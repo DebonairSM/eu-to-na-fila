@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entrar na Fila - Barbearia</title>
+    <title>Entrar na Fila - Barbearia Mineiro</title>
     
     <!-- Google Fonts - Roboto -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,27 +21,27 @@
         }
 
         :root {
-            /* Material Design 3 Color Scheme */
-            --md-sys-color-primary: #6750A4;
+            /* Gold and White Color Scheme for Mineiro Barber Shop */
+            --md-sys-color-primary: #D4AF37;
             --md-sys-color-on-primary: #FFFFFF;
-            --md-sys-color-primary-container: #EADDFF;
-            --md-sys-color-on-primary-container: #21005D;
-            --md-sys-color-secondary: #625B71;
+            --md-sys-color-primary-container: #FFF8E1;
+            --md-sys-color-on-primary-container: #3E2723;
+            --md-sys-color-secondary: #8B7355;
             --md-sys-color-on-secondary: #FFFFFF;
-            --md-sys-color-surface: #FEF7FF;
+            --md-sys-color-surface: #FFFFFF;
             --md-sys-color-on-surface: #1D1B20;
-            --md-sys-color-surface-variant: #E7E0EC;
-            --md-sys-color-on-surface-variant: #49454F;
-            --md-sys-color-outline: #79747E;
+            --md-sys-color-surface-variant: #F5F5F5;
+            --md-sys-color-on-surface-variant: #5D5D5D;
+            --md-sys-color-outline: #C4C4C4;
             --md-sys-color-error: #BA1A1A;
             --md-sys-color-on-error: #FFFFFF;
             --md-sys-color-error-container: #FFDAD6;
             --md-sys-color-on-error-container: #410002;
             
-            /* Elevation shadows */
-            --md-sys-elevation-1: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
-            --md-sys-elevation-2: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
-            --md-sys-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.3);
+            /* Elevation shadows with gold tint */
+            --md-sys-elevation-1: 0px 1px 2px rgba(212, 175, 55, 0.2), 0px 1px 3px 1px rgba(0, 0, 0, 0.1);
+            --md-sys-elevation-2: 0px 1px 2px rgba(212, 175, 55, 0.25), 0px 2px 6px 2px rgba(0, 0, 0, 0.12);
+            --md-sys-elevation-3: 0px 4px 8px 3px rgba(212, 175, 55, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.2);
         }
 
         body {
@@ -70,6 +70,7 @@
             font-size: 64px;
             color: var(--md-sys-color-primary);
             margin-bottom: 16px;
+            filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3));
         }
 
         h1 {
@@ -285,6 +286,7 @@
             font-size: 64px;
             color: var(--md-sys-color-primary);
             margin-bottom: 16px;
+            filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3));
         }
 
         .success-title {
@@ -305,7 +307,7 @@
             font-weight: 500;
             margin-top: 16px;
             padding: 12px;
-            background-color: rgba(103, 80, 164, 0.1);
+            background-color: rgba(212, 175, 55, 0.1);
             border-radius: 8px;
         }
 
@@ -323,7 +325,7 @@
     <div class="container">
         <div class="header">
             <span class="material-symbols-outlined header-icon">content_cut</span>
-            <h1>Entre na Fila</h1>
+            <h1>Barbearia Mineiro</h1>
             <p class="subtitle">Adicione seu nome e aguarde ser chamado</p>
         </div>
 
@@ -381,6 +383,7 @@
 
         // DOM elements
         const form = document.getElementById('queueForm');
+        const formCard = document.querySelector('.form-card');
         const nameInput = document.getElementById('nameInput');
         const errorMessage = document.getElementById('errorMessage');
         const joinButton = document.getElementById('joinButton');
@@ -463,14 +466,14 @@
             customerNameDisplay.textContent = name.trim();
             positionNumber.textContent = position;
             
+            // Hide the form card entirely
+            formCard.style.display = 'none';
+            
             // Show success message
             successCard.classList.add('show');
             
             // Update wait time
             updateWaitTime();
-            
-            // Reset form
-            form.style.display = 'none';
             
             // Simulate queue progression
             simulateQueueProgress();
@@ -486,7 +489,7 @@
                     updateWaitTime();
                     
                     if (newPosition === 1) {
-                        queuePosition.innerHTML = '<span style="color: var(--md-sys-color-primary); font-weight: 700;">Você é o próximo!</span>';
+                        queuePosition.innerHTML = '<span style="color: #D4AF37; font-weight: 700;">Você é o próximo!</span>';
                     }
                 }
             }, 5000); // Update every 5 seconds for demo purposes
