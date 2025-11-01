@@ -228,6 +228,37 @@
             animation: slideIn 0.3s ease;
         }
 
+        .remove-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--md-sys-color-primary);
+            background-color: var(--md-sys-color-error-container);
+            color: var(--md-sys-color-error);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .remove-avatar:hover {
+            background-color: var(--md-sys-color-error);
+            color: var(--md-sys-color-on-error);
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
+        }
+
+        .remove-avatar:active {
+            transform: scale(0.95);
+        }
+
+        .remove-avatar .material-symbols-outlined {
+            font-size: 24px;
+        }
+
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -552,6 +583,26 @@
             return barbers.filter(b => b.active);
         }
 
+        // Get available barbers (active and not currently serving)
+        function getAvailableBarbers() {
+            const servingBarberIds = beingServedData.map(c => c.barberId);
+            return barbers.filter(b => b.active && !servingBarberIds.includes(b.id));
+        }
+
+        // Remove customer from queue
+        function removeCustomer(customerId) {
+            const item = document.querySelector(`.queue-item[data-id="${customerId}"]`);
+            
+            if (item) {
+                item.classList.add('removing');
+                
+                setTimeout(() => {
+                    queueData = queueData.filter(c => c.id !== customerId);
+                    renderAll();
+                }, 300);
+            }
+        }
+
         // Toggle barber availability
         function toggleBarber(barberId) {
             const barber = barbers.find(b => b.id === barberId);
@@ -660,13 +711,13 @@
             customerInfo.appendChild(customerName);
             customerInfo.appendChild(waitingTime);
             
-            // Barber avatars (only active barbers)
+            // Barber avatars (only available barbers - active and not currently serving)
             const barberAvatars = document.createElement('div');
             barberAvatars.className = 'barber-avatars';
             
-            const activeBarbers = getActiveBarbers();
-            if (activeBarbers.length > 0) {
-                activeBarbers.forEach(barber => {
+            const availableBarbers = getAvailableBarbers();
+            if (availableBarbers.length > 0) {
+                availableBarbers.forEach(barber => {
                     const avatar = document.createElement('img');
                     avatar.className = 'barber-avatar';
                     avatar.src = barber.avatar;
@@ -678,6 +729,14 @@
             } else {
                 barberAvatars.innerHTML = '<span style="font-size: 12px; color: var(--md-sys-color-on-surface-variant);">Nenhum barbeiro disponível</span>';
             }
+            
+            // Remove button styled as avatar
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-avatar';
+            removeBtn.onclick = () => removeCustomer(customer.id);
+            removeBtn.innerHTML = '<span class="material-symbols-outlined">close</span>';
+            removeBtn.title = 'Remover da fila';
+            barberAvatars.appendChild(removeBtn);
             
             // Assemble item
             item.appendChild(badge);
@@ -749,17 +808,31 @@
         function updateTimes() {
             // Update wait times for customers in queue
             queueData.forEach(customer => {
-                if (customer.waitTime > 0) {
-                    customer.waitTime = Math.max(0, customer.waitTime - 1);
+                customer.waitTime += 1;
+            });
+            
+            // Update existing queue items without re-rendering
+            queueData.forEach((customer, index) => {
+                const item = document.querySelector(`.queue-item[data-id="${customer.id}"]`);
+                if (item) {
+                    const waitingTimeSpan = item.querySelector('.waiting-time span:last-child');
+                    if (waitingTimeSpan) {
+                        waitingTimeSpan.textContent = `Aguardando ${customer.waitTime} min`;
+                    }
                 }
             });
             
-            // Re-render being served to update service times
-            if (beingServedData.length > 0) {
-                renderBeingServed();
-            }
-            
-            renderQueue();
+            // Update being served items without re-rendering
+            beingServedData.forEach(customer => {
+                const item = document.querySelector(`.being-served-item[data-id="${customer.id}"]`);
+                if (item) {
+                    const serviceTime = Math.floor((Date.now() - customer.startTime) / 60000);
+                    const timeSpan = item.querySelector('.being-served-details span:last-child');
+                    if (timeSpan) {
+                        timeSpan.textContent = `${serviceTime} min`;
+                    }
+                }
+            });
         }
 
         // Initialize
