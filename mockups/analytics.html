@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analíticas - Barbearia Mineiro</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    
+    <!-- Google Fonts - Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            overflow-y: scroll;
+        }
+
+        :root {
+            /* Gold and White Color Scheme for Mineiro Barber Shop */
+            --md-sys-color-primary: #D4AF37;
+            --md-sys-color-on-primary: #FFFFFF;
+            --md-sys-color-primary-container: #FFF8E1;
+            --md-sys-color-on-primary-container: #3E2723;
+            --md-sys-color-secondary: #8B7355;
+            --md-sys-color-on-secondary: #FFFFFF;
+            --md-sys-color-surface: #FFFFFF;
+            --md-sys-color-on-surface: #1D1B20;
+            --md-sys-color-surface-variant: #F5F5F5;
+            --md-sys-color-on-surface-variant: #5D5D5D;
+            --md-sys-color-outline: #C4C4C4;
+            --md-sys-color-error: #BA1A1A;
+            --md-sys-color-on-error: #FFFFFF;
+            --md-sys-color-error-container: #FFDAD6;
+            --md-sys-color-on-error-container: #410002;
+            --md-sys-color-success: #2E7D32;
+            --md-sys-color-success-container: #C8E6C9;
+            
+            /* Elevation shadows with gold tint */
+            --md-sys-elevation-1: 0px 1px 2px rgba(212, 175, 55, 0.2), 0px 1px 3px 1px rgba(0, 0, 0, 0.1);
+            --md-sys-elevation-2: 0px 1px 2px rgba(212, 175, 55, 0.25), 0px 2px 6px 2px rgba(0, 0, 0, 0.12);
+            --md-sys-elevation-3: 0px 4px 8px 3px rgba(212, 175, 55, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--md-sys-color-surface-variant);
+            color: var(--md-sys-color-on-surface);
+            min-height: 100vh;
+            padding: 16px;
+            padding-bottom: 48px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: var(--md-sys-elevation-2);
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .header-icon {
+            font-size: 32px;
+        }
+
+        .header-title {
+            flex: 1;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 500;
+            line-height: 32px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        /* Section Headers */
+        .section-header {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            margin: 24px 0 12px 0;
+            padding: 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-header .material-symbols-outlined {
+            font-size: 24px;
+            color: var(--md-sys-color-primary);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background-color: var(--md-sys-color-surface);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: var(--md-sys-elevation-1);
+        }
+
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card-icon {
+            font-size: 20px;
+            color: var(--md-sys-color-primary);
+        }
+
+        .stat-card-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface-variant);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card-value {
+            font-size: 28px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 4px;
+        }
+
+        .stat-card-description {
+            font-size: 11px;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .stat-card-trend {
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-card-trend.positive {
+            color: var(--md-sys-color-success);
+        }
+
+        .stat-card-trend.negative {
+            color: var(--md-sys-color-error);
+        }
+
+        .stat-card-trend .material-symbols-outlined {
+            font-size: 16px;
+        }
+
+        /* Monte Carlo Section */
+        .monte-carlo-card {
+            background-color: var(--md-sys-color-surface);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--md-sys-elevation-2);
+            margin-bottom: 16px;
+        }
+
+        .monte-carlo-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .distribution-canvas {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 16px;
+        }
+
+        .percentile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .percentile-item {
+            text-align: center;
+            padding: 12px;
+            background-color: var(--md-sys-color-primary-container);
+            border-radius: 8px;
+        }
+
+        .percentile-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-primary-container);
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+
+        .percentile-value {
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-primary-container);
+        }
+
+        .percentile-unit {
+            font-size: 11px;
+            color: var(--md-sys-color-on-primary-container);
+            opacity: 0.8;
+        }
+
+        .algorithm-explanation {
+            background-color: var(--md-sys-color-primary-container);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--md-sys-color-on-primary-container);
+        }
+
+        .algorithm-explanation strong {
+            color: var(--md-sys-color-primary);
+        }
+
+        /* Chart Card */
+        .chart-card {
+            background-color: var(--md-sys-color-surface);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--md-sys-elevation-1);
+            margin-bottom: 16px;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        /* Bar Chart */
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 180px;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(180deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-secondary) 100%);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: all 0.3s ease;
+            min-height: 8px;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+            cursor: pointer;
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--md-sys-color-on-surface-variant);
+            white-space: nowrap;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            white-space: nowrap;
+        }
+
+        .chart-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            font-size: 10px;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        /* Line Chart */
+        .line-chart-container {
+            position: relative;
+            height: 160px;
+            margin-bottom: 24px;
+        }
+
+        .line-chart {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Heatmap */
+        .heatmap {
+            display: grid;
+            grid-template-columns: auto repeat(7, 1fr);
+            gap: 4px;
+            font-size: 11px;
+        }
+
+        .heatmap-label {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 500;
+            transition: transform 0.2s ease;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.1);
+            cursor: pointer;
+        }
+
+        .heatmap-day-label {
+            text-align: center;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface-variant);
+            padding: 4px 0;
+        }
+
+        /* Barber Performance */
+        .barber-performance {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .barber-card {
+            background-color: var(--md-sys-color-surface);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: var(--md-sys-elevation-1);
+        }
+
+        .barber-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .barber-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--md-sys-color-primary);
+        }
+
+        .barber-info {
+            flex: 1;
+        }
+
+        .barber-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .barber-role {
+            font-size: 12px;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .barber-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .barber-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .barber-metric-label {
+            font-size: 12px;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .barber-metric-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .utilization-bar {
+            width: 100%;
+            height: 6px;
+            background-color: var(--md-sys-color-surface-variant);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .utilization-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-success) 100%);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        /* Material Icons */
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24;
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .percentile-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .heatmap {
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-top">
+                <span class="material-symbols-outlined header-icon">analytics</span>
+                <div class="header-title">
+                    <h1>Analíticas</h1>
+                    <p class="subtitle">Últimos 30 dias</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="material-symbols-outlined stat-card-icon">groups</span>
+                    <div class="stat-card-label">Clientes</div>
+                </div>
+                <div class="stat-card-value" id="totalCustomers">567</div>
+                <div class="stat-card-description">Total atendido</div>
+                <div class="stat-card-trend positive">
+                    <span class="material-symbols-outlined">trending_up</span>
+                    <span>+12%</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="material-symbols-outlined stat-card-icon">schedule</span>
+                    <div class="stat-card-label">Tempo Total</div>
+                </div>
+                <div class="stat-card-value" id="avgLeadTime">32</div>
+                <div class="stat-card-description">Da fila até sair (min)</div>
+                <div class="stat-card-trend positive">
+                    <span class="material-symbols-outlined">trending_down</span>
+                    <span>-8%</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="material-symbols-outlined stat-card-icon">speed</span>
+                    <div class="stat-card-label">Tempo na Cadeira</div>
+                </div>
+                <div class="stat-card-value" id="avgCycleTime">25</div>
+                <div class="stat-card-description">Cortando cabelo (min)</div>
+                <div class="stat-card-trend positive">
+                    <span class="material-symbols-outlined">trending_down</span>
+                    <span>-3%</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="material-symbols-outlined stat-card-icon">show_chart</span>
+                    <div class="stat-card-label">Clientes por Dia</div>
+                </div>
+                <div class="stat-card-value" id="throughput">18.9</div>
+                <div class="stat-card-description">Média diária</div>
+                <div class="stat-card-trend positive">
+                    <span class="material-symbols-outlined">trending_up</span>
+                    <span>+15%</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="material-symbols-outlined stat-card-icon">hourglass_empty</span>
+                    <div class="stat-card-label">Fila Média</div>
+                </div>
+                <div class="stat-card-value" id="avgWIP">3.2</div>
+                <div class="stat-card-description">Pessoas esperando</div>
+                <div class="stat-card-trend positive">
+                    <span class="material-symbols-outlined">trending_down</span>
+                    <span>-5%</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="material-symbols-outlined stat-card-icon">percent</span>
+                    <div class="stat-card-label">Tempo Produtivo</div>
+                </div>
+                <div class="stat-card-value" id="flowEfficiency">78%</div>
+                <div class="stat-card-description">Cortando vs esperando</div>
+                <div class="stat-card-trend positive">
+                    <span class="material-symbols-outlined">trending_up</span>
+                    <span>+4%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monte Carlo Simulation -->
+        <h2 class="section-header">
+            <span class="material-symbols-outlined">finance_mode</span>
+            <span>Simulação Monte Carlo - Previsão de Espera</span>
+        </h2>
+        <div class="monte-carlo-card">
+            <div class="monte-carlo-title">Distribuição de Probabilidade (10,000 simulações)</div>
+            <canvas id="distributionCanvas" class="distribution-canvas"></canvas>
+            
+            <div class="percentile-grid">
+                <div class="percentile-item">
+                    <div class="percentile-label">P50 (Mediana)</div>
+                    <div class="percentile-value" id="p50">28</div>
+                    <div class="percentile-unit">min</div>
+                </div>
+                <div class="percentile-item">
+                    <div class="percentile-label">P75</div>
+                    <div class="percentile-value" id="p75">35</div>
+                    <div class="percentile-unit">min</div>
+                </div>
+                <div class="percentile-item">
+                    <div class="percentile-label">P90</div>
+                    <div class="percentile-value" id="p90">42</div>
+                    <div class="percentile-unit">min</div>
+                </div>
+                <div class="percentile-item">
+                    <div class="percentile-label">P95</div>
+                    <div class="percentile-value" id="p95">48</div>
+                    <div class="percentile-unit">min</div>
+                </div>
+            </div>
+
+            <div class="algorithm-explanation">
+                <strong>Como funciona:</strong> O algoritmo executa 10,000 simulações considerando: 
+                (1) número de clientes na fila, (2) barbeiros disponíveis, (3) tempo médio de serviço (μ=25min, σ=5min), 
+                e (4) variação do tempo de espera. Cada simulação gera um tempo de espera aleatório baseado em 
+                distribuições normais. Os percentis mostram a confiança: P50 = 50% dos clientes esperam até 28 minutos, 
+                P90 = 90% esperam até 42 minutos.
+            </div>
+        </div>
+
+        <!-- Throughput Trend -->
+        <h2 class="section-header">
+            <span class="material-symbols-outlined">insert_chart</span>
+            <span>Volume Diário</span>
+        </h2>
+        <div class="chart-card">
+            <div class="chart-title">Clientes Atendidos por Dia (Últimos 14 dias)</div>
+            <div class="bar-chart" id="throughputChart"></div>
+            <div class="chart-labels">
+                <span>Há 14 dias</span>
+                <span>Hoje</span>
+            </div>
+        </div>
+
+        <!-- Wait Time Trend -->
+        <h2 class="section-header">
+            <span class="material-symbols-outlined">trending_down</span>
+            <span>Tendência de Tempo de Espera</span>
+        </h2>
+        <div class="chart-card">
+            <div class="chart-title">Tempo Total Médio (Últimos 30 dias)</div>
+            <div class="line-chart-container">
+                <canvas id="lineChart" class="line-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Peak Hours Heatmap -->
+        <h2 class="section-header">
+            <span class="material-symbols-outlined">calendar_view_week</span>
+            <span>Horários de Pico</span>
+        </h2>
+        <div class="chart-card">
+            <div class="chart-title">Volume por Dia da Semana e Horário</div>
+            <div class="heatmap" id="heatmap"></div>
+        </div>
+
+        <!-- Barber Performance -->
+        <h2 class="section-header">
+            <span class="material-symbols-outlined">person</span>
+            <span>Desempenho dos Barbeiros</span>
+        </h2>
+        <div class="barber-performance">
+            <div class="barber-card">
+                <div class="barber-header">
+                    <img src="https://i.pravatar.cc/80?img=12" alt="Carlos" class="barber-avatar">
+                    <div class="barber-info">
+                        <div class="barber-name">Carlos</div>
+                        <div class="barber-role">Barbeiro Senior</div>
+                    </div>
+                </div>
+                <div class="barber-metrics">
+                    <div class="barber-metric">
+                        <span class="barber-metric-label">Clientes</span>
+                        <span class="barber-metric-value">203</span>
+                    </div>
+                    <div class="barber-metric">
+                        <span class="barber-metric-label">Tempo Médio</span>
+                        <span class="barber-metric-value">24 min</span>
+                    </div>
+                    <div class="barber-metric">
+                        <span class="barber-metric-label">Utilização</span>
+                        <span class="barber-metric-value">87%</span>
+                    </div>
+                    <div class="utilization-bar">
+                        <div class="utilization-fill" style="width: 87%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="barber-card">
+                <div class="barber-header">
+                    <img src="https://i.pravatar.cc/80?img=33" alt="Roberto" class="barber-avatar">
+                    <div class="barber-info">
+                        <div class="barber-name">Roberto</div>
+                        <div class="barber-role">Barbeiro</div>
+                    </div>
+                </div>
+                <div class="barber-metrics">
+                    <div class="barber-metric">
+                        <span class="barber-metric-label">Clientes</span>
+                        <span class="barber-metric-value">189</span>
+                    </div>
+                    <div class="barber-metric">
+                        <span class="barber-metric-label">Tempo Médio</span>
+                        <span class="barber-metric-value">26 min</span>
+                    </div>
+                    <div class="barber-metric">
+                        <span class="barber-metric-label">Utilização</span>
+                        <span class="barber-metric-value">82%</span>
+                    </div>
+                    <div class="utilization-bar">
+                        <div class="utilization-fill" style="width: 82%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="barber-card">
+                <div class="barber-header">
+                    <img src="https://i.pravatar.cc/80?img=51" alt="Miguel" class="barber-avatar">
+                    <div class="barber-info">
+                        <div class="barber-name">Miguel</div>
+                        <div class="barber-role">Barbeiro</div>
+                    </div>
+                </div>
+                <div class="barber-metrics">
+                    <div class="barber-metric">
+                        <span class="barber-metric-label">Clientes</span>
+                        <span class="barber-metric-value">175</span>
+                    </div>
+                    <div class="barber-metric">
+                        <span class="barber-metric-label">Tempo Médio</span>
+                        <span class="barber-metric-value">27 min</span>
+                    </div>
+                    <div class="barber-metric">
+                        <span class="barber-metric-label">Utilização</span>
+                        <span class="barber-metric-value">79%</span>
+                    </div>
+                    <div class="utilization-bar">
+                        <div class="utilization-fill" style="width: 79%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Generate realistic simulated data for 30 days
+        function generateSimulatedData() {
+            const data = {
+                dailyCustomers: [],
+                dailyTotalTimes: [], // Tempo total (da fila até sair)
+                dailyChairTimes: []  // Tempo na cadeira (cortando)
+            };
+
+            // Generate 30 days of data
+            for (let i = 0; i < 30; i++) {
+                // Simulate daily customers (15-25 with some variance)
+                const baseCustomers = 18 + Math.random() * 7;
+                const customers = Math.round(baseCustomers + Math.sin(i / 7) * 3);
+                data.dailyCustomers.push(customers);
+
+                // Simulate total time (28-38 minutes with trend improvement)
+                const totalTime = 35 - (i * 0.1) + (Math.random() * 5 - 2.5);
+                data.dailyTotalTimes.push(totalTime);
+
+                // Simulate chair time (23-28 minutes)
+                const chairTime = 25 + (Math.random() * 5 - 2.5);
+                data.dailyChairTimes.push(chairTime);
+            }
+
+            return data;
+        }
+
+        const simulatedData = generateSimulatedData();
+
+        // Monte Carlo Simulation for wait time prediction
+        function runMonteCarloSimulation(queueSize, availableBarbers, numSimulations = 10000) {
+            const results = [];
+            const avgServiceTime = 25; // minutes
+            const serviceTimeStdDev = 5; // minutes
+
+            for (let i = 0; i < numSimulations; i++) {
+                let totalWaitTime = 0;
+
+                // Simulate service times for each person ahead in queue
+                for (let j = 0; j < queueSize; j++) {
+                    // Normal distribution for service time
+                    const serviceTime = normalRandom(avgServiceTime, serviceTimeStdDev);
+                    
+                    // Distribute across available barbers
+                    const waitForThisCustomer = serviceTime / availableBarbers;
+                    totalWaitTime += waitForThisCustomer;
+                }
+
+                results.push(totalWaitTime);
+            }
+
+            results.sort((a, b) => a - b);
+            return results;
+        }
+
+        // Box-Muller transform for normal distribution
+        function normalRandom(mean, stdDev) {
+            const u1 = Math.random();
+            const u2 = Math.random();
+            const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+            return Math.max(15, mean + z0 * stdDev); // Minimum 15 minutes
+        }
+
+        // Calculate percentile
+        function percentile(arr, p) {
+            const index = Math.ceil(arr.length * (p / 100)) - 1;
+            return Math.round(arr[index]);
+        }
+
+        // Draw Monte Carlo distribution chart
+        function drawDistributionChart() {
+            const canvas = document.getElementById('distributionCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            // Run simulation with current queue parameters
+            const queueSize = 3;
+            const availableBarbers = 2;
+            const results = runMonteCarloSimulation(queueSize, availableBarbers);
+
+            // Update percentile displays
+            document.getElementById('p50').textContent = percentile(results, 50);
+            document.getElementById('p75').textContent = percentile(results, 75);
+            document.getElementById('p90').textContent = percentile(results, 90);
+            document.getElementById('p95').textContent = percentile(results, 95);
+
+            // Create histogram data
+            const bins = 40;
+            const minValue = Math.min(...results);
+            const maxValue = Math.max(...results);
+            const binSize = (maxValue - minValue) / bins;
+            const histogram = new Array(bins).fill(0);
+
+            results.forEach(value => {
+                const binIndex = Math.min(bins - 1, Math.floor((value - minValue) / binSize));
+                histogram[binIndex]++;
+            });
+
+            const maxCount = Math.max(...histogram);
+
+            // Draw histogram
+            const barWidth = canvas.width / bins;
+            const heightScale = (canvas.height - 40) / maxCount;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw bars
+            histogram.forEach((count, i) => {
+                const x = i * barWidth;
+                const height = count * heightScale;
+                const y = canvas.height - height - 20;
+
+                // Gradient fill
+                const gradient = ctx.createLinearGradient(0, y, 0, canvas.height - 20);
+                gradient.addColorStop(0, '#D4AF37');
+                gradient.addColorStop(1, '#8B7355');
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, y, barWidth - 1, height);
+            });
+
+            // Draw percentile lines
+            const p50Value = percentile(results, 50);
+            const p90Value = percentile(results, 90);
+
+            function drawPercentileLine(value, color, label) {
+                const x = ((value - minValue) / (maxValue - minValue)) * canvas.width;
+                
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height - 20);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.fillStyle = color;
+                ctx.font = '10px Roboto';
+                ctx.fillText(label, x + 4, 12);
+            }
+
+            drawPercentileLine(p50Value, '#2E7D32', 'P50');
+            drawPercentileLine(p90Value, '#BA1A1A', 'P90');
+
+            // Draw x-axis
+            ctx.strokeStyle = '#C4C4C4';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - 20);
+            ctx.lineTo(canvas.width, canvas.height - 20);
+            ctx.stroke();
+
+            // Draw x-axis labels
+            ctx.fillStyle = '#5D5D5D';
+            ctx.font = '10px Roboto';
+            ctx.textAlign = 'center';
+            ctx.fillText(Math.round(minValue) + ' min', 30, canvas.height - 5);
+            ctx.fillText(Math.round(maxValue) + ' min', canvas.width - 30, canvas.height - 5);
+        }
+
+        // Draw throughput bar chart
+        function drawThroughputChart() {
+            const container = document.getElementById('throughputChart');
+            const data = simulatedData.dailyCustomers.slice(-14); // Last 14 days
+            const maxValue = Math.max(...data);
+
+            container.innerHTML = '';
+
+            data.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                const heightPercent = (value / maxValue) * 100;
+                bar.style.height = heightPercent + '%';
+
+                const barValue = document.createElement('span');
+                barValue.className = 'bar-value';
+                barValue.textContent = value;
+                bar.appendChild(barValue);
+
+                container.appendChild(bar);
+            });
+        }
+
+        // Draw line chart for total time trend
+        function drawLineChart() {
+            const canvas = document.getElementById('lineChart');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            const data = simulatedData.dailyTotalTimes;
+            const maxValue = Math.max(...data);
+            const minValue = Math.min(...data);
+            const range = maxValue - minValue;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grid lines
+            ctx.strokeStyle = '#F5F5F5';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = (canvas.height / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Draw line
+            ctx.strokeStyle = '#D4AF37';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+
+            data.forEach((value, index) => {
+                const x = (index / (data.length - 1)) * canvas.width;
+                const y = canvas.height - ((value - minValue) / range) * canvas.height;
+
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+
+            ctx.stroke();
+
+            // Draw points
+            ctx.fillStyle = '#D4AF37';
+            data.forEach((value, index) => {
+                const x = (index / (data.length - 1)) * canvas.width;
+                const y = canvas.height - ((value - minValue) / range) * canvas.height;
+
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+
+            // Draw labels
+            ctx.fillStyle = '#5D5D5D';
+            ctx.font = '10px Roboto';
+            ctx.textAlign = 'left';
+            ctx.fillText(Math.round(maxValue) + ' min', 5, 12);
+            ctx.textAlign = 'right';
+            ctx.fillText(Math.round(minValue) + ' min', canvas.width - 5, canvas.height - 5);
+        }
+
+        // Draw heatmap
+        function drawHeatmap() {
+            const container = document.getElementById('heatmap');
+            const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            const hours = ['9h', '11h', '13h', '15h', '17h', '19h'];
+
+            // Generate heatmap data (6 time periods x 7 days)
+            const heatmapData = [];
+            for (let i = 0; i < 6; i++) {
+                const row = [];
+                for (let j = 0; j < 7; j++) {
+                    // Simulate higher volume on weekday afternoons and Saturdays
+                    let baseValue = 3;
+                    if (j === 6) baseValue += 4; // Saturday boost
+                    if (j >= 1 && j <= 5 && i >= 2 && i <= 4) baseValue += 3; // Weekday afternoon boost
+                    const value = Math.round(baseValue + Math.random() * 3);
+                    row.push(value);
+                }
+                heatmapData.push(row);
+            }
+
+            const maxValue = Math.max(...heatmapData.flat());
+
+            // Add day labels
+            container.innerHTML = '<div class="heatmap-cell"></div>'; // Empty corner
+            days.forEach(day => {
+                const label = document.createElement('div');
+                label.className = 'heatmap-day-label';
+                label.textContent = day;
+                container.appendChild(label);
+            });
+
+            // Add hours and cells
+            hours.forEach((hour, i) => {
+                const label = document.createElement('div');
+                label.className = 'heatmap-label';
+                label.textContent = hour;
+                container.appendChild(label);
+
+                heatmapData[i].forEach((value, j) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'heatmap-cell';
+                    
+                    // Color intensity based on value
+                    const intensity = value / maxValue;
+                    const hue = 45; // Gold hue
+                    const saturation = 70 + (intensity * 20);
+                    const lightness = 85 - (intensity * 40);
+                    
+                    cell.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                    cell.style.color = intensity > 0.5 ? '#FFF' : '#3E2723';
+                    cell.textContent = value;
+                    cell.title = `${days[j]} ${hour}: ${value} clientes`;
+                    
+                    container.appendChild(cell);
+                });
+            });
+        }
+
+        // Initialize all charts
+        function initializeCharts() {
+            drawDistributionChart();
+            drawThroughputChart();
+            drawLineChart();
+            drawHeatmap();
+        }
+
+        // Responsive resize
+        window.addEventListener('resize', () => {
+            drawDistributionChart();
+            drawLineChart();
+        });
+
+        // Initialize on load
+        window.addEventListener('load', initializeCharts);
+    </script>
+</body>
+</html>
+
