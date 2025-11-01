@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Fila - Barbearia Mineiro</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     
     <!-- Google Fonts - Roboto -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,6 +38,8 @@
             --md-sys-color-on-error: #FFFFFF;
             --md-sys-color-error-container: #FFDAD6;
             --md-sys-color-on-error-container: #410002;
+            --md-sys-color-success: #2E7D32;
+            --md-sys-color-success-container: #C8E6C9;
             
             /* Elevation shadows with gold tint */
             --md-sys-elevation-1: 0px 1px 2px rgba(212, 175, 55, 0.2), 0px 1px 3px 1px rgba(0, 0, 0, 0.1);
@@ -50,6 +53,7 @@
             color: var(--md-sys-color-on-surface);
             min-height: 100vh;
             padding: 16px;
+            padding-bottom: 200px;
         }
 
         .container {
@@ -120,6 +124,89 @@
             font-weight: 400;
             opacity: 0.9;
             margin-top: 4px;
+        }
+
+        /* Section Headers */
+        .section-header {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            margin: 24px 0 12px 0;
+            padding: 0 4px;
+        }
+
+        /* Being Served Section */
+        .being-served-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .being-served-item {
+            background-color: var(--md-sys-color-success-container);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: var(--md-sys-elevation-1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .being-served-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .being-served-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 4px;
+        }
+
+        .being-served-details {
+            font-size: 12px;
+            color: var(--md-sys-color-on-surface-variant);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .barber-serving {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .barber-serving-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .finalize-button {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'Roboto', sans-serif;
+            border: none;
+            border-radius: 20px;
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .finalize-button:hover {
+            box-shadow: var(--md-sys-elevation-2);
+        }
+
+        .finalize-button:active {
+            transform: scale(0.95);
         }
 
         /* Queue List */
@@ -206,80 +293,131 @@
             font-size: 16px;
         }
 
-        /* Barber Avatar */
+        /* Barber Avatars Row */
+        .barber-avatars {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
         .barber-avatar {
             width: 48px;
             height: 48px;
             border-radius: 50%;
             border: 2px solid var(--md-sys-color-primary);
             object-fit: cover;
-            flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .barber-avatar.unassigned {
-            background-color: var(--md-sys-color-surface-variant);
-            border-color: var(--md-sys-color-outline);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .barber-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
         }
 
-        .barber-avatar.unassigned .material-symbols-outlined {
-            font-size: 24px;
-            color: var(--md-sys-color-on-surface-variant);
-        }
-
-        /* Remove Button */
-        .remove-button {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: none;
-            background-color: transparent;
-            color: var(--md-sys-color-on-surface-variant);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .remove-button:hover {
-            background-color: var(--md-sys-color-error-container);
-            color: var(--md-sys-color-error);
-        }
-
-        .remove-button:active {
-            background-color: var(--md-sys-color-error-container);
+        .barber-avatar:active {
             transform: scale(0.95);
         }
 
-        .remove-button .material-symbols-outlined {
-            font-size: 28px;
+        /* Barber Check-In Panel */
+        .barber-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--md-sys-color-surface);
+            border-top: 1px solid var(--md-sys-color-outline);
+            padding: 16px;
+            box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .barber-panel-content {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .barber-panel-title {
+            font-size: 14px;
             font-weight: 500;
+            color: var(--md-sys-color-on-surface-variant);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        /* Ripple Effect */
-        .remove-button::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
+        .barber-list {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+        }
+
+        .barber-card {
+            flex: 1;
+            background-color: var(--md-sys-color-surface-variant);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .barber-card.active {
+            background-color: var(--md-sys-color-success-container);
+            box-shadow: var(--md-sys-elevation-1);
+        }
+
+        .barber-card-avatar {
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
-            background: rgba(186, 26, 26, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.4s, height 0.4s;
+            object-fit: cover;
+            border: 3px solid transparent;
+            transition: all 0.2s ease;
         }
 
-        .remove-button:active::before {
-            width: 100px;
-            height: 100px;
+        .barber-card.active .barber-card-avatar {
+            border-color: var(--md-sys-color-success);
+        }
+
+        .barber-card-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            text-align: center;
+        }
+
+        .barber-toggle-button {
+            width: 100%;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 500;
+            font-family: 'Roboto', sans-serif;
+            border: 1px solid var(--md-sys-color-outline);
+            border-radius: 16px;
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface-variant);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .barber-card.active .barber-toggle-button {
+            background-color: var(--md-sys-color-success);
+            color: var(--md-sys-color-on-primary);
+            border-color: var(--md-sys-color-success);
+        }
+
+        .barber-toggle-button:hover {
+            box-shadow: var(--md-sys-elevation-1);
+        }
+
+        .barber-toggle-button:active {
+            transform: scale(0.95);
         }
 
         /* Empty State */
@@ -339,17 +477,26 @@
             
             <div class="queue-stats">
                 <div class="stat-item">
-                    <div class="stat-value" id="queueCount">6</div>
-                    <div class="stat-label">Na Fila</div>
+                    <div class="stat-value" id="queueCount">4</div>
+                    <div class="stat-label">Aguardando</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value" id="avgWaitTime">25</div>
-                    <div class="stat-label">Min. Espera</div>
+                    <div class="stat-value" id="servingCount">0</div>
+                    <div class="stat-label">Atendendo</div>
                 </div>
             </div>
         </div>
 
-        <!-- Queue List -->
+        <!-- Being Served Section -->
+        <div id="beingServedSection" style="display: none;">
+            <h2 class="section-header">Em Atendimento</h2>
+            <div class="being-served-list" id="beingServedList">
+                <!-- Being served items will be dynamically generated -->
+            </div>
+        </div>
+
+        <!-- Queue Section -->
+        <h2 class="section-header">Fila de Espera</h2>
         <div class="queue-list" id="queueList">
             <!-- Queue items will be dynamically generated -->
         </div>
@@ -362,26 +509,111 @@
         </div>
     </div>
 
+    <!-- Barber Check-In Panel -->
+    <div class="barber-panel">
+        <div class="barber-panel-content">
+            <div class="barber-panel-title">Barbeiros</div>
+            <div class="barber-list" id="barberList">
+                <!-- Barber cards will be dynamically generated -->
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Sample queue data
-        let queueData = [
-            { id: 1, name: 'João Silva', waitTime: 5, barberId: 1 },
-            { id: 2, name: 'Maria Santos', waitTime: 10, barberId: 2 },
-            { id: 3, name: 'Pedro Oliveira', waitTime: 15, barberId: 3 },
-            { id: 4, name: 'Ana Costa', waitTime: 20, barberId: 4 },
-            { id: 5, name: 'Carlos Souza', waitTime: 25, barberId: 1 },
-            { id: 6, name: 'Juliana Lima', waitTime: 30, barberId: 2 }
+        // Barbers data
+        let barbers = [
+            { id: 1, name: 'Carlos', avatar: 'https://i.pravatar.cc/80?img=12', active: false },
+            { id: 2, name: 'Roberto', avatar: 'https://i.pravatar.cc/80?img=33', active: false },
+            { id: 3, name: 'Miguel', avatar: 'https://i.pravatar.cc/80?img=51', active: false }
         ];
 
-        const avgServiceTime = 25; // minutes per customer
+        // Queue data - customers waiting
+        let queueData = [
+            { id: 1, name: 'João Silva', waitTime: 5 },
+            { id: 2, name: 'Maria Santos', waitTime: 10 },
+            { id: 3, name: 'Pedro Oliveira', waitTime: 15 },
+            { id: 4, name: 'Ana Costa', waitTime: 20 }
+        ];
+
+        // Being served data - customers currently being served
+        let beingServedData = [];
 
         // DOM elements
         const queueList = document.getElementById('queueList');
         const emptyState = document.getElementById('emptyState');
         const queueCountDisplay = document.getElementById('queueCount');
-        const avgWaitTimeDisplay = document.getElementById('avgWaitTime');
+        const servingCountDisplay = document.getElementById('servingCount');
+        const barberList = document.getElementById('barberList');
+        const beingServedList = document.getElementById('beingServedList');
+        const beingServedSection = document.getElementById('beingServedSection');
 
-        // Render queue
+        // Get active barbers
+        function getActiveBarbers() {
+            return barbers.filter(b => b.active);
+        }
+
+        // Toggle barber availability
+        function toggleBarber(barberId) {
+            const barber = barbers.find(b => b.id === barberId);
+            if (barber) {
+                barber.active = !barber.active;
+                renderAll();
+            }
+        }
+
+        // Claim customer - move from queue to being served
+        function claimCustomer(customerId, barberId) {
+            const customerIndex = queueData.findIndex(c => c.id === customerId);
+            if (customerIndex !== -1) {
+                const customer = queueData[customerIndex];
+                queueData.splice(customerIndex, 1);
+                
+                // Add to being served with timestamp
+                beingServedData.push({
+                    ...customer,
+                    barberId: barberId,
+                    startTime: Date.now()
+                });
+                
+                renderAll();
+            }
+        }
+
+        // Finalize service - mark as paid and remove
+        function finalizeService(customerId) {
+            const item = document.querySelector(`.being-served-item[data-id="${customerId}"]`);
+            
+            if (item) {
+                item.classList.add('removing');
+                
+                setTimeout(() => {
+                    beingServedData = beingServedData.filter(c => c.id !== customerId);
+                    renderAll();
+                }, 300);
+            }
+        }
+
+        // Render barber check-in panel
+        function renderBarberPanel() {
+            barberList.innerHTML = '';
+            
+            barbers.forEach(barber => {
+                const card = document.createElement('div');
+                card.className = `barber-card ${barber.active ? 'active' : ''}`;
+                
+                card.innerHTML = `
+                    <img src="${barber.avatar}" alt="${barber.name}" class="barber-card-avatar">
+                    <div class="barber-card-name">${barber.name}</div>
+                    <button class="barber-toggle-button" onclick="toggleBarber(${barber.id})">
+                        ${barber.active ? 'Disponível' : 'Indisponível'}
+                    </button>
+                `;
+                
+                barberList.appendChild(card);
+            });
+        }
+
+        // Render queue list
         function renderQueue() {
             queueList.innerHTML = '';
             
@@ -397,8 +629,6 @@
                     queueList.appendChild(queueItem);
                 });
             }
-            
-            updateStats();
         }
 
         // Create queue item element
@@ -430,77 +660,115 @@
             customerInfo.appendChild(customerName);
             customerInfo.appendChild(waitingTime);
             
-            // Barber avatar
-            const avatar = document.createElement('img');
-            avatar.className = 'barber-avatar';
-            avatar.src = `https://i.pravatar.cc/80?img=${customer.barberId}`;
-            avatar.alt = `Barbeiro ${customer.barberId}`;
+            // Barber avatars (only active barbers)
+            const barberAvatars = document.createElement('div');
+            barberAvatars.className = 'barber-avatars';
             
-            // Remove button
-            const removeButton = document.createElement('button');
-            removeButton.className = 'remove-button';
-            removeButton.innerHTML = '<span class="material-symbols-outlined">close</span>';
-            removeButton.onclick = () => removeCustomer(customer.id);
+            const activeBarbers = getActiveBarbers();
+            if (activeBarbers.length > 0) {
+                activeBarbers.forEach(barber => {
+                    const avatar = document.createElement('img');
+                    avatar.className = 'barber-avatar';
+                    avatar.src = barber.avatar;
+                    avatar.alt = barber.name;
+                    avatar.title = `Atender como ${barber.name}`;
+                    avatar.onclick = () => claimCustomer(customer.id, barber.id);
+                    barberAvatars.appendChild(avatar);
+                });
+            } else {
+                barberAvatars.innerHTML = '<span style="font-size: 12px; color: var(--md-sys-color-on-surface-variant);">Nenhum barbeiro disponível</span>';
+            }
             
             // Assemble item
             item.appendChild(badge);
             item.appendChild(customerInfo);
-            item.appendChild(avatar);
-            item.appendChild(removeButton);
+            item.appendChild(barberAvatars);
             
             return item;
         }
 
-        // Remove customer from queue
-        function removeCustomer(customerId) {
-            const item = document.querySelector(`[data-id="${customerId}"]`);
-            
-            if (item) {
-                item.classList.add('removing');
+        // Render being served section
+        function renderBeingServed() {
+            if (beingServedData.length === 0) {
+                beingServedSection.style.display = 'none';
+            } else {
+                beingServedSection.style.display = 'block';
+                beingServedList.innerHTML = '';
                 
-                setTimeout(() => {
-                    queueData = queueData.filter(customer => customer.id !== customerId);
-                    
-                    // Recalculate wait times
-                    queueData.forEach((customer, index) => {
-                        customer.waitTime = (index + 1) * avgServiceTime;
-                    });
-                    
-                    renderQueue();
-                }, 300);
+                beingServedData.forEach(customer => {
+                    const item = createBeingServedItem(customer);
+                    beingServedList.appendChild(item);
+                });
             }
+        }
+
+        // Create being served item element
+        function createBeingServedItem(customer) {
+            const barber = barbers.find(b => b.id === customer.barberId);
+            const serviceTime = Math.floor((Date.now() - customer.startTime) / 60000); // minutes
+            
+            const item = document.createElement('div');
+            item.className = 'being-served-item';
+            item.dataset.id = customer.id;
+            
+            item.innerHTML = `
+                <div class="being-served-info">
+                    <div class="being-served-name">${customer.name}</div>
+                    <div class="being-served-details">
+                        <div class="barber-serving">
+                            <img src="${barber.avatar}" alt="${barber.name}" class="barber-serving-avatar">
+                            <span>${barber.name}</span>
+                        </div>
+                        <span>•</span>
+                        <span>${serviceTime} min</span>
+                    </div>
+                </div>
+                <button class="finalize-button" onclick="finalizeService(${customer.id})">
+                    Finalizar
+                </button>
+            `;
+            
+            return item;
         }
 
         // Update statistics
         function updateStats() {
             queueCountDisplay.textContent = queueData.length;
-            
-            if (queueData.length > 0) {
-                const avgWait = Math.round(
-                    queueData.reduce((sum, c) => sum + c.waitTime, 0) / queueData.length
-                );
-                avgWaitTimeDisplay.textContent = avgWait;
-            } else {
-                avgWaitTimeDisplay.textContent = 0;
-            }
+            servingCountDisplay.textContent = beingServedData.length;
+        }
+
+        // Render all sections
+        function renderAll() {
+            renderBarberPanel();
+            renderQueue();
+            renderBeingServed();
+            updateStats();
         }
 
         // Simulate wait time updates
-        function updateWaitTimes() {
-            queueData.forEach((customer, index) => {
+        function updateTimes() {
+            // Update wait times for customers in queue
+            queueData.forEach(customer => {
                 if (customer.waitTime > 0) {
                     customer.waitTime = Math.max(0, customer.waitTime - 1);
                 }
             });
+            
+            // Re-render being served to update service times
+            if (beingServedData.length > 0) {
+                renderBeingServed();
+            }
+            
             renderQueue();
         }
 
         // Initialize
-        renderQueue();
+        renderAll();
 
-        // Update wait times every minute (simulated as every 3 seconds for demo)
-        setInterval(updateWaitTimes, 3000);
+        // Update times every minute (simulated as every 3 seconds for demo)
+        setInterval(updateTimes, 3000);
     </script>
 </body>
 </html>
+
 
