@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Fila - Barbearia Mineiro</title>
+    
+    <!-- Google Fonts - Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Gold and White Color Scheme for Mineiro Barber Shop */
+            --md-sys-color-primary: #D4AF37;
+            --md-sys-color-on-primary: #FFFFFF;
+            --md-sys-color-primary-container: #FFF8E1;
+            --md-sys-color-on-primary-container: #3E2723;
+            --md-sys-color-secondary: #8B7355;
+            --md-sys-color-on-secondary: #FFFFFF;
+            --md-sys-color-surface: #FFFFFF;
+            --md-sys-color-on-surface: #1D1B20;
+            --md-sys-color-surface-variant: #F5F5F5;
+            --md-sys-color-on-surface-variant: #5D5D5D;
+            --md-sys-color-outline: #C4C4C4;
+            --md-sys-color-error: #BA1A1A;
+            --md-sys-color-on-error: #FFFFFF;
+            --md-sys-color-error-container: #FFDAD6;
+            --md-sys-color-on-error-container: #410002;
+            
+            /* Elevation shadows with gold tint */
+            --md-sys-elevation-1: 0px 1px 2px rgba(212, 175, 55, 0.2), 0px 1px 3px 1px rgba(0, 0, 0, 0.1);
+            --md-sys-elevation-2: 0px 1px 2px rgba(212, 175, 55, 0.25), 0px 2px 6px 2px rgba(0, 0, 0, 0.12);
+            --md-sys-elevation-3: 0px 4px 8px 3px rgba(212, 175, 55, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--md-sys-color-surface-variant);
+            color: var(--md-sys-color-on-surface);
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: var(--md-sys-elevation-2);
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .header-icon {
+            font-size: 32px;
+        }
+
+        .header-title {
+            flex: 1;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 500;
+            line-height: 32px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        /* Queue Stats */
+        .queue-stats {
+            display: flex;
+            gap: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 500;
+            line-height: 36px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        /* Queue List */
+        .queue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .queue-item {
+            background-color: var(--md-sys-color-surface);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: var(--md-sys-elevation-1);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.2s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .queue-item.removing {
+            animation: slideOut 0.3s ease forwards;
+        }
+
+        @keyframes slideOut {
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        /* Position Badge */
+        .position-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            background-color: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        /* Customer Info */
+        .customer-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .customer-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .waiting-time {
+            font-size: 12px;
+            color: var(--md-sys-color-on-surface-variant);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .waiting-time .material-symbols-outlined {
+            font-size: 16px;
+        }
+
+        /* Barber Avatar */
+        .barber-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--md-sys-color-primary);
+            object-fit: cover;
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .barber-avatar.unassigned {
+            background-color: var(--md-sys-color-surface-variant);
+            border-color: var(--md-sys-color-outline);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .barber-avatar.unassigned .material-symbols-outlined {
+            font-size: 24px;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        /* Remove Button */
+        .remove-button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background-color: transparent;
+            color: var(--md-sys-color-on-surface-variant);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .remove-button:hover {
+            background-color: var(--md-sys-color-error-container);
+            color: var(--md-sys-color-error);
+        }
+
+        .remove-button:active {
+            background-color: var(--md-sys-color-error-container);
+            transform: scale(0.95);
+        }
+
+        .remove-button .material-symbols-outlined {
+            font-size: 28px;
+            font-weight: 500;
+        }
+
+        /* Ripple Effect */
+        .remove-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(186, 26, 26, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+
+        .remove-button:active::before {
+            width: 100px;
+            height: 100px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            background-color: var(--md-sys-color-surface);
+            border-radius: 12px;
+            box-shadow: var(--md-sys-elevation-1);
+            display: none;
+        }
+
+        .empty-state.show {
+            display: block;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            color: var(--md-sys-color-on-surface-variant);
+            opacity: 0.5;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 8px;
+        }
+
+        .empty-state-message {
+            font-size: 14px;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        /* Material Icons */
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-top">
+                <span class="material-symbols-outlined header-icon">content_cut</span>
+                <div class="header-title">
+                    <h1>Barbearia Mineiro</h1>
+                    <p class="subtitle">Gerenciamento da Fila</p>
+                </div>
+            </div>
+            
+            <div class="queue-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="queueCount">6</div>
+                    <div class="stat-label">Na Fila</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgWaitTime">25</div>
+                    <div class="stat-label">Min. Espera</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Queue List -->
+        <div class="queue-list" id="queueList">
+            <!-- Queue items will be dynamically generated -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <span class="material-symbols-outlined empty-state-icon">event_available</span>
+            <div class="empty-state-title">Nenhum cliente na fila</div>
+            <div class="empty-state-message">Quando alguém entrar na fila, aparecerá aqui</div>
+        </div>
+    </div>
+
+    <script>
+        // Sample queue data
+        let queueData = [
+            { id: 1, name: 'João Silva', waitTime: 5, barberId: 1 },
+            { id: 2, name: 'Maria Santos', waitTime: 10, barberId: 2 },
+            { id: 3, name: 'Pedro Oliveira', waitTime: 15, barberId: 3 },
+            { id: 4, name: 'Ana Costa', waitTime: 20, barberId: 4 },
+            { id: 5, name: 'Carlos Souza', waitTime: 25, barberId: 1 },
+            { id: 6, name: 'Juliana Lima', waitTime: 30, barberId: 2 }
+        ];
+
+        const avgServiceTime = 25; // minutes per customer
+
+        // DOM elements
+        const queueList = document.getElementById('queueList');
+        const emptyState = document.getElementById('emptyState');
+        const queueCountDisplay = document.getElementById('queueCount');
+        const avgWaitTimeDisplay = document.getElementById('avgWaitTime');
+
+        // Render queue
+        function renderQueue() {
+            queueList.innerHTML = '';
+            
+            if (queueData.length === 0) {
+                emptyState.classList.add('show');
+                queueList.style.display = 'none';
+            } else {
+                emptyState.classList.remove('show');
+                queueList.style.display = 'flex';
+                
+                queueData.forEach((customer, index) => {
+                    const queueItem = createQueueItem(customer, index + 1);
+                    queueList.appendChild(queueItem);
+                });
+            }
+            
+            updateStats();
+        }
+
+        // Create queue item element
+        function createQueueItem(customer, position) {
+            const item = document.createElement('div');
+            item.className = 'queue-item';
+            item.dataset.id = customer.id;
+            
+            // Position badge
+            const badge = document.createElement('div');
+            badge.className = 'position-badge';
+            badge.textContent = position;
+            
+            // Customer info
+            const customerInfo = document.createElement('div');
+            customerInfo.className = 'customer-info';
+            
+            const customerName = document.createElement('div');
+            customerName.className = 'customer-name';
+            customerName.textContent = customer.name;
+            
+            const waitingTime = document.createElement('div');
+            waitingTime.className = 'waiting-time';
+            waitingTime.innerHTML = `
+                <span class="material-symbols-outlined">schedule</span>
+                <span>Aguardando ${customer.waitTime} min</span>
+            `;
+            
+            customerInfo.appendChild(customerName);
+            customerInfo.appendChild(waitingTime);
+            
+            // Barber avatar
+            const avatar = document.createElement('img');
+            avatar.className = 'barber-avatar';
+            avatar.src = `https://i.pravatar.cc/80?img=${customer.barberId}`;
+            avatar.alt = `Barbeiro ${customer.barberId}`;
+            
+            // Remove button
+            const removeButton = document.createElement('button');
+            removeButton.className = 'remove-button';
+            removeButton.innerHTML = '<span class="material-symbols-outlined">close</span>';
+            removeButton.onclick = () => removeCustomer(customer.id);
+            
+            // Assemble item
+            item.appendChild(badge);
+            item.appendChild(customerInfo);
+            item.appendChild(avatar);
+            item.appendChild(removeButton);
+            
+            return item;
+        }
+
+        // Remove customer from queue
+        function removeCustomer(customerId) {
+            const item = document.querySelector(`[data-id="${customerId}"]`);
+            
+            if (item) {
+                item.classList.add('removing');
+                
+                setTimeout(() => {
+                    queueData = queueData.filter(customer => customer.id !== customerId);
+                    
+                    // Recalculate wait times
+                    queueData.forEach((customer, index) => {
+                        customer.waitTime = (index + 1) * avgServiceTime;
+                    });
+                    
+                    renderQueue();
+                }, 300);
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            queueCountDisplay.textContent = queueData.length;
+            
+            if (queueData.length > 0) {
+                const avgWait = Math.round(
+                    queueData.reduce((sum, c) => sum + c.waitTime, 0) / queueData.length
+                );
+                avgWaitTimeDisplay.textContent = avgWait;
+            } else {
+                avgWaitTimeDisplay.textContent = 0;
+            }
+        }
+
+        // Simulate wait time updates
+        function updateWaitTimes() {
+            queueData.forEach((customer, index) => {
+                if (customer.waitTime > 0) {
+                    customer.waitTime = Math.max(0, customer.waitTime - 1);
+                }
+            });
+            renderQueue();
+        }
+
+        // Initialize
+        renderQueue();
+
+        // Update wait times every minute (simulated as every 3 seconds for demo)
+        setInterval(updateWaitTimes, 3000);
+    </script>
+</body>
+</html>
+
