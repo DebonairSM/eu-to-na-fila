@@ -1,0 +1,3 @@
+# This directory will contain the built SPA files
+# The integrate-web.js script will copy apps/web/dist to apps/api/public/mineiro/
+

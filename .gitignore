@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+*.apk
+*.aab
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Database
+data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+
+# Temp
+tmp/
+temp/
+.cache/
+
