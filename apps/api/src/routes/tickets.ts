@@ -1,58 +1,126 @@
 import type { FastifyPluginAsync } from 'fastify';
+import { z } from 'zod';
 import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { createTicketSchema } from '@eutonafila/shared';
-import type { WebSocketEvent } from '@eutonafila/shared';
+import { ticketService } from '../services/TicketService.js';
+import { websocketService } from '../services/WebSocketService.js';
+import { validateRequest } from '../lib/validation.js';
+import { NotFoundError } from '../lib/errors.js';
 
+/**
+ * Ticket routes.
+ * Handles ticket creation, retrieval, and updates.
+ */
 export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
-  // POST /api/shops/:slug/tickets - Join queue
+  /**
+   * Create a new ticket (join queue).
+   * 
+   * @route POST /api/shops/:slug/tickets
+   * @param slug - Shop slug identifier
+   * @body customerName - Customer's name
+   * @body serviceId - ID of the service requested
+   * @body customerPhone - Customer's phone (optional)
+   * @returns Created ticket with position and wait time
+   * @throws {404} If shop or service not found
+   * @throws {400} If validation fails
+   * @throws {409} If queue is full
+   */
   fastify.post('/shops/:slug/tickets', async (request, reply) => {
-    const { slug } = request.params as { slug: string };
-    
+    // Validate params
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+
+    // Get shop
     const shop = await db.query.shops.findFirst({
       where: eq(schema.shops.slug, slug),
     });
 
     if (!shop) {
-      return reply.status(404).send({ error: 'Shop not found' });
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
     }
 
-    const body = request.body as any;
-    const validation = createTicketSchema.safeParse({
-      customerName: body.customerName,
-      serviceId: body.serviceId,
-      customerPhone: body.customerPhone,
+    // Validate body - remove shopId from external request
+    const bodySchema = z.object({
+      serviceId: z.number(),
+      customerName: z.string().min(1).max(200),
+      customerPhone: z.string().optional(),
+    });
+    const data = validateRequest(bodySchema, request.body);
+
+    // Create ticket using service (includes position calculation and wait time)
+    const ticket = await ticketService.create(shop.id, {
+      ...data,
       shopId: shop.id,
     });
 
-    if (!validation.success) {
-      return reply.status(400).send({ error: validation.error });
+    // Broadcast WebSocket event
+    websocketService.broadcastTicketCreated(slug, ticket);
+
+    return reply.status(201).send(ticket);
+  });
+
+  /**
+   * Get a ticket by ID.
+   * 
+   * @route GET /api/tickets/:id
+   * @param id - Ticket ID
+   * @returns Ticket details
+   * @throws {404} If ticket not found
+   */
+  fastify.get('/tickets/:id', async (request, reply) => {
+    const paramsSchema = z.object({
+      id: z.coerce.number().int().positive(),
+    });
+    const { id } = validateRequest(paramsSchema, request.params);
+
+    const ticket = await ticketService.getById(id);
+
+    if (!ticket) {
+      throw new NotFoundError(`Ticket with ID ${id} not found`);
     }
 
-    // Calculate position in queue
-    const waitingTickets = await db.query.tickets.findMany({
-      where: eq(schema.tickets.status, 'waiting'),
+    return ticket;
+  });
+
+  /**
+   * Cancel a ticket.
+   * 
+   * @route DELETE /api/tickets/:id
+   * @param id - Ticket ID
+   * @returns Cancelled ticket
+   * @throws {404} If ticket not found
+   */
+  fastify.delete('/tickets/:id', async (request, reply) => {
+    const paramsSchema = z.object({
+      id: z.coerce.number().int().positive(),
+    });
+    const { id } = validateRequest(paramsSchema, request.params);
+
+    // Get ticket before cancelling (for shop slug)
+    const existingTicket = await ticketService.getById(id);
+    if (!existingTicket) {
+      throw new NotFoundError(`Ticket with ID ${id} not found`);
+    }
+
+    // Cancel ticket
+    const ticket = await ticketService.cancel(id);
+
+    // Get shop for broadcast
+    const shop = await db.query.shops.findFirst({
+      where: eq(schema.shops.id, ticket.shopId),
     });
 
-    const [ticket] = await db
-      .insert(schema.tickets)
-      .values({
-        ...validation.data,
-        status: 'waiting',
-        position: waitingTickets.length + 1,
-      })
-      .returning();
-
-    // Broadcast WebSocket event
-    const event: WebSocketEvent = {
-      type: 'ticket.created',
-      shopId: slug,
-      timestamp: new Date().toISOString(),
-      data: ticket,
-    };
-
-    // Broadcast to all connected WebSocket clients
-    (fastify as any).broadcast(event);
+    if (shop) {
+      // Broadcast status change
+      websocketService.broadcastTicketStatusChanged(
+        shop.slug,
+        ticket,
+        existingTicket.status
+      );
+    }
 
     return ticket;
   });

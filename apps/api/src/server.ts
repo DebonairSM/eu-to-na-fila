@@ -7,11 +7,11 @@ import fastifyRateLimit from '@fastify/rate-limit';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { env } from './env.js';
-import { db, schema } from './db/index.js';
-import { eq } from 'drizzle-orm';
 import { websocketHandler } from './websocket/handler.js';
+import { queueRoutes } from './routes/queue.js';
 import { ticketRoutes } from './routes/tickets.js';
 import { statusRoutes } from './routes/status.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,26 +21,6 @@ const fastify = Fastify({
     level: env.NODE_ENV === 'development' ? 'info' : 'warn',
   },
 });
-
-// Store WebSocket clients for broadcasting
-const wsClients = new Set<any>();
-
-// Decorate fastify with broadcast function
-fastify.decorate('broadcast', (message: any) => {
-  const messageStr = JSON.stringify(message);
-  wsClients.forEach(client => {
-    try {
-      if (client.readyState === 1) { // OPEN
-        client.send(messageStr);
-      }
-    } catch (err) {
-      console.error('Error broadcasting to client:', err);
-    }
-  });
-});
-
-fastify.decorate('addWsClient', (client: any) => wsClients.add(client));
-fastify.decorate('removeWsClient', (client: any) => wsClients.delete(client));
 
 // Security plugins
 fastify.register(fastifyHelmet, {
@@ -82,25 +62,8 @@ fastify.get('/test', async () => {
 // API routes under /api prefix
 fastify.register(
   async (instance) => {
-    instance.get('/shops/:slug/queue', async (request, reply) => {
-      const { slug } = request.params as { slug: string };
-      
-      const shop = await db.query.shops.findFirst({
-        where: eq(schema.shops.slug, slug),
-      });
-
-      if (!shop) {
-        return reply.status(404).send({ error: 'Shop not found' });
-      }
-
-      const tickets = await db.query.tickets.findMany({
-        where: eq(schema.tickets.shopId, shop.id),
-      });
-
-      return { shop, tickets };
-    });
-
-    // Register ticket and status routes
+    // Register route modules
+    instance.register(queueRoutes);
     instance.register(ticketRoutes);
     instance.register(statusRoutes);
   },
@@ -119,6 +82,10 @@ fastify.get('/', async (request, reply) => {
 fastify.get('/mineiro/*', async (request, reply) => {
   return reply.sendFile('mineiro/index.html');
 });
+
+// Register error handlers
+fastify.setErrorHandler(errorHandler);
+fastify.setNotFoundHandler(notFoundHandler);
 
 // Start server
 fastify.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {

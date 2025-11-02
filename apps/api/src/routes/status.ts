@@ -1,49 +1,69 @@
 import type { FastifyPluginAsync } from 'fastify';
+import { z } from 'zod';
 import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { updateTicketStatusSchema } from '@eutonafila/shared';
-import type { WebSocketEvent } from '@eutonafila/shared';
+import { ticketService } from '../services/TicketService.js';
+import { websocketService } from '../services/WebSocketService.js';
+import { queueService } from '../services/QueueService.js';
+import { validateRequest } from '../lib/validation.js';
+import { NotFoundError } from '../lib/errors.js';
 
+/**
+ * Status routes.
+ * Handles ticket status updates.
+ */
 export const statusRoutes: FastifyPluginAsync = async (fastify) => {
-  // PATCH /api/tickets/:id/status - Update ticket status
+  /**
+   * Update ticket status.
+   * 
+   * @route PATCH /api/tickets/:id/status
+   * @param id - Ticket ID
+   * @body status - New status (waiting, in_progress, completed, cancelled)
+   * @body barberId - Barber ID (optional, required for in_progress)
+   * @returns Updated ticket
+   * @throws {404} If ticket or barber not found
+   * @throws {400} If validation fails
+   * @throws {409} If status transition is invalid
+   */
   fastify.patch('/tickets/:id/status', async (request, reply) => {
-    const { id } = request.params as { id: string };
+    // Validate params
+    const paramsSchema = z.object({
+      id: z.coerce.number().int().positive(),
+    });
+    const { id } = validateRequest(paramsSchema, request.params);
 
-    const validation = updateTicketStatusSchema.safeParse(request.body);
+    // Validate body
+    const data = validateRequest(updateTicketStatusSchema, request.body);
 
-    if (!validation.success) {
-      return reply.status(400).send({ error: validation.error });
+    // Get existing ticket (for previous status and shop slug)
+    const existingTicket = await ticketService.getById(id);
+    if (!existingTicket) {
+      throw new NotFoundError(`Ticket with ID ${id} not found`);
     }
 
-    const [ticket] = await db
-      .update(schema.tickets)
-      .set({
-        status: validation.data.status,
-        barberId: validation.data.barberId,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(schema.tickets.id, parseInt(id)))
-      .returning();
+    const previousStatus = existingTicket.status;
 
-    if (!ticket) {
-      return reply.status(404).send({ error: 'Ticket not found' });
-    }
+    // Update status using service (includes validation and queue recalculation)
+    const ticket = await ticketService.updateStatus(id, data);
 
-    // Get shop slug for WebSocket broadcast
+    // Get shop for broadcast
     const shop = await db.query.shops.findFirst({
       where: eq(schema.shops.id, ticket.shopId),
     });
 
-    // Broadcast WebSocket event
-    const event: WebSocketEvent = {
-      type: 'ticket.status.changed',
-      shopId: shop?.slug || '',
-      timestamp: new Date().toISOString(),
-      data: ticket,
-    };
+    if (shop) {
+      // Broadcast status change
+      websocketService.broadcastTicketStatusChanged(
+        shop.slug,
+        ticket,
+        previousStatus
+      );
 
-    // Broadcast to all connected WebSocket clients
-    (fastify as any).broadcast(event);
+      // Broadcast updated metrics
+      const metrics = await queueService.getMetrics(shop.id);
+      websocketService.broadcastMetricsUpdated(shop.slug, metrics);
+    }
 
     return ticket;
   });

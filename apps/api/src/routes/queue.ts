@@ -1,29 +1,112 @@
 import type { FastifyPluginAsync } from 'fastify';
+import { z } from 'zod';
 import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
+import { ticketService } from '../services/TicketService.js';
+import { queueService } from '../services/QueueService.js';
+import { validateRequest } from '../lib/validation.js';
+import { NotFoundError } from '../lib/errors.js';
 
+/**
+ * Queue routes.
+ * Handles queue viewing and metrics.
+ */
 export const queueRoutes: FastifyPluginAsync = async (fastify) => {
-  // GET /api/shops/:slug/queue - Get current queue for a shop
+  /**
+   * Get current queue for a shop.
+   * 
+   * @route GET /api/shops/:slug/queue
+   * @param slug - Shop slug identifier
+   * @returns Shop details and all tickets
+   * @throws {404} If shop not found
+   */
   fastify.get('/shops/:slug/queue', async (request, reply) => {
-    const { slug } = request.params as { slug: string };
+    // Validate params
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
 
+    // Get shop
     const shop = await db.query.shops.findFirst({
       where: eq(schema.shops.slug, slug),
     });
 
     if (!shop) {
-      return reply.status(404).send({ error: 'Shop not found' });
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
     }
 
-    const tickets = await db.query.tickets.findMany({
-      where: eq(schema.tickets.shopId, shop.id),
-      with: {
-        service: true,
-        barber: true,
-      },
-    });
+    // Get tickets using service
+    const tickets = await ticketService.getByShop(shop.id);
 
     return { shop, tickets };
+  });
+
+  /**
+   * Get queue metrics for a shop.
+   * 
+   * @route GET /api/shops/:slug/metrics
+   * @param slug - Shop slug identifier
+   * @returns Queue metrics (length, wait time, active barbers)
+   * @throws {404} If shop not found
+   */
+  fastify.get('/shops/:slug/metrics', async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+
+    // Get shop
+    const shop = await db.query.shops.findFirst({
+      where: eq(schema.shops.slug, slug),
+    });
+
+    if (!shop) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    }
+
+    // Get metrics using service
+    const metrics = await queueService.getMetrics(shop.id);
+
+    return metrics;
+  });
+
+  /**
+   * Get statistics for a shop.
+   * 
+   * @route GET /api/shops/:slug/statistics
+   * @param slug - Shop slug identifier
+   * @query since - Optional start date for statistics (ISO string)
+   * @returns Ticket statistics
+   * @throws {404} If shop not found
+   */
+  fastify.get('/shops/:slug/statistics', async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+    });
+    const querySchema = z.object({
+      since: z.string().datetime().optional(),
+    });
+
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { since } = validateRequest(querySchema, request.query);
+
+    // Get shop
+    const shop = await db.query.shops.findFirst({
+      where: eq(schema.shops.slug, slug),
+    });
+
+    if (!shop) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    }
+
+    // Get statistics using service
+    const statistics = await ticketService.getStatistics(
+      shop.id,
+      since ? new Date(since) : undefined
+    );
+
+    return statistics;
   });
 };
 
