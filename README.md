@@ -8,7 +8,7 @@ Queue management system for barbershops. Single-tenant template with hosted back
 - Node.js 20+ + TypeScript
 - Fastify web framework
 - Drizzle ORM + libSQL (pure JavaScript SQLite, no build tools needed)
-- WebSocket support for real-time updates
+- REST API with automatic queue updates
 - Security: helmet, CORS, rate limiting
 - Upgradeable to Postgres without code changes
 
@@ -16,7 +16,7 @@ Queue management system for barbershops. Single-tenant template with hosted back
 - React + Vite + TypeScript
 - TailwindCSS + shadcn/ui components
 - React Router with basename support
-- WebSocket client for live updates
+- HTTP polling for live updates (3-second refresh)
 
 **Tablet Support (PWA)**
 - Progressive Web App (installable)
@@ -28,7 +28,7 @@ Queue management system for barbershops. Single-tenant template with hosted back
 **Shared (packages/shared)**
 - Zod schemas for validation
 - Shared TypeScript types
-- WebSocket event definitions
+- API response definitions
 
 ## Quick Start
 
@@ -62,7 +62,6 @@ pnpm --filter web dev
 Access:
 - Web SPA: http://localhost:5173/mineiro
 - API: http://localhost:3000/api
-- WebSocket: ws://localhost:3000/ws
 
 ### Database
 
@@ -103,7 +102,7 @@ The API serves the SPA at http://localhost:3000/mineiro
 
 ```
 ├── apps/
-│   ├── api/           Fastify backend (API + SPA hosting + WebSocket)
+│   ├── api/           Fastify backend (API + SPA hosting)
 │   └── web/           React SPA (builds to /mineiro path, installable as PWA)
 ├── packages/
 │   └── shared/        Zod schemas + shared types
@@ -142,7 +141,6 @@ The API serves the SPA at http://localhost:3000/mineiro
 Access your app at:
 - SPA: https://eutonafila.com/mineiro
 - API: https://eutonafila.com/api
-- WebSocket: wss://eutonafila.com/ws
 
 ### Railway
 
@@ -196,7 +194,7 @@ The PWA caches:
 - Queue data (for viewing when offline)
 - Shop configuration
 
-WebSocket reconnects automatically when back online.
+Polling resumes automatically when back online.
 
 ## Migration to Postgres
 
@@ -253,14 +251,9 @@ No other code changes required.
 - `GET /api/barbers` - List barbers
 - `GET /api/services` - List services
 
-### WebSocket
+### Real-Time Updates
 
-Connect to `/ws?shopId=<slug>` for real-time updates.
-
-Events:
-- `ticket.created` - New ticket added
-- `ticket.status.changed` - Ticket status updated
-- `metrics.updated` - Queue metrics changed
+The frontend uses HTTP polling (every 3 seconds) to fetch queue updates. This is simple, works everywhere, and is appropriate for the expected scale (~30 concurrent users).
 
 ## Documentation
 

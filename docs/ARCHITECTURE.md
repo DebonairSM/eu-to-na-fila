@@ -4,15 +4,15 @@
 
 EuToNaFila is a single-tenant queue management system with three main components:
 
-1. **Backend API** (Node.js + Fastify) - Handles REST API, WebSocket connections, and serves the web app
-2. **Web App** (React + Vite) - Customer and staff interface
+1. **Backend API** (Node.js + Fastify) - Handles REST API and serves the web app
+2. **Web App** (React + Vite) - Customer and staff interface with HTTP polling for updates
 3. **Android App** (Kotlin) - Tablet interface for barbers
 
 ## Technology Stack
 
 ### Backend (`apps/api`)
 - **Runtime**: Node.js 20+
-- **Framework**: Fastify (chosen for performance and WebSocket support)
+- **Framework**: Fastify (chosen for performance and simplicity)
 - **Database**: libSQL (SQLite) via Drizzle ORM
 - **Validation**: Zod schemas from `@eutonafila/shared`
 - **Security**: helmet, CORS, rate limiting
@@ -22,12 +22,12 @@ EuToNaFila is a single-tenant queue management system with three main components
 - **Build Tool**: Vite
 - **Routing**: React Router v6
 - **Styling**: TailwindCSS + shadcn/ui
-- **State Management**: React hooks + WebSocket for real-time updates
+- **State Management**: React hooks + HTTP polling for updates (3-second interval)
 
 ### Shared (`packages/shared`)
 - **Validation**: Zod schemas
 - **Types**: TypeScript interfaces and types
-- **Protocol**: WebSocket event definitions
+- **Protocol**: REST API response types
 
 ## Data Flow
 
@@ -37,10 +37,9 @@ EuToNaFila is a single-tenant queue management system with three main components
 2. API validates request using Zod schema
 3. TicketService creates ticket in database
 4. QueueService calculates position and wait time
-5. WebSocketService broadcasts ticket.created event
-6. API returns ticket with position
-7. Customer redirected to /status/:id page
-8. WebSocket updates all connected clients
+5. API returns ticket with position
+6. Customer redirected to /status/:id page
+7. Client polls for updates every 3 seconds
 ```
 
 ### Barber Updates Ticket Status
@@ -49,21 +48,18 @@ EuToNaFila is a single-tenant queue management system with three main components
 2. API validates request and checks authorization
 3. TicketService updates ticket status
 4. QueueService recalculates positions for waiting tickets
-5. WebSocketService broadcasts ticket.status.changed event
-6. API returns updated ticket
-7. All clients receive real-time update via WebSocket
+5. API returns updated ticket
+6. All clients receive updates via their next poll (within 3 seconds)
 ```
 
-### Real-Time Updates
+### Real-Time Updates via HTTP Polling
 ```
-1. Client connects to ws://host/ws?shopId=slug
-2. Server sends connection.established event
-3. Server broadcasts events when data changes:
-   - ticket.created
-   - ticket.status.changed
-   - metrics.updated
-4. Clients update UI automatically
-5. Auto-reconnect on disconnect (3-second delay)
+1. Client loads page and fetches initial queue state
+2. Client sets up polling interval (every 3 seconds)
+3. Each poll: GET /api/shops/:slug/queue or GET /api/tickets/:id
+4. On response, client updates UI with new queue state
+5. Polling continues until page unmount
+6. Simple, reliable, works everywhere
 ```
 
 ## Database Schema

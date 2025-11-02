@@ -1,14 +1,11 @@
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
-import fastifyWebsocket from '@fastify/websocket';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { env } from './env.js';
-import { websocketHandler } from './websocket/handler.js';
-import { websocketService } from './services/WebSocketService.js';
 import { db } from './db/index.js';
 import { queueRoutes } from './routes/queue.js';
 import { ticketRoutes } from './routes/tickets.js';
@@ -39,11 +36,6 @@ fastify.register(fastifyRateLimit, {
   timeWindow: '1 minute',
 });
 
-// WebSocket support
-fastify.register(fastifyWebsocket, {
-  options: { maxPayload: 1048576 }
-});
-
 // Static file serving
 const publicPath = join(__dirname, '..', 'public');
 fastify.register(fastifyStatic, {
@@ -68,19 +60,6 @@ fastify.get('/health', async () => {
     health.checks.database = 'error';
     health.status = 'degraded';
     fastify.log.error({ err: error }, 'Health check: database error');
-  }
-
-  // Check WebSocket service
-  try {
-    const wsClientCount = websocketService.getTotalClientCount();
-    health.checks.websocket = {
-      status: 'ok',
-      connections: wsClientCount,
-    };
-  } catch (error) {
-    health.checks.websocket = { status: 'error' };
-    health.status = 'degraded';
-    fastify.log.error({ err: error }, 'Health check: websocket error');
   }
 
   // Check memory usage
@@ -110,11 +89,13 @@ fastify.register(
   { prefix: '/api' }
 );
 
-// WebSocket endpoint
-fastify.register(websocketHandler);
-
 // Redirect root to /mineiro/
 fastify.get('/', async (request, reply) => {
+  return reply.redirect('/mineiro/');
+});
+
+// Redirect /mineiro to /mineiro/ for proper base path
+fastify.get('/mineiro', async (request, reply) => {
   return reply.redirect('/mineiro/');
 });
 
@@ -132,7 +113,6 @@ fastify.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {
   console.log(`✅ Server running at http://localhost:${env.PORT}`);
   console.log(`📱 SPA available at http://localhost:${env.PORT}/mineiro`);
   console.log(`🔌 API available at http://localhost:${env.PORT}/api`);
-  console.log(`🌐 WebSocket available at ws://localhost:${env.PORT}/ws`);
   console.log('\n📋 Registered routes:');
   fastify.printRoutes();
 }).catch((err) => {

@@ -4,7 +4,6 @@ import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { createTicketSchema } from '@eutonafila/shared';
 import { ticketService } from '../services/TicketService.js';
-import { websocketService } from '../services/WebSocketService.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 
@@ -56,9 +55,6 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       shopId: shop.id,
     });
 
-    // Broadcast WebSocket event
-    websocketService.broadcastTicketCreated(slug, ticket);
-
     return reply.status(201).send(ticket);
   });
 
@@ -107,20 +103,6 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Cancel ticket
     const ticket = await ticketService.cancel(id);
-
-    // Get shop for broadcast
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.id, ticket.shopId),
-    });
-
-    if (shop) {
-      // Broadcast status change
-      websocketService.broadcastTicketStatusChanged(
-        shop.slug,
-        ticket,
-        existingTicket.status
-      );
-    }
 
     return ticket;
   });

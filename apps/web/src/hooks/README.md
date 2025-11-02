@@ -4,46 +4,72 @@ This directory contains custom React hooks for the queue management system.
 
 ## Available Hooks
 
-### `useWebSocket`
+### `useQueuePolling`
 
-Real-time WebSocket connection hook for receiving queue updates.
+HTTP polling hook for fetching queue data with automatic updates.
 
 **Usage:**
 ```typescript
-import { useWebSocket } from './hooks/useWebSocket';
+import { useQueuePolling } from './hooks/usePolling';
 
 function QueuePage() {
-  const { isConnected, lastEvent, ws } = useWebSocket('mineiro');
+  const { data, isLoading, error } = useQueuePolling('mineiro');
 
-  useEffect(() => {
-    if (lastEvent?.type === 'ticket.created') {
-      console.log('New ticket created:', lastEvent.data);
-    }
-  }, [lastEvent]);
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading queue</div>;
 
   return (
     <div>
-      {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+      <h2>{data?.shop.name}</h2>
+      <p>{data?.tickets.length} tickets in queue</p>
     </div>
   );
 }
 ```
 
 **Returns:**
-- `isConnected` (boolean) - Whether WebSocket is currently connected
-- `lastEvent` (WebSocketEvent | null) - Most recent event received
-- `ws` (WebSocket | null) - Raw WebSocket instance
+- `data` (QueueData | null) - Shop and tickets data
+- `isLoading` (boolean) - Whether initial load is in progress
+- `error` (Error | null) - Error if fetch failed
+- `refetch` (function) - Manually trigger a refresh
+
+**Options:**
+- `interval` (number) - Polling interval in ms (default: 3000)
+- `enabled` (boolean) - Whether polling is enabled (default: true)
 
 **Features:**
-- Auto-reconnection (3-second delay)
+- Automatic polling every 3 seconds
 - Automatic cleanup on unmount
-- Type-safe event handling
+- Manual refresh capability
 
-**Event Types:**
-- `connection.established` - Connection confirmed
-- `ticket.created` - New ticket added to queue
-- `ticket.status.changed` - Ticket status updated
-- `metrics.updated` - Queue metrics changed
+### `useTicketPolling`
+
+HTTP polling hook for fetching a specific ticket's status.
+
+**Usage:**
+```typescript
+import { useTicketPolling } from './hooks/usePolling';
+
+function TicketStatus({ ticketId }: { ticketId: number }) {
+  const { ticket, isLoading, error } = useTicketPolling(ticketId);
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading ticket</div>;
+
+  return (
+    <div>
+      <p>Status: {ticket?.status}</p>
+      <p>Position: {ticket?.position}</p>
+    </div>
+  );
+}
+```
+
+**Returns:**
+- `ticket` (Ticket | null) - Ticket data
+- `isLoading` (boolean) - Whether initial load is in progress
+- `error` (Error | null) - Error if fetch failed
+- `refetch` (function) - Manually trigger a refresh
 
 ---
 
@@ -78,26 +104,21 @@ function useQueue(shopSlug: string) {
 }
 ```
 
-### Real-Time Updates with WebSocket
+### Automatic Updates with Polling
 
 ```typescript
 function useRealtimeQueue(shopSlug: string) {
-  const { tickets, loading, error, refresh } = useQueue(shopSlug);
-  const { lastEvent } = useWebSocket(shopSlug);
+  // Polling hook automatically refreshes every 3 seconds
+  const { data, isLoading, error } = useQueuePolling(shopSlug, {
+    interval: 3000,
+    enabled: true,
+  });
 
-  // Refresh queue when relevant events occur
-  useEffect(() => {
-    if (!lastEvent) return;
-
-    if (
-      lastEvent.type === 'ticket.created' ||
-      lastEvent.type === 'ticket.status.changed'
-    ) {
-      refresh();
-    }
-  }, [lastEvent, refresh]);
-
-  return { tickets, loading, error };
+  return { 
+    tickets: data?.tickets || [], 
+    loading: isLoading, 
+    error 
+  };
 }
 ```
 

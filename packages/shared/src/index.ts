@@ -5,7 +5,8 @@ export * from './schemas/barber.js';
 export * from './schemas/ticket.js';
 
 // Types
-export * from './types/websocket.js';
 export * from './types/api.js';
 export * from './types/errors.js';
+
+// Note: WebSocket types removed - using HTTP polling instead
 

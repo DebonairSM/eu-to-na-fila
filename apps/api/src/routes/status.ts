@@ -4,8 +4,6 @@ import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { updateTicketStatusSchema } from '@eutonafila/shared';
 import { ticketService } from '../services/TicketService.js';
-import { websocketService } from '../services/WebSocketService.js';
-import { queueService } from '../services/QueueService.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 
@@ -46,24 +44,6 @@ export const statusRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Update status using service (includes validation and queue recalculation)
     const ticket = await ticketService.updateStatus(id, data);
-
-    // Get shop for broadcast
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.id, ticket.shopId),
-    });
-
-    if (shop) {
-      // Broadcast status change
-      websocketService.broadcastTicketStatusChanged(
-        shop.slug,
-        ticket,
-        previousStatus
-      );
-
-      // Broadcast updated metrics
-      const metrics = await queueService.getMetrics(shop.id);
-      websocketService.broadcastMetricsUpdated(shop.slug, metrics);
-    }
 
     return ticket;
   });

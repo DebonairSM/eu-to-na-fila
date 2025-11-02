@@ -27,14 +27,14 @@ These decisions prevent over-engineering and keep the system maintainable for a 
 
 ### ❌ TanStack Query
 
-**Decision:** Skip it. Use vanilla `useState` + `fetch` + WebSocket.
+**Decision:** Skip it. Use vanilla `useState` + HTTP polling.
 
 **Why We Don't Need It:**
 
-1. **Real-time updates already handled**
-   - WebSocket provides instant queue updates
+1. **Real-time updates handled by simple polling**
+   - HTTP polling (3 seconds) provides adequate real-time feel
    - No need for sophisticated cache invalidation
-   - Server pushes changes to all clients immediately
+   - Simple setInterval fetch pattern is sufficient
 
 2. **Scale doesn't justify complexity**
    - 30 concurrent users is tiny
@@ -51,7 +51,7 @@ These decisions prevent over-engineering and keep the system maintainable for a 
      loadQueue(); // Simple fetch
    }, []);
    
-   useWebSocket('mineiro', (event) => {
+   useQueuePolling('mineiro', {
      if (event.type === 'ticket.created') {
        loadQueue(); // Re-fetch on update
      }
