@@ -18,11 +18,12 @@ Queue management system for barbershops. Single-tenant template with hosted back
 - React Router with basename support
 - WebSocket client for live updates
 
-**Mobile (apps/android)**
-- Kotlin + Jetpack Compose
-- Retrofit for REST API
-- OkHttp WebSocket with auto-reconnect
-- Sideloadable APK for tablets
+**Tablet Support (PWA)**
+- Progressive Web App (installable)
+- Works offline with service worker
+- Fullscreen app-like experience
+- Auto-updates on deployment
+- No app store required
 
 **Shared (packages/shared)**
 - Zod schemas for validation
@@ -35,7 +36,6 @@ Queue management system for barbershops. Single-tenant template with hosted back
 
 - Node.js 20+
 - pnpm 8+
-- (Optional) Android Studio for mobile app
 
 ### Installation
 
@@ -104,8 +104,7 @@ The API serves the SPA at http://localhost:3000/mineiro
 ```
 ├── apps/
 │   ├── api/           Fastify backend (API + SPA hosting + WebSocket)
-│   ├── web/           React SPA (builds to /mineiro path)
-│   └── android/       Kotlin tablet app
+│   └── web/           React SPA (builds to /mineiro path, installable as PWA)
 ├── packages/
 │   └── shared/        Zod schemas + shared types
 ├── templates/
@@ -170,6 +169,35 @@ Access your app at:
 | `CORS_ORIGIN` | Allowed CORS origin | `http://localhost:5173` | Yes |
 | `SHOP_SLUG` | Shop identifier | `mineiro` | No |
 
+## Using on Tablets (Barber Interface)
+
+The web app works perfectly on tablets via Progressive Web App (PWA) technology:
+
+### Installation on Android Tablets
+
+1. Open Chrome on the tablet
+2. Navigate to your shop URL (e.g., `https://eutonafila.com/mineiro`)
+3. Tap the menu (⋮) and select **"Add to Home screen"** or **"Install app"**
+4. An icon will appear on the home screen
+5. Tap to launch - opens fullscreen like a native app
+
+### Benefits of PWA
+
+- **No app store** - Install directly from browser
+- **Auto-updates** - Always latest version when we deploy
+- **Works offline** - Caches data for viewing without internet
+- **Fullscreen mode** - Looks and feels like native app
+- **One codebase** - Same app for desktop, mobile, and tablets
+
+### Offline Support
+
+The PWA caches:
+- App interface (HTML, CSS, JavaScript)
+- Queue data (for viewing when offline)
+- Shop configuration
+
+WebSocket reconnects automatically when back online.
+
 ## Migration to Postgres
 
 When ready to scale, switch from libSQL to Postgres:
@@ -233,6 +261,55 @@ Events:
 - `ticket.created` - New ticket added
 - `ticket.status.changed` - Ticket status updated
 - `metrics.updated` - Queue metrics changed
+
+## Documentation
+
+### Getting Started
+- [Quick Start](#quick-start) - Get up and running in minutes
+- [Development](#development) - Local development setup
+- [Database](#database) - Migrations and seeding
+
+### Architecture & Design
+- [Architecture Overview](./docs/ARCHITECTURE.md) - System design and components
+- [Scale Decisions](./docs/SCALE_DECISIONS.md) - Why we skip TanStack Query, OpenTelemetry, and native Android
+- [Code Conventions](./docs/CONVENTIONS.md) - Naming, structure, and patterns
+- [API Reference](./docs/API.md) - Complete API documentation
+
+### Production Deployment
+- [Deployment Guide](./docs/DEPLOYMENT.md) - Deploy to Render/Railway
+- [Environment Variables](./docs/ENVIRONMENT_VARIABLES.md) - Configuration reference
+- [Backup & Restore](./docs/BACKUP_RESTORE.md) - Database backup procedures
+- [Sentry Setup](./docs/SENTRY_SETUP.md) - Error monitoring configuration
+- [Troubleshooting](./docs/TROUBLESHOOTING.md) - Common issues and solutions
+
+### Development
+- [Contributing Guide](./CONTRIBUTING.md) - How to contribute
+- [Common Patterns](./docs/PATTERNS.md) - Code patterns and examples
+- [Examples](./examples/) - Complete code examples
+
+### Tablet Setup
+- [PWA Installation](#using-on-tablets-barber-interface) - Install on Android tablets
+- [Offline Support](#offline-support) - How offline mode works
+
+## Production Readiness
+
+This application is production-ready for single barbershop deployment with:
+
+✅ **PWA Support** - Installable on tablets, works offline
+✅ **Error Monitoring** - Sentry integration for tracking issues
+✅ **Automated Backups** - Daily database backups to cloud storage
+✅ **Health Monitoring** - Uptime checks and status endpoint
+✅ **Security** - Helmet, CORS, rate limiting, JWT auth
+✅ **Documentation** - Comprehensive guides for deployment and troubleshooting
+
+### Right-Sized for Single Shop
+
+This system is deliberately kept simple for its target scale:
+- **5 barbers** working simultaneously
+- **~30 concurrent users** (barbers + customers)
+- **100-200 tickets per day**
+
+See [Scale Decisions](./docs/SCALE_DECISIONS.md) for why we don't use enterprise patterns like TanStack Query, OpenTelemetry, or native mobile apps.
 
 ## License
 

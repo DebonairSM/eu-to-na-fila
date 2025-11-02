@@ -13,6 +13,10 @@ export default defineConfig({
   },
   server: {
     port: 5174,
+    hmr: {
+      clientPort: 5174,
+      path: '/mineiro/',
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:3002',

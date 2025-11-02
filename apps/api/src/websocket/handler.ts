@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { WebSocketEvent } from '@eutonafila/shared';
+import { websocketService } from '../services/WebSocketService.js';
 
 export const websocketHandler: FastifyPluginAsync = async (fastify) => {
   fastify.get('/ws', { websocket: true }, (connection, request) => {
@@ -7,15 +8,15 @@ export const websocketHandler: FastifyPluginAsync = async (fastify) => {
 
     console.log(`WebSocket client connected for shop: ${shopId}`);
 
-    // Add client to the broadcast set
-    (fastify as any).addWsClient(connection);
+    // Add client to the WebSocket service
+    const clientId = websocketService.addClient(connection, shopId);
 
     // Send connection established event
     const event: WebSocketEvent = {
       type: 'connection.established',
       shopId,
       timestamp: new Date().toISOString(),
-      data: { clientId: 'client' },
+      data: { clientId },
     };
 
     connection.send(JSON.stringify(event));
@@ -27,7 +28,7 @@ export const websocketHandler: FastifyPluginAsync = async (fastify) => {
 
     connection.on('close', () => {
       console.log(`WebSocket client disconnected for shop: ${shopId}`);
-      (fastify as any).removeWsClient(connection);
+      websocketService.removeClient(clientId);
     });
 
     connection.on('error', (error: Error) => {

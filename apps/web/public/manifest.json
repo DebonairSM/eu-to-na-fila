@@ -1,0 +1,16 @@
+{
+  "name": "EuTôNaFila - Barbearia Mineiro",
+  "short_name": "Mineiro",
+  "description": "Sistema de gerenciamento de fila para barbearia",
+  "start_url": "/mineiro/",
+  "scope": "/mineiro/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8B4513",
+  "orientation": "any",
+  "icons": [],
+  "categories": ["business", "productivity"],
+  "lang": "pt-BR",
+  "dir": "ltr"
+}
+

@@ -7,10 +7,6 @@
   "theme": {
     "primary": "#3E2723",
     "accent": "#FFD54F"
-  },
-  "assets": {
-    "logoSvg": "assets/mineiro-logo.svg",
-    "faviconSvg": "assets/favicon.svg"
   }
 }
 

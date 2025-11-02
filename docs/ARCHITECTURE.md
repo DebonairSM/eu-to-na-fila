@@ -224,14 +224,48 @@ When scaling needs increase:
 ## Monitoring
 
 ### Logging
-- Fastify built-in logger
+- Fastify built-in logger (Pino)
 - Info level in development
 - Warn level in production
 - Structured JSON logs
 
-### Metrics (Future)
-- Queue length over time
-- Average wait time
-- Ticket completion rate
-- WebSocket connection count
+### Error Tracking
+- Sentry for exception monitoring
+- Email alerts on errors
+- Stack traces and breadcrumbs
+- Free tier sufficient for single shop
+
+### Uptime Monitoring
+- UptimeRobot pings `/health` endpoint
+- 5-minute check interval
+- Email/SMS alerts on downtime
+- Simple status page
+
+### Backups
+- Automated daily SQLite backups
+- Compressed and uploaded to cloud storage
+- 30-day retention
+- Documented restore procedure
+
+## Architecture Decisions
+
+### Right-Sizing for Single Shop
+
+This system is deliberately kept simple for its target scale: one barbershop with 5 barbers serving ~30 concurrent users. See [SCALE_DECISIONS.md](./SCALE_DECISIONS.md) for detailed rationale.
+
+**What We're NOT Using:**
+
+- ❌ **TanStack Query** - useState + WebSocket is sufficient for this scale
+- ❌ **OpenTelemetry** - Pino logs + Sentry errors + uptime monitoring covers our needs
+- ❌ **Native Android App** - PWA on tablets provides equivalent UX with less maintenance
+
+**Why:** At this scale, enterprise patterns add complexity without benefit. We optimize for:
+- Simple maintenance (single developer)
+- Low operational overhead  
+- Fast debugging without specialized tools
+- Clear migration path when scale increases
+
+**When to Reconsider:** Multi-shop deployment (10+ shops), 1000+ concurrent users, or distributed architecture.
+
+See [SCALE_DECISIONS.md](./SCALE_DECISIONS.md) for complete analysis.
 

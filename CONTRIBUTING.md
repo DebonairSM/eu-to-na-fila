@@ -19,7 +19,6 @@ See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for detailed system design.
 
 - Node.js 20+
 - pnpm 8+
-- (Optional) Android Studio for mobile development
 
 ### Setup
 
@@ -54,13 +53,12 @@ apps/
 │   │   ├── lib/          # Utilities (validation, errors)
 │   │   └── websocket/    # WebSocket handlers
 │   └── drizzle/          # Database migrations
-├── web/           # React frontend
-│   └── src/
-│       ├── pages/        # Route components
-│       ├── hooks/        # Custom React hooks
-│       ├── lib/          # Utilities (API client, config)
-│       └── components/   # UI components
-└── android/       # Kotlin mobile app
+└── web/           # React frontend (PWA)
+    └── src/
+        ├── pages/        # Route components
+        ├── hooks/        # Custom React hooks
+        ├── lib/          # Utilities (API client, config)
+        └── components/   # UI components
 
 packages/
 └── shared/        # Shared types and validation
@@ -381,6 +379,27 @@ Provide:
 7. **Code Style** - Follow established conventions
 8. **Git Hygiene** - Clear commit messages, logical commits
 
+## Keep It Simple
+
+This codebase is deliberately kept simple for single-shop scale. See [docs/SCALE_DECISIONS.md](./docs/SCALE_DECISIONS.md) for rationale.
+
+### What We Don't Use
+
+- **TanStack Query** - useState + WebSocket is sufficient
+- **OpenTelemetry** - Pino logs + Sentry errors cover our needs
+- **Native Mobile Apps** - PWA on tablets provides equivalent UX
+
+### When Adding Features
+
+Ask yourself:
+1. Does this solve a problem we actually have?
+2. Is there a simpler solution?
+3. Does it add maintenance burden?
+4. Would it work at 10x scale? (If yes, it's probably overkill)
+
+**Prefer:** Boring, proven, simple solutions
+**Avoid:** Cutting-edge, complex, "enterprise" patterns
+
 ## AI-Friendly Practices
 
 This codebase is optimized for AI assistance:
@@ -391,10 +410,12 @@ This codebase is optimized for AI assistance:
 4. **Inline Documentation** - JSDoc with usage examples
 5. **Consistent Structure** - Predictable file organization
 6. **Clear Conventions** - Defined in `docs/CONVENTIONS.md`
+7. **Scale Decisions** - Documented in `docs/SCALE_DECISIONS.md`
 
 When working with AI:
 - Reference specific documentation files
 - Point to similar examples
 - Describe desired patterns explicitly
 - Ask for code that matches established conventions
+- Keep solutions appropriate for single-shop scale
 

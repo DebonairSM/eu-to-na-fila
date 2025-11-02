@@ -8,6 +8,8 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { env } from './env.js';
 import { websocketHandler } from './websocket/handler.js';
+import { websocketService } from './services/WebSocketService.js';
+import { db } from './db/index.js';
 import { queueRoutes } from './routes/queue.js';
 import { ticketRoutes } from './routes/tickets.js';
 import { statusRoutes } from './routes/status.js';
@@ -49,9 +51,47 @@ fastify.register(fastifyStatic, {
   prefix: '/',
 });
 
-// Health check - register first to test basic routing
+// Health check with database and WebSocket status
 fastify.get('/health', async () => {
-  return { status: 'ok', timestamp: new Date().toISOString() };
+  const health: any = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    checks: {},
+  };
+
+  // Check database connectivity
+  try {
+    await db.query.shops.findFirst();
+    health.checks.database = 'ok';
+  } catch (error) {
+    health.checks.database = 'error';
+    health.status = 'degraded';
+    fastify.log.error({ err: error }, 'Health check: database error');
+  }
+
+  // Check WebSocket service
+  try {
+    const wsClientCount = websocketService.getTotalClientCount();
+    health.checks.websocket = {
+      status: 'ok',
+      connections: wsClientCount,
+    };
+  } catch (error) {
+    health.checks.websocket = { status: 'error' };
+    health.status = 'degraded';
+    fastify.log.error({ err: error }, 'Health check: websocket error');
+  }
+
+  // Check memory usage
+  const memoryUsage = process.memoryUsage();
+  health.memory = {
+    rss: Math.round(memoryUsage.rss / 1024 / 1024),
+    heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024),
+    heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024),
+  };
+
+  return health;
 });
 
 // Test route
