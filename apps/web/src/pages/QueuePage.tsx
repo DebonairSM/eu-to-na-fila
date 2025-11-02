@@ -55,7 +55,7 @@ export function QueuePage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-muted-foreground">
-                      Wait: ~{ticket.estimatedWaitMinutes} min
+                      Wait: ~{ticket.estimatedWaitTime} min
                     </p>
                   </div>
                 </div>

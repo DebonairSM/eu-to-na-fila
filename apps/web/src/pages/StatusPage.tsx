@@ -61,7 +61,7 @@ export function StatusPage() {
                   </div>
                   <div className="mb-4">
                     <p className="text-sm text-muted-foreground">Estimated Wait</p>
-                    <p className="font-semibold">~{ticket.estimatedWaitMinutes} minutes</p>
+                    <p className="font-semibold">~{ticket.estimatedWaitTime} minutes</p>
                   </div>
                 </>
               )}

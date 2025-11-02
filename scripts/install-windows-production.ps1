@@ -102,25 +102,27 @@ Write-Host "✅ Configuration created at $InstallPath\.env.production" -Foregrou
 Write-Host ""
 Write-Host "📝 Creating start script..." -ForegroundColor Yellow
 
-$startScript = @"
+$startScriptContent = @'
 # Load environment variables
-Get-Content `$PSScriptRoot\.env.production | ForEach-Object {
-    if (`$_ -match '^([^=]+)=(.+)`$') {
-        [Environment]::SetEnvironmentVariable(`$matches[1], `$matches[2], 'Process')
+Get-Content "$PSScriptRoot\.env.production" | ForEach-Object {
+    if ($_ -match '^([^=]+)=(.+)$') {
+        [Environment]::SetEnvironmentVariable($matches[1], $matches[2], 'Process')
     }
 }
 
 Write-Host "Starting EuToNaFila server..." -ForegroundColor Green
-Write-Host "Web app: http://localhost:$Port/mineiro/" -ForegroundColor Cyan
-Write-Host "API: http://localhost:$Port/api" -ForegroundColor Cyan
+Write-Host "Web app: http://localhost:PORTPLACEHOLDER/mineiro/" -ForegroundColor Cyan
+Write-Host "API: http://localhost:PORTPLACEHOLDER/api" -ForegroundColor Cyan
 Write-Host "Press Ctrl+C to stop" -ForegroundColor Yellow
 Write-Host ""
 
 # Start server
-node `$PSScriptRoot\dist\server.js
-"@
+node "$PSScriptRoot\dist\server.js"
+'@
 
-$startScript | Out-File -FilePath "$InstallPath\start.ps1" -Encoding utf8
+$startScriptContent = $startScriptContent.Replace("PORTPLACEHOLDER", $Port)
+$startScriptContent | Out-File -FilePath "$InstallPath\start.ps1" -Encoding utf8
+
 Write-Host "✅ Start script created" -ForegroundColor Green
 
 # Step 6: Set up database
