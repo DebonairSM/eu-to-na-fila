@@ -17,8 +17,11 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(404).send({ error: 'Shop not found' });
     }
 
+    const body = request.body as any;
     const validation = createTicketSchema.safeParse({
-      ...request.body,
+      customerName: body.customerName,
+      serviceId: body.serviceId,
+      customerPhone: body.customerPhone,
       shopId: shop.id,
     });
 

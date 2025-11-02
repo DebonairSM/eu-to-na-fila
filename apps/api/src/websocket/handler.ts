@@ -12,21 +12,21 @@ export const websocketHandler: FastifyPluginAsync = async (fastify) => {
       type: 'connection.established',
       shopId,
       timestamp: new Date().toISOString(),
-      data: { clientId: connection.socket.remoteAddress || 'unknown' },
+      data: { clientId: 'client' },
     };
 
-    connection.socket.send(JSON.stringify(event));
+    connection.send(JSON.stringify(event));
 
-    connection.socket.on('message', (message) => {
+    connection.on('message', (message: any) => {
       console.log('Received message:', message.toString());
       // Handle incoming messages if needed
     });
 
-    connection.socket.on('close', () => {
+    connection.on('close', () => {
       console.log(`WebSocket client disconnected for shop: ${shopId}`);
     });
 
-    connection.socket.on('error', (error) => {
+    connection.on('error', (error: Error) => {
       console.error('WebSocket error:', error);
     });
   });
