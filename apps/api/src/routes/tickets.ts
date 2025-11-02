@@ -51,12 +51,8 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       data: ticket,
     };
 
-    // Broadcast to all clients in this shop's room
-    fastify.websocketServer.clients.forEach((client) => {
-      if (client.readyState === 1) {
-        client.send(JSON.stringify(event));
-      }
-    });
+    // Broadcast to all connected WebSocket clients
+    (fastify as any).broadcast(event);
 
     return ticket;
   });

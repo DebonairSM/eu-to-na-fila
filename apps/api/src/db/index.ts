@@ -15,6 +15,9 @@ const client = createClient({
   url: `file:${env.DATA_PATH}`,
 });
 
-export const db = drizzle(client, { schema });
+export const db = drizzle(client, { 
+  schema,
+  casing: 'snake_case',
+});
 export { schema };
 

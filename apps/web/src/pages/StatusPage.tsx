@@ -7,6 +7,26 @@ export function StatusPage() {
   const { id } = useParams<{ id: string }>();
   const { isConnected, lastEvent } = useWebSocket();
 
+  if (!id) {
+    return (
+      <div className="container mx-auto p-6 max-w-md">
+        <h1 className="text-3xl font-bold mb-6">Ticket Status</h1>
+        <Card className="mb-4">
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground mb-4">
+              No ticket ID provided
+            </p>
+            <Link to="/">
+              <Button variant="outline" className="w-full">
+                Back to Queue
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6 max-w-md">
       <h1 className="text-3xl font-bold mb-6">Ticket Status</h1>

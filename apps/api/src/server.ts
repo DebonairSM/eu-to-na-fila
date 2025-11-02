@@ -10,6 +10,8 @@ import { env } from './env.js';
 import { db, schema } from './db/index.js';
 import { eq } from 'drizzle-orm';
 import { websocketHandler } from './websocket/handler.js';
+import { ticketRoutes } from './routes/tickets.js';
+import { statusRoutes } from './routes/status.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,6 +21,26 @@ const fastify = Fastify({
     level: env.NODE_ENV === 'development' ? 'info' : 'warn',
   },
 });
+
+// Store WebSocket clients for broadcasting
+const wsClients = new Set<any>();
+
+// Decorate fastify with broadcast function
+fastify.decorate('broadcast', (message: any) => {
+  const messageStr = JSON.stringify(message);
+  wsClients.forEach(client => {
+    try {
+      if (client.readyState === 1) { // OPEN
+        client.send(messageStr);
+      }
+    } catch (err) {
+      console.error('Error broadcasting to client:', err);
+    }
+  });
+});
+
+fastify.decorate('addWsClient', (client: any) => wsClients.add(client));
+fastify.decorate('removeWsClient', (client: any) => wsClients.delete(client));
 
 // Security plugins
 fastify.register(fastifyHelmet, {
@@ -36,7 +58,9 @@ fastify.register(fastifyRateLimit, {
 });
 
 // WebSocket support
-fastify.register(fastifyWebsocket);
+fastify.register(fastifyWebsocket, {
+  options: { maxPayload: 1048576 }
+});
 
 // Static file serving
 const publicPath = join(__dirname, '..', 'public');
@@ -76,19 +100,20 @@ fastify.register(
       return { shop, tickets };
     });
 
-    instance.post('/shops/:slug/tickets', async (request, reply) => {
-      return { message: 'Ticket creation endpoint' };
-    });
-
-    instance.patch('/tickets/:id/status', async (request, reply) => {
-      return { message: 'Status update endpoint' };
-    });
+    // Register ticket and status routes
+    instance.register(ticketRoutes);
+    instance.register(statusRoutes);
   },
   { prefix: '/api' }
 );
 
 // WebSocket endpoint
 fastify.register(websocketHandler);
+
+// Redirect root to /mineiro/
+fastify.get('/', async (request, reply) => {
+  return reply.redirect('/mineiro/');
+});
 
 // SPA history fallback
 fastify.get('/mineiro/*', async (request, reply) => {

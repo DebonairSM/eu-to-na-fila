@@ -7,6 +7,9 @@ export const websocketHandler: FastifyPluginAsync = async (fastify) => {
 
     console.log(`WebSocket client connected for shop: ${shopId}`);
 
+    // Add client to the broadcast set
+    (fastify as any).addWsClient(connection);
+
     // Send connection established event
     const event: WebSocketEvent = {
       type: 'connection.established',
@@ -24,6 +27,7 @@ export const websocketHandler: FastifyPluginAsync = async (fastify) => {
 
     connection.on('close', () => {
       console.log(`WebSocket client disconnected for shop: ${shopId}`);
+      (fastify as any).removeWsClient(connection);
     });
 
     connection.on('error', (error: Error) => {
