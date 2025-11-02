@@ -1,9 +1,9 @@
 // Schemas
-export * from './schemas/shop';
-export * from './schemas/service';
-export * from './schemas/barber';
-export * from './schemas/ticket';
+export * from './schemas/shop.js';
+export * from './schemas/service.js';
+export * from './schemas/barber.js';
+export * from './schemas/ticket.js';
 
 // Types
-export * from './types/websocket';
+export * from './types/websocket.js';
 
