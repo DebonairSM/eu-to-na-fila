@@ -1,5 +1,5 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { createClient } from '@libsql/client';
+import { drizzle } from 'drizzle-orm/libsql';
 import { env } from '../env.js';
 import * as schema from './schema.js';
 import { dirname } from 'path';
@@ -11,9 +11,10 @@ if (!existsSync(dataDir)) {
   mkdirSync(dataDir, { recursive: true });
 }
 
-const sqlite = new Database(env.DATA_PATH);
-sqlite.pragma('journal_mode = WAL');
+const client = createClient({
+  url: `file:${env.DATA_PATH}`,
+});
 
-export const db = drizzle(sqlite, { schema });
+export const db = drizzle(client, { schema });
 export { schema };
 

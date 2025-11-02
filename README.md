@@ -7,9 +7,10 @@ Queue management system for barbershops. Single-tenant template with hosted back
 **Backend (apps/api)**
 - Node.js 20+ + TypeScript
 - Fastify web framework
-- Drizzle ORM + SQLite (upgradeable to Postgres)
+- Drizzle ORM + libSQL (pure JavaScript SQLite, no build tools needed)
 - WebSocket support for real-time updates
 - Security: helmet, CORS, rate limiting
+- Upgradeable to Postgres without code changes
 
 **Frontend (apps/web)**
 - React + Vite + TypeScript
@@ -66,7 +67,7 @@ Access:
 ### Database
 
 ```bash
-# Generate migrations
+# Generate migrations from schema
 pnpm --filter api db:generate
 
 # Run migrations
@@ -74,6 +75,9 @@ pnpm db:migrate
 
 # Seed with test data
 pnpm db:seed
+
+# Optional: Open Drizzle Studio to view database
+pnpm --filter api db:studio
 ```
 
 This creates the "mineiro" shop with 2 barbers and 3 services.
@@ -168,14 +172,14 @@ Access your app at:
 
 ## Migration to Postgres
 
-When ready to scale, switch from SQLite to Postgres:
+When ready to scale, switch from libSQL to Postgres:
 
 1. Update `apps/api/package.json`:
    ```json
    {
      "dependencies": {
        "drizzle-orm": "^0.29.2",
-       "postgres": "^3.4.3"  // Replace better-sqlite3
+       "postgres": "^3.4.3"  // Replace @libsql/client
      }
    }
    ```
@@ -201,7 +205,9 @@ When ready to scale, switch from SQLite to Postgres:
    export const db = drizzle(client, { schema });
    ```
 
-4. Migrate data (one-time script to copy SQLite to Postgres)
+4. Update `apps/api/src/migrate.ts` similarly
+
+5. Migrate data (one-time script to copy SQLite to Postgres)
 
 No other code changes required.
 

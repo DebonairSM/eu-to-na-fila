@@ -1,6 +1,6 @@
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { migrate } from 'drizzle-orm/libsql/migrator';
+import { createClient } from '@libsql/client';
+import { drizzle } from 'drizzle-orm/libsql';
 import { env } from './env.js';
 import { dirname } from 'path';
 import { mkdirSync, existsSync } from 'fs';
@@ -11,12 +11,15 @@ if (!existsSync(dataDir)) {
   mkdirSync(dataDir, { recursive: true });
 }
 
-const sqlite = new Database(env.DATA_PATH);
-const db = drizzle(sqlite);
+const client = createClient({
+  url: `file:${env.DATA_PATH}`,
+});
+
+const db = drizzle(client);
 
 console.log('Running migrations...');
-migrate(db, { migrationsFolder: './drizzle' });
+await migrate(db, { migrationsFolder: './drizzle' });
 console.log('Migrations complete!');
 
-sqlite.close();
+client.close();
 
