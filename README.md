@@ -116,6 +116,43 @@ The API serves the SPA at http://localhost:3000/mineiro
 
 ## Deployment
 
+### Windows Server (Local Installation)
+
+For running on a local Windows machine at `c:\apps`:
+
+**Quick Install (Automated):**
+
+```powershell
+# Run from your development directory
+cd c:\git\eu-to-na-fila
+
+# Install to c:\apps\eutonafila
+powershell -ExecutionPolicy Bypass -File scripts\install-windows-production.ps1
+
+# Or install as Windows Service (requires Administrator)
+powershell -ExecutionPolicy Bypass -File scripts\install-windows-production.ps1 -InstallService
+```
+
+**Manual Install:**
+
+See [Windows Installation Guide](./docs/WINDOWS_INSTALLATION.md) for detailed instructions.
+
+**Quick Commands:**
+
+```powershell
+# Start server manually
+powershell -ExecutionPolicy Bypass -File c:\apps\eutonafila\start.ps1
+
+# Or manage as service
+Start-Service EuToNaFila
+Stop-Service EuToNaFila
+Get-Service EuToNaFila
+```
+
+Access at:
+- SPA: http://localhost:3000/mineiro/
+- API: http://localhost:3000/api
+
 ### Render
 
 1. Create a new **Web Service**
