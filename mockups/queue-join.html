@@ -463,21 +463,15 @@
             currentQueueSize++;
             const position = currentQueueSize;
             
-            // Update success card
-            customerNameDisplay.textContent = name.trim();
-            positionNumber.textContent = position;
+            // In real app, would get ticket ID from API
+            const ticketId = Math.floor(Math.random() * 10000);
             
-            // Hide the form card entirely
-            formCard.style.display = 'none';
+            // Redirect to status page
+            // In mockup, we'll just show a message. In real app: window.location.href = `/status/${ticketId}`
+            alert(`Você entrou na fila!\nPosição: ${position}\n\nRedirecionando para página de status...`);
             
-            // Show success message
-            successCard.classList.add('show');
-            
-            // Update wait time
-            updateWaitTime();
-            
-            // Simulate queue progression
-            simulateQueueProgress();
+            // Simulate redirect to status page
+            window.location.href = 'customer-status.html';
         });
 
         // Simulate queue progression

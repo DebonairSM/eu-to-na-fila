@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Posição - Barbearia Mineiro</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    
+    <!-- Google Fonts - Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Gold and White Color Scheme for Mineiro Barber Shop */
+            --md-sys-color-primary: #D4AF37;
+            --md-sys-color-on-primary: #FFFFFF;
+            --md-sys-color-primary-container: #FFF8E1;
+            --md-sys-color-on-primary-container: #3E2723;
+            --md-sys-color-secondary: #8B7355;
+            --md-sys-color-on-secondary: #FFFFFF;
+            --md-sys-color-surface: #FFFFFF;
+            --md-sys-color-on-surface: #1D1B20;
+            --md-sys-color-surface-variant: #F5F5F5;
+            --md-sys-color-on-surface-variant: #5D5D5D;
+            --md-sys-color-outline: #C4C4C4;
+            --md-sys-color-error: #BA1A1A;
+            --md-sys-color-on-error: #FFFFFF;
+            --md-sys-color-success: #2E7D32;
+            --md-sys-color-success-container: #C8E6C9;
+            
+            /* Elevation shadows with gold tint */
+            --md-sys-elevation-1: 0px 1px 2px rgba(212, 175, 55, 0.2), 0px 1px 3px 1px rgba(0, 0, 0, 0.1);
+            --md-sys-elevation-2: 0px 1px 2px rgba(212, 175, 55, 0.25), 0px 2px 6px 2px rgba(0, 0, 0, 0.12);
+            --md-sys-elevation-3: 0px 4px 8px 3px rgba(212, 175, 55, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            margin-top: 24px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header-icon {
+            font-size: 48px;
+            color: var(--md-sys-color-primary);
+            margin-bottom: 16px;
+            filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3));
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 400;
+            line-height: 32px;
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 8px;
+        }
+
+        .customer-name {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--md-sys-color-primary);
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-top: 12px;
+        }
+
+        .status-badge.waiting {
+            background-color: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+        }
+
+        .status-badge.in-progress {
+            background-color: var(--md-sys-color-success-container);
+            color: var(--md-sys-color-success);
+        }
+
+        .status-badge.completed {
+            background-color: var(--md-sys-color-success);
+            color: var(--md-sys-color-on-primary);
+        }
+
+        /* Position Card */
+        .position-card {
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border-radius: 24px;
+            padding: 40px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--md-sys-elevation-3);
+            text-align: center;
+        }
+
+        .position-label {
+            font-size: 14px;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .position-number {
+            font-size: 96px;
+            font-weight: 300;
+            line-height: 96px;
+            margin-bottom: 16px;
+        }
+
+        .position-text {
+            font-size: 16px;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+
+        /* Wait Time Card */
+        .wait-time-card {
+            background-color: var(--md-sys-color-surface);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--md-sys-elevation-2);
+        }
+
+        .wait-time-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .wait-time-icon {
+            font-size: 32px;
+            color: var(--md-sys-color-primary);
+        }
+
+        .wait-time-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface-variant);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .wait-time-value {
+            font-size: 48px;
+            font-weight: 400;
+            line-height: 56px;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .wait-time-unit {
+            font-size: 20px;
+            font-weight: 400;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        /* Info Card */
+        .info-card {
+            background-color: var(--md-sys-color-primary-container);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: start;
+            gap: 16px;
+        }
+
+        .info-icon {
+            font-size: 24px;
+            color: var(--md-sys-color-primary);
+            flex-shrink: 0;
+        }
+
+        .info-text {
+            font-size: 14px;
+            color: var(--md-sys-color-on-primary-container);
+            line-height: 20px;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .button {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.1px;
+            font-family: 'Roboto', sans-serif;
+            border: none;
+            border-radius: 100px;
+            cursor: pointer;
+            box-shadow: var(--md-sys-elevation-1);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .button.primary {
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+        }
+
+        .button.secondary {
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            border: 1px solid var(--md-sys-color-outline);
+        }
+
+        .button.danger {
+            background-color: var(--md-sys-color-error);
+            color: var(--md-sys-color-on-error);
+        }
+
+        .button:hover {
+            box-shadow: var(--md-sys-elevation-2);
+        }
+
+        .button:active {
+            box-shadow: var(--md-sys-elevation-1);
+            transform: scale(0.98);
+        }
+
+        .button:disabled {
+            background-color: rgba(29, 27, 32, 0.12);
+            color: rgba(29, 27, 32, 0.38);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Pulsing animation for "You're next!" */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .position-card.next {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Material Icons */
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24;
+        }
+
+        /* In Progress State */
+        .in-progress-card {
+            background-color: var(--md-sys-color-success-container);
+            border-radius: 16px;
+            padding: 32px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--md-sys-elevation-2);
+            text-align: center;
+        }
+
+        .in-progress-icon {
+            font-size: 64px;
+            color: var(--md-sys-color-success);
+            margin-bottom: 16px;
+        }
+
+        .in-progress-title {
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 8px;
+        }
+
+        .in-progress-message {
+            font-size: 14px;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        /* Auto-refresh indicator */
+        .refresh-indicator {
+            text-align: center;
+            font-size: 12px;
+            color: var(--md-sys-color-on-surface-variant);
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .refresh-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--md-sys-color-primary);
+            border-radius: 50%;
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="material-symbols-outlined header-icon">content_cut</span>
+            <h1>Barbearia Mineiro</h1>
+            <div class="customer-name" id="customerName">João Silva</div>
+            <div class="status-badge waiting" id="statusBadge">
+                <span class="material-symbols-outlined" style="font-size: 16px;">schedule</span>
+                <span>Aguardando</span>
+            </div>
+        </div>
+
+        <!-- Waiting State -->
+        <div id="waitingState">
+            <div class="position-card" id="positionCard">
+                <div class="position-label">Sua posição na fila</div>
+                <div class="position-number" id="positionNumber">3</div>
+                <div class="position-text">pessoas na sua frente</div>
+            </div>
+
+            <div class="wait-time-card">
+                <div class="wait-time-header">
+                    <span class="material-symbols-outlined wait-time-icon">schedule</span>
+                    <div class="wait-time-label">Tempo estimado</div>
+                </div>
+                <div>
+                    <span class="wait-time-value" id="waitTimeValue">45</span>
+                    <span class="wait-time-unit">minutos</span>
+                </div>
+            </div>
+
+            <div class="info-card" id="arrivedCard">
+                <span class="material-symbols-outlined info-icon">info</span>
+                <div class="info-text">
+                    Chegou na barbearia? Clique no botão abaixo para confirmar sua presença.
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="button primary" id="arrivedButton">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <span>Eu Cheguei</span>
+                </button>
+                <button class="button secondary" id="refreshButton">
+                    <span class="material-symbols-outlined">refresh</span>
+                    <span>Atualizar Posição</span>
+                </button>
+                <button class="button danger" id="leaveButton">
+                    <span class="material-symbols-outlined">exit_to_app</span>
+                    <span>Sair da Fila</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- In Progress State (hidden by default) -->
+        <div id="inProgressState" style="display: none;">
+            <div class="in-progress-card">
+                <span class="material-symbols-outlined in-progress-icon">cut</span>
+                <div class="in-progress-title">Você está sendo atendido!</div>
+                <div class="in-progress-message">Aproveite seu corte</div>
+            </div>
+        </div>
+
+        <!-- Completed State (hidden by default) -->
+        <div id="completedState" style="display: none;">
+            <div class="in-progress-card" style="background-color: var(--md-sys-color-success); color: var(--md-sys-color-on-primary);">
+                <span class="material-symbols-outlined in-progress-icon" style="color: var(--md-sys-color-on-primary);">check_circle</span>
+                <div class="in-progress-title" style="color: var(--md-sys-color-on-primary);">Atendimento concluído!</div>
+                <div class="in-progress-message" style="color: var(--md-sys-color-on-primary); opacity: 0.9;">Obrigado por usar nosso sistema</div>
+            </div>
+        </div>
+
+        <div class="refresh-indicator">
+            <div class="refresh-dot"></div>
+            <span>Atualizando automaticamente</span>
+        </div>
+    </div>
+
+    <script>
+        // Simulate ticket data
+        let ticketData = {
+            customerName: 'João Silva',
+            position: 3,
+            waitTime: 45,
+            status: 'waiting', // waiting, in_progress, completed
+            hasArrived: false
+        };
+
+        // DOM elements
+        const customerName = document.getElementById('customerName');
+        const statusBadge = document.getElementById('statusBadge');
+        const positionCard = document.getElementById('positionCard');
+        const positionNumber = document.getElementById('positionNumber');
+        const waitTimeValue = document.getElementById('waitTimeValue');
+        const arrivedCard = document.getElementById('arrivedCard');
+        const arrivedButton = document.getElementById('arrivedButton');
+        const refreshButton = document.getElementById('refreshButton');
+        const leaveButton = document.getElementById('leaveButton');
+        const waitingState = document.getElementById('waitingState');
+        const inProgressState = document.getElementById('inProgressState');
+        const completedState = document.getElementById('completedState');
+
+        // Update UI based on ticket data
+        function updateUI() {
+            customerName.textContent = ticketData.customerName;
+            
+            // Update status badge
+            statusBadge.className = `status-badge ${ticketData.status}`;
+            if (ticketData.status === 'waiting') {
+                statusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">schedule</span><span>Aguardando</span>';
+            } else if (ticketData.status === 'in_progress') {
+                statusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">cut</span><span>Em Atendimento</span>';
+            } else if (ticketData.status === 'completed') {
+                statusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">check_circle</span><span>Concluído</span>';
+            }
+
+            // Show appropriate state
+            if (ticketData.status === 'waiting') {
+                waitingState.style.display = 'block';
+                inProgressState.style.display = 'none';
+                completedState.style.display = 'none';
+
+                positionNumber.textContent = ticketData.position;
+                waitTimeValue.textContent = ticketData.waitTime;
+
+                // Check if user is next
+                if (ticketData.position === 1) {
+                    positionCard.classList.add('next');
+                    positionCard.querySelector('.position-text').textContent = 'Você é o próximo!';
+                    positionCard.querySelector('.position-label').textContent = 'Prepare-se!';
+                } else {
+                    positionCard.classList.remove('next');
+                    positionCard.querySelector('.position-text').textContent = 'pessoas na sua frente';
+                    positionCard.querySelector('.position-label').textContent = 'Sua posição na fila';
+                }
+
+                // Update "I arrived" button state
+                if (ticketData.hasArrived) {
+                    arrivedCard.style.display = 'none';
+                    arrivedButton.disabled = true;
+                    arrivedButton.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>Presença Confirmada</span>';
+                } else {
+                    arrivedCard.style.display = 'flex';
+                    arrivedButton.disabled = false;
+                    arrivedButton.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>Eu Cheguei</span>';
+                }
+            } else if (ticketData.status === 'in_progress') {
+                waitingState.style.display = 'none';
+                inProgressState.style.display = 'block';
+                completedState.style.display = 'none';
+            } else if (ticketData.status === 'completed') {
+                waitingState.style.display = 'none';
+                inProgressState.style.display = 'none';
+                completedState.style.display = 'block';
+            }
+        }
+
+        // Handle "I arrived" button
+        arrivedButton.addEventListener('click', function() {
+            ticketData.hasArrived = true;
+            updateUI();
+            
+            // Show confirmation
+            alert('Presença confirmada! O barbeiro saberá que você está aqui.');
+        });
+
+        // Handle refresh button
+        refreshButton.addEventListener('click', function() {
+            // Simulate fetching new data
+            refreshButton.disabled = true;
+            refreshButton.innerHTML = '<span class="material-symbols-outlined">sync</span><span>Atualizando...</span>';
+            
+            setTimeout(() => {
+                refreshButton.disabled = false;
+                refreshButton.innerHTML = '<span class="material-symbols-outlined">refresh</span><span>Atualizar Posição</span>';
+            }, 1000);
+        });
+
+        // Handle leave queue button
+        leaveButton.addEventListener('click', function() {
+            if (confirm('Tem certeza que deseja sair da fila?')) {
+                alert('Você saiu da fila. Até a próxima!');
+                // In real app, would navigate away or show confirmation screen
+            }
+        });
+
+        // Simulate queue progression
+        function simulateQueueProgression() {
+            setInterval(() => {
+                if (ticketData.status === 'waiting' && ticketData.position > 0) {
+                    // Randomly move forward in queue
+                    if (Math.random() > 0.5) {
+                        ticketData.position = Math.max(1, ticketData.position - 1);
+                        ticketData.waitTime = Math.max(5, ticketData.waitTime - 15);
+                        updateUI();
+                    }
+                }
+            }, 5000);
+        }
+
+        // Simulate status changes (for demo)
+        function simulateStatusChange() {
+            setTimeout(() => {
+                ticketData.status = 'in_progress';
+                updateUI();
+                
+                setTimeout(() => {
+                    ticketData.status = 'completed';
+                    updateUI();
+                }, 10000);
+            }, 15000);
+        }
+
+        // Initialize
+        updateUI();
+        simulateQueueProgression();
+        // Uncomment to see status transitions:
+        // simulateStatusChange();
+    </script>
+</body>
+</html>
+
