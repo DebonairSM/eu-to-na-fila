@@ -444,6 +444,33 @@
             font-size: 14px;
             line-height: 20px;
         }
+
+        /* Role Selection */
+        .role-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 20px;
+            border: 2px solid var(--md-sys-color-outline);
+            border-radius: 16px;
+            background-color: var(--md-sys-color-surface);
+            transition: all 0.3s ease;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .role-option:hover {
+            border-color: var(--md-sys-color-primary);
+            background-color: rgba(212, 175, 55, 0.05);
+        }
+
+        .role-option.selected {
+            border-color: var(--md-sys-color-primary);
+            border-width: 3px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);
+            color: var(--md-sys-color-primary);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -490,6 +517,29 @@
                         <span class="material-symbols-outlined" id="passwordToggleIcon">visibility</span>
                     </button>
                     <div class="error-message" id="passwordError">Campo obrigatório</div>
+                </div>
+
+                <!-- Role Selection -->
+                <div style="margin-bottom: 16px;">
+                    <label style="font-size: 14px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); display: block; margin-bottom: 12px;">
+                        Entrar como:
+                    </label>
+                    <div style="display: flex; gap: 12px;">
+                        <label style="flex: 1; cursor: pointer;">
+                            <input type="radio" name="role" value="barber" checked style="display: none;">
+                            <div class="role-option" id="roleBarber">
+                                <span class="material-symbols-outlined" style="font-size: 32px;">content_cut</span>
+                                <span style="font-size: 14px; font-weight: 500;">Barbeiro</span>
+                            </div>
+                        </label>
+                        <label style="flex: 1; cursor: pointer;">
+                            <input type="radio" name="role" value="owner" style="display: none;">
+                            <div class="role-option" id="roleOwner">
+                                <span class="material-symbols-outlined" style="font-size: 32px;">shield_person</span>
+                                <span style="font-size: 14px; font-weight: 500;">Proprietário</span>
+                            </div>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="button-group">
@@ -560,6 +610,27 @@
         const errorAlert = document.getElementById('errorAlert');
         const errorText = document.getElementById('errorText');
 
+        // Role selection handling
+        const roleBarber = document.getElementById('roleBarber');
+        const roleOwner = document.getElementById('roleOwner');
+        const roleInputs = document.querySelectorAll('input[name="role"]');
+
+        // Initialize first option as selected
+        roleBarber.classList.add('selected');
+
+        roleInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                roleBarber.classList.remove('selected');
+                roleOwner.classList.remove('selected');
+                
+                if (this.value === 'barber') {
+                    roleBarber.classList.add('selected');
+                } else {
+                    roleOwner.classList.add('selected');
+                }
+            });
+        });
+
         // Toggle password visibility
         function togglePassword() {
             const passwordToggleIcon = document.getElementById('passwordToggleIcon');
@@ -604,18 +675,33 @@
             loginButton.classList.add('loading');
             loginButton.disabled = true;
 
+            // Get selected role
+            const selectedRole = document.querySelector('input[name="role"]:checked').value;
+
             // Simulate API call
             setTimeout(() => {
                 // For demo: accept "admin" / "admin123"
                 if (username === 'admin' && password === 'admin123') {
-                    showCustomAlert(
-                        'Login Bem-Sucedido!',
-                        'Redirecionando para gerenciamento da fila...',
-                        'check_circle',
-                        () => {
-                            window.location.href = 'barber-queue-manager.html';
-                        }
-                    );
+                    // Route based on role
+                    if (selectedRole === 'barber') {
+                        showCustomAlert(
+                            'Login Bem-Sucedido!',
+                            'Redirecionando para gerenciamento da fila...',
+                            'check_circle',
+                            () => {
+                                window.location.href = 'barber-queue-manager.html';
+                            }
+                        );
+                    } else {
+                        showCustomAlert(
+                            'Login Bem-Sucedido!',
+                            'Bem-vindo, Proprietário!',
+                            'check_circle',
+                            () => {
+                                window.location.href = 'owner-dashboard.html';
+                            }
+                        );
+                    }
                 } else {
                     errorText.textContent = 'Usuário ou senha incorretos. Tente novamente.';
                     errorAlert.classList.add('show');

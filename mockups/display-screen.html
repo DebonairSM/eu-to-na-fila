@@ -438,12 +438,12 @@
     <script>
         // Queue data (simulated)
         let queueData = [
-            { position: 1, name: 'Carlos Silva', status: 'serving' },
-            { position: 2, name: 'João Santos', status: 'waiting', waitTime: 15 },
-            { position: 3, name: 'Pedro Costa', status: 'waiting', waitTime: 30 },
-            { position: 4, name: 'Maria Oliveira', status: 'waiting', waitTime: 45 },
-            { position: 5, name: 'Ana Lima', status: 'waiting', waitTime: 60 },
-            { position: 6, name: 'Roberto Souza', status: 'waiting', waitTime: 75 }
+            { position: 1, name: 'Carlos Silva', status: 'serving', hasArrived: true },
+            { position: 2, name: 'João Santos', status: 'waiting', waitTime: 15, hasArrived: true },
+            { position: 3, name: 'Pedro Costa', status: 'waiting', waitTime: 30, hasArrived: true },
+            { position: 4, name: 'Maria Oliveira', status: 'waiting', waitTime: 45, hasArrived: false },
+            { position: 5, name: 'Ana Lima', status: 'waiting', waitTime: 60, hasArrived: false },
+            { position: 6, name: 'Roberto Souza', status: 'waiting', waitTime: 75, hasArrived: true }
         ];
 
         // Keep a copy of previous queue data to detect changes
@@ -474,9 +474,14 @@
                 const queueItem = document.createElement('div');
                 queueItem.className = `queue-item ${item.status === 'serving' ? 'serving' : ''}`;
 
+                // Arrival status badge
+                const arrivalBadge = item.hasArrived 
+                    ? '<span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background-color: rgba(46, 125, 50, 0.3); color: #4CAF50; border-radius: 20px; font-size: 16px; font-weight: 500; margin-right: 12px;"><span class="material-symbols-outlined" style="font-size: 20px;">check_circle</span>No salão</span>'
+                    : '<span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background-color: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5); border-radius: 20px; font-size: 16px; font-weight: 500; margin-right: 12px;"><span class="material-symbols-outlined" style="font-size: 20px;">schedule</span>A caminho</span>';
+
                 const statusText = item.status === 'serving' 
                     ? '<span class="material-symbols-outlined" style="font-size: 24px;">cut</span>Em atendimento'
-                    : `<span class="material-symbols-outlined" style="font-size: 24px;">schedule</span>~${item.waitTime} min`;
+                    : `${arrivalBadge}<span class="material-symbols-outlined" style="font-size: 24px;">schedule</span>~${item.waitTime} min`;
 
                 queueItem.innerHTML = `
                     <div class="queue-position">${item.position}</div>
@@ -552,9 +557,9 @@
         // Simulate queue updates
         function simulateQueueUpdates() {
             setInterval(() => {
-                // Randomly update wait times
+                // Randomly update wait times (preserving other properties)
                 queueData = queueData.map(item => {
-                    if (item.status === 'waiting' && item.waitTime > 0) {
+                    if (item.status === 'waiting' && item.waitTime && item.waitTime > 0) {
                         return {
                             ...item,
                             waitTime: Math.max(5, item.waitTime - 5)

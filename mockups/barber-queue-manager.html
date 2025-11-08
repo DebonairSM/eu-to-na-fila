@@ -81,6 +81,7 @@
             align-items: center;
             gap: 12px;
             margin-bottom: 16px;
+            justify-content: space-between;
         }
 
         .header-icon {
@@ -89,6 +90,11 @@
 
         .header-title {
             flex: 1;
+        }
+
+        .header-top a:hover {
+            background: rgba(255,255,255,0.2) !important;
+            border-color: var(--md-sys-color-primary) !important;
         }
 
         h1 {
@@ -508,6 +514,10 @@
                     <h1>Barbearia Mineiro</h1>
                     <p class="subtitle">Gerenciamento da Fila</p>
                 </div>
+                <a href="owner-dashboard.html" style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: rgba(255,255,255,0.1); border: 2px solid rgba(212,175,55,0.3); border-radius: 100px; color: var(--md-sys-color-primary); font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.3s ease;">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+                    <span>Voltar</span>
+                </a>
             </div>
             
             <div class="queue-stats">
@@ -564,10 +574,10 @@
 
         // Queue data - customers waiting
         let queueData = [
-            { id: 1, name: 'João Silva', waitTime: 5 },
-            { id: 2, name: 'Maria Santos', waitTime: 10 },
-            { id: 3, name: 'Pedro Oliveira', waitTime: 15 },
-            { id: 4, name: 'Ana Costa', waitTime: 20 }
+            { id: 1, name: 'João Silva', waitTime: 5, hasArrived: true },
+            { id: 2, name: 'Maria Santos', waitTime: 10, hasArrived: true },
+            { id: 3, name: 'Pedro Oliveira', waitTime: 15, hasArrived: false },
+            { id: 4, name: 'Ana Costa', waitTime: 20, hasArrived: false }
         ];
 
         // Being served data - customers currently being served
@@ -707,9 +717,19 @@
             
             const waitingTime = document.createElement('div');
             waitingTime.className = 'waiting-time';
+            
+            // Show arrival status and wait time
+            const arrivalBadge = customer.hasArrived 
+                ? '<span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background-color: var(--md-sys-color-success-container); color: var(--md-sys-color-success); border-radius: 12px; font-size: 12px; font-weight: 500;"><span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>No salão</span>'
+                : '<span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background-color: rgba(0,0,0,0.05); color: var(--md-sys-color-on-surface-variant); border-radius: 12px; font-size: 12px; font-weight: 500;"><span class="material-symbols-outlined" style="font-size: 14px;">schedule</span>A caminho</span>';
+            
+            const waitTimeBadge = `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background-color: rgba(212, 175, 55, 0.15); color: var(--md-sys-color-primary); border-radius: 12px; font-size: 12px; font-weight: 500;"><span class="material-symbols-outlined" style="font-size: 14px;">schedule</span>${customer.waitTime} min</span>`;
+            
             waitingTime.innerHTML = `
-                <span class="material-symbols-outlined">schedule</span>
-                <span>Aguardando ${customer.waitTime} min</span>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    ${arrivalBadge}
+                    ${waitTimeBadge}
+                </div>
             `;
             
             customerInfo.appendChild(customerName);
@@ -815,16 +835,8 @@
                 customer.waitTime += 1;
             });
             
-            // Update existing queue items without re-rendering
-            queueData.forEach((customer, index) => {
-                const item = document.querySelector(`.queue-item[data-id="${customer.id}"]`);
-                if (item) {
-                    const waitingTimeSpan = item.querySelector('.waiting-time span:last-child');
-                    if (waitingTimeSpan) {
-                        waitingTimeSpan.textContent = `Aguardando ${customer.waitTime} min`;
-                    }
-                }
-            });
+            // Re-render queue to update badges properly
+            renderQueue();
             
             // Update being served items without re-rendering
             beingServedData.forEach(customer => {

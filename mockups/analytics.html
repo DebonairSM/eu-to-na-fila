@@ -81,6 +81,7 @@
             align-items: center;
             gap: 12px;
             margin-bottom: 8px;
+            justify-content: space-between;
         }
 
         .header-icon {
@@ -89,6 +90,11 @@
 
         .header-title {
             flex: 1;
+        }
+
+        .header-top a:hover {
+            background: rgba(255,255,255,0.3) !important;
+            border-color: #FFFFFF !important;
         }
 
         h1 {
@@ -495,6 +501,10 @@
                     <h1>Analíticas</h1>
                     <p class="subtitle">Últimos 30 dias</p>
                 </div>
+                <a href="owner-dashboard.html" style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); border-radius: 100px; color: #FFFFFF; font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.3s ease;">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+                    <span>Voltar</span>
+                </a>
             </div>
         </div>
 

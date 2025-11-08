@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard do Proprietário - Barbearia Mineiro</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    
+    <!-- Google Fonts - Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --md-sys-color-primary: #D4AF37;
+            --md-sys-color-on-primary: #FFFFFF;
+            --md-sys-color-primary-container: #FFF8E1;
+            --md-sys-color-on-primary-container: #3E2723;
+            --md-sys-color-surface: #FFFFFF;
+            --md-sys-color-on-surface: #1D1B20;
+            --md-sys-color-surface-variant: #F5F5F5;
+            --md-sys-color-on-surface-variant: #5D5D5D;
+            --md-sys-color-outline: #C4C4C4;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2d2416 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.03) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header-icon {
+            font-size: 80px;
+            color: var(--md-sys-color-primary);
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.6));
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.6));
+            }
+            50% {
+                transform: scale(1.05);
+                filter: drop-shadow(0 6px 20px rgba(212, 175, 55, 0.8));
+            }
+        }
+
+        .title {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--md-sys-color-primary);
+            margin-bottom: 12px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+        }
+
+        .welcome-name {
+            font-size: 24px;
+            font-weight: 500;
+            color: #FFFFFF;
+            margin-top: 16px;
+        }
+
+        /* Option Cards */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .option-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(212, 175, 55, 0.06) 100%);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 28px;
+            padding: 48px 32px;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .option-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .option-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 20px 60px rgba(212, 175, 55, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .option-card:hover::before {
+            opacity: 1;
+        }
+
+        .option-card:active {
+            transform: translateY(-4px) scale(1.01);
+        }
+
+        .option-icon {
+            font-size: 72px;
+            color: var(--md-sys-color-primary);
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .option-card:hover .option-icon {
+            transform: scale(1.15) rotate(5deg);
+            filter: drop-shadow(0 8px 20px rgba(212, 175, 55, 0.6));
+        }
+
+        .option-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #FFFFFF;
+            position: relative;
+            z-index: 1;
+        }
+
+        .option-description {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+
+        .option-arrow {
+            font-size: 32px;
+            color: var(--md-sys-color-primary);
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .option-card:hover .option-arrow {
+            transform: translateX(10px);
+        }
+
+        /* Logout Button */
+        .logout-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: rgba(186, 26, 26, 0.15);
+            border: 2px solid rgba(186, 26, 26, 0.4);
+            border-radius: 100px;
+            color: #ff6b6b;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            margin: 0 auto;
+        }
+
+        .logout-button:hover {
+            background: rgba(186, 26, 26, 0.25);
+            border-color: #BA1A1A;
+            box-shadow: 0 4px 16px rgba(186, 26, 26, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .logout-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Material Icons */
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 32px;
+            }
+
+            .header-icon {
+                font-size: 64px;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .option-card {
+                padding: 36px 24px;
+            }
+
+            .option-icon {
+                font-size: 56px;
+            }
+
+            .option-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="material-symbols-outlined header-icon">shield_person</span>
+            <h1 class="title">Dashboard do Proprietário</h1>
+            <p class="subtitle">Barbearia Mineiro</p>
+            <div class="welcome-name">Bem-vindo, Admin</div>
+        </div>
+
+        <div class="options-grid">
+            <a href="barber-queue-manager.html" class="option-card">
+                <span class="material-symbols-outlined option-icon">dashboard</span>
+                <h2 class="option-title">Gerenciar Fila</h2>
+                <p class="option-description">
+                    Controle a fila de clientes, gerencie atendimentos e barbeiros ativos
+                </p>
+                <span class="material-symbols-outlined option-arrow">arrow_forward</span>
+            </a>
+
+            <a href="manage-barbers.html" class="option-card">
+                <span class="material-symbols-outlined option-icon">group</span>
+                <h2 class="option-title">Gerenciar Barbeiros</h2>
+                <p class="option-description">
+                    Adicione, edite ou remova barbeiros da equipe e gerencie suas contas
+                </p>
+                <span class="material-symbols-outlined option-arrow">arrow_forward</span>
+            </a>
+
+            <a href="analytics.html" class="option-card">
+                <span class="material-symbols-outlined option-icon">analytics</span>
+                <h2 class="option-title">Analytics</h2>
+                <p class="option-description">
+                    Visualize métricas de performance, cortes por hora e produtividade
+                </p>
+                <span class="material-symbols-outlined option-arrow">arrow_forward</span>
+            </a>
+        </div>
+
+        <a href="index.html" class="logout-button">
+            <span class="material-symbols-outlined">logout</span>
+            <span>Sair</span>
+        </a>
+    </div>
+
+    <script>
+        // Add staggered animations to cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.option-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 300 + (index * 150));
+            });
+        });
+
+        // Add ripple effect on card click
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                const ripple = document.createElement('div');
+                ripple.style.position = 'absolute';
+                ripple.style.borderRadius = '50%';
+                ripple.style.background = 'rgba(212, 175, 55, 0.6)';
+                ripple.style.width = '20px';
+                ripple.style.height = '20px';
+                ripple.style.pointerEvents = 'none';
+                
+                const rect = this.getBoundingClientRect();
+                ripple.style.left = (e.clientX - rect.left - 10) + 'px';
+                ripple.style.top = (e.clientY - rect.top - 10) + 'px';
+                
+                this.appendChild(ripple);
+                
+                ripple.animate([
+                    { transform: 'scale(0)', opacity: 1 },
+                    { transform: 'scale(15)', opacity: 0 }
+                ], {
+                    duration: 600,
+                    easing: 'ease-out'
+                });
+                
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+    </script>
+</body>
+</html>
+
