@@ -682,7 +682,73 @@
         </div>
     </div>
 
+    <!-- Custom Confirm Modal -->
+    <div class="confirm-modal" id="confirmModal">
+        <div class="confirm-content">
+            <span class="material-symbols-outlined confirm-icon" id="confirmIcon">help</span>
+            <div class="confirm-title" id="confirmTitle">Confirmar ação</div>
+            <div class="confirm-message" id="confirmMessage">Tem certeza?</div>
+            <div class="confirm-buttons">
+                <button class="button secondary" id="confirmCancel">Cancelar</button>
+                <button class="button danger" id="confirmOk">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div class="confirm-modal" id="alertModal">
+        <div class="confirm-content">
+            <span class="material-symbols-outlined confirm-icon" style="color: var(--md-sys-color-primary);" id="alertIcon">check_circle</span>
+            <div class="confirm-title" id="alertTitle">Sucesso!</div>
+            <div class="confirm-message" id="alertMessage">Operação concluída</div>
+            <button class="button primary" id="alertOk" style="width: 100%;">OK</button>
+        </div>
+    </div>
+
     <script>
+        // Custom alert function
+        function showAlert(title, message, icon = 'check_circle', callback = null) {
+            const modal = document.getElementById('alertModal');
+            const alertTitle = document.getElementById('alertTitle');
+            const alertMessage = document.getElementById('alertMessage');
+            const alertIcon = document.getElementById('alertIcon');
+            const alertOk = document.getElementById('alertOk');
+
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            alertIcon.textContent = icon;
+            modal.classList.add('show');
+
+            alertOk.onclick = () => {
+                modal.classList.remove('show');
+                if (callback) callback();
+            };
+        }
+
+        // Custom confirm function
+        function showConfirm(title, message, icon = 'help', onConfirm = null) {
+            const modal = document.getElementById('confirmModal');
+            const confirmTitle = document.getElementById('confirmTitle');
+            const confirmMessage = document.getElementById('confirmMessage');
+            const confirmIcon = document.getElementById('confirmIcon');
+            const confirmOk = document.getElementById('confirmOk');
+            const confirmCancel = document.getElementById('confirmCancel');
+
+            confirmTitle.textContent = title;
+            confirmMessage.textContent = message;
+            confirmIcon.textContent = icon;
+            modal.classList.add('show');
+
+            confirmOk.onclick = () => {
+                modal.classList.remove('show');
+                if (onConfirm) onConfirm();
+            };
+
+            confirmCancel.onclick = () => {
+                modal.classList.remove('show');
+            };
+        }
+
         // Simulate ticket data
         let ticketData = {
             customerName: 'João Silva',
@@ -767,7 +833,11 @@
             updateUI();
             
             // Show confirmation
-            alert('Presença confirmada! O barbeiro saberá que você está aqui.');
+            showAlert(
+                'Presença Confirmada!',
+                'O barbeiro saberá que você está aqui.',
+                'check_circle'
+            );
         });
 
         // Handle refresh button
@@ -784,11 +854,21 @@
 
         // Handle leave queue button
         leaveButton.addEventListener('click', function() {
-            if (confirm('Tem certeza que deseja sair da fila?')) {
-                alert('Você saiu da fila. Até a próxima!');
-                // Redirect back to home page
-                window.location.href = 'index.html';
-            }
+            showConfirm(
+                'Sair da Fila?',
+                'Tem certeza que deseja sair da fila?',
+                'exit_to_app',
+                () => {
+                    showAlert(
+                        'Até Logo!',
+                        'Você saiu da fila. Até a próxima!',
+                        'waving_hand',
+                        () => {
+                            window.location.href = 'index.html';
+                        }
+                    );
+                }
+            );
         });
 
         // Simulate queue progression

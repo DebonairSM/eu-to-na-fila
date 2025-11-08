@@ -504,12 +504,55 @@
             </form>
 
             <div class="forgot-link">
-                <a href="#" onclick="alert('Recuperação de senha não implementada'); return false;">Esqueceu sua senha?</a>
+                <a href="#" onclick="showInfoAlert(); return false;">Esqueceu sua senha?</a>
             </div>
         </div>
     </div>
 
+    <!-- Custom Alert Modal -->
+    <div class="modal-backdrop" id="customAlertBackdrop" style="display: none;">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header" style="margin-bottom: 24px;">
+                <span class="material-symbols-outlined modal-icon" id="customAlertIcon">info</span>
+                <div class="modal-title" id="customAlertTitle">Informação</div>
+            </div>
+            <div class="modal-subtitle" id="customAlertMessage" style="text-align: center; margin-bottom: 24px;">
+                Mensagem
+            </div>
+            <button class="button primary" id="customAlertOk" style="width: 100%; flex: none;">
+                <span>OK</span>
+            </button>
+        </div>
+    </div>
+
     <script>
+        // Custom alert function
+        function showCustomAlert(title, message, icon = 'info', callback = null) {
+            const backdrop = document.getElementById('customAlertBackdrop');
+            const alertTitle = document.getElementById('customAlertTitle');
+            const alertMessage = document.getElementById('customAlertMessage');
+            const alertIcon = document.getElementById('customAlertIcon');
+            const alertOk = document.getElementById('customAlertOk');
+
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            alertIcon.textContent = icon;
+            backdrop.style.display = 'flex';
+
+            alertOk.onclick = () => {
+                backdrop.style.display = 'none';
+                if (callback) callback();
+            };
+        }
+
+        function showInfoAlert() {
+            showCustomAlert(
+                'Em Breve',
+                'A recuperação de senha ainda não foi implementada. Entre em contato com o administrador.',
+                'info'
+            );
+        }
+
         const form = document.getElementById('loginForm');
         const usernameInput = document.getElementById('usernameInput');
         const passwordInput = document.getElementById('passwordInput');
@@ -565,9 +608,14 @@
             setTimeout(() => {
                 // For demo: accept "admin" / "admin123"
                 if (username === 'admin' && password === 'admin123') {
-                    alert('Login bem-sucedido! Redirecionando para gerenciamento da fila...');
-                    // Redirect to queue manager
-                    window.location.href = 'barber-queue-manager.html';
+                    showCustomAlert(
+                        'Login Bem-Sucedido!',
+                        'Redirecionando para gerenciamento da fila...',
+                        'check_circle',
+                        () => {
+                            window.location.href = 'barber-queue-manager.html';
+                        }
+                    );
                 } else {
                     errorText.textContent = 'Usuário ou senha incorretos. Tente novamente.';
                     errorAlert.classList.add('show');
