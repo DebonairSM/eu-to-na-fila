@@ -423,6 +423,13 @@
                 <div class="in-progress-title" style="color: var(--md-sys-color-on-primary);">Atendimento concluído!</div>
                 <div class="in-progress-message" style="color: var(--md-sys-color-on-primary); opacity: 0.9;">Obrigado por usar nosso sistema</div>
             </div>
+
+            <div class="action-buttons">
+                <button class="button primary" onclick="window.location.href = 'index.html'" style="background-color: var(--md-sys-color-surface); color: var(--md-sys-color-primary);">
+                    <span class="material-symbols-outlined">home</span>
+                    <span>Voltar ao Início</span>
+                </button>
+            </div>
         </div>
 
         <div class="refresh-indicator">
@@ -535,7 +542,8 @@
         leaveButton.addEventListener('click', function() {
             if (confirm('Tem certeza que deseja sair da fila?')) {
                 alert('Você saiu da fila. Até a próxima!');
-                // In real app, would navigate away or show confirmation screen
+                // Redirect back to home page
+                window.location.href = 'index.html';
             }
         });
 
