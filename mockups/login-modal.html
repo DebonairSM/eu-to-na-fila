@@ -475,8 +475,12 @@
 
         // Close modal
         function closeModal() {
-            // In real app, would navigate back to display view
-            alert('Modal fechado. Voltando para a tela de exibição...');
+            // Go back to previous page or home
+            if (document.referrer) {
+                window.history.back();
+            } else {
+                window.location.href = 'index.html';
+            }
         }
 
         // Handle form submission
@@ -506,7 +510,8 @@
                 // For demo: accept "admin" / "admin123"
                 if (username === 'admin' && password === 'admin123') {
                     alert('Login bem-sucedido! Redirecionando para gerenciamento da fila...');
-                    // In real app, would store JWT and redirect
+                    // Redirect to queue manager
+                    window.location.href = 'barber-queue-manager.html';
                 } else {
                     errorText.textContent = 'Usuário ou senha incorretos. Tente novamente.';
                     errorAlert.classList.add('show');
