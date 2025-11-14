@@ -24,14 +24,15 @@ Static HTML mockups for all pages and components of the queue management system.
 
 ### Staff Interface
 
-3. **barber-queue-manager.html** - Queue Management Dashboard
-   - Queue statistics (waiting count, serving count)
-   - "Being Served" section for in-progress customers
-   - Waiting queue list with position badges
-   - Barber avatars for claiming customers
-   - Remove button for cancellations
-   - Barber check-in panel (toggle active/inactive)
-   - "Finalizar" button to complete services
+3. **barber-queue-manager.html** - Unified Queue Management & Kiosk Display
+   - **Management Mode**: Queue statistics, simple list showing position + name only
+   - Start service / Complete service buttons
+   - Remove customer button
+   - **Kiosk Mode**: Toggle via TV icon button
+   - Fullscreen display with queue view (15s) and ads (10s each)
+   - Rotates automatically between queue and 3 advertisement slides
+   - Login button in kiosk mode for staff access
+   - Shows only position number and customer name (simplified)
    - Real-time updates simulation
 
 4. **owner-dashboard.html** - Owner Dashboard
@@ -59,16 +60,7 @@ Static HTML mockups for all pages and components of the queue management system.
 
 ### Display & Auth
 
-7. **display-screen.html** - Public TV Display
-   - Fullscreen display view
-   - Rotating between queue and advertisements (15s queue, 10s per ad)
-   - Large, readable fonts for distance viewing
-   - Progress bar showing rotation timing
-   - Login button in top right corner
-   - Three advertisement slides included
-   - Auto-refresh queue data (only updates display when data changes)
-
-8. **login-modal.html** - Staff Login Modal
+7. **login-modal.html** - Staff Login Modal
    - Clean modal overlay design
    - Username/email and password fields
    - Role selection (Barber or Owner)
@@ -110,11 +102,14 @@ Open any HTML file directly in a browser to view the mockup. Each file is self-c
 
 1. **queue-join.html**: Try entering names with profanity to test the filter
 2. **customer-status.html**: Watch the position/time updates, click "I Have Arrived"
-3. **barber-queue-manager.html**: Toggle barber status, claim customers, complete services
+3. **barber-queue-manager.html**: 
+   - Management mode: Start/complete services, remove customers
+   - Click TV icon to enter kiosk mode (fullscreen)
+   - Watch queue rotate with ads (15s queue, 10s ads)
+   - Press ESC to exit kiosk mode
 4. **owner-dashboard.html**: See owner landing page with three options
 5. **manage-barbers.html**: Add/edit/remove barbers, see stats update
-6. **display-screen.html**: Watch the 15s queue + 10s ad rotation, only updates when queue changes
-7. **login-modal.html**: Test with admin/admin123, try both Barber and Owner roles
+6. **login-modal.html**: Test with admin/admin123, try both Barber and Owner roles
 
 ## Implementation Notes
 

@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Fila - Barbearia Mineiro</title>
+    <title>Fila - Barbearia Mineiro</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     
     <!-- Google Fonts - Roboto -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     
     <!-- Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -21,101 +21,120 @@
             box-sizing: border-box;
         }
 
-        html {
-            overflow-y: scroll;
-        }
-
         :root {
-            /* Gold and White Color Scheme for Mineiro Barber Shop */
             --md-sys-color-primary: #D4AF37;
             --md-sys-color-on-primary: #FFFFFF;
             --md-sys-color-primary-container: #FFF8E1;
             --md-sys-color-on-primary-container: #3E2723;
-            --md-sys-color-secondary: #8B7355;
-            --md-sys-color-on-secondary: #FFFFFF;
             --md-sys-color-surface: #FFFFFF;
             --md-sys-color-on-surface: #1D1B20;
             --md-sys-color-surface-variant: #F5F5F5;
             --md-sys-color-on-surface-variant: #5D5D5D;
             --md-sys-color-outline: #C4C4C4;
             --md-sys-color-error: #BA1A1A;
-            --md-sys-color-on-error: #FFFFFF;
-            --md-sys-color-error-container: #FFDAD6;
-            --md-sys-color-on-error-container: #410002;
             --md-sys-color-success: #2E7D32;
             --md-sys-color-success-container: #C8E6C9;
-            
-            /* Elevation shadows with gold tint */
-            --md-sys-elevation-1: 0px 1px 2px rgba(212, 175, 55, 0.2), 0px 1px 3px 1px rgba(0, 0, 0, 0.1);
-            --md-sys-elevation-2: 0px 1px 2px rgba(212, 175, 55, 0.25), 0px 2px 6px 2px rgba(0, 0, 0, 0.12);
-            --md-sys-elevation-3: 0px 4px 8px 3px rgba(212, 175, 55, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.2);
         }
 
+        /* ============ MANAGEMENT MODE STYLES ============ */
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: var(--md-sys-color-surface-variant);
+            background: linear-gradient(135deg, #f0f2f5 0%, #e3e7ed 100%);
+            background-attachment: fixed;
             color: var(--md-sys-color-on-surface);
             min-height: 100vh;
             padding: 16px;
             padding-bottom: 200px;
+            transition: all 0.5s ease;
+        }
+
+        body.kiosk-mode {
+            background: #000000;
+            padding: 0;
+            overflow: hidden;
+            height: 100vh;
         }
 
         .container {
-            width: 100%;
-            max-width: 480px;
+            max-width: 600px;
             margin: 0 auto;
+            transition: all 0.5s ease;
+        }
+
+        body.kiosk-mode .container {
+            max-width: 100%;
         }
 
         /* Header */
         .header {
-            background-color: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary);
-            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
             padding: 24px;
             margin-bottom: 16px;
-            box-shadow: var(--md-sys-elevation-2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        }
+
+        body.kiosk-mode .header {
+            display: none;
         }
 
         .header-top {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 12px;
             margin-bottom: 16px;
-            justify-content: space-between;
         }
 
         .header-icon {
             font-size: 32px;
+            color: var(--md-sys-color-primary);
         }
 
-        .header-title {
-            flex: 1;
-        }
-
-        .header-top a:hover {
-            background: rgba(255,255,255,0.2) !important;
-            border-color: var(--md-sys-color-primary) !important;
-        }
-
-        h1 {
+        .header-title h1 {
             font-size: 24px;
             font-weight: 500;
-            line-height: 32px;
+            color: var(--md-sys-color-on-surface);
         }
 
-        .subtitle {
+        .header-title p {
             font-size: 14px;
-            font-weight: 400;
-            opacity: 0.9;
-            margin-top: 4px;
+            color: var(--md-sys-color-on-surface-variant);
         }
 
-        /* Queue Stats */
-        .queue-stats {
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid var(--md-sys-color-outline);
+            background: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface-variant);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .icon-button:hover {
+            border-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-primary);
+            background: rgba(212, 175, 55, 0.1);
+            transform: scale(1.1);
+        }
+
+        .stats {
             display: flex;
             gap: 16px;
             padding-top: 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .stat-item {
@@ -126,100 +145,85 @@
         .stat-value {
             font-size: 28px;
             font-weight: 500;
-            line-height: 36px;
+            color: var(--md-sys-color-primary);
         }
 
         .stat-label {
             font-size: 12px;
-            font-weight: 400;
-            opacity: 0.9;
+            color: var(--md-sys-color-on-surface-variant);
             margin-top: 4px;
         }
 
-        /* Section Headers */
-        .section-header {
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface);
-            margin: 24px 0 12px 0;
-            padding: 0 4px;
-        }
-
-        /* Being Served Section */
-        .being-served-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+        /* Barber Selector */
+        .barber-selector {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 20px;
             margin-bottom: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
         }
 
-        .being-served-item {
-            background-color: var(--md-sys-color-success-container);
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: var(--md-sys-elevation-1);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideIn 0.3s ease;
-        }
-
-        .being-served-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .being-served-name {
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface);
-            margin-bottom: 4px;
-        }
-
-        .being-served-details {
-            font-size: 12px;
-            color: var(--md-sys-color-on-surface-variant);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .barber-serving {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .barber-serving-avatar {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .finalize-button {
-            padding: 8px 16px;
+        .barber-selector-title {
             font-size: 14px;
             font-weight: 500;
-            font-family: 'Roboto', sans-serif;
-            border: none;
-            border-radius: 20px;
-            background-color: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary);
+            color: var(--md-sys-color-on-surface-variant);
+            margin-bottom: 12px;
+        }
+
+        .barber-list {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .barber-chip {
+            padding: 8px 16px;
+            background: rgba(212, 175, 55, 0.1);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--md-sys-color-primary);
             cursor: pointer;
-            transition: all 0.2s ease;
-            white-space: nowrap;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .finalize-button:hover {
-            box-shadow: var(--md-sys-elevation-2);
+        .barber-chip:hover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: var(--md-sys-color-primary);
+            transform: translateY(-2px);
         }
 
-        .finalize-button:active {
-            transform: scale(0.95);
+        .barber-chip.active {
+            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
+            border-color: var(--md-sys-color-primary);
+            color: white;
         }
 
-        /* Queue List */
+        /* Queue Section */
+        .queue-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        }
+
+        body.kiosk-mode .queue-section {
+            display: none;
+        }
+
+        .section-header {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 20px;
+        }
+
         .queue-list {
             display: flex;
             flex-direction: column;
@@ -227,271 +231,372 @@
         }
 
         .queue-item {
-            background-color: var(--md-sys-color-surface);
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: var(--md-sys-elevation-1);
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(212, 175, 55, 0.02) 100%);
+            border: 2px solid rgba(212, 175, 55, 0.2);
+            border-radius: 16px;
+            padding: 20px;
             display: flex;
             align-items: center;
             gap: 16px;
-            transition: all 0.2s ease;
-            animation: slideIn 0.3s ease;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
 
-        .remove-avatar {
+        .queue-item:hover {
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.2);
+        }
+
+        .queue-item.claimed {
+            border-color: var(--md-sys-color-primary);
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);
+        }
+
+        .position-badge {
             width: 48px;
             height: 48px;
             border-radius: 50%;
-            border: 2px solid var(--md-sys-color-primary);
-            background-color: var(--md-sys-color-error-container);
-            color: var(--md-sys-color-error);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 22px;
+            font-weight: 600;
             flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
         }
 
-        .remove-avatar:hover {
-            background-color: var(--md-sys-color-error);
-            color: var(--md-sys-color-on-error);
-            transform: scale(1.1);
-            box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
-        }
-
-        .remove-avatar:active {
-            transform: scale(0.95);
-        }
-
-        .remove-avatar .material-symbols-outlined {
-            font-size: 24px;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .queue-item.removing {
-            animation: slideOut 0.3s ease forwards;
-        }
-
-        @keyframes slideOut {
-            to {
-                opacity: 0;
-                transform: translateX(100%);
-            }
-        }
-
-        /* Position Badge */
-        .position-badge {
-            width: 40px;
-            height: 40px;
-            border-radius: 20px;
-            background-color: var(--md-sys-color-primary-container);
-            color: var(--md-sys-color-on-primary-container);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            font-weight: 500;
-            flex-shrink: 0;
-        }
-
-        /* Customer Info */
         .customer-info {
             flex: 1;
-            min-width: 0;
-        }
-
-        .customer-name {
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface);
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .waiting-time {
-            font-size: 12px;
-            color: var(--md-sys-color-on-surface-variant);
             display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 4px;
         }
 
-        .waiting-time .material-symbols-outlined {
-            font-size: 16px;
+        .customer-name {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
         }
 
-        /* Barber Avatars Row */
-        .barber-avatars {
+        .barber-assignment {
+            font-size: 13px;
+            color: var(--md-sys-color-on-surface-variant);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .barber-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--md-sys-color-primary);
+            font-weight: 500;
+        }
+
+        .queue-actions {
             display: flex;
             gap: 8px;
-            flex-shrink: 0;
         }
 
-        .barber-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: 2px solid var(--md-sys-color-primary);
-            object-fit: cover;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .barber-avatar:hover {
-            transform: scale(1.1);
-            box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
-        }
-
-        .barber-avatar:active {
-            transform: scale(0.95);
-        }
-
-        /* Barber Check-In Panel */
-        .barber-panel {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: var(--md-sys-color-surface);
-            border-top: 1px solid var(--md-sys-color-outline);
-            padding: 16px;
-            box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-        }
-
-        .barber-panel-content {
-            max-width: 480px;
-            margin: 0 auto;
-        }
-
-        .barber-panel-title {
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 100px;
+            font-family: 'Roboto', sans-serif;
             font-size: 14px;
             font-weight: 500;
-            color: var(--md-sys-color-on-surface-variant);
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .barber-list {
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: flex;
-            gap: 12px;
-            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
         }
 
-        .barber-card {
+        .action-btn.primary {
+            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+        }
+
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+        }
+
+        .action-btn.danger {
+            background: transparent;
+            color: var(--md-sys-color-error);
+            border: 2px solid rgba(186, 26, 26, 0.3);
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(186, 26, 26, 0.1);
+            border-color: var(--md-sys-color-error);
+        }
+
+        /* ============ KIOSK MODE STYLES ============ */
+        .kiosk-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        body.kiosk-mode .kiosk-container {
+            display: block;
+        }
+
+        /* Login button for kiosk */
+        .kiosk-login-btn {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 14px 28px;
+            background: rgba(212, 175, 55, 0.15);
+            border: 2px solid rgba(212, 175, 55, 0.6);
+            border-radius: 100px;
+            color: var(--md-sys-color-primary);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+            transition: all 0.4s ease;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+            text-decoration: none;
+        }
+
+        body.kiosk-mode .kiosk-login-btn {
+            display: flex;
+        }
+
+        .kiosk-login-btn:hover {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(212, 175, 55, 0.2) 100%);
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* Kiosk views */
+        .kiosk-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        .kiosk-view.active {
+            opacity: 1;
+            z-index: 1;
+        }
+
+        /* Kiosk Queue View */
+        .kiosk-queue-view {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kiosk-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .kiosk-logo {
+            font-size: 96px;
+            color: var(--md-sys-color-primary);
+            margin-bottom: 20px;
+            filter: drop-shadow(0 8px 24px rgba(212, 175, 55, 0.6));
+            animation: logoFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .kiosk-title {
+            font-size: 64px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 50%, #D4AF37 100%);
+            background-size: 200% 200%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            animation: textShimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes textShimmer {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .kiosk-subtitle {
+            font-size: 28px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .kiosk-queue-list {
             flex: 1;
-            background-color: var(--md-sys-color-surface-variant);
-            border-radius: 12px;
-            padding: 12px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            max-height: 70vh;
+            overflow: hidden;
+        }
+
+        .kiosk-queue-item {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.08) 100%);
+            border: 3px solid rgba(212, 175, 55, 0.4);
+            border-radius: 28px;
+            padding: 36px;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            backdrop-filter: blur(20px);
+        }
+
+        .kiosk-queue-item.serving {
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.25) 0%, rgba(46, 125, 50, 0.15) 100%);
+            border-color: rgba(46, 125, 50, 0.6);
+            box-shadow: 0 8px 32px rgba(46, 125, 50, 0.3);
+        }
+
+        .kiosk-position {
+            width: 80px;
+            height: 80px;
+            background-color: var(--md-sys-color-primary);
+            color: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: 700;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+        }
+
+        .kiosk-queue-item.serving .kiosk-position {
+            background-color: var(--md-sys-color-success);
+        }
+
+        .kiosk-customer-name {
+            font-size: 36px;
+            font-weight: 500;
+            color: #FFFFFF;
+        }
+
+        .kiosk-status {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .kiosk-queue-item.serving .kiosk-status {
+            color: var(--md-sys-color-success);
+        }
+
+        /* Kiosk Ad Views */
+        .kiosk-ad-view {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-        }
-
-        .barber-card.active {
-            background-color: var(--md-sys-color-success-container);
-            box-shadow: var(--md-sys-elevation-1);
-        }
-
-        .barber-card-avatar {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid transparent;
-            transition: all 0.2s ease;
-        }
-
-        .barber-card.active .barber-card-avatar {
-            border-color: var(--md-sys-color-success);
-        }
-
-        .barber-card-name {
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface);
+            justify-content: center;
+            padding: 80px;
             text-align: center;
         }
 
-        .barber-toggle-button {
-            width: 100%;
-            padding: 6px 12px;
-            font-size: 11px;
-            font-weight: 500;
-            font-family: 'Roboto', sans-serif;
-            border: 1px solid var(--md-sys-color-outline);
-            border-radius: 16px;
-            background-color: var(--md-sys-color-surface);
-            color: var(--md-sys-color-on-surface-variant);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .kiosk-ad-view.ad-1 {
+            background: linear-gradient(135deg, #1a1a1a 0%, #3d3d3d 100%);
         }
 
-        .barber-card.active .barber-toggle-button {
-            background-color: var(--md-sys-color-success);
-            color: var(--md-sys-color-on-primary);
-            border-color: var(--md-sys-color-success);
+        .kiosk-ad-view.ad-2 {
+            background: linear-gradient(135deg, #2d2416 0%, #4a3d2a 100%);
         }
 
-        .barber-toggle-button:hover {
-            box-shadow: var(--md-sys-elevation-1);
+        .kiosk-ad-view.ad-3 {
+            background: linear-gradient(135deg, #1a2d1a 0%, #2d4a2d 100%);
         }
 
-        .barber-toggle-button:active {
-            transform: scale(0.95);
+        .ad-icon {
+            font-size: 120px;
+            color: var(--md-sys-color-primary);
+            margin-bottom: 40px;
+            filter: drop-shadow(0 8px 16px rgba(212, 175, 55, 0.4));
+        }
+
+        .ad-title {
+            font-size: 72px;
+            font-weight: 900;
+            color: var(--md-sys-color-primary);
+            margin-bottom: 24px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            line-height: 1.2;
+        }
+
+        .ad-subtitle {
+            font-size: 36px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.4;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background-color: var(--md-sys-color-primary);
+            transition: width 0.1s linear;
+            z-index: 999;
+            display: none;
+        }
+
+        body.kiosk-mode .progress-bar {
+            display: block;
         }
 
         /* Empty State */
         .empty-state {
             text-align: center;
-            padding: 48px 24px;
-            background-color: var(--md-sys-color-surface);
-            border-radius: 12px;
-            box-shadow: var(--md-sys-elevation-1);
-            display: none;
-        }
-
-        .empty-state.show {
-            display: block;
-        }
-
-        .empty-state-icon {
-            font-size: 64px;
+            padding: 60px 20px;
             color: var(--md-sys-color-on-surface-variant);
-            opacity: 0.5;
-            margin-bottom: 16px;
         }
 
-        .empty-state-title {
-            font-size: 18px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface);
-            margin-bottom: 8px;
-        }
-
-        .empty-state-message {
-            font-size: 14px;
-            color: var(--md-sys-color-on-surface-variant);
+        .empty-icon {
+            font-size: 80px;
+            opacity: 0.3;
+            margin-bottom: 20px;
         }
 
         /* Material Icons */
@@ -502,362 +607,389 @@
             'GRAD' 0,
             'opsz' 24;
         }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .kiosk-queue-list {
+                grid-template-columns: 1fr;
+            }
+
+            .kiosk-customer-name {
+                font-size: 28px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Management Mode Content -->
     <div class="container">
         <!-- Header -->
         <div class="header">
             <div class="header-top">
-                <span class="material-symbols-outlined header-icon">content_cut</span>
-                <div class="header-title">
-                    <h1>Barbearia Mineiro</h1>
-                    <p class="subtitle">Gerenciamento da Fila</p>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="material-symbols-outlined header-icon">content_cut</span>
+                    <div class="header-title">
+                        <h1>Barbearia Mineiro</h1>
+                        <p>Gerenciamento da Fila</p>
+                    </div>
                 </div>
-                <a href="owner-dashboard.html" style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: rgba(255,255,255,0.1); border: 2px solid rgba(212,175,55,0.3); border-radius: 100px; color: var(--md-sys-color-primary); font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.3s ease;">
-                    <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
-                    <span>Voltar</span>
-                </a>
+                <div class="header-actions">
+                    <button class="icon-button" onclick="toggleKioskMode()" title="Modo Kiosk">
+                        <span class="material-symbols-outlined">tv</span>
+                    </button>
+                    <a href="owner-dashboard.html" class="icon-button" title="Voltar">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </a>
+                </div>
             </div>
-            
-            <div class="queue-stats">
+
+            <div class="stats">
                 <div class="stat-item">
                     <div class="stat-value" id="queueCount">4</div>
                     <div class="stat-label">Aguardando</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value" id="servingCount">0</div>
+                    <div class="stat-value" id="servingCount">1</div>
                     <div class="stat-label">Atendendo</div>
                 </div>
             </div>
         </div>
 
-        <!-- Being Served Section -->
-        <div id="beingServedSection" style="display: none;">
-            <h2 class="section-header">Em Atendimento</h2>
-            <div class="being-served-list" id="beingServedList">
-                <!-- Being served items will be dynamically generated -->
-            </div>
-        </div>
-
-        <!-- Queue Section -->
-        <h2 class="section-header">Fila de Espera</h2>
-        <div class="queue-list" id="queueList">
-            <!-- Queue items will be dynamically generated -->
-        </div>
-
-        <!-- Empty State -->
-        <div class="empty-state" id="emptyState">
-            <span class="material-symbols-outlined empty-state-icon">event_available</span>
-            <div class="empty-state-title">Nenhum cliente na fila</div>
-            <div class="empty-state-message">Quando alguém entrar na fila, aparecerá aqui</div>
-        </div>
-    </div>
-
-    <!-- Barber Check-In Panel -->
-    <div class="barber-panel">
-        <div class="barber-panel-content">
-            <div class="barber-panel-title">Barbeiros</div>
+        <!-- Barber Selector -->
+        <div class="barber-selector">
+            <div class="barber-selector-title">Selecione um barbeiro para reivindicar clientes:</div>
             <div class="barber-list" id="barberList">
-                <!-- Barber cards will be dynamically generated -->
+                <!-- Barbers will be generated here -->
+            </div>
+        </div>
+
+        <!-- Queue List -->
+        <div class="queue-section">
+            <h2 class="section-header">Fila de Espera</h2>
+            <div class="queue-list" id="queueList">
+                <!-- Queue items will be generated here -->
+            </div>
+
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <span class="material-symbols-outlined empty-icon">event_available</span>
+                <div style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">Nenhum cliente na fila</div>
+                <div style="font-size: 14px;">Quando alguém entrar na fila, aparecerá aqui</div>
             </div>
         </div>
     </div>
+
+    <!-- Kiosk Mode Content -->
+    <a href="login-modal.html" class="kiosk-login-btn">
+        <span class="material-symbols-outlined">login</span>
+        <span>Entrar</span>
+    </a>
+
+    <div class="kiosk-container">
+        <!-- Kiosk Queue View -->
+        <div class="kiosk-view kiosk-queue-view active" id="kioskQueueView">
+            <div class="kiosk-header">
+                <span class="material-symbols-outlined kiosk-logo">content_cut</span>
+                <div class="kiosk-title">Barbearia Mineiro</div>
+                <div class="kiosk-subtitle">Fila de Espera</div>
+            </div>
+
+            <div class="kiosk-queue-list" id="kioskQueueList">
+                <!-- Kiosk queue items will be generated here -->
+            </div>
+        </div>
+
+        <!-- Ad Views -->
+        <div class="kiosk-view kiosk-ad-view ad-1" id="ad1">
+            <span class="material-symbols-outlined ad-icon">content_cut</span>
+            <div class="ad-title">CORTE + BARBA</div>
+            <div class="ad-subtitle">O melhor atendimento da região<br>Venha conhecer</div>
+        </div>
+
+        <div class="kiosk-view kiosk-ad-view ad-2" id="ad2">
+            <span class="material-symbols-outlined ad-icon">workspace_premium</span>
+            <div class="ad-title">PRODUTOS<br>PROFISSIONAIS</div>
+            <div class="ad-subtitle">Linha completa para cuidados<br>com cabelo e barba</div>
+        </div>
+
+        <div class="kiosk-view kiosk-ad-view ad-3" id="ad3">
+            <span class="material-symbols-outlined ad-icon">schedule</span>
+            <div class="ad-title">ABERTO DE<br>SEG A SÁB</div>
+            <div class="ad-subtitle">Segunda a Sexta: 9h às 19h<br>Sábado: 9h às 17h</div>
+        </div>
+    </div>
+
+    <div class="progress-bar" id="progressBar"></div>
 
     <script>
-        // Barbers data
-        let barbers = [
-            { id: 1, name: 'Carlos', avatar: 'https://i.pravatar.cc/80?img=12', active: false },
-            { id: 2, name: 'Roberto', avatar: 'https://i.pravatar.cc/80?img=33', active: false },
-            { id: 3, name: 'Miguel', avatar: 'https://i.pravatar.cc/80?img=51', active: false }
+        // Hard-seeded barbers
+        const barbers = [
+            { id: 1, name: 'João' },
+            { id: 2, name: 'Pedro' },
+            { id: 3, name: 'Carlos' }
         ];
 
-        // Queue data - customers waiting
+        // Queue data with hard-seeded barber assignments
         let queueData = [
-            { id: 1, name: 'João Silva', waitTime: 5, hasArrived: true },
-            { id: 2, name: 'Maria Santos', waitTime: 10, hasArrived: true },
-            { id: 3, name: 'Pedro Oliveira', waitTime: 15, hasArrived: false },
-            { id: 4, name: 'Ana Costa', waitTime: 20, hasArrived: false }
+            { id: 1, name: 'Carlos Silva', status: 'serving', barberId: 1 },
+            { id: 2, name: 'João Santos', status: 'waiting', barberId: null },
+            { id: 3, name: 'Pedro Oliveira', status: 'waiting', barberId: null },
+            { id: 4, name: 'Maria Costa', status: 'waiting', barberId: null }
         ];
 
-        // Being served data - customers currently being served
-        let beingServedData = [];
+        let selectedBarberId = null;
+        let isKioskMode = false;
+        let kioskViewIndex = 0;
+        const kioskViews = ['kioskQueueView', 'ad1', 'ad2', 'ad3'];
+        const QUEUE_DURATION = 15000;
+        const AD_DURATION = 10000;
+        let kioskInterval;
+        let progressInterval;
 
-        // DOM elements
-        const queueList = document.getElementById('queueList');
-        const emptyState = document.getElementById('emptyState');
-        const queueCountDisplay = document.getElementById('queueCount');
-        const servingCountDisplay = document.getElementById('servingCount');
-        const barberList = document.getElementById('barberList');
-        const beingServedList = document.getElementById('beingServedList');
-        const beingServedSection = document.getElementById('beingServedSection');
-
-        // Get active barbers
-        function getActiveBarbers() {
-            return barbers.filter(b => b.active);
-        }
-
-        // Get available barbers (active and not currently serving)
-        function getAvailableBarbers() {
-            const servingBarberIds = beingServedData.map(c => c.barberId);
-            return barbers.filter(b => b.active && !servingBarberIds.includes(b.id));
-        }
-
-        // Remove customer from queue
-        function removeCustomer(customerId) {
-            const item = document.querySelector(`.queue-item[data-id="${customerId}"]`);
+        // Toggle kiosk mode
+        function toggleKioskMode() {
+            isKioskMode = !isKioskMode;
+            document.body.classList.toggle('kiosk-mode');
             
-            if (item) {
-                item.classList.add('removing');
-                
-                setTimeout(() => {
-                    queueData = queueData.filter(c => c.id !== customerId);
-                    renderAll();
-                }, 300);
-            }
-        }
-
-        // Toggle barber availability
-        function toggleBarber(barberId) {
-            const barber = barbers.find(b => b.id === barberId);
-            if (barber) {
-                barber.active = !barber.active;
-                renderAll();
-            }
-        }
-
-        // Claim customer - move from queue to being served
-        function claimCustomer(customerId, barberId) {
-            const customerIndex = queueData.findIndex(c => c.id === customerId);
-            if (customerIndex !== -1) {
-                const customer = queueData[customerIndex];
-                queueData.splice(customerIndex, 1);
-                
-                // Add to being served with timestamp
-                beingServedData.push({
-                    ...customer,
-                    barberId: barberId,
-                    startTime: Date.now()
-                });
-                
-                renderAll();
-            }
-        }
-
-        // Finalize service - mark as paid and remove
-        function finalizeService(customerId) {
-            const item = document.querySelector(`.being-served-item[data-id="${customerId}"]`);
-            
-            if (item) {
-                item.classList.add('removing');
-                
-                setTimeout(() => {
-                    beingServedData = beingServedData.filter(c => c.id !== customerId);
-                    renderAll();
-                }, 300);
-            }
-        }
-
-        // Render barber check-in panel
-        function renderBarberPanel() {
-            barberList.innerHTML = '';
-            
-            barbers.forEach(barber => {
-                const card = document.createElement('div');
-                card.className = `barber-card ${barber.active ? 'active' : ''}`;
-                
-                card.innerHTML = `
-                    <img src="${barber.avatar}" alt="${barber.name}" class="barber-card-avatar">
-                    <div class="barber-card-name">${barber.name}</div>
-                    <button class="barber-toggle-button" onclick="toggleBarber(${barber.id})">
-                        ${barber.active ? 'Disponível' : 'Indisponível'}
-                    </button>
-                `;
-                
-                barberList.appendChild(card);
-            });
-        }
-
-        // Render queue list
-        function renderQueue() {
-            queueList.innerHTML = '';
-            
-            if (queueData.length === 0) {
-                emptyState.classList.add('show');
-                queueList.style.display = 'none';
+            if (isKioskMode) {
+                startKioskRotation();
+                document.documentElement.requestFullscreen?.();
             } else {
-                emptyState.classList.remove('show');
-                queueList.style.display = 'flex';
-                
-                queueData.forEach((customer, index) => {
-                    const queueItem = createQueueItem(customer, index + 1);
-                    queueList.appendChild(queueItem);
-                });
-            }
-        }
-
-        // Create queue item element
-        function createQueueItem(customer, position) {
-            const item = document.createElement('div');
-            item.className = 'queue-item';
-            item.dataset.id = customer.id;
-            
-            // Position badge
-            const badge = document.createElement('div');
-            badge.className = 'position-badge';
-            badge.textContent = position;
-            
-            // Customer info
-            const customerInfo = document.createElement('div');
-            customerInfo.className = 'customer-info';
-            
-            const customerName = document.createElement('div');
-            customerName.className = 'customer-name';
-            customerName.textContent = customer.name;
-            
-            const waitingTime = document.createElement('div');
-            waitingTime.className = 'waiting-time';
-            
-            // Show arrival status and wait time
-            const arrivalBadge = customer.hasArrived 
-                ? '<span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background-color: var(--md-sys-color-success-container); color: var(--md-sys-color-success); border-radius: 12px; font-size: 12px; font-weight: 500;"><span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>No salão</span>'
-                : '<span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background-color: rgba(0,0,0,0.05); color: var(--md-sys-color-on-surface-variant); border-radius: 12px; font-size: 12px; font-weight: 500;"><span class="material-symbols-outlined" style="font-size: 14px;">schedule</span>A caminho</span>';
-            
-            const waitTimeBadge = `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background-color: rgba(212, 175, 55, 0.15); color: var(--md-sys-color-primary); border-radius: 12px; font-size: 12px; font-weight: 500;"><span class="material-symbols-outlined" style="font-size: 14px;">schedule</span>${customer.waitTime} min</span>`;
-            
-            waitingTime.innerHTML = `
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    ${arrivalBadge}
-                    ${waitTimeBadge}
-                </div>
-            `;
-            
-            customerInfo.appendChild(customerName);
-            customerInfo.appendChild(waitingTime);
-            
-            // Barber avatars (only available barbers - active and not currently serving)
-            const barberAvatars = document.createElement('div');
-            barberAvatars.className = 'barber-avatars';
-            
-            const availableBarbers = getAvailableBarbers();
-            if (availableBarbers.length > 0) {
-                availableBarbers.forEach(barber => {
-                    const avatar = document.createElement('img');
-                    avatar.className = 'barber-avatar';
-                    avatar.src = barber.avatar;
-                    avatar.alt = barber.name;
-                    avatar.title = `Atender como ${barber.name}`;
-                    avatar.onclick = () => claimCustomer(customer.id, barber.id);
-                    barberAvatars.appendChild(avatar);
-                });
-            } else {
-                barberAvatars.innerHTML = '<span style="font-size: 12px; color: var(--md-sys-color-on-surface-variant);">Nenhum barbeiro disponível</span>';
-            }
-            
-            // Remove button styled as avatar
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'remove-avatar';
-            removeBtn.onclick = () => removeCustomer(customer.id);
-            removeBtn.innerHTML = '<span class="material-symbols-outlined">close</span>';
-            removeBtn.title = 'Remover da fila';
-            barberAvatars.appendChild(removeBtn);
-            
-            // Assemble item
-            item.appendChild(badge);
-            item.appendChild(customerInfo);
-            item.appendChild(barberAvatars);
-            
-            return item;
-        }
-
-        // Render being served section
-        function renderBeingServed() {
-            if (beingServedData.length === 0) {
-                beingServedSection.style.display = 'none';
-            } else {
-                beingServedSection.style.display = 'block';
-                beingServedList.innerHTML = '';
-                
-                beingServedData.forEach(customer => {
-                    const item = createBeingServedItem(customer);
-                    beingServedList.appendChild(item);
-                });
-            }
-        }
-
-        // Create being served item element
-        function createBeingServedItem(customer) {
-            const barber = barbers.find(b => b.id === customer.barberId);
-            const serviceTime = Math.floor((Date.now() - customer.startTime) / 60000); // minutes
-            
-            const item = document.createElement('div');
-            item.className = 'being-served-item';
-            item.dataset.id = customer.id;
-            
-            item.innerHTML = `
-                <div class="being-served-info">
-                    <div class="being-served-name">${customer.name}</div>
-                    <div class="being-served-details">
-                        <div class="barber-serving">
-                            <img src="${barber.avatar}" alt="${barber.name}" class="barber-serving-avatar">
-                            <span>${barber.name}</span>
-                        </div>
-                        <span>•</span>
-                        <span>${serviceTime} min</span>
-                    </div>
-                </div>
-                <button class="finalize-button" onclick="finalizeService(${customer.id})">
-                    Finalizar
-                </button>
-            `;
-            
-            return item;
-        }
-
-        // Update statistics
-        function updateStats() {
-            queueCountDisplay.textContent = queueData.length;
-            servingCountDisplay.textContent = beingServedData.length;
-        }
-
-        // Render all sections
-        function renderAll() {
-            renderBarberPanel();
-            renderQueue();
-            renderBeingServed();
-            updateStats();
-        }
-
-        // Simulate wait time updates
-        function updateTimes() {
-            // Update wait times for customers in queue
-            queueData.forEach(customer => {
-                customer.waitTime += 1;
-            });
-            
-            // Re-render queue to update badges properly
-            renderQueue();
-            
-            // Update being served items without re-rendering
-            beingServedData.forEach(customer => {
-                const item = document.querySelector(`.being-served-item[data-id="${customer.id}"]`);
-                if (item) {
-                    const serviceTime = Math.floor((Date.now() - customer.startTime) / 60000);
-                    const timeSpan = item.querySelector('.being-served-details span:last-child');
-                    if (timeSpan) {
-                        timeSpan.textContent = `${serviceTime} min`;
-                    }
+                stopKioskRotation();
+                if (document.fullscreenElement) {
+                    document.exitFullscreen?.();
                 }
+            }
+        }
+
+        // Render barber selector
+        function renderBarberSelector() {
+            const barberList = document.getElementById('barberList');
+            barberList.innerHTML = '';
+
+            barbers.forEach(barber => {
+                const chip = document.createElement('div');
+                chip.className = `barber-chip ${selectedBarberId === barber.id ? 'active' : ''}`;
+                chip.innerHTML = `
+                    <span class="material-symbols-outlined" style="font-size: 18px;">content_cut</span>
+                    <span>${barber.name}</span>
+                `;
+                chip.onclick = () => {
+                    selectedBarberId = selectedBarberId === barber.id ? null : barber.id;
+                    renderAll();
+                };
+                barberList.appendChild(chip);
             });
+        }
+
+        // Render management queue
+        function renderManagementQueue() {
+            const queueList = document.getElementById('queueList');
+            const emptyState = document.getElementById('emptyState');
+            const queueCount = document.getElementById('queueCount');
+            const servingCount = document.getElementById('servingCount');
+
+            const waiting = queueData.filter(c => c.status === 'waiting');
+            const serving = queueData.filter(c => c.status === 'serving');
+
+            queueCount.textContent = waiting.length;
+            servingCount.textContent = serving.length;
+
+            if (queueData.length === 0) {
+                queueList.innerHTML = '';
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                queueList.innerHTML = '';
+
+                queueData.forEach((customer, index) => {
+                    const item = document.createElement('div');
+                    const isClaimed = customer.barberId !== null;
+                    item.className = `queue-item ${isClaimed ? 'claimed' : ''}`;
+                    
+                    // Get barber name if assigned
+                    const barber = customer.barberId ? barbers.find(b => b.id === customer.barberId) : null;
+                    const barberBadge = barber 
+                        ? `<div class="barber-badge">
+                            <span class="material-symbols-outlined" style="font-size: 14px;">content_cut</span>
+                            <span>${barber.name}</span>
+                           </div>`
+                        : '';
+                    
+                    // Click handler for claiming customer
+                    if (customer.status === 'waiting' && !isClaimed && selectedBarberId) {
+                        item.onclick = (e) => {
+                            // Don't claim if clicking on action buttons
+                            if (!e.target.closest('.queue-actions')) {
+                                claimCustomer(customer.id, selectedBarberId);
+                            }
+                        };
+                    }
+                    
+                    item.innerHTML = `
+                        <div class="position-badge">${index + 1}</div>
+                        <div class="customer-info">
+                            <div class="customer-name">${customer.name}</div>
+                            ${barberBadge}
+                            ${customer.status === 'waiting' && !isClaimed && selectedBarberId ? 
+                                '<div style="font-size: 12px; color: var(--md-sys-color-primary); margin-top: 4px;">Clique para reivindicar</div>' : ''}
+                        </div>
+                        <div class="queue-actions" onclick="event.stopPropagation()">
+                            ${customer.status === 'waiting' ? `
+                                <button class="action-btn primary" onclick="startService(${customer.id})" ${!isClaimed ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
+                                    <span class="material-symbols-outlined" style="font-size: 18px;">play_arrow</span>
+                                    <span>Atender</span>
+                                </button>
+                            ` : `
+                                <button class="action-btn primary" onclick="completeService(${customer.id})">
+                                    <span class="material-symbols-outlined" style="font-size: 18px;">check</span>
+                                    <span>Finalizar</span>
+                                </button>
+                            `}
+                            <button class="action-btn danger" onclick="removeCustomer(${customer.id})">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+                            </button>
+                        </div>
+                    `;
+
+                    queueList.appendChild(item);
+                });
+            }
+        }
+
+        // Render kiosk queue
+        function renderKioskQueue() {
+            const kioskQueueList = document.getElementById('kioskQueueList');
+            kioskQueueList.innerHTML = '';
+
+            const displayQueue = queueData.slice(0, 6);
+
+            displayQueue.forEach((item, index) => {
+                const queueItem = document.createElement('div');
+                queueItem.className = `kiosk-queue-item ${item.status === 'serving' ? 'serving' : ''}`;
+
+                const statusText = item.status === 'serving' 
+                    ? '<span class="material-symbols-outlined" style="font-size: 24px;">cut</span>Em atendimento'
+                    : '';
+
+                queueItem.innerHTML = `
+                    <div class="kiosk-position">${index + 1}</div>
+                    <div>
+                        <div class="kiosk-customer-name">${item.name}</div>
+                        ${statusText ? `<div class="kiosk-status">${statusText}</div>` : ''}
+                    </div>
+                `;
+
+                kioskQueueList.appendChild(queueItem);
+            });
+        }
+
+        // Kiosk rotation
+        function startKioskRotation() {
+            switchKioskView(0);
+            
+            function rotateView() {
+                kioskViewIndex = (kioskViewIndex + 1) % kioskViews.length;
+                switchKioskView(kioskViewIndex);
+            }
+            
+            kioskInterval = setInterval(rotateView, kioskViewIndex === 0 ? QUEUE_DURATION : AD_DURATION);
+        }
+
+        function switchKioskView(index) {
+            document.querySelectorAll('.kiosk-view').forEach(view => {
+                view.classList.remove('active');
+            });
+
+            const viewId = kioskViews[index];
+            document.getElementById(viewId).classList.add('active');
+
+            const duration = viewId === 'kioskQueueView' ? QUEUE_DURATION : AD_DURATION;
+            
+            clearInterval(kioskInterval);
+            kioskInterval = setInterval(() => {
+                kioskViewIndex = (kioskViewIndex + 1) % kioskViews.length;
+                switchKioskView(kioskViewIndex);
+            }, duration);
+
+            startProgressBar(duration);
+        }
+
+        function startProgressBar(duration) {
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = '0%';
+            
+            clearInterval(progressInterval);
+            
+            let progress = 0;
+            const increment = 100 / (duration / 100);
+            
+            progressInterval = setInterval(() => {
+                progress += increment;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(progressInterval);
+                }
+                progressBar.style.width = progress + '%';
+            }, 100);
+        }
+
+        function stopKioskRotation() {
+            clearInterval(kioskInterval);
+            clearInterval(progressInterval);
+        }
+
+        // Actions
+        function claimCustomer(customerId, barberId) {
+            const customer = queueData.find(c => c.id === customerId);
+            if (customer && customer.status === 'waiting' && !customer.barberId) {
+                customer.barberId = barberId;
+                renderAll();
+            }
+        }
+
+        function startService(customerId) {
+            const customer = queueData.find(c => c.id === customerId);
+            if (customer && customer.barberId) {
+                customer.status = 'serving';
+                renderAll();
+            }
+        }
+
+        function completeService(customerId) {
+            queueData = queueData.filter(c => c.id !== customerId);
+            renderAll();
+        }
+
+        function removeCustomer(customerId) {
+            if (confirm('Remover cliente da fila?')) {
+                queueData = queueData.filter(c => c.id !== customerId);
+                renderAll();
+            }
+        }
+
+        // Render all views
+        function renderAll() {
+            renderBarberSelector();
+            renderManagementQueue();
+            renderKioskQueue();
         }
 
         // Initialize
         renderAll();
 
-        // Update times every minute (simulated as every 3 seconds for demo)
-        setInterval(updateTimes, 3000);
+        // Escape key exits kiosk mode
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isKioskMode) {
+                toggleKioskMode();
+            }
+        });
+
+        // Poll for updates (simulate)
+        setInterval(() => {
+            if (isKioskMode) {
+                renderKioskQueue();
+            }
+        }, 3000);
     </script>
 </body>
 </html>
-
-

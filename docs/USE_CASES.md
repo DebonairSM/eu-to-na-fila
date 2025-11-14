@@ -76,17 +76,15 @@ The system supports three types of users:
 
 **Steps**:
 1. Staff views current queue on management page
-2. System displays waiting customers in order
+2. System displays waiting customers in order (showing only position number and name)
 3. Staff identifies next customer to serve (typically first in queue)
-4. Staff clicks "Start Service" or "Call Customer" button
-5. System may prompt to select which barber is serving (optional)
-6. Staff confirms the action
-7. System updates ticket status from `waiting` to `in_progress`
-8. System assigns barber ID to the ticket (if applicable)
-9. System sets ticket position to 0 (no longer in queue)
-10. System recalculates queue positions for remaining waiting customers
-11. System broadcasts update to all connected clients
-12. Customer's status page shows "In Progress"
+4. Staff clicks "Start Service" or "Atender" button
+5. System updates ticket status from `waiting` to `in_progress`
+6. System assigns barber ID to the ticket (if applicable)
+7. System sets ticket position to 0 (no longer in queue)
+8. System recalculates queue positions for remaining waiting customers
+9. System broadcasts update to all connected clients
+10. Customer's status page shows "In Progress"
 
 **Postconditions**:
 - Ticket status is `in_progress`
@@ -299,51 +297,52 @@ The system supports three types of users:
 - Track barber login/logout times or use active barber count history
 - Consider caching for performance
 
-## 10. Public Display with Advertisements (Display Screen)
+## 10. Unified Queue Display with Kiosk Mode
 
-**Actor**: Display screen (e.g., TV mounted in barbershop)
+**Actor**: Staff (Barber/Owner) or Display Screen
 
 **Preconditions**:
-- Display device is connected to internet
-- Display device navigates to display URL (e.g., `/display` or `/queue`)
+- Staff has access to queue management interface
+- For kiosk mode: device is connected to internet and can display fullscreen
 
 **Steps**:
-1. Device loads display view
-2. System alternates between two views:
+1. Staff navigates to queue management page
+2. System displays queue in **Management Mode**:
+   - Simple list showing position number and customer name only
+   - Statistics (waiting count, serving count)
+   - Action buttons: Start Service, Complete Service, Remove
+3. Staff clicks TV icon button to toggle **Kiosk Mode**
+4. System switches to fullscreen kiosk display
+5. System alternates between two views:
    - **Queue View** (15 seconds):
-     - Customer names or ticket numbers
-     - Current status (waiting, in progress)
-     - Approximate wait time for next customers
+     - Shows up to 6 customers
+     - Displays position number and name only
      - Large, readable format for visibility from distance
-   - **Advertisement View** (10-15 seconds per ad):
-     - Shop promotional content (images, videos, offers)
+     - Highlights customers currently being served
+   - **Advertisement View** (10 seconds per ad):
+     - Shop promotional content
      - Barbershop branding
      - Services offered
      - Special promotions
-3. System automatically rotates between queue and ads in a loop
-4. Queue data refreshes every 3 seconds via polling (even when ads are showing)
-5. Login button remains visible in top corner during all views
+     - Three advertisement slides rotate
+6. System automatically rotates between queue and ads in a loop
+7. Queue data refreshes every 3 seconds via polling
+8. Login button remains visible in top corner during kiosk mode
+9. Staff can press ESC key to exit kiosk mode
 
 **Postconditions**:
 - Customers in shop can see current queue status regularly
 - Shop displays promotional content between queue updates
 - Staff can access management features via login button at any time
+- Staff can toggle between management and kiosk modes
 
 **Display Characteristics**:
 - Large font sizes for visibility from distance
-- High contrast colors
+- High contrast colors (dark background, gold accents)
 - Smooth transitions between queue and ad views
-- Fullscreen mode
-- No customer interaction required
-- Prevents screen sleep/idle
-
-**Configuration Options**:
-- Queue display duration (default: 15 seconds)
-- Ad rotation interval per slide (default: 10-15 seconds)
-- Number of upcoming tickets shown (e.g., next 5-10 customers)
-- Ad content (images, videos, text slides)
-- Transition style (fade, slide, instant)
-- Theme customization per shop
+- Fullscreen mode (auto-enters fullscreen)
+- Progress bar shows rotation timing
+- Shows only essential information: position + name
 
 **Rotation Example**:
 ```
@@ -356,38 +355,40 @@ The system supports three types of users:
 ```
 
 **Implementation Notes**:
-- Create dedicated route (e.g., `/display`)
-- Use CSS for large text and high contrast
+- Single unified page serves both management and display purposes
+- Toggle between modes via UI button
+- Use CSS for large text and high contrast in kiosk mode
 - Implement slideshow/carousel component with timer
-- Store ad images/videos in shop configuration or cloud storage
 - Continue polling queue data in background during ad display
-- Hide unnecessary UI elements (forms, detailed info)
 - Login button positioned absolutely (stays on top of rotation)
+- Exit kiosk mode via ESC key or clicking TV icon again
 
-## 11. Staff Login from Display Screen
+## 11. Staff Login from Kiosk Mode
 
 **Actor**: Barber/Staff
 
 **Preconditions**:
-- Display screen is showing public queue view
+- Kiosk mode is active (displaying queue/ads)
 - Staff needs to access management features
 
 **Steps**:
-1. Staff clicks login button in top corner of display screen
-2. System displays login modal overlay (display view remains visible in background)
+1. Staff clicks login button in top corner of kiosk display
+2. System navigates to login page
 3. System shows login form:
    - Username/email field
    - Password field
+   - Role selection (Barber or Owner)
    - Login button
    - Cancel button
-4. Staff enters credentials
+4. Staff enters credentials and selects role
 5. Staff clicks login button
 6. System validates credentials
 7. If valid:
    - System generates JWT token
    - System stores token in browser
-   - System closes modal
-   - System redirects to queue management interface
+   - System redirects based on role:
+     - Barber → Queue management page
+     - Owner → Owner dashboard
 8. If invalid:
    - System displays error message
    - Staff can retry or cancel
@@ -397,26 +398,19 @@ The system supports three types of users:
 - Staff has access to management features:
   - Update ticket status
   - Remove customers from queue
-  - Adjust active barber count
-  - View analytics (if implemented)
-- Staff can return to display view via logout or dedicated button
+  - View analytics (Owner only)
+  - Manage barbers (Owner only)
+- Staff can toggle kiosk mode from management interface
 
 **Alternative Flow - Cancel**:
 - Staff clicks cancel button
-- Modal closes
-- Display view continues showing queue
+- Returns to previous page or home page
 
 **Security Notes**:
 - Password is transmitted over HTTPS only
 - Failed login attempts are rate-limited
 - Session expires after inactivity period
 - Token is stored securely (httpOnly cookie or secure localStorage)
-
-**UI Considerations**:
-- Modal should be large enough for touch input (tablet-friendly)
-- Clear visual distinction between display and login modes
-- Easy way to return to display view after managing queue
-- Consider "Display Mode" button in staff interface to return to public view
 
 ## Future Use Cases
 
