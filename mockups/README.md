@@ -4,6 +4,16 @@ Static HTML mockups for all pages and components of the queue management system.
 
 ## Mockup Files
 
+### Home Page
+
+0. **index.html** - Home Page
+   - Central navigation hub
+   - Three main options:
+     - "Entrar na Fila" - Customer registration
+     - "Entrar (Staff)" - Staff login page
+     - "Gerenciar Fila" - Direct access to queue manager (bypass login)
+   - Clean, simple design with animated cards
+
 ### Customer Interface
 
 1. **queue-join.html** - Customer Registration Page
@@ -16,61 +26,47 @@ Static HTML mockups for all pages and components of the queue management system.
 2. **customer-status.html** - Customer Status Page
    - Real-time queue position display
    - Estimated wait time
-   - "I Have Arrived" button
    - "Leave Queue" button
    - Status badges (waiting, in progress, completed)
-   - Auto-refresh indicator
+   - Auto-updates every 30 seconds (only shows changes when data actually changes)
    - Responsive design for mobile
 
 ### Staff Interface
 
 3. **barber-queue-manager.html** - Unified Queue Management & Kiosk Display
    - **Management Mode**: Queue statistics, simple list showing position + name only
+   - Barber selector to choose which barber is claiming customers
    - Start service / Complete service buttons
    - Remove customer button
    - **Kiosk Mode**: Toggle via TV icon button
    - Fullscreen display with queue view (15s) and ads (10s each)
    - Rotates automatically between queue and 3 advertisement slides
-   - Login button in kiosk mode for staff access
+   - Barber selector at bottom (visible only during queue view, hidden during ads)
+   - Barbers can select themselves and click customers to claim them
    - Shows only position number and customer name (simplified)
-   - Real-time updates simulation
+   - Polls every 30 seconds, only visually updates when data changes
 
 4. **owner-dashboard.html** - Owner Dashboard
    - Landing page for owners after login
-   - Three options: Gerenciar Fila, Gerenciar Barbeiros, or Analytics
+   - Option to access Gerenciar Fila
    - Clean, simple navigation
    - Logout button
    - Animated entrance
 
-5. **manage-barbers.html** - Manage Barbers (Owner Only)
-   - List all barbers with avatars
-   - Add new barber (name, email, phone, password)
-   - Edit existing barber information
-   - Remove barber with confirmation
-   - Toggle active/inactive status
-   - Stats showing total and active barbers
-   - Back button to owner dashboard
-
-6. **analytics.html** - Analytics Dashboard
-   - Performance metrics and graphs
-   - Haircuts per hour/day
-   - Average wait times
-   - Barber productivity
-   - Service popularity
-
 ### Display & Auth
 
-7. **login-modal.html** - Staff Login Modal
+5. **login-modal.html** - Staff Login Modal
    - Clean modal overlay design
    - Username/email and password fields
-   - Role selection (Barber or Owner)
    - Show/hide password toggle
    - Error handling and validation
    - Loading states
    - Forgot password link
    - Close on Escape or backdrop click
-   - Demo credentials: admin / admin123
-   - Routes to barber-queue-manager.html (Barber) or owner-dashboard.html (Owner)
+   - Demo credentials: 
+     - `admin` / `admin123` → Owner → routes to owner-dashboard.html
+     - `barber` / `barber123` → Barber → routes to barber-queue-manager.html
+   - Role is determined automatically based on credentials
 
 ## Design System
 
@@ -94,31 +90,44 @@ All mockups use a consistent Material Design 3 theme:
 - Touch-friendly button sizes for tablets
 - High contrast for readability
 
+## Archived Files
+
+The following files have been archived in the `archive/` folder for future implementation:
+- **analytics.html** - Analytics Dashboard (performance metrics, graphs, productivity stats)
+- **manage-barbers.html** - Manage Barbers page (add/edit/remove barbers, manage accounts)
+
+These features are planned for later phases of development.
+
 ## Usage
 
 Open any HTML file directly in a browser to view the mockup. Each file is self-contained with inline CSS and JavaScript for interactivity.
 
 ### Testing Mockups
 
-1. **queue-join.html**: Try entering names with profanity to test the filter
-2. **customer-status.html**: Watch the position/time updates, click "I Have Arrived"
-3. **barber-queue-manager.html**: 
-   - Management mode: Start/complete services, remove customers
+1. **index.html**: Home page with three options:
+   - "Entrar na Fila" - Customer registration
+   - "Entrar (Staff)" - Staff login
+   - "Gerenciar Fila" - Direct access to queue manager (bypass login)
+2. **queue-join.html**: Try entering names with profanity to test the filter
+3. **customer-status.html**: Watch the position/time updates (updates every 30s, only when data changes)
+4. **barber-queue-manager.html**: 
+   - Management mode: Select barber, start/complete services, remove customers
    - Click TV icon to enter kiosk mode (fullscreen)
+   - In kiosk mode: Select barber at bottom, click customers to claim them
    - Watch queue rotate with ads (15s queue, 10s ads)
    - Press ESC to exit kiosk mode
-4. **owner-dashboard.html**: See owner landing page with three options
-5. **manage-barbers.html**: Add/edit/remove barbers, see stats update
-6. **login-modal.html**: Test with admin/admin123, try both Barber and Owner roles
+5. **owner-dashboard.html**: See owner landing page (only shows "Gerenciar Fila" option)
+6. **login-modal.html**: Test with admin/admin123 (Owner) or barber/barber123 (Barber)
 
 ## Implementation Notes
 
 These mockups serve as visual references for implementing the actual React components. Key behaviors to replicate:
 
-- HTTP polling every 3 seconds for queue updates
+- HTTP polling every 30 seconds for customer status and kiosk mode (with smart diffing)
 - Smooth animations for state changes
 - Material Design interaction patterns
 - Responsive layouts for mobile and tablet
 - Error handling and loading states
 - Real-time position calculations
+- Visual updates only when data actually changes (prevents unnecessary re-renders)
 

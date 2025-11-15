@@ -154,35 +154,38 @@
             margin-top: 4px;
         }
 
-        /* Barber Selector */
+        /* Barber Selector - Integrated */
         .barber-selector {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.04) 100%);
+            border: 2px solid rgba(212, 175, 55, 0.2);
+            border-radius: 16px;
+            margin-bottom: 20px;
         }
 
         .barber-selector-title {
             font-size: 14px;
             font-weight: 500;
             color: var(--md-sys-color-on-surface-variant);
-            margin-bottom: 12px;
+            white-space: nowrap;
         }
 
         .barber-list {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             flex-wrap: wrap;
+            flex: 1;
         }
 
         .barber-chip {
-            padding: 8px 16px;
+            padding: 6px 14px;
             background: rgba(212, 175, 55, 0.1);
             border: 2px solid rgba(212, 175, 55, 0.3);
             border-radius: 100px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             color: var(--md-sys-color-primary);
             cursor: pointer;
@@ -202,6 +205,7 @@
             background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
             border-color: var(--md-sys-color-primary);
             color: white;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
         }
 
         /* Queue Section */
@@ -525,6 +529,114 @@
             font-weight: 600;
         }
 
+        .kiosk-queue-item.claimed {
+            border-color: rgba(212, 175, 55, 0.8);
+            box-shadow: 0 12px 48px rgba(212, 175, 55, 0.5), inset 0 0 60px rgba(212, 175, 55, 0.2);
+        }
+
+        .kiosk-queue-item.clickable {
+            cursor: pointer;
+            animation: clickablePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes clickablePulse {
+            0%, 100% {
+                border-color: rgba(212, 175, 55, 0.5);
+            }
+            50% {
+                border-color: rgba(212, 175, 55, 0.9);
+                box-shadow: 0 12px 48px rgba(212, 175, 55, 0.4), inset 0 0 60px rgba(212, 175, 55, 0.2), 0 0 0 4px rgba(212, 175, 55, 0.3);
+            }
+        }
+
+        .kiosk-queue-item.clickable:hover {
+            transform: translateY(-8px) scale(1.05);
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 20px 80px rgba(212, 175, 55, 0.6), inset 0 0 100px rgba(212, 175, 55, 0.3);
+            animation: none;
+        }
+
+        .kiosk-queue-item.clickable:active {
+            transform: translateY(-4px) scale(1.02);
+        }
+
+        /* Kiosk Barber Selector */
+        .kiosk-barber-selector {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 26, 0.98) 100%);
+            backdrop-filter: blur(30px);
+            border: 3px solid rgba(212, 175, 55, 0.8);
+            border-radius: 16px;
+            padding: 12px 24px;
+            display: none;
+            align-items: center;
+            gap: 16px;
+            z-index: 10000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(212, 175, 55, 0.3);
+            pointer-events: auto;
+        }
+
+        body.kiosk-mode .kiosk-barber-selector.show {
+            display: flex;
+        }
+
+        .kiosk-barber-label {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--md-sys-color-primary);
+            white-space: nowrap;
+        }
+
+        .kiosk-barber-list {
+            display: flex;
+            gap: 12px;
+        }
+
+        .kiosk-barber-chip {
+            padding: 10px 20px;
+            background: rgba(212, 175, 55, 0.15);
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--md-sys-color-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 100px;
+            justify-content: center;
+            pointer-events: auto;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .kiosk-barber-chip:hover {
+            background: rgba(212, 175, 55, 0.3);
+            border-color: var(--md-sys-color-primary);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+        }
+
+        .kiosk-barber-chip:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .kiosk-barber-chip.active {
+            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
+            border-color: var(--md-sys-color-primary);
+            color: white;
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.6);
+        }
+
+        .kiosk-barber-chip .material-symbols-outlined {
+            font-size: 24px;
+        }
+
         /* Kiosk Ad Views */
         .kiosk-ad-view {
             display: flex;
@@ -665,7 +777,7 @@
             
             <div class="stats">
                 <div class="stat-item">
-                    <div class="stat-value" id="queueCount">4</div>
+                    <div class="stat-value" id="queueCount">9</div>
                     <div class="stat-label">Aguardando</div>
                 </div>
                 <div class="stat-item">
@@ -675,17 +787,20 @@
             </div>
         </div>
 
-        <!-- Barber Selector -->
-        <div class="barber-selector">
-            <div class="barber-selector-title">Selecione um barbeiro para reivindicar clientes:</div>
-            <div class="barber-list" id="barberList">
-                <!-- Barbers will be generated here -->
+        <!-- Queue List -->
+        <div class="queue-section">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                <h2 class="section-header" style="margin: 0;">Fila de Espera</h2>
+            </div>
+            
+            <!-- Barber Selector - Integrated -->
+            <div class="barber-selector">
+                <div class="barber-selector-title">Selecione barbeiro:</div>
+                <div class="barber-list" id="barberList">
+                    <!-- Barbers will be generated here -->
             </div>
         </div>
 
-        <!-- Queue List -->
-        <div class="queue-section">
-        <h2 class="section-header">Fila de Espera</h2>
         <div class="queue-list" id="queueList">
                 <!-- Queue items will be generated here -->
         </div>
@@ -700,18 +815,26 @@
 
     <!-- Kiosk Mode Content -->
     <div class="kiosk-container">
+        <!-- Kiosk Barber Selector - Always visible in kiosk mode -->
+        <div class="kiosk-barber-selector">
+            <div class="kiosk-barber-label">Selecione barbeiro:</div>
+            <div class="kiosk-barber-list" id="kioskBarberList">
+                <!-- Barbers will be generated here -->
+            </div>
+        </div>
+
         <!-- Kiosk Queue View -->
         <div class="kiosk-view kiosk-queue-view active" id="kioskQueueView">
             <div class="kiosk-header">
                 <span class="material-symbols-outlined kiosk-logo">content_cut</span>
                 <div class="kiosk-title">Barbearia Mineiro</div>
                 <div class="kiosk-subtitle">Fila de Espera</div>
-            </div>
+    </div>
 
             <div class="kiosk-queue-list" id="kioskQueueList">
                 <!-- Kiosk queue items will be generated here -->
+            </div>
         </div>
-    </div>
 
         <!-- Ad Views -->
         <div class="kiosk-view kiosk-ad-view ad-1" id="ad1">
@@ -748,7 +871,13 @@
             { id: 1, name: 'Carlos Silva', status: 'serving', barberId: 1 },
             { id: 2, name: 'João Santos', status: 'waiting', barberId: null },
             { id: 3, name: 'Pedro Oliveira', status: 'waiting', barberId: null },
-            { id: 4, name: 'Maria Costa', status: 'waiting', barberId: null }
+            { id: 4, name: 'Maria Costa', status: 'waiting', barberId: null },
+            { id: 5, name: 'Ana Paula', status: 'waiting', barberId: null },
+            { id: 6, name: 'Roberto Alves', status: 'waiting', barberId: null },
+            { id: 7, name: 'Fernanda Lima', status: 'waiting', barberId: null },
+            { id: 8, name: 'Lucas Mendes', status: 'waiting', barberId: null },
+            { id: 9, name: 'Juliana Souza', status: 'waiting', barberId: null },
+            { id: 10, name: 'Ricardo Gomes', status: 'waiting', barberId: null }
         ];
 
         let selectedBarberId = null;
@@ -766,34 +895,95 @@
             document.body.classList.toggle('kiosk-mode');
             
             if (isKioskMode) {
+                // Reset state when entering kiosk mode
+                kioskViewIndex = 0;
+                previousQueueData = ''; // Reset to force render
+                
+                // Reset progress bar
+                const progressBar = document.getElementById('progressBar');
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                }
+                
+                // Render initial state
+                renderKioskQueue();
+                renderKioskBarberSelector();
+                
+                // Show barber selector initially (queue view is first)
+                const barberSelector = document.querySelector('.kiosk-barber-selector');
+                if (barberSelector) {
+                    barberSelector.classList.add('show');
+                }
+                
+                // Start rotation
                 startKioskRotation();
+                
+                // Request fullscreen
                 document.documentElement.requestFullscreen?.();
             } else {
+                // Clean up when exiting kiosk mode
                 stopKioskRotation();
+                
+                // Reset progress bar
+                const progressBar = document.getElementById('progressBar');
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                }
+                
+                // Exit fullscreen
                 if (document.fullscreenElement) {
                     document.exitFullscreen?.();
                 }
             }
         }
 
-        // Render barber selector
+        // Render barber selector (management mode)
         function renderBarberSelector() {
             const barberList = document.getElementById('barberList');
-            barberList.innerHTML = '';
+            if (barberList) {
+                barberList.innerHTML = '';
 
-            barbers.forEach(barber => {
-                const chip = document.createElement('div');
-                chip.className = `barber-chip ${selectedBarberId === barber.id ? 'active' : ''}`;
-                chip.innerHTML = `
-                    <span class="material-symbols-outlined" style="font-size: 18px;">content_cut</span>
-                    <span>${barber.name}</span>
-                `;
-                chip.onclick = () => {
-                    selectedBarberId = selectedBarberId === barber.id ? null : barber.id;
-                    renderAll();
-                };
-                barberList.appendChild(chip);
-            });
+                barbers.forEach(barber => {
+                    const chip = document.createElement('div');
+                    chip.className = `barber-chip ${selectedBarberId === barber.id ? 'active' : ''}`;
+                    chip.innerHTML = `
+                        <span class="material-symbols-outlined" style="font-size: 18px;">content_cut</span>
+                        <span>${barber.name}</span>
+                    `;
+                    chip.onclick = () => {
+                        selectedBarberId = selectedBarberId === barber.id ? null : barber.id;
+                renderAll();
+                    };
+                    barberList.appendChild(chip);
+                });
+            }
+        }
+
+        // Render kiosk barber selector
+        function renderKioskBarberSelector() {
+            const kioskBarberList = document.getElementById('kioskBarberList');
+            if (kioskBarberList) {
+                kioskBarberList.innerHTML = '';
+
+                barbers.forEach(barber => {
+                    const chip = document.createElement('div');
+                    chip.className = `kiosk-barber-chip ${selectedBarberId === barber.id ? 'active' : ''}`;
+                    chip.innerHTML = `
+                        <span class="material-symbols-outlined">content_cut</span>
+                        <span>${barber.name}</span>
+                    `;
+                    
+                    // Click handler for barber selection
+                    chip.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectedBarberId = selectedBarberId === barber.id ? null : barber.id;
+                renderAll();
+                    });
+                    
+                    kioskBarberList.appendChild(chip);
+                });
+            }
         }
 
         // Render management queue
@@ -816,10 +1006,28 @@
                 emptyState.style.display = 'none';
                 queueList.innerHTML = '';
 
-                queueData.forEach((customer, index) => {
+                // Sort: serving first, then waiting by original order
+                const sortedQueue = [...queueData].sort((a, b) => {
+                    if (a.status === 'serving' && b.status !== 'serving') return -1;
+                    if (a.status !== 'serving' && b.status === 'serving') return 1;
+                    return 0;
+                });
+
+                // Calculate position for waiting customers
+                let waitingPosition = 1;
+                sortedQueue.forEach((customer, index) => {
                     const item = document.createElement('div');
                     const isClaimed = customer.barberId !== null;
                     item.className = `queue-item ${isClaimed ? 'claimed' : ''}`;
+                    
+                    // Position number: serving shows as 0, waiting shows queue position
+                    let positionNumber;
+                    if (customer.status === 'serving') {
+                        positionNumber = 0;
+                    } else {
+                        positionNumber = waitingPosition;
+                        waitingPosition++;
+                    }
                     
                     // Get barber name if assigned
                     const barber = customer.barberId ? barbers.find(b => b.id === customer.barberId) : null;
@@ -841,7 +1049,7 @@
                     }
                     
                     item.innerHTML = `
-                        <div class="position-badge">${index + 1}</div>
+                        <div class="position-badge">${positionNumber || '✓'}</div>
                         <div class="customer-info">
                             <div class="customer-name">${customer.name}</div>
                             ${barberBadge}
@@ -877,17 +1085,27 @@
         // Render kiosk queue
         function renderKioskQueue() {
             const kioskQueueList = document.getElementById('kioskQueueList');
+            if (!kioskQueueList) return; // Element doesn't exist if not in kiosk mode
             
             // Only update if data actually changed
             const currentDataString = JSON.stringify(queueData);
-            if (currentDataString === previousQueueData && kioskQueueList.innerHTML !== '') {
+            // Force update if queue is empty (to show empty state)
+            const isEmpty = queueData.length === 0;
+            if (currentDataString === previousQueueData && kioskQueueList.innerHTML !== '' && !isEmpty) {
                 return; // No changes, skip re-render
             }
             previousQueueData = currentDataString;
 
             kioskQueueList.innerHTML = '';
 
-            const displayQueue = queueData.slice(0, 6);
+            // Sort: serving first, then waiting
+            const sortedQueue = [...queueData].sort((a, b) => {
+                if (a.status === 'serving' && b.status !== 'serving') return -1;
+                if (a.status !== 'serving' && b.status === 'serving') return 1;
+                return 0;
+            });
+
+            const displayQueue = sortedQueue.slice(0, 6);
 
             if (displayQueue.length === 0) {
                 kioskQueueList.innerHTML = `
@@ -898,19 +1116,71 @@
                 return;
             }
 
-            displayQueue.forEach((item, index) => {
+            // Calculate position for waiting customers
+            let waitingPosition = 1;
+            displayQueue.forEach((item) => {
                 const queueItem = document.createElement('div');
-                queueItem.className = `kiosk-queue-item ${item.status === 'serving' ? 'serving' : ''}`;
+                const isClaimed = item.barberId !== null;
+                const isWaiting = item.status === 'waiting';
+                
+                let positionNumber;
+                if (item.status === 'serving') {
+                    positionNumber = '✓';
+                } else {
+                    positionNumber = waitingPosition;
+                    waitingPosition++;
+                }
+
+                let className = `kiosk-queue-item ${item.status === 'serving' ? 'serving' : ''} ${isClaimed ? 'claimed' : ''}`;
+                
+                // Make clickable if:
+                // 1. Waiting, not claimed, and barber is selected (to claim)
+                // 2. Waiting, claimed by selected barber (to unclaim)
+                const isClaimedBySelectedBarber = isClaimed && item.barberId === selectedBarberId;
+                const canClaim = isWaiting && !isClaimed && selectedBarberId;
+                const canUnclaim = isWaiting && isClaimedBySelectedBarber;
+                
+                if (canClaim || canUnclaim) {
+                    className += ' clickable';
+                    queueItem.style.cursor = 'pointer';
+                    queueItem.setAttribute('data-customer-id', item.id);
+                    queueItem.setAttribute('data-clickable', 'true');
+                    queueItem.setAttribute('data-action', canUnclaim ? 'unclaim' : 'claim');
+                } else {
+                    queueItem.style.cursor = 'default';
+                }
+                
+                queueItem.className = className;
+
+                // Get barber name if assigned
+                const barber = item.barberId ? barbers.find(b => b.id === item.barberId) : null;
+                const barberBadge = barber 
+                    ? `<div style="font-size: 20px; color: var(--md-sys-color-primary); margin-top: 8px; font-weight: 500;">
+                        <span class="material-symbols-outlined" style="font-size: 24px; vertical-align: middle;">content_cut</span>
+                        ${barber.name}
+                       </div>`
+                    : '';
 
                 const statusText = item.status === 'serving' 
                     ? '<span class="material-symbols-outlined" style="font-size: 32px;">content_cut</span><span>Em atendimento</span>'
                     : '';
 
+                let clickHint = '';
+                if (isWaiting && selectedBarberId) {
+                    if (isClaimedBySelectedBarber) {
+                        clickHint = '<div style="font-size: 20px; color: #ff6b6b; margin-top: 12px; font-weight: 600; text-shadow: 0 2px 8px rgba(255, 107, 107, 0.5);">👆 Toque para desmarcar</div>';
+                    } else if (!isClaimed) {
+                        clickHint = '<div style="font-size: 20px; color: var(--md-sys-color-primary); margin-top: 12px; font-weight: 600; text-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">👆 Toque para reivindicar</div>';
+                    }
+                }
+
                 queueItem.innerHTML = `
-                    <div class="kiosk-position">${index + 1}</div>
+                    <div class="kiosk-position">${positionNumber}</div>
                     <div style="text-align: center;">
                         <div class="kiosk-customer-name">${item.name}</div>
+                        ${barberBadge}
                         ${statusText ? `<div class="kiosk-status">${statusText}</div>` : ''}
+                        ${clickHint}
                     </div>
                 `;
 
@@ -920,32 +1190,56 @@
 
         // Kiosk rotation
         function startKioskRotation() {
+            // Clear any existing intervals
+            stopKioskRotation();
+            
+            // Start with queue view (index 0)
             switchKioskView(0);
-            
-            function rotateView() {
-                kioskViewIndex = (kioskViewIndex + 1) % kioskViews.length;
-                switchKioskView(kioskViewIndex);
-            }
-            
-            kioskInterval = setInterval(rotateView, kioskViewIndex === 0 ? QUEUE_DURATION : AD_DURATION);
         }
 
         function switchKioskView(index) {
+            // Update index
+            kioskViewIndex = index;
+            
+            // Hide all views
             document.querySelectorAll('.kiosk-view').forEach(view => {
                 view.classList.remove('active');
             });
 
+            // Show selected view
             const viewId = kioskViews[index];
-            document.getElementById(viewId).classList.add('active');
+            const viewElement = document.getElementById(viewId);
+            if (viewElement) {
+                viewElement.classList.add('active');
+            }
 
+            // Show/hide barber selector based on view
+            const barberSelector = document.querySelector('.kiosk-barber-selector');
+            if (barberSelector) {
+                if (viewId === 'kioskQueueView') {
+                    barberSelector.classList.add('show');
+            } else {
+                    barberSelector.classList.remove('show');
+                }
+            }
+
+            // Determine duration for this view
             const duration = viewId === 'kioskQueueView' ? QUEUE_DURATION : AD_DURATION;
             
-            clearInterval(kioskInterval);
-            kioskInterval = setInterval(() => {
-                kioskViewIndex = (kioskViewIndex + 1) % kioskViews.length;
-                switchKioskView(kioskViewIndex);
+            // Clear existing timeout
+            if (kioskInterval) {
+                clearTimeout(kioskInterval);
+            }
+            
+            // Set up next rotation
+            kioskInterval = setTimeout(() => {
+                if (isKioskMode) {
+                    const nextIndex = (kioskViewIndex + 1) % kioskViews.length;
+                    switchKioskView(nextIndex);
+                }
             }, duration);
 
+            // Start progress bar
             startProgressBar(duration);
         }
 
@@ -969,15 +1263,31 @@
         }
 
         function stopKioskRotation() {
-            clearInterval(kioskInterval);
-            clearInterval(progressInterval);
+            // Clear timeout (we use setTimeout for rotation)
+            if (kioskInterval) {
+                clearTimeout(kioskInterval);
+                kioskInterval = null;
+            }
+            // Clear progress bar interval
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
         }
 
         // Actions
         function claimCustomer(customerId, barberId) {
             const customer = queueData.find(c => c.id === customerId);
-            if (customer && customer.status === 'waiting' && !customer.barberId) {
-                customer.barberId = barberId;
+            if (customer && customer.status === 'waiting' && barberId) {
+                // If already claimed by this barber, unclaim it
+                if (customer.barberId === barberId) {
+                    customer.barberId = null;
+                } else if (!customer.barberId) {
+                    // Otherwise, claim it
+                    customer.barberId = barberId;
+                }
+                // Force update by resetting previousQueueData to ensure render happens
+                previousQueueData = '';
                 renderAll();
             }
         }
@@ -1005,12 +1315,37 @@
         // Render all views
         function renderAll() {
             renderBarberSelector();
+            renderKioskBarberSelector();
             renderManagementQueue();
             renderKioskQueue();
         }
 
+        // Event delegation for clickable queue items in kiosk mode
+        // Use document-level delegation to ensure it works even if element is recreated
+        document.addEventListener('click', function(e) {
+            // Only handle clicks in kiosk mode
+            if (!isKioskMode) return;
+            
+            const queueItem = e.target.closest('.kiosk-queue-item.clickable');
+            if (queueItem && queueItem.getAttribute('data-clickable') === 'true') {
+                e.preventDefault();
+                e.stopPropagation();
+                const customerId = parseInt(queueItem.getAttribute('data-customer-id'));
+                if (customerId && selectedBarberId) {
+                    claimCustomer(customerId, selectedBarberId);
+                }
+            }
+        });
+
         // Initialize
         renderAll();
+
+        // Ensure kiosk queue renders if already in kiosk mode
+        if (document.body.classList.contains('kiosk-mode')) {
+            previousQueueData = '';
+            renderKioskQueue();
+            renderKioskBarberSelector();
+        }
 
         // Escape key exits kiosk mode
         document.addEventListener('keydown', (e) => {

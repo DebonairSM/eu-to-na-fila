@@ -54,8 +54,8 @@ The system supports three types of users:
    - Estimated wait time (calculated as: average service time × position / active barbers)
    - Customer name
    - Current status (waiting, in progress, completed, cancelled)
-4. System polls API every 3 seconds for updates
-5. System updates display when queue changes
+4. System polls API every 30 seconds for updates
+5. System only visually updates display when queue data actually changes (smart diffing)
 
 **Postconditions**:
 - Customer has current information about their queue position
@@ -225,77 +225,17 @@ The system supports three types of users:
 **Alternative Flow**:
 - If customer is already being served (status `in_progress`), system may prevent cancellation or require staff confirmation
 
-## 8. Mark Arrival (Customer)
+## 8. Mark Arrival (Customer) - ARCHIVED
 
-**Actor**: Customer
+**Status**: This feature has been removed from the current implementation. It may be re-added in a future version.
 
-**Preconditions**:
-- Customer has a valid ticket ID
-- Customer has physically arrived at the barbershop
-- Ticket status is `waiting`
+**Note**: The "I Have Arrived" button was removed from the customer status page to simplify the interface. Customers can still be called by name when their turn arrives.
 
-**Steps**:
-1. Customer views their status page
-2. System displays "I Have Arrived" button
-3. Customer clicks the button
-4. System updates ticket with arrival confirmation
-5. System may adjust queue priority or flag the ticket as "present"
-6. Staff sees confirmation that customer is on-site
+## 9. View Analytics (Staff) - ARCHIVED
 
-**Postconditions**:
-- Ticket is marked with arrival time
-- Staff knows customer is physically present
-- Customer maintains their queue position
+**Status**: This feature has been archived for future implementation. The analytics page mockup is available in `mockups/archive/analytics.html`.
 
-**Use Cases**:
-- Prevents calling customers who haven't arrived
-- Allows shop to skip customers not yet present
-- Reduces no-shows and wait time confusion
-
-**Implementation Notes**:
-- May require new field in ticket schema: `arrivedAt` timestamp
-- Staff interface should distinguish between arrived and not-arrived customers
-
-## 9. View Analytics (Staff - Optional Feature)
-
-**Actor**: Shop Owner/Manager
-
-**Preconditions**:
-- Staff has manager-level access
-- Historical data exists in the database
-
-**Steps**:
-1. Staff navigates to analytics page
-2. System queries ticket and barber activity data
-3. System generates visualizations:
-   - Haircuts completed per hour (line graph)
-   - Haircuts completed per day (bar chart)
-   - Average wait time trend (line graph)
-   - Barbers working per hour (line graph)
-   - Service type distribution (pie chart)
-   - Peak hours heatmap
-4. Staff can filter by date range
-5. Staff can export data as CSV or PDF
-
-**Postconditions**:
-- Staff has insight into shop performance
-- Data can inform staffing decisions
-
-**Metrics Displayed**:
-- Total tickets created per period
-- Total tickets completed per period
-- Average wait time
-- Average service duration
-- Busiest hours/days
-- Barber productivity
-
-**Note**: Service-specific metrics (e.g., service popularity) would require implementing service selection feature.
-
-**Implementation Notes**:
-- Query completed tickets grouped by hour/day
-- Calculate averages from ticket timestamps
-- Track barber login/logout times or use active barber count history
-- Consider caching for performance
+**Note**: Analytics functionality is planned for a later phase of development. The owner dashboard currently only provides access to queue management.
 
 ## 10. Unified Queue Display with Kiosk Mode
 
@@ -326,15 +266,16 @@ The system supports three types of users:
      - Special promotions
      - Three advertisement slides rotate
 6. System automatically rotates between queue and ads in a loop
-7. Queue data refreshes every 3 seconds via polling
-8. Login button remains visible in top corner during kiosk mode
-9. Staff can press ESC key to exit kiosk mode
+7. Queue data refreshes every 30 seconds via polling (only visually updates when data changes)
+8. Barber selector is visible at bottom during queue view (hidden during ads)
+9. Barbers can select themselves and click customers to claim them
+10. Staff can press ESC key to exit kiosk mode
 
 **Postconditions**:
 - Customers in shop can see current queue status regularly
 - Shop displays promotional content between queue updates
-- Staff can access management features via login button at any time
 - Staff can toggle between management and kiosk modes
+- Barbers can claim customers directly from kiosk display
 
 **Display Characteristics**:
 - Large font sizes for visibility from distance
@@ -343,6 +284,8 @@ The system supports three types of users:
 - Fullscreen mode (auto-enters fullscreen)
 - Progress bar shows rotation timing
 - Shows only essential information: position + name
+- Barber selector at bottom (only visible during queue view)
+- Clickable customer cards when barber is selected
 
 **Rotation Example**:
 ```
@@ -356,33 +299,34 @@ The system supports three types of users:
 
 **Implementation Notes**:
 - Single unified page serves both management and display purposes
-- Toggle between modes via UI button
+- Toggle between modes via TV icon button
 - Use CSS for large text and high contrast in kiosk mode
 - Implement slideshow/carousel component with timer
-- Continue polling queue data in background during ad display
-- Login button positioned absolutely (stays on top of rotation)
+- Continue polling queue data in background during ad display (30s interval)
+- Barber selector shows/hides based on active view (queue vs ads)
 - Exit kiosk mode via ESC key or clicking TV icon again
 
-## 11. Staff Login from Kiosk Mode
+## 11. Staff Login
 
 **Actor**: Barber/Staff
 
 **Preconditions**:
-- Kiosk mode is active (displaying queue/ads)
 - Staff needs to access management features
+- Staff has valid credentials
 
 **Steps**:
-1. Staff clicks login button in top corner of kiosk display
-2. System navigates to login page
-3. System shows login form:
+1. Staff navigates to login page (from home page or directly)
+2. System shows login form:
    - Username/email field
    - Password field
-   - Role selection (Barber or Owner)
    - Login button
    - Cancel button
-4. Staff enters credentials and selects role
-5. Staff clicks login button
-6. System validates credentials
+3. Staff enters credentials
+4. Staff clicks login button
+5. System validates credentials
+6. System determines role automatically based on username:
+   - `admin` / `admin123` → Owner
+   - `barber` / `barber123` → Barber
 7. If valid:
    - System generates JWT token
    - System stores token in browser
@@ -398,51 +342,80 @@ The system supports three types of users:
 - Staff has access to management features:
   - Update ticket status
   - Remove customers from queue
-  - View analytics (Owner only)
-  - Manage barbers (Owner only)
+  - Access owner dashboard (Owner only)
 - Staff can toggle kiosk mode from management interface
 
 **Alternative Flow - Cancel**:
 - Staff clicks cancel button
 - Returns to previous page or home page
 
+**Alternative Flow - Bypass Login**:
+- Staff can use "Gerenciar Fila" button on home page to access queue manager directly without login (for development/testing)
+
 **Security Notes**:
 - Password is transmitted over HTTPS only
 - Failed login attempts are rate-limited
 - Session expires after inactivity period
 - Token is stored securely (httpOnly cookie or secure localStorage)
+- Role is determined by credentials, not user selection
+
+## 12. Direct Queue Access (Bypass Login)
+
+**Actor**: Staff/Developer
+
+**Preconditions**:
+- User is on the home page
+- User needs quick access to queue management
+
+**Steps**:
+1. User navigates to home page
+2. System displays "Gerenciar Fila" button alongside customer and login options
+3. User clicks "Gerenciar Fila" button
+4. System redirects directly to queue management page without authentication
+
+**Postconditions**:
+- User has immediate access to queue management interface
+- All queue management features are available
+- User can toggle kiosk mode
+
+**Use Cases**:
+- Quick access during development/testing
+- Emergency access when login system is unavailable
+- Simplified workflow for trusted staff
+
+**Note**: This bypass is intended for development and testing. Production implementation should require authentication.
 
 ## Future Use Cases
 
 The following use cases may be implemented in future versions:
 
-### 12. Service Selection (Future)
+### 13. Service Selection (Future)
 - Customer selects service type when joining queue
 - Different services have different durations
 - Wait time calculated based on selected service
 - Currently: service is discussed in-person with barber
 
-### 13. Multi-Shop Management (Future)
+### 14. Multi-Shop Management (Future)
 - Admin views multiple shops from one dashboard
 - Compare performance across locations
 - Aggregate analytics
 
-### 14. Appointment Scheduling (Future)
+### 15. Appointment Scheduling (Future)
 - Customer books specific time slot
 - System reserves barber for appointment
 - Walk-ins and appointments managed together
 
-### 15. Barber Selection (Future)
+### 16. Barber Selection (Future)
 - Customer chooses preferred barber
 - System assigns ticket to specific barber queue
 - Wait times calculated per barber
 
-### 16. Notification System (Future)
+### 17. Notification System (Future)
 - SMS/push notifications when queue position changes
 - Alert when customer is next
 - Remind customer of arrival time
 
-### 17. Payment Integration (Future)
+### 18. Payment Integration (Future)
 - Customer pays via app after service
 - Track revenue per ticket
 - Generate invoices
@@ -450,10 +423,10 @@ The following use cases may be implemented in future versions:
 ## Cross-Cutting Concerns
 
 ### Real-Time Updates
-All use cases that modify queue state trigger real-time updates via HTTP polling (every 3 seconds):
-- Customer status pages refresh automatically
-- Staff management interface updates
-- Display screens stay current
+All use cases that modify queue state trigger real-time updates via HTTP polling:
+- Customer status pages: Poll every 30 seconds, only visually update when data changes
+- Staff management interface: Updates in real-time as actions occur
+- Kiosk mode display: Polls every 30 seconds, only visually updates when data changes
 - No manual refresh required
 
 ### Error Handling
@@ -480,7 +453,8 @@ When network is unavailable:
 
 ### Performance
 - Queue endpoint response time: < 200ms
-- Status page polling interval: 3 seconds
+- Status page polling interval: 30 seconds (with smart diffing to only update on changes)
+- Kiosk mode polling interval: 30 seconds (with smart diffing)
 - Maximum concurrent customers: ~30
 - Maximum queue size: 50 tickets
 
