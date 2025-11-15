@@ -24,12 +24,12 @@ Static HTML mockups for all pages and components of the queue management system.
    - Material Design 3 with gold/white theme
 
 2. **customer-status.html** - Customer Status Page
-   - Real-time queue position display
-   - Estimated wait time
+   - Large, prominent estimated wait time display (gold gradient card)
+   - Customer name and status badges (waiting, in progress, completed)
    - "Leave Queue" button
-   - Status badges (waiting, in progress, completed)
    - Auto-updates every 30 seconds (only shows changes when data actually changes)
    - Responsive design for mobile
+   - Note: Position number is not displayed to customers
 
 ### Staff Interface
 
@@ -39,12 +39,15 @@ Static HTML mockups for all pages and components of the queue management system.
    - Start service / Complete service buttons
    - Remove customer button
    - **Kiosk Mode**: Toggle via TV icon button
+   - **Back button** in top-left corner (always visible) to exit kiosk mode
    - Fullscreen display with queue view (15s) and ads (10s each)
    - Rotates automatically between queue and 3 advertisement slides
    - Barber selector at bottom (visible only during queue view, hidden during ads)
    - Barbers can select themselves and click customers to claim them
+   - **"Atender" button** on each customer card to toggle service status (turns green when serving)
    - Shows only position number and customer name (simplified)
    - Polls every 30 seconds, only visually updates when data changes
+   - Fully responsive design that adapts to different screen sizes and orientations
 
 4. **owner-dashboard.html** - Owner Dashboard
    - Landing page for owners after login
@@ -109,13 +112,16 @@ Open any HTML file directly in a browser to view the mockup. Each file is self-c
    - "Entrar (Staff)" - Staff login
    - "Gerenciar Fila" - Direct access to queue manager (bypass login)
 2. **queue-join.html**: Try entering names with profanity to test the filter
-3. **customer-status.html**: Watch the position/time updates (updates every 30s, only when data changes)
+3. **customer-status.html**: Watch the estimated wait time updates (updates every 30s, only when data changes). Large, prominent wait time display.
 4. **barber-queue-manager.html**: 
    - Management mode: Select barber, start/complete services, remove customers
    - Click TV icon to enter kiosk mode (fullscreen)
-   - In kiosk mode: Select barber at bottom, click customers to claim them
-   - Watch queue rotate with ads (15s queue, 10s ads)
-   - Press ESC to exit kiosk mode
+   - In kiosk mode: 
+     - Use back button (top-left) or ESC to exit
+     - Select barber at bottom, click customers to claim them
+     - Click "Atender" button on customers to toggle service status
+     - Watch queue rotate with ads (15s queue, 10s ads)
+   - Fully responsive - adapts to different screen sizes
 5. **owner-dashboard.html**: See owner landing page (only shows "Gerenciar Fila" option)
 6. **login-modal.html**: Test with admin/admin123 (Owner) or barber/barber123 (Barber)
 

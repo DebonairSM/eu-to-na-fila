@@ -50,20 +50,20 @@ The system supports three types of users:
 1. Customer navigates to status page (`/status/:ticketId`)
 2. System fetches ticket details from API
 3. System displays:
-   - Queue position
-   - Estimated wait time (calculated as: average service time × position / active barbers)
+   - Estimated wait time (calculated as: average service time × position / active barbers) - displayed prominently in large format
    - Customer name
    - Current status (waiting, in progress, completed, cancelled)
 4. System polls API every 30 seconds for updates
 5. System only visually updates display when queue data actually changes (smart diffing)
 
 **Postconditions**:
-- Customer has current information about their queue position
+- Customer has current information about their estimated wait time
 
 **Calculation Details**:
 - Estimated wait time = (average cutting time × number of people ahead) / total active barbers
-- Position updates automatically when other customers are served or leave
+- Wait time updates automatically when other customers are served or leave
 - Wait time decreases as queue moves forward
+- Display focuses on estimated wait time displayed prominently (position number is not shown to customers)
 
 ## 3. Start Service (Staff)
 
@@ -250,26 +250,31 @@ The system supports three types of users:
 2. System displays queue in **Management Mode**:
    - Simple list showing position number and customer name only
    - Statistics (waiting count, serving count)
+   - Barber selector to choose which barber is claiming customers
    - Action buttons: Start Service, Complete Service, Remove
 3. Staff clicks TV icon button to toggle **Kiosk Mode**
 4. System switches to fullscreen kiosk display
-5. System alternates between two views:
+5. **Back button** appears in top-left corner (always visible) to exit kiosk mode
+6. System alternates between two views:
    - **Queue View** (15 seconds):
      - Shows up to 6 customers
      - Displays position number and name only
      - Large, readable format for visibility from distance
      - Highlights customers currently being served
+     - **"Atender" button** on each customer card to toggle service status (turns green when serving)
+     - Barber selector visible at bottom
    - **Advertisement View** (10 seconds per ad):
      - Shop promotional content
      - Barbershop branding
      - Services offered
      - Special promotions
      - Three advertisement slides rotate
-6. System automatically rotates between queue and ads in a loop
-7. Queue data refreshes every 30 seconds via polling (only visually updates when data changes)
-8. Barber selector is visible at bottom during queue view (hidden during ads)
-9. Barbers can select themselves and click customers to claim them
-10. Staff can press ESC key to exit kiosk mode
+     - Barber selector hidden during ads
+7. System automatically rotates between queue and ads in a loop
+8. Queue data refreshes every 30 seconds via polling (only visually updates when data changes)
+9. Barber selector is visible at bottom during queue view (hidden during ads)
+10. Barbers can select themselves and click customers to claim them
+11. Staff can press ESC key or click back button to exit kiosk mode
 
 **Postconditions**:
 - Customers in shop can see current queue status regularly
@@ -286,6 +291,9 @@ The system supports three types of users:
 - Shows only essential information: position + name
 - Barber selector at bottom (only visible during queue view)
 - Clickable customer cards when barber is selected
+- "Atender" button on each customer to toggle service status
+- Back button in top-left corner (always visible) to exit kiosk mode
+- Fully responsive design that adapts to different screen sizes
 
 **Rotation Example**:
 ```
@@ -304,7 +312,10 @@ The system supports three types of users:
 - Implement slideshow/carousel component with timer
 - Continue polling queue data in background during ad display (30s interval)
 - Barber selector shows/hides based on active view (queue vs ads)
-- Exit kiosk mode via ESC key or clicking TV icon again
+- Exit kiosk mode via ESC key, back button, or clicking TV icon again
+- "Atender" button toggles customer service status (waiting ↔ serving)
+- Responsive grid layout adapts to screen size (3 columns → 2 columns → 1 column)
+- Header and item sizes scale appropriately for different displays
 
 ## 11. Staff Login
 
