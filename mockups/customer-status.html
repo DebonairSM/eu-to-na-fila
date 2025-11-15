@@ -628,22 +628,7 @@
                 </div>
             </div>
 
-            <div class="info-card" id="arrivedCard">
-                <span class="material-symbols-outlined info-icon">info</span>
-                <div class="info-text">
-                    Chegou na barbearia? Clique no botão abaixo para confirmar sua presença.
-                </div>
-            </div>
-
             <div class="action-buttons">
-                <button class="button primary" id="arrivedButton">
-                    <span class="material-symbols-outlined">check_circle</span>
-                    <span>Eu Cheguei</span>
-                </button>
-                <button class="button secondary" id="refreshButton">
-                    <span class="material-symbols-outlined">refresh</span>
-                    <span>Atualizar Posição</span>
-                </button>
                 <button class="button danger" id="leaveButton">
                     <span class="material-symbols-outlined">exit_to_app</span>
                     <span>Sair da Fila</span>
@@ -676,10 +661,6 @@
             </div>
         </div>
 
-        <div class="refresh-indicator">
-            <div class="refresh-dot"></div>
-            <span>Atualizando automaticamente</span>
-        </div>
     </div>
 
     <!-- Custom Confirm Modal -->
@@ -754,9 +735,11 @@
             customerName: 'João Silva',
             position: 3,
             waitTime: 45,
-            status: 'waiting', // waiting, in_progress, completed
-            hasArrived: false
+            status: 'waiting' // waiting, in_progress, completed
         };
+
+        // Store previous data to detect changes
+        let previousData = JSON.stringify(ticketData);
 
         // DOM elements
         const customerName = document.getElementById('customerName');
@@ -764,9 +747,6 @@
         const positionCard = document.getElementById('positionCard');
         const positionNumber = document.getElementById('positionNumber');
         const waitTimeValue = document.getElementById('waitTimeValue');
-        const arrivedCard = document.getElementById('arrivedCard');
-        const arrivedButton = document.getElementById('arrivedButton');
-        const refreshButton = document.getElementById('refreshButton');
         const leaveButton = document.getElementById('leaveButton');
         const waitingState = document.getElementById('waitingState');
         const inProgressState = document.getElementById('inProgressState');
@@ -805,17 +785,6 @@
                     positionCard.querySelector('.position-text').textContent = 'pessoas na sua frente';
                     positionCard.querySelector('.position-label').textContent = 'Sua posição na fila';
                 }
-
-                // Update "I arrived" button state
-                if (ticketData.hasArrived) {
-                    arrivedCard.style.display = 'none';
-                    arrivedButton.disabled = true;
-                    arrivedButton.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>Presença Confirmada</span>';
-                } else {
-                    arrivedCard.style.display = 'flex';
-                    arrivedButton.disabled = false;
-                    arrivedButton.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>Eu Cheguei</span>';
-                }
             } else if (ticketData.status === 'in_progress') {
                 waitingState.style.display = 'none';
                 inProgressState.style.display = 'block';
@@ -826,31 +795,6 @@
                 completedState.style.display = 'block';
             }
         }
-
-        // Handle "I arrived" button
-        arrivedButton.addEventListener('click', function() {
-            ticketData.hasArrived = true;
-            updateUI();
-            
-            // Show confirmation
-            showAlert(
-                'Presença Confirmada!',
-                'O barbeiro saberá que você está aqui.',
-                'check_circle'
-            );
-        });
-
-        // Handle refresh button
-        refreshButton.addEventListener('click', function() {
-            // Simulate fetching new data
-            refreshButton.disabled = true;
-            refreshButton.innerHTML = '<span class="material-symbols-outlined">sync</span><span>Atualizando...</span>';
-            
-            setTimeout(() => {
-                refreshButton.disabled = false;
-                refreshButton.innerHTML = '<span class="material-symbols-outlined">refresh</span><span>Atualizar Posição</span>';
-            }, 1000);
-        });
 
         // Handle leave queue button
         leaveButton.addEventListener('click', function() {
@@ -871,18 +815,25 @@
             );
         });
 
-        // Simulate queue progression
-        function simulateQueueProgression() {
+        // Auto-update every 30 seconds, only show changes when data actually changes
+        function autoUpdate() {
             setInterval(() => {
-                if (ticketData.status === 'waiting' && ticketData.position > 0) {
-                    // Randomly move forward in queue
-                    if (Math.random() > 0.5) {
-                        ticketData.position = Math.max(1, ticketData.position - 1);
-                        ticketData.waitTime = Math.max(5, ticketData.waitTime - 15);
-                        updateUI();
-                    }
+                // Simulate fetching new data (in real app, this would be an API call)
+                const newData = {
+                    customerName: ticketData.customerName,
+                    position: ticketData.position > 0 ? Math.max(1, ticketData.position - (Math.random() > 0.7 ? 1 : 0)) : 0,
+                    waitTime: Math.max(5, ticketData.waitTime - (Math.random() > 0.7 ? 15 : 0)),
+                    status: ticketData.status
+                };
+
+                // Only update if data actually changed
+                const newDataString = JSON.stringify(newData);
+                if (newDataString !== previousData) {
+                    ticketData = newData;
+                    previousData = newDataString;
+                    updateUI();
                 }
-            }, 5000);
+            }, 30000); // 30 seconds
         }
 
         // Simulate status changes (for demo)
@@ -900,7 +851,7 @@
 
         // Initialize
         updateUI();
-        simulateQueueProgression();
+        autoUpdate();
         // Uncomment to see status transitions:
         // simulateStatusChange();
     </script>
