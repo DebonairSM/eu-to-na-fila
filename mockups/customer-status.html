@@ -265,44 +265,74 @@
 
         /* Wait Time Card */
         .wait-time-card {
-            background-color: var(--md-sys-color-surface);
-            border-radius: 16px;
-            padding: 24px;
+            background: linear-gradient(135deg, #D4AF37 0%, #B8941F 50%, #D4AF37 100%);
+            background-size: 200% 200%;
+            color: var(--md-sys-color-on-primary);
+            border-radius: 32px;
+            padding: 64px 32px;
             margin-bottom: 24px;
-            box-shadow: var(--md-sys-elevation-2);
+            box-shadow: 0 16px 48px rgba(212, 175, 55, 0.4), 0 8px 16px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: gradientShift 8s ease infinite, cardAppear 0.8s ease-out 0.2s both;
+        }
+
+        .wait-time-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
         }
 
         .wait-time-header {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 12px;
-            margin-bottom: 16px;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 1;
         }
 
         .wait-time-icon {
-            font-size: 32px;
-            color: var(--md-sys-color-primary);
+            font-size: 40px;
+            color: var(--md-sys-color-on-primary);
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
         }
 
         .wait-time-label {
-            font-size: 14px;
+            font-size: 18px;
             font-weight: 500;
-            color: var(--md-sys-color-on-surface-variant);
+            color: var(--md-sys-color-on-primary);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 2px;
+            opacity: 0.95;
         }
 
         .wait-time-value {
-            font-size: 48px;
-            font-weight: 400;
-            line-height: 56px;
-            color: var(--md-sys-color-on-surface);
+            font-size: 120px;
+            font-weight: 200;
+            line-height: 120px;
+            color: var(--md-sys-color-on-primary);
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: numberPulse 2s ease-in-out infinite;
+            margin-bottom: 8px;
         }
 
         .wait-time-unit {
-            font-size: 20px;
+            font-size: 28px;
             font-weight: 400;
-            color: var(--md-sys-color-on-surface-variant);
+            color: var(--md-sys-color-on-primary);
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
         }
 
         /* Info Card */
@@ -571,13 +601,17 @@
                 font-size: 40px;
             }
 
-            .position-number {
+            .wait-time-value {
                 font-size: 80px;
                 line-height: 80px;
             }
 
-            .wait-time-value {
-                font-size: 40px;
+            .wait-time-unit {
+                font-size: 20px;
+            }
+
+            .wait-time-card {
+                padding: 48px 24px;
             }
 
             .action-buttons {
@@ -611,20 +645,14 @@
 
         <!-- Waiting State -->
         <div id="waitingState">
-            <div class="position-card" id="positionCard">
-                <div class="position-label">Sua posição na fila</div>
-                <div class="position-number" id="positionNumber">3</div>
-                <div class="position-text">pessoas na sua frente</div>
-            </div>
-
             <div class="wait-time-card">
                 <div class="wait-time-header">
                     <span class="material-symbols-outlined wait-time-icon">schedule</span>
                     <div class="wait-time-label">Tempo estimado</div>
                 </div>
                 <div>
-                    <span class="wait-time-value" id="waitTimeValue">45</span>
-                    <span class="wait-time-unit">minutos</span>
+                    <div class="wait-time-value" id="waitTimeValue">45</div>
+                    <div class="wait-time-unit">minutos</div>
                 </div>
             </div>
 
@@ -744,8 +772,6 @@
         // DOM elements
         const customerName = document.getElementById('customerName');
         const statusBadge = document.getElementById('statusBadge');
-        const positionCard = document.getElementById('positionCard');
-        const positionNumber = document.getElementById('positionNumber');
         const waitTimeValue = document.getElementById('waitTimeValue');
         const leaveButton = document.getElementById('leaveButton');
         const waitingState = document.getElementById('waitingState');
@@ -772,19 +798,7 @@
                 inProgressState.style.display = 'none';
                 completedState.style.display = 'none';
 
-                positionNumber.textContent = ticketData.position;
                 waitTimeValue.textContent = ticketData.waitTime;
-
-                // Check if user is next
-                if (ticketData.position === 1) {
-                    positionCard.classList.add('next');
-                    positionCard.querySelector('.position-text').textContent = 'Você é o próximo!';
-                    positionCard.querySelector('.position-label').textContent = 'Prepare-se!';
-                } else {
-                    positionCard.classList.remove('next');
-                    positionCard.querySelector('.position-text').textContent = 'pessoas na sua frente';
-                    positionCard.querySelector('.position-label').textContent = 'Sua posição na fila';
-                }
             } else if (ticketData.status === 'in_progress') {
                 waitingState.style.display = 'none';
                 inProgressState.style.display = 'block';

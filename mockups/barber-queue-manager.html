@@ -378,21 +378,25 @@
         /* Kiosk Queue View */
         .kiosk-queue-view {
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
-            padding: 80px 60px;
+            padding: 40px 40px 120px 40px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
+            overflow-y: auto;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
 
         .kiosk-header {
             text-align: center;
-            margin-bottom: 80px;
+            margin-bottom: 40px;
+            flex-shrink: 0;
         }
 
         .kiosk-logo {
-            font-size: 120px;
+            font-size: 80px;
             color: var(--md-sys-color-primary);
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             filter: drop-shadow(0 8px 32px rgba(212, 175, 55, 0.8));
             animation: logoFloat 4s ease-in-out infinite;
         }
@@ -407,14 +411,14 @@
         }
 
         .kiosk-title {
-            font-size: 84px;
+            font-size: 56px;
             font-weight: 900;
             background: linear-gradient(135deg, #D4AF37 0%, #FFD700 30%, #FFF8DC 50%, #FFD700 70%, #D4AF37 100%);
             background-size: 300% 300%;
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             animation: textShimmer 4s ease-in-out infinite;
             text-shadow: 0 0 40px rgba(212, 175, 55, 0.5);
             letter-spacing: 2px;
@@ -430,7 +434,7 @@
         }
 
         .kiosk-subtitle {
-            font-size: 36px;
+            font-size: 24px;
             font-weight: 300;
             color: rgba(255, 255, 255, 0.8);
             letter-spacing: 4px;
@@ -441,24 +445,28 @@
             flex: 1;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 40px;
-            max-width: 1600px;
+            gap: 24px;
+            max-width: 1800px;
             margin: 0 auto;
             width: 100%;
+            align-content: start;
+            padding-bottom: 20px;
         }
 
         .kiosk-queue-item {
             background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0.1) 100%);
             border: 4px solid rgba(212, 175, 55, 0.5);
-            border-radius: 32px;
-            padding: 50px 40px;
+            border-radius: 24px;
+            padding: 32px 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 24px;
+            gap: 16px;
             backdrop-filter: blur(30px);
             box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4), inset 0 0 60px rgba(212, 175, 55, 0.1);
             transition: all 0.5s ease;
+            min-height: 0;
+            box-sizing: border-box;
         }
 
         .kiosk-queue-item:hover {
@@ -484,19 +492,19 @@
         }
 
         .kiosk-position {
-            width: 120px;
-            height: 120px;
+            width: 80px;
+            height: 80px;
             background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 56px;
+            font-size: 40px;
             font-weight: 800;
             flex-shrink: 0;
             box-shadow: 0 8px 24px rgba(212, 175, 55, 0.6), inset 0 0 30px rgba(255, 255, 255, 0.2);
-            border: 4px solid rgba(255, 255, 255, 0.3);
+            border: 3px solid rgba(255, 255, 255, 0.3);
         }
 
         .kiosk-queue-item.serving .kiosk-position {
@@ -506,12 +514,14 @@
         }
 
         .kiosk-customer-name {
-            font-size: 48px;
+            font-size: 32px;
             font-weight: 600;
             color: #FFFFFF;
             text-align: center;
             text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
             line-height: 1.2;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .kiosk-status {
@@ -558,6 +568,63 @@
 
         .kiosk-queue-item.clickable:active {
             transform: translateY(-4px) scale(1.02);
+        }
+
+        /* Kiosk Back Button */
+        .kiosk-back-button {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 26, 0.98) 100%);
+            backdrop-filter: blur(30px);
+            border: 3px solid rgba(212, 175, 55, 0.8);
+            border-radius: 16px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--md-sys-color-primary);
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 10001;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(212, 175, 55, 0.3);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .kiosk-back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(212, 175, 55, 0.5), 0 0 0 3px rgba(212, 175, 55, 0.5);
+            border-color: var(--md-sys-color-primary);
+        }
+
+        .kiosk-back-button:active {
+            transform: translateY(0);
+        }
+
+        .kiosk-back-button .material-symbols-outlined {
+            font-size: 28px;
+        }
+
+        /* Kiosk Atender Button */
+        .kiosk-atender-btn {
+            font-family: 'Roboto', sans-serif;
+            border: none;
+            outline: none;
+        }
+
+        .kiosk-atender-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .kiosk-atender-btn:active {
+            transform: translateY(0);
+        }
+
+        .kiosk-atender-btn.serving {
+            animation: servingPulse 2s ease-in-out infinite;
         }
 
         /* Kiosk Barber Selector */
@@ -610,9 +677,15 @@
             gap: 8px;
             min-width: 100px;
             justify-content: center;
-            pointer-events: auto;
+            pointer-events: auto !important;
             user-select: none;
             -webkit-user-select: none;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .kiosk-barber-chip * {
+            pointer-events: none;
         }
 
         .kiosk-barber-chip:hover {
@@ -721,33 +794,243 @@
         }
 
         /* Responsive */
+        /* Responsive adjustments for kiosk mode */
+        @media (max-width: 1920px) {
+            .kiosk-queue-view {
+                padding: 30px 30px 120px 30px;
+            }
+            
+            .kiosk-header {
+                margin-bottom: 30px;
+            }
+            
+            .kiosk-logo {
+                font-size: 64px;
+            }
+            
+            .kiosk-title {
+                font-size: 48px;
+            }
+            
+            .kiosk-subtitle {
+                font-size: 20px;
+            }
+            
+            .kiosk-queue-list {
+                gap: 20px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 28px 20px;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 28px;
+            }
+            
+            .kiosk-position {
+                width: 70px;
+                height: 70px;
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 1600px) {
+            .kiosk-queue-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
         @media (max-width: 1400px) {
+            .kiosk-queue-view {
+                padding: 24px 24px 120px 24px;
+            }
+            
             .kiosk-queue-list {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+            
+            .kiosk-logo {
+                font-size: 56px;
+            }
+            
+            .kiosk-title {
+                font-size: 40px;
+            }
+            
+            .kiosk-subtitle {
+                font-size: 18px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 24px 18px;
+                gap: 14px;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 24px;
+            }
+            
+            .kiosk-position {
+                width: 60px;
+                height: 60px;
+                font-size: 32px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .kiosk-queue-view {
+                padding: 20px 20px 120px 20px;
+            }
+            
+            .kiosk-header {
+                margin-bottom: 24px;
+            }
+            
+            .kiosk-logo {
+                font-size: 48px;
+                margin-bottom: 16px;
+            }
+            
+            .kiosk-title {
+                font-size: 36px;
+            }
+            
+            .kiosk-subtitle {
+                font-size: 16px;
+            }
+            
+            .kiosk-queue-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 20px 16px;
+                gap: 12px;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 22px;
+            }
+            
+            .kiosk-position {
+                width: 56px;
+                height: 56px;
+                font-size: 28px;
             }
         }
 
         @media (max-width: 768px) {
+            .kiosk-queue-view {
+                padding: 16px 16px 120px 16px;
+            }
+            
+            .kiosk-header {
+                margin-bottom: 20px;
+            }
+            
+            .kiosk-logo {
+                font-size: 40px;
+                margin-bottom: 12px;
+            }
+            
+            .kiosk-title {
+                font-size: 28px;
+            }
+            
+            .kiosk-subtitle {
+                font-size: 14px;
+            }
+            
             .kiosk-queue-list {
                 grid-template-columns: 1fr;
+                gap: 12px;
             }
-
-            .kiosk-title {
-                font-size: 56px;
+            
+            .kiosk-queue-item {
+                padding: 18px 14px;
+                gap: 10px;
             }
-
-            .kiosk-subtitle {
+            
+            .kiosk-customer-name {
+                font-size: 20px;
+            }
+            
+            .kiosk-position {
+                width: 50px;
+                height: 50px;
                 font-size: 24px;
             }
-
-            .kiosk-customer-name {
+        }
+        
+        @media (max-height: 800px) {
+            .kiosk-header {
+                margin-bottom: 20px;
+            }
+            
+            .kiosk-logo {
+                font-size: 48px;
+                margin-bottom: 12px;
+            }
+            
+            .kiosk-title {
                 font-size: 36px;
             }
-
-            .kiosk-position {
-                width: 100px;
-                height: 100px;
-                font-size: 48px;
+            
+            .kiosk-subtitle {
+                font-size: 18px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 20px 16px;
+            }
+        }
+        
+        @media (max-height: 600px) {
+            .kiosk-header {
+                margin-bottom: 16px;
+            }
+            
+            .kiosk-logo {
+                font-size: 40px;
+                margin-bottom: 8px;
+            }
+            
+            .kiosk-title {
+                font-size: 28px;
+            }
+            
+            .kiosk-subtitle {
+                font-size: 14px;
+            }
+            
+            .kiosk-queue-view {
+                padding: 16px 16px 120px 16px;
+            }
+        }
+        
+        /* Responsive adjustments for Atender button */
+        @media (max-width: 1400px) {
+            .kiosk-atender-btn {
+                padding: 10px 20px !important;
+                font-size: 16px !important;
+            }
+            
+            .kiosk-atender-btn .material-symbols-outlined {
+                font-size: 20px !important;
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .kiosk-atender-btn {
+                padding: 8px 16px !important;
+                font-size: 14px !important;
+            }
+            
+            .kiosk-atender-btn .material-symbols-outlined {
+                font-size: 18px !important;
             }
         }
     </style>
@@ -815,6 +1098,12 @@
 
     <!-- Kiosk Mode Content -->
     <div class="kiosk-container">
+        <!-- Back Button - Always visible in kiosk mode -->
+        <button class="kiosk-back-button" onclick="toggleKioskMode()" title="Voltar para modo normal">
+            <span class="material-symbols-outlined">arrow_back</span>
+            <span>Voltar</span>
+        </button>
+
         <!-- Kiosk Barber Selector - Always visible in kiosk mode -->
         <div class="kiosk-barber-selector">
             <div class="kiosk-barber-label">Selecione barbeiro:</div>
@@ -962,28 +1251,28 @@
         // Render kiosk barber selector
         function renderKioskBarberSelector() {
             const kioskBarberList = document.getElementById('kioskBarberList');
-            if (kioskBarberList) {
-                kioskBarberList.innerHTML = '';
+            if (!kioskBarberList) return;
+            
+            // Clear existing content
+            kioskBarberList.innerHTML = '';
 
-                barbers.forEach(barber => {
-                    const chip = document.createElement('div');
-                    chip.className = `kiosk-barber-chip ${selectedBarberId === barber.id ? 'active' : ''}`;
-                    chip.innerHTML = `
-                        <span class="material-symbols-outlined">content_cut</span>
-                        <span>${barber.name}</span>
-                    `;
-                    
-                    // Click handler for barber selection
-                    chip.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        selectedBarberId = selectedBarberId === barber.id ? null : barber.id;
-                renderAll();
-                    });
-                    
-                    kioskBarberList.appendChild(chip);
-                });
-            }
+            // Create barber chips
+            barbers.forEach(barber => {
+                const chip = document.createElement('div');
+                const isActive = selectedBarberId === barber.id;
+                chip.className = `kiosk-barber-chip${isActive ? ' active' : ''}`;
+                chip.dataset.barberId = barber.id;
+                chip.setAttribute('role', 'button');
+                chip.setAttribute('tabindex', '0');
+                chip.setAttribute('aria-label', `Selecionar barbeiro ${barber.name}`);
+                
+                chip.innerHTML = `
+                    <span class="material-symbols-outlined">content_cut</span>
+                    <span>${barber.name}</span>
+                `;
+                
+                kioskBarberList.appendChild(chip);
+            });
         }
 
         // Render management queue
@@ -1174,6 +1463,15 @@
                     }
                 }
 
+                // Atender button - show for all customers, toggle service status
+                const atenderButton = `<button class="kiosk-atender-btn ${item.status === 'serving' ? 'serving' : ''}" 
+                               onclick="event.stopPropagation(); toggleService(${item.id});" 
+                               data-customer-id="${item.id}"
+                               style="margin-top: 16px; padding: 12px 24px; font-size: 18px; font-weight: 600; border-radius: 12px; border: 2px solid ${item.status === 'serving' ? '#2E7D32' : 'rgba(212, 175, 55, 0.8)'}; background: ${item.status === 'serving' ? 'rgba(46, 125, 50, 0.2)' : 'rgba(212, 175, 55, 0.2)'}; color: ${item.status === 'serving' ? '#4CAF50' : 'var(--md-sys-color-primary)'}; cursor: pointer; transition: all 0.3s ease;">
+                        <span class="material-symbols-outlined" style="font-size: 24px; vertical-align: middle;">${item.status === 'serving' ? 'check_circle' : 'play_arrow'}</span>
+                        <span>${item.status === 'serving' ? 'Em Atendimento' : 'Atender'}</span>
+                       </button>`;
+
                 queueItem.innerHTML = `
                     <div class="kiosk-position">${positionNumber}</div>
                     <div style="text-align: center;">
@@ -1181,6 +1479,7 @@
                         ${barberBadge}
                         ${statusText ? `<div class="kiosk-status">${statusText}</div>` : ''}
                         ${clickHint}
+                        ${atenderButton}
                     </div>
                 `;
 
@@ -1296,6 +1595,26 @@
             const customer = queueData.find(c => c.id === customerId);
             if (customer && customer.barberId) {
                 customer.status = 'serving';
+                previousQueueData = '';
+                renderAll();
+            }
+        }
+
+        // Toggle service status (for kiosk mode)
+        function toggleService(customerId) {
+            const customer = queueData.find(c => c.id === customerId);
+            if (customer) {
+                if (customer.status === 'serving') {
+                    // If serving, change back to waiting
+                    customer.status = 'waiting';
+                } else {
+                    // If waiting, start service (assign to selected barber if available, otherwise keep current barber)
+                    if (!customer.barberId && selectedBarberId) {
+                        customer.barberId = selectedBarberId;
+                    }
+                    customer.status = 'serving';
+                }
+                previousQueueData = '';
                 renderAll();
             }
         }
@@ -1320,19 +1639,60 @@
             renderKioskQueue();
         }
 
-        // Event delegation for clickable queue items in kiosk mode
-        // Use document-level delegation to ensure it works even if element is recreated
-        document.addEventListener('click', function(e) {
-            // Only handle clicks in kiosk mode
+        // Handle barber selection in kiosk mode
+        function handleBarberSelection(barberId) {
             if (!isKioskMode) return;
             
+            // Toggle selection
+            selectedBarberId = selectedBarberId === barberId ? null : barberId;
+            
+            // Force re-render to update UI
+            previousQueueData = '';
+            renderAll();
+        }
+
+        // Event delegation for kiosk mode interactions
+        // Set up once and handle all clicks
+        document.addEventListener('click', function(e) {
+            if (!isKioskMode) return;
+            
+            // Check if click is on a barber chip
+            const barberChip = e.target.closest('.kiosk-barber-chip');
+            if (barberChip) {
+                e.preventDefault();
+                e.stopPropagation();
+                const barberId = parseInt(barberChip.dataset.barberId);
+                if (barberId && !isNaN(barberId)) {
+                    handleBarberSelection(barberId);
+                }
+                return;
+            }
+            
+            // Check if click is on a queue item
             const queueItem = e.target.closest('.kiosk-queue-item.clickable');
             if (queueItem && queueItem.getAttribute('data-clickable') === 'true') {
                 e.preventDefault();
                 e.stopPropagation();
                 const customerId = parseInt(queueItem.getAttribute('data-customer-id'));
-                if (customerId && selectedBarberId) {
+                if (customerId && !isNaN(customerId) && selectedBarberId) {
                     claimCustomer(customerId, selectedBarberId);
+                }
+            }
+        });
+
+        // Also handle keyboard events for accessibility
+        document.addEventListener('keydown', function(e) {
+            if (!isKioskMode) return;
+            
+            // Handle Enter/Space on barber chips
+            if (e.key === 'Enter' || e.key === ' ') {
+                const barberChip = e.target.closest('.kiosk-barber-chip');
+                if (barberChip) {
+                    e.preventDefault();
+                    const barberId = parseInt(barberChip.dataset.barberId);
+                    if (barberId && !isNaN(barberId)) {
+                        handleBarberSelection(barberId);
+                    }
                 }
             }
         });
