@@ -497,6 +497,29 @@ await client.execute('PRAGMA synchronous = NORMAL;');
 - Logs: Platform dashboard or `heroku logs --tail`
 - Database: Check with `sqlite3 data/eutonafila.sqlite`
 
+## Static assets and web build integration
+
+Canonical sources for static files live under `apps/web/public`, and the web application source is under `apps/web`. The API serves the built web app from `apps/api/public/mineiro`, which is treated as build output.
+
+Workflow:
+
+```bash
+# Build the web app
+pnpm --filter @eutonafila/web build
+
+# Integrate the built artifacts into the API's public directory
+node scripts/integrate-web.js
+
+# Build the API
+pnpm --filter @eutonafila/api build
+```
+
+Notes:
+
+- Do not manually edit files under `apps/api/public/mineiro`. They are generated and will be overwritten.
+- Keep `apps/web/public` as the source of truth for static assets (icons, manifest, service worker) that ship with the web app.
+- CI/CD should run the three steps above (build web → integrate → build API) before starting the server.
+
 ---
 
 *Last updated: 2024*
