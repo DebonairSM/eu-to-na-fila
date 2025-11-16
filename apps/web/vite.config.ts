@@ -27,18 +27,18 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5174,
+    port: 4040,
     hmr: {
-      clientPort: 5174,
+      clientPort: 4040,
       path: '/mineiro/',
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:3002',
+        target: 'http://localhost:4041',
         changeOrigin: true,
       },
       '/ws': {
-        target: 'ws://localhost:3002',
+        target: 'ws://localhost:4041',
         ws: true,
       },
     },

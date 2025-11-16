@@ -60,8 +60,8 @@ pnpm --filter web dev
 ```
 
 Access:
-- Web SPA: http://localhost:5173/mineiro
-- API: http://localhost:3000/api
+- Web SPA: http://localhost:4040/mineiro
+- API: http://localhost:4041/api
 
 ### Database
 
@@ -198,10 +198,10 @@ Access your app at:
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `NODE_ENV` | Environment | `development` | No |
-| `PORT` | Server port | `3000` | No |
+| `PORT` | Server port | `4041` | No |
 | `DATA_PATH` | SQLite file path | `./data/eutonafila.sqlite` | Yes |
 | `JWT_SECRET` | Secret for JWT tokens | - | Yes |
-| `CORS_ORIGIN` | Allowed CORS origin | `http://localhost:5173` | Yes |
+| `CORS_ORIGIN` | Allowed CORS origin | `http://localhost:4040` | Yes |
 | `SHOP_SLUG` | Shop identifier | `mineiro` | No |
 
 ## Using on Tablets (Barber Interface)
