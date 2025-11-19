@@ -235,53 +235,61 @@
         }
 
         .queue-item {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(212, 175, 55, 0.02) 100%);
-            border: 2px solid rgba(212, 175, 55, 0.2);
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.04) 100%);
+            border: 2px solid rgba(212, 175, 55, 0.25);
             border-radius: 16px;
-            padding: 20px;
+            padding: 16px 20px;
             display: flex;
             align-items: center;
             gap: 16px;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: default;
         }
 
         .queue-item:hover {
-            border-color: var(--md-sys-color-primary);
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.2);
+            border-color: rgba(212, 175, 55, 0.5);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.15);
+            transform: translateY(-1px);
         }
 
-        .queue-item.claimed {
-            border-color: var(--md-sys-color-primary);
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);
+        .queue-item.serving {
+            border-color: rgba(46, 125, 50, 0.6);
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.1) 0%, rgba(46, 125, 50, 0.05) 100%);
         }
 
         .position-badge {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
-            font-weight: 600;
+            font-size: 20px;
+            font-weight: 700;
             flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+        }
+        
+        .queue-item.serving .position-badge {
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            box-shadow: 0 2px 8px rgba(46, 125, 50, 0.4);
         }
 
         .customer-info {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
+            min-width: 0;
         }
 
         .customer-name {
             font-size: 18px;
-            font-weight: 500;
+            font-weight: 600;
             color: var(--md-sys-color-on-surface);
+            line-height: 1.3;
         }
 
         .barber-assignment {
@@ -308,6 +316,69 @@
         .queue-actions {
             display: flex;
             gap: 8px;
+            align-items: center;
+        }
+        
+        /* Barber avatars on cards */
+        .barber-avatars {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .barber-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.08) 100%);
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+        
+        .barber-avatar:hover {
+            transform: scale(1.1);
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.5);
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.15) 100%);
+        }
+        
+        .barber-avatar:active {
+            transform: scale(0.95);
+        }
+        
+        .barber-avatar.assigned {
+            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.6), 0 0 0 2px rgba(212, 175, 55, 0.3);
+        }
+        
+        .barber-avatar.assigned:hover {
+            background: linear-gradient(135deg, #E5C047 0%, #D4AF37 100%);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.7), 0 0 0 3px rgba(212, 175, 55, 0.4);
+        }
+        
+        .barber-avatar.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        .barber-avatar-face {
+            font-size: 32px;
+            line-height: 1;
+            user-select: none;
+        }
+        
+        .barber-avatar.assigned .barber-avatar-face {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
         }
 
         .action-btn {
@@ -1861,14 +1932,6 @@
                 <h2 class="section-header" style="margin: 0;">Fila de Espera</h2>
             </div>
             
-            <!-- Barber Selector - Integrated -->
-            <div class="barber-selector">
-                <div class="barber-selector-title">Selecione barbeiro:</div>
-                <div class="barber-list" id="barberList">
-                    <!-- Barbers will be generated here -->
-            </div>
-        </div>
-
         <div class="queue-list" id="queueList">
                 <!-- Queue items will be generated here -->
         </div>
@@ -1964,9 +2027,9 @@
     <script>
         // Hard-seeded barbers
         const barbers = [
-            { id: 1, name: 'João' },
-            { id: 2, name: 'Pedro' },
-            { id: 3, name: 'Carlos' }
+            { id: 1, name: 'João', avatar: '👨‍🦱' },
+            { id: 2, name: 'Pedro', avatar: '👨' },
+            { id: 3, name: 'Carlos', avatar: '👨‍🦰' }
         ];
 
         // Queue data with hard-seeded barber assignments
@@ -2043,26 +2106,9 @@
             }
         }
 
-        // Render barber selector (management mode)
+        // Render barber selector (management mode) - No longer needed, but kept for compatibility
         function renderBarberSelector() {
-            const barberList = document.getElementById('barberList');
-            if (barberList) {
-                barberList.innerHTML = '';
-
-                barbers.forEach(barber => {
-                    const chip = document.createElement('div');
-                    chip.className = `barber-chip ${selectedBarberId === barber.id ? 'active' : ''}`;
-                    chip.innerHTML = `
-                        <span class="material-symbols-outlined" style="font-size: 18px;">content_cut</span>
-                        <span>${barber.name}</span>
-                    `;
-                    chip.onclick = () => {
-                        selectedBarberId = selectedBarberId === barber.id ? null : barber.id;
-                renderAll();
-                    };
-                    barberList.appendChild(chip);
-                });
-            }
+            // Barber selector removed - barbers are now shown on each card
         }
 
         // Render kiosk barber selector
@@ -2123,66 +2169,72 @@
                 let waitingPosition = 1;
                 sortedQueue.forEach((customer, index) => {
                     const item = document.createElement('div');
-                    const isClaimed = customer.barberId !== null;
-                    item.className = `queue-item ${isClaimed ? 'claimed' : ''}`;
+                    const assignedBarber = customer.barberId ? barbers.find(b => b.id === customer.barberId) : null;
+                    item.className = `queue-item ${customer.status === 'serving' ? 'serving' : ''}`;
                     
-                    // Position number: serving shows as 0, waiting shows queue position
+                    // Position number: serving shows checkmark, waiting shows queue position
                     let positionNumber;
                     if (customer.status === 'serving') {
-                        positionNumber = 0;
+                        positionNumber = '✓';
                     } else {
                         positionNumber = waitingPosition;
                         waitingPosition++;
                     }
                     
-                    // Get barber name if assigned
-                    const barber = customer.barberId ? barbers.find(b => b.id === customer.barberId) : null;
-                    const barberBadge = barber 
-                        ? `<div class="barber-badge">
-                            <span class="material-symbols-outlined" style="font-size: 14px;">content_cut</span>
-                            <span>${barber.name}</span>
-                           </div>`
-                        : '';
-                    
-                    // Click handler for claiming customer
-                    if (customer.status === 'waiting' && !isClaimed && selectedBarberId) {
-                        item.onclick = (e) => {
-                            // Don't claim if clicking on action buttons
-                            if (!e.target.closest('.queue-actions')) {
-                                claimCustomer(customer.id, selectedBarberId);
-                            }
-                        };
-                    }
+                    // Create barber avatars with face images
+                    const barberAvatars = barbers.map(barber => {
+                        const isAssigned = assignedBarber && assignedBarber.id === barber.id;
+                        const canAssign = customer.status === 'waiting';
+                        const isDisabled = customer.status === 'serving' && !isAssigned;
+                        return `
+                            <div class="barber-avatar ${isAssigned ? 'assigned' : ''} ${isDisabled ? 'disabled' : ''}" 
+                                 onclick="event.stopPropagation(); ${canAssign ? `assignBarberAndStart(${customer.id}, ${barber.id})` : ''};"
+                                 title="${isAssigned ? `Atendendo: ${barber.name}` : isDisabled ? 'Cliente já está sendo atendido' : `Atender com ${barber.name}`}">
+                                <span class="barber-avatar-face">${barber.avatar || barber.name.charAt(0)}</span>
+                            </div>
+                        `;
+                    }).join('');
                     
                     item.innerHTML = `
-                        <div class="position-badge">${positionNumber || '✓'}</div>
+                        <div class="position-badge">${positionNumber}</div>
                         <div class="customer-info">
                             <div class="customer-name">${customer.name}</div>
-                            ${barberBadge}
-                            ${customer.status === 'waiting' && !isClaimed && selectedBarberId ? 
-                                '<div style="font-size: 12px; color: var(--md-sys-color-primary); margin-top: 4px;">Clique para reivindicar</div>' : ''}
+                            ${assignedBarber ? `<div style="font-size: 13px; color: var(--md-sys-color-primary); font-weight: 500; display: flex; align-items: center; gap: 4px;">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">content_cut</span>
+                                <span>${assignedBarber.name}</span>
+                            </div>` : ''}
+                        </div>
+                        <div class="barber-avatars">
+                            ${barberAvatars}
                         </div>
                         <div class="queue-actions" onclick="event.stopPropagation()">
-                            ${customer.status === 'waiting' ? `
-                                <button class="action-btn primary" onclick="startService(${customer.id})" ${!isClaimed ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
-                                    <span class="material-symbols-outlined" style="font-size: 18px;">play_arrow</span>
-                                    <span>Atender</span>
-                    </button>
-                            ` : `
+                            ${customer.status === 'serving' ? `
                                 <button class="action-btn primary" onclick="completeService(${customer.id})">
                                     <span class="material-symbols-outlined" style="font-size: 18px;">check</span>
                                     <span>Finalizar</span>
                                 </button>
+                            ` : `
+                                <button class="action-btn danger" onclick="removeCustomer(${customer.id})">
+                                    <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+                                </button>
                             `}
-                            <button class="action-btn danger" onclick="removeCustomer(${customer.id})">
-                                <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
-                            </button>
                         </div>
                     `;
 
                     queueList.appendChild(item);
                 });
             }
+        }
+        
+        // Assign barber and start service in one action
+        function assignBarberAndStart(customerId, barberId) {
+            const customer = queueData.find(c => c.id === customerId);
+            if (!customer || customer.status !== 'waiting') return;
+            
+            // Assign barber and start service
+            customer.barberId = barberId;
+            customer.status = 'serving';
+            renderAll();
         }
 
         // Store previous queue data for change detection
