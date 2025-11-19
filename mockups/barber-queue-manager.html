@@ -385,6 +385,38 @@
             overflow-y: auto;
             min-height: 100vh;
             box-sizing: border-box;
+            position: relative;
+        }
+        
+        .kiosk-hidden-indicator {
+            position: fixed;
+            top: 100px;
+            right: 40px;
+            background: rgba(212, 175, 55, 0.2);
+            border: 2px solid rgba(212, 175, 55, 0.6);
+            border-radius: 16px;
+            padding: 12px 24px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 24px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 20px rgba(212, 175, 55, 0.2);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .kiosk-header {
@@ -444,84 +476,532 @@
         .kiosk-queue-list {
             flex: 1;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
             max-width: 1800px;
             margin: 0 auto;
             width: 100%;
             align-content: start;
             padding-bottom: 20px;
+            grid-auto-rows: minmax(60px, 1fr);
+        }
+        
+        /* Adaptive grid columns based on screen size */
+        @media (min-width: 1920px) {
+            .kiosk-queue-list {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 14px;
+                grid-auto-rows: minmax(80px, 1fr);
+                max-width: 100%;
+            }
+        }
+        
+        @media (min-width: 1600px) and (max-width: 1919px) {
+            .kiosk-queue-list {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+                grid-auto-rows: minmax(75px, 1fr);
+            }
+        }
+        
+        @media (min-width: 1400px) and (max-width: 1599px) {
+            .kiosk-queue-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                grid-auto-rows: minmax(70px, 1fr);
+            }
+        }
+        
+        @media (min-width: 1024px) and (max-width: 1399px) {
+            .kiosk-queue-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                grid-auto-rows: minmax(65px, 1fr);
+            }
         }
 
         .kiosk-queue-item {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0.1) 100%);
-            border: 4px solid rgba(212, 175, 55, 0.5);
-            border-radius: 24px;
-            padding: 32px 24px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.08) 50%, rgba(212, 175, 55, 0.12) 100%);
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            border-radius: 16px;
+            padding: 10px 12px;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
             backdrop-filter: blur(30px);
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4), inset 0 0 60px rgba(212, 175, 55, 0.1);
-            transition: all 0.5s ease;
-            min-height: 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 
+                        0 0 0 1px rgba(212, 175, 55, 0.2) inset;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-sizing: border-box;
+            position: relative;
+            overflow: visible;
+            width: 100%;
+            align-self: stretch;
+        }
+        
+        /* Adaptive card sizing for larger screens */
+        @media (min-width: 1920px) {
+            .kiosk-queue-item {
+                padding: 16px 20px;
+                gap: 18px;
+                border-radius: 18px;
+                min-height: 80px;
+            }
+        }
+        
+        @media (min-width: 1600px) and (max-width: 1919px) {
+            .kiosk-queue-item {
+                padding: 14px 18px;
+                gap: 16px;
+                min-height: 75px;
+            }
+        }
+        
+        @media (min-width: 1400px) and (max-width: 1599px) {
+            .kiosk-queue-item {
+                padding: 12px 16px;
+                gap: 14px;
+                min-height: 70px;
+            }
+        }
+        
+        @media (min-width: 1024px) and (max-width: 1399px) {
+            .kiosk-queue-item {
+                padding: 11px 14px;
+                gap: 12px;
+                min-height: 65px;
+            }
         }
 
         .kiosk-queue-item:hover {
-            transform: translateY(-8px) scale(1.02);
-            border-color: var(--md-sys-color-primary);
-            box-shadow: 0 16px 64px rgba(212, 175, 55, 0.5), inset 0 0 80px rgba(212, 175, 55, 0.2);
+            transform: translateY(-2px);
+            border-color: rgba(212, 175, 55, 0.7);
+            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.5), 
+                        0 0 0 1px rgba(212, 175, 55, 0.4) inset;
         }
 
         .kiosk-queue-item.serving {
-            background: linear-gradient(135deg, rgba(46, 125, 50, 0.3) 0%, rgba(46, 125, 50, 0.2) 100%);
-            border-color: rgba(46, 125, 50, 0.8);
-            box-shadow: 0 12px 48px rgba(46, 125, 50, 0.4), inset 0 0 60px rgba(46, 125, 50, 0.15);
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.25) 0%, rgba(46, 125, 50, 0.15) 50%, rgba(46, 125, 50, 0.2) 100%);
+            border-color: rgba(46, 125, 50, 0.7);
+            box-shadow: 0 8px 32px rgba(46, 125, 50, 0.5), 
+                        0 0 0 1px rgba(46, 125, 50, 0.3) inset,
+                        0 2px 8px rgba(46, 125, 50, 0.4);
             animation: servingPulse 2s ease-in-out infinite;
         }
 
         @keyframes servingPulse {
             0%, 100% {
-                box-shadow: 0 12px 48px rgba(46, 125, 50, 0.4), inset 0 0 60px rgba(46, 125, 50, 0.15);
+                box-shadow: 0 8px 32px rgba(46, 125, 50, 0.5), 
+                            0 0 0 1px rgba(46, 125, 50, 0.3) inset,
+                            0 2px 8px rgba(46, 125, 50, 0.4);
             }
             50% {
-                box-shadow: 0 16px 64px rgba(46, 125, 50, 0.6), inset 0 0 80px rgba(46, 125, 50, 0.25);
+                box-shadow: 0 12px 48px rgba(46, 125, 50, 0.7), 
+                            0 0 0 1px rgba(46, 125, 50, 0.5) inset,
+                            0 4px 16px rgba(46, 125, 50, 0.6);
             }
         }
-
-        .kiosk-position {
+        
+        /* Remove button */
+        .kiosk-remove-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, rgba(186, 26, 26, 0.9) 0%, rgba(186, 26, 26, 0.7) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+            opacity: 0.85;
+            flex-shrink: 0;
+        }
+        
+        /* Adaptive remove button sizing */
+        @media (min-width: 1920px) {
+            .kiosk-remove-btn {
+                width: 36px;
+                height: 36px;
+                border-radius: 8px;
+            }
+            
+            .kiosk-remove-btn .material-symbols-outlined {
+                font-size: 20px;
+            }
+        }
+        
+        @media (min-width: 1600px) and (max-width: 1919px) {
+            .kiosk-remove-btn {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .kiosk-remove-btn .material-symbols-outlined {
+                font-size: 18px;
+            }
+        }
+        
+        @media (min-width: 1400px) and (max-width: 1599px) {
+            .kiosk-remove-btn {
+                width: 30px;
+                height: 30px;
+            }
+        }
+        
+        .kiosk-remove-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(186, 26, 26, 0.5);
+            background: linear-gradient(135deg, rgba(186, 26, 26, 1) 0%, rgba(186, 26, 26, 0.8) 100%);
+        }
+        
+        .kiosk-remove-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .kiosk-remove-btn .material-symbols-outlined {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        /* Back to Queue Button (during ads) */
+        .back-to-queue-btn {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.95) 0%, rgba(212, 175, 55, 0.85) 100%);
+            backdrop-filter: blur(30px);
+            border: 3px solid rgba(212, 175, 55, 0.8);
+            border-radius: 12px;
+            padding: 12px 24px;
+            color: #1a1a1a;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.6), 0 0 0 3px rgba(212, 175, 55, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: auto;
+            min-width: 48px;
+            min-height: 48px;
+        }
+        
+        .back-to-queue-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 12px 40px rgba(212, 175, 55, 0.8), 0 0 0 4px rgba(212, 175, 55, 0.5);
+            background: linear-gradient(135deg, rgba(212, 175, 55, 1) 0%, rgba(212, 175, 55, 0.9) 100%);
+        }
+        
+        .back-to-queue-btn:active {
+            transform: translateY(0) scale(1);
+        }
+        
+        .back-to-queue-btn .material-symbols-outlined {
+            font-size: 24px;
+        }
+        
+        /* Remove Confirmation Modal */
+        .remove-confirm-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 20000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .remove-confirm-content {
+            background: linear-gradient(135deg, rgba(26, 26, 26, 0.98) 0%, rgba(30, 30, 30, 0.98) 100%);
+            border: 3px solid rgba(186, 26, 26, 0.6);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(186, 26, 26, 0.3) inset;
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .remove-confirm-icon {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
-            color: white;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, rgba(186, 26, 26, 0.2) 0%, rgba(186, 26, 26, 0.1) 100%);
+            border: 3px solid rgba(186, 26, 26, 0.5);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(186, 26, 26, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(186, 26, 26, 0);
+            }
+        }
+        
+        .remove-confirm-icon .material-symbols-outlined {
+            font-size: 48px;
+            color: #ff6b6b;
+        }
+        
+        .remove-confirm-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #FFFFFF;
+            margin: 0 0 16px 0;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+        
+        .remove-confirm-message {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0 0 32px 0;
+            line-height: 1.6;
+        }
+        
+        .remove-confirm-message strong {
+            color: #ff6b6b;
+            font-weight: 700;
+        }
+        
+        .remove-confirm-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+        
+        .remove-confirm-btn {
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            min-width: 140px;
+            justify-content: center;
+        }
+        
+        .remove-confirm-btn.cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .remove-confirm-btn.cancel:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .remove-confirm-btn.confirm {
+            background: linear-gradient(135deg, rgba(186, 26, 26, 0.9) 0%, rgba(186, 26, 26, 0.7) 100%);
+            color: white;
+            border-color: rgba(186, 26, 26, 0.8);
+        }
+        
+        .remove-confirm-btn.confirm:hover {
+            background: linear-gradient(135deg, rgba(186, 26, 26, 1) 0%, rgba(186, 26, 26, 0.8) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(186, 26, 26, 0.6);
+        }
+        
+        .remove-confirm-btn .material-symbols-outlined {
+            font-size: 20px;
+        }
+        
+        /* Responsive remove button */
+        @media (max-width: 1024px) {
+            .kiosk-remove-btn {
+                width: 28px;
+                height: 28px;
+                top: 6px;
+                right: 6px;
+            }
+            
+            .kiosk-remove-btn .material-symbols-outlined {
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .kiosk-remove-btn {
+                width: 26px;
+                height: 26px;
+                top: 5px;
+                right: 5px;
+            }
+            
+            .kiosk-remove-btn .material-symbols-outlined {
+                font-size: 14px;
+            }
+        }
+
+        .kiosk-position {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
             font-weight: 800;
             flex-shrink: 0;
-            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.6), inset 0 0 30px rgba(255, 255, 255, 0.2);
-            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5), 
+                        inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+        
+        /* Adaptive position badge sizing */
+        @media (min-width: 1920px) {
+            .kiosk-position {
+                width: 56px;
+                height: 56px;
+                font-size: 26px;
+                border-radius: 12px;
+            }
+        }
+        
+        @media (min-width: 1600px) and (max-width: 1919px) {
+            .kiosk-position {
+                width: 52px;
+                height: 52px;
+                font-size: 24px;
+            }
+        }
+        
+        @media (min-width: 1400px) and (max-width: 1599px) {
+            .kiosk-position {
+                width: 48px;
+                height: 48px;
+                font-size: 22px;
+            }
         }
 
         .kiosk-queue-item.serving .kiosk-position {
             background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
-            box-shadow: 0 8px 24px rgba(46, 125, 50, 0.6), inset 0 0 30px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 2px 8px rgba(46, 125, 50, 0.5), 
+                        inset 0 1px 2px rgba(255, 255, 255, 0.3);
             border-color: rgba(255, 255, 255, 0.4);
         }
 
         .kiosk-customer-name {
-            font-size: 32px;
+            font-size: 20px;
             font-weight: 600;
             color: #FFFFFF;
-            text-align: center;
-            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            line-height: 1.2;
-            word-break: break-word;
-            overflow-wrap: break-word;
+            text-align: left;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+            line-height: 1.3;
+            margin: 0;
+            letter-spacing: 0.2px;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            position: relative;
+            white-space: nowrap;
+        }
+        
+        .kiosk-customer-name-wrapper {
+            display: inline-block;
+            padding-right: 30px;
+        }
+        
+        /* Marquee scrolling effect - like LED sign */
+        .kiosk-customer-name.scrollable {
+            display: flex;
+        }
+        
+        .kiosk-customer-name.scrollable .kiosk-customer-name-wrapper {
+            animation: marquee 20s linear infinite;
+            will-change: transform;
+        }
+        
+        .kiosk-customer-name.scrollable:hover .kiosk-customer-name-wrapper {
+            animation-play-state: paused;
+        }
+        
+        @keyframes marquee {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+        
+        /* Non-scrollable names */
+        .kiosk-customer-name:not(.scrollable) .kiosk-customer-name-wrapper {
+            padding-right: 0;
+        }
+        
+        /* Adaptive customer name sizing */
+        @media (min-width: 1920px) {
+            .kiosk-customer-name {
+                font-size: 26px;
+                letter-spacing: 0.3px;
+            }
+        }
+        
+        @media (min-width: 1600px) and (max-width: 1919px) {
+            .kiosk-customer-name {
+                font-size: 24px;
+            }
+        }
+        
+        @media (min-width: 1400px) and (max-width: 1599px) {
+            .kiosk-customer-name {
+                font-size: 22px;
+            }
+        }
+        
+        .kiosk-queue-item-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .kiosk-queue-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
         }
 
         .kiosk-status {
@@ -817,21 +1297,22 @@
             }
             
             .kiosk-queue-list {
-                gap: 20px;
+                gap: 16px;
             }
             
             .kiosk-queue-item {
-                padding: 28px 20px;
+                padding: 14px 10px;
+                gap: 8px;
             }
             
             .kiosk-customer-name {
-                font-size: 28px;
+                font-size: 22px;
             }
             
             .kiosk-position {
-                width: 70px;
-                height: 70px;
-                font-size: 36px;
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
             }
         }
 
@@ -879,52 +1360,10 @@
             }
         }
 
-        @media (max-width: 1024px) {
+        /* Tablet Landscape (1024px - 1366px) */
+        @media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
             .kiosk-queue-view {
-                padding: 20px 20px 120px 20px;
-            }
-            
-            .kiosk-header {
-                margin-bottom: 24px;
-            }
-            
-            .kiosk-logo {
-                font-size: 48px;
-                margin-bottom: 16px;
-            }
-            
-            .kiosk-title {
-                font-size: 36px;
-            }
-            
-            .kiosk-subtitle {
-                font-size: 16px;
-            }
-            
-            .kiosk-queue-list {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 16px;
-            }
-            
-            .kiosk-queue-item {
-                padding: 20px 16px;
-                gap: 12px;
-            }
-            
-            .kiosk-customer-name {
-                font-size: 22px;
-            }
-            
-            .kiosk-position {
-                width: 56px;
-                height: 56px;
-                font-size: 28px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .kiosk-queue-view {
-                padding: 16px 16px 120px 16px;
+                padding: 24px 24px 100px 24px;
             }
             
             .kiosk-header {
@@ -932,26 +1371,27 @@
             }
             
             .kiosk-logo {
-                font-size: 40px;
-                margin-bottom: 12px;
+                font-size: 52px;
+                margin-bottom: 14px;
             }
             
             .kiosk-title {
-                font-size: 28px;
+                font-size: 38px;
             }
             
             .kiosk-subtitle {
-                font-size: 14px;
+                font-size: 17px;
             }
             
             .kiosk-queue-list {
-                grid-template-columns: 1fr;
-                gap: 12px;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 14px;
+                max-width: 1400px;
             }
             
             .kiosk-queue-item {
-                padding: 18px 14px;
-                gap: 10px;
+                padding: 12px 8px;
+                gap: 6px;
             }
             
             .kiosk-customer-name {
@@ -959,47 +1399,351 @@
             }
             
             .kiosk-position {
-                width: 50px;
-                height: 50px;
-                font-size: 24px;
+                width: 44px;
+                height: 44px;
+                font-size: 20px;
+            }
+            
+            .kiosk-atender-btn {
+                padding: 10px 20px !important;
+                font-size: 16px !important;
+                min-height: 44px; /* Touch target */
+            }
+            
+            .kiosk-hidden-indicator {
+                top: 120px;
+                right: 24px;
+                font-size: 22px;
+                padding: 10px 20px;
+                min-height: 44px; /* Touch target */
+            }
+            
+            .kiosk-barber-selector {
+                bottom: 20px;
+                padding: 14px 28px;
+            }
+            
+            .kiosk-barber-chip {
+                padding: 12px 24px;
+                font-size: 20px;
+                min-height: 48px; /* Touch target */
+            }
+            
+            .kiosk-back-button {
+                top: 24px;
+                left: 24px;
+                padding: 14px 22px;
+                font-size: 18px;
+                min-height: 48px;
             }
         }
-        
-        @media (max-height: 800px) {
+
+        /* Tablet Portrait (768px - 1024px) */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .kiosk-queue-view {
+                padding: 20px 20px 110px 20px;
+            }
+            
             .kiosk-header {
                 margin-bottom: 20px;
             }
             
             .kiosk-logo {
-                font-size: 48px;
+                font-size: 44px;
+                margin-bottom: 14px;
+            }
+            
+            .kiosk-title {
+                font-size: 32px;
+            }
+            
+            .kiosk-subtitle {
+                font-size: 15px;
+            }
+            
+            .kiosk-queue-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 12px 8px;
+                gap: 6px;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 18px;
+            }
+            
+            .kiosk-position {
+                width: 44px;
+                height: 44px;
+                font-size: 20px;
+            }
+            
+            .kiosk-atender-btn {
+                padding: 10px 20px !important;
+                font-size: 16px !important;
+                min-height: 44px; /* Touch target */
+            }
+            
+            .kiosk-hidden-indicator {
+                top: 90px;
+                right: 20px;
+                font-size: 20px;
+                padding: 10px 20px;
+                min-height: 44px; /* Touch target */
+            }
+            
+            .kiosk-barber-selector {
+                bottom: 20px;
+                padding: 12px 24px;
+            }
+            
+            .kiosk-barber-chip {
+                padding: 12px 22px;
+                font-size: 18px;
+                min-height: 48px; /* Touch target */
+            }
+            
+            .kiosk-back-button {
+                top: 20px;
+                left: 20px;
+                padding: 12px 20px;
+                font-size: 17px;
+                min-height: 48px;
+            }
+        }
+
+        /* Tablet Portrait - Specific adjustments */
+        @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+            .kiosk-queue-view {
+                padding: 18px 18px 110px 18px;
+            }
+            
+            .kiosk-header {
+                margin-bottom: 18px;
+            }
+            
+            .kiosk-logo {
+                font-size: 40px;
+            }
+            
+            .kiosk-title {
+                font-size: 30px;
+            }
+            
+            .kiosk-queue-list {
+                gap: 12px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 12px 8px;
+                gap: 6px;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 18px;
+            }
+            
+            .kiosk-position {
+                width: 44px;
+                height: 44px;
+                font-size: 20px;
+            }
+            
+            .kiosk-back-button {
+                top: 18px;
+                left: 18px;
+                padding: 12px 18px;
+                font-size: 16px;
+            }
+        }
+
+        /* Small Tablets / Large Phones (600px - 768px) */
+        @media (min-width: 600px) and (max-width: 768px) {
+            .kiosk-queue-view {
+                padding: 18px 18px 110px 18px;
+            }
+            
+            .kiosk-header {
+                margin-bottom: 18px;
+            }
+            
+            .kiosk-logo {
+                font-size: 42px;
                 margin-bottom: 12px;
             }
             
             .kiosk-title {
-                font-size: 36px;
+                font-size: 30px;
             }
             
             .kiosk-subtitle {
-                font-size: 18px;
+                font-size: 15px;
+            }
+            
+            .kiosk-queue-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
             }
             
             .kiosk-queue-item {
-                padding: 20px 16px;
+                padding: 10px 8px;
+                gap: 6px;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 18px;
+            }
+            
+            .kiosk-position {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            
+            .kiosk-atender-btn {
+                padding: 10px 18px !important;
+                font-size: 15px !important;
+                min-height: 44px; /* Touch target */
+            }
+            
+            .kiosk-hidden-indicator {
+                top: 65px;
+                right: 18px;
+                font-size: 19px;
+                padding: 9px 18px;
+                min-height: 44px; /* Touch target */
+            }
+            
+            .kiosk-barber-selector {
+                bottom: 18px;
+                padding: 12px 20px;
+            }
+            
+            .kiosk-barber-chip {
+                padding: 10px 20px;
+                font-size: 17px;
+                min-height: 44px; /* Touch target */
             }
         }
-        
-        @media (max-height: 600px) {
+
+        /* Mobile Phones (up to 600px) */
+        @media (max-width: 600px) {
+            .kiosk-queue-view {
+                padding: 16px 16px 110px 16px;
+            }
+            
             .kiosk-header {
                 margin-bottom: 16px;
             }
             
             .kiosk-logo {
-                font-size: 40px;
+                font-size: 36px;
+                margin-bottom: 10px;
+            }
+            
+            .kiosk-title {
+                font-size: 26px;
+            }
+            
+            .kiosk-subtitle {
+                font-size: 13px;
+            }
+            
+            .kiosk-queue-list {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 10px 8px;
+                gap: 6px;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 18px;
+            }
+            
+            .kiosk-position {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            
+            .kiosk-atender-btn {
+                padding: 10px 16px !important;
+                font-size: 14px !important;
+                min-height: 44px; /* Touch target */
+            }
+            
+            .kiosk-hidden-indicator {
+                top: 60px;
+                right: 16px;
+                font-size: 16px;
+                padding: 8px 14px;
+                min-height: 40px; /* Touch target */
+            }
+            
+            .kiosk-hidden-indicator .material-symbols-outlined {
+                font-size: 18px;
+            }
+            
+            .kiosk-barber-selector {
+                bottom: 16px;
+                padding: 10px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .kiosk-barber-chip {
+                padding: 10px 18px;
+                font-size: 16px;
+                min-height: 44px; /* Touch target */
+            }
+        }
+        
+        /* Height-based adjustments for landscape tablets */
+        @media (max-height: 900px) and (min-width: 768px) {
+            .kiosk-header {
+                margin-bottom: 16px;
+            }
+            
+            .kiosk-logo {
+                font-size: 44px;
+                margin-bottom: 10px;
+            }
+            
+            .kiosk-title {
+                font-size: 32px;
+            }
+            
+            .kiosk-subtitle {
+                font-size: 16px;
+            }
+            
+            .kiosk-queue-view {
+                padding: 18px 18px 100px 18px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 18px 14px;
+            }
+        }
+        
+        @media (max-height: 700px) {
+            .kiosk-header {
+                margin-bottom: 12px;
+            }
+            
+            .kiosk-logo {
+                font-size: 36px;
                 margin-bottom: 8px;
             }
             
             .kiosk-title {
-                font-size: 28px;
+                font-size: 26px;
             }
             
             .kiosk-subtitle {
@@ -1007,30 +1751,71 @@
             }
             
             .kiosk-queue-view {
-                padding: 16px 16px 120px 16px;
+                padding: 14px 14px 100px 14px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 16px 12px;
+            }
+            
+            .kiosk-hidden-indicator {
+                top: 55px;
+            }
+        }
+        
+        /* Touch target improvements for all interactive elements */
+        @media (pointer: coarse) {
+            .kiosk-queue-item.clickable {
+                min-height: 60px;
+            }
+            
+            .kiosk-atender-btn {
+                min-height: 44px;
+                min-width: 120px;
+            }
+            
+            .kiosk-barber-chip {
+                min-height: 48px;
+                min-width: 100px;
+            }
+            
+            .kiosk-back-button {
+                min-width: 48px;
+                min-height: 48px;
             }
         }
         
         /* Responsive adjustments for Atender button */
         @media (max-width: 1400px) {
             .kiosk-atender-btn {
-                padding: 10px 20px !important;
-                font-size: 16px !important;
+                padding: 6px 12px !important;
+                font-size: 13px !important;
             }
             
             .kiosk-atender-btn .material-symbols-outlined {
-                font-size: 20px !important;
+                font-size: 16px !important;
             }
         }
         
         @media (max-width: 1024px) {
             .kiosk-atender-btn {
-                padding: 8px 16px !important;
-                font-size: 14px !important;
+                padding: 6px 10px !important;
+                font-size: 12px !important;
             }
             
             .kiosk-atender-btn .material-symbols-outlined {
-                font-size: 18px !important;
+                font-size: 16px !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .kiosk-atender-btn {
+                padding: 6px 10px !important;
+                font-size: 12px !important;
+            }
+            
+            .kiosk-atender-btn .material-symbols-outlined {
+                font-size: 14px !important;
             }
         }
     </style>
@@ -1125,6 +1910,12 @@
             </div>
         </div>
 
+        <!-- Back to Queue Button (shown during ads) -->
+        <button class="back-to-queue-btn" id="backToQueueBtn" onclick="goToQueueFromAd()" title="Voltar para fila" style="display: none;">
+            <span class="material-symbols-outlined">queue</span>
+            <span>Ver Fila</span>
+        </button>
+
         <!-- Ad Views -->
         <div class="kiosk-view kiosk-ad-view ad-1" id="ad1">
             <span class="material-symbols-outlined ad-icon">content_cut</span>
@@ -1142,6 +1933,29 @@
             <span class="material-symbols-outlined ad-icon">schedule</span>
             <div class="ad-title">ABERTO DE<br>SEG A SÁB</div>
             <div class="ad-subtitle">Segunda a Sexta: 9h às 19h<br>Sábado: 9h às 17h</div>
+        </div>
+    </div>
+    
+    <!-- Remove Confirmation Modal -->
+    <div class="remove-confirm-modal" id="removeConfirmModal">
+        <div class="remove-confirm-content">
+            <div class="remove-confirm-icon">
+                <span class="material-symbols-outlined">warning</span>
+            </div>
+            <h2 class="remove-confirm-title">Remover da Fila?</h2>
+            <p class="remove-confirm-message">
+                Tem certeza que deseja remover <strong id="removeCustomerName">cliente</strong> da fila?
+            </p>
+            <div class="remove-confirm-buttons">
+                <button class="remove-confirm-btn cancel" onclick="closeRemoveConfirmModal(false)">
+                    <span class="material-symbols-outlined">close</span>
+                    <span>Cancelar</span>
+                </button>
+                <button class="remove-confirm-btn confirm" onclick="closeRemoveConfirmModal(true)">
+                    <span class="material-symbols-outlined">check</span>
+                    <span>Remover</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1177,6 +1991,9 @@
         const AD_DURATION = 10000;
         let kioskInterval;
         let progressInterval;
+        let adStartTime = 0; // Track when ad started
+        let adRemainingTime = 0; // Track remaining time when switching to queue
+        let isManualQueueView = false; // Track if user manually switched to queue
 
         // Toggle kiosk mode
         function toggleKioskMode() {
@@ -1394,7 +2211,40 @@
                 return 0;
             });
 
-            const displayQueue = sortedQueue.slice(0, 6);
+            // Adaptive number of customers based on screen size
+            let maxCustomers = 6; // Default for small screens
+            if (window.innerWidth >= 1920) {
+                maxCustomers = 12; // Large screens
+            } else if (window.innerWidth >= 1600) {
+                maxCustomers = 10; // Medium-large screens
+            } else if (window.innerWidth >= 1400) {
+                maxCustomers = 8; // Medium screens
+            } else if (window.innerWidth >= 1024) {
+                maxCustomers = 8; // Tablets
+            }
+            
+            const displayQueue = sortedQueue.slice(0, maxCustomers);
+            const hiddenCount = sortedQueue.length - displayQueue.length;
+
+            // Update or create hidden indicator
+            let hiddenIndicator = document.getElementById('kioskHiddenIndicator');
+            if (hiddenCount > 0) {
+                if (!hiddenIndicator) {
+                    hiddenIndicator = document.createElement('div');
+                    hiddenIndicator.id = 'kioskHiddenIndicator';
+                    hiddenIndicator.className = 'kiosk-hidden-indicator';
+                    document.getElementById('kioskQueueView').appendChild(hiddenIndicator);
+                }
+                hiddenIndicator.innerHTML = `
+                    <span class="material-symbols-outlined" style="font-size: 28px;">visibility_off</span>
+                    <span>Pessoas ocultas: ${hiddenCount}</span>
+                `;
+                hiddenIndicator.style.display = 'flex';
+            } else {
+                if (hiddenIndicator) {
+                    hiddenIndicator.style.display = 'none';
+                }
+            }
 
             if (displayQueue.length === 0) {
                 kioskQueueList.innerHTML = `
@@ -1402,6 +2252,9 @@
                         Nenhum cliente na fila
                     </div>
                 `;
+                if (hiddenIndicator) {
+                    hiddenIndicator.style.display = 'none';
+                }
                 return;
             }
 
@@ -1443,43 +2296,57 @@
 
                 // Get barber name if assigned
                 const barber = item.barberId ? barbers.find(b => b.id === item.barberId) : null;
+                // Adaptive sizing based on screen width
+                const isLargeScreen = window.innerWidth >= 1920;
+                const isMediumLargeScreen = window.innerWidth >= 1600;
+                const isMediumScreen = window.innerWidth >= 1400;
+                
+                const barberFontSize = isLargeScreen ? '16px' : isMediumLargeScreen ? '15px' : isMediumScreen ? '14px' : '14px';
+                const barberIconSize = isLargeScreen ? '16px' : isMediumLargeScreen ? '15px' : isMediumScreen ? '14px' : '14px';
+                
+                // Compact barber badge - inline with name
                 const barberBadge = barber 
-                    ? `<div style="font-size: 20px; color: var(--md-sys-color-primary); margin-top: 8px; font-weight: 500;">
-                        <span class="material-symbols-outlined" style="font-size: 24px; vertical-align: middle;">content_cut</span>
-                        ${barber.name}
-                       </div>`
+                    ? `<span style="font-size: ${barberFontSize}; color: var(--md-sys-color-primary); font-weight: 500; display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;">
+                        <span class="material-symbols-outlined" style="font-size: ${barberIconSize}; vertical-align: middle;">content_cut</span>
+                        <span>${barber.name}</span>
+                       </span>`
                     : '';
 
-                const statusText = item.status === 'serving' 
-                    ? '<span class="material-symbols-outlined" style="font-size: 32px;">content_cut</span><span>Em atendimento</span>'
-                    : '';
-
-                let clickHint = '';
-                if (isWaiting && selectedBarberId) {
-                    if (isClaimedBySelectedBarber) {
-                        clickHint = '<div style="font-size: 20px; color: #ff6b6b; margin-top: 12px; font-weight: 600; text-shadow: 0 2px 8px rgba(255, 107, 107, 0.5);">👆 Toque para desmarcar</div>';
-                    } else if (!isClaimed) {
-                        clickHint = '<div style="font-size: 20px; color: var(--md-sys-color-primary); margin-top: 12px; font-weight: 600; text-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">👆 Toque para reivindicar</div>';
-                    }
-                }
-
-                // Atender button - show for all customers, toggle service status
+                // Adaptive Atender button sizing
+                const btnPadding = isLargeScreen ? '8px 14px' : isMediumLargeScreen ? '7px 12px' : isMediumScreen ? '7px 11px' : '6px 10px';
+                const btnFontSize = isLargeScreen ? '14px' : isMediumLargeScreen ? '13px' : isMediumScreen ? '12px' : '12px';
+                const btnIconSize = isLargeScreen ? '18px' : isMediumLargeScreen ? '17px' : isMediumScreen ? '16px' : '16px';
+                const btnTextSize = isLargeScreen ? '12px' : isMediumLargeScreen ? '11px' : isMediumScreen ? '11px' : '11px';
+                const btnMinWidth = item.status === 'serving' ? (isLargeScreen ? '40px' : isMediumLargeScreen ? '36px' : '32px') : 'auto';
+                
+                // Compact Atender button - icon only, smaller
                 const atenderButton = `<button class="kiosk-atender-btn ${item.status === 'serving' ? 'serving' : ''}" 
                                onclick="event.stopPropagation(); toggleService(${item.id});" 
                                data-customer-id="${item.id}"
-                               style="margin-top: 16px; padding: 12px 24px; font-size: 18px; font-weight: 600; border-radius: 12px; border: 2px solid ${item.status === 'serving' ? '#2E7D32' : 'rgba(212, 175, 55, 0.8)'}; background: ${item.status === 'serving' ? 'rgba(46, 125, 50, 0.2)' : 'rgba(212, 175, 55, 0.2)'}; color: ${item.status === 'serving' ? '#4CAF50' : 'var(--md-sys-color-primary)'}; cursor: pointer; transition: all 0.3s ease;">
-                        <span class="material-symbols-outlined" style="font-size: 24px; vertical-align: middle;">${item.status === 'serving' ? 'check_circle' : 'play_arrow'}</span>
-                        <span>${item.status === 'serving' ? 'Em Atendimento' : 'Atender'}</span>
+                               style="padding: ${btnPadding}; font-size: ${btnFontSize}; font-weight: 600; border-radius: 8px; border: 1.5px solid ${item.status === 'serving' ? '#2E7D32' : 'rgba(212, 175, 55, 0.7)'}; background: ${item.status === 'serving' ? 'rgba(46, 125, 50, 0.25)' : 'rgba(212, 175, 55, 0.2)'}; color: ${item.status === 'serving' ? '#4CAF50' : 'var(--md-sys-color-primary)'}; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: ${item.status === 'serving' ? '0' : '4px'}; min-width: ${btnMinWidth};">
+                        <span class="material-symbols-outlined" style="font-size: ${btnIconSize};">${item.status === 'serving' ? 'check_circle' : 'play_arrow'}</span>
+                        ${item.status === 'serving' ? '' : `<span style="font-size: ${btnTextSize};">Atender</span>`}
                        </button>`;
 
+                // Check if name needs scrolling (longer than ~20 chars or contains barber badge)
+                const fullText = item.name + (barber ? ` • ${barber.name}` : '');
+                const needsScrolling = fullText.length > 20;
+                
                 queueItem.innerHTML = `
                     <div class="kiosk-position">${positionNumber}</div>
-                    <div style="text-align: center;">
-                        <div class="kiosk-customer-name">${item.name}</div>
-                        ${barberBadge}
-                        ${statusText ? `<div class="kiosk-status">${statusText}</div>` : ''}
-                        ${clickHint}
+                    <div class="kiosk-queue-item-content">
+                        <div class="kiosk-customer-name ${needsScrolling ? 'scrollable' : ''}">
+                            <span class="kiosk-customer-name-wrapper">
+                                ${item.name}${barberBadge}
+                            </span>
+                            ${needsScrolling ? `<span class="kiosk-customer-name-wrapper">${item.name}${barberBadge}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="kiosk-queue-item-actions">
                         ${atenderButton}
+                        <button class="kiosk-remove-btn" onclick="event.stopPropagation(); removeCustomer(${item.id});" title="Remover da fila">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
                     </div>
                 `;
 
@@ -1517,13 +2384,33 @@
             if (barberSelector) {
                 if (viewId === 'kioskQueueView') {
                     barberSelector.classList.add('show');
-            } else {
+                } else {
                     barberSelector.classList.remove('show');
+                }
+            }
+            
+            // Show/hide "Back to Queue" button
+            const backToQueueBtn = document.getElementById('backToQueueBtn');
+            if (backToQueueBtn) {
+                if (viewId === 'kioskQueueView') {
+                    backToQueueBtn.style.display = 'none';
+                } else {
+                    backToQueueBtn.style.display = 'flex';
                 }
             }
 
             // Determine duration for this view
-            const duration = viewId === 'kioskQueueView' ? QUEUE_DURATION : AD_DURATION;
+            let duration = viewId === 'kioskQueueView' ? QUEUE_DURATION : AD_DURATION;
+            
+            // If manually viewing queue, use shorter duration to resume ad
+            if (viewId === 'kioskQueueView' && isManualQueueView) {
+                // Show queue for 5 seconds when manually accessed, then resume ad
+                duration = 5000;
+            } else if (viewId !== 'kioskQueueView') {
+                // Starting an ad - record start time
+                adStartTime = Date.now();
+                isManualQueueView = false; // Reset manual flag when showing ads
+            }
             
             // Clear existing timeout
             if (kioskInterval) {
@@ -1533,8 +2420,14 @@
             // Set up next rotation
             kioskInterval = setTimeout(() => {
                 if (isKioskMode) {
-                    const nextIndex = (kioskViewIndex + 1) % kioskViews.length;
-                    switchKioskView(nextIndex);
+                    if (viewId === 'kioskQueueView' && isManualQueueView) {
+                        // Resume ad rotation
+                        resumeAdRotation();
+                    } else {
+                        // Normal rotation
+                        const nextIndex = (kioskViewIndex + 1) % kioskViews.length;
+                        switchKioskView(nextIndex);
+                    }
                 }
             }, duration);
 
@@ -1625,9 +2518,85 @@
         }
 
         function removeCustomer(customerId) {
-            if (confirm('Remover cliente da fila?')) {
+            const customer = queueData.find(c => c.id === customerId);
+            const customerName = customer ? customer.name : 'cliente';
+            
+            showRemoveConfirmModal(customerName, () => {
                 queueData = queueData.filter(c => c.id !== customerId);
+                // Reset previous queue data to force re-render
+                previousQueueData = '';
                 renderAll();
+            });
+        }
+        
+        function showRemoveConfirmModal(customerName, onConfirm) {
+            const modal = document.getElementById('removeConfirmModal');
+            const customerNameSpan = document.getElementById('removeCustomerName');
+            if (customerNameSpan) {
+                customerNameSpan.textContent = customerName;
+            }
+            if (modal) {
+                modal.style.display = 'flex';
+                // Store confirm callback
+                modal.dataset.confirmCallback = 'true';
+                window.removeConfirmCallback = onConfirm;
+            }
+        }
+        
+        function closeRemoveConfirmModal(confirmed = false) {
+            const modal = document.getElementById('removeConfirmModal');
+            if (modal) {
+                modal.style.display = 'none';
+                if (confirmed && window.removeConfirmCallback) {
+                    window.removeConfirmCallback();
+                    window.removeConfirmCallback = null;
+                }
+            }
+        }
+        
+        function goToQueueFromAd() {
+            if (!isKioskMode) return;
+            
+            // Calculate remaining time for current ad
+            if (kioskViewIndex > 0) { // Currently showing an ad
+                const elapsed = Date.now() - adStartTime;
+                adRemainingTime = Math.max(0, AD_DURATION - elapsed);
+                previousAdIndex = kioskViewIndex; // Remember which ad we were on
+                isManualQueueView = true;
+            }
+            
+            // Switch to queue view
+            switchKioskView(0);
+        }
+        
+        function resumeAdRotation() {
+            if (!isKioskMode) return;
+            
+            // Resume from where we left off
+            if (adRemainingTime > 0 && isManualQueueView) {
+                // Go back to the ad we were viewing
+                switchKioskView(previousAdIndex);
+                
+                // Adjust the timeout to use remaining time
+                if (kioskInterval) {
+                    clearTimeout(kioskInterval);
+                }
+                kioskInterval = setTimeout(() => {
+                    if (isKioskMode) {
+                        const nextIndex = (previousAdIndex + 1) % kioskViews.length;
+                        switchKioskView(nextIndex);
+                    }
+                }, adRemainingTime);
+                
+                // Update progress bar with remaining time
+                startProgressBar(adRemainingTime);
+                adRemainingTime = 0; // Reset
+                isManualQueueView = false;
+            } else {
+                // Normal rotation
+                isManualQueueView = false;
+                const nextIndex = (kioskViewIndex + 1) % kioskViews.length;
+                switchKioskView(nextIndex);
             }
         }
 
@@ -1722,6 +2691,19 @@
                 renderKioskQueue();
             }
         }, 30000);
+        
+        // Re-render on window resize to adapt to screen size changes
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (isKioskMode) {
+                    // Reset previous data to force re-render with new max customers
+                    previousQueueData = '';
+                    renderKioskQueue();
+                }
+            }, 250);
+        });
     </script>
 </body>
 </html>
