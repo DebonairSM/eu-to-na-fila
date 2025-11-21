@@ -565,30 +565,6 @@
             position: relative;
         }
         
-        
-        .kiosk-hidden-indicator {
-            position: relative;
-            background: #000000;
-            border: 3px solid var(--md-sys-color-primary);
-            border-radius: var(--radius-md);
-            padding: var(--spacing-md) var(--spacing-lg);
-            color: var(--md-sys-color-primary);
-            font-size: var(--font-size-h3);
-            font-weight: 700;
-            line-height: 1.3;
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--spacing-sm);
-            margin-top: var(--spacing-lg);
-            margin-left: auto;
-            margin-right: auto;
-            max-width: 1400px;
-            width: 100%;
-            animation: fadeIn var(--transition-normal) var(--easing-standard);
-        }
-        
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -601,15 +577,17 @@
         }
 
         .kiosk-header {
-            text-align: left;
+            text-align: center;
             margin-bottom: var(--spacing-lg);
             flex-shrink: 0;
             padding-bottom: var(--spacing-md);
-            padding-left: 100px;
+            padding-left: 0;
+            padding-right: 0;
             padding-top: 0;
             border-bottom: 3px solid rgba(212, 175, 55, 0.3);
             display: flex;
-            align-items: flex-start;
+            align-items: center;
+            justify-content: center;
         }
 
         .kiosk-logo {
@@ -647,7 +625,7 @@
             max-width: 1400px;
             margin: 0 auto;
             width: 100%;
-            overflow: hidden;
+            overflow-y: auto;
             position: relative;
         }
         
@@ -753,15 +731,15 @@
             width: 28px;
             height: 28px;
             border-radius: var(--radius-sm);
-            background: #EF4444;
-            border: 2px solid #EF4444;
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.6);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all var(--transition-normal) var(--easing-standard);
-            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+            box-shadow: none;
             flex-shrink: 0;
         }
 
@@ -798,9 +776,9 @@
         
         .kiosk-remove-btn:hover {
             transform: scale(1.1);
-            box-shadow: 0 6px 24px rgba(239, 68, 68, 0.5);
-            background: #DC2626;
-            border-color: #DC2626;
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.9);
         }
 
         .kiosk-remove-btn:active {
@@ -1055,7 +1033,7 @@
 
         .kiosk-queue-item.serving .kiosk-position {
             background: var(--md-sys-color-success);
-            color: #000000;
+            color: #FFFFFF;
             box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
         }
 
@@ -1443,7 +1421,7 @@
             
             .kiosk-header {
                 margin-bottom: var(--spacing-md);
-                padding-left: 120px;
+                padding-left: 0;
             }
             
             .kiosk-title {
@@ -1526,10 +1504,11 @@
             
             .kiosk-header {
                 margin-bottom: var(--spacing-xl);
-                padding-left: 100px;
+                padding-left: 0;
                 padding-top: 0;
                 padding-bottom: var(--spacing-md);
-                align-items: flex-start;
+                align-items: center;
+                justify-content: center;
                 min-height: 48px;
             }
             
@@ -1567,11 +1546,6 @@
                 padding: 10px 20px !important;
                 font-size: 16px !important;
                 min-height: 44px; /* Touch target */
-            }
-            
-            .kiosk-hidden-indicator {
-                font-size: var(--font-size-body);
-                padding: var(--spacing-sm) var(--spacing-md);
             }
             
             .kiosk-barber-selector {
@@ -1612,10 +1586,11 @@
             
             .kiosk-header {
                 margin-bottom: var(--spacing-xl);
-                padding-left: 90px;
+                padding-left: 0;
                 padding-top: 0;
                 padding-bottom: var(--spacing-md);
-                align-items: flex-start;
+                align-items: center;
+                justify-content: center;
                 min-height: 44px;
             }
             
@@ -1652,12 +1627,6 @@
                 min-height: 40px;
             }
             
-            .kiosk-hidden-indicator {
-                font-size: var(--font-size-body);
-                padding: var(--spacing-md) var(--spacing-lg);
-                margin-top: var(--spacing-xl);
-            }
-            
             .kiosk-barber-selector {
                 bottom: var(--spacing-md);
                 padding: var(--spacing-sm) var(--spacing-md);
@@ -1688,10 +1657,11 @@
             
             .kiosk-header {
                 margin-bottom: var(--spacing-xl);
-                padding-left: 90px;
+                padding-left: 0;
                 padding-top: 0;
                 padding-bottom: var(--spacing-md);
-                align-items: flex-start;
+                align-items: center;
+                justify-content: center;
                 min-height: 44px;
             }
             
@@ -1728,12 +1698,6 @@
                 min-height: 40px;
             }
             
-            .kiosk-hidden-indicator {
-                font-size: var(--font-size-body);
-                padding: var(--spacing-md) var(--spacing-lg);
-                margin-top: var(--spacing-xl);
-            }
-            
             .kiosk-barber-selector {
                 bottom: var(--spacing-md);
                 padding: var(--spacing-sm) var(--spacing-md);
@@ -1756,7 +1720,7 @@
             
             .kiosk-header {
                 margin-bottom: var(--spacing-md);
-                padding-left: 100px;
+                padding-left: 0;
             }
             
             .kiosk-title {
@@ -1788,14 +1752,6 @@
                 min-height: 44px; /* Touch target */
             }
             
-            .kiosk-hidden-indicator {
-                top: 65px;
-                right: 18px;
-                font-size: 19px;
-                padding: 9px 18px;
-                min-height: 44px; /* Touch target */
-            }
-            
             .kiosk-barber-selector {
                 bottom: 18px;
                 padding: 12px 20px;
@@ -1819,7 +1775,7 @@
             
             .kiosk-header {
                 margin-bottom: var(--spacing-sm);
-                padding-left: 90px;
+                padding-left: 0;
             }
             
             .kiosk-title {
@@ -1849,15 +1805,6 @@
                 padding: 10px 16px !important;
                 font-size: 14px !important;
                 min-height: 44px; /* Touch target */
-            }
-            
-            .kiosk-hidden-indicator {
-                font-size: var(--font-size-caption);
-                padding: var(--spacing-xs) var(--spacing-sm);
-            }
-            
-            .kiosk-hidden-indicator .material-symbols-outlined {
-                font-size: 18px;
             }
             
             .kiosk-barber-selector {
@@ -2349,104 +2296,31 @@
 
             kioskQueueList.innerHTML = '';
 
-            // Sort: serving first, then waiting
+            // Sort: waiting first, then serving (serving at bottom to save space)
             const sortedQueue = [...queueData].sort((a, b) => {
-                if (a.status === 'serving' && b.status !== 'serving') return -1;
-                if (a.status !== 'serving' && b.status === 'serving') return 1;
+                if (a.status === 'serving' && b.status !== 'serving') return 1;
+                if (a.status !== 'serving' && b.status === 'serving') return -1;
                 return 0;
             });
 
-            // Calculate how many cards can fit completely in the available space
-            const kioskQueueViewEl = document.getElementById('kioskQueueView');
-            const queueListRect = kioskQueueList.getBoundingClientRect();
-            const viewRect = kioskQueueViewEl ? kioskQueueViewEl.getBoundingClientRect() : null;
-            
-            // Get available height for queue list
-            // Account for header, padding, and barber selector space
-            let availableHeight = queueListRect.height;
-            if (!availableHeight || availableHeight === 0) {
-                // Fallback: calculate from viewport
-                const headerHeight = document.querySelector('.kiosk-header')?.getBoundingClientRect().height || 0;
-                const viewHeight = viewRect ? viewRect.height : window.innerHeight;
-                const topPadding = 80;
-                const bottomPadding = 140; // Space for barber selector
-                availableHeight = viewHeight - headerHeight - topPadding - bottomPadding;
-            }
-            
-            // Estimate card height (including gap)
-            // This is approximate - we'll refine it after rendering first card
-            const gap = 8; // var(--spacing-sm) = 8px
-            let estimatedCardHeight = 70; // Base estimate, will be refined
-            
-            // Calculate max customers that can fit
-            let maxCustomers = Math.floor((availableHeight + gap) / (estimatedCardHeight + gap));
-            
-            // Ensure minimum of 1 and maximum reasonable limit
-            maxCustomers = Math.max(1, Math.min(maxCustomers, sortedQueue.length));
-            
-            // Measure card height once using a sample card
-            let cardHeight = estimatedCardHeight;
-            if (sortedQueue.length > 0) {
-                const tempItem = document.createElement('div');
-                tempItem.className = 'kiosk-queue-item';
-                tempItem.style.visibility = 'hidden';
-                tempItem.style.position = 'absolute';
-                tempItem.style.top = '-9999px';
-                tempItem.style.width = queueListRect.width > 0 ? queueListRect.width + 'px' : '100%';
-                tempItem.innerHTML = '<div class="kiosk-position">1</div><div class="kiosk-queue-item-content"><div class="kiosk-customer-name">Sample Customer Name</div></div><div class="kiosk-queue-item-actions"><button class="kiosk-atender-btn"><span class="material-symbols-outlined">play_arrow</span><span>Atender</span></button></div>';
-                document.body.appendChild(tempItem);
-                cardHeight = tempItem.getBoundingClientRect().height;
-                document.body.removeChild(tempItem);
-            }
-            
-            // Calculate how many cards can fit completely
-            const cardHeightWithGap = cardHeight + gap;
-            let maxFittingCards = Math.floor((availableHeight + gap) / cardHeightWithGap);
-            maxFittingCards = Math.max(0, Math.min(maxFittingCards, sortedQueue.length));
-            
-            // Only show cards that fit completely
-            const displayQueue = sortedQueue.slice(0, maxFittingCards);
-            
-            const hiddenCount = sortedQueue.length - displayQueue.length;
-
-            // Update or create hidden indicator (placed after queue list)
-            let hiddenIndicator = document.getElementById('kioskHiddenIndicator');
-            
-            // Show hidden indicator if any cards are hidden
-            if (hiddenCount > 0) {
-                if (!hiddenIndicator) {
-                    hiddenIndicator = document.createElement('div');
-                    hiddenIndicator.id = 'kioskHiddenIndicator';
-                    hiddenIndicator.className = 'kiosk-hidden-indicator';
-                    // Insert after the queue list
-                    kioskQueueList.parentNode.insertBefore(hiddenIndicator, kioskQueueList.nextSibling);
-                }
-                hiddenIndicator.innerHTML = `
-                    <span class="material-symbols-outlined" style="font-size: 1.25rem;">visibility_off</span>
-                    <span>Pessoas ocultas: ${hiddenCount}</span>
-                `;
-                hiddenIndicator.style.display = 'flex';
-            } else {
-                if (hiddenIndicator) {
-                    hiddenIndicator.style.display = 'none';
-                }
+            // Remove any existing hidden indicator
+            const hiddenIndicator = document.getElementById('kioskHiddenIndicator');
+            if (hiddenIndicator) {
+                hiddenIndicator.remove();
             }
 
-            if (displayQueue.length === 0) {
+            if (sortedQueue.length === 0) {
                 kioskQueueList.innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 80px; color: rgba(255, 255, 255, 0.5); font-size: 48px;">
                         Nenhum cliente na fila
                     </div>
                 `;
-                if (hiddenIndicator) {
-                    hiddenIndicator.style.display = 'none';
-                }
                 return;
             }
 
             // Calculate position for waiting customers
             let waitingPosition = 1;
-            displayQueue.forEach((item) => {
+            sortedQueue.forEach((item) => {
                 const queueItem = document.createElement('div');
                 const isClaimed = item.barberId !== null;
                 const isWaiting = item.status === 'waiting';
