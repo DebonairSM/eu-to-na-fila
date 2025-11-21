@@ -22,30 +22,89 @@
         }
 
         :root {
+            /* Primary Colors */
             --md-sys-color-primary: #D4AF37;
+            --md-sys-color-primary-hover: #E5C047;
+            --md-sys-color-primary-active: #C49B2E;
+            --md-sys-color-primary-light: rgba(212, 175, 55, 0.1);
+            --md-sys-color-primary-medium: rgba(212, 175, 55, 0.2);
+            --md-sys-color-primary-dark: rgba(212, 175, 55, 0.8);
             --md-sys-color-on-primary: #FFFFFF;
             --md-sys-color-primary-container: #FFF8E1;
             --md-sys-color-on-primary-container: #3E2723;
+            
+            /* Surface Colors */
             --md-sys-color-surface: #FFFFFF;
-            --md-sys-color-on-surface: #1D1B20;
-            --md-sys-color-surface-variant: #F5F5F5;
-            --md-sys-color-on-surface-variant: #5D5D5D;
+            --md-sys-color-surface-variant: #F8F9FA;
+            --md-sys-color-surface-elevated: rgba(255, 255, 255, 0.95);
+            --md-sys-color-surface-kiosk: #0A0A0A;
+            
+            /* Text Colors */
+            --md-sys-color-on-surface: #1A1A1A;
+            --md-sys-color-on-surface-variant: #6B7280;
+            --md-sys-color-on-surface-disabled: #9CA3AF;
+            
+            /* Status Colors */
+            --md-sys-color-success: #10B981;
+            --md-sys-color-success-light: rgba(16, 185, 129, 0.1);
+            --md-sys-color-error: #EF4444;
+            --md-sys-color-error-light: rgba(239, 68, 68, 0.1);
+            --md-sys-color-warning: #F59E0B;
+            
+            /* Border Colors */
+            --md-sys-color-border-default: rgba(0, 0, 0, 0.08);
+            --md-sys-color-border-hover: rgba(212, 175, 55, 0.4);
+            --md-sys-color-border-active: rgba(212, 175, 55, 0.6);
+            --md-sys-color-border-kiosk: rgba(212, 175, 55, 0.3);
             --md-sys-color-outline: #C4C4C4;
-            --md-sys-color-error: #BA1A1A;
-            --md-sys-color-success: #2E7D32;
-            --md-sys-color-success-container: #C8E6C9;
+            
+            /* Spacing Scale (8px base) */
+            --spacing-xs: 0.25rem; /* 4px */
+            --spacing-sm: 0.5rem; /* 8px */
+            --spacing-md: 1rem; /* 16px */
+            --spacing-lg: 1.5rem; /* 24px */
+            --spacing-xl: 2rem; /* 32px */
+            --spacing-2xl: 3rem; /* 48px */
+            --spacing-3xl: 4rem; /* 64px */
+            
+            /* Typography Scale */
+            --font-size-h1: 2rem; /* 32px */
+            --font-size-h2: 1.5rem; /* 24px */
+            --font-size-h3: 1.25rem; /* 20px */
+            --font-size-body-large: 1.125rem; /* 18px */
+            --font-size-body: 1rem; /* 16px */
+            --font-size-body-small: 0.875rem; /* 14px */
+            --font-size-caption: 0.75rem; /* 12px */
+            --font-size-label: 0.75rem; /* 12px */
+            
+            /* Transitions */
+            --transition-fast: 150ms;
+            --transition-normal: 250ms;
+            --transition-slow: 400ms;
+            --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+            --easing-decelerate: cubic-bezier(0, 0, 0.2, 1);
+            --easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
+            
+            /* Border Radius */
+            --radius-sm: 0.5rem; /* 8px */
+            --radius-md: 0.75rem; /* 12px */
+            --radius-lg: 1rem; /* 16px */
+            --radius-xl: 1.5rem; /* 24px */
+            --radius-full: 50%;
         }
 
         /* ============ MANAGEMENT MODE STYLES ============ */
         body {
             font-family: 'Roboto', sans-serif;
+            font-size: var(--font-size-body);
+            line-height: 1.5;
             background: linear-gradient(135deg, #f0f2f5 0%, #e3e7ed 100%);
             background-attachment: fixed;
             color: var(--md-sys-color-on-surface);
             min-height: 100vh;
-            padding: 16px;
+            padding: var(--spacing-md);
             padding-bottom: 200px;
-            transition: all 0.5s ease;
+            transition: all var(--transition-slow) var(--easing-standard);
         }
 
         body.kiosk-mode {
@@ -67,12 +126,12 @@
 
         /* Header */
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 24px;
-            margin-bottom: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            background: #FFFFFF;
+            border: 3px solid rgba(212, 175, 55, 0.2);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
         }
 
         body.kiosk-mode .header {
@@ -83,58 +142,67 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
         }
 
         .header-icon {
-            font-size: 32px;
+            font-size: 2rem; /* 32px */
             color: var(--md-sys-color-primary);
         }
 
         .header-title h1 {
-            font-size: 24px;
-            font-weight: 500;
+            font-size: var(--font-size-h2);
+            font-weight: 600;
+            line-height: 1.3;
             color: var(--md-sys-color-on-surface);
         }
 
         .header-title p {
-            font-size: 14px;
+            font-size: var(--font-size-body-small);
+            line-height: 1.5;
             color: var(--md-sys-color-on-surface-variant);
+            margin-top: var(--spacing-xs);
         }
 
         .header-actions {
             display: flex;
-            gap: 8px;
+            gap: var(--spacing-sm);
         }
 
         .icon-button {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: 2px solid var(--md-sys-color-outline);
+            width: 3rem; /* 48px */
+            height: 3rem; /* 48px */
+            border-radius: var(--radius-md);
+            border: 3px solid var(--md-sys-color-outline);
             background: var(--md-sys-color-surface);
             color: var(--md-sys-color-on-surface-variant);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: all var(--transition-normal) var(--easing-standard);
             text-decoration: none;
+            font-size: 1.25rem; /* 20px */
         }
 
         .icon-button:hover {
             border-color: var(--md-sys-color-primary);
             color: var(--md-sys-color-primary);
             background: rgba(212, 175, 55, 0.1);
-            transform: scale(1.1);
+            transform: translateX(2px);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.2);
+        }
+
+        .icon-button:active {
+            transform: translateX(0) scale(0.98);
         }
 
         .stats {
             display: flex;
-            gap: 16px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            gap: var(--spacing-lg);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--md-sys-color-border-default);
         }
 
         .stat-item {
@@ -143,15 +211,18 @@
         }
 
         .stat-value {
-            font-size: 28px;
-            font-weight: 500;
+            font-size: var(--font-size-h1);
+            font-weight: 600;
+            line-height: 1.2;
             color: var(--md-sys-color-primary);
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: var(--font-size-caption);
+            line-height: 1.4;
+            font-weight: 400;
             color: var(--md-sys-color-on-surface-variant);
-            margin-top: 4px;
+            margin-top: var(--spacing-xs);
         }
 
         /* Barber Selector - Integrated */
@@ -160,9 +231,9 @@
             align-items: center;
             gap: 16px;
             padding: 16px 20px;
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.04) 100%);
-            border: 2px solid rgba(212, 175, 55, 0.2);
-            border-radius: 16px;
+            background: rgba(212, 175, 55, 0.08);
+            border: 3px solid rgba(212, 175, 55, 0.3);
+            border-radius: var(--radius-md);
             margin-bottom: 20px;
         }
 
@@ -184,9 +255,9 @@
             padding: 6px 14px;
             background: rgba(212, 175, 55, 0.1);
             border: 2px solid rgba(212, 175, 55, 0.3);
-            border-radius: 100px;
+            border-radius: var(--radius-md);
             font-size: 13px;
-            font-weight: 500;
+            font-weight: 600;
             color: var(--md-sys-color-primary);
             cursor: pointer;
             transition: all 0.3s ease;
@@ -202,19 +273,19 @@
         }
 
         .barber-chip.active {
-            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
+            background: var(--md-sys-color-primary);
             border-color: var(--md-sys-color-primary);
-            color: white;
-            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+            color: #000000;
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
         }
 
         /* Queue Section */
         .queue-section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            background: #FFFFFF;
+            border: 3px solid rgba(212, 175, 55, 0.2);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
         }
 
         body.kiosk-mode .queue-section {
@@ -222,147 +293,157 @@
         }
 
         .section-header {
-            font-size: 18px;
-            font-weight: 500;
+            font-size: var(--font-size-h2);
+            font-weight: 600;
+            line-height: 1.3;
             color: var(--md-sys-color-on-surface);
-            margin-bottom: 20px;
+            margin-bottom: var(--spacing-lg);
         }
 
         .queue-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: var(--spacing-md);
         }
 
         .queue-item {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.04) 100%);
-            border: 2px solid rgba(212, 175, 55, 0.25);
-            border-radius: 16px;
-            padding: 16px 20px;
+            background: #FFFFFF;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-left: 4px solid var(--md-sys-color-primary);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
             display: flex;
             align-items: center;
-            gap: 16px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            gap: var(--spacing-md);
+            transition: all var(--transition-normal) var(--easing-standard);
             cursor: default;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         }
 
         .queue-item:hover {
+            border-left-color: var(--md-sys-color-primary);
             border-color: rgba(212, 175, 55, 0.5);
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.15);
-            transform: translateY(-1px);
+            background: #FAFAFA;
+            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.25);
+            transform: translateX(4px);
         }
 
         .queue-item.serving {
-            border-color: rgba(46, 125, 50, 0.6);
-            background: linear-gradient(135deg, rgba(46, 125, 50, 0.1) 0%, rgba(46, 125, 50, 0.05) 100%);
+            border-left-color: var(--md-sys-color-success);
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.08);
         }
 
         .position-badge {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
-            color: white;
+            width: 3.25rem; /* 52px */
+            height: 3.25rem; /* 52px */
+            border-radius: var(--radius-md);
+            background: var(--md-sys-color-primary);
+            color: #000000;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            font-weight: 700;
+            font-size: var(--font-size-h3);
+            font-weight: 900;
+            line-height: 1;
             flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
         }
         
         .queue-item.serving .position-badge {
-            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
-            box-shadow: 0 2px 8px rgba(46, 125, 50, 0.4);
+            background: var(--md-sys-color-success);
+            color: #000000;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
         }
 
         .customer-info {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: var(--spacing-sm);
             min-width: 0;
         }
 
         .customer-name {
-            font-size: 18px;
+            font-size: var(--font-size-body-large);
             font-weight: 600;
+            line-height: 1.5;
             color: var(--md-sys-color-on-surface);
-            line-height: 1.3;
         }
 
         .barber-assignment {
-            font-size: 13px;
+            font-size: var(--font-size-body-small);
+            line-height: 1.5;
             color: var(--md-sys-color-on-surface-variant);
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: var(--spacing-sm);
         }
 
         .barber-badge {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            padding: 4px 10px;
+            gap: var(--spacing-xs);
+            padding: var(--spacing-xs) var(--spacing-md);
             background: rgba(212, 175, 55, 0.1);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 12px;
-            font-size: 12px;
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-caption);
+            line-height: 1.4;
             color: var(--md-sys-color-primary);
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .queue-actions {
             display: flex;
-            gap: 8px;
+            gap: var(--spacing-md);
             align-items: center;
         }
         
         /* Barber avatars on cards */
         .barber-avatars {
             display: flex;
-            gap: 8px;
+            gap: var(--spacing-sm);
             align-items: center;
             flex-shrink: 0;
         }
         
         .barber-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.08) 100%);
-            border: 2px solid rgba(212, 175, 55, 0.4);
+            width: 3.25rem; /* 52px */
+            height: 3.25rem; /* 52px */
+            border-radius: var(--radius-md);
+            background: rgba(212, 175, 55, 0.1);
+            border: 3px solid rgba(212, 175, 55, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all var(--transition-normal) var(--easing-standard);
             position: relative;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
             overflow: hidden;
         }
         
         .barber-avatar:hover {
-            transform: scale(1.1);
+            transform: scale(1.05);
             border-color: var(--md-sys-color-primary);
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.5);
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.15) 100%);
+            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.4);
+            background: rgba(212, 175, 55, 0.2);
         }
         
         .barber-avatar:active {
-            transform: scale(0.95);
+            transform: scale(0.98);
         }
         
         .barber-avatar.assigned {
-            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
+            background: var(--md-sys-color-primary);
             border-color: var(--md-sys-color-primary);
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.6), 0 0 0 2px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.5);
         }
         
         .barber-avatar.assigned:hover {
-            background: linear-gradient(135deg, #E5C047 0%, #D4AF37 100%);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.7), 0 0 0 3px rgba(212, 175, 55, 0.4);
+            background: var(--md-sys-color-primary-hover);
+            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.6);
         }
         
         .barber-avatar.disabled {
@@ -372,49 +453,74 @@
         }
         
         .barber-avatar-face {
-            font-size: 32px;
-            line-height: 1;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             user-select: none;
+            border-radius: var(--radius-md);
         }
         
         .barber-avatar.assigned .barber-avatar-face {
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
         }
+        
+        .barber-avatar.disabled .barber-avatar-face {
+            opacity: 0.3;
+            filter: grayscale(100%);
+        }
 
         .action-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 100px;
+            min-height: 3rem; /* 48px */
+            padding: var(--spacing-md) var(--spacing-lg);
+            border: 3px solid;
+            border-radius: var(--radius-md);
             font-family: 'Roboto', sans-serif;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: var(--font-size-body-small);
+            font-weight: 600;
+            line-height: 1.5;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all var(--transition-normal) var(--easing-standard);
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            gap: var(--spacing-sm);
+        }
+
+        .action-btn .material-symbols-outlined {
+            font-size: 1.25rem; /* 20px */
         }
 
         .action-btn.primary {
-            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
-            color: white;
-            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+            background: var(--md-sys-color-primary);
+            color: #000000;
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
         }
 
         .action-btn.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+            transform: translateX(2px);
+            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.4);
+            background: var(--md-sys-color-primary-hover);
+        }
+
+        .action-btn.primary:active {
+            transform: translateX(0) scale(0.98);
         }
 
         .action-btn.danger {
             background: transparent;
             color: var(--md-sys-color-error);
-            border: 2px solid rgba(186, 26, 26, 0.3);
+            border-color: var(--md-sys-color-error);
         }
 
         .action-btn.danger:hover {
-            background: rgba(186, 26, 26, 0.1);
-            border-color: var(--md-sys-color-error);
+            background: var(--md-sys-color-error);
+            color: #FFFFFF;
+            transform: translateX(2px);
+        }
+
+        .action-btn.danger:active {
+            transform: translateX(0) scale(0.98);
         }
 
         /* ============ KIOSK MODE STYLES ============ */
@@ -448,35 +554,39 @@
 
         /* Kiosk Queue View */
         .kiosk-queue-view {
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
-            padding: 40px 40px 120px 40px;
+            background: #000000;
+            padding: 80px var(--spacing-2xl) 140px var(--spacing-2xl);
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            overflow-y: auto;
-            min-height: 100vh;
+            overflow: hidden;
+            height: 100vh;
             box-sizing: border-box;
             position: relative;
         }
         
+        
         .kiosk-hidden-indicator {
-            position: fixed;
-            top: 100px;
-            right: 40px;
-            background: rgba(212, 175, 55, 0.2);
-            border: 2px solid rgba(212, 175, 55, 0.6);
-            border-radius: 16px;
-            padding: 12px 24px;
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 24px;
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 20px rgba(212, 175, 55, 0.2);
-            z-index: 10000;
+            position: relative;
+            background: #000000;
+            border: 3px solid var(--md-sys-color-primary);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md) var(--spacing-lg);
+            color: var(--md-sys-color-primary);
+            font-size: var(--font-size-h3);
+            font-weight: 700;
+            line-height: 1.3;
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
             display: flex;
             align-items: center;
-            gap: 8px;
-            animation: fadeIn 0.3s ease;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-lg);
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 1400px;
+            width: 100%;
+            animation: fadeIn var(--transition-normal) var(--easing-standard);
         }
         
         @keyframes fadeIn {
@@ -491,124 +601,100 @@
         }
 
         .kiosk-header {
-            text-align: center;
-            margin-bottom: 40px;
+            text-align: left;
+            margin-bottom: var(--spacing-lg);
             flex-shrink: 0;
+            padding-bottom: var(--spacing-md);
+            padding-left: 100px;
+            padding-top: 0;
+            border-bottom: 3px solid rgba(212, 175, 55, 0.3);
+            display: flex;
+            align-items: flex-start;
         }
 
         .kiosk-logo {
-            font-size: 80px;
-            color: var(--md-sys-color-primary);
-            margin-bottom: 20px;
-            filter: drop-shadow(0 8px 32px rgba(212, 175, 55, 0.8));
-            animation: logoFloat 4s ease-in-out infinite;
-        }
-
-        @keyframes logoFloat {
-            0%, 100% {
-                transform: translateY(0) scale(1);
-            }
-            50% {
-                transform: translateY(-15px) scale(1.05);
-            }
+            display: none; /* Removed floating logo */
         }
 
         .kiosk-title {
-            font-size: 56px;
+            font-size: 3.5rem; /* 56px */
             font-weight: 900;
-            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 30%, #FFF8DC 50%, #FFD700 70%, #D4AF37 100%);
-            background-size: 300% 300%;
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 12px;
-            animation: textShimmer 4s ease-in-out infinite;
-            text-shadow: 0 0 40px rgba(212, 175, 55, 0.5);
-            letter-spacing: 2px;
-        }
-
-        @keyframes textShimmer {
-            0%, 100% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
+            line-height: 1.1;
+            color: var(--md-sys-color-primary);
+            margin-bottom: var(--spacing-xs);
+            letter-spacing: -1px;
+            text-transform: uppercase;
+            text-shadow: 0 0 60px rgba(212, 175, 55, 0.6);
+            display: flex;
+            align-items: center;
         }
 
         .kiosk-subtitle {
-            font-size: 24px;
-            font-weight: 300;
-            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.5);
             letter-spacing: 4px;
             text-transform: uppercase;
+            margin-top: var(--spacing-xs);
         }
 
         .kiosk-queue-list {
             flex: 1;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            max-width: 1800px;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            max-width: 1400px;
             margin: 0 auto;
             width: 100%;
-            align-content: start;
-            padding-bottom: 20px;
-            grid-auto-rows: minmax(60px, 1fr);
+            overflow: hidden;
+            position: relative;
         }
         
-        /* Adaptive grid columns based on screen size */
+        
+        /* Adaptive sizing based on screen size */
         @media (min-width: 1920px) {
             .kiosk-queue-list {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 14px;
-                grid-auto-rows: minmax(80px, 1fr);
-                max-width: 100%;
+                max-width: 1600px;
             }
         }
         
         @media (min-width: 1600px) and (max-width: 1919px) {
             .kiosk-queue-list {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 12px;
-                grid-auto-rows: minmax(75px, 1fr);
+                max-width: 1400px;
             }
         }
         
         @media (min-width: 1400px) and (max-width: 1599px) {
             .kiosk-queue-list {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-                grid-auto-rows: minmax(70px, 1fr);
+                max-width: 1200px;
             }
         }
         
         @media (min-width: 1024px) and (max-width: 1399px) {
             .kiosk-queue-list {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-                grid-auto-rows: minmax(65px, 1fr);
+                max-width: 1000px;
             }
         }
 
         .kiosk-queue-item {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.08) 50%, rgba(212, 175, 55, 0.12) 100%);
-            border: 2px solid rgba(212, 175, 55, 0.4);
-            border-radius: 16px;
-            padding: 10px 12px;
+            background: rgba(18, 18, 18, 0.95);
+            border: 3px solid rgba(212, 175, 55, 0.2);
+            border-left: 6px solid var(--md-sys-color-primary);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md) var(--spacing-lg);
             display: flex;
             flex-direction: row;
             align-items: center;
-            gap: 12px;
-            backdrop-filter: blur(30px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 
-                        0 0 0 1px rgba(212, 175, 55, 0.2) inset;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            gap: var(--spacing-lg);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all var(--transition-normal) var(--easing-standard);
             box-sizing: border-box;
             position: relative;
             overflow: visible;
             width: 100%;
-            align-self: stretch;
+            flex-shrink: 0;
         }
         
         /* Adaptive card sizing for larger screens */
@@ -624,7 +710,7 @@
         @media (min-width: 1600px) and (max-width: 1919px) {
             .kiosk-queue-item {
                 padding: 14px 18px;
-                gap: 16px;
+            gap: 16px;
                 min-height: 75px;
             }
         }
@@ -646,58 +732,45 @@
         }
 
         .kiosk-queue-item:hover {
-            transform: translateY(-2px);
-            border-color: rgba(212, 175, 55, 0.7);
-            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.5), 
-                        0 0 0 1px rgba(212, 175, 55, 0.4) inset;
+            transform: translateX(8px);
+            border-left-color: var(--md-sys-color-primary);
+            border-color: rgba(212, 175, 55, 0.5);
+            background: rgba(26, 26, 26, 0.98);
+            box-shadow: 0 12px 48px rgba(212, 175, 55, 0.3), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
         .kiosk-queue-item.serving {
-            background: linear-gradient(135deg, rgba(46, 125, 50, 0.25) 0%, rgba(46, 125, 50, 0.15) 50%, rgba(46, 125, 50, 0.2) 100%);
-            border-color: rgba(46, 125, 50, 0.7);
-            box-shadow: 0 8px 32px rgba(46, 125, 50, 0.5), 
-                        0 0 0 1px rgba(46, 125, 50, 0.3) inset,
-                        0 2px 8px rgba(46, 125, 50, 0.4);
-            animation: servingPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes servingPulse {
-            0%, 100% {
-                box-shadow: 0 8px 32px rgba(46, 125, 50, 0.5), 
-                            0 0 0 1px rgba(46, 125, 50, 0.3) inset,
-                            0 2px 8px rgba(46, 125, 50, 0.4);
-            }
-            50% {
-                box-shadow: 0 12px 48px rgba(46, 125, 50, 0.7), 
-                            0 0 0 1px rgba(46, 125, 50, 0.5) inset,
-                            0 4px 16px rgba(46, 125, 50, 0.6);
-            }
+            background: rgba(16, 185, 129, 0.15);
+            border-left-color: var(--md-sys-color-success);
+            border-color: rgba(16, 185, 129, 0.4);
+            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
         
         /* Remove button */
         .kiosk-remove-btn {
             width: 28px;
             height: 28px;
-            border-radius: 6px;
-            background: linear-gradient(135deg, rgba(186, 26, 26, 0.9) 0%, rgba(186, 26, 26, 0.7) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-sm);
+            background: #EF4444;
+            border: 2px solid #EF4444;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-            opacity: 0.85;
+            transition: all var(--transition-normal) var(--easing-standard);
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
             flex-shrink: 0;
         }
-        
+
         /* Adaptive remove button sizing */
         @media (min-width: 1920px) {
             .kiosk-remove-btn {
                 width: 36px;
                 height: 36px;
-                border-radius: 8px;
+                border-radius: 0;
             }
             
             .kiosk-remove-btn .material-symbols-outlined {
@@ -724,16 +797,16 @@
         }
         
         .kiosk-remove-btn:hover {
-            opacity: 1;
             transform: scale(1.1);
-            box-shadow: 0 2px 8px rgba(186, 26, 26, 0.5);
-            background: linear-gradient(135deg, rgba(186, 26, 26, 1) 0%, rgba(186, 26, 26, 0.8) 100%);
+            box-shadow: 0 6px 24px rgba(239, 68, 68, 0.5);
+            background: #DC2626;
+            border-color: #DC2626;
         }
-        
+
         .kiosk-remove-btn:active {
             transform: scale(0.95);
         }
-        
+
         .kiosk-remove-btn .material-symbols-outlined {
             font-size: 16px;
             font-weight: 600;
@@ -744,40 +817,40 @@
             position: fixed;
             top: 30px;
             right: 30px;
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.95) 0%, rgba(212, 175, 55, 0.85) 100%);
-            backdrop-filter: blur(30px);
-            border: 3px solid rgba(212, 175, 55, 0.8);
-            border-radius: 12px;
-            padding: 12px 24px;
-            color: #1a1a1a;
-            font-size: 18px;
-            font-weight: 700;
+            background: var(--md-sys-color-primary);
+            border: 3px solid var(--md-sys-color-primary);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-sm) var(--spacing-md);
+            color: #000000;
+            font-size: var(--font-size-body-small);
+            font-weight: 600;
             cursor: pointer;
             z-index: 10001;
             display: flex;
             align-items: center;
-            gap: 8px;
-            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.6), 0 0 0 3px rgba(212, 175, 55, 0.3);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            gap: var(--spacing-sm);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+            transition: all var(--transition-normal) var(--easing-standard);
             pointer-events: auto;
             min-width: 48px;
-            min-height: 48px;
+            min-height: 40px;
         }
         
         .back-to-queue-btn:hover {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 12px 40px rgba(212, 175, 55, 0.8), 0 0 0 4px rgba(212, 175, 55, 0.5);
-            background: linear-gradient(135deg, rgba(212, 175, 55, 1) 0%, rgba(212, 175, 55, 0.9) 100%);
+            transform: translateX(4px);
+            box-shadow: 0 12px 48px rgba(212, 175, 55, 0.5);
+            background: var(--md-sys-color-primary-hover);
+            border-color: var(--md-sys-color-primary-hover);
         }
         
         .back-to-queue-btn:active {
-            transform: translateY(0) scale(1);
+            transform: translateX(0) scale(0.98);
         }
         
         .back-to-queue-btn .material-symbols-outlined {
             font-size: 24px;
         }
-        
+
         /* Remove Confirmation Modal */
         .remove-confirm-modal {
             display: none;
@@ -786,8 +859,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.9);
             z-index: 20000;
             align-items: center;
             justify-content: center;
@@ -795,14 +867,14 @@
         }
         
         .remove-confirm-content {
-            background: linear-gradient(135deg, rgba(26, 26, 26, 0.98) 0%, rgba(30, 30, 30, 0.98) 100%);
-            border: 3px solid rgba(186, 26, 26, 0.6);
-            border-radius: 24px;
-            padding: 40px;
+            background: #1A1A1A;
+            border: 3px solid #EF4444;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-2xl);
             max-width: 500px;
             width: 90%;
             text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(186, 26, 26, 0.3) inset;
+            box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4);
             animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
@@ -821,46 +893,37 @@
             width: 80px;
             height: 80px;
             margin: 0 auto 24px;
-            background: linear-gradient(135deg, rgba(186, 26, 26, 0.2) 0%, rgba(186, 26, 26, 0.1) 100%);
-            border: 3px solid rgba(186, 26, 26, 0.5);
-            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.2);
+            border: 3px solid #EF4444;
+            border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
-            animation: pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% {
-                box-shadow: 0 0 0 0 rgba(186, 26, 26, 0.4);
-            }
-            50% {
-                box-shadow: 0 0 0 10px rgba(186, 26, 26, 0);
-            }
         }
         
         .remove-confirm-icon .material-symbols-outlined {
             font-size: 48px;
-            color: #ff6b6b;
+            color: #EF4444;
         }
         
         .remove-confirm-title {
-            font-size: 32px;
-            font-weight: 800;
+            font-size: 2rem;
+            font-weight: 900;
             color: #FFFFFF;
-            margin: 0 0 16px 0;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            margin: 0 0 var(--spacing-md) 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .remove-confirm-message {
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.8);
-            margin: 0 0 32px 0;
+            font-size: var(--font-size-body-large);
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0 0 var(--spacing-xl) 0;
             line-height: 1.6;
         }
         
         .remove-confirm-message strong {
-            color: #ff6b6b;
+            color: #EF4444;
             font-weight: 700;
         }
         
@@ -871,42 +934,48 @@
         }
         
         .remove-confirm-btn {
-            padding: 14px 28px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
+            padding: var(--spacing-md) var(--spacing-xl);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-body);
+            font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid transparent;
+            gap: var(--spacing-sm);
+            transition: all var(--transition-normal) var(--easing-standard);
+            border: 3px solid;
             min-width: 140px;
             justify-content: center;
         }
         
         .remove-confirm-btn.cancel {
-            background: rgba(255, 255, 255, 0.1);
+            background: transparent;
             color: rgba(255, 255, 255, 0.9);
-            border-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
         }
         
         .remove-confirm-btn.cancel:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateX(2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         }
         
         .remove-confirm-btn.confirm {
-            background: linear-gradient(135deg, rgba(186, 26, 26, 0.9) 0%, rgba(186, 26, 26, 0.7) 100%);
-            color: white;
-            border-color: rgba(186, 26, 26, 0.8);
+            background: #EF4444;
+            color: #FFFFFF;
+            border-color: #EF4444;
         }
         
         .remove-confirm-btn.confirm:hover {
-            background: linear-gradient(135deg, rgba(186, 26, 26, 1) 0%, rgba(186, 26, 26, 0.8) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(186, 26, 26, 0.6);
+            background: #DC2626;
+            border-color: #DC2626;
+            transform: translateX(2px);
+            box-shadow: 0 6px 24px rgba(239, 68, 68, 0.4);
+        }
+        
+        .remove-confirm-btn:active {
+            transform: translateX(0) scale(0.98);
         }
         
         .remove-confirm-btn .material-symbols-outlined {
@@ -941,20 +1010,20 @@
         }
 
         .kiosk-position {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
-            color: white;
-            border-radius: 10px;
+            width: 3rem; /* 48px */
+            height: 3rem; /* 48px */
+            background: var(--md-sys-color-primary);
+            color: #000000;
+            border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            font-weight: 800;
+            font-size: 1.5rem; /* 24px */
+            font-weight: 900;
+            line-height: 1;
             flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5), 
-                        inset 0 1px 2px rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+            border: none;
             position: relative;
         }
         
@@ -964,7 +1033,7 @@
                 width: 56px;
                 height: 56px;
                 font-size: 26px;
-                border-radius: 12px;
+                border-radius: 0;
             }
         }
         
@@ -985,59 +1054,26 @@
         }
 
         .kiosk-queue-item.serving .kiosk-position {
-            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
-            box-shadow: 0 2px 8px rgba(46, 125, 50, 0.5), 
-                        inset 0 1px 2px rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.4);
+            background: var(--md-sys-color-success);
+            color: #000000;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
         }
 
         .kiosk-customer-name {
-            font-size: 20px;
-            font-weight: 600;
+            font-size: 1.5rem; /* 24px */
+            font-weight: 700;
+            line-height: 1.2;
             color: #FFFFFF;
             text-align: left;
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-            line-height: 1.3;
+            text-shadow: none;
             margin: 0;
-            letter-spacing: 0.2px;
+            letter-spacing: -0.5px;
             flex: 1;
             min-width: 0;
             overflow: hidden;
             position: relative;
             white-space: nowrap;
-        }
-        
-        .kiosk-customer-name-wrapper {
-            display: inline-block;
-            padding-right: 30px;
-        }
-        
-        /* Marquee scrolling effect - like LED sign */
-        .kiosk-customer-name.scrollable {
-            display: flex;
-        }
-        
-        .kiosk-customer-name.scrollable .kiosk-customer-name-wrapper {
-            animation: marquee 20s linear infinite;
-            will-change: transform;
-        }
-        
-        .kiosk-customer-name.scrollable:hover .kiosk-customer-name-wrapper {
-            animation-play-state: paused;
-        }
-        
-        @keyframes marquee {
-            0% {
-                transform: translateX(0);
-            }
-            100% {
-                transform: translateX(-50%);
-            }
-        }
-        
-        /* Non-scrollable names */
-        .kiosk-customer-name:not(.scrollable) .kiosk-customer-name-wrapper {
-            padding-right: 0;
+            text-overflow: ellipsis;
         }
         
         /* Adaptive customer name sizing */
@@ -1097,65 +1133,56 @@
 
         .kiosk-queue-item.clickable {
             cursor: pointer;
-            animation: clickablePulse 2s ease-in-out infinite;
-        }
-
-        @keyframes clickablePulse {
-            0%, 100% {
-                border-color: rgba(212, 175, 55, 0.5);
-            }
-            50% {
-                border-color: rgba(212, 175, 55, 0.9);
-                box-shadow: 0 12px 48px rgba(212, 175, 55, 0.4), inset 0 0 60px rgba(212, 175, 55, 0.2), 0 0 0 4px rgba(212, 175, 55, 0.3);
-            }
         }
 
         .kiosk-queue-item.clickable:hover {
-            transform: translateY(-8px) scale(1.05);
-            border-color: var(--md-sys-color-primary);
-            box-shadow: 0 20px 80px rgba(212, 175, 55, 0.6), inset 0 0 100px rgba(212, 175, 55, 0.3);
-            animation: none;
+            transform: translateX(12px);
+            border-left-color: var(--md-sys-color-primary);
+            border-color: rgba(212, 175, 55, 0.6);
+            background: rgba(30, 30, 30, 1);
+            box-shadow: 0 16px 64px rgba(212, 175, 55, 0.4), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         .kiosk-queue-item.clickable:active {
-            transform: translateY(-4px) scale(1.02);
+            transform: translateX(6px);
         }
 
         /* Kiosk Back Button */
         .kiosk-back-button {
-            position: fixed;
-            top: 30px;
-            left: 30px;
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 26, 0.98) 100%);
-            backdrop-filter: blur(30px);
-            border: 3px solid rgba(212, 175, 55, 0.8);
-            border-radius: 16px;
-            padding: 16px 24px;
+            position: absolute;
+            top: var(--spacing-lg);
+            left: var(--spacing-lg);
+            background: #000000;
+            border: 3px solid var(--md-sys-color-primary);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-sm) var(--spacing-md);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: var(--spacing-sm);
             color: var(--md-sys-color-primary);
-            font-size: 20px;
+            font-size: var(--font-size-body-small);
             font-weight: 600;
+            line-height: 1.4;
             cursor: pointer;
             z-index: 10001;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(212, 175, 55, 0.3);
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+            transition: all var(--transition-normal) var(--easing-standard);
             pointer-events: auto;
         }
 
         .kiosk-back-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(212, 175, 55, 0.5), 0 0 0 3px rgba(212, 175, 55, 0.5);
-            border-color: var(--md-sys-color-primary);
+            transform: translateX(4px);
+            box-shadow: 0 12px 48px rgba(212, 175, 55, 0.5);
+            background: rgba(212, 175, 55, 0.1);
         }
 
         .kiosk-back-button:active {
-            transform: translateY(0);
+            transform: translateX(0) scale(0.98);
         }
 
         .kiosk-back-button .material-symbols-outlined {
-            font-size: 28px;
+            font-size: 1.25rem; /* 20px */
         }
 
         /* Kiosk Atender Button */
@@ -1166,34 +1193,34 @@
         }
 
         .kiosk-atender-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transform: translateX(2px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
         }
 
         .kiosk-atender-btn:active {
-            transform: translateY(0);
+            transform: translateX(0) scale(0.98);
         }
 
         .kiosk-atender-btn.serving {
-            animation: servingPulse 2s ease-in-out infinite;
+            animation: none;
         }
 
         /* Kiosk Barber Selector */
         .kiosk-barber-selector {
             position: fixed;
-            bottom: 30px;
+            bottom: var(--spacing-md);
             left: 50%;
             transform: translateX(-50%);
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 26, 0.98) 100%);
-            backdrop-filter: blur(30px);
-            border: 3px solid rgba(212, 175, 55, 0.8);
-            border-radius: 16px;
-            padding: 12px 24px;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--md-sys-color-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-sm) var(--spacing-md);
             display: none;
             align-items: center;
-            gap: 16px;
+            gap: var(--spacing-sm);
             z-index: 10000;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.3);
             pointer-events: auto;
         }
 
@@ -1202,37 +1229,48 @@
         }
 
         .kiosk-barber-label {
-            font-size: 20px;
+            font-size: var(--font-size-caption);
             font-weight: 600;
-            color: var(--md-sys-color-primary);
+            line-height: 1.4;
+            color: rgba(212, 175, 55, 0.7);
             white-space: nowrap;
+            margin-right: var(--spacing-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .kiosk-barber-list {
             display: flex;
-            gap: 12px;
+            gap: var(--spacing-sm);
         }
 
         .kiosk-barber-chip {
-            padding: 10px 20px;
-            background: rgba(212, 175, 55, 0.15);
-            border: 2px solid rgba(212, 175, 55, 0.4);
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--md-sys-color-primary);
-            cursor: pointer;
-            transition: all 0.3s ease;
+            padding: 2px;
+            background: rgba(212, 175, 55, 0.1);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: var(--radius-md);
+            width: 3.5rem; /* 56px */
+            min-height: 3.5rem; /* 56px */
+            height: auto;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 8px;
-            min-width: 100px;
-            justify-content: center;
+            justify-content: flex-start;
+            cursor: pointer;
+            transition: all var(--transition-normal) var(--easing-standard);
             pointer-events: auto !important;
             user-select: none;
             -webkit-user-select: none;
             position: relative;
             z-index: 1;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            overflow: visible;
+        }
+        
+        .kiosk-barber-chip .barber-face {
+            width: calc(100% - 4px);
+            height: 3rem; /* 48px */
+            flex-shrink: 0;
         }
         
         .kiosk-barber-chip * {
@@ -1240,25 +1278,63 @@
         }
 
         .kiosk-barber-chip:hover {
-            background: rgba(212, 175, 55, 0.3);
+            background: rgba(212, 175, 55, 0.15);
             border-color: var(--md-sys-color-primary);
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
         }
 
         .kiosk-barber-chip:active {
-            transform: translateY(0) scale(0.98);
+            transform: translateY(0);
         }
 
         .kiosk-barber-chip.active {
-            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
+            background: var(--md-sys-color-primary);
             border-color: var(--md-sys-color-primary);
-            color: white;
             box-shadow: 0 4px 16px rgba(212, 175, 55, 0.6);
+            transform: translateY(-2px);
+        }
+        
+        .kiosk-barber-chip.active .barber-face {
+            filter: none;
         }
 
-        .kiosk-barber-chip .material-symbols-outlined {
-            font-size: 24px;
+        .kiosk-barber-chip .barber-face {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            user-select: none;
+        }
+        
+        .kiosk-barber-chip.active .barber-face {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+        
+        .kiosk-barber-chip .barber-name {
+            display: none;
+            font-size: 0.5rem; /* 8px */
+            font-weight: 700;
+            color: var(--md-sys-color-primary);
+            margin-top: 2px;
+            padding: 0 2px;
+            line-height: 1;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            text-align: center;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .kiosk-barber-chip.active {
+            min-height: 4.25rem; /* 68px */
+        }
+        
+        .kiosk-barber-chip.active .barber-name {
+            display: block;
+            color: #000000;
         }
 
         /* Kiosk Ad Views */
@@ -1272,15 +1348,15 @@
         }
 
         .kiosk-ad-view.ad-1 {
-            background: linear-gradient(135deg, #1a1a1a 0%, #3d3d3d 100%);
+            background: #000000;
         }
 
         .kiosk-ad-view.ad-2 {
-            background: linear-gradient(135deg, #2d2416 0%, #4a3d2a 100%);
+            background: #0A0A0A;
         }
 
         .kiosk-ad-view.ad-3 {
-            background: linear-gradient(135deg, #1a2d1a 0%, #2d4a2d 100%);
+            background: #000000;
         }
 
         .ad-icon {
@@ -1325,14 +1401,26 @@
         /* Empty State */
         .empty-state {
             text-align: center;
-            padding: 60px 20px;
+            padding: var(--spacing-3xl) var(--spacing-lg);
             color: var(--md-sys-color-on-surface-variant);
         }
 
         .empty-icon {
-            font-size: 80px;
-            opacity: 0.3;
-            margin-bottom: 20px;
+            font-size: 4rem; /* 64px */
+            opacity: 0.4;
+            margin-bottom: var(--spacing-lg);
+            color: var(--md-sys-color-on-surface-variant);
+        }
+        
+        .empty-state > div:first-of-type {
+            font-size: var(--font-size-body-large);
+            font-weight: 500;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .empty-state > div:last-of-type {
+            font-size: var(--font-size-body-small);
+            color: var(--md-sys-color-on-surface-variant);
         }
 
         /* Material Icons */
@@ -1348,60 +1436,50 @@
         /* Responsive adjustments for kiosk mode */
         @media (max-width: 1920px) {
             .kiosk-queue-view {
-                padding: 30px 30px 120px 30px;
+                padding: 70px 30px 140px 30px;
+                height: 100vh;
+                overflow: hidden;
             }
             
             .kiosk-header {
-                margin-bottom: 30px;
-            }
-            
-            .kiosk-logo {
-                font-size: 64px;
+                margin-bottom: var(--spacing-md);
+                padding-left: 120px;
             }
             
             .kiosk-title {
-                font-size: 48px;
+                font-size: 3rem; /* 48px */
             }
             
             .kiosk-subtitle {
-                font-size: 20px;
+                font-size: 0.875rem;
             }
             
             .kiosk-queue-list {
-                gap: 16px;
+                gap: var(--spacing-sm);
             }
             
             .kiosk-queue-item {
-                padding: 14px 10px;
-                gap: 8px;
+                padding: var(--spacing-md) var(--spacing-lg);
+                gap: var(--spacing-md);
             }
             
             .kiosk-customer-name {
-                font-size: 22px;
+                font-size: 1.375rem; /* 22px */
             }
             
             .kiosk-position {
-                width: 50px;
-                height: 50px;
-                font-size: 24px;
+                width: 2.75rem; /* 44px */
+                height: 2.75rem; /* 44px */
+                font-size: 1.25rem; /* 20px */
             }
         }
 
-        @media (max-width: 1600px) {
-            .kiosk-queue-list {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
 
         @media (max-width: 1400px) {
             .kiosk-queue-view {
                 padding: 24px 24px 120px 24px;
             }
             
-            .kiosk-queue-list {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
-            }
             
             .kiosk-logo {
                 font-size: 56px;
@@ -1434,45 +1512,55 @@
         /* Tablet Landscape (1024px - 1366px) */
         @media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
             .kiosk-queue-view {
-                padding: 24px 24px 100px 24px;
+                padding: 60px 28px 120px 28px;
+                height: 100vh;
+                overflow: hidden;
+            }
+            
+            .kiosk-back-button {
+                top: 20px;
+                left: 28px;
+                padding: 8px 14px;
+                height: fit-content;
             }
             
             .kiosk-header {
-                margin-bottom: 20px;
-            }
-            
-            .kiosk-logo {
-                font-size: 52px;
-                margin-bottom: 14px;
+                margin-bottom: var(--spacing-xl);
+                padding-left: 100px;
+                padding-top: 0;
+                padding-bottom: var(--spacing-md);
+                align-items: flex-start;
+                min-height: 48px;
             }
             
             .kiosk-title {
-                font-size: 38px;
+                font-size: 2.5rem; /* 40px */
+                line-height: 1.1;
+                margin-top: 0;
+                margin-bottom: 0;
             }
             
             .kiosk-subtitle {
-                font-size: 17px;
+                font-size: 0.875rem;
             }
             
             .kiosk-queue-list {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 14px;
-                max-width: 1400px;
+                gap: var(--spacing-sm);
             }
             
             .kiosk-queue-item {
-                padding: 12px 8px;
-                gap: 6px;
+                padding: var(--spacing-sm) var(--spacing-md);
+                gap: var(--spacing-md);
             }
             
             .kiosk-customer-name {
-                font-size: 20px;
+                font-size: 1.125rem; /* 18px */
             }
             
             .kiosk-position {
-                width: 44px;
-                height: 44px;
-                font-size: 20px;
+                width: 2.25rem; /* 36px */
+                height: 2.25rem; /* 36px */
+                font-size: 1rem; /* 16px */
             }
             
             .kiosk-atender-btn {
@@ -1482,190 +1570,210 @@
             }
             
             .kiosk-hidden-indicator {
-                top: 120px;
-                right: 24px;
-                font-size: 22px;
-                padding: 10px 20px;
-                min-height: 44px; /* Touch target */
+                font-size: var(--font-size-body);
+                padding: var(--spacing-sm) var(--spacing-md);
             }
             
             .kiosk-barber-selector {
-                bottom: 20px;
-                padding: 14px 28px;
+                bottom: var(--spacing-sm);
+                padding: var(--spacing-xs) var(--spacing-sm);
             }
             
             .kiosk-barber-chip {
-                padding: 12px 24px;
-                font-size: 20px;
-                min-height: 48px; /* Touch target */
+                width: 3rem; /* 48px */
+                height: 3rem; /* 48px */
+                padding: 2px;
             }
             
             .kiosk-back-button {
                 top: 24px;
                 left: 24px;
-                padding: 14px 22px;
-                font-size: 18px;
-                min-height: 48px;
+                padding: var(--spacing-sm) var(--spacing-md);
+                font-size: var(--font-size-body-small);
+                min-height: 40px;
             }
         }
 
         /* Tablet Portrait (768px - 1024px) */
         @media (min-width: 768px) and (max-width: 1024px) {
             .kiosk-queue-view {
-                padding: 20px 20px 110px 20px;
-            }
-            
-            .kiosk-header {
-                margin-bottom: 20px;
-            }
-            
-            .kiosk-logo {
-                font-size: 44px;
-                margin-bottom: 14px;
-            }
-            
-            .kiosk-title {
-                font-size: 32px;
-            }
-            
-            .kiosk-subtitle {
-                font-size: 15px;
-            }
-            
-            .kiosk-queue-list {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 14px;
-            }
-            
-            .kiosk-queue-item {
-                padding: 12px 8px;
-                gap: 6px;
-            }
-            
-            .kiosk-customer-name {
-                font-size: 18px;
-            }
-            
-            .kiosk-position {
-                width: 44px;
-                height: 44px;
-                font-size: 20px;
-            }
-            
-            .kiosk-atender-btn {
-                padding: 10px 20px !important;
-                font-size: 16px !important;
-                min-height: 44px; /* Touch target */
-            }
-            
-            .kiosk-hidden-indicator {
-                top: 90px;
-                right: 20px;
-                font-size: 20px;
-                padding: 10px 20px;
-                min-height: 44px; /* Touch target */
-            }
-            
-            .kiosk-barber-selector {
-                bottom: 20px;
-                padding: 12px 24px;
-            }
-            
-            .kiosk-barber-chip {
-                padding: 12px 22px;
-                font-size: 18px;
-                min-height: 48px; /* Touch target */
+                padding: 60px 24px 120px 24px;
+                height: 100vh;
+                overflow: hidden;
             }
             
             .kiosk-back-button {
-                top: 20px;
-                left: 20px;
-                padding: 12px 20px;
-                font-size: 17px;
-                min-height: 48px;
+                top: 16px;
+                left: 24px;
+                padding: 8px 14px;
+                font-size: 0.875rem;
+                height: fit-content;
+            }
+            
+            .kiosk-header {
+                margin-bottom: var(--spacing-xl);
+                padding-left: 90px;
+                padding-top: 0;
+                padding-bottom: var(--spacing-md);
+                align-items: flex-start;
+                min-height: 44px;
+            }
+            
+            .kiosk-title {
+                font-size: 2.25rem; /* 36px */
+                line-height: 1.1;
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+            
+            .kiosk-queue-list {
+                gap: var(--spacing-md);
+            }
+            
+            .kiosk-queue-item {
+                padding: var(--spacing-md) var(--spacing-lg);
+                gap: var(--spacing-md);
+                min-height: 70px;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 1.25rem; /* 20px */
+            }
+            
+            .kiosk-position {
+                width: 2.5rem; /* 40px */
+                height: 2.5rem; /* 40px */
+                font-size: 1.125rem; /* 18px */
+            }
+            
+            .kiosk-atender-btn {
+                padding: 8px 16px !important;
+                font-size: 0.875rem !important;
+                min-height: 40px;
+            }
+            
+            .kiosk-hidden-indicator {
+                font-size: var(--font-size-body);
+                padding: var(--spacing-md) var(--spacing-lg);
+                margin-top: var(--spacing-xl);
+            }
+            
+            .kiosk-barber-selector {
+                bottom: var(--spacing-md);
+                padding: var(--spacing-sm) var(--spacing-md);
+            }
+            
+            .kiosk-barber-chip {
+                width: 3rem; /* 48px */
+                height: 3rem; /* 48px */
+                padding: 2px;
             }
         }
 
         /* Tablet Portrait - Specific adjustments */
         @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
             .kiosk-queue-view {
-                padding: 18px 18px 110px 18px;
-            }
-            
-            .kiosk-header {
-                margin-bottom: 18px;
-            }
-            
-            .kiosk-logo {
-                font-size: 40px;
-            }
-            
-            .kiosk-title {
-                font-size: 30px;
-            }
-            
-            .kiosk-queue-list {
-                gap: 12px;
-            }
-            
-            .kiosk-queue-item {
-                padding: 12px 8px;
-                gap: 6px;
-            }
-            
-            .kiosk-customer-name {
-                font-size: 18px;
-            }
-            
-            .kiosk-position {
-                width: 44px;
-                height: 44px;
-                font-size: 20px;
+                padding: 60px 20px 120px 20px;
+                height: 100vh;
+                overflow: hidden;
             }
             
             .kiosk-back-button {
-                top: 18px;
-                left: 18px;
-                padding: 12px 18px;
-                font-size: 16px;
+                top: 16px;
+                left: 20px;
+                padding: 8px 14px;
+                font-size: 0.875rem;
+                height: fit-content;
+            }
+            
+            .kiosk-header {
+                margin-bottom: var(--spacing-xl);
+                padding-left: 90px;
+                padding-top: 0;
+                padding-bottom: var(--spacing-md);
+                align-items: flex-start;
+                min-height: 44px;
+            }
+            
+            .kiosk-title {
+                font-size: 2rem; /* 32px */
+                line-height: 1.1;
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+            
+            .kiosk-queue-list {
+                gap: var(--spacing-md);
+            }
+            
+            .kiosk-queue-item {
+                padding: var(--spacing-md) var(--spacing-lg);
+                gap: var(--spacing-md);
+                min-height: 70px;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 1.25rem; /* 20px */
+            }
+            
+            .kiosk-position {
+                width: 2.5rem; /* 40px */
+                height: 2.5rem; /* 40px */
+                font-size: 1.125rem; /* 18px */
+            }
+            
+            .kiosk-atender-btn {
+                padding: 8px 16px !important;
+                font-size: 0.875rem !important;
+                min-height: 40px;
+            }
+            
+            .kiosk-hidden-indicator {
+                font-size: var(--font-size-body);
+                padding: var(--spacing-md) var(--spacing-lg);
+                margin-top: var(--spacing-xl);
+            }
+            
+            .kiosk-barber-selector {
+                bottom: var(--spacing-md);
+                padding: var(--spacing-sm) var(--spacing-md);
+            }
+            
+            .kiosk-barber-chip {
+                width: 3rem; /* 48px */
+                height: 3rem; /* 48px */
+                padding: 2px;
             }
         }
 
         /* Small Tablets / Large Phones (600px - 768px) */
         @media (min-width: 600px) and (max-width: 768px) {
             .kiosk-queue-view {
-                padding: 18px 18px 110px 18px;
+                padding: 70px 18px 140px 18px;
+                height: 100vh;
+                overflow: hidden;
             }
             
             .kiosk-header {
-                margin-bottom: 18px;
-            }
-            
-            .kiosk-logo {
-                font-size: 42px;
-                margin-bottom: 12px;
+                margin-bottom: var(--spacing-md);
+                padding-left: 100px;
             }
             
             .kiosk-title {
-                font-size: 30px;
+                font-size: 1.875rem; /* 30px */
             }
             
             .kiosk-subtitle {
-                font-size: 15px;
-            }
-            
-            .kiosk-queue-list {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
+                font-size: 0.875rem;
             }
             
             .kiosk-queue-item {
-                padding: 10px 8px;
-                gap: 6px;
+                padding: var(--spacing-sm) var(--spacing-md);
+                gap: var(--spacing-sm);
             }
             
             .kiosk-customer-name {
-                font-size: 18px;
+                font-size: 1.125rem; /* 18px */
             }
             
             .kiosk-position {
@@ -1694,47 +1802,41 @@
             }
             
             .kiosk-barber-chip {
-                padding: 10px 20px;
-                font-size: 17px;
-                min-height: 44px; /* Touch target */
+                width: 48px;
+                height: 48px;
+                padding: 8px;
             }
+            
         }
 
         /* Mobile Phones (up to 600px) */
         @media (max-width: 600px) {
             .kiosk-queue-view {
-                padding: 16px 16px 110px 16px;
+                padding: 70px 16px 140px 16px;
+                height: 100vh;
+                overflow: hidden;
             }
             
             .kiosk-header {
-                margin-bottom: 16px;
-            }
-            
-            .kiosk-logo {
-                font-size: 36px;
-                margin-bottom: 10px;
+                margin-bottom: var(--spacing-sm);
+                padding-left: 90px;
             }
             
             .kiosk-title {
-                font-size: 26px;
+                font-size: 1.625rem; /* 26px */
             }
             
             .kiosk-subtitle {
-                font-size: 13px;
-            }
-            
-            .kiosk-queue-list {
-                grid-template-columns: 1fr;
-                gap: 10px;
+                font-size: 0.75rem;
             }
             
             .kiosk-queue-item {
-                padding: 10px 8px;
-                gap: 6px;
+                padding: var(--spacing-sm) var(--spacing-md);
+                gap: var(--spacing-sm);
             }
             
             .kiosk-customer-name {
-                font-size: 18px;
+                font-size: 1rem; /* 16px */
             }
             
             .kiosk-position {
@@ -1750,11 +1852,8 @@
             }
             
             .kiosk-hidden-indicator {
-                top: 60px;
-                right: 16px;
-                font-size: 16px;
-                padding: 8px 14px;
-                min-height: 40px; /* Touch target */
+                font-size: var(--font-size-caption);
+                padding: var(--spacing-xs) var(--spacing-sm);
             }
             
             .kiosk-hidden-indicator .material-symbols-outlined {
@@ -1769,69 +1868,63 @@
             }
             
             .kiosk-barber-chip {
-                padding: 10px 18px;
-                font-size: 16px;
-                min-height: 44px; /* Touch target */
+                width: 44px;
+                height: 44px;
+                padding: 6px;
             }
+            
         }
         
         /* Height-based adjustments for landscape tablets */
         @media (max-height: 900px) and (min-width: 768px) {
-            .kiosk-header {
-                margin-bottom: 16px;
+            .kiosk-queue-view {
+                padding: 70px 18px 140px 18px;
+                height: 100vh;
+                overflow: hidden;
             }
             
-            .kiosk-logo {
-                font-size: 44px;
-                margin-bottom: 10px;
+            .kiosk-header {
+                margin-bottom: var(--spacing-sm);
+                padding-left: 100px;
             }
             
             .kiosk-title {
-                font-size: 32px;
+                font-size: 2rem; /* 32px */
             }
             
             .kiosk-subtitle {
-                font-size: 16px;
-            }
-            
-            .kiosk-queue-view {
-                padding: 18px 18px 100px 18px;
+                font-size: 0.875rem;
             }
             
             .kiosk-queue-item {
-                padding: 18px 14px;
+                padding: var(--spacing-sm) var(--spacing-md);
             }
         }
         
         @media (max-height: 700px) {
-            .kiosk-header {
-                margin-bottom: 12px;
+            .kiosk-queue-view {
+                padding: 60px 14px 140px 14px;
+                height: 100vh;
+                overflow: hidden;
             }
             
-            .kiosk-logo {
-                font-size: 36px;
-                margin-bottom: 8px;
+            .kiosk-header {
+                margin-bottom: var(--spacing-xs);
+                padding-left: 90px;
             }
             
             .kiosk-title {
-                font-size: 26px;
+                font-size: 1.625rem; /* 26px */
             }
             
             .kiosk-subtitle {
-                font-size: 14px;
-            }
-            
-            .kiosk-queue-view {
-                padding: 14px 14px 100px 14px;
+                font-size: 0.75rem;
             }
             
             .kiosk-queue-item {
-                padding: 16px 12px;
+                padding: var(--spacing-sm) var(--spacing-md);
             }
             
-            .kiosk-hidden-indicator {
-                top: 55px;
-            }
         }
         
         /* Touch target improvements for all interactive elements */
@@ -1846,9 +1939,10 @@
             }
             
             .kiosk-barber-chip {
-                min-height: 48px;
-                min-width: 100px;
+                width: 56px;
+                height: 56px;
             }
+            
             
             .kiosk-back-button {
                 min-width: 48px;
@@ -1930,8 +2024,8 @@
         <div class="queue-section">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
                 <h2 class="section-header" style="margin: 0;">Fila de Espera</h2>
-            </div>
-            
+        </div>
+
         <div class="queue-list" id="queueList">
                 <!-- Queue items will be generated here -->
         </div>
@@ -1965,7 +2059,6 @@
             <div class="kiosk-header">
                 <span class="material-symbols-outlined kiosk-logo">content_cut</span>
                 <div class="kiosk-title">Barbearia Mineiro</div>
-                <div class="kiosk-subtitle">Fila de Espera</div>
     </div>
 
             <div class="kiosk-queue-list" id="kioskQueueList">
@@ -2025,11 +2118,11 @@
     <div class="progress-bar" id="progressBar"></div>
 
     <script>
-        // Hard-seeded barbers
+        // Hard-seeded barbers with real images
         const barbers = [
-            { id: 1, name: 'João', avatar: '👨‍🦱' },
-            { id: 2, name: 'Pedro', avatar: '👨' },
-            { id: 3, name: 'Carlos', avatar: '👨‍🦰' }
+            { id: 1, name: 'João', avatar: 'https://i.pravatar.cc/150?img=12' },
+            { id: 2, name: 'Pedro', avatar: 'https://i.pravatar.cc/150?img=33' },
+            { id: 3, name: 'Carlos', avatar: 'https://i.pravatar.cc/150?img=47' }
         ];
 
         // Queue data with hard-seeded barber assignments
@@ -2119,7 +2212,7 @@
             // Clear existing content
             kioskBarberList.innerHTML = '';
 
-            // Create barber chips
+            // Create barber chips with face images
             barbers.forEach(barber => {
                 const chip = document.createElement('div');
                 const isActive = selectedBarberId === barber.id;
@@ -2130,8 +2223,8 @@
                 chip.setAttribute('aria-label', `Selecionar barbeiro ${barber.name}`);
                 
                 chip.innerHTML = `
-                    <span class="material-symbols-outlined">content_cut</span>
-                    <span>${barber.name}</span>
+                    <img src="${barber.avatar}" alt="${barber.name}" class="barber-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
+                    <span class="barber-name">${barber.name}</span>
                 `;
                 
                 kioskBarberList.appendChild(chip);
@@ -2140,8 +2233,8 @@
 
         // Render management queue
         function renderManagementQueue() {
-            const queueList = document.getElementById('queueList');
-            const emptyState = document.getElementById('emptyState');
+        const queueList = document.getElementById('queueList');
+        const emptyState = document.getElementById('emptyState');
             const queueCount = document.getElementById('queueCount');
             const servingCount = document.getElementById('servingCount');
 
@@ -2190,7 +2283,7 @@
                             <div class="barber-avatar ${isAssigned ? 'assigned' : ''} ${isDisabled ? 'disabled' : ''}" 
                                  onclick="event.stopPropagation(); ${canAssign ? `assignBarberAndStart(${customer.id}, ${barber.id})` : ''};"
                                  title="${isAssigned ? `Atendendo: ${barber.name}` : isDisabled ? 'Cliente já está sendo atendido' : `Atender com ${barber.name}`}">
-                                <span class="barber-avatar-face">${barber.avatar || barber.name.charAt(0)}</span>
+                                <img src="${barber.avatar}" alt="${barber.name}" class="barber-avatar-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
                             </div>
                         `;
                     }).join('');
@@ -2234,8 +2327,8 @@
             // Assign barber and start service
             customer.barberId = barberId;
             customer.status = 'serving';
-            renderAll();
-        }
+                renderAll();
+            }
 
         // Store previous queue data for change detection
         let previousQueueData = JSON.stringify(queueData);
@@ -2263,32 +2356,73 @@
                 return 0;
             });
 
-            // Adaptive number of customers based on screen size
-            let maxCustomers = 6; // Default for small screens
-            if (window.innerWidth >= 1920) {
-                maxCustomers = 12; // Large screens
-            } else if (window.innerWidth >= 1600) {
-                maxCustomers = 10; // Medium-large screens
-            } else if (window.innerWidth >= 1400) {
-                maxCustomers = 8; // Medium screens
-            } else if (window.innerWidth >= 1024) {
-                maxCustomers = 8; // Tablets
+            // Calculate how many cards can fit completely in the available space
+            const kioskQueueViewEl = document.getElementById('kioskQueueView');
+            const queueListRect = kioskQueueList.getBoundingClientRect();
+            const viewRect = kioskQueueViewEl ? kioskQueueViewEl.getBoundingClientRect() : null;
+            
+            // Get available height for queue list
+            // Account for header, padding, and barber selector space
+            let availableHeight = queueListRect.height;
+            if (!availableHeight || availableHeight === 0) {
+                // Fallback: calculate from viewport
+                const headerHeight = document.querySelector('.kiosk-header')?.getBoundingClientRect().height || 0;
+                const viewHeight = viewRect ? viewRect.height : window.innerHeight;
+                const topPadding = 80;
+                const bottomPadding = 140; // Space for barber selector
+                availableHeight = viewHeight - headerHeight - topPadding - bottomPadding;
             }
             
-            const displayQueue = sortedQueue.slice(0, maxCustomers);
+            // Estimate card height (including gap)
+            // This is approximate - we'll refine it after rendering first card
+            const gap = 8; // var(--spacing-sm) = 8px
+            let estimatedCardHeight = 70; // Base estimate, will be refined
+            
+            // Calculate max customers that can fit
+            let maxCustomers = Math.floor((availableHeight + gap) / (estimatedCardHeight + gap));
+            
+            // Ensure minimum of 1 and maximum reasonable limit
+            maxCustomers = Math.max(1, Math.min(maxCustomers, sortedQueue.length));
+            
+            // Measure card height once using a sample card
+            let cardHeight = estimatedCardHeight;
+            if (sortedQueue.length > 0) {
+                const tempItem = document.createElement('div');
+                tempItem.className = 'kiosk-queue-item';
+                tempItem.style.visibility = 'hidden';
+                tempItem.style.position = 'absolute';
+                tempItem.style.top = '-9999px';
+                tempItem.style.width = queueListRect.width > 0 ? queueListRect.width + 'px' : '100%';
+                tempItem.innerHTML = '<div class="kiosk-position">1</div><div class="kiosk-queue-item-content"><div class="kiosk-customer-name">Sample Customer Name</div></div><div class="kiosk-queue-item-actions"><button class="kiosk-atender-btn"><span class="material-symbols-outlined">play_arrow</span><span>Atender</span></button></div>';
+                document.body.appendChild(tempItem);
+                cardHeight = tempItem.getBoundingClientRect().height;
+                document.body.removeChild(tempItem);
+            }
+            
+            // Calculate how many cards can fit completely
+            const cardHeightWithGap = cardHeight + gap;
+            let maxFittingCards = Math.floor((availableHeight + gap) / cardHeightWithGap);
+            maxFittingCards = Math.max(0, Math.min(maxFittingCards, sortedQueue.length));
+            
+            // Only show cards that fit completely
+            const displayQueue = sortedQueue.slice(0, maxFittingCards);
+            
             const hiddenCount = sortedQueue.length - displayQueue.length;
 
-            // Update or create hidden indicator
+            // Update or create hidden indicator (placed after queue list)
             let hiddenIndicator = document.getElementById('kioskHiddenIndicator');
+            
+            // Show hidden indicator if any cards are hidden
             if (hiddenCount > 0) {
                 if (!hiddenIndicator) {
                     hiddenIndicator = document.createElement('div');
                     hiddenIndicator.id = 'kioskHiddenIndicator';
                     hiddenIndicator.className = 'kiosk-hidden-indicator';
-                    document.getElementById('kioskQueueView').appendChild(hiddenIndicator);
+                    // Insert after the queue list
+                    kioskQueueList.parentNode.insertBefore(hiddenIndicator, kioskQueueList.nextSibling);
                 }
                 hiddenIndicator.innerHTML = `
-                    <span class="material-symbols-outlined" style="font-size: 28px;">visibility_off</span>
+                    <span class="material-symbols-outlined" style="font-size: 1.25rem;">visibility_off</span>
                     <span>Pessoas ocultas: ${hiddenCount}</span>
                 `;
                 hiddenIndicator.style.display = 'flex';
@@ -2375,30 +2509,23 @@
                 const atenderButton = `<button class="kiosk-atender-btn ${item.status === 'serving' ? 'serving' : ''}" 
                                onclick="event.stopPropagation(); toggleService(${item.id});" 
                                data-customer-id="${item.id}"
-                               style="padding: ${btnPadding}; font-size: ${btnFontSize}; font-weight: 600; border-radius: 8px; border: 1.5px solid ${item.status === 'serving' ? '#2E7D32' : 'rgba(212, 175, 55, 0.7)'}; background: ${item.status === 'serving' ? 'rgba(46, 125, 50, 0.25)' : 'rgba(212, 175, 55, 0.2)'}; color: ${item.status === 'serving' ? '#4CAF50' : 'var(--md-sys-color-primary)'}; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: ${item.status === 'serving' ? '0' : '4px'}; min-width: ${btnMinWidth};">
+                               style="padding: ${btnPadding}; font-size: ${btnFontSize}; font-weight: 700; border-radius: 12px; border: 3px solid ${item.status === 'serving' ? '#10B981' : '#D4AF37'}; background: ${item.status === 'serving' ? '#10B981' : 'rgba(212, 175, 55, 0.2)'}; color: ${item.status === 'serving' ? '#000000' : '#D4AF37'}; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; gap: ${item.status === 'serving' ? '0' : '4px'}; min-width: ${btnMinWidth};">
                         <span class="material-symbols-outlined" style="font-size: ${btnIconSize};">${item.status === 'serving' ? 'check_circle' : 'play_arrow'}</span>
                         ${item.status === 'serving' ? '' : `<span style="font-size: ${btnTextSize};">Atender</span>`}
                        </button>`;
 
-                // Check if name needs scrolling (longer than ~20 chars or contains barber badge)
-                const fullText = item.name + (barber ? ` • ${barber.name}` : '');
-                const needsScrolling = fullText.length > 20;
-                
                 queueItem.innerHTML = `
                     <div class="kiosk-position">${positionNumber}</div>
                     <div class="kiosk-queue-item-content">
-                        <div class="kiosk-customer-name ${needsScrolling ? 'scrollable' : ''}">
-                            <span class="kiosk-customer-name-wrapper">
-                                ${item.name}${barberBadge}
-                            </span>
-                            ${needsScrolling ? `<span class="kiosk-customer-name-wrapper">${item.name}${barberBadge}</span>` : ''}
+                        <div class="kiosk-customer-name">
+                            ${item.name}${barberBadge}
                         </div>
                     </div>
                     <div class="kiosk-queue-item-actions">
                         ${atenderButton}
                         <button class="kiosk-remove-btn" onclick="event.stopPropagation(); removeCustomer(${item.id});" title="Remover da fila">
                             <span class="material-symbols-outlined">close</span>
-                        </button>
+                    </button>
                     </div>
                 `;
 
@@ -2552,7 +2679,7 @@
                 if (customer.status === 'serving') {
                     // If serving, change back to waiting
                     customer.status = 'waiting';
-                } else {
+            } else {
                     // If waiting, start service (assign to selected barber if available, otherwise keep current barber)
                     if (!customer.barberId && selectedBarberId) {
                         customer.barberId = selectedBarberId;
@@ -2697,9 +2824,9 @@
                 const customerId = parseInt(queueItem.getAttribute('data-customer-id'));
                 if (customerId && !isNaN(customerId) && selectedBarberId) {
                     claimCustomer(customerId, selectedBarberId);
+                    }
                 }
-            }
-        });
+            });
 
         // Also handle keyboard events for accessibility
         document.addEventListener('keydown', function(e) {
