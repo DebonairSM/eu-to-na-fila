@@ -1728,6 +1728,140 @@
             color: var(--md-sys-color-on-surface-variant);
         }
 
+        /* Barber Presence Selector */
+        .barber-presence-section {
+            margin-top: var(--spacing-2xl);
+            padding: var(--spacing-xl);
+            background: var(--md-sys-color-surface-variant);
+            border-radius: 16px;
+            border: 1px solid var(--color-border);
+        }
+
+        body.kiosk-mode .barber-presence-section {
+            display: none;
+        }
+
+        .barber-presence-header {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .barber-presence-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--md-sys-color-on-surface);
+            margin: 0 0 var(--spacing-xs) 0;
+        }
+
+        .barber-presence-subtitle {
+            font-size: 0.875rem;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .barber-presence-list {
+            display: flex;
+            gap: var(--spacing-md);
+            flex-wrap: wrap;
+        }
+
+        .barber-presence-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md);
+            background: var(--md-sys-color-surface);
+            border: 2px solid var(--color-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 100px;
+            position: relative;
+        }
+
+        .barber-presence-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: var(--color-border-hover);
+        }
+
+        .barber-presence-item.present {
+            border-color: var(--md-sys-color-primary);
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .barber-presence-item.present:hover {
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.2);
+        }
+
+        .barber-presence-item.absent {
+            opacity: 0.5;
+            border-color: var(--color-border);
+        }
+
+        .barber-presence-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--color-border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .barber-presence-item.present .barber-presence-avatar {
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
+        }
+
+        .barber-presence-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            text-align: center;
+        }
+
+        .barber-presence-status {
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .barber-presence-item.present .barber-presence-status {
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--md-sys-color-primary);
+        }
+
+        .barber-presence-item.absent .barber-presence-status {
+            background: var(--md-sys-color-surface-variant);
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .barber-presence-check {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--md-sys-color-primary);
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .barber-presence-item.present .barber-presence-check {
+            opacity: 1;
+            transform: scale(1);
+        }
+
         /* Material Icons */
         .material-symbols-outlined {
             font-variation-settings:
@@ -2312,6 +2446,17 @@
                 <div style="font-size: 14px;">Quando alguém entrar na fila, aparecerá aqui</div>
             </div>
         </div>
+
+        <!-- Barber Presence Selector -->
+        <div class="barber-presence-section">
+            <div class="barber-presence-header">
+                <h3 class="barber-presence-title">Barbeiros Presentes</h3>
+                <span class="barber-presence-subtitle">Clique para marcar presença</span>
+            </div>
+            <div class="barber-presence-list" id="barberPresenceList">
+                <!-- Barbers will be generated here -->
+            </div>
+        </div>
     </div>
 
     <!-- Kiosk Mode Content -->
@@ -2428,9 +2573,9 @@
     <script>
         // Hard-seeded barbers with real images
         const barbers = [
-            { id: 1, name: 'João', avatar: 'https://i.pravatar.cc/150?img=12' },
-            { id: 2, name: 'Pedro', avatar: 'https://i.pravatar.cc/150?img=33' },
-            { id: 3, name: 'Carlos', avatar: 'https://i.pravatar.cc/150?img=47' }
+            { id: 1, name: 'João', avatar: 'https://i.pravatar.cc/150?img=12', isPresent: true },
+            { id: 2, name: 'Pedro', avatar: 'https://i.pravatar.cc/150?img=33', isPresent: true },
+            { id: 3, name: 'Carlos', avatar: 'https://i.pravatar.cc/150?img=47', isPresent: true }
         ];
 
         // Queue data with hard-seeded barber assignments
@@ -2517,6 +2662,43 @@
             // Barber selector removed - barbers are now shown on each card
         }
 
+        // Render barber presence selector
+        function renderBarberPresence() {
+            const presenceList = document.getElementById('barberPresenceList');
+            if (!presenceList) return;
+
+            presenceList.innerHTML = '';
+
+            barbers.forEach(barber => {
+                const item = document.createElement('div');
+                item.className = `barber-presence-item ${barber.isPresent ? 'present' : 'absent'}`;
+                item.onclick = () => toggleBarberPresence(barber.id);
+
+                item.innerHTML = `
+                    <div class="barber-presence-check">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">check</span>
+                    </div>
+                    <img src="${barber.avatar}" alt="${barber.name}" class="barber-presence-avatar" 
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
+                    <span class="barber-presence-name">${barber.name}</span>
+                    <span class="barber-presence-status">${barber.isPresent ? 'Presente' : 'Ausente'}</span>
+                `;
+
+                presenceList.appendChild(item);
+            });
+        }
+
+        // Toggle barber presence
+        function toggleBarberPresence(barberId) {
+            const barber = barbers.find(b => b.id === barberId);
+            if (barber) {
+                barber.isPresent = !barber.isPresent;
+                renderBarberPresence();
+                // Optionally trigger a re-render of queue if barber presence affects it
+                renderAll();
+            }
+        }
+
         // Render kiosk barber selector
         function renderKioskBarberSelector() {
             const kioskBarberList = document.getElementById('kioskBarberList');
@@ -2525,23 +2707,25 @@
             // Clear existing content
             kioskBarberList.innerHTML = '';
 
-            // Create barber chips with face images
-            barbers.forEach(barber => {
-                const chip = document.createElement('div');
-                const isActive = selectedBarberId === barber.id;
-                chip.className = `kiosk-barber-chip${isActive ? ' active' : ''}`;
-                chip.dataset.barberId = barber.id;
-                chip.setAttribute('role', 'button');
-                chip.setAttribute('tabindex', '0');
-                chip.setAttribute('aria-label', `Selecionar barbeiro ${barber.name}`);
-                
-                chip.innerHTML = `
-                    <img src="${barber.avatar}" alt="${barber.name}" class="barber-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
-                    <span class="barber-name">${barber.name}</span>
-                `;
-                
-                kioskBarberList.appendChild(chip);
-            });
+            // Create barber chips with face images - only show present barbers
+            barbers
+                .filter(barber => barber.isPresent)
+                .forEach(barber => {
+                    const chip = document.createElement('div');
+                    const isActive = selectedBarberId === barber.id;
+                    chip.className = `kiosk-barber-chip${isActive ? ' active' : ''}`;
+                    chip.dataset.barberId = barber.id;
+                    chip.setAttribute('role', 'button');
+                    chip.setAttribute('tabindex', '0');
+                    chip.setAttribute('aria-label', `Selecionar barbeiro ${barber.name}`);
+                    
+                    chip.innerHTML = `
+                        <img src="${barber.avatar}" alt="${barber.name}" class="barber-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
+                        <span class="barber-name">${barber.name}</span>
+                    `;
+                    
+                    kioskBarberList.appendChild(chip);
+                });
         }
 
         // Render management queue
@@ -2587,19 +2771,21 @@
                         waitingPosition++;
                     }
                     
-                    // Create barber avatars with face images
-                    const barberAvatars = barbers.map(barber => {
-                        const isAssigned = assignedBarber && assignedBarber.id === barber.id;
-                        const canAssign = customer.status === 'waiting';
-                        const isDisabled = customer.status === 'serving' && !isAssigned;
-                        return `
-                            <div class="barber-avatar ${isAssigned ? 'assigned' : ''} ${isDisabled ? 'disabled' : ''}" 
-                                 onclick="event.stopPropagation(); ${canAssign ? `assignBarberAndStart(${customer.id}, ${barber.id})` : ''};"
-                                 title="${isAssigned ? `Atendendo: ${barber.name}` : isDisabled ? 'Cliente já está sendo atendido' : `Atender com ${barber.name}`}">
-                                <img src="${barber.avatar}" alt="${barber.name}" class="barber-avatar-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
-                            </div>
-                        `;
-                    }).join('');
+                    // Create barber avatars with face images - only show present barbers
+                    const barberAvatars = barbers
+                        .filter(barber => barber.isPresent || (assignedBarber && assignedBarber.id === barber.id))
+                        .map(barber => {
+                            const isAssigned = assignedBarber && assignedBarber.id === barber.id;
+                            const canAssign = customer.status === 'waiting';
+                            const isDisabled = customer.status === 'serving' && !isAssigned;
+                            return `
+                                <div class="barber-avatar ${isAssigned ? 'assigned' : ''} ${isDisabled ? 'disabled' : ''}" 
+                                     onclick="event.stopPropagation(); ${canAssign ? `assignBarberAndStart(${customer.id}, ${barber.id})` : ''};"
+                                     title="${isAssigned ? `Atendendo: ${barber.name}` : isDisabled ? 'Cliente já está sendo atendido' : `Atender com ${barber.name}`}">
+                                    <img src="${barber.avatar}" alt="${barber.name}" class="barber-avatar-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
+                                </div>
+                            `;
+                        }).join('');
                     
                     item.innerHTML = `
                         <div class="position-badge">${positionNumber}</div>
@@ -2636,6 +2822,10 @@
         function assignBarberAndStart(customerId, barberId) {
             const customer = queueData.find(c => c.id === customerId);
             if (!customer || customer.status !== 'waiting') return;
+            
+            // Check if barber is present
+            const barber = barbers.find(b => b.id === barberId);
+            if (!barber || !barber.isPresent) return;
             
             // Assign barber and start service
             customer.barberId = barberId;
@@ -2905,6 +3095,12 @@
         function claimCustomer(customerId, barberId) {
             const customer = queueData.find(c => c.id === customerId);
             if (customer && customer.status === 'waiting' && barberId) {
+                // Check if barber is present (unless unclaiming)
+                const barber = barbers.find(b => b.id === barberId);
+                if (customer.barberId !== barberId && (!barber || !barber.isPresent)) {
+                    return; // Don't allow claiming with absent barber
+                }
+                
                 // If already claimed by this barber, unclaim it
                 if (customer.barberId === barberId) {
                     customer.barberId = null;
@@ -3039,6 +3235,7 @@
             renderBarberSelector();
             renderKioskBarberSelector();
             renderManagementQueue();
+            renderBarberPresence();
             renderKioskQueue();
         }
 
@@ -3133,8 +3330,12 @@
             // Clear existing QR code
             qrContainer.innerHTML = '';
             
-            // Generate QR code - QRCode.toCanvas can accept the container directly
-            QRCode.toCanvas(qrContainer, joinUrl, {
+            // Create a canvas element for the QR code
+            const canvas = document.createElement('canvas');
+            qrContainer.appendChild(canvas);
+            
+            // Generate QR code - QRCode.toCanvas requires a canvas element
+            QRCode.toCanvas(canvas, joinUrl, {
                 width: 84,
                 margin: 2,
                 color: {
@@ -3149,7 +3350,6 @@
                 } else {
                     console.log('QR code generated successfully for:', joinUrl);
                     // Ensure canvas is visible
-                    const canvas = qrContainer.querySelector('canvas');
                     if (canvas) {
                         canvas.style.display = 'block';
                     }
@@ -3230,6 +3430,8 @@
             if (e.key === 'Escape') {
                 const modal = document.getElementById('checkinModal');
                 if (modal && modal.classList.contains('show')) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     closeCheckinModal();
                 }
             }
@@ -3253,10 +3455,14 @@
             }
         }
 
-        // Escape key exits kiosk mode
+        // Escape key exits kiosk mode (only if modal is not open)
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && isKioskMode) {
-                toggleKioskMode();
+                const modal = document.getElementById('checkinModal');
+                // Don't exit kiosk mode if check-in modal is open
+                if (!modal || !modal.classList.contains('show')) {
+                    toggleKioskMode();
+                }
             }
         });
 
