@@ -6,10 +6,10 @@
     <title>Fila - Barbearia Mineiro</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     
-    <!-- Google Fonts - Roboto -->
+    <!-- Google Fonts - Victorian Serif + Clean Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <!-- Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -25,41 +25,74 @@
         }
 
         :root {
+            /* Original-inspired Gold Palette - Smooth & Refined */
+            --color-primary: #D4AF37; /* Gold - original primary */
+            --color-primary-light: #E5C047;
+            --color-primary-dark: #C49B2E;
+            --color-primary-subtle: rgba(212, 175, 55, 0.08);
+            --color-primary-medium: rgba(212, 175, 55, 0.15);
+            --color-primary-soft: rgba(212, 175, 55, 0.25);
+            
+            --color-surface: #FFFFFF;
+            --color-surface-soft: #FAFAFA;
+            --color-surface-elevated: #FFFFFF;
+            --color-surface-kiosk: #0A0A0A; /* Deep black */
+            
+            --color-text-primary: #1A1A1A;
+            --color-text-secondary: #6B7280;
+            --color-text-tertiary: #9CA3AF;
+            --color-text-on-dark: #FFFFFF;
+            
+            --color-success: #10B981;
+            --color-success-light: rgba(16, 185, 129, 0.12);
+            --color-success-soft: rgba(16, 185, 129, 0.2);
+            --color-error: #EF4444;
+            --color-error-light: rgba(239, 68, 68, 0.1);
+            
+            --color-border: rgba(0, 0, 0, 0.06);
+            --color-border-hover: rgba(212, 175, 55, 0.25);
+            --color-border-active: rgba(212, 175, 55, 0.4);
+            --color-border-kiosk: rgba(212, 175, 55, 0.15);
+            
             /* Primary Colors */
-            --md-sys-color-primary: #D4AF37;
-            --md-sys-color-primary-hover: #E5C047;
-            --md-sys-color-primary-active: #C49B2E;
-            --md-sys-color-primary-light: rgba(212, 175, 55, 0.1);
-            --md-sys-color-primary-medium: rgba(212, 175, 55, 0.2);
+            --md-sys-color-primary: var(--color-primary);
+            --md-sys-color-primary-hover: var(--color-primary-light);
+            --md-sys-color-primary-active: var(--color-primary-dark);
+            --md-sys-color-primary-light: var(--color-primary-subtle);
+            --md-sys-color-primary-medium: var(--color-primary-medium);
             --md-sys-color-primary-dark: rgba(212, 175, 55, 0.8);
-            --md-sys-color-on-primary: #FFFFFF;
-            --md-sys-color-primary-container: #FFF8E1;
-            --md-sys-color-on-primary-container: #3E2723;
+            --md-sys-color-on-primary: #000000;
+            --md-sys-color-primary-container: var(--color-surface);
+            --md-sys-color-on-primary-container: var(--color-text-primary);
             
             /* Surface Colors */
-            --md-sys-color-surface: #FFFFFF;
-            --md-sys-color-surface-variant: #F8F9FA;
-            --md-sys-color-surface-elevated: rgba(255, 255, 255, 0.95);
-            --md-sys-color-surface-kiosk: #0A0A0A;
+            --md-sys-color-surface: var(--color-surface);
+            --md-sys-color-surface-variant: var(--color-surface-soft);
+            --md-sys-color-surface-elevated: var(--color-surface-elevated);
+            --md-sys-color-surface-kiosk: var(--color-surface-kiosk);
             
             /* Text Colors */
-            --md-sys-color-on-surface: #1A1A1A;
-            --md-sys-color-on-surface-variant: #6B7280;
-            --md-sys-color-on-surface-disabled: #9CA3AF;
+            --md-sys-color-on-surface: var(--color-text-primary);
+            --md-sys-color-on-surface-variant: var(--color-text-secondary);
+            --md-sys-color-on-surface-disabled: var(--color-text-tertiary);
             
             /* Status Colors */
-            --md-sys-color-success: #10B981;
-            --md-sys-color-success-light: rgba(16, 185, 129, 0.1);
-            --md-sys-color-error: #EF4444;
-            --md-sys-color-error-light: rgba(239, 68, 68, 0.1);
-            --md-sys-color-warning: #F59E0B;
+            --md-sys-color-success: var(--color-success);
+            --md-sys-color-success-light: var(--color-success-light);
+            --md-sys-color-error: var(--color-error);
+            --md-sys-color-error-light: var(--color-error-light);
+            --md-sys-color-warning: var(--color-primary);
             
             /* Border Colors */
-            --md-sys-color-border-default: rgba(0, 0, 0, 0.08);
-            --md-sys-color-border-hover: rgba(212, 175, 55, 0.4);
-            --md-sys-color-border-active: rgba(212, 175, 55, 0.6);
-            --md-sys-color-border-kiosk: rgba(212, 175, 55, 0.3);
-            --md-sys-color-outline: #C4C4C4;
+            --md-sys-color-border-default: var(--color-border);
+            --md-sys-color-border-hover: var(--color-border-hover);
+            --md-sys-color-border-active: var(--color-border-active);
+            --md-sys-color-border-kiosk: var(--color-border-kiosk);
+            --md-sys-color-outline: var(--color-text-tertiary);
+            
+            /* Typography */
+            --font-serif: 'Playfair Display', serif;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             
             /* Spacing Scale (8px base) */
             --spacing-xs: 0.25rem; /* 4px */
@@ -557,8 +590,8 @@
 
         /* Kiosk Queue View */
         .kiosk-queue-view {
-            background: #000000;
-            padding: 80px var(--spacing-2xl) 140px var(--spacing-2xl);
+            background: var(--color-surface-kiosk);
+            padding: 60px var(--spacing-2xl) 140px var(--spacing-2xl);
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -581,16 +614,33 @@
 
         .kiosk-header {
             text-align: center;
-            margin-bottom: var(--spacing-lg);
+            margin-bottom: 64px;
             flex-shrink: 0;
-            padding-bottom: var(--spacing-md);
+            padding-bottom: 32px;
             padding-left: 0;
             padding-right: 0;
             padding-top: 0;
-            border-bottom: 3px solid rgba(212, 175, 55, 0.3);
+            border-bottom: none;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            position: relative;
+        }
+        
+        .kiosk-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            max-width: 40%;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(212, 175, 55, 0.3) 50%,
+                transparent);
         }
 
         .kiosk-logo {
@@ -598,16 +648,20 @@
         }
 
         .kiosk-title {
+            font-family: var(--font-sans);
             font-size: 3.5rem; /* 56px */
-            font-weight: 900;
-            line-height: 1.1;
-            color: var(--md-sys-color-primary);
-            margin-bottom: var(--spacing-xs);
-            letter-spacing: -1px;
+            font-weight: 300;
+            line-height: 1.3;
+            color: var(--color-text-on-dark);
+            margin-bottom: 0;
+            letter-spacing: 4px;
             text-transform: uppercase;
-            text-shadow: 0 0 60px rgba(212, 175, 55, 0.6);
             display: flex;
             align-items: center;
+            justify-content: center;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .kiosk-subtitle {
@@ -624,12 +678,32 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: var(--spacing-sm);
-            max-width: 1400px;
+            gap: 20px;
+            max-width: 1200px;
             margin: 0 auto;
             width: 100%;
             overflow-y: auto;
             position: relative;
+            padding: 8px 0;
+        }
+        
+        /* Custom scrollbar for queue list */
+        .kiosk-queue-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .kiosk-queue-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+        
+        .kiosk-queue-list::-webkit-scrollbar-thumb {
+            background: rgba(212, 175, 55, 0.4);
+            border-radius: 4px;
+        }
+        
+        .kiosk-queue-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(212, 175, 55, 0.6);
         }
         
         
@@ -659,90 +733,138 @@
         }
 
         .kiosk-queue-item {
-            background: rgba(18, 18, 18, 0.95);
-            border: 3px solid rgba(212, 175, 55, 0.2);
-            border-left: 6px solid var(--md-sys-color-primary);
-            border-radius: var(--radius-md);
-            padding: var(--spacing-md) var(--spacing-lg);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-left: 2px solid var(--color-primary);
+            border-radius: 16px;
+            padding: 28px 36px;
             display: flex;
             flex-direction: row;
             align-items: center;
-            gap: var(--spacing-lg);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 
-                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            transition: all var(--transition-normal) var(--easing-standard);
+            gap: 28px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             box-sizing: border-box;
             position: relative;
             overflow: visible;
             width: 100%;
             flex-shrink: 0;
+            backdrop-filter: blur(12px) saturate(180%);
+        }
+        
+        .kiosk-queue-item::before {
+            content: '';
+            position: absolute;
+            left: -2px;
+            top: 12px;
+            bottom: 12px;
+            width: 1px;
+            background: var(--victorian-burgundy);
+            opacity: 0.3;
         }
         
         /* Adaptive card sizing for larger screens */
         @media (min-width: 1920px) {
             .kiosk-queue-item {
-                padding: 16px 20px;
-                gap: 18px;
-                border-radius: 18px;
-                min-height: 80px;
+                padding: 32px 44px;
+                gap: 36px;
+            }
+            
+            .kiosk-position {
+                width: 80px;
+                height: 80px;
+                font-size: 2.25rem;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 2rem;
             }
         }
         
         @media (min-width: 1600px) and (max-width: 1919px) {
             .kiosk-queue-item {
-                padding: 14px 18px;
-            gap: 16px;
-                min-height: 75px;
+                padding: 30px 40px;
+                gap: 32px;
+            }
+            
+            .kiosk-position {
+                width: 76px;
+                height: 76px;
+                font-size: 2.125rem;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 1.875rem;
             }
         }
         
         @media (min-width: 1400px) and (max-width: 1599px) {
             .kiosk-queue-item {
-                padding: 12px 16px;
-                gap: 14px;
-                min-height: 70px;
+                padding: 28px 36px;
+                gap: 28px;
+            }
+            
+            .kiosk-position {
+                width: 72px;
+                height: 72px;
+                font-size: 2rem;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 1.75rem;
             }
         }
         
         @media (min-width: 1024px) and (max-width: 1399px) {
             .kiosk-queue-item {
-                padding: 11px 14px;
-                gap: 12px;
-                min-height: 65px;
+                padding: 24px 32px;
+                gap: 24px;
+            }
+            
+            .kiosk-position {
+                width: 64px;
+                height: 64px;
+                font-size: 1.75rem;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 1.5rem;
             }
         }
 
         .kiosk-queue-item:hover {
-            transform: translateX(8px);
-            border-left-color: var(--md-sys-color-primary);
-            border-color: rgba(212, 175, 55, 0.5);
-            background: rgba(26, 26, 26, 0.98);
-            box-shadow: 0 12px 48px rgba(212, 175, 55, 0.3), 
-                        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transform: translateX(4px) translateY(-1px);
+            border-left-width: 3px;
+            border-left-color: var(--color-primary);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.15), 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .kiosk-queue-item.serving {
-            background: rgba(16, 185, 129, 0.15);
-            border-left-color: var(--md-sys-color-success);
-            border-color: rgba(16, 185, 129, 0.4);
-            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4), 
-                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            background: rgba(16, 185, 129, 0.06);
+            border-left-color: var(--color-success);
+            border-color: rgba(16, 185, 129, 0.15);
+        }
+        
+        .kiosk-queue-item.serving:hover {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.25);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15), 0 2px 8px rgba(0, 0, 0, 0.2);
         }
         
         /* Remove button */
         .kiosk-remove-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: var(--radius-sm);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             background: transparent;
-            border: 2px solid rgba(255, 255, 255, 0.6);
-            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.6);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all var(--transition-normal) var(--easing-standard);
-            box-shadow: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             flex-shrink: 0;
         }
 
@@ -778,19 +900,20 @@
         }
         
         .kiosk-remove-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.9);
+            border-color: var(--color-error);
+            color: var(--color-error);
+            background: rgba(239, 68, 68, 0.12);
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
         }
 
         .kiosk-remove-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.98);
         }
 
         .kiosk-remove-btn .material-symbols-outlined {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 20px;
+            font-weight: 300;
         }
         
         /* Back to Queue Button (during ads) */
@@ -991,21 +1114,24 @@
         }
 
         .kiosk-position {
-            width: 3rem; /* 48px */
-            height: 3rem; /* 48px */
-            background: var(--md-sys-color-primary);
+            width: 68px;
+            height: 68px;
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
             color: #000000;
-            border-radius: var(--radius-md);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem; /* 24px */
-            font-weight: 900;
+            font-family: var(--font-sans);
+            font-size: 1.875rem; /* 30px */
+            font-weight: 500;
             line-height: 1;
             flex-shrink: 0;
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
-            border: none;
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.25), 0 2px 6px rgba(212, 175, 55, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border: 1.5px solid rgba(212, 175, 55, 0.3);
             position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-font-smoothing: antialiased;
         }
         
         /* Adaptive position badge sizing */
@@ -1035,9 +1161,10 @@
         }
 
         .kiosk-queue-item.serving .kiosk-position {
-            background: var(--md-sys-color-success);
-            color: #FFFFFF;
-            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0.15) 100%);
+            color: var(--color-success);
+            border-color: rgba(16, 185, 129, 0.4);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2), 0 2px 6px rgba(16, 185, 129, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
 
         /* Small check-in button in corner */
@@ -1061,12 +1188,15 @@
         }
 
         .kiosk-checkin-btn-small:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
         }
 
         .kiosk-checkin-btn-small .material-symbols-outlined {
-            font-size: 28px;
+            font-size: 26px;
+            font-weight: 300;
         }
 
         /* Small QR code in corner */
@@ -1076,14 +1206,16 @@
             right: var(--spacing-xl);
             width: 100px;
             height: 100px;
-            background: white;
-            padding: 8px;
-            border-radius: var(--radius-sm);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.98);
+            padding: 10px;
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1);
             z-index: 9998;
             display: flex;
             align-items: center;
             justify-content: center;
+            backdrop-filter: blur(10px);
         }
 
         .kiosk-qr-corner canvas {
@@ -1102,8 +1234,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(4px);
+            background: rgba(26, 26, 26, 0.85);
+            backdrop-filter: blur(2px);
             z-index: 10000;
             align-items: center;
             justify-content: center;
@@ -1114,21 +1246,26 @@
         }
 
         .checkin-modal-content {
-            background: rgba(18, 18, 18, 0.98);
-            border: 3px solid var(--md-sys-color-primary);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-2xl);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 20px;
+            padding: 48px;
             max-width: 400px;
             width: 90%;
-            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
         }
 
         .checkin-modal-title {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--md-sys-color-primary);
-            margin-bottom: var(--spacing-lg);
+            font-family: var(--font-sans);
+            font-size: 1.875rem;
+            font-weight: 400;
+            color: var(--color-text-primary);
+            margin-bottom: 36px;
             text-align: center;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            -webkit-font-smoothing: antialiased;
         }
 
         .checkin-modal-form {
@@ -1138,20 +1275,23 @@
         }
 
         .checkin-modal-input {
-            padding: var(--spacing-md);
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid rgba(212, 175, 55, 0.3);
-            border-radius: var(--radius-md);
-            color: white;
+            padding: 16px 20px;
+            background: var(--color-surface-soft);
+            border: 1.5px solid var(--color-border);
+            border-radius: 12px;
+            color: var(--color-text-primary);
             font-size: 1rem;
-            font-family: inherit;
-            transition: all var(--transition-normal) var(--easing-standard);
+            font-family: var(--font-sans);
+            font-weight: 400;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-font-smoothing: antialiased;
         }
 
         .checkin-modal-input:focus {
             outline: none;
-            border-color: var(--md-sys-color-primary);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1), 0 2px 8px rgba(212, 175, 55, 0.1);
+            background: var(--color-surface);
         }
 
         .checkin-modal-buttons {
@@ -1162,52 +1302,66 @@
 
         .checkin-modal-btn {
             flex: 1;
-            padding: var(--spacing-md);
-            border-radius: var(--radius-md);
+            padding: 14px 24px;
+            border-radius: 12px;
             font-size: 1rem;
-            font-weight: 700;
+            font-weight: 500;
             cursor: pointer;
-            transition: all var(--transition-normal) var(--easing-standard);
-            border: 3px solid;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1.5px solid;
+            font-family: var(--font-sans);
+            -webkit-font-smoothing: antialiased;
         }
 
         .checkin-modal-btn.primary {
-            background: var(--md-sys-color-primary);
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
             color: #000000;
-            border-color: var(--md-sys-color-primary);
+            border-color: var(--color-primary);
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
         }
 
         .checkin-modal-btn.primary:hover {
-            background: var(--md-sys-color-primary-hover);
-            border-color: var(--md-sys-color-primary-hover);
+            background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+            border-color: var(--color-primary-light);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
         }
 
         .checkin-modal-btn.secondary {
             background: transparent;
-            color: rgba(255, 255, 255, 0.7);
-            border-color: rgba(255, 255, 255, 0.3);
+            color: var(--color-text-primary);
+            border-color: var(--color-border);
+            font-family: var(--font-sans);
         }
 
         .checkin-modal-btn.secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.5);
+            background: var(--color-surface-soft);
+            border-color: var(--color-border-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .kiosk-customer-name {
+            font-family: var(--font-sans);
             font-size: 1.5rem; /* 24px */
-            font-weight: 700;
-            line-height: 1.2;
-            color: #FFFFFF;
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--color-text-on-dark);
             text-align: left;
-            text-shadow: none;
             margin: 0;
-            letter-spacing: -0.5px;
+            letter-spacing: 0.2px;
             flex: 1;
             min-width: 0;
             overflow: hidden;
             position: relative;
             white-space: nowrap;
             text-overflow: ellipsis;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .kiosk-queue-item.serving .kiosk-customer-name {
+            color: var(--color-text-on-dark);
         }
         
         /* Adaptive customer name sizing */
@@ -1287,28 +1441,32 @@
             position: absolute;
             top: var(--spacing-lg);
             left: var(--spacing-lg);
-            background: #000000;
-            border: 3px solid var(--md-sys-color-primary);
-            border-radius: var(--radius-md);
-            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(212, 175, 55, 0.1);
+            border: 1.5px solid rgba(212, 175, 55, 0.25);
+            border-radius: 12px;
+            padding: 12px 20px;
             display: flex;
             align-items: center;
-            gap: var(--spacing-sm);
-            color: var(--md-sys-color-primary);
-            font-size: var(--font-size-body-small);
-            font-weight: 600;
+            gap: 10px;
+            color: var(--color-primary);
+            font-family: var(--font-sans);
+            font-size: 0.875rem;
+            font-weight: 500;
             line-height: 1.4;
             cursor: pointer;
             z-index: 10001;
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
-            transition: all var(--transition-normal) var(--easing-standard);
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: auto;
+            backdrop-filter: blur(12px);
+            -webkit-font-smoothing: antialiased;
         }
 
         .kiosk-back-button:hover {
-            transform: translateX(4px);
-            box-shadow: 0 12px 48px rgba(212, 175, 55, 0.5);
-            background: rgba(212, 175, 55, 0.1);
+            transform: translateX(-3px);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.25);
+            background: rgba(212, 175, 55, 0.15);
+            border-color: var(--color-primary);
         }
 
         .kiosk-back-button:active {
@@ -1327,12 +1485,16 @@
         }
 
         .kiosk-atender-btn:hover {
-            transform: translateX(2px);
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+            transform: translateX(2px) translateY(-1px);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.25), 0 2px 8px rgba(212, 175, 55, 0.15);
         }
 
         .kiosk-atender-btn:active {
             transform: translateX(0) scale(0.98);
+        }
+        
+        .kiosk-atender-btn.serving:hover {
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25), 0 2px 8px rgba(16, 185, 129, 0.15);
         }
 
         .kiosk-atender-btn.serving {
@@ -1345,17 +1507,17 @@
             bottom: var(--spacing-md);
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(10px);
-            border: 2px solid var(--md-sys-color-primary);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(20, 20, 20, 0.85);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 16px;
+            padding: 14px 24px;
             display: none;
             align-items: center;
-            gap: var(--spacing-sm);
+            gap: 18px;
             z-index: 10000;
-            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
             pointer-events: auto;
+            backdrop-filter: blur(20px) saturate(180%);
         }
 
         body.kiosk-mode .kiosk-barber-selector.show {
@@ -1363,14 +1525,15 @@
         }
 
         .kiosk-barber-label {
-            font-size: var(--font-size-caption);
-            font-weight: 600;
+            font-family: var(--font-sans);
+            font-size: 0.75rem;
+            font-weight: 500;
             line-height: 1.4;
-            color: rgba(212, 175, 55, 0.7);
+            color: rgba(255, 255, 255, 0.7);
             white-space: nowrap;
             margin-right: var(--spacing-sm);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
         }
 
         .kiosk-barber-list {
@@ -1379,10 +1542,10 @@
         }
 
         .kiosk-barber-chip {
-            padding: 2px;
-            background: rgba(212, 175, 55, 0.1);
-            border: 2px solid rgba(212, 175, 55, 0.3);
-            border-radius: var(--radius-md);
+            padding: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
             width: 3.5rem; /* 56px */
             min-height: 3.5rem; /* 56px */
             height: auto;
@@ -1391,7 +1554,7 @@
             align-items: center;
             justify-content: flex-start;
             cursor: pointer;
-            transition: all var(--transition-normal) var(--easing-standard);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: auto !important;
             user-select: none;
             -webkit-user-select: none;
@@ -1399,6 +1562,21 @@
             z-index: 1;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             overflow: visible;
+            backdrop-filter: blur(10px);
+        }
+        
+        .kiosk-barber-chip:hover {
+            border-color: var(--color-primary);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.25), 0 2px 6px rgba(212, 175, 55, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .kiosk-barber-chip.selected {
+            border-color: var(--color-primary);
+            border-width: 2px;
+            background: rgba(212, 175, 55, 0.15);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
         }
         
         .kiosk-barber-chip .barber-face {
@@ -1411,21 +1589,14 @@
             pointer-events: none;
         }
 
-        .kiosk-barber-chip:hover {
-            background: rgba(212, 175, 55, 0.15);
-            border-color: var(--md-sys-color-primary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
-        }
-
         .kiosk-barber-chip:active {
-            transform: translateY(0);
+            transform: translateY(0) scale(0.98);
         }
 
         .kiosk-barber-chip.active {
-            background: var(--md-sys-color-primary);
-            border-color: var(--md-sys-color-primary);
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.6);
+            background: rgba(212, 175, 55, 0.18);
+            border-color: var(--color-primary);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.35), 0 2px 8px rgba(212, 175, 55, 0.2);
             transform: translateY(-2px);
         }
         
@@ -1943,31 +2114,6 @@
             .kiosk-subtitle {
                 font-size: 0.75rem;
             }
-
-            .kiosk-checkin-section {
-                flex-direction: column;
-                gap: var(--spacing-md);
-                padding: var(--spacing-md);
-                margin-top: var(--spacing-lg);
-            }
-
-            .kiosk-checkin-title {
-                font-size: 1.25rem;
-            }
-
-            .kiosk-checkin-input-group {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .kiosk-checkin-btn {
-                width: 100%;
-            }
-
-            .kiosk-qr-code {
-                width: 120px;
-                height: 120px;
-            }
             
             .kiosk-queue-item {
                 padding: var(--spacing-sm) var(--spacing-md);
@@ -2188,7 +2334,7 @@
         <div class="kiosk-view kiosk-queue-view active" id="kioskQueueView">
             <div class="kiosk-header">
                 <span class="material-symbols-outlined kiosk-logo">content_cut</span>
-                <div class="kiosk-title">Barbearia Mineiro</div>
+                <div class="kiosk-title" data-text="Barbearia Mineiro">Barbearia Mineiro</div>
     </div>
 
             <div class="kiosk-queue-list" id="kioskQueueList">
@@ -2531,8 +2677,13 @@
 
             if (sortedQueue.length === 0) {
                 kioskQueueList.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 80px; color: rgba(255, 255, 255, 0.5); font-size: 48px;">
-                        Nenhum cliente na fila
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 160px 40px; color: rgba(255, 255, 255, 0.3); font-size: 3rem; font-weight: 300; letter-spacing: 6px; text-transform: uppercase;">
+                        <div style="margin-bottom: 32px; opacity: 0.4;">
+                            <span class="material-symbols-outlined" style="font-size: 120px; display: block; margin-bottom: 24px; filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.3));">queue</span>
+                        </div>
+                        <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, transparent 100%); padding: 24px; border-radius: 16px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                            Nenhum cliente na fila
+                        </div>
                     </div>
                 `;
                 return;
@@ -2540,7 +2691,7 @@
 
             // Calculate position for waiting customers
             let waitingPosition = 1;
-            sortedQueue.forEach((item) => {
+            sortedQueue.forEach((item, index) => {
                 const queueItem = document.createElement('div');
                 const isClaimed = item.barberId !== null;
                 const isWaiting = item.status === 'waiting';
@@ -2599,12 +2750,12 @@
                 const btnTextSize = isLargeScreen ? '12px' : isMediumLargeScreen ? '11px' : isMediumScreen ? '11px' : '11px';
                 const btnMinWidth = item.status === 'serving' ? (isLargeScreen ? '40px' : isMediumLargeScreen ? '36px' : '32px') : 'auto';
                 
-                // Compact Atender button - icon only, smaller
+                // Compact Atender button - smooth style
                 const atenderButton = `<button class="kiosk-atender-btn ${item.status === 'serving' ? 'serving' : ''}" 
                                onclick="event.stopPropagation(); toggleService(${item.id});" 
                                data-customer-id="${item.id}"
-                               style="padding: ${btnPadding}; font-size: ${btnFontSize}; font-weight: 700; border-radius: 12px; border: 3px solid ${item.status === 'serving' ? '#10B981' : '#D4AF37'}; background: ${item.status === 'serving' ? '#10B981' : 'rgba(212, 175, 55, 0.2)'}; color: ${item.status === 'serving' ? '#000000' : '#D4AF37'}; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; gap: ${item.status === 'serving' ? '0' : '4px'}; min-width: ${btnMinWidth};">
-                        <span class="material-symbols-outlined" style="font-size: ${btnIconSize};">${item.status === 'serving' ? 'check_circle' : 'play_arrow'}</span>
+                               style="padding: ${btnPadding}; font-size: ${btnFontSize}; font-weight: 500; border-radius: 12px; border: 1.5px solid ${item.status === 'serving' ? 'var(--color-success)' : 'var(--color-primary)'}; background: ${item.status === 'serving' ? 'var(--color-success)' : 'rgba(212, 175, 55, 0.12)'}; color: ${item.status === 'serving' ? '#FFFFFF' : 'var(--color-primary)'}; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; gap: ${item.status === 'serving' ? '0' : '6px'}; min-width: ${btnMinWidth}; font-family: var(--font-sans); box-shadow: ${item.status === 'serving' ? '0 2px 8px rgba(16, 185, 129, 0.2)' : '0 2px 8px rgba(212, 175, 55, 0.15)'};">
+                        <span class="material-symbols-outlined" style="font-size: ${btnIconSize}; font-weight: 300;">${item.status === 'serving' ? 'check' : 'play_arrow'}</span>
                         ${item.status === 'serving' ? '' : `<span style="font-size: ${btnTextSize};">Atender</span>`}
                        </button>`;
 
@@ -2623,6 +2774,9 @@
                     </div>
                 `;
 
+                // Add staggered animation delay
+                queueItem.style.animationDelay = `${index * 0.08}s`;
+                
                 kioskQueueList.appendChild(queueItem);
             });
         }

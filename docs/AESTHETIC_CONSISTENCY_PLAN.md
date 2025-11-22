@@ -162,19 +162,6 @@ Update all components to match the new sharp, minimal, bold aesthetic. Remove al
 - Bold gold border (4px solid)
 - Angular design
 
-### Kiosk Hidden Indicator
-**Current Issues:**
-- Uses `backdrop-filter: blur(10px)`
-- Has `border-radius: var(--radius-lg)`
-- Semi-transparent background
-
-**Updates:**
-- Remove `backdrop-filter: blur(10px)`
-- `border-radius: 0`
-- Solid background color
-- Bold border
-- Angular design
-
 ### Kiosk Atender Button
 **Current Issues:**
 - May have rounded corners
@@ -372,8 +359,6 @@ Update all components to match the new sharp, minimal, bold aesthetic. Remove al
 - [ ] Remove backdrop-filter from back button
 - [ ] Change back button border-radius to 0
 - [ ] Update back button to solid background
-- [ ] Remove backdrop-filter from hidden indicator
-- [ ] Change hidden indicator border-radius to 0
 - [ ] Update all buttons to angular
 - [ ] Verify all cards have border-radius: 0
 - [ ] Verify no gradients remain

@@ -293,6 +293,8 @@ The system supports three types of users:
 - Clickable customer cards when barber is selected
 - "Atender" button on each customer to toggle service status
 - Back button in top-left corner (always visible) to exit kiosk mode
+- **Check-in button** in bottom-right corner to open quick login modal
+- **QR code** in top-right corner linking to join page for mobile check-in
 - Fully responsive design that adapts to different screen sizes
 
 **Rotation Example**:
@@ -316,6 +318,10 @@ The system supports three types of users:
 - "Atender" button toggles customer service status (waiting ↔ serving)
 - Responsive grid layout adapts to screen size (3 columns → 2 columns → 1 column)
 - Header and item sizes scale appropriately for different displays
+- Check-in button opens modal for quick customer entry at the display
+- QR code allows customers to scan and join from their phones
+- Queue displays all customers with scrolling (no hidden indicator)
+- Serving customers appear at bottom of queue to save space at top
 
 ## 11. Staff Login
 
