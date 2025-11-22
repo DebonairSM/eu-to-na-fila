@@ -687,23 +687,14 @@
             padding: 8px 0;
         }
         
-        /* Custom scrollbar for queue list */
+        /* Hide scrollbar but keep scrolling functionality */
+        .kiosk-queue-list {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        
         .kiosk-queue-list::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .kiosk-queue-list::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 4px;
-        }
-        
-        .kiosk-queue-list::-webkit-scrollbar-thumb {
-            background: rgba(212, 175, 55, 0.4);
-            border-radius: 4px;
-        }
-        
-        .kiosk-queue-list::-webkit-scrollbar-thumb:hover {
-            background: rgba(212, 175, 55, 0.6);
+            display: none; /* Chrome, Safari, Opera */
         }
         
         
@@ -917,43 +908,6 @@
         }
         
         /* Back to Queue Button (during ads) */
-        .back-to-queue-btn {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            background: var(--md-sys-color-primary);
-            border: 3px solid var(--md-sys-color-primary);
-            border-radius: var(--radius-md);
-            padding: var(--spacing-sm) var(--spacing-md);
-            color: #000000;
-            font-size: var(--font-size-body-small);
-            font-weight: 600;
-            cursor: pointer;
-            z-index: 10001;
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
-            transition: all var(--transition-normal) var(--easing-standard);
-            pointer-events: auto;
-            min-width: 48px;
-            min-height: 40px;
-        }
-        
-        .back-to-queue-btn:hover {
-            transform: translateX(4px);
-            box-shadow: 0 12px 48px rgba(212, 175, 55, 0.5);
-            background: var(--md-sys-color-primary-hover);
-            border-color: var(--md-sys-color-primary-hover);
-        }
-        
-        .back-to-queue-btn:active {
-            transform: translateX(0) scale(0.98);
-        }
-        
-        .back-to-queue-btn .material-symbols-outlined {
-            font-size: 24px;
-        }
 
         /* Remove Confirmation Modal */
         .remove-confirm-modal {
@@ -1436,8 +1390,8 @@
             transform: translateX(6px);
         }
 
-        /* Kiosk Back Button */
-        .kiosk-back-button {
+        /* Kiosk Mode Toggle Button */
+        .kiosk-mode-toggle {
             position: absolute;
             top: var(--spacing-lg);
             left: var(--spacing-lg);
@@ -1445,7 +1399,7 @@
             border: 1.5px solid rgba(212, 175, 55, 0.25);
             border-radius: 12px;
             padding: 12px 20px;
-            display: flex;
+            display: none; /* Hidden by default, shown only in queue view */
             align-items: center;
             gap: 10px;
             color: var(--color-primary);
@@ -1462,18 +1416,22 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        .kiosk-back-button:hover {
+        .kiosk-mode-toggle.show {
+            display: flex;
+        }
+
+        .kiosk-mode-toggle:hover {
             transform: translateX(-3px);
             box-shadow: 0 4px 16px rgba(212, 175, 55, 0.25);
             background: rgba(212, 175, 55, 0.15);
             border-color: var(--color-primary);
         }
 
-        .kiosk-back-button:active {
+        .kiosk-mode-toggle:active {
             transform: translateX(0) scale(0.98);
         }
 
-        .kiosk-back-button .material-symbols-outlined {
+        .kiosk-mode-toggle .material-symbols-outlined {
             font-size: 1.25rem; /* 20px */
         }
 
@@ -1499,6 +1457,15 @@
 
         .kiosk-atender-btn.serving {
             animation: none;
+        }
+
+        .kiosk-atender-btn.disabled {
+            pointer-events: none;
+        }
+
+        .kiosk-atender-btn.disabled:hover {
+            transform: none;
+            box-shadow: none;
         }
 
         /* Kiosk Barber Selector */
@@ -1640,6 +1607,125 @@
         .kiosk-barber-chip.active .barber-name {
             display: block;
             color: #000000;
+        }
+
+        .kiosk-barber-chip.present {
+            border-color: var(--color-primary);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .kiosk-barber-chip.absent {
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+
+        .kiosk-barber-chip.present .barber-name {
+            display: block;
+            color: var(--color-primary);
+        }
+
+        /* Barber Selection Overlay */
+        .barber-selection-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 20000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .barber-selection-overlay.show {
+            display: flex;
+        }
+
+        .barber-selection-content {
+            background: rgba(20, 20, 20, 0.95);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(212, 175, 55, 0.1);
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .barber-selection-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .barber-selection-title {
+            display: block;
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 8px;
+        }
+
+        .barber-selection-customer {
+            display: block;
+            font-size: 1rem;
+            color: var(--color-primary);
+            font-weight: 500;
+        }
+
+        .barber-selection-list {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .barber-selection-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(212, 175, 55, 0.2);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 100px;
+        }
+
+        .barber-selection-item:hover {
+            transform: translateY(-4px);
+            border-color: var(--color-primary);
+            background: rgba(212, 175, 55, 0.1);
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+        }
+
+        .barber-selection-item:active {
+            transform: translateY(-2px) scale(0.98);
+        }
+
+        .barber-selection-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .barber-selection-item:hover .barber-selection-avatar {
+            border-color: var(--color-primary);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+        }
+
+        .barber-selection-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
         }
 
         /* Kiosk Ad Views */
@@ -1956,7 +2042,7 @@
                 overflow: hidden;
             }
             
-            .kiosk-back-button {
+            .kiosk-mode-toggle {
                 top: 20px;
                 left: 28px;
                 padding: 8px 14px;
@@ -2020,7 +2106,7 @@
                 padding: 2px;
             }
             
-            .kiosk-back-button {
+            .kiosk-mode-toggle {
                 top: 24px;
                 left: 24px;
                 padding: var(--spacing-sm) var(--spacing-md);
@@ -2037,7 +2123,7 @@
                 overflow: hidden;
             }
             
-            .kiosk-back-button {
+            .kiosk-mode-toggle {
                 top: 16px;
                 left: 24px;
                 padding: 8px 14px;
@@ -2109,7 +2195,7 @@
                 overflow: hidden;
             }
             
-            .kiosk-back-button {
+            .kiosk-mode-toggle {
                 top: 16px;
                 left: 20px;
                 padding: 8px 14px;
@@ -2354,7 +2440,7 @@
             }
             
             
-            .kiosk-back-button {
+            .kiosk-mode-toggle {
                 min-width: 48px;
                 min-height: 48px;
             }
@@ -2409,7 +2495,7 @@
                     </div>
                 </div>
                 <div class="header-actions">
-                    <button class="icon-button" onclick="toggleKioskMode()" title="Modo Kiosk">
+                    <button class="icon-button" onclick="toggleKioskMode()" title="Modo Display">
                         <span class="material-symbols-outlined">tv</span>
                     </button>
                     <a href="owner-dashboard.html" class="icon-button" title="Voltar">
@@ -2461,17 +2547,30 @@
 
     <!-- Kiosk Mode Content -->
     <div class="kiosk-container">
-        <!-- Back Button - Always visible in kiosk mode -->
-        <button class="kiosk-back-button" onclick="toggleKioskMode()" title="Voltar para modo normal">
-            <span class="material-symbols-outlined">arrow_back</span>
-            <span>Voltar</span>
+        <!-- Mode Toggle Button - Only visible in queue view -->
+        <button class="kiosk-mode-toggle" id="kioskModeToggle" onclick="toggleKioskMode()" title="Alternar entre modo barbeiro e modo display">
+            <span class="material-symbols-outlined" id="kioskModeToggleIcon">settings</span>
+            <span id="kioskModeToggleText">Modo Barbeiro</span>
         </button>
 
-        <!-- Kiosk Barber Selector - Always visible in kiosk mode -->
+        <!-- Kiosk Barber Selector - Presence toggle in kiosk mode -->
         <div class="kiosk-barber-selector">
-            <div class="kiosk-barber-label">Selecione barbeiro:</div>
+            <div class="kiosk-barber-label">Barbeiros Presentes</div>
             <div class="kiosk-barber-list" id="kioskBarberList">
                 <!-- Barbers will be generated here -->
+            </div>
+        </div>
+
+        <!-- Barber Selection Overlay (appears when clicking customer) -->
+        <div class="barber-selection-overlay" id="barberSelectionOverlay">
+            <div class="barber-selection-content">
+                <div class="barber-selection-header">
+                    <span class="barber-selection-title">Selecione o barbeiro</span>
+                    <span class="barber-selection-customer" id="barberSelectionCustomerName"></span>
+                </div>
+                <div class="barber-selection-list" id="barberSelectionList">
+                    <!-- Present barbers will be generated here -->
+                </div>
             </div>
         </div>
 
@@ -2493,11 +2592,6 @@
             <div class="kiosk-qr-corner" id="kioskQRCode"></div>
         </div>
 
-        <!-- Back to Queue Button (shown during ads) -->
-        <button class="back-to-queue-btn" id="backToQueueBtn" onclick="goToQueueFromAd()" title="Voltar para fila" style="display: none;">
-            <span class="material-symbols-outlined">queue</span>
-            <span>Ver Fila</span>
-        </button>
 
         <!-- Ad Views -->
         <div class="kiosk-view kiosk-ad-view ad-1" id="ad1">
@@ -2603,6 +2697,30 @@
         let adStartTime = 0; // Track when ad started
         let adRemainingTime = 0; // Track remaining time when switching to queue
         let isManualQueueView = false; // Track if user manually switched to queue
+        let idleTimer = null; // Timer for idle detection
+        let previousAdIndex = 0; // Track which ad we were viewing before going to queue
+        const IDLE_TIMEOUT = 10000; // 10 seconds of idle time
+
+        // Update mode toggle button text/icon
+        function updateModeToggleButton() {
+            const toggleButton = document.getElementById('kioskModeToggle');
+            const toggleIcon = document.getElementById('kioskModeToggleIcon');
+            const toggleText = document.getElementById('kioskModeToggleText');
+            
+            if (toggleButton && toggleIcon && toggleText) {
+                if (isKioskMode) {
+                    // Currently in display mode, button shows "Modo Barbeiro"
+                    toggleIcon.textContent = 'settings';
+                    toggleText.textContent = 'Modo Barbeiro';
+                    toggleButton.title = 'Alternar para modo barbeiro';
+                } else {
+                    // Currently in barber mode, button shows "Modo Display"
+                    toggleIcon.textContent = 'tv';
+                    toggleText.textContent = 'Modo Display';
+                    toggleButton.title = 'Alternar para modo display';
+                }
+            }
+        }
 
         // Toggle kiosk mode
         function toggleKioskMode() {
@@ -2655,6 +2773,9 @@
                     document.exitFullscreen?.();
                 }
             }
+            
+            // Update toggle button text/icon
+            updateModeToggleButton();
         }
 
         // Render barber selector (management mode) - No longer needed, but kept for compatibility
@@ -2699,7 +2820,7 @@
             }
         }
 
-        // Render kiosk barber selector
+        // Render kiosk barber selector (presence toggle)
         function renderKioskBarberSelector() {
             const kioskBarberList = document.getElementById('kioskBarberList');
             if (!kioskBarberList) return;
@@ -2707,25 +2828,30 @@
             // Clear existing content
             kioskBarberList.innerHTML = '';
 
-            // Create barber chips with face images - only show present barbers
-            barbers
-                .filter(barber => barber.isPresent)
-                .forEach(barber => {
-                    const chip = document.createElement('div');
-                    const isActive = selectedBarberId === barber.id;
-                    chip.className = `kiosk-barber-chip${isActive ? ' active' : ''}`;
-                    chip.dataset.barberId = barber.id;
-                    chip.setAttribute('role', 'button');
-                    chip.setAttribute('tabindex', '0');
-                    chip.setAttribute('aria-label', `Selecionar barbeiro ${barber.name}`);
-                    
-                    chip.innerHTML = `
-                        <img src="${barber.avatar}" alt="${barber.name}" class="barber-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
-                        <span class="barber-name">${barber.name}</span>
-                    `;
-                    
-                    kioskBarberList.appendChild(chip);
-                });
+            // Create barber chips for presence toggle - show all barbers
+            barbers.forEach(barber => {
+                const chip = document.createElement('div');
+                chip.className = `kiosk-barber-chip ${barber.isPresent ? 'present' : 'absent'}`;
+                chip.dataset.barberId = barber.id;
+                chip.setAttribute('role', 'button');
+                chip.setAttribute('tabindex', '0');
+                chip.setAttribute('aria-label', `Marcar ${barber.name} como ${barber.isPresent ? 'ausente' : 'presente'}`);
+                
+                chip.innerHTML = `
+                    <img src="${barber.avatar}" alt="${barber.name}" class="barber-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
+                    <span class="barber-name">${barber.name}</span>
+                `;
+                
+                // Add presence indicator
+                if (barber.isPresent) {
+                    const check = document.createElement('div');
+                    check.style.cssText = 'position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;';
+                    check.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px; color: #000;">check</span>';
+                    chip.appendChild(check);
+                }
+                
+                kioskBarberList.appendChild(chip);
+            });
         }
 
         // Render management queue
@@ -2896,19 +3022,12 @@
 
                 let className = `kiosk-queue-item ${item.status === 'serving' ? 'serving' : ''} ${isClaimed ? 'claimed' : ''}`;
                 
-                // Make clickable if:
-                // 1. Waiting, not claimed, and barber is selected (to claim)
-                // 2. Waiting, claimed by selected barber (to unclaim)
-                const isClaimedBySelectedBarber = isClaimed && item.barberId === selectedBarberId;
-                const canClaim = isWaiting && !isClaimed && selectedBarberId;
-                const canUnclaim = isWaiting && isClaimedBySelectedBarber;
-                
-                if (canClaim || canUnclaim) {
+                // Make all waiting customers clickable to show barber selection
+                if (isWaiting) {
                     className += ' clickable';
                     queueItem.style.cursor = 'pointer';
                     queueItem.setAttribute('data-customer-id', item.id);
                     queueItem.setAttribute('data-clickable', 'true');
-                    queueItem.setAttribute('data-action', canUnclaim ? 'unclaim' : 'claim');
                 } else {
                     queueItem.style.cursor = 'default';
                 }
@@ -2933,22 +3052,6 @@
                        </span>`
                     : '';
 
-                // Adaptive Atender button sizing
-                const btnPadding = isLargeScreen ? '8px 14px' : isMediumLargeScreen ? '7px 12px' : isMediumScreen ? '7px 11px' : '6px 10px';
-                const btnFontSize = isLargeScreen ? '14px' : isMediumLargeScreen ? '13px' : isMediumScreen ? '12px' : '12px';
-                const btnIconSize = isLargeScreen ? '18px' : isMediumLargeScreen ? '17px' : isMediumScreen ? '16px' : '16px';
-                const btnTextSize = isLargeScreen ? '12px' : isMediumLargeScreen ? '11px' : isMediumScreen ? '11px' : '11px';
-                const btnMinWidth = item.status === 'serving' ? (isLargeScreen ? '40px' : isMediumLargeScreen ? '36px' : '32px') : 'auto';
-                
-                // Compact Atender button - smooth style
-                const atenderButton = `<button class="kiosk-atender-btn ${item.status === 'serving' ? 'serving' : ''}" 
-                               onclick="event.stopPropagation(); toggleService(${item.id});" 
-                               data-customer-id="${item.id}"
-                               style="padding: ${btnPadding}; font-size: ${btnFontSize}; font-weight: 500; border-radius: 12px; border: 1.5px solid ${item.status === 'serving' ? 'var(--color-success)' : 'var(--color-primary)'}; background: ${item.status === 'serving' ? 'var(--color-success)' : 'rgba(212, 175, 55, 0.12)'}; color: ${item.status === 'serving' ? '#FFFFFF' : 'var(--color-primary)'}; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; gap: ${item.status === 'serving' ? '0' : '6px'}; min-width: ${btnMinWidth}; font-family: var(--font-sans); box-shadow: ${item.status === 'serving' ? '0 2px 8px rgba(16, 185, 129, 0.2)' : '0 2px 8px rgba(212, 175, 55, 0.15)'};">
-                        <span class="material-symbols-outlined" style="font-size: ${btnIconSize}; font-weight: 300;">${item.status === 'serving' ? 'check' : 'play_arrow'}</span>
-                        ${item.status === 'serving' ? '' : `<span style="font-size: ${btnTextSize};">Atender</span>`}
-                       </button>`;
-
                 queueItem.innerHTML = `
                     <div class="kiosk-position">${positionNumber}</div>
                     <div class="kiosk-queue-item-content">
@@ -2957,7 +3060,6 @@
                         </div>
                     </div>
                     <div class="kiosk-queue-item-actions">
-                        ${atenderButton}
                         <button class="kiosk-remove-btn" onclick="event.stopPropagation(); removeCustomer(${item.id});" title="Remover da fila">
                             <span class="material-symbols-outlined">close</span>
                     </button>
@@ -3012,28 +3114,38 @@
                     barberSelector.classList.remove('show');
                 }
             }
-            
-            // Show/hide "Back to Queue" button
-            const backToQueueBtn = document.getElementById('backToQueueBtn');
-            if (backToQueueBtn) {
+
+            // Show/hide mode toggle button - only in queue view
+            const modeToggle = document.getElementById('kioskModeToggle');
+            if (modeToggle) {
                 if (viewId === 'kioskQueueView') {
-                    backToQueueBtn.style.display = 'none';
+                    modeToggle.classList.add('show');
                 } else {
-                    backToQueueBtn.style.display = 'flex';
+                    modeToggle.classList.remove('show');
                 }
             }
 
             // Determine duration for this view
             let duration = viewId === 'kioskQueueView' ? QUEUE_DURATION : AD_DURATION;
             
-            // If manually viewing queue, use shorter duration to resume ad
+            // If manually viewing queue, don't auto-advance (wait for idle timer)
             if (viewId === 'kioskQueueView' && isManualQueueView) {
-                // Show queue for 5 seconds when manually accessed, then resume ad
-                duration = 5000;
+                // Don't set a timeout - wait for idle timer
+                // Clear any existing interval
+                if (kioskInterval) {
+                    clearTimeout(kioskInterval);
+                    kioskInterval = null;
+                }
+                return;
             } else if (viewId !== 'kioskQueueView') {
                 // Starting an ad - record start time
                 adStartTime = Date.now();
                 isManualQueueView = false; // Reset manual flag when showing ads
+                // Clear idle timer when showing ads
+                if (idleTimer) {
+                    clearTimeout(idleTimer);
+                    idleTimer = null;
+                }
             }
             
             // Clear existing timeout
@@ -3044,17 +3156,11 @@
             // Set up next rotation
             kioskInterval = setTimeout(() => {
                 if (isKioskMode) {
-                    if (viewId === 'kioskQueueView' && isManualQueueView) {
-                        // Resume ad rotation
-                        resumeAdRotation();
-                    } else {
-                        // Normal rotation
-                        const nextIndex = (kioskViewIndex + 1) % kioskViews.length;
-                        switchKioskView(nextIndex);
-                    }
+                    const nextIndex = (kioskViewIndex + 1) % kioskViews.length;
+                    switchKioskView(nextIndex);
                 }
             }, duration);
-
+            
             // Start progress bar
             startProgressBar(duration);
         }
@@ -3088,6 +3194,11 @@
             if (progressInterval) {
                 clearInterval(progressInterval);
                 progressInterval = null;
+            }
+            // Clear idle timer
+            if (idleTimer) {
+                clearTimeout(idleTimer);
+                idleTimer = null;
             }
         }
 
@@ -3130,11 +3241,13 @@
                 if (customer.status === 'serving') {
                     // If serving, change back to waiting
                     customer.status = 'waiting';
-            } else {
-                    // If waiting, start service (assign to selected barber if available, otherwise keep current barber)
-                    if (!customer.barberId && selectedBarberId) {
-                        customer.barberId = selectedBarberId;
+                } else {
+                    // If waiting, require customer to have been claimed by a barber
+                    if (!customer.barberId) {
+                        // Customer not claimed by any barber - cannot start service
+                        return;
                     }
+                    // Customer has been claimed, can start service
                     customer.status = 'serving';
                 }
                 previousQueueData = '';
@@ -3148,15 +3261,11 @@
         }
 
         function removeCustomer(customerId) {
-            const customer = queueData.find(c => c.id === customerId);
-            const customerName = customer ? customer.name : 'cliente';
-            
-            showRemoveConfirmModal(customerName, () => {
-                queueData = queueData.filter(c => c.id !== customerId);
-                // Reset previous queue data to force re-render
-                previousQueueData = '';
-                renderAll();
-            });
+            // Remove customer directly without confirmation
+            queueData = queueData.filter(c => c.id !== customerId);
+            // Reset previous queue data to force re-render
+            previousQueueData = '';
+            renderAll();
         }
         
         function showRemoveConfirmModal(customerName, onConfirm) {
@@ -3184,26 +3293,62 @@
             }
         }
         
-        function goToQueueFromAd() {
+        // Handle touch to return to queue from ads
+        function handleTouchToQueue() {
             if (!isKioskMode) return;
             
-            // Calculate remaining time for current ad
-            if (kioskViewIndex > 0) { // Currently showing an ad
-                const elapsed = Date.now() - adStartTime;
-                adRemainingTime = Math.max(0, AD_DURATION - elapsed);
-                previousAdIndex = kioskViewIndex; // Remember which ad we were on
+            // If currently showing an ad, go to queue
+            if (kioskViewIndex > 0) {
+                // Calculate remaining time for current ad
+                if (adStartTime > 0) {
+                    const elapsed = Date.now() - adStartTime;
+                    adRemainingTime = Math.max(0, AD_DURATION - elapsed);
+                    previousAdIndex = kioskViewIndex;
+                }
+                
+                // Stop rotation
+                if (kioskInterval) {
+                    clearTimeout(kioskInterval);
+                    kioskInterval = null;
+                }
+                
+                // Switch to queue view
                 isManualQueueView = true;
+                switchKioskView(0);
+                
+                // Start idle timer
+                resetIdleTimer();
+            } else {
+                // Already on queue - reset idle timer
+                resetIdleTimer();
             }
-            
-            // Switch to queue view
-            switchKioskView(0);
         }
         
+        // Reset idle timer (called on any touch)
+        function resetIdleTimer() {
+            // Clear existing timer
+            if (idleTimer) {
+                clearTimeout(idleTimer);
+            }
+            
+            // Only start timer if we're on queue view
+            if (kioskViewIndex === 0 && isManualQueueView) {
+                idleTimer = setTimeout(() => {
+                    if (isKioskMode && kioskViewIndex === 0 && isManualQueueView) {
+                        resumeAdRotation();
+                    }
+                }, IDLE_TIMEOUT);
+            }
+        }
+        
+        // Resume ad rotation after idle
         function resumeAdRotation() {
             if (!isKioskMode) return;
             
+            isManualQueueView = false;
+            
             // Resume from where we left off
-            if (adRemainingTime > 0 && isManualQueueView) {
+            if (adRemainingTime > 0 && previousAdIndex > 0) {
                 // Go back to the ad we were viewing
                 switchKioskView(previousAdIndex);
                 
@@ -3221,12 +3366,15 @@
                 // Update progress bar with remaining time
                 startProgressBar(adRemainingTime);
                 adRemainingTime = 0; // Reset
-                isManualQueueView = false;
             } else {
-                // Normal rotation
-                isManualQueueView = false;
+                // Normal rotation - go to next ad
                 const nextIndex = (kioskViewIndex + 1) % kioskViews.length;
-                switchKioskView(nextIndex);
+                if (nextIndex === 0) {
+                    // Skip queue if it's next, go to first ad
+                    switchKioskView(1);
+                } else {
+                    switchKioskView(nextIndex);
+                }
             }
         }
 
@@ -3239,14 +3387,83 @@
             renderKioskQueue();
         }
 
-        // Handle barber selection in kiosk mode
-        function handleBarberSelection(barberId) {
-            if (!isKioskMode) return;
+        // Show barber selection overlay for customer
+        let barberSelectionTimer = null;
+        function showBarberSelection(customerId) {
+            const customer = queueData.find(c => c.id === customerId);
+            if (!customer || customer.status !== 'waiting') return;
             
-            // Toggle selection
-            selectedBarberId = selectedBarberId === barberId ? null : barberId;
+            const overlay = document.getElementById('barberSelectionOverlay');
+            const customerNameEl = document.getElementById('barberSelectionCustomerName');
+            const selectionList = document.getElementById('barberSelectionList');
             
-            // Force re-render to update UI
+            if (!overlay || !customerNameEl || !selectionList) return;
+            
+            // Set customer name
+            customerNameEl.textContent = customer.name;
+            
+            // Clear and populate barber list (only present barbers)
+            selectionList.innerHTML = '';
+            const presentBarbers = barbers.filter(b => b.isPresent);
+            
+            if (presentBarbers.length === 0) {
+                selectionList.innerHTML = '<div style="text-align: center; color: rgba(255, 255, 255, 0.6); padding: 20px;">Nenhum barbeiro presente</div>';
+            } else {
+                presentBarbers.forEach(barber => {
+                    const item = document.createElement('div');
+                    item.className = 'barber-selection-item';
+                    item.onclick = () => selectBarberForCustomer(customerId, barber.id);
+                    
+                    item.innerHTML = `
+                        <img src="${barber.avatar}" alt="${barber.name}" class="barber-selection-avatar" 
+                             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
+                        <span class="barber-selection-name">${barber.name}</span>
+                    `;
+                    
+                    selectionList.appendChild(item);
+                });
+            }
+            
+            // Show overlay
+            overlay.classList.add('show');
+            
+            // Auto-hide after 5 seconds
+            if (barberSelectionTimer) {
+                clearTimeout(barberSelectionTimer);
+            }
+            barberSelectionTimer = setTimeout(() => {
+                hideBarberSelection();
+            }, 5000);
+        }
+        
+        // Hide barber selection overlay
+        function hideBarberSelection() {
+            const overlay = document.getElementById('barberSelectionOverlay');
+            if (overlay) {
+                overlay.classList.remove('show');
+            }
+            if (barberSelectionTimer) {
+                clearTimeout(barberSelectionTimer);
+                barberSelectionTimer = null;
+            }
+        }
+        
+        // Select barber for customer (automatically sets to serving)
+        function selectBarberForCustomer(customerId, barberId) {
+            const customer = queueData.find(c => c.id === customerId);
+            const barber = barbers.find(b => b.id === barberId);
+            
+            if (!customer || !barber || !barber.isPresent) return;
+            if (customer.status !== 'waiting') return;
+            
+            // Assign barber and set to serving
+            customer.barberId = barberId;
+            customer.status = 'serving';
+            
+            // Hide overlay
+            hideBarberSelection();
+            
+            // Re-render
             previousQueueData = '';
             renderAll();
         }
@@ -3256,43 +3473,63 @@
         document.addEventListener('click', function(e) {
             if (!isKioskMode) return;
             
-            // Check if click is on a barber chip
+            // Check if click is on a barber chip (presence toggle)
             const barberChip = e.target.closest('.kiosk-barber-chip');
             if (barberChip) {
                 e.preventDefault();
                 e.stopPropagation();
                 const barberId = parseInt(barberChip.dataset.barberId);
                 if (barberId && !isNaN(barberId)) {
-                    handleBarberSelection(barberId);
+                    toggleBarberPresence(barberId);
                 }
                 return;
             }
             
-            // Check if click is on a queue item
+            // Check if click is on barber selection overlay background (close it)
+            const overlay = e.target.closest('.barber-selection-overlay');
+            if (overlay && e.target === overlay) {
+                hideBarberSelection();
+                return;
+            }
+            
+            // Check if click is on a queue item (show barber selection)
             const queueItem = e.target.closest('.kiosk-queue-item.clickable');
             if (queueItem && queueItem.getAttribute('data-clickable') === 'true') {
+                // Don't trigger if clicking on remove button
+                if (e.target.closest('.kiosk-remove-btn')) {
+                    return;
+                }
                 e.preventDefault();
                 e.stopPropagation();
                 const customerId = parseInt(queueItem.getAttribute('data-customer-id'));
-                if (customerId && !isNaN(customerId) && selectedBarberId) {
-                    claimCustomer(customerId, selectedBarberId);
-                    }
+                if (customerId && !isNaN(customerId)) {
+                    showBarberSelection(customerId);
                 }
-            });
+                return;
+            }
+        });
 
         // Also handle keyboard events for accessibility
         document.addEventListener('keydown', function(e) {
             if (!isKioskMode) return;
             
-            // Handle Enter/Space on barber chips
+            // Handle Enter/Space on barber chips (presence toggle)
             if (e.key === 'Enter' || e.key === ' ') {
                 const barberChip = e.target.closest('.kiosk-barber-chip');
                 if (barberChip) {
                     e.preventDefault();
                     const barberId = parseInt(barberChip.dataset.barberId);
                     if (barberId && !isNaN(barberId)) {
-                        handleBarberSelection(barberId);
+                        toggleBarberPresence(barberId);
                     }
+                }
+            }
+            
+            // Handle Escape to close barber selection overlay
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('barberSelectionOverlay');
+                if (overlay && overlay.classList.contains('show')) {
+                    hideBarberSelection();
                 }
             }
         });
@@ -3437,8 +3674,60 @@
             }
         });
 
+        // Touch event to return to queue from ads (kiosk mode only)
+        document.addEventListener('touchstart', function(e) {
+            if (isKioskMode) {
+                // Don't trigger if touching interactive elements
+                const target = e.target;
+                const isInteractive = target.closest('button') || 
+                                     target.closest('.kiosk-barber-chip') || 
+                                     target.closest('.kiosk-queue-item.clickable') ||
+                                     target.closest('.checkin-modal') ||
+                                     target.closest('.kiosk-checkin-btn-small') ||
+                                     target.closest('.kiosk-qr-corner') ||
+                                     target.closest('.kiosk-queue-item');
+                
+                if (!isInteractive) {
+                    if (kioskViewIndex > 0) {
+                        // Touching ad - go to queue
+                        handleTouchToQueue();
+                    } else if (kioskViewIndex === 0 && isManualQueueView) {
+                        // Touching queue view - reset idle timer
+                        resetIdleTimer();
+                    }
+                }
+            }
+        }, { passive: true });
+
+        // Also handle click events (for non-touch devices or testing)
+        document.addEventListener('click', function(e) {
+            if (isKioskMode) {
+                // Don't trigger if clicking interactive elements
+                const target = e.target;
+                const isInteractive = target.closest('button') || 
+                                     target.closest('.kiosk-barber-chip') || 
+                                     target.closest('.kiosk-queue-item.clickable') ||
+                                     target.closest('.checkin-modal') ||
+                                     target.closest('.kiosk-checkin-btn-small') ||
+                                     target.closest('.kiosk-qr-corner') ||
+                                     target.closest('.kiosk-mode-toggle') ||
+                                     target.closest('.kiosk-queue-item');
+                
+                if (!isInteractive) {
+                    if (kioskViewIndex > 0) {
+                        // Clicking on ad - go to queue
+                        handleTouchToQueue();
+                    } else if (kioskViewIndex === 0 && isManualQueueView) {
+                        // Clicking on queue view - reset idle timer
+                        resetIdleTimer();
+                    }
+                }
+            }
+        });
+
         // Initialize
         renderAll();
+        updateModeToggleButton(); // Set initial button state
 
         // Ensure kiosk queue renders if already in kiosk mode
         if (document.body.classList.contains('kiosk-mode')) {
@@ -3490,3 +3779,4 @@
     </script>
 </body>
 </html>
+
