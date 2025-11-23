@@ -118,3 +118,4 @@ Combine minimalistic modern design principles with Victorian era elegance and re
 - **High Contrast**: Clear hierarchy, readable
 - **Refined Details**: Every element carefully considered
 
+
