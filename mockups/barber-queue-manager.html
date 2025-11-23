@@ -1398,15 +1398,12 @@
             background: rgba(212, 175, 55, 0.1);
             border: 1.5px solid rgba(212, 175, 55, 0.25);
             border-radius: 12px;
-            padding: 12px 20px;
+            padding: 12px;
             display: none; /* Hidden by default, shown only in queue view */
             align-items: center;
-            gap: 10px;
+            justify-content: center;
             color: var(--color-primary);
             font-family: var(--font-sans);
-            font-size: 0.875rem;
-            font-weight: 500;
-            line-height: 1.4;
             cursor: pointer;
             z-index: 10001;
             box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
@@ -1414,6 +1411,8 @@
             pointer-events: auto;
             backdrop-filter: blur(12px);
             -webkit-font-smoothing: antialiased;
+            width: 44px;
+            height: 44px;
         }
 
         .kiosk-mode-toggle.show {
@@ -2530,10 +2529,6 @@
 
         <!-- Queue List -->
         <div class="queue-section">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                <h2 class="section-header" style="margin: 0;">Fila de Espera</h2>
-        </div>
-
         <div class="queue-list" id="queueList">
                 <!-- Queue items will be generated here -->
         </div>
@@ -2562,7 +2557,6 @@
         <!-- Mode Toggle Button - Only visible in queue view -->
         <button class="kiosk-mode-toggle" id="kioskModeToggle" onclick="toggleKioskMode()" title="Alternar entre modo barbeiro e modo display">
             <span class="material-symbols-outlined" id="kioskModeToggleIcon">settings</span>
-            <span id="kioskModeToggleText">Modo Barbeiro</span>
         </button>
 
         <!-- Kiosk Barber Selector - Presence toggle in kiosk mode -->
@@ -2595,12 +2589,12 @@
 
             <div class="kiosk-queue-list" id="kioskQueueList">
                 <!-- Kiosk queue items will be generated here -->
-            </div>
+        </div>
 
             <!-- Small buttons in corner -->
             <button class="kiosk-checkin-btn-small" onclick="openCheckinModal()" title="Entrar na fila">
                 <span class="material-symbols-outlined">person_add</span>
-            </button>
+        </button>
             <div class="kiosk-qr-corner" id="kioskQRCode"></div>
         </div>
 
@@ -2713,22 +2707,19 @@
         let previousAdIndex = 0; // Track which ad we were viewing before going to queue
         const IDLE_TIMEOUT = 10000; // 10 seconds of idle time
 
-        // Update mode toggle button text/icon
+        // Update mode toggle button icon
         function updateModeToggleButton() {
             const toggleButton = document.getElementById('kioskModeToggle');
             const toggleIcon = document.getElementById('kioskModeToggleIcon');
-            const toggleText = document.getElementById('kioskModeToggleText');
             
-            if (toggleButton && toggleIcon && toggleText) {
+            if (toggleButton && toggleIcon) {
                 if (isKioskMode) {
-                    // Currently in display mode, button shows "Modo Barbeiro"
+                    // Currently in display mode, button shows gear icon
                     toggleIcon.textContent = 'settings';
-                    toggleText.textContent = 'Modo Barbeiro';
                     toggleButton.title = 'Alternar para modo barbeiro';
                 } else {
-                    // Currently in barber mode, button shows "Modo Display"
+                    // Currently in barber mode, button shows TV icon
                     toggleIcon.textContent = 'tv';
-                    toggleText.textContent = 'Modo Display';
                     toggleButton.title = 'Alternar para modo display';
                 }
             }
@@ -2913,17 +2904,17 @@
                     const barberAvatars = barbers
                         .filter(barber => barber.isPresent || (assignedBarber && assignedBarber.id === barber.id))
                         .map(barber => {
-                            const isAssigned = assignedBarber && assignedBarber.id === barber.id;
-                            const canAssign = customer.status === 'waiting';
-                            const isDisabled = customer.status === 'serving' && !isAssigned;
-                            return `
-                                <div class="barber-avatar ${isAssigned ? 'assigned' : ''} ${isDisabled ? 'disabled' : ''}" 
-                                     onclick="event.stopPropagation(); ${canAssign ? `assignBarberAndStart(${customer.id}, ${barber.id})` : ''};"
-                                     title="${isAssigned ? `Atendendo: ${barber.name}` : isDisabled ? 'Cliente já está sendo atendido' : `Atender com ${barber.name}`}">
-                                    <img src="${barber.avatar}" alt="${barber.name}" class="barber-avatar-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
-                                </div>
-                            `;
-                        }).join('');
+                        const isAssigned = assignedBarber && assignedBarber.id === barber.id;
+                        // Allow clicking: assign if waiting, unassign/change if serving
+                        const canInteract = true; // Always allow interaction
+                        return `
+                            <div class="barber-avatar ${isAssigned ? 'assigned' : ''}" 
+                                 onclick="event.stopPropagation(); ${canInteract ? (isAssigned ? `unassignBarber(${customer.id})` : `assignBarberAndStart(${customer.id}, ${barber.id})`) : ''};"
+                                 title="${isAssigned ? `Clique para desatribuir ${barber.name}` : `Atender com ${barber.name}`}">
+                                <img src="${barber.avatar}" alt="${barber.name}" class="barber-avatar-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
+                            </div>
+                        `;
+                    }).join('');
                     
                     item.innerHTML = `
                         <div class="position-badge">${positionNumber}</div>
@@ -2959,17 +2950,28 @@
         // Assign barber and start service in one action
         function assignBarberAndStart(customerId, barberId) {
             const customer = queueData.find(c => c.id === customerId);
-            if (!customer || customer.status !== 'waiting') return;
+            if (!customer) return;
             
             // Check if barber is present
             const barber = barbers.find(b => b.id === barberId);
             if (!barber || !barber.isPresent) return;
             
-            // Assign barber and start service
+            // Assign barber and start service (or change barber if already serving)
             customer.barberId = barberId;
             customer.status = 'serving';
                 renderAll();
             }
+        
+        // Unassign barber and return customer to waiting
+        function unassignBarber(customerId) {
+            const customer = queueData.find(c => c.id === customerId);
+            if (!customer) return;
+            
+            // Remove barber assignment and return to waiting
+            customer.barberId = null;
+            customer.status = 'waiting';
+            renderAll();
+        }
 
         // Store previous queue data for change detection
         let previousQueueData = JSON.stringify(queueData);
@@ -2999,7 +3001,7 @@
 
             // Remove any existing hidden indicator
             const hiddenIndicator = document.getElementById('kioskHiddenIndicator');
-            if (hiddenIndicator) {
+                if (hiddenIndicator) {
                 hiddenIndicator.remove();
             }
 
@@ -3010,7 +3012,7 @@
                             <span class="material-symbols-outlined" style="font-size: 120px; display: block; margin-bottom: 24px; filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.3));">queue</span>
                         </div>
                         <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, transparent 100%); padding: 24px; border-radius: 16px; border: 1px solid rgba(212, 175, 55, 0.2);">
-                            Nenhum cliente na fila
+                        Nenhum cliente na fila
                         </div>
                     </div>
                 `;
@@ -3082,7 +3084,7 @@
 
                 // Add staggered animation delay
                 queueItem.style.animationDelay = `${index * 0.08}s`;
-                
+
                 kioskQueueList.appendChild(queueItem);
             });
         }
@@ -3128,7 +3130,7 @@
                     barberSelector.classList.remove('show');
                 }
             }
-
+            
             // Show/hide mode toggle button - only in queue view
             const modeToggle = document.getElementById('kioskModeToggle');
             if (modeToggle) {
@@ -3170,11 +3172,11 @@
             // Set up next rotation
             kioskInterval = setTimeout(() => {
                 if (isKioskMode) {
-                    const nextIndex = (kioskViewIndex + 1) % kioskViews.length;
-                    switchKioskView(nextIndex);
+                        const nextIndex = (kioskViewIndex + 1) % kioskViews.length;
+                        switchKioskView(nextIndex);
                 }
             }, duration);
-            
+
             // Start progress bar
             startProgressBar(duration);
         }
@@ -3255,7 +3257,7 @@
                 if (customer.status === 'serving') {
                     // If serving, change back to waiting
                     customer.status = 'waiting';
-                } else {
+            } else {
                     // If waiting, require customer to have been claimed by a barber
                     if (!customer.barberId) {
                         // Customer not claimed by any barber - cannot start service
@@ -3276,10 +3278,10 @@
 
         function removeCustomer(customerId) {
             // Remove customer directly without confirmation
-            queueData = queueData.filter(c => c.id !== customerId);
-            // Reset previous queue data to force re-render
-            previousQueueData = '';
-            renderAll();
+                queueData = queueData.filter(c => c.id !== customerId);
+                // Reset previous queue data to force re-render
+                previousQueueData = '';
+                renderAll();
         }
         
         function showRemoveConfirmModal(customerName, onConfirm) {
@@ -3313,10 +3315,10 @@
             
             // If currently showing an ad, go to queue
             if (kioskViewIndex > 0) {
-                // Calculate remaining time for current ad
+            // Calculate remaining time for current ad
                 if (adStartTime > 0) {
-                    const elapsed = Date.now() - adStartTime;
-                    adRemainingTime = Math.max(0, AD_DURATION - elapsed);
+                const elapsed = Date.now() - adStartTime;
+                adRemainingTime = Math.max(0, AD_DURATION - elapsed);
                     previousAdIndex = kioskViewIndex;
                 }
                 
@@ -3324,11 +3326,11 @@
                 if (kioskInterval) {
                     clearTimeout(kioskInterval);
                     kioskInterval = null;
-                }
-                
-                // Switch to queue view
+            }
+            
+            // Switch to queue view
                 isManualQueueView = true;
-                switchKioskView(0);
+            switchKioskView(0);
                 
                 // Start idle timer
                 resetIdleTimer();
@@ -3387,7 +3389,7 @@
                     // Skip queue if it's next, go to first ad
                     switchKioskView(1);
                 } else {
-                    switchKioskView(nextIndex);
+                switchKioskView(nextIndex);
                 }
             }
         }
@@ -3551,10 +3553,10 @@
                 const customerId = parseInt(queueItem.getAttribute('data-customer-id'));
                 if (customerId && !isNaN(customerId)) {
                     showBarberSelection(customerId);
-                }
+                    }
                 return;
-            }
-        });
+                }
+            });
 
         // Also handle keyboard events for accessibility
         document.addEventListener('keydown', function(e) {
@@ -3797,7 +3799,7 @@
                 const modal = document.getElementById('checkinModal');
                 // Don't exit kiosk mode if check-in modal is open
                 if (!modal || !modal.classList.contains('show')) {
-                    toggleKioskMode();
+                toggleKioskMode();
                 }
             }
         });
