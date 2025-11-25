@@ -124,7 +124,7 @@ fastify.get('/mineiro/', async (request, reply) => {
       path: indexPath
     });
   }
-  return reply.sendFile('index.html', { root: mineiroPath });
+  return reply.sendFile('index.html', mineiroPath);
 });
 
 // Register error handler
@@ -137,7 +137,7 @@ fastify.setNotFoundHandler(async (request, reply) => {
   if (request.url.startsWith('/mineiro/') && request.url !== '/mineiro/') {
     const indexPath = join(mineiroPath, 'index.html');
     if (existsSync(indexPath)) {
-      return reply.sendFile('index.html', { root: mineiroPath });
+      return reply.sendFile('index.html', mineiroPath);
     }
   }
   // For other 404s, use default handler
