@@ -363,7 +363,7 @@
         .queue-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             margin-bottom: var(--spacing-lg);
             gap: var(--spacing-md);
         }
@@ -371,6 +371,7 @@
         .checkin-btn {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: var(--spacing-sm);
             padding: var(--spacing-md) var(--spacing-xl);
             background: var(--md-sys-color-primary);
@@ -383,6 +384,8 @@
             cursor: pointer;
             transition: all var(--transition-normal) var(--easing-standard);
             box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .checkin-btn:hover {
@@ -538,6 +541,43 @@
         
         /* Mobile responsiveness for management queue */
         @media (max-width: 768px) {
+            .header {
+                padding: var(--spacing-md);
+            }
+            
+            .header-top {
+                flex-wrap: wrap;
+                gap: var(--spacing-sm);
+            }
+            
+            .header-title h1 {
+                font-size: 1.25rem;
+            }
+            
+            .header-title p {
+                font-size: 0.75rem;
+            }
+            
+            .header-actions {
+                flex-shrink: 0;
+            }
+            
+            .icon-button {
+                width: 2.5rem;
+                height: 2.5rem;
+                font-size: 1.125rem;
+            }
+            
+            .stats {
+                gap: var(--spacing-md);
+                flex-wrap: wrap;
+            }
+            
+            .stat-item {
+                flex: 1 1 calc(50% - var(--spacing-md));
+                min-width: 0;
+            }
+            
             .queue-section {
                 padding: var(--spacing-md);
                 border-width: 2px;
@@ -551,6 +591,7 @@
             .queue-header {
                 flex-wrap: wrap;
                 margin-bottom: var(--spacing-md);
+                justify-content: center;
             }
             
             .queue-list {
@@ -594,12 +635,61 @@
         }
         
         @media (max-width: 480px) {
+            .header {
+                padding: var(--spacing-sm);
+                margin-bottom: var(--spacing-sm);
+            }
+            
+            .header-top {
+                gap: var(--spacing-xs);
+            }
+            
+            .header-icon {
+                font-size: 1.5rem;
+            }
+            
+            .header-title h1 {
+                font-size: 1.125rem;
+            }
+            
+            .header-title p {
+                font-size: 0.7rem;
+            }
+            
+            .icon-button {
+                width: 2.25rem;
+                height: 2.25rem;
+                font-size: 1rem;
+            }
+            
+            .stats {
+                gap: var(--spacing-sm);
+                padding-top: var(--spacing-sm);
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            
+            .stat-label {
+                font-size: 0.7rem;
+            }
+            
             .queue-section {
                 padding: var(--spacing-sm);
             }
             
             .section-header {
                 font-size: 1.125rem;
+            }
+            
+            .queue-header {
+                justify-content: center;
+                margin-bottom: var(--spacing-md);
+            }
+            
+            .checkin-btn {
+                padding: var(--spacing-sm) var(--spacing-lg);
             }
             
             .queue-item {
@@ -3065,7 +3155,6 @@
         <div class="queue-section">
             <!-- Queue Header with Title and Check-in Button -->
             <div class="queue-header">
-                <h2 class="section-header" style="margin: 0;">Fila de Espera</h2>
                 <button class="checkin-btn" onclick="openCheckinModal()" title="Adicionar cliente à fila">
                     <span class="material-symbols-outlined">person_add</span>
                     <span>Adicionar Cliente</span>
