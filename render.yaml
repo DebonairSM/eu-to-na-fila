@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: eutonafila
+    env: node
+    plan: starter
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    startCommand: node apps/api/dist/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATA_PATH
+        value: /var/data/eutonafila.sqlite
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false  # Set this in Render dashboard to your domain
+      - key: SHOP_SLUG
+        value: mineiro
+    disk:
+      name: eutonafila-data
+      mountPath: /var/data
+      sizeGB: 1
+

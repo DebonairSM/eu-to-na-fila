@@ -154,6 +154,27 @@
             max-width: 600px;
             margin: 0 auto;
             transition: all 0.5s ease;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0 var(--spacing-md);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 var(--spacing-sm);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 12px;
+            }
+        }
+        
+        @media (max-width: 375px) {
+            .container {
+                padding: 0 10px;
+            }
         }
 
         body.kiosk-mode .container {
@@ -322,6 +343,9 @@
             border-radius: var(--radius-lg);
             padding: var(--spacing-lg);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         body.kiosk-mode .queue-section {
@@ -380,6 +404,8 @@
             display: flex;
             flex-direction: column;
             gap: var(--spacing-md);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .queue-item {
@@ -394,6 +420,9 @@
             transition: all var(--transition-normal) var(--easing-standard);
             cursor: default;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
         }
 
         .queue-item:hover {
@@ -424,12 +453,46 @@
             line-height: 1;
             flex-shrink: 0;
             box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0;
+        }
+        
+        .position-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+        }
+        
+        .position-badge:active {
+            transform: scale(0.98);
+        }
+        
+        .position-badge .material-symbols-outlined {
+            font-size: 1.5rem;
+            font-weight: 300;
         }
         
         .queue-item.serving .position-badge {
             background: var(--md-sys-color-success);
             color: #000000;
             box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+        }
+        
+        .queue-item.serving .position-badge:hover {
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+        
+        .queue-item:not(.serving) .position-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .queue-item:not(.serving) .position-badge:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--md-sys-color-error);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
         }
 
         .customer-info {
@@ -474,6 +537,117 @@
             display: flex;
             gap: var(--spacing-md);
             align-items: center;
+            flex-shrink: 0;
+        }
+        
+        /* Mobile responsiveness for management queue */
+        @media (max-width: 768px) {
+            .queue-section {
+                padding: var(--spacing-md);
+                border-width: 2px;
+            }
+            
+            .section-header {
+                font-size: 1.25rem;
+                margin-bottom: var(--spacing-md);
+            }
+            
+            .queue-header {
+                flex-wrap: wrap;
+                margin-bottom: var(--spacing-md);
+            }
+            
+            .queue-list {
+                gap: var(--spacing-sm);
+            }
+            
+            .queue-item {
+                padding: 12px 16px;
+                gap: 12px;
+                border-left-width: 3px;
+            }
+            
+            .position-badge {
+                width: 44px;
+                height: 44px;
+            }
+            
+            .position-badge .material-symbols-outlined {
+                font-size: 1.25rem;
+            }
+            
+            .customer-info {
+                min-width: 0;
+                flex: 1;
+            }
+            
+            .customer-name {
+                font-size: 0.9375rem;
+                line-height: 1.4;
+                word-break: break-word;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .barber-assignment {
+                font-size: 0.8125rem;
+            }
+            
+            .barber-avatars {
+                display: none; /* Hide on mobile to save space */
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .queue-section {
+                padding: var(--spacing-sm);
+            }
+            
+            .section-header {
+                font-size: 1.125rem;
+            }
+            
+            .queue-item {
+                padding: 10px 12px;
+                gap: 10px;
+            }
+            
+            .position-badge {
+                width: 36px;
+                height: 36px;
+            }
+            
+            .position-badge .material-symbols-outlined {
+                font-size: 1rem;
+            }
+            
+            .customer-name {
+                font-size: 0.875rem;
+            }
+        }
+        
+        @media (max-width: 375px) {
+            .queue-section {
+                padding: 10px;
+            }
+            
+            .queue-item {
+                padding: 8px 10px;
+                gap: 8px;
+            }
+            
+            .position-badge {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .position-badge .material-symbols-outlined {
+                font-size: 0.875rem;
+            }
+            
+            .customer-name {
+                font-size: 0.8125rem;
+            }
         }
         
         /* Barber avatars on cards */
@@ -587,6 +761,16 @@
             background: transparent;
             color: var(--md-sys-color-error);
             border-color: var(--md-sys-color-error);
+            min-width: 36px;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 8px;
+        }
+        
+        .action-btn.danger.finalizar-btn {
+            color: var(--md-sys-color-success);
+            border-color: var(--md-sys-color-success);
         }
 
         .action-btn.danger:hover {
@@ -594,9 +778,18 @@
             color: #FFFFFF;
             transform: translateX(2px);
         }
+        
+        .action-btn.danger.finalizar-btn:hover {
+            background: var(--md-sys-color-success);
+            color: #FFFFFF;
+        }
 
         .action-btn.danger:active {
             transform: translateX(0) scale(0.98);
+        }
+        
+        .action-btn.danger .material-symbols-outlined {
+            font-size: 20px;
         }
 
         /* ============ KIOSK MODE STYLES ============ */
@@ -904,6 +1097,106 @@
                 font-size: 1.5rem;
             }
         }
+        
+        /* Mobile responsiveness for cellphones */
+        @media (max-width: 768px) {
+            .kiosk-queue-view {
+                padding: 20px 16px 80px 16px !important;
+            }
+            
+            .kiosk-header {
+                margin-bottom: 24px;
+                padding-bottom: 16px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 16px 20px;
+                gap: 12px;
+                border-radius: 12px;
+            }
+            
+            .kiosk-position {
+                width: 44px;
+                height: 44px;
+                font-size: 1.25rem;
+                flex-shrink: 0;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 1rem;
+                line-height: 1.3;
+            }
+            
+            .kiosk-queue-item-actions {
+                flex-shrink: 0;
+            }
+            
+            .kiosk-queue-list {
+                gap: 12px;
+                max-width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .kiosk-queue-view {
+                padding: 16px 12px 60px 12px !important;
+            }
+            
+            .kiosk-header {
+                margin-bottom: 20px;
+                padding-bottom: 12px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 12px 16px;
+                gap: 10px;
+                border-radius: 10px;
+            }
+            
+            .kiosk-position {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 0.875rem;
+            }
+            
+            .kiosk-queue-list {
+                gap: 8px;
+            }
+        }
+        
+        @media (max-width: 375px) {
+            .kiosk-queue-view {
+                padding: 12px 10px 50px 10px !important;
+            }
+            
+            .kiosk-header {
+                margin-bottom: 16px;
+                padding-bottom: 10px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+            
+            .kiosk-position {
+                width: 32px;
+                height: 32px;
+                font-size: 0.875rem;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 0.8125rem;
+            }
+            
+            .kiosk-queue-list {
+                gap: 6px;
+            }
+        }
 
         .kiosk-queue-item:hover {
             transform: translateX(4px) translateY(-1px);
@@ -987,6 +1280,96 @@
         .kiosk-remove-btn .material-symbols-outlined {
             font-size: 20px;
             font-weight: 300;
+        }
+        
+        /* Finalizar button - same size as remove button */
+        .kiosk-finalizar-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: transparent;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: rgba(16, 185, 129, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+        }
+        
+        .kiosk-finalizar-btn:hover {
+            border-color: rgba(16, 185, 129, 0.6);
+            color: rgba(16, 185, 129, 1);
+            background: rgba(16, 185, 129, 0.12);
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+        }
+        
+        .kiosk-finalizar-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .kiosk-finalizar-btn .material-symbols-outlined {
+            font-size: 20px;
+            font-weight: 300;
+        }
+        
+        /* Adaptive finalizar button sizing - EXACT match to remove button */
+        @media (min-width: 1920px) {
+            .kiosk-finalizar-btn {
+                width: 36px;
+                height: 36px;
+                border-radius: 0;
+            }
+            
+            .kiosk-finalizar-btn .material-symbols-outlined {
+                font-size: 20px;
+            }
+        }
+        
+        @media (min-width: 1600px) and (max-width: 1919px) {
+            .kiosk-finalizar-btn {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .kiosk-finalizar-btn .material-symbols-outlined {
+                font-size: 18px;
+            }
+        }
+        
+        @media (min-width: 1400px) and (max-width: 1599px) {
+            .kiosk-finalizar-btn {
+                width: 30px;
+                height: 30px;
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .kiosk-finalizar-btn {
+                width: 28px;
+                height: 28px;
+                top: 6px;
+                right: 6px;
+            }
+            
+            .kiosk-finalizar-btn .material-symbols-outlined {
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .kiosk-finalizar-btn {
+                width: 26px;
+                height: 26px;
+                top: 5px;
+                right: 5px;
+            }
+            
+            .kiosk-finalizar-btn .material-symbols-outlined {
+                font-size: 14px;
+            }
         }
         
         /* Back to Queue Button (during ads) */
@@ -1838,6 +2221,7 @@
             align-items: center;
             justify-content: center;
             padding: 80px;
+            cursor: pointer;
             text-align: center;
         }
 
@@ -2865,7 +3249,7 @@
         let selectedBarberId = null;
         let isKioskMode = false;
         let kioskViewIndex = 0;
-        const kioskViews = ['kioskQueueView', 'ad1', 'ad2', 'ad3'];
+        const kioskViews = ['ad1', 'kioskQueueView', 'ad2', 'kioskQueueView'];
         const QUEUE_DURATION = 15000;
         const AD_DURATION = 10000;
         let kioskInterval;
@@ -3061,12 +3445,12 @@
                     const assignedBarber = customer.barberId ? barbers.find(b => b.id === customer.barberId) : null;
                     item.className = `queue-item ${customer.status === 'serving' ? 'serving' : ''}`;
                     
-                    // Position number: serving shows checkmark, waiting shows queue position
-                    let positionNumber;
+                    // Position icon: serving shows check, waiting shows X
+                    let positionIcon;
                     if (customer.status === 'serving') {
-                        positionNumber = '✓';
+                        positionIcon = '<span class="material-symbols-outlined" style="font-size: 1.5rem;">check</span>';
                     } else {
-                        positionNumber = waitingPosition;
+                        positionIcon = '<span class="material-symbols-outlined" style="font-size: 1.5rem;">close</span>';
                         waitingPosition++;
                     }
                     
@@ -3087,28 +3471,14 @@
                     }).join('');
                     
                     item.innerHTML = `
-                        <div class="position-badge">${positionNumber}</div>
+                        <button class="position-badge" onclick="event.stopPropagation(); ${customer.status === 'serving' ? `completeService(${customer.id})` : `removeCustomer(${customer.id})`};" title="${customer.status === 'serving' ? 'Finalizar atendimento' : 'Remover da fila'}">
+                            ${positionIcon}
+                        </button>
                         <div class="customer-info">
                             <div class="customer-name">${customer.name}</div>
-                            ${assignedBarber ? `<div style="font-size: 13px; color: var(--md-sys-color-primary); font-weight: 500; display: flex; align-items: center; gap: 4px;">
-                                <span class="material-symbols-outlined" style="font-size: 14px;">content_cut</span>
-                                <span>${assignedBarber.name}</span>
-                            </div>` : ''}
                         </div>
                         <div class="barber-avatars">
                             ${barberAvatars}
-                        </div>
-                        <div class="queue-actions" onclick="event.stopPropagation()">
-                            ${customer.status === 'serving' ? `
-                                <button class="action-btn primary" onclick="completeService(${customer.id})">
-                                    <span class="material-symbols-outlined" style="font-size: 18px;">check</span>
-                                    <span>Finalizar</span>
-                                </button>
-                            ` : `
-                                <button class="action-btn danger" onclick="removeCustomer(${customer.id})">
-                                    <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
-                                </button>
-                            `}
                         </div>
                     `;
 
@@ -3238,6 +3608,15 @@
                        </span>`
                     : '';
 
+                // Show finalizar button for serving customers, remove button for others
+                const actionButton = item.status === 'serving'
+                    ? `<button class="kiosk-finalizar-btn" onclick="event.stopPropagation(); completeService(${item.id});" title="Finalizar atendimento">
+                            <span class="material-symbols-outlined">check</span>
+                        </button>`
+                    : `<button class="kiosk-remove-btn" onclick="event.stopPropagation(); removeCustomer(${item.id});" title="Remover da fila">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>`;
+                
                 queueItem.innerHTML = `
                     <div class="kiosk-position">${positionNumber}</div>
                     <div class="kiosk-queue-item-content">
@@ -3246,9 +3625,7 @@
                         </div>
                     </div>
                     <div class="kiosk-queue-item-actions">
-                        <button class="kiosk-remove-btn" onclick="event.stopPropagation(); removeCustomer(${item.id});" title="Remover da fila">
-                            <span class="material-symbols-outlined">close</span>
-                    </button>
+                        ${actionButton}
                     </div>
                 `;
 
@@ -3264,7 +3641,7 @@
             // Clear any existing intervals
             stopKioskRotation();
             
-            // Start with queue view (index 0)
+            // Start with first ad (index 0)
             switchKioskView(0);
         }
 
@@ -3483,12 +3860,15 @@
         function handleTouchToQueue() {
             if (!isKioskMode) return;
             
-            // If currently showing an ad, go to queue
-            if (kioskViewIndex > 0) {
-            // Calculate remaining time for current ad
+            // Check if currently showing an ad (not queue view)
+            const currentViewId = kioskViews[kioskViewIndex];
+            const isAdView = currentViewId !== 'kioskQueueView';
+            
+            if (isAdView) {
+                // Calculate remaining time for current ad
                 if (adStartTime > 0) {
-                const elapsed = Date.now() - adStartTime;
-                adRemainingTime = Math.max(0, AD_DURATION - elapsed);
+                    const elapsed = Date.now() - adStartTime;
+                    adRemainingTime = Math.max(0, AD_DURATION - elapsed);
                     previousAdIndex = kioskViewIndex;
                 }
                 
@@ -3496,11 +3876,13 @@
                 if (kioskInterval) {
                     clearTimeout(kioskInterval);
                     kioskInterval = null;
-            }
+                }
             
-            // Switch to queue view
+                // Switch to queue view (find next queue view in rotation)
+                // With pattern ['ad1', 'kioskQueueView', 'ad2', 'kioskQueueView']
+                // Queue is at indices 1 and 3, so go to index 1
                 isManualQueueView = true;
-            switchKioskView(0);
+                switchKioskView(1);
                 
                 // Start idle timer
                 resetIdleTimer();
@@ -3553,14 +3935,9 @@
                 startProgressBar(adRemainingTime);
                 adRemainingTime = 0; // Reset
             } else {
-                // Normal rotation - go to next ad
+                // Normal rotation - go to next view
                 const nextIndex = (kioskViewIndex + 1) % kioskViews.length;
-                if (nextIndex === 0) {
-                    // Skip queue if it's next, go to first ad
-                    switchKioskView(1);
-                } else {
                 switchKioskView(nextIndex);
-                }
             }
         }
 
@@ -3907,10 +4284,13 @@
                                      target.closest('.kiosk-queue-item');
                 
                 if (!isInteractive) {
-                    if (kioskViewIndex > 0) {
+                    const currentViewId = kioskViews[kioskViewIndex];
+                    const isAdView = currentViewId !== 'kioskQueueView';
+                    
+                    if (isAdView) {
                         // Touching ad - go to queue
                         handleTouchToQueue();
-                    } else if (kioskViewIndex === 0 && isManualQueueView) {
+                    } else if (isManualQueueView) {
                         // Touching queue view - reset idle timer
                         resetIdleTimer();
                     }
@@ -3933,10 +4313,13 @@
                                      target.closest('.kiosk-queue-item');
                 
                 if (!isInteractive) {
-                    if (kioskViewIndex > 0) {
+                    const currentViewId = kioskViews[kioskViewIndex];
+                    const isAdView = currentViewId !== 'kioskQueueView';
+                    
+                    if (isAdView) {
                         // Clicking on ad - go to queue
                         handleTouchToQueue();
-                    } else if (kioskViewIndex === 0 && isManualQueueView) {
+                    } else if (isManualQueueView) {
                         // Clicking on queue view - reset idle timer
                         resetIdleTimer();
                     }
