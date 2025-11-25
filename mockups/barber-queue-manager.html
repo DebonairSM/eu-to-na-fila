@@ -630,11 +630,72 @@
             }
             
             .barber-avatars {
-                display: none; /* Hide on mobile to save space */
+                display: flex; /* Show on tablet but limit */
+                gap: 8px;
+            }
+            
+            .barber-avatar {
+                width: 2rem; /* 32px on tablet */
+                height: 2rem;
+            }
+            
+            .barber-dropdown-btn {
+                width: 2rem;
+                height: 2rem;
+            }
+            
+            .barber-dropdown-menu {
+                min-width: 180px;
+                max-width: 250px;
+            }
+            
+            .barber-dropdown-item {
+                padding: 8px;
             }
         }
         
+        @media (max-width: 768px) {
+            .barber-presence-list {
+                grid-template-columns: repeat(3, 1fr);
+                gap: var(--spacing-sm);
+            }
+            
+            .barber-presence-item {
+                min-width: 0;
+                padding: var(--spacing-sm);
+            }
+            
+            .barber-presence-avatar {
+                width: 48px;
+                height: 48px;
+            }
+            
+        }
+        
         @media (max-width: 480px) {
+            .barber-presence-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: var(--spacing-xs);
+            }
+            
+            .barber-presence-item {
+                padding: var(--spacing-xs);
+            }
+            
+            .barber-presence-avatar {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .barber-presence-name {
+                font-size: 0.75rem;
+            }
+            
+            .barber-presence-status {
+                font-size: 0.65rem;
+                padding: 2px 6px;
+            }
+            
             .header {
                 padding: var(--spacing-sm);
                 margin-bottom: var(--spacing-sm);
@@ -697,6 +758,50 @@
                 gap: 10px;
             }
             
+            .barber-avatars {
+                display: flex; /* Show on mobile but smaller */
+                gap: 6px;
+            }
+            
+            .barber-avatar {
+                width: 1.75rem; /* 28px on mobile */
+                height: 1.75rem;
+                border-width: 1.5px;
+            }
+            
+            .barber-dropdown-btn {
+                width: 1.75rem;
+                height: 1.75rem;
+            }
+            
+            .barber-dropdown-btn .material-symbols-outlined {
+                font-size: 1rem;
+            }
+            
+            .barber-dropdown-menu {
+                min-width: 160px;
+                max-width: 200px;
+                top: calc(100% + 6px);
+            }
+            
+            .barber-dropdown-item {
+                padding: 6px;
+                gap: 8px;
+            }
+            
+            .barber-dropdown-item .barber-avatar-face {
+                width: 1.5rem;
+                height: 1.5rem;
+            }
+            
+            .barber-dropdown-item-name {
+                font-size: 0.8rem;
+            }
+            
+            .barber-dropdown-item-status {
+                font-size: 0.65rem;
+            }
+            
             .position-badge {
                 width: 36px;
                 height: 36px;
@@ -741,14 +846,15 @@
             gap: var(--spacing-sm);
             align-items: center;
             flex-shrink: 0;
+            position: relative;
         }
         
         .barber-avatar {
-            width: 3.25rem; /* 52px */
-            height: 3.25rem; /* 52px */
+            width: 2.5rem; /* 40px */
+            height: 2.5rem; /* 40px */
             border-radius: var(--radius-md);
             background: rgba(212, 175, 55, 0.1);
-            border: 3px solid rgba(212, 175, 55, 0.4);
+            border: 2px solid rgba(212, 175, 55, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -757,7 +863,99 @@
             position: relative;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
             overflow: hidden;
+            flex-shrink: 0;
         }
+        
+        .barber-dropdown-btn {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: var(--radius-md);
+            background: rgba(212, 175, 55, 0.15);
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-normal) var(--easing-standard);
+            color: var(--md-sys-color-primary);
+            flex-shrink: 0;
+        }
+        
+        .barber-dropdown-btn:hover {
+            background: rgba(212, 175, 55, 0.25);
+            border-color: var(--md-sys-color-primary);
+            transform: scale(1.05);
+        }
+        
+        .barber-dropdown-btn .material-symbols-outlined {
+            font-size: 1.25rem;
+        }
+        
+        .barber-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: rgba(20, 20, 20, 0.98);
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-sm);
+            min-width: 200px;
+            max-width: 300px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+            backdrop-filter: blur(20px);
+        }
+        
+        .barber-dropdown-menu.show {
+            display: flex;
+        }
+        
+        .barber-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-normal) var(--easing-standard);
+            border: 1px solid transparent;
+        }
+        
+        .barber-dropdown-item:hover {
+            background: rgba(212, 175, 55, 0.1);
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+        
+        .barber-dropdown-item.assigned {
+            background: rgba(212, 175, 55, 0.15);
+            border-color: var(--md-sys-color-primary);
+        }
+        
+        .barber-dropdown-item.absent {
+            opacity: 0.5;
+        }
+        
+        .barber-dropdown-item .barber-avatar-face {
+            width: 2rem;
+            height: 2rem;
+            border-radius: var(--radius-sm);
+            object-fit: cover;
+        }
+        
+        .barber-dropdown-item-name {
+            flex: 1;
+            font-size: var(--font-size-body-small);
+            color: #FFFFFF;
+        }
+        
+        .barber-dropdown-item-status {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
         
         .barber-avatar:hover {
             transform: scale(1.05);
@@ -1480,6 +1678,8 @@
             text-align: center;
             box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4);
             animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
+            position: relative;
         }
         
         @keyframes slideUp {
@@ -1584,6 +1784,90 @@
         
         .remove-confirm-btn .material-symbols-outlined {
             font-size: 20px;
+        }
+        
+        /* Mobile responsive for remove confirmation modal */
+        @media (max-width: 768px) {
+            .remove-confirm-content {
+                padding: var(--spacing-xl);
+                max-width: 95%;
+                margin: var(--spacing-md);
+            }
+            
+            .remove-confirm-icon {
+                width: 70px;
+                height: 70px;
+                margin-bottom: 20px;
+            }
+            
+            .remove-confirm-icon .material-symbols-outlined {
+                font-size: 40px;
+            }
+            
+            .remove-confirm-title {
+                font-size: 1.75rem;
+            }
+            
+            .remove-confirm-message {
+                font-size: var(--font-size-body);
+                margin-bottom: var(--spacing-lg);
+            }
+            
+            .remove-confirm-buttons {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .remove-confirm-btn {
+                width: 100%;
+                min-width: auto;
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .remove-confirm-content {
+                padding: var(--spacing-lg);
+                max-width: 95%;
+                margin: var(--spacing-sm);
+            }
+            
+            .remove-confirm-icon {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 16px;
+            }
+            
+            .remove-confirm-icon .material-symbols-outlined {
+                font-size: 36px;
+            }
+            
+            .remove-confirm-title {
+                font-size: 1.5rem;
+                margin-bottom: var(--spacing-sm);
+            }
+            
+            .remove-confirm-message {
+                font-size: 0.9rem;
+                margin-bottom: var(--spacing-md);
+                line-height: 1.5;
+            }
+            
+            .remove-confirm-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .remove-confirm-btn {
+                width: 100%;
+                min-width: auto;
+                padding: var(--spacing-sm) var(--spacing-md);
+                font-size: 0.9rem;
+            }
+            
+            .remove-confirm-btn .material-symbols-outlined {
+                font-size: 18px;
+            }
         }
         
         /* Responsive remove button */
@@ -2412,9 +2696,9 @@
         }
 
         .barber-presence-list {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: var(--spacing-md);
-            flex-wrap: wrap;
         }
 
         .barber-presence-item {
@@ -3308,7 +3592,10 @@
         const barbers = [
             { id: 1, name: 'João', avatar: 'https://i.pravatar.cc/150?img=12', isPresent: true },
             { id: 2, name: 'Pedro', avatar: 'https://i.pravatar.cc/150?img=33', isPresent: true },
-            { id: 3, name: 'Carlos', avatar: 'https://i.pravatar.cc/150?img=47', isPresent: true }
+            { id: 3, name: 'Carlos', avatar: 'https://i.pravatar.cc/150?img=47', isPresent: true },
+            { id: 4, name: 'Miguel', avatar: 'https://i.pravatar.cc/150?img=68', isPresent: true },
+            { id: 5, name: 'Rafael', avatar: 'https://i.pravatar.cc/150?img=51', isPresent: true },
+            { id: 6, name: 'Lucas', avatar: 'https://i.pravatar.cc/150?img=27', isPresent: true }
         ];
 
         // Queue data with hard-seeded barber assignments
@@ -3451,9 +3738,23 @@
         function toggleBarberPresence(barberId) {
             const barber = barbers.find(b => b.id === barberId);
             if (barber) {
+                const wasPresent = barber.isPresent;
                 barber.isPresent = !barber.isPresent;
+                
+                // If barber is now absent, unassign all customers assigned to them
+                if (!barber.isPresent && wasPresent) {
+                    queueData.forEach(customer => {
+                        if (customer.barberId === barberId) {
+                            customer.barberId = null;
+                            // If customer was serving, change back to waiting
+                            if (customer.status === 'serving') {
+                                customer.status = 'waiting';
+                            }
+                        }
+                    });
+                }
+                
                 renderBarberPresence();
-                // Optionally trigger a re-render of queue if barber presence affects it
                 renderAll();
             }
         }
@@ -3535,18 +3836,28 @@
                         waitingPosition++;
                     }
                     
-                    // Create barber avatars with face images - only show present barbers
-                    const barberAvatars = barbers
-                        .filter(barber => barber.isPresent || (assignedBarber && assignedBarber.id === barber.id))
-                        .map(barber => {
+                    // Show only assigned barber on card (if one is assigned)
+                    let barberAvatars = '';
+                    if (assignedBarber) {
+                        barberAvatars = `
+                            <div class="barber-avatar assigned" 
+                                 onclick="event.stopPropagation(); unassignBarber(${customer.id});"
+                                 title="Clique para desatribuir ${assignedBarber.name}">
+                                <img src="${assignedBarber.avatar}" alt="${assignedBarber.name}" class="barber-avatar-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(assignedBarber.name)}&background=D4AF37&color=000&size=128';" />
+                            </div>
+                        `;
+                    }
+                    
+                    // Create dropdown menu with all barbers
+                    const allBarbersDropdown = barbers.map(barber => {
                         const isAssigned = assignedBarber && assignedBarber.id === barber.id;
-                        // Allow clicking: assign if waiting, unassign/change if serving
-                        const canInteract = true; // Always allow interaction
+                        const isPresent = barber.isPresent;
                         return `
-                            <div class="barber-avatar ${isAssigned ? 'assigned' : ''}" 
-                                 onclick="event.stopPropagation(); ${canInteract ? (isAssigned ? `unassignBarber(${customer.id})` : `assignBarberAndStart(${customer.id}, ${barber.id})`) : ''};"
-                                 title="${isAssigned ? `Clique para desatribuir ${barber.name}` : `Atender com ${barber.name}`}">
+                            <div class="barber-dropdown-item ${isAssigned ? 'assigned' : ''} ${!isPresent ? 'absent' : ''}" 
+                                 onclick="event.stopPropagation(); ${isPresent ? (isAssigned ? `unassignBarber(${customer.id})` : `assignBarberAndStart(${customer.id}, ${barber.id})`) : ''}; toggleBarberDropdown(${customer.id});">
                                 <img src="${barber.avatar}" alt="${barber.name}" class="barber-avatar-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
+                                <span class="barber-dropdown-item-name">${barber.name}</span>
+                                <span class="barber-dropdown-item-status">${isPresent ? 'Presente' : 'Ausente'}</span>
                             </div>
                         `;
                     }).join('');
@@ -3560,6 +3871,12 @@
                         </div>
                         <div class="barber-avatars">
                             ${barberAvatars}
+                            <button class="barber-dropdown-btn" onclick="event.stopPropagation(); toggleBarberDropdown(${customer.id});" title="Ver todos os barbeiros">
+                                <span class="material-symbols-outlined">expand_more</span>
+                            </button>
+                            <div class="barber-dropdown-menu" id="barberDropdown${customer.id}">
+                                ${allBarbersDropdown}
+                            </div>
                         </div>
                     `;
 
@@ -3593,6 +3910,30 @@
             customer.status = 'waiting';
             renderAll();
         }
+        
+        // Toggle barber dropdown menu
+        function toggleBarberDropdown(customerId) {
+            // Close all other dropdowns first
+            document.querySelectorAll('.barber-dropdown-menu').forEach(menu => {
+                if (menu.id !== `barberDropdown${customerId}`) {
+                    menu.classList.remove('show');
+                }
+            });
+            
+            const dropdown = document.getElementById(`barberDropdown${customerId}`);
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+        }
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.barber-avatars')) {
+                document.querySelectorAll('.barber-dropdown-menu').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
 
         // Store previous queue data for change detection
         let previousQueueData = JSON.stringify(queueData);
@@ -3907,11 +4248,18 @@
         }
 
         function removeCustomer(customerId) {
-            // Remove customer directly without confirmation
+            // Find customer to get their name
+            const customer = queueData.find(c => c.id === customerId);
+            if (!customer) return;
+            
+            // Show confirmation modal
+            showRemoveConfirmModal(customer.name, () => {
+                // This callback runs when user confirms
                 queueData = queueData.filter(c => c.id !== customerId);
                 // Reset previous queue data to force re-render
                 previousQueueData = '';
                 renderAll();
+            });
         }
         
         function showRemoveConfirmModal(customerName, onConfirm) {
@@ -3925,6 +4273,24 @@
                 // Store confirm callback
                 modal.dataset.confirmCallback = 'true';
                 window.removeConfirmCallback = onConfirm;
+                
+                // Close on background click
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        closeRemoveConfirmModal(false);
+                    }
+                };
+                
+                // Close on Escape key
+                const escapeHandler = function(e) {
+                    if (e.key === 'Escape') {
+                        closeRemoveConfirmModal(false);
+                        document.removeEventListener('keydown', escapeHandler);
+                    }
+                };
+                document.addEventListener('keydown', escapeHandler);
+                // Store handler for cleanup
+                modal._escapeHandler = escapeHandler;
             }
         }
         
@@ -3932,6 +4298,12 @@
             const modal = document.getElementById('removeConfirmModal');
             if (modal) {
                 modal.style.display = 'none';
+                modal.onclick = null; // Remove background click handler
+                // Remove escape handler if it exists
+                if (modal._escapeHandler) {
+                    document.removeEventListener('keydown', modal._escapeHandler);
+                    modal._escapeHandler = null;
+                }
                 if (confirmed && window.removeConfirmCallback) {
                     window.removeConfirmCallback();
                     window.removeConfirmCallback = null;
