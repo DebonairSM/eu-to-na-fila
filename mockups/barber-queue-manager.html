@@ -3849,7 +3849,6 @@
                         }
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('Card clicked, showing barber selection for customer:', customer.id);
                         showBarberSelection(customer.id);
                     });
 
@@ -4358,12 +4357,9 @@
         // Show barber selection overlay for customer
         let barberSelectionTimer = null;
         function showBarberSelection(customerId) {
-            console.log('showBarberSelection called with customerId:', customerId);
             const customer = queueData.find(c => c.id === customerId);
-            console.log('Found customer:', customer);
             // Allow showing overlay for waiting customers or serving customers (to unselect/change)
             if (!customer || (customer.status !== 'waiting' && customer.status !== 'serving')) {
-                console.log('Customer not found or invalid status:', customer ? customer.status : 'not found');
                 return;
             }
             
@@ -4371,10 +4367,7 @@
             const customerNameEl = document.getElementById('barberSelectionCustomerName');
             const selectionList = document.getElementById('barberSelectionList');
             
-            console.log('Overlay elements:', { overlay, customerNameEl, selectionList });
-            
             if (!overlay || !customerNameEl || !selectionList) {
-                console.error('Barber selection overlay elements not found');
                 return;
             }
             
@@ -4393,7 +4386,6 @@
             
             // Clear and populate barber list (show ALL barbers)
             selectionList.innerHTML = '';
-            console.log('Populating barber list, total barbers:', barbers.length);
             
             barbers.forEach((barber, index) => {
                 const isCurrentBarber = currentBarber && barber.id === currentBarber.id;
@@ -4420,16 +4412,9 @@
                 `;
                 
                 selectionList.appendChild(item);
-                console.log(`Added barber ${index + 1}:`, barber.name, 'present:', isPresent);
             });
             
-            console.log('Barber list populated, items count:', selectionList.children.length);
-            console.log('Selection list HTML length:', selectionList.innerHTML.length);
-            
             // Show overlay
-            console.log('Showing overlay');
-            console.log('Overlay before:', overlay.style.display, overlay.classList.toString());
-            
             overlay.classList.add('show');
             
             // Set all styles directly
@@ -4448,17 +4433,6 @@
             
             // Force a reflow
             void overlay.offsetHeight;
-            
-            console.log('Overlay after:', overlay.style.display, overlay.classList.toString());
-            const computed = window.getComputedStyle(overlay);
-            console.log('Overlay computed style:', computed.display, computed.zIndex, computed.position, computed.visibility, computed.opacity);
-            console.log('Overlay parent:', overlay.parentElement);
-            console.log('Overlay offset:', overlay.offsetTop, overlay.offsetLeft, overlay.offsetWidth, overlay.offsetHeight);
-            const content = overlay.querySelector('.barber-selection-content');
-            if (content) {
-                const contentComputed = window.getComputedStyle(content);
-                console.log('Content computed style:', contentComputed.display, contentComputed.width, contentComputed.height);
-            }
             
             // Auto-hide after 5 seconds
             if (barberSelectionTimer) {
@@ -4591,14 +4565,11 @@
         function generateQRCode() {
             const qrContainer = document.getElementById('kioskQRCode');
             if (!qrContainer) {
-                console.log('QR container not found');
                 return;
             }
             
             // Use the actual queue-join page URL
             const joinUrl = 'https://eutonafila-hiyh.onrender.com/queue-join.html';
-            
-            console.log('Generating QR code for:', joinUrl);
             
             // Clear any existing content
             qrContainer.innerHTML = '';
@@ -4610,12 +4581,7 @@
             qrImage.alt = 'QR Code - Escaneie para entrar na fila';
             qrImage.style.cssText = 'width: 100%; height: auto; display: block; border-radius: 4px;';
             
-            qrImage.onload = function() {
-                console.log('QR code loaded successfully');
-            };
-            
             qrImage.onerror = function() {
-                console.error('Failed to load QR code image');
                 qrContainer.innerHTML = '<div style="color: #f00; text-align: center; padding: 10px; font-size: 9px;">QR Error</div>';
             };
             
@@ -4821,7 +4787,6 @@
                     }
                     const customerId = parseInt(queueItem.getAttribute('data-customer-id'));
                     if (customerId && !isNaN(customerId)) {
-                        console.log('Queue item clicked via delegation, customer:', customerId);
                         e.preventDefault();
                         e.stopPropagation();
                         showBarberSelection(customerId);
