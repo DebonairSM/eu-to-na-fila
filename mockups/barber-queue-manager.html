@@ -14,8 +14,7 @@
     <!-- Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     
-    <!-- QR Code Library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <!-- QR Code will be generated using API service -->
     
     <style>
         * {
@@ -3299,10 +3298,12 @@
                 renderKioskQueue();
                 renderKioskBarberSelector();
                 
-                // Generate QR code
+                // Generate QR code immediately when entering kiosk mode
                 setTimeout(() => {
-                    generateQRCode();
-                }, 100);
+                    if (typeof generateQRCode === 'function') {
+                        generateQRCode();
+                    }
+                }, 300);
                 
                 // Show barber selector initially (queue view is first)
                 const barberSelector = document.querySelector('.kiosk-barber-selector');
@@ -3661,10 +3662,12 @@
                 viewElement.classList.add('active');
                 
                 // Regenerate QR code when switching back to queue view
-                if (viewId === 'kioskQueueView' && typeof QRCode !== 'undefined') {
+                if (viewId === 'kioskQueueView') {
                     setTimeout(() => {
-                        generateQRCode();
-                    }, 100);
+                        if (typeof generateQRCode === 'function') {
+                            generateQRCode();
+                        }
+                    }, 200);
                 }
             }
 
@@ -4138,48 +4141,31 @@
                 return;
             }
             
-            // Check if QRCode library is loaded
-            if (typeof QRCode === 'undefined') {
-                console.log('QRCode library not loaded yet, retrying...');
-                qrContainer.innerHTML = '<div style="color: #666; text-align: center; padding: 10px; font-size: 10px;">Loading...</div>';
-                // Retry after a short delay
-                setTimeout(generateQRCode, 200);
-                return;
-            }
-            
             // Use the actual queue-join page URL
             const joinUrl = 'https://eutonafila-hiyh.onrender.com/queue-join.html';
             
             console.log('Generating QR code for:', joinUrl);
             
-            // Clear existing QR code
+            // Clear any existing content
             qrContainer.innerHTML = '';
             
-            // Create a canvas element for the QR code
-            const canvas = document.createElement('canvas');
-            qrContainer.appendChild(canvas);
+            // Use QR code API service directly
+            const encodedUrl = encodeURIComponent(joinUrl);
+            const qrImage = document.createElement('img');
+            qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodedUrl}`;
+            qrImage.alt = 'QR Code - Escaneie para entrar na fila';
+            qrImage.style.cssText = 'width: 100%; height: auto; display: block; border-radius: 4px;';
             
-            // Generate QR code - QRCode.toCanvas requires a canvas element
-            QRCode.toCanvas(canvas, joinUrl, {
-                width: 84,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                },
-                errorCorrectionLevel: 'M'
-            }, function (error) {
-                if (error) {
-                    console.error('Error generating QR code:', error);
-                    qrContainer.innerHTML = '<div style="color: #666; text-align: center; padding: 10px; font-size: 9px;">QR Error</div>';
-                } else {
-                    console.log('QR code generated successfully for:', joinUrl);
-                    // Ensure canvas is visible
-                    if (canvas) {
-                        canvas.style.display = 'block';
-                    }
-                }
-            });
+            qrImage.onload = function() {
+                console.log('QR code loaded successfully');
+            };
+            
+            qrImage.onerror = function() {
+                console.error('Failed to load QR code image');
+                qrContainer.innerHTML = '<div style="color: #f00; text-align: center; padding: 10px; font-size: 9px;">QR Error</div>';
+            };
+            
+            qrContainer.appendChild(qrImage);
         }
 
         // Open check-in modal
@@ -4328,14 +4314,10 @@
             previousQueueData = '';
             renderKioskQueue();
             renderKioskBarberSelector();
-            // Wait for QRCode library to load before generating
-            if (typeof QRCode !== 'undefined') {
+            // Generate QR code
+            setTimeout(() => {
                 generateQRCode();
-            } else {
-                window.addEventListener('load', function() {
-                    setTimeout(generateQRCode, 100);
-                });
-            }
+            }, 100);
         }
 
         // Escape key exits kiosk mode (only if modal is not open)
@@ -4370,6 +4352,21 @@
                 }
             }, 250);
         });
+        
+        // Generate QR code on page load
+        function initQRCode() {
+            // Only generate if kiosk mode is active or if container exists
+            const qrContainer = document.getElementById('kioskQRCode');
+            if (qrContainer) {
+                generateQRCode();
+            }
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initQRCode);
+        } else {
+            initQRCode();
+        }
     </script>
 </body>
 </html>
