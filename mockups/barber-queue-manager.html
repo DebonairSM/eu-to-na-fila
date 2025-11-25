@@ -655,45 +655,118 @@
         }
         
         @media (max-width: 768px) {
+            .barber-presence-section {
+                padding: var(--spacing-md);
+                margin-top: var(--spacing-lg);
+            }
+            
             .barber-presence-list {
                 grid-template-columns: repeat(3, 1fr);
                 gap: var(--spacing-sm);
+                width: 100%;
+                padding: 0;
+                box-sizing: border-box;
+                overflow: hidden;
             }
             
             .barber-presence-item {
                 min-width: 0;
                 padding: var(--spacing-sm);
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                overflow: hidden;
             }
             
             .barber-presence-avatar {
                 width: 48px;
                 height: 48px;
-            }
-            
-        }
-        
-        @media (max-width: 480px) {
-            .barber-presence-list {
-                grid-template-columns: repeat(2, 1fr);
-                gap: var(--spacing-xs);
-            }
-            
-            .barber-presence-item {
-                padding: var(--spacing-xs);
-            }
-            
-            .barber-presence-avatar {
-                width: 40px;
-                height: 40px;
+                flex-shrink: 0;
             }
             
             .barber-presence-name {
                 font-size: 0.75rem;
+                text-align: center;
+                width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                box-sizing: border-box;
             }
             
             .barber-presence-status {
                 font-size: 0.65rem;
                 padding: 2px 6px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .barber-presence-section {
+                padding: var(--spacing-sm);
+                margin-top: var(--spacing-md);
+            }
+            
+            .barber-presence-header {
+                margin-bottom: var(--spacing-md);
+            }
+            
+            .barber-presence-title {
+                font-size: 1rem;
+            }
+            
+            .barber-presence-subtitle {
+                font-size: 0.75rem;
+            }
+            
+            .barber-presence-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: var(--spacing-xs);
+                width: 100%;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            .barber-presence-item {
+                padding: var(--spacing-xs);
+                min-width: 0;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            
+            .barber-presence-avatar {
+                width: 40px;
+                height: 40px;
+                flex-shrink: 0;
+            }
+            
+            .barber-presence-name {
+                font-size: 0.7rem;
+                text-align: center;
+                width: 100%;
+                line-height: 1.2;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                box-sizing: border-box;
+            }
+            
+            .barber-presence-status {
+                font-size: 0.6rem;
+                padding: 2px 4px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+            
+            .barber-presence-section {
+                padding: var(--spacing-sm);
+                overflow: hidden;
             }
             
             .header {
@@ -2673,6 +2746,9 @@
             background: rgba(20, 20, 20, 0.9);
             border-radius: 16px;
             border: 1px solid rgba(212, 175, 55, 0.3);
+            box-sizing: border-box;
+            overflow: hidden;
+            width: 100%;
         }
 
         body.kiosk-mode .barber-presence-section {
@@ -2699,6 +2775,8 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: var(--spacing-md);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .barber-presence-item {
@@ -2712,8 +2790,11 @@
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-width: 100px;
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
             position: relative;
+            overflow: hidden;
         }
 
         .barber-presence-item:hover {
@@ -2756,6 +2837,11 @@
             font-weight: 500;
             color: #FFFFFF;
             text-align: center;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            box-sizing: border-box;
         }
 
         .barber-presence-status {
