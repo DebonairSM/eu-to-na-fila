@@ -419,7 +419,7 @@
             align-items: center;
             gap: var(--spacing-md);
             transition: all var(--transition-normal) var(--easing-standard);
-            cursor: default;
+            cursor: pointer;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
             width: 100%;
             box-sizing: border-box;
@@ -431,6 +431,10 @@
             background: rgba(30, 30, 30, 0.9);
             box-shadow: 0 6px 24px rgba(212, 175, 55, 0.3);
             transform: translateX(4px);
+        }
+        
+        .queue-item:active {
+            transform: translateX(2px) scale(0.98);
         }
 
         .queue-item.serving {
@@ -639,19 +643,6 @@
                 height: 2rem;
             }
             
-            .barber-dropdown-btn {
-                width: 2rem;
-                height: 2rem;
-            }
-            
-            .barber-dropdown-menu {
-                min-width: 180px;
-                max-width: 250px;
-            }
-            
-            .barber-dropdown-item {
-                padding: 8px;
-            }
         }
         
         @media (max-width: 768px) {
@@ -840,39 +831,6 @@
                 border-width: 1.5px;
             }
             
-            .barber-dropdown-btn {
-                width: 1.75rem;
-                height: 1.75rem;
-            }
-            
-            .barber-dropdown-btn .material-symbols-outlined {
-                font-size: 1rem;
-            }
-            
-            .barber-dropdown-menu {
-                min-width: 160px;
-                max-width: 200px;
-                top: calc(100% + 6px);
-            }
-            
-            .barber-dropdown-item {
-                padding: 6px;
-                gap: 8px;
-            }
-            
-            .barber-dropdown-item .barber-avatar-face {
-                width: 1.5rem;
-                height: 1.5rem;
-            }
-            
-            .barber-dropdown-item-name {
-                font-size: 0.8rem;
-            }
-            
-            .barber-dropdown-item-status {
-                font-size: 0.65rem;
-            }
-            
             .position-badge {
                 width: 36px;
                 height: 36px;
@@ -936,97 +894,6 @@
             overflow: hidden;
             flex-shrink: 0;
         }
-        
-        .barber-dropdown-btn {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: var(--radius-md);
-            background: rgba(212, 175, 55, 0.15);
-            border: 2px solid rgba(212, 175, 55, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all var(--transition-normal) var(--easing-standard);
-            color: var(--md-sys-color-primary);
-            flex-shrink: 0;
-        }
-        
-        .barber-dropdown-btn:hover {
-            background: rgba(212, 175, 55, 0.25);
-            border-color: var(--md-sys-color-primary);
-            transform: scale(1.05);
-        }
-        
-        .barber-dropdown-btn .material-symbols-outlined {
-            font-size: 1.25rem;
-        }
-        
-        .barber-dropdown-menu {
-            position: absolute;
-            top: calc(100% + 8px);
-            right: 0;
-            background: rgba(20, 20, 20, 0.98);
-            border: 2px solid rgba(212, 175, 55, 0.4);
-            border-radius: var(--radius-md);
-            padding: var(--spacing-sm);
-            min-width: 200px;
-            max-width: 300px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            gap: var(--spacing-xs);
-            backdrop-filter: blur(20px);
-        }
-        
-        .barber-dropdown-menu.show {
-            display: flex;
-        }
-        
-        .barber-dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-            padding: var(--spacing-sm);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            transition: all var(--transition-normal) var(--easing-standard);
-            border: 1px solid transparent;
-        }
-        
-        .barber-dropdown-item:hover {
-            background: rgba(212, 175, 55, 0.1);
-            border-color: rgba(212, 175, 55, 0.3);
-        }
-        
-        .barber-dropdown-item.assigned {
-            background: rgba(212, 175, 55, 0.15);
-            border-color: var(--md-sys-color-primary);
-        }
-        
-        .barber-dropdown-item.absent {
-            opacity: 0.5;
-        }
-        
-        .barber-dropdown-item .barber-avatar-face {
-            width: 2rem;
-            height: 2rem;
-            border-radius: var(--radius-sm);
-            object-fit: cover;
-        }
-        
-        .barber-dropdown-item-name {
-            flex: 1;
-            font-size: var(--font-size-body-small);
-            color: #FFFFFF;
-        }
-        
-        .barber-dropdown-item-status {
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
         
         .barber-avatar:hover {
             transform: scale(1.05);
@@ -2536,33 +2403,38 @@
 
         /* Barber Selection Overlay */
         .barber-selection-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0, 0, 0, 0.85) !important;
             backdrop-filter: blur(8px);
-            z-index: 20000;
+            z-index: 99999 !important;
             display: none;
             align-items: center;
             justify-content: center;
             animation: fadeIn 0.2s ease;
+            pointer-events: auto !important;
         }
 
         .barber-selection-overlay.show {
-            display: flex;
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
         .barber-selection-content {
-            background: rgba(20, 20, 20, 0.95);
-            border: 2px solid rgba(212, 175, 55, 0.3);
+            background: rgba(20, 20, 20, 0.95) !important;
+            border: 2px solid rgba(212, 175, 55, 0.3) !important;
             border-radius: 20px;
             padding: 32px;
             max-width: 600px;
             width: 90%;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(212, 175, 55, 0.1);
             animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative !important;
+            z-index: 100000 !important;
         }
 
         .barber-selection-header {
@@ -2586,24 +2458,28 @@
         }
 
         .barber-selection-list {
-            display: flex;
+            display: flex !important;
             gap: 16px;
             flex-wrap: wrap;
             justify-content: center;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
         .barber-selection-item {
-            display: flex;
+            display: flex !important;
             flex-direction: column;
             align-items: center;
             gap: 8px;
             padding: 16px;
-            background: rgba(20, 20, 20, 0.8);
+            background: rgba(20, 20, 20, 0.8) !important;
             border: 2px solid rgba(212, 175, 55, 0.2);
             border-radius: 16px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             min-width: 100px;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
         .barber-selection-item:hover {
@@ -2617,6 +2493,19 @@
             border-color: var(--color-primary);
             background: rgba(212, 175, 55, 0.15);
             box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+        }
+        
+        .barber-selection-item.absent {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
+        
+        .barber-selection-item.absent:hover {
+            transform: none;
+            border-color: rgba(212, 175, 55, 0.2);
+            background: rgba(20, 20, 20, 0.8);
+            box-shadow: none;
         }
 
         .barber-selection-item.current:hover {
@@ -2771,10 +2660,11 @@
 
         .barber-presence-list {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: var(--spacing-md);
             width: 100%;
             box-sizing: border-box;
+            overflow: hidden;
         }
 
         .barber-presence-item {
@@ -3568,7 +3458,7 @@
         </div>
 
         <!-- Barber Selection Overlay (appears when clicking customer) -->
-        <div class="barber-selection-overlay" id="barberSelectionOverlay">
+        <div class="barber-selection-overlay" id="barberSelectionOverlay" style="display: none;">
             <div class="barber-selection-content">
                 <div class="barber-selection-header">
                     <span class="barber-selection-title">Selecione o barbeiro</span>
@@ -3932,20 +3822,6 @@
                         `;
                     }
                     
-                    // Create dropdown menu with all barbers
-                    const allBarbersDropdown = barbers.map(barber => {
-                        const isAssigned = assignedBarber && assignedBarber.id === barber.id;
-                        const isPresent = barber.isPresent;
-                        return `
-                            <div class="barber-dropdown-item ${isAssigned ? 'assigned' : ''} ${!isPresent ? 'absent' : ''}" 
-                                 onclick="event.stopPropagation(); ${isPresent ? (isAssigned ? `unassignBarber(${customer.id})` : `assignBarberAndStart(${customer.id}, ${barber.id})`) : ''}; toggleBarberDropdown(${customer.id});">
-                                <img src="${barber.avatar}" alt="${barber.name}" class="barber-avatar-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
-                                <span class="barber-dropdown-item-name">${barber.name}</span>
-                                <span class="barber-dropdown-item-status">${isPresent ? 'Presente' : 'Ausente'}</span>
-                            </div>
-                        `;
-                    }).join('');
-                    
                     item.innerHTML = `
                         <button class="position-badge" onclick="event.stopPropagation(); ${customer.status === 'serving' ? `completeService(${customer.id})` : `removeCustomer(${customer.id})`};" title="${customer.status === 'serving' ? 'Finalizar atendimento' : 'Remover da fila'}">
                             ${positionIcon}
@@ -3955,14 +3831,27 @@
                         </div>
                         <div class="barber-avatars">
                             ${barberAvatars}
-                            <button class="barber-dropdown-btn" onclick="event.stopPropagation(); toggleBarberDropdown(${customer.id});" title="Ver todos os barbeiros">
-                                <span class="material-symbols-outlined">expand_more</span>
-                            </button>
-                            <div class="barber-dropdown-menu" id="barberDropdown${customer.id}">
-                                ${allBarbersDropdown}
-                            </div>
                         </div>
                     `;
+                    
+                    // Make the card clickable to show barber selection overlay (set after innerHTML)
+                    item.style.cursor = 'pointer';
+                    item.setAttribute('data-customer-id', customer.id);
+                    item.setAttribute('data-clickable', 'true');
+                    
+                    // Use addEventListener instead of onclick
+                    item.addEventListener('click', function(e) {
+                        // Don't trigger if clicking on position badge, barber avatar, or buttons
+                        if (e.target.closest('.position-badge') || 
+                            e.target.closest('.barber-avatar') ||
+                            e.target.closest('button')) {
+                            return;
+                        }
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Card clicked, showing barber selection for customer:', customer.id);
+                        showBarberSelection(customer.id);
+                    });
 
                     queueList.appendChild(item);
                 });
@@ -3995,29 +3884,6 @@
             renderAll();
         }
         
-        // Toggle barber dropdown menu
-        function toggleBarberDropdown(customerId) {
-            // Close all other dropdowns first
-            document.querySelectorAll('.barber-dropdown-menu').forEach(menu => {
-                if (menu.id !== `barberDropdown${customerId}`) {
-                    menu.classList.remove('show');
-                }
-            });
-            
-            const dropdown = document.getElementById(`barberDropdown${customerId}`);
-            if (dropdown) {
-                dropdown.classList.toggle('show');
-            }
-        }
-        
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.barber-avatars')) {
-                document.querySelectorAll('.barber-dropdown-menu').forEach(menu => {
-                    menu.classList.remove('show');
-                });
-            }
-        });
 
         // Store previous queue data for change detection
         let previousQueueData = JSON.stringify(queueData);
@@ -4492,15 +4358,32 @@
         // Show barber selection overlay for customer
         let barberSelectionTimer = null;
         function showBarberSelection(customerId) {
+            console.log('showBarberSelection called with customerId:', customerId);
             const customer = queueData.find(c => c.id === customerId);
+            console.log('Found customer:', customer);
             // Allow showing overlay for waiting customers or serving customers (to unselect/change)
-            if (!customer || (customer.status !== 'waiting' && customer.status !== 'serving')) return;
+            if (!customer || (customer.status !== 'waiting' && customer.status !== 'serving')) {
+                console.log('Customer not found or invalid status:', customer ? customer.status : 'not found');
+                return;
+            }
             
             const overlay = document.getElementById('barberSelectionOverlay');
             const customerNameEl = document.getElementById('barberSelectionCustomerName');
             const selectionList = document.getElementById('barberSelectionList');
             
-            if (!overlay || !customerNameEl || !selectionList) return;
+            console.log('Overlay elements:', { overlay, customerNameEl, selectionList });
+            
+            if (!overlay || !customerNameEl || !selectionList) {
+                console.error('Barber selection overlay elements not found');
+                return;
+            }
+            
+            // Close overlay when clicking on background
+            overlay.onclick = function(e) {
+                if (e.target === overlay) {
+                    hideBarberSelection();
+                }
+            };
             
             // Set customer name
             customerNameEl.textContent = customer.name;
@@ -4508,40 +4391,74 @@
             // Get current assigned barber
             const currentBarber = customer.barberId ? barbers.find(b => b.id === customer.barberId) : null;
             
-            // Clear and populate barber list (only present barbers)
+            // Clear and populate barber list (show ALL barbers)
             selectionList.innerHTML = '';
-            const presentBarbers = barbers.filter(b => b.isPresent);
+            console.log('Populating barber list, total barbers:', barbers.length);
             
-            if (presentBarbers.length === 0) {
-                selectionList.innerHTML = '<div style="text-align: center; color: rgba(255, 255, 255, 0.6); padding: 20px;">Nenhum barbeiro presente</div>';
-            } else {
-                presentBarbers.forEach(barber => {
-                    const isCurrentBarber = currentBarber && barber.id === currentBarber.id;
-                    const item = document.createElement('div');
-                    item.className = `barber-selection-item ${isCurrentBarber ? 'current' : ''}`;
-                    item.onclick = () => {
-                        if (isCurrentBarber) {
-                            // Unselect current barber
-                            unselectBarberForCustomer(customerId);
-                        } else {
-                            // Select new barber
-                            selectBarberForCustomer(customerId, barber.id);
-                        }
-                    };
-                    
-                    item.innerHTML = `
-                        <img src="${barber.avatar}" alt="${barber.name}" class="barber-selection-avatar" 
-                             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
-                        <span class="barber-selection-name">${barber.name}</span>
-                        ${isCurrentBarber ? '<span style="font-size: 0.75rem; color: var(--color-primary); margin-top: 4px;">Atual</span>' : ''}
-                    `;
-                    
-                    selectionList.appendChild(item);
-                });
-            }
+            barbers.forEach((barber, index) => {
+                const isCurrentBarber = currentBarber && barber.id === currentBarber.id;
+                const isPresent = barber.isPresent;
+                const item = document.createElement('div');
+                item.className = `barber-selection-item ${isCurrentBarber ? 'current' : ''} ${!isPresent ? 'absent' : ''}`;
+                item.onclick = () => {
+                    if (!isPresent) return; // Can't select absent barbers
+                    if (isCurrentBarber) {
+                        // Unselect current barber
+                        unselectBarberForCustomer(customerId);
+                    } else {
+                        // Select new barber
+                        selectBarberForCustomer(customerId, barber.id);
+                    }
+                };
+                
+                item.innerHTML = `
+                    <img src="${barber.avatar}" alt="${barber.name}" class="barber-selection-avatar" 
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
+                    <span class="barber-selection-name">${barber.name}</span>
+                    ${isCurrentBarber ? '<span style="font-size: 0.75rem; color: var(--color-primary); margin-top: 4px;">Atual</span>' : ''}
+                    ${!isPresent ? '<span style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); margin-top: 4px;">Ausente</span>' : ''}
+                `;
+                
+                selectionList.appendChild(item);
+                console.log(`Added barber ${index + 1}:`, barber.name, 'present:', isPresent);
+            });
+            
+            console.log('Barber list populated, items count:', selectionList.children.length);
+            console.log('Selection list HTML length:', selectionList.innerHTML.length);
             
             // Show overlay
+            console.log('Showing overlay');
+            console.log('Overlay before:', overlay.style.display, overlay.classList.toString());
+            
             overlay.classList.add('show');
+            
+            // Set all styles directly
+            overlay.style.setProperty('position', 'fixed', 'important');
+            overlay.style.setProperty('top', '0', 'important');
+            overlay.style.setProperty('left', '0', 'important');
+            overlay.style.setProperty('width', '100%', 'important');
+            overlay.style.setProperty('height', '100%', 'important');
+            overlay.style.setProperty('display', 'flex', 'important');
+            overlay.style.setProperty('visibility', 'visible', 'important');
+            overlay.style.setProperty('opacity', '1', 'important');
+            overlay.style.setProperty('z-index', '99999', 'important');
+            overlay.style.setProperty('background', 'rgba(0, 0, 0, 0.85)', 'important');
+            overlay.style.setProperty('align-items', 'center', 'important');
+            overlay.style.setProperty('justify-content', 'center', 'important');
+            
+            // Force a reflow
+            void overlay.offsetHeight;
+            
+            console.log('Overlay after:', overlay.style.display, overlay.classList.toString());
+            const computed = window.getComputedStyle(overlay);
+            console.log('Overlay computed style:', computed.display, computed.zIndex, computed.position, computed.visibility, computed.opacity);
+            console.log('Overlay parent:', overlay.parentElement);
+            console.log('Overlay offset:', overlay.offsetTop, overlay.offsetLeft, overlay.offsetWidth, overlay.offsetHeight);
+            const content = overlay.querySelector('.barber-selection-content');
+            if (content) {
+                const contentComputed = window.getComputedStyle(content);
+                console.log('Content computed style:', contentComputed.display, contentComputed.width, contentComputed.height);
+            }
             
             // Auto-hide after 5 seconds
             if (barberSelectionTimer) {
@@ -4557,6 +4474,7 @@
             const overlay = document.getElementById('barberSelectionOverlay');
             if (overlay) {
                 overlay.classList.remove('show');
+                overlay.style.display = 'none';
             }
             if (barberSelectionTimer) {
                 clearTimeout(barberSelectionTimer);
@@ -4577,7 +4495,7 @@
             customer.barberId = barberId;
             customer.status = 'serving';
             
-            // Hide overlay
+            // Hide overlay after selection
             hideBarberSelection();
             
             // Re-render
@@ -4888,6 +4806,29 @@
                 }
             }, 250);
         });
+        
+        // Event delegation for queue items (management mode)
+        const queueList = document.getElementById('queueList');
+        if (queueList) {
+            queueList.addEventListener('click', function(e) {
+                const queueItem = e.target.closest('.queue-item[data-clickable="true"]');
+                if (queueItem) {
+                    // Don't trigger if clicking on position badge, barber avatar, or buttons
+                    if (e.target.closest('.position-badge') || 
+                        e.target.closest('.barber-avatar') ||
+                        e.target.closest('button')) {
+                        return;
+                    }
+                    const customerId = parseInt(queueItem.getAttribute('data-customer-id'));
+                    if (customerId && !isNaN(customerId)) {
+                        console.log('Queue item clicked via delegation, customer:', customerId);
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showBarberSelection(customerId);
+                    }
+                }
+            });
+        }
         
         // Generate QR code on page load
         function initQRCode() {
