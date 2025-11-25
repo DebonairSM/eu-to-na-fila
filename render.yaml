@@ -3,6 +3,7 @@ services:
     name: eutonafila
     env: node
     plan: starter
+    region: oregon
     buildCommand: pnpm install --frozen-lockfile && pnpm build
     startCommand: node apps/api/dist/server.js
     envVars:
@@ -15,11 +16,12 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        sync: false  # Set this in Render dashboard to your domain
+        sync: false
       - key: SHOP_SLUG
         value: mineiro
-    disk:
-      name: eutonafila-data
-      mountPath: /var/data
-      sizeGB: 1
+    disks:
+      - name: eutonafila-data
+        mountPath: /var/data
+        sizeGB: 1
+
 

@@ -4147,16 +4147,8 @@
                 return;
             }
             
-            // Get current origin and construct join URL
-            // In production, this should be the actual domain where the web app is hosted
-            let joinUrl = window.location.origin + '/join';
-            
-            // If we're in a mockup directory, adjust the path
-            const pathname = window.location.pathname;
-            if (pathname.includes('/mockups/') || pathname.includes('barber-queue-manager')) {
-                // For mockups, use a relative path that will work in production
-                joinUrl = window.location.origin + '/join';
-            }
+            // Use the actual queue-join page URL
+            const joinUrl = 'https://eutonafila-hiyh.onrender.com/queue-join.html';
             
             console.log('Generating QR code for:', joinUrl);
             

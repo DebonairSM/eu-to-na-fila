@@ -5,6 +5,7 @@ import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { existsSync } from 'fs';
 import { env } from './env.js';
 import { db } from './db/index.js';
 import { queueRoutes } from './routes/queue.js';
@@ -23,7 +24,16 @@ const fastify = Fastify({
 
 // Security plugins
 fastify.register(fastifyHelmet, {
-  contentSecurityPolicy: env.NODE_ENV === 'production',
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Needed for Vite
+      styleSrc: ["'self'", "'unsafe-inline'"], // Needed for inline styles
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", "data:"],
+    },
+  },
 });
 
 fastify.register(fastifyCors, {
@@ -36,11 +46,15 @@ fastify.register(fastifyRateLimit, {
   timeWindow: '1 minute',
 });
 
-// Static file serving
+// Static file serving - register BEFORE routes to ensure assets are served first
 const publicPath = join(__dirname, '..', 'public');
+const mineiroPath = join(publicPath, 'mineiro');
+
+// Register static file serving for /mineiro/ assets
 fastify.register(fastifyStatic, {
-  root: publicPath,
-  prefix: '/',
+  root: mineiroPath,
+  prefix: '/mineiro/',
+  decorateReply: false, // Don't add sendFile to reply
 });
 
 // Health check with database and WebSocket status
@@ -99,14 +113,36 @@ fastify.get('/mineiro', async (request, reply) => {
   return reply.redirect('/mineiro/');
 });
 
-// SPA history fallback
-fastify.get('/mineiro/*', async (request, reply) => {
-  return reply.sendFile('mineiro/index.html');
+// Serve SPA index.html for /mineiro/ (exact match)
+// This route is needed because fastify-static serves /mineiro/index.html, not /mineiro/
+fastify.get('/mineiro/', async (request, reply) => {
+  const indexPath = join(mineiroPath, 'index.html');
+  if (!existsSync(indexPath)) {
+    fastify.log.error(`SPA index.html not found at: ${indexPath}`);
+    return reply.code(404).send({ 
+      error: 'SPA not found. Make sure web app is built and integrated.',
+      path: indexPath
+    });
+  }
+  return reply.sendFile('index.html', { root: mineiroPath });
 });
 
-// Register error handlers
+// Register error handler
 fastify.setErrorHandler(errorHandler);
-fastify.setNotFoundHandler(notFoundHandler);
+
+// SPA history fallback - register as 404 handler AFTER static files and API routes
+// This will only catch routes that don't match static files
+fastify.setNotFoundHandler(async (request, reply) => {
+  // Only handle SPA fallback for /mineiro/* routes (but not /mineiro/ itself, handled above)
+  if (request.url.startsWith('/mineiro/') && request.url !== '/mineiro/') {
+    const indexPath = join(mineiroPath, 'index.html');
+    if (existsSync(indexPath)) {
+      return reply.sendFile('index.html', { root: mineiroPath });
+    }
+  }
+  // For other 404s, use default handler
+  return notFoundHandler(request, reply);
+});
 
 // Start server
 fastify.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {
