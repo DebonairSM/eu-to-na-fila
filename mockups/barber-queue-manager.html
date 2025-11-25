@@ -336,6 +336,46 @@
             margin-bottom: var(--spacing-lg);
         }
 
+        /* Queue Header */
+        .queue-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-lg);
+            gap: var(--spacing-md);
+        }
+
+        .checkin-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md) var(--spacing-xl);
+            background: var(--md-sys-color-primary);
+            color: #000000;
+            border: 2px solid var(--md-sys-color-primary);
+            border-radius: var(--radius-md);
+            font-family: var(--font-sans);
+            font-size: var(--font-size-body);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal) var(--easing-standard);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+        }
+
+        .checkin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.4);
+            background: rgba(212, 175, 55, 0.9);
+        }
+
+        .checkin-btn:active {
+            transform: translateY(0);
+        }
+
+        .checkin-btn .material-symbols-outlined {
+            font-size: 1.5rem;
+        }
+
         .queue-list {
             display: flex;
             flex-direction: column;
@@ -622,20 +662,19 @@
             padding-top: 0;
             border-bottom: none;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             position: relative;
+            gap: var(--spacing-lg);
         }
         
         .kiosk-header::after {
             content: '';
             position: absolute;
             bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            max-width: 40%;
+            left: 0;
+            width: 100%;
             height: 1px;
             background: linear-gradient(90deg, 
                 transparent, 
@@ -658,10 +697,11 @@
             text-transform: uppercase;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             position: relative;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            flex: 1;
         }
 
         .kiosk-subtitle {
@@ -1121,35 +1161,46 @@
             box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2), 0 2px 6px rgba(16, 185, 129, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
 
-        /* Small check-in button in corner */
+        /* Check-in button in kiosk header */
         .kiosk-checkin-btn-small {
-            position: fixed;
-            bottom: 80px;
-            right: var(--spacing-xl);
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
+            position: relative;
+            width: auto;
+            min-width: 180px;
+            height: 60px;
+            border-radius: 16px;
             background: var(--md-sys-color-primary);
             color: #000000;
-            border: 3px solid var(--md-sys-color-primary);
+            border: 2px solid var(--md-sys-color-primary);
             display: flex;
+            flex-direction: row;
             align-items: center;
             justify-content: center;
+            gap: 10px;
             cursor: pointer;
             transition: all var(--transition-normal) var(--easing-standard);
             box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
             z-index: 9999;
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            padding: 0 20px;
+            flex-shrink: 0;
         }
 
         .kiosk-checkin-btn-small:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            background: var(--md-sys-color-primary);
+            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.5);
+            background: rgba(212, 175, 55, 0.95);
             border-color: var(--md-sys-color-primary);
         }
 
+        .kiosk-checkin-btn-small:active {
+            transform: translateY(0);
+        }
+
         .kiosk-checkin-btn-small .material-symbols-outlined {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 300;
         }
 
@@ -2529,9 +2580,18 @@
 
         <!-- Queue List -->
         <div class="queue-section">
-        <div class="queue-list" id="queueList">
+            <!-- Queue Header with Title and Check-in Button -->
+            <div class="queue-header">
+                <h2 class="section-header" style="margin: 0;">Fila de Espera</h2>
+                <button class="checkin-btn" onclick="openCheckinModal()" title="Adicionar cliente à fila">
+                    <span class="material-symbols-outlined">person_add</span>
+                    <span>Adicionar Cliente</span>
+                </button>
+            </div>
+            
+            <div class="queue-list" id="queueList">
                 <!-- Queue items will be generated here -->
-        </div>
+            </div>
 
             <div class="empty-state" id="emptyState" style="display: none;">
                 <span class="material-symbols-outlined empty-icon">event_available</span>
@@ -2583,18 +2643,20 @@
         <!-- Kiosk Queue View -->
         <div class="kiosk-view kiosk-queue-view active" id="kioskQueueView">
             <div class="kiosk-header">
-                <span class="material-symbols-outlined kiosk-logo">content_cut</span>
-                <div class="kiosk-title" data-text="Barbearia Mineiro">Barbearia Mineiro</div>
-    </div>
+                <div style="display: flex; align-items: center; gap: var(--spacing-md); flex: 1;">
+                    <span class="material-symbols-outlined kiosk-logo">content_cut</span>
+                    <div class="kiosk-title" data-text="Barbearia Mineiro">Barbearia Mineiro</div>
+                </div>
+                <button class="kiosk-checkin-btn-small" onclick="openCheckinModal()" title="Entrar na fila">
+                    <span class="material-symbols-outlined">person_add</span>
+                    <span>Entrar na Fila</span>
+                </button>
+            </div>
 
             <div class="kiosk-queue-list" id="kioskQueueList">
                 <!-- Kiosk queue items will be generated here -->
-        </div>
+            </div>
 
-            <!-- Small buttons in corner -->
-            <button class="kiosk-checkin-btn-small" onclick="openCheckinModal()" title="Entrar na fila">
-                <span class="material-symbols-outlined">person_add</span>
-        </button>
             <div class="kiosk-qr-corner" id="kioskQRCode"></div>
         </div>
 
