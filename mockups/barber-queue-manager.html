@@ -706,8 +706,9 @@
         
         @media (max-width: 480px) {
             .barber-presence-section {
-                padding: var(--spacing-sm);
+                padding: var(--spacing-md);
                 margin-top: var(--spacing-md);
+                overflow: hidden;
             }
             
             .barber-presence-header {
@@ -723,29 +724,31 @@
             }
             
             .barber-presence-list {
-                grid-template-columns: repeat(2, 1fr);
-                gap: var(--spacing-xs);
+                grid-template-columns: repeat(3, 1fr);
+                gap: var(--spacing-sm);
                 width: 100%;
                 padding: 0;
                 box-sizing: border-box;
             }
             
             .barber-presence-item {
-                padding: var(--spacing-xs);
+                padding: var(--spacing-sm);
                 min-width: 0;
                 width: 100%;
                 max-width: 100%;
                 box-sizing: border-box;
+                overflow: hidden;
+                gap: 6px;
             }
             
             .barber-presence-avatar {
-                width: 40px;
-                height: 40px;
+                width: 50px;
+                height: 50px;
                 flex-shrink: 0;
             }
             
             .barber-presence-name {
-                font-size: 0.7rem;
+                font-size: 0.75rem;
                 text-align: center;
                 width: 100%;
                 line-height: 1.2;
@@ -756,17 +759,12 @@
             }
             
             .barber-presence-status {
-                font-size: 0.6rem;
-                padding: 2px 4px;
+                font-size: 0.65rem;
+                padding: 3px 6px;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 max-width: 100%;
-            }
-            
-            .barber-presence-section {
-                padding: var(--spacing-sm);
-                overflow: hidden;
             }
             
             .header {
