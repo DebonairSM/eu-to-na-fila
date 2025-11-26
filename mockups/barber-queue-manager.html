@@ -3025,10 +3025,17 @@
                 padding: 60px 20px 120px 20px;
                 height: 100vh;
                 overflow: hidden;
+                justify-content: flex-start; /* Ensure top alignment but allow spacing */
+            }
+            
+            .kiosk-header {
+                margin-bottom: 80px; /* Push list down to fill gap */
+                flex-shrink: 0;
             }
             
             .kiosk-queue-list {
                 width: 95%;
+                gap: var(--spacing-lg); /* Increase gap between items */
             }
             
             .kiosk-mode-toggle {
@@ -3037,16 +3044,6 @@
                 padding: 8px 14px;
                 font-size: 0.875rem;
                 height: fit-content;
-            }
-            
-            .kiosk-header {
-                margin-bottom: var(--spacing-xl);
-                padding-left: 0;
-                padding-top: 0;
-                padding-bottom: var(--spacing-md);
-                align-items: center;
-                justify-content: center;
-                min-height: 44px;
             }
             
             .kiosk-title-text {
@@ -4291,10 +4288,12 @@
                 clearTimeout(idleTimer);
             }
             
-            // Only start timer if we're on queue view
-            if (kioskViewIndex === 0 && isManualQueueView) {
+            // Only start timer if we're on queue view manually
+            const currentViewId = kioskViews[kioskViewIndex];
+            if (currentViewId === 'kioskQueueView' && isManualQueueView) {
                 idleTimer = setTimeout(() => {
-                    if (isKioskMode && kioskViewIndex === 0 && isManualQueueView) {
+                    // Check if we're still in the same state before resuming
+                    if (isKioskMode && kioskViews[kioskViewIndex] === 'kioskQueueView' && isManualQueueView) {
                         resumeAdRotation();
                     }
                 }, IDLE_TIMEOUT);
