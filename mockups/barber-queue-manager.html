@@ -1175,9 +1175,9 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            width: 100%;
+            width: 90%;
             overflow-y: auto;
             position: relative;
             padding: 8px 0;
@@ -1195,27 +1195,9 @@
         
         
         /* Adaptive sizing based on screen size */
-        @media (min-width: 1920px) {
+        @media (max-width: 768px) {
             .kiosk-queue-list {
-                max-width: 1600px;
-            }
-        }
-        
-        @media (min-width: 1600px) and (max-width: 1919px) {
-            .kiosk-queue-list {
-                max-width: 1400px;
-            }
-        }
-        
-        @media (min-width: 1400px) and (max-width: 1599px) {
-            .kiosk-queue-list {
-                max-width: 1200px;
-            }
-        }
-        
-        @media (min-width: 1024px) and (max-width: 1399px) {
-            .kiosk-queue-list {
-                max-width: 1000px;
+                width: 95%;
             }
         }
 
@@ -3043,6 +3025,10 @@
                 padding: 60px 20px 120px 20px;
                 height: 100vh;
                 overflow: hidden;
+            }
+            
+            .kiosk-queue-list {
+                width: 95%;
             }
             
             .kiosk-mode-toggle {
