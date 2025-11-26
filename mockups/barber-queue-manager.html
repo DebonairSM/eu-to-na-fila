@@ -3457,19 +3457,6 @@
             </div>
         </div>
 
-        <!-- Barber Selection Overlay (appears when clicking customer) -->
-        <div class="barber-selection-overlay" id="barberSelectionOverlay" style="display: none;">
-            <div class="barber-selection-content">
-                <div class="barber-selection-header">
-                    <span class="barber-selection-title">Selecione o barbeiro</span>
-                    <span class="barber-selection-customer" id="barberSelectionCustomerName"></span>
-                </div>
-                <div class="barber-selection-list" id="barberSelectionList">
-                    <!-- Present barbers will be generated here -->
-                </div>
-            </div>
-        </div>
-
         <!-- Kiosk Queue View -->
         <div class="kiosk-view kiosk-queue-view active" id="kioskQueueView">
             <div class="kiosk-header">
@@ -3558,6 +3545,19 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Barber Selection Overlay (Moved outside kiosk-container to be visible in all modes) -->
+    <div class="barber-selection-overlay" id="barberSelectionOverlay" style="display: none;">
+        <div class="barber-selection-content">
+            <div class="barber-selection-header">
+                <span class="barber-selection-title">Selecione o barbeiro</span>
+                <span class="barber-selection-customer" id="barberSelectionCustomerName"></span>
+            </div>
+            <div class="barber-selection-list" id="barberSelectionList">
+                <!-- Present barbers will be generated here -->
+            </div>
         </div>
     </div>
 
@@ -3836,21 +3836,13 @@
                     
                     // Make the card clickable to show barber selection overlay (set after innerHTML)
                     item.style.cursor = 'pointer';
+                    item.onclick = function(e) {
+                         e.preventDefault();
+                         e.stopPropagation();
+                         showBarberSelection(customer.id);
+                    };
                     item.setAttribute('data-customer-id', customer.id);
                     item.setAttribute('data-clickable', 'true');
-                    
-                    // Use addEventListener instead of onclick
-                    item.addEventListener('click', function(e) {
-                        // Don't trigger if clicking on position badge, barber avatar, or buttons
-                        if (e.target.closest('.position-badge') || 
-                            e.target.closest('.barber-avatar') ||
-                            e.target.closest('button')) {
-                            return;
-                        }
-                        e.preventDefault();
-                        e.stopPropagation();
-                        showBarberSelection(customer.id);
-                    });
 
                     queueList.appendChild(item);
                 });
@@ -4019,6 +4011,16 @@
         function switchKioskView(index) {
             // Update index
             kioskViewIndex = index;
+            
+            // Close any open overlays to ensure clean state
+            hideBarberSelection();
+            closeCheckinModal();
+            
+            // Temporarily disable pointer events to prevent accidental clicks during transition
+            document.body.style.pointerEvents = 'none';
+            setTimeout(() => {
+                document.body.style.pointerEvents = '';
+            }, 500);
             
             // Hide all views
             document.querySelectorAll('.kiosk-view').forEach(view => {
@@ -4371,6 +4373,9 @@
                 return;
             }
             
+            // Move overlay to body end to ensure it's on top of everything (fixes z-index issues)
+            document.body.appendChild(overlay);
+            
             // Close overlay when clicking on background
             overlay.onclick = function(e) {
                 if (e.target === overlay) {
@@ -4497,6 +4502,7 @@
 
         // Event delegation for kiosk mode interactions
         // Set up once and handle all clicks
+        // Global click handler for kiosk mode
         document.addEventListener('click', function(e) {
             if (!isKioskMode) return;
             
@@ -4531,17 +4537,27 @@
                 const customerId = parseInt(queueItem.getAttribute('data-customer-id'));
                 if (customerId && !isNaN(customerId)) {
                     showBarberSelection(customerId);
-                    }
-                return;
                 }
-            });
+                return;
+            }
+        });
+        
+        // Global click handler for management mode (barber selection overlay)
+        document.addEventListener('click', function(e) {
+            if (isKioskMode) return;
+            
+            // Check if click is on barber selection overlay background (close it)
+            const overlay = e.target.closest('.barber-selection-overlay');
+            if (overlay && e.target === overlay) {
+                hideBarberSelection();
+                return;
+            }
+        });
 
         // Also handle keyboard events for accessibility
         document.addEventListener('keydown', function(e) {
-            if (!isKioskMode) return;
-            
-            // Handle Enter/Space on barber chips (presence toggle)
-            if (e.key === 'Enter' || e.key === ' ') {
+            // Handle Enter/Space on barber chips (presence toggle) - kiosk mode only
+            if (isKioskMode && (e.key === 'Enter' || e.key === ' ')) {
                 const barberChip = e.target.closest('.kiosk-barber-chip');
                 if (barberChip) {
                     e.preventDefault();
@@ -4552,7 +4568,7 @@
                 }
             }
             
-            // Handle Escape to close barber selection overlay
+            // Handle Escape to close barber selection overlay (works in both modes)
             if (e.key === 'Escape') {
                 const overlay = document.getElementById('barberSelectionOverlay');
                 if (overlay && overlay.classList.contains('show')) {
@@ -4773,27 +4789,15 @@
             }, 250);
         });
         
-        // Event delegation for queue items (management mode)
-        const queueList = document.getElementById('queueList');
-        if (queueList) {
-            queueList.addEventListener('click', function(e) {
-                const queueItem = e.target.closest('.queue-item[data-clickable="true"]');
-                if (queueItem) {
-                    // Don't trigger if clicking on position badge, barber avatar, or buttons
-                    if (e.target.closest('.position-badge') || 
-                        e.target.closest('.barber-avatar') ||
-                        e.target.closest('button')) {
-                        return;
-                    }
-                    const customerId = parseInt(queueItem.getAttribute('data-customer-id'));
-                    if (customerId && !isNaN(customerId)) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        showBarberSelection(customerId);
-                    }
-                }
-            });
-        }
+        // Global click handler for management mode queue items (barber selection)
+        // Removed in favor of direct onclick handler on queue items for better reliability
+        /*
+        document.addEventListener('click', function(e) {
+            if (isKioskMode) return; // Kiosk mode has its own handler
+            
+            // ... logic removed ...
+        });
+        */
         
         // Generate QR code on page load
         function initQRCode() {
