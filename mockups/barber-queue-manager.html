@@ -1194,10 +1194,46 @@
         }
         
         
-        /* Adaptive sizing based on screen size */
+        /* Adaptive sizing based on screen size and orientation */
         @media (max-width: 768px) {
             .kiosk-queue-list {
                 width: 95%;
+            }
+        }
+        
+        /* Landscape orientation optimizations */
+        @media (orientation: landscape) {
+            .kiosk-queue-list {
+                width: 85%;
+                max-width: 1200px;
+            }
+            
+            /* Compact spacing in landscape for better use of horizontal space */
+            @media (max-height: 600px) {
+                .kiosk-queue-list {
+                    width: 92%;
+                    gap: 12px;
+                }
+                
+                .kiosk-queue-item {
+                    padding: 16px 24px;
+                    gap: 16px;
+                }
+            }
+        }
+        
+        /* Portrait orientation optimizations */
+        @media (orientation: portrait) {
+            .kiosk-queue-list {
+                width: 92%;
+            }
+            
+            /* Tall screens in portrait - use more width */
+            @media (min-height: 900px) {
+                .kiosk-queue-list {
+                    width: 88%;
+                    max-width: 800px;
+                }
             }
         }
 
@@ -1335,6 +1371,7 @@
             
             .kiosk-queue-list {
                 gap: 12px;
+                width: 95%;
                 max-width: 100%;
             }
         }
@@ -2897,6 +2934,8 @@
             
             .kiosk-queue-list {
                 gap: var(--spacing-sm);
+                width: 88%;
+                max-width: 1100px;
             }
             
             .kiosk-queue-item {
@@ -3061,6 +3100,8 @@
             
             .kiosk-queue-list {
                 gap: var(--spacing-md);
+                width: 90%;
+                max-width: 900px;
             }
             
             .kiosk-queue-item {
