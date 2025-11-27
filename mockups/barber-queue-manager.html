@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fila - Barbearia Mineiro</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     
@@ -1045,7 +1045,7 @@
         /* Kiosk Queue View */
         .kiosk-queue-view {
             background: #000000;
-            padding: 40px 20px 140px 20px;
+            padding: 60px 0 140px 0;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -1083,16 +1083,16 @@
             position: relative;
         }
         
-        /* Proportional spacing between header and queue list based on orientation */
+        /* Increase spacing between header and queue list based on orientation */
         @media (orientation: portrait) {
             .kiosk-header {
-                margin-bottom: 32px;
+                margin-bottom: 150px;
             }
         }
         
         @media (orientation: landscape) {
             .kiosk-header {
-                margin-bottom: 24px;
+                margin-bottom: 120px;
             }
         }
         
@@ -1193,13 +1193,10 @@
             margin: 0 auto;
             width: 90%;
             overflow-y: auto;
-            overflow-x: hidden;
             position: relative;
             padding: 8px 0;
             align-self: center;
             box-sizing: border-box;
-            -webkit-overflow-scrolling: touch;
-            min-width: 0;
         }
         
         /* Hide scrollbar but keep scrolling functionality */
@@ -1226,7 +1223,7 @@
             .kiosk-queue-list {
                 width: 85%;
                 max-width: 1200px;
-                margin: 0 auto;
+                margin: 80px auto 0 auto;
             }
             
             /* Compact spacing in landscape for better use of horizontal space */
@@ -1234,7 +1231,7 @@
                 .kiosk-queue-list {
                     width: 92%;
                     gap: 12px;
-                    margin: 0 auto;
+                    margin: 60px auto 0 auto;
                 }
                 
                 .kiosk-queue-item {
@@ -1248,7 +1245,7 @@
         @media (orientation: portrait) {
             .kiosk-queue-list {
                 width: 92%;
-                margin: 0 auto;
+                margin: 120px auto 0 auto;
             }
             
             /* Tall screens in portrait - use more width */
@@ -1256,7 +1253,7 @@
                 .kiosk-queue-list {
                     width: 88%;
                     max-width: 800px;
-                    margin: 0 auto;
+                    margin: 140px auto 0 auto;
                 }
             }
         }
@@ -1274,9 +1271,8 @@
             transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             box-sizing: border-box;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
             width: 100%;
-            min-width: 0;
             flex-shrink: 0;
             backdrop-filter: blur(12px) saturate(180%);
         }
@@ -1368,7 +1364,7 @@
             }
             
             .kiosk-header {
-                margin-bottom: 24px !important;
+                margin-bottom: 24px;
                 padding-bottom: 16px;
             }
             
@@ -1407,7 +1403,7 @@
             }
             
             .kiosk-header {
-                margin-bottom: 20px !important;
+                margin-bottom: 20px;
                 padding-bottom: 12px;
             }
             
@@ -1438,7 +1434,7 @@
             }
             
             .kiosk-header {
-                margin-bottom: 16px !important;
+                margin-bottom: 16px;
                 padding-bottom: 10px;
             }
             
@@ -2135,8 +2131,6 @@
             text-overflow: ellipsis;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
         }
         
         .kiosk-queue-item.serving .kiosk-customer-name {
@@ -2169,8 +2163,6 @@
             gap: 4px;
             flex: 1;
             min-width: 0;
-            overflow: hidden;
-            box-sizing: border-box;
         }
         
         .kiosk-queue-item-actions {
@@ -2841,7 +2833,7 @@
             }
             
             .kiosk-header {
-                margin-bottom: 24px !important;
+                margin-bottom: var(--spacing-md);
                 padding-left: 0;
             }
             
@@ -2921,10 +2913,9 @@
         /* Tablet Landscape (1024px - 1366px) */
         @media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
             .kiosk-queue-view {
-                padding: 40px 20px 140px 20px;
+                padding: 60px 28px 120px 28px;
                 height: 100vh;
                 overflow: hidden;
-                align-items: center;
             }
             
             .kiosk-mode-toggle {
@@ -2935,7 +2926,7 @@
             }
             
             .kiosk-header {
-                margin-bottom: 24px !important;
+                margin-bottom: 48px !important;
                 padding-left: 0;
                 padding-top: 0;
                 padding-bottom: var(--spacing-md);
@@ -2967,6 +2958,7 @@
                 width: 88%;
                 max-width: 1100px;
                 margin: 0 auto;
+                margin-top: 30px;
             }
             
             .kiosk-queue-item {
@@ -3013,10 +3005,9 @@
         /* Tablet Portrait (768px - 1024px) */
         @media (min-width: 768px) and (max-width: 1024px) {
             .kiosk-queue-view {
-                padding: 40px 20px 140px 20px;
+                padding: 60px 24px 120px 24px;
                 height: 100vh;
                 overflow: hidden;
-                align-items: center;
             }
             
             .kiosk-mode-toggle {
@@ -3028,7 +3019,7 @@
             }
             
             .kiosk-header {
-                margin-bottom: 32px !important;
+                margin-bottom: 48px !important;
                 padding-left: 0;
                 padding-top: 0;
                 padding-bottom: var(--spacing-md);
@@ -3053,9 +3044,7 @@
             
             .kiosk-queue-list {
                 gap: var(--spacing-md);
-                width: 90%;
-                max-width: 900px;
-                margin: 0 auto;
+                margin-top: 20px;
             }
             
             .kiosk-queue-item {
@@ -3096,10 +3085,9 @@
         /* Tablet Portrait - Specific adjustments */
         @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
             .kiosk-queue-view {
-                padding: 40px 20px 140px 20px;
+                padding: 60px 20px 120px 20px;
                 height: 100vh;
                 overflow: hidden;
-                align-items: center;
             }
             
             .kiosk-mode-toggle {
@@ -3111,7 +3099,7 @@
             }
             
             .kiosk-header {
-                margin-bottom: 32px !important;
+                margin-bottom: 48px !important;
                 padding-left: 0;
                 padding-top: 0;
                 padding-bottom: var(--spacing-md);
@@ -3139,6 +3127,7 @@
                 width: 90%;
                 max-width: 900px;
                 margin: 0 auto;
+                margin-top: 30px;
             }
             
             .kiosk-queue-item {
@@ -3179,14 +3168,13 @@
         /* Small Tablets / Large Phones (600px - 768px) */
         @media (min-width: 600px) and (max-width: 768px) {
             .kiosk-queue-view {
-                padding: 40px 20px 140px 20px;
+                padding: 70px 18px 140px 18px;
                 height: 100vh;
                 overflow: hidden;
-                align-items: center;
             }
             
             .kiosk-header {
-                margin-bottom: 24px !important;
+                margin-bottom: var(--spacing-md);
                 padding-left: 0;
             }
             
@@ -3205,12 +3193,6 @@
             
             .kiosk-subtitle {
                 font-size: 0.875rem;
-            }
-            
-            .kiosk-queue-list {
-                width: 92%;
-                max-width: 1000px;
-                margin: 0 auto;
             }
             
             .kiosk-queue-item {
@@ -3256,7 +3238,7 @@
             }
             
             .kiosk-header {
-                margin-bottom: 20px !important;
+                margin-bottom: var(--spacing-sm);
                 padding-left: 0;
             }
             
@@ -3322,7 +3304,7 @@
             }
             
             .kiosk-header {
-                margin-bottom: 20px !important;
+                margin-bottom: var(--spacing-sm);
                 padding-left: 100px;
             }
             
@@ -3356,7 +3338,7 @@
             }
             
             .kiosk-header {
-                margin-bottom: 16px !important;
+                margin-bottom: var(--spacing-xs);
                 padding-left: 90px;
             }
             
@@ -3990,7 +3972,6 @@
             }
 
             // Calculate position for waiting customers
-            // Reset counter to ensure accurate numbering
             let waitingPosition = 1;
             sortedQueue.forEach((item, index) => {
                 const queueItem = document.createElement('div');
@@ -4064,16 +4045,6 @@
                 queueItem.style.animationDelay = `${index * 0.08}s`;
 
                 kioskQueueList.appendChild(queueItem);
-            });
-            
-            // Ensure all items are visible and properly rendered
-            requestAnimationFrame(() => {
-                const items = kioskQueueList.querySelectorAll('.kiosk-queue-item');
-                items.forEach((item, idx) => {
-                    item.style.display = 'flex';
-                    item.style.visibility = 'visible';
-                    item.style.opacity = '1';
-                });
             });
         }
 
