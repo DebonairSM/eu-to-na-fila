@@ -1082,6 +1082,19 @@
             position: relative;
         }
         
+        /* Increase spacing between header and queue list based on orientation */
+        @media (orientation: portrait) {
+            .kiosk-header {
+                margin-bottom: 150px;
+            }
+        }
+        
+        @media (orientation: landscape) {
+            .kiosk-header {
+                margin-bottom: 120px;
+            }
+        }
+        
         .kiosk-header::after {
             content: '';
             position: absolute;
@@ -1206,6 +1219,7 @@
             .kiosk-queue-list {
                 width: 85%;
                 max-width: 1200px;
+                margin-top: 80px;
             }
             
             /* Compact spacing in landscape for better use of horizontal space */
@@ -1213,6 +1227,7 @@
                 .kiosk-queue-list {
                     width: 92%;
                     gap: 12px;
+                    margin-top: 60px;
                 }
                 
                 .kiosk-queue-item {
@@ -1226,6 +1241,7 @@
         @media (orientation: portrait) {
             .kiosk-queue-list {
                 width: 92%;
+                margin-top: 120px;
             }
             
             /* Tall screens in portrait - use more width */
@@ -1233,6 +1249,7 @@
                 .kiosk-queue-list {
                     width: 88%;
                     max-width: 800px;
+                    margin-top: 140px;
                 }
             }
         }
