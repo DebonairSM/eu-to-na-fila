@@ -14,8 +14,7 @@
     <!-- Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     
-    <!-- QR Code Library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <!-- QR Code will be generated using API service -->
     
     <style>
         * {
@@ -154,6 +153,27 @@
             max-width: 600px;
             margin: 0 auto;
             transition: all 0.5s ease;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0 var(--spacing-md);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 var(--spacing-sm);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 12px;
+            }
+        }
+        
+        @media (max-width: 375px) {
+            .container {
+                padding: 0 10px;
+            }
         }
 
         body.kiosk-mode .container {
@@ -322,6 +342,9 @@
             border-radius: var(--radius-lg);
             padding: var(--spacing-lg);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         body.kiosk-mode .queue-section {
@@ -340,7 +363,7 @@
         .queue-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             margin-bottom: var(--spacing-lg);
             gap: var(--spacing-md);
         }
@@ -348,6 +371,7 @@
         .checkin-btn {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: var(--spacing-sm);
             padding: var(--spacing-md) var(--spacing-xl);
             background: var(--md-sys-color-primary);
@@ -360,6 +384,8 @@
             cursor: pointer;
             transition: all var(--transition-normal) var(--easing-standard);
             box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .checkin-btn:hover {
@@ -380,32 +406,38 @@
             display: flex;
             flex-direction: column;
             gap: var(--spacing-md);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .queue-item {
             background: rgba(20, 20, 20, 0.8);
             border: 2px solid rgba(212, 175, 55, 0.3);
-            border-left: 4px solid var(--md-sys-color-primary);
             border-radius: var(--radius-md);
             padding: var(--spacing-lg);
             display: flex;
             align-items: center;
             gap: var(--spacing-md);
             transition: all var(--transition-normal) var(--easing-standard);
-            cursor: default;
+            cursor: pointer;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
         }
 
         .queue-item:hover {
-            border-left-color: var(--md-sys-color-primary);
             border-color: rgba(212, 175, 55, 0.5);
             background: rgba(30, 30, 30, 0.9);
             box-shadow: 0 6px 24px rgba(212, 175, 55, 0.3);
             transform: translateX(4px);
         }
+        
+        .queue-item:active {
+            transform: translateX(2px) scale(0.98);
+        }
 
         .queue-item.serving {
-            border-left-color: var(--md-sys-color-success);
             border-color: rgba(16, 185, 129, 0.4);
             background: rgba(20, 20, 20, 0.9);
         }
@@ -424,12 +456,46 @@
             line-height: 1;
             flex-shrink: 0;
             box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0;
+        }
+        
+        .position-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+        }
+        
+        .position-badge:active {
+            transform: scale(0.98);
+        }
+        
+        .position-badge .material-symbols-outlined {
+            font-size: 1.5rem;
+            font-weight: 300;
         }
         
         .queue-item.serving .position-badge {
             background: var(--md-sys-color-success);
             color: #000000;
             box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+        }
+        
+        .queue-item.serving .position-badge:hover {
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+        
+        .queue-item:not(.serving) .position-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .queue-item:not(.serving) .position-badge:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--md-sys-color-error);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
         }
 
         .customer-info {
@@ -474,6 +540,333 @@
             display: flex;
             gap: var(--spacing-md);
             align-items: center;
+            flex-shrink: 0;
+        }
+        
+        /* Mobile responsiveness for management queue */
+        @media (max-width: 768px) {
+            .header {
+                padding: var(--spacing-md);
+            }
+            
+            .header-top {
+                flex-wrap: wrap;
+                gap: var(--spacing-sm);
+            }
+            
+            .header-title h1 {
+                font-size: 1.25rem;
+            }
+            
+            .header-title p {
+                font-size: 0.75rem;
+            }
+            
+            .header-actions {
+                flex-shrink: 0;
+            }
+            
+            .icon-button {
+                width: 2.5rem;
+                height: 2.5rem;
+                font-size: 1.125rem;
+            }
+            
+            .stats {
+                gap: var(--spacing-md);
+                flex-wrap: wrap;
+            }
+            
+            .stat-item {
+                flex: 1 1 calc(50% - var(--spacing-md));
+                min-width: 0;
+            }
+            
+            .queue-section {
+                padding: var(--spacing-md);
+                border-width: 2px;
+            }
+            
+            .section-header {
+                font-size: 1.25rem;
+                margin-bottom: var(--spacing-md);
+            }
+            
+            .queue-header {
+                flex-wrap: wrap;
+                margin-bottom: var(--spacing-md);
+                justify-content: center;
+            }
+            
+            .queue-list {
+                gap: var(--spacing-sm);
+            }
+            
+            .queue-item {
+                padding: 12px 16px;
+                gap: 12px;
+            }
+            
+            .position-badge {
+                width: 44px;
+                height: 44px;
+            }
+            
+            .position-badge .material-symbols-outlined {
+                font-size: 1.25rem;
+            }
+            
+            .customer-info {
+                min-width: 0;
+                flex: 1;
+            }
+            
+            .customer-name {
+                font-size: 0.9375rem;
+                line-height: 1.4;
+                word-break: break-word;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .barber-assignment {
+                font-size: 0.8125rem;
+            }
+            
+            .barber-avatars {
+                display: flex; /* Show on tablet but limit */
+                gap: 8px;
+            }
+            
+            .barber-avatar {
+                width: 2rem; /* 32px on tablet */
+                height: 2rem;
+            }
+            
+        }
+        
+        @media (max-width: 768px) {
+            .barber-presence-section {
+                padding: var(--spacing-md);
+                margin-top: var(--spacing-lg);
+            }
+            
+            .barber-presence-list {
+                grid-template-columns: repeat(3, 1fr);
+                gap: var(--spacing-sm);
+                width: 100%;
+                padding: 0;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+            
+            .barber-presence-item {
+                min-width: 0;
+                padding: var(--spacing-sm);
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+            
+            .barber-presence-avatar {
+                width: 48px;
+                height: 48px;
+                flex-shrink: 0;
+            }
+            
+            .barber-presence-name {
+                font-size: 0.75rem;
+                text-align: center;
+                width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                box-sizing: border-box;
+            }
+            
+            .barber-presence-status {
+                font-size: 0.65rem;
+                padding: 2px 6px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .barber-presence-section {
+                padding: var(--spacing-md);
+                margin-top: var(--spacing-md);
+                overflow: hidden;
+            }
+            
+            .barber-presence-header {
+                margin-bottom: var(--spacing-md);
+            }
+            
+            .barber-presence-title {
+                font-size: 1rem;
+            }
+            
+            .barber-presence-subtitle {
+                font-size: 0.75rem;
+            }
+            
+            .barber-presence-list {
+                grid-template-columns: repeat(3, 1fr);
+                gap: var(--spacing-sm);
+                width: 100%;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            .barber-presence-item {
+                padding: var(--spacing-sm);
+                min-width: 0;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                overflow: hidden;
+                gap: 6px;
+            }
+            
+            .barber-presence-avatar {
+                width: 50px;
+                height: 50px;
+                flex-shrink: 0;
+            }
+            
+            .barber-presence-name {
+                font-size: 0.75rem;
+                text-align: center;
+                width: 100%;
+                line-height: 1.2;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                box-sizing: border-box;
+            }
+            
+            .barber-presence-status {
+                font-size: 0.65rem;
+                padding: 3px 6px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+            
+            .header {
+                padding: var(--spacing-sm);
+                margin-bottom: var(--spacing-sm);
+            }
+            
+            .header-top {
+                gap: var(--spacing-xs);
+            }
+            
+            .header-icon {
+                font-size: 1.5rem;
+            }
+            
+            .header-title h1 {
+                font-size: 1.125rem;
+            }
+            
+            .header-title p {
+                font-size: 0.7rem;
+            }
+            
+            .icon-button {
+                width: 2.25rem;
+                height: 2.25rem;
+                font-size: 1rem;
+            }
+            
+            .stats {
+                gap: var(--spacing-sm);
+                padding-top: var(--spacing-sm);
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            
+            .stat-label {
+                font-size: 0.7rem;
+            }
+            
+            .queue-section {
+                padding: var(--spacing-sm);
+            }
+            
+            .section-header {
+                font-size: 1.125rem;
+            }
+            
+            .queue-header {
+                justify-content: center;
+                margin-bottom: var(--spacing-md);
+            }
+            
+            .checkin-btn {
+                padding: var(--spacing-sm) var(--spacing-lg);
+            }
+            
+            .queue-item {
+                padding: 10px 12px;
+                gap: 10px;
+            }
+            
+            .barber-avatars {
+                display: flex; /* Show on mobile but smaller */
+                gap: 6px;
+            }
+            
+            .barber-avatar {
+                width: 1.75rem; /* 28px on mobile */
+                height: 1.75rem;
+                border-width: 1.5px;
+            }
+            
+            .position-badge {
+                width: 36px;
+                height: 36px;
+            }
+            
+            .position-badge .material-symbols-outlined {
+                font-size: 1rem;
+            }
+            
+            .customer-name {
+                font-size: 0.875rem;
+            }
+        }
+        
+        @media (max-width: 375px) {
+            .queue-section {
+                padding: 10px;
+            }
+            
+            .queue-item {
+                padding: 8px 10px;
+                gap: 8px;
+            }
+            
+            .position-badge {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .position-badge .material-symbols-outlined {
+                font-size: 0.875rem;
+            }
+            
+            .customer-name {
+                font-size: 0.8125rem;
+            }
         }
         
         /* Barber avatars on cards */
@@ -482,14 +875,15 @@
             gap: var(--spacing-sm);
             align-items: center;
             flex-shrink: 0;
+            position: relative;
         }
         
         .barber-avatar {
-            width: 3.25rem; /* 52px */
-            height: 3.25rem; /* 52px */
+            width: 2.5rem; /* 40px */
+            height: 2.5rem; /* 40px */
             border-radius: var(--radius-md);
             background: rgba(212, 175, 55, 0.1);
-            border: 3px solid rgba(212, 175, 55, 0.4);
+            border: 2px solid rgba(212, 175, 55, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -498,6 +892,7 @@
             position: relative;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
             overflow: hidden;
+            flex-shrink: 0;
         }
         
         .barber-avatar:hover {
@@ -587,6 +982,16 @@
             background: transparent;
             color: var(--md-sys-color-error);
             border-color: var(--md-sys-color-error);
+            min-width: 36px;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 8px;
+        }
+        
+        .action-btn.danger.finalizar-btn {
+            color: var(--md-sys-color-success);
+            border-color: var(--md-sys-color-success);
         }
 
         .action-btn.danger:hover {
@@ -594,9 +999,18 @@
             color: #FFFFFF;
             transform: translateX(2px);
         }
+        
+        .action-btn.danger.finalizar-btn:hover {
+            background: var(--md-sys-color-success);
+            color: #FFFFFF;
+        }
 
         .action-btn.danger:active {
             transform: translateX(0) scale(0.98);
+        }
+        
+        .action-btn.danger .material-symbols-outlined {
+            font-size: 20px;
         }
 
         /* ============ KIOSK MODE STYLES ============ */
@@ -654,9 +1068,9 @@
 
         .kiosk-header {
             text-align: center;
-            margin-bottom: 64px;
+            margin-bottom: 48px;
             flex-shrink: 0;
-            padding-bottom: 32px;
+            padding-bottom: 24px;
             padding-left: 0;
             padding-right: 0;
             padding-top: 0;
@@ -664,9 +1078,8 @@
             display: flex;
             flex-direction: row;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             position: relative;
-            gap: var(--spacing-lg);
         }
         
         .kiosk-header::after {
@@ -686,22 +1099,65 @@
             display: none; /* Removed floating logo */
         }
 
-        .kiosk-title {
-            font-family: var(--font-sans);
-            font-size: 3.5rem; /* 56px */
-            font-weight: 300;
-            line-height: 1.3;
-            color: var(--color-text-on-dark);
-            margin-bottom: 0;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
+        .kiosk-unified-btn {
             position: relative;
+            width: auto;
+            min-width: 320px;
+            height: 64px;
+            border-radius: 16px;
+            background: var(--md-sys-color-primary);
+            color: #000000;
+            border: 2px solid var(--md-sys-color-primary);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all var(--transition-normal) var(--easing-standard);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+            z-index: 9999;
+            font-family: var(--font-sans);
+            padding: 0 24px;
+            flex-shrink: 0;
+        }
+        
+        .kiosk-unified-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.5);
+            background: rgba(212, 175, 55, 0.95);
+            border-color: var(--md-sys-color-primary);
+        }
+        
+        .kiosk-unified-btn:active {
+            transform: translateY(0);
+        }
+        
+        .kiosk-title-text {
+            font-size: 2.5rem; /* 40px */
+            font-weight: 300;
+            line-height: 1.2;
+            letter-spacing: 3px;
+            text-transform: uppercase;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            flex: 1;
+            white-space: nowrap;
+        }
+        
+        .kiosk-unified-btn .material-symbols-outlined {
+            font-size: 32px;
+            font-weight: 300;
+        }
+        
+        .kiosk-icons-group {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-left: -4px;
+        }
+        
+        .kiosk-icons-group .material-symbols-outlined:first-child {
+            margin-right: -8px;
         }
 
         .kiosk-subtitle {
@@ -719,9 +1175,9 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            width: 100%;
+            width: 90%;
             overflow-y: auto;
             position: relative;
             padding: 8px 0;
@@ -739,34 +1195,15 @@
         
         
         /* Adaptive sizing based on screen size */
-        @media (min-width: 1920px) {
+        @media (max-width: 768px) {
             .kiosk-queue-list {
-                max-width: 1600px;
-            }
-        }
-        
-        @media (min-width: 1600px) and (max-width: 1919px) {
-            .kiosk-queue-list {
-                max-width: 1400px;
-            }
-        }
-        
-        @media (min-width: 1400px) and (max-width: 1599px) {
-            .kiosk-queue-list {
-                max-width: 1200px;
-            }
-        }
-        
-        @media (min-width: 1024px) and (max-width: 1399px) {
-            .kiosk-queue-list {
-                max-width: 1000px;
+                width: 95%;
             }
         }
 
         .kiosk-queue-item {
             background: rgba(20, 20, 20, 0.8);
             border: 1px solid rgba(212, 175, 55, 0.2);
-            border-left: 2px solid var(--color-primary);
             border-radius: 16px;
             padding: 28px 36px;
             display: flex;
@@ -862,18 +1299,115 @@
                 font-size: 1.5rem;
             }
         }
+        
+        /* Mobile responsiveness for cellphones */
+        @media (max-width: 768px) {
+            .kiosk-queue-view {
+                padding: 20px 16px 80px 16px !important;
+            }
+            
+            .kiosk-header {
+                margin-bottom: 24px;
+                padding-bottom: 16px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 16px 20px;
+                gap: 12px;
+                border-radius: 12px;
+            }
+            
+            .kiosk-position {
+                width: 44px;
+                height: 44px;
+                font-size: 1.25rem;
+                flex-shrink: 0;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 1rem;
+                line-height: 1.3;
+            }
+            
+            .kiosk-queue-item-actions {
+                flex-shrink: 0;
+            }
+            
+            .kiosk-queue-list {
+                gap: 12px;
+                max-width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .kiosk-queue-view {
+                padding: 16px 12px 60px 12px !important;
+            }
+            
+            .kiosk-header {
+                margin-bottom: 20px;
+                padding-bottom: 12px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 12px 16px;
+                gap: 10px;
+                border-radius: 10px;
+            }
+            
+            .kiosk-position {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 0.875rem;
+            }
+            
+            .kiosk-queue-list {
+                gap: 8px;
+            }
+        }
+        
+        @media (max-width: 375px) {
+            .kiosk-queue-view {
+                padding: 12px 10px 50px 10px !important;
+            }
+            
+            .kiosk-header {
+                margin-bottom: 16px;
+                padding-bottom: 10px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+            
+            .kiosk-position {
+                width: 32px;
+                height: 32px;
+                font-size: 0.875rem;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 0.8125rem;
+            }
+            
+            .kiosk-queue-list {
+                gap: 6px;
+            }
+        }
 
         .kiosk-queue-item:hover {
             transform: translateX(4px) translateY(-1px);
-            border-left-width: 3px;
-            border-left-color: var(--color-primary);
             background: rgba(30, 30, 30, 0.9);
             box-shadow: 0 4px 20px rgba(212, 175, 55, 0.15), 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .kiosk-queue-item.serving {
             background: rgba(20, 20, 20, 0.9);
-            border-left-color: var(--color-success);
             border-color: rgba(16, 185, 129, 0.3);
         }
         
@@ -947,6 +1481,96 @@
             font-weight: 300;
         }
         
+        /* Finalizar button - same size as remove button */
+        .kiosk-finalizar-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: transparent;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: rgba(16, 185, 129, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+        }
+        
+        .kiosk-finalizar-btn:hover {
+            border-color: rgba(16, 185, 129, 0.6);
+            color: rgba(16, 185, 129, 1);
+            background: rgba(16, 185, 129, 0.12);
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+        }
+        
+        .kiosk-finalizar-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .kiosk-finalizar-btn .material-symbols-outlined {
+            font-size: 20px;
+            font-weight: 300;
+        }
+        
+        /* Adaptive finalizar button sizing - EXACT match to remove button */
+        @media (min-width: 1920px) {
+            .kiosk-finalizar-btn {
+                width: 36px;
+                height: 36px;
+                border-radius: 0;
+            }
+            
+            .kiosk-finalizar-btn .material-symbols-outlined {
+                font-size: 20px;
+            }
+        }
+        
+        @media (min-width: 1600px) and (max-width: 1919px) {
+            .kiosk-finalizar-btn {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .kiosk-finalizar-btn .material-symbols-outlined {
+                font-size: 18px;
+            }
+        }
+        
+        @media (min-width: 1400px) and (max-width: 1599px) {
+            .kiosk-finalizar-btn {
+                width: 30px;
+                height: 30px;
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .kiosk-finalizar-btn {
+                width: 28px;
+                height: 28px;
+                top: 6px;
+                right: 6px;
+            }
+            
+            .kiosk-finalizar-btn .material-symbols-outlined {
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .kiosk-finalizar-btn {
+                width: 26px;
+                height: 26px;
+                top: 5px;
+                right: 5px;
+            }
+            
+            .kiosk-finalizar-btn .material-symbols-outlined {
+                font-size: 14px;
+            }
+        }
+        
         /* Back to Queue Button (during ads) */
 
         /* Remove Confirmation Modal */
@@ -974,6 +1598,8 @@
             text-align: center;
             box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4);
             animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
+            position: relative;
         }
         
         @keyframes slideUp {
@@ -1080,6 +1706,90 @@
             font-size: 20px;
         }
         
+        /* Mobile responsive for remove confirmation modal */
+        @media (max-width: 768px) {
+            .remove-confirm-content {
+                padding: var(--spacing-xl);
+                max-width: 95%;
+                margin: var(--spacing-md);
+            }
+            
+            .remove-confirm-icon {
+                width: 70px;
+                height: 70px;
+                margin-bottom: 20px;
+            }
+            
+            .remove-confirm-icon .material-symbols-outlined {
+                font-size: 40px;
+            }
+            
+            .remove-confirm-title {
+                font-size: 1.75rem;
+            }
+            
+            .remove-confirm-message {
+                font-size: var(--font-size-body);
+                margin-bottom: var(--spacing-lg);
+            }
+            
+            .remove-confirm-buttons {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .remove-confirm-btn {
+                width: 100%;
+                min-width: auto;
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .remove-confirm-content {
+                padding: var(--spacing-lg);
+                max-width: 95%;
+                margin: var(--spacing-sm);
+            }
+            
+            .remove-confirm-icon {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 16px;
+            }
+            
+            .remove-confirm-icon .material-symbols-outlined {
+                font-size: 36px;
+            }
+            
+            .remove-confirm-title {
+                font-size: 1.5rem;
+                margin-bottom: var(--spacing-sm);
+            }
+            
+            .remove-confirm-message {
+                font-size: 0.9rem;
+                margin-bottom: var(--spacing-md);
+                line-height: 1.5;
+            }
+            
+            .remove-confirm-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .remove-confirm-btn {
+                width: 100%;
+                min-width: auto;
+                padding: var(--spacing-sm) var(--spacing-md);
+                font-size: 0.9rem;
+            }
+            
+            .remove-confirm-btn .material-symbols-outlined {
+                font-size: 18px;
+            }
+        }
+        
         /* Responsive remove button */
         @media (max-width: 1024px) {
             .kiosk-remove-btn {
@@ -1165,9 +1875,9 @@
         .kiosk-checkin-btn-small {
             position: relative;
             width: auto;
-            min-width: 180px;
-            height: 60px;
-            border-radius: 16px;
+            min-width: 160px;
+            height: 56px;
+            border-radius: 14px;
             background: var(--md-sys-color-primary);
             color: #000000;
             border: 2px solid var(--md-sys-color-primary);
@@ -1175,16 +1885,16 @@
             flex-direction: row;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             cursor: pointer;
             transition: all var(--transition-normal) var(--easing-standard);
             box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
             z-index: 9999;
             font-family: var(--font-sans);
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             letter-spacing: 0.5px;
-            padding: 0 20px;
+            padding: 0 18px;
             flex-shrink: 0;
         }
 
@@ -1200,7 +1910,7 @@
         }
 
         .kiosk-checkin-btn-small .material-symbols-outlined {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 300;
         }
 
@@ -1430,7 +2140,6 @@
 
         .kiosk-queue-item.clickable:hover {
             transform: translateX(12px);
-            border-left-color: var(--md-sys-color-primary);
             border-color: rgba(212, 175, 55, 0.6);
             background: rgba(30, 30, 30, 1);
             box-shadow: 0 16px 64px rgba(212, 175, 55, 0.4), 
@@ -1676,33 +2385,38 @@
 
         /* Barber Selection Overlay */
         .barber-selection-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0, 0, 0, 0.85) !important;
             backdrop-filter: blur(8px);
-            z-index: 20000;
+            z-index: 99999 !important;
             display: none;
             align-items: center;
             justify-content: center;
             animation: fadeIn 0.2s ease;
+            pointer-events: auto !important;
         }
 
         .barber-selection-overlay.show {
-            display: flex;
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
         .barber-selection-content {
-            background: rgba(20, 20, 20, 0.95);
-            border: 2px solid rgba(212, 175, 55, 0.3);
+            background: rgba(20, 20, 20, 0.95) !important;
+            border: 2px solid rgba(212, 175, 55, 0.3) !important;
             border-radius: 20px;
             padding: 32px;
             max-width: 600px;
             width: 90%;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(212, 175, 55, 0.1);
             animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative !important;
+            z-index: 100000 !important;
         }
 
         .barber-selection-header {
@@ -1726,24 +2440,28 @@
         }
 
         .barber-selection-list {
-            display: flex;
+            display: flex !important;
             gap: 16px;
             flex-wrap: wrap;
             justify-content: center;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
         .barber-selection-item {
-            display: flex;
+            display: flex !important;
             flex-direction: column;
             align-items: center;
             gap: 8px;
             padding: 16px;
-            background: rgba(20, 20, 20, 0.8);
+            background: rgba(20, 20, 20, 0.8) !important;
             border: 2px solid rgba(212, 175, 55, 0.2);
             border-radius: 16px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             min-width: 100px;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
         .barber-selection-item:hover {
@@ -1757,6 +2475,19 @@
             border-color: var(--color-primary);
             background: rgba(212, 175, 55, 0.15);
             box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+        }
+        
+        .barber-selection-item.absent {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
+        
+        .barber-selection-item.absent:hover {
+            transform: none;
+            border-color: rgba(212, 175, 55, 0.2);
+            background: rgba(20, 20, 20, 0.8);
+            box-shadow: none;
         }
 
         .barber-selection-item.current:hover {
@@ -1796,6 +2527,7 @@
             align-items: center;
             justify-content: center;
             padding: 80px;
+            cursor: pointer;
             text-align: center;
         }
 
@@ -1883,6 +2615,9 @@
             background: rgba(20, 20, 20, 0.9);
             border-radius: 16px;
             border: 1px solid rgba(212, 175, 55, 0.3);
+            box-sizing: border-box;
+            overflow: hidden;
+            width: 100%;
         }
 
         body.kiosk-mode .barber-presence-section {
@@ -1906,9 +2641,12 @@
         }
 
         .barber-presence-list {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: var(--spacing-md);
-            flex-wrap: wrap;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         .barber-presence-item {
@@ -1922,8 +2660,11 @@
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-width: 100px;
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
             position: relative;
+            overflow: hidden;
         }
 
         .barber-presence-item:hover {
@@ -1966,6 +2707,11 @@
             font-weight: 500;
             color: #FFFFFF;
             text-align: center;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            box-sizing: border-box;
         }
 
         .barber-presence-status {
@@ -2033,8 +2779,13 @@
                 padding-left: 0;
             }
             
-            .kiosk-title {
-                font-size: 3rem; /* 48px */
+            .kiosk-title-text {
+                font-size: 2.25rem; /* 36px */
+            }
+            
+            .kiosk-unified-btn {
+                min-width: 280px;
+                height: 56px;
             }
             
             .kiosk-subtitle {
@@ -2072,8 +2823,13 @@
                 font-size: 56px;
             }
             
-            .kiosk-title {
-                font-size: 40px;
+            .kiosk-title-text {
+                font-size: 2rem; /* 32px */
+            }
+            
+            .kiosk-unified-btn {
+                min-width: 260px;
+                height: 52px;
             }
             
             .kiosk-subtitle {
@@ -2121,11 +2877,18 @@
                 min-height: 48px;
             }
             
-            .kiosk-title {
-                font-size: 2.5rem; /* 40px */
+            .kiosk-title-text {
+                font-size: 2rem; /* 32px */
                 line-height: 1.1;
-                margin-top: 0;
-                margin-bottom: 0;
+            }
+            
+            .kiosk-unified-btn {
+                min-width: 240px;
+                height: 48px;
+            }
+            
+            .kiosk-unified-btn .material-symbols-outlined {
+                font-size: 28px;
             }
             
             .kiosk-subtitle {
@@ -2203,11 +2966,18 @@
                 min-height: 44px;
             }
             
-            .kiosk-title {
-                font-size: 2.25rem; /* 36px */
+            .kiosk-title-text {
+                font-size: 1.75rem; /* 28px */
                 line-height: 1.1;
-                margin-top: 0;
-                margin-bottom: 0;
+            }
+            
+            .kiosk-unified-btn {
+                min-width: 220px;
+                height: 44px;
+            }
+            
+            .kiosk-unified-btn .material-symbols-outlined {
+                font-size: 24px;
             }
             
             .kiosk-queue-list {
@@ -2252,13 +3022,9 @@
         /* Tablet Portrait - Specific adjustments */
         @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
             .kiosk-queue-view {
-                padding: 30px 20px 100px 20px;
+                padding: 60px 20px 120px 20px;
                 height: 100vh;
                 overflow: hidden;
-            }
-            
-            .kiosk-queue-list {
-                width: 95%;
             }
             
             .kiosk-mode-toggle {
@@ -2270,20 +3036,27 @@
             }
             
             .kiosk-header {
-                margin-bottom: var(--spacing-md);
+                margin-bottom: var(--spacing-xl);
                 padding-left: 0;
                 padding-top: 0;
-                padding-bottom: var(--spacing-sm);
+                padding-bottom: var(--spacing-md);
                 align-items: center;
                 justify-content: center;
                 min-height: 44px;
             }
             
-            .kiosk-title {
-                font-size: 2rem; /* 32px */
+            .kiosk-title-text {
+                font-size: 1.5rem; /* 24px */
                 line-height: 1.1;
-                margin-top: 0;
-                margin-bottom: 0;
+            }
+            
+            .kiosk-unified-btn {
+                min-width: 200px;
+                height: 40px;
+            }
+            
+            .kiosk-unified-btn .material-symbols-outlined {
+                font-size: 20px;
             }
             
             .kiosk-queue-list {
@@ -2324,17 +3097,6 @@
             }
 
         }
-        
-        /* Tablet Landscape - Specific adjustments */
-        @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
-            .kiosk-queue-view {
-                padding: 30px 20px 100px 20px;
-            }
-            
-            .kiosk-header {
-                margin-bottom: var(--spacing-md);
-            }
-        }
 
         /* Small Tablets / Large Phones (600px - 768px) */
         @media (min-width: 600px) and (max-width: 768px) {
@@ -2349,8 +3111,17 @@
                 padding-left: 0;
             }
             
-            .kiosk-title {
-                font-size: 1.875rem; /* 30px */
+            .kiosk-title-text {
+                font-size: 1.375rem; /* 22px */
+            }
+            
+            .kiosk-unified-btn {
+                min-width: 180px;
+                height: 38px;
+            }
+            
+            .kiosk-unified-btn .material-symbols-outlined {
+                font-size: 20px;
             }
             
             .kiosk-subtitle {
@@ -2404,8 +3175,17 @@
                 padding-left: 0;
             }
             
-            .kiosk-title {
-                font-size: 1.625rem; /* 26px */
+            .kiosk-title-text {
+                font-size: 1.125rem; /* 18px */
+            }
+            
+            .kiosk-unified-btn {
+                min-width: 150px;
+                height: 34px;
+            }
+            
+            .kiosk-unified-btn .material-symbols-outlined {
+                font-size: 16px;
             }
             
             .kiosk-subtitle {
@@ -2461,8 +3241,17 @@
                 padding-left: 100px;
             }
             
-            .kiosk-title {
-                font-size: 2rem; /* 32px */
+            .kiosk-title-text {
+                font-size: 1.5rem; /* 24px */
+            }
+            
+            .kiosk-unified-btn {
+                min-width: 200px;
+                height: 40px;
+            }
+            
+            .kiosk-unified-btn .material-symbols-outlined {
+                font-size: 20px;
             }
             
             .kiosk-subtitle {
@@ -2486,8 +3275,17 @@
                 padding-left: 90px;
             }
             
-            .kiosk-title {
-                font-size: 1.625rem; /* 26px */
+            .kiosk-title-text {
+                font-size: 1.125rem; /* 18px */
+            }
+            
+            .kiosk-unified-btn {
+                min-width: 150px;
+                height: 34px;
+            }
+            
+            .kiosk-unified-btn .material-symbols-outlined {
+                font-size: 16px;
             }
             
             .kiosk-subtitle {
@@ -2597,7 +3395,6 @@
         <div class="queue-section">
             <!-- Queue Header with Title and Check-in Button -->
             <div class="queue-header">
-                <h2 class="section-header" style="margin: 0;">Fila de Espera</h2>
                 <button class="checkin-btn" onclick="openCheckinModal()" title="Adicionar cliente à fila">
                     <span class="material-symbols-outlined">person_add</span>
                     <span>Adicionar Cliente</span>
@@ -2642,29 +3439,15 @@
             </div>
         </div>
 
-        <!-- Barber Selection Overlay (appears when clicking customer) -->
-        <div class="barber-selection-overlay" id="barberSelectionOverlay">
-            <div class="barber-selection-content">
-                <div class="barber-selection-header">
-                    <span class="barber-selection-title">Selecione o barbeiro</span>
-                    <span class="barber-selection-customer" id="barberSelectionCustomerName"></span>
-                </div>
-                <div class="barber-selection-list" id="barberSelectionList">
-                    <!-- Present barbers will be generated here -->
-                </div>
-            </div>
-        </div>
-
         <!-- Kiosk Queue View -->
         <div class="kiosk-view kiosk-queue-view active" id="kioskQueueView">
             <div class="kiosk-header">
-                <div style="display: flex; align-items: center; gap: var(--spacing-md); flex: 1;">
-                    <span class="material-symbols-outlined kiosk-logo">content_cut</span>
-                    <div class="kiosk-title" data-text="Barbearia Mineiro">Barbearia Mineiro</div>
-                </div>
-                <button class="kiosk-checkin-btn-small" onclick="openCheckinModal()" title="Entrar na fila">
-                    <span class="material-symbols-outlined">person_add</span>
-                    <span>Entrar na Fila</span>
+                <button class="kiosk-unified-btn" onclick="openCheckinModal()" title="Entrar na fila">
+                    <span class="kiosk-title-text">Barbearia Mineiro</span>
+                    <span class="kiosk-icons-group">
+                        <span class="material-symbols-outlined">person</span>
+                        <span class="material-symbols-outlined">add</span>
+                    </span>
                 </button>
             </div>
 
@@ -2747,12 +3530,28 @@
         </div>
     </div>
 
+    <!-- Barber Selection Overlay (Moved outside kiosk-container to be visible in all modes) -->
+    <div class="barber-selection-overlay" id="barberSelectionOverlay" style="display: none;">
+        <div class="barber-selection-content">
+            <div class="barber-selection-header">
+                <span class="barber-selection-title">Selecione o barbeiro</span>
+                <span class="barber-selection-customer" id="barberSelectionCustomerName"></span>
+            </div>
+            <div class="barber-selection-list" id="barberSelectionList">
+                <!-- Present barbers will be generated here -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // Hard-seeded barbers with real images
         const barbers = [
             { id: 1, name: 'João', avatar: 'https://i.pravatar.cc/150?img=12', isPresent: true },
             { id: 2, name: 'Pedro', avatar: 'https://i.pravatar.cc/150?img=33', isPresent: true },
-            { id: 3, name: 'Carlos', avatar: 'https://i.pravatar.cc/150?img=47', isPresent: true }
+            { id: 3, name: 'Carlos', avatar: 'https://i.pravatar.cc/150?img=47', isPresent: true },
+            { id: 4, name: 'Miguel', avatar: 'https://i.pravatar.cc/150?img=68', isPresent: true },
+            { id: 5, name: 'Rafael', avatar: 'https://i.pravatar.cc/150?img=51', isPresent: true },
+            { id: 6, name: 'Lucas', avatar: 'https://i.pravatar.cc/150?img=27', isPresent: true }
         ];
 
         // Queue data with hard-seeded barber assignments
@@ -2772,7 +3571,7 @@
         let selectedBarberId = null;
         let isKioskMode = false;
         let kioskViewIndex = 0;
-        const kioskViews = ['kioskQueueView', 'ad1', 'ad2', 'ad3'];
+        const kioskViews = ['ad1', 'kioskQueueView', 'ad2', 'kioskQueueView'];
         const QUEUE_DURATION = 15000;
         const AD_DURATION = 10000;
         let kioskInterval;
@@ -2822,10 +3621,12 @@
                 renderKioskQueue();
                 renderKioskBarberSelector();
                 
-                // Generate QR code
+                // Generate QR code immediately when entering kiosk mode
                 setTimeout(() => {
-                    generateQRCode();
-                }, 100);
+                    if (typeof generateQRCode === 'function') {
+                        generateQRCode();
+                    }
+                }, 300);
                 
                 // Show barber selector initially (queue view is first)
                 const barberSelector = document.querySelector('.kiosk-barber-selector');
@@ -2893,9 +3694,23 @@
         function toggleBarberPresence(barberId) {
             const barber = barbers.find(b => b.id === barberId);
             if (barber) {
+                const wasPresent = barber.isPresent;
                 barber.isPresent = !barber.isPresent;
+                
+                // If barber is now absent, unassign all customers assigned to them
+                if (!barber.isPresent && wasPresent) {
+                    queueData.forEach(customer => {
+                        if (customer.barberId === barberId) {
+                            customer.barberId = null;
+                            // If customer was serving, change back to waiting
+                            if (customer.status === 'serving') {
+                                customer.status = 'waiting';
+                            }
+                        }
+                    });
+                }
+                
                 renderBarberPresence();
-                // Optionally trigger a re-render of queue if barber presence affects it
                 renderAll();
             }
         }
@@ -2968,56 +3783,48 @@
                     const assignedBarber = customer.barberId ? barbers.find(b => b.id === customer.barberId) : null;
                     item.className = `queue-item ${customer.status === 'serving' ? 'serving' : ''}`;
                     
-                    // Position number: serving shows checkmark, waiting shows queue position
-                    let positionNumber;
+                    // Position icon: serving shows check, waiting shows X
+                    let positionIcon;
                     if (customer.status === 'serving') {
-                        positionNumber = '✓';
+                        positionIcon = '<span class="material-symbols-outlined" style="font-size: 1.5rem;">check</span>';
                     } else {
-                        positionNumber = waitingPosition;
+                        positionIcon = '<span class="material-symbols-outlined" style="font-size: 1.5rem;">close</span>';
                         waitingPosition++;
                     }
                     
-                    // Create barber avatars with face images - only show present barbers
-                    const barberAvatars = barbers
-                        .filter(barber => barber.isPresent || (assignedBarber && assignedBarber.id === barber.id))
-                        .map(barber => {
-                        const isAssigned = assignedBarber && assignedBarber.id === barber.id;
-                        // Allow clicking: assign if waiting, unassign/change if serving
-                        const canInteract = true; // Always allow interaction
-                        return `
-                            <div class="barber-avatar ${isAssigned ? 'assigned' : ''}" 
-                                 onclick="event.stopPropagation(); ${canInteract ? (isAssigned ? `unassignBarber(${customer.id})` : `assignBarberAndStart(${customer.id}, ${barber.id})`) : ''};"
-                                 title="${isAssigned ? `Clique para desatribuir ${barber.name}` : `Atender com ${barber.name}`}">
-                                <img src="${barber.avatar}" alt="${barber.name}" class="barber-avatar-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
+                    // Show only assigned barber on card (if one is assigned)
+                    let barberAvatars = '';
+                    if (assignedBarber) {
+                        barberAvatars = `
+                            <div class="barber-avatar assigned" 
+                                 onclick="event.stopPropagation(); unassignBarber(${customer.id});"
+                                 title="Clique para desatribuir ${assignedBarber.name}">
+                                <img src="${assignedBarber.avatar}" alt="${assignedBarber.name}" class="barber-avatar-face" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(assignedBarber.name)}&background=D4AF37&color=000&size=128';" />
                             </div>
                         `;
-                    }).join('');
+                    }
                     
                     item.innerHTML = `
-                        <div class="position-badge">${positionNumber}</div>
+                        <button class="position-badge" onclick="event.stopPropagation(); ${customer.status === 'serving' ? `completeService(${customer.id})` : `removeCustomer(${customer.id})`};" title="${customer.status === 'serving' ? 'Finalizar atendimento' : 'Remover da fila'}">
+                            ${positionIcon}
+                        </button>
                         <div class="customer-info">
                             <div class="customer-name">${customer.name}</div>
-                            ${assignedBarber ? `<div style="font-size: 13px; color: var(--md-sys-color-primary); font-weight: 500; display: flex; align-items: center; gap: 4px;">
-                                <span class="material-symbols-outlined" style="font-size: 14px;">content_cut</span>
-                                <span>${assignedBarber.name}</span>
-                            </div>` : ''}
                         </div>
                         <div class="barber-avatars">
                             ${barberAvatars}
                         </div>
-                        <div class="queue-actions" onclick="event.stopPropagation()">
-                            ${customer.status === 'serving' ? `
-                                <button class="action-btn primary" onclick="completeService(${customer.id})">
-                                    <span class="material-symbols-outlined" style="font-size: 18px;">check</span>
-                                    <span>Finalizar</span>
-                                </button>
-                            ` : `
-                                <button class="action-btn danger" onclick="removeCustomer(${customer.id})">
-                                    <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
-                                </button>
-                            `}
-                        </div>
                     `;
+                    
+                    // Make the card clickable to show barber selection overlay (set after innerHTML)
+                    item.style.cursor = 'pointer';
+                    item.onclick = function(e) {
+                         e.preventDefault();
+                         e.stopPropagation();
+                         showBarberSelection(customer.id);
+                    };
+                    item.setAttribute('data-customer-id', customer.id);
+                    item.setAttribute('data-clickable', 'true');
 
                     queueList.appendChild(item);
                 });
@@ -3049,6 +3856,7 @@
             customer.status = 'waiting';
             renderAll();
         }
+        
 
         // Store previous queue data for change detection
         let previousQueueData = JSON.stringify(queueData);
@@ -3145,6 +3953,15 @@
                        </span>`
                     : '';
 
+                // Show finalizar button for serving customers, remove button for others
+                const actionButton = item.status === 'serving'
+                    ? `<button class="kiosk-finalizar-btn" onclick="event.stopPropagation(); completeService(${item.id});" title="Finalizar atendimento">
+                            <span class="material-symbols-outlined">check</span>
+                        </button>`
+                    : `<button class="kiosk-remove-btn" onclick="event.stopPropagation(); removeCustomer(${item.id});" title="Remover da fila">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>`;
+                
                 queueItem.innerHTML = `
                     <div class="kiosk-position">${positionNumber}</div>
                     <div class="kiosk-queue-item-content">
@@ -3153,9 +3970,7 @@
                         </div>
                     </div>
                     <div class="kiosk-queue-item-actions">
-                        <button class="kiosk-remove-btn" onclick="event.stopPropagation(); removeCustomer(${item.id});" title="Remover da fila">
-                            <span class="material-symbols-outlined">close</span>
-                    </button>
+                        ${actionButton}
                     </div>
                 `;
 
@@ -3171,16 +3986,23 @@
             // Clear any existing intervals
             stopKioskRotation();
             
-            // Reset manual queue view flag to allow rotation
-            isManualQueueView = false;
-            
-            // Start with first ad (index 0) - kioskViews = ['ad1', 'kioskQueueView', 'ad2', 'kioskQueueView']
+            // Start with first ad (index 0)
             switchKioskView(0);
         }
 
         function switchKioskView(index) {
             // Update index
             kioskViewIndex = index;
+            
+            // Close any open overlays to ensure clean state
+            hideBarberSelection();
+            closeCheckinModal();
+            
+            // Temporarily disable pointer events to prevent accidental clicks during transition
+            document.body.style.pointerEvents = 'none';
+            setTimeout(() => {
+                document.body.style.pointerEvents = '';
+            }, 500);
             
             // Hide all views
             document.querySelectorAll('.kiosk-view').forEach(view => {
@@ -3194,10 +4016,12 @@
                 viewElement.classList.add('active');
                 
                 // Regenerate QR code when switching back to queue view
-                if (viewId === 'kioskQueueView' && typeof QRCode !== 'undefined') {
+                if (viewId === 'kioskQueueView') {
                     setTimeout(() => {
-                        generateQRCode();
-                    }, 100);
+                        if (typeof generateQRCode === 'function') {
+                            generateQRCode();
+                        }
+                    }, 200);
                 }
             }
 
@@ -3357,11 +4181,18 @@
         }
 
         function removeCustomer(customerId) {
-            // Remove customer directly without confirmation
+            // Find customer to get their name
+            const customer = queueData.find(c => c.id === customerId);
+            if (!customer) return;
+            
+            // Show confirmation modal
+            showRemoveConfirmModal(customer.name, () => {
+                // This callback runs when user confirms
                 queueData = queueData.filter(c => c.id !== customerId);
                 // Reset previous queue data to force re-render
                 previousQueueData = '';
                 renderAll();
+            });
         }
         
         function showRemoveConfirmModal(customerName, onConfirm) {
@@ -3375,6 +4206,24 @@
                 // Store confirm callback
                 modal.dataset.confirmCallback = 'true';
                 window.removeConfirmCallback = onConfirm;
+                
+                // Close on background click
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        closeRemoveConfirmModal(false);
+                    }
+                };
+                
+                // Close on Escape key
+                const escapeHandler = function(e) {
+                    if (e.key === 'Escape') {
+                        closeRemoveConfirmModal(false);
+                        document.removeEventListener('keydown', escapeHandler);
+                    }
+                };
+                document.addEventListener('keydown', escapeHandler);
+                // Store handler for cleanup
+                modal._escapeHandler = escapeHandler;
             }
         }
         
@@ -3382,6 +4231,12 @@
             const modal = document.getElementById('removeConfirmModal');
             if (modal) {
                 modal.style.display = 'none';
+                modal.onclick = null; // Remove background click handler
+                // Remove escape handler if it exists
+                if (modal._escapeHandler) {
+                    document.removeEventListener('keydown', modal._escapeHandler);
+                    modal._escapeHandler = null;
+                }
                 if (confirmed && window.removeConfirmCallback) {
                     window.removeConfirmCallback();
                     window.removeConfirmCallback = null;
@@ -3393,10 +4248,10 @@
         function handleTouchToQueue() {
             if (!isKioskMode) return;
             
+            // Check if currently showing an ad (not queue view)
             const currentViewId = kioskViews[kioskViewIndex];
             const isAdView = currentViewId !== 'kioskQueueView';
             
-            // If currently showing an ad, go to queue
             if (isAdView) {
                 // Calculate remaining time for current ad
                 if (adStartTime > 0) {
@@ -3411,15 +4266,14 @@
                     kioskInterval = null;
                 }
             
-                // Switch to queue view (find first queue view index)
-                const queueIndex = kioskViews.findIndex(v => v === 'kioskQueueView');
-                if (queueIndex !== -1) {
-                    isManualQueueView = true;
-                    switchKioskView(queueIndex);
-                    
-                    // Start idle timer
-                    resetIdleTimer();
-                }
+                // Switch to queue view (find next queue view in rotation)
+                // With pattern ['ad1', 'kioskQueueView', 'ad2', 'kioskQueueView']
+                // Queue is at indices 1 and 3, so go to index 1
+                isManualQueueView = true;
+                switchKioskView(1);
+                
+                // Start idle timer
+                resetIdleTimer();
             } else {
                 // Already on queue - reset idle timer
                 resetIdleTimer();
@@ -3433,11 +4287,10 @@
                 clearTimeout(idleTimer);
             }
             
-            // Only start timer if we're on queue view (indices 1 or 3 in kioskViews array)
-            const isQueueView = kioskViews[kioskViewIndex] === 'kioskQueueView';
-            if (isQueueView && isManualQueueView) {
+            // Only start timer if we're on queue view
+            if (kioskViewIndex === 0 && isManualQueueView) {
                 idleTimer = setTimeout(() => {
-                    if (isKioskMode && kioskViews[kioskViewIndex] === 'kioskQueueView' && isManualQueueView) {
+                    if (isKioskMode && kioskViewIndex === 0 && isManualQueueView) {
                         resumeAdRotation();
                     }
                 }, IDLE_TIMEOUT);
@@ -3451,7 +4304,7 @@
             isManualQueueView = false;
             
             // Resume from where we left off
-            if (adRemainingTime > 0 && previousAdIndex >= 0 && kioskViews[previousAdIndex] !== 'kioskQueueView') {
+            if (adRemainingTime > 0 && previousAdIndex > 0) {
                 // Go back to the ad we were viewing
                 switchKioskView(previousAdIndex);
                 
@@ -3470,14 +4323,9 @@
                 startProgressBar(adRemainingTime);
                 adRemainingTime = 0; // Reset
             } else {
-                // Normal rotation - go to next ad
+                // Normal rotation - go to next view
                 const nextIndex = (kioskViewIndex + 1) % kioskViews.length;
-                if (nextIndex === 0) {
-                    // Skip queue if it's next, go to first ad
-                    switchKioskView(1);
-                } else {
                 switchKioskView(nextIndex);
-                }
             }
         }
 
@@ -3495,13 +4343,27 @@
         function showBarberSelection(customerId) {
             const customer = queueData.find(c => c.id === customerId);
             // Allow showing overlay for waiting customers or serving customers (to unselect/change)
-            if (!customer || (customer.status !== 'waiting' && customer.status !== 'serving')) return;
+            if (!customer || (customer.status !== 'waiting' && customer.status !== 'serving')) {
+                return;
+            }
             
             const overlay = document.getElementById('barberSelectionOverlay');
             const customerNameEl = document.getElementById('barberSelectionCustomerName');
             const selectionList = document.getElementById('barberSelectionList');
             
-            if (!overlay || !customerNameEl || !selectionList) return;
+            if (!overlay || !customerNameEl || !selectionList) {
+                return;
+            }
+            
+            // Move overlay to body end to ensure it's on top of everything (fixes z-index issues)
+            document.body.appendChild(overlay);
+            
+            // Close overlay when clicking on background
+            overlay.onclick = function(e) {
+                if (e.target === overlay) {
+                    hideBarberSelection();
+                }
+            };
             
             // Set customer name
             customerNameEl.textContent = customer.name;
@@ -3509,40 +4371,55 @@
             // Get current assigned barber
             const currentBarber = customer.barberId ? barbers.find(b => b.id === customer.barberId) : null;
             
-            // Clear and populate barber list (only present barbers)
+            // Clear and populate barber list (show ALL barbers)
             selectionList.innerHTML = '';
-            const presentBarbers = barbers.filter(b => b.isPresent);
             
-            if (presentBarbers.length === 0) {
-                selectionList.innerHTML = '<div style="text-align: center; color: rgba(255, 255, 255, 0.6); padding: 20px;">Nenhum barbeiro presente</div>';
-            } else {
-                presentBarbers.forEach(barber => {
-                    const isCurrentBarber = currentBarber && barber.id === currentBarber.id;
-                    const item = document.createElement('div');
-                    item.className = `barber-selection-item ${isCurrentBarber ? 'current' : ''}`;
-                    item.onclick = () => {
-                        if (isCurrentBarber) {
-                            // Unselect current barber
-                            unselectBarberForCustomer(customerId);
-                        } else {
-                            // Select new barber
-                            selectBarberForCustomer(customerId, barber.id);
-                        }
-                    };
-                    
-                    item.innerHTML = `
-                        <img src="${barber.avatar}" alt="${barber.name}" class="barber-selection-avatar" 
-                             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
-                        <span class="barber-selection-name">${barber.name}</span>
-                        ${isCurrentBarber ? '<span style="font-size: 0.75rem; color: var(--color-primary); margin-top: 4px;">Atual</span>' : ''}
-                    `;
-                    
-                    selectionList.appendChild(item);
-                });
-            }
+            barbers.forEach((barber, index) => {
+                const isCurrentBarber = currentBarber && barber.id === currentBarber.id;
+                const isPresent = barber.isPresent;
+                const item = document.createElement('div');
+                item.className = `barber-selection-item ${isCurrentBarber ? 'current' : ''} ${!isPresent ? 'absent' : ''}`;
+                item.onclick = () => {
+                    if (!isPresent) return; // Can't select absent barbers
+                    if (isCurrentBarber) {
+                        // Unselect current barber
+                        unselectBarberForCustomer(customerId);
+                    } else {
+                        // Select new barber
+                        selectBarberForCustomer(customerId, barber.id);
+                    }
+                };
+                
+                item.innerHTML = `
+                    <img src="${barber.avatar}" alt="${barber.name}" class="barber-selection-avatar" 
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
+                    <span class="barber-selection-name">${barber.name}</span>
+                    ${isCurrentBarber ? '<span style="font-size: 0.75rem; color: var(--color-primary); margin-top: 4px;">Atual</span>' : ''}
+                    ${!isPresent ? '<span style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); margin-top: 4px;">Ausente</span>' : ''}
+                `;
+                
+                selectionList.appendChild(item);
+            });
             
             // Show overlay
             overlay.classList.add('show');
+            
+            // Set all styles directly
+            overlay.style.setProperty('position', 'fixed', 'important');
+            overlay.style.setProperty('top', '0', 'important');
+            overlay.style.setProperty('left', '0', 'important');
+            overlay.style.setProperty('width', '100%', 'important');
+            overlay.style.setProperty('height', '100%', 'important');
+            overlay.style.setProperty('display', 'flex', 'important');
+            overlay.style.setProperty('visibility', 'visible', 'important');
+            overlay.style.setProperty('opacity', '1', 'important');
+            overlay.style.setProperty('z-index', '99999', 'important');
+            overlay.style.setProperty('background', 'rgba(0, 0, 0, 0.85)', 'important');
+            overlay.style.setProperty('align-items', 'center', 'important');
+            overlay.style.setProperty('justify-content', 'center', 'important');
+            
+            // Force a reflow
+            void overlay.offsetHeight;
             
             // Auto-hide after 5 seconds
             if (barberSelectionTimer) {
@@ -3558,6 +4435,7 @@
             const overlay = document.getElementById('barberSelectionOverlay');
             if (overlay) {
                 overlay.classList.remove('show');
+                overlay.style.display = 'none';
             }
             if (barberSelectionTimer) {
                 clearTimeout(barberSelectionTimer);
@@ -3578,7 +4456,7 @@
             customer.barberId = barberId;
             customer.status = 'serving';
             
-            // Hide overlay
+            // Hide overlay after selection
             hideBarberSelection();
             
             // Re-render
@@ -3606,6 +4484,7 @@
 
         // Event delegation for kiosk mode interactions
         // Set up once and handle all clicks
+        // Global click handler for kiosk mode
         document.addEventListener('click', function(e) {
             if (!isKioskMode) return;
             
@@ -3640,17 +4519,27 @@
                 const customerId = parseInt(queueItem.getAttribute('data-customer-id'));
                 if (customerId && !isNaN(customerId)) {
                     showBarberSelection(customerId);
-                    }
-                return;
                 }
-            });
+                return;
+            }
+        });
+        
+        // Global click handler for management mode (barber selection overlay)
+        document.addEventListener('click', function(e) {
+            if (isKioskMode) return;
+            
+            // Check if click is on barber selection overlay background (close it)
+            const overlay = e.target.closest('.barber-selection-overlay');
+            if (overlay && e.target === overlay) {
+                hideBarberSelection();
+                return;
+            }
+        });
 
         // Also handle keyboard events for accessibility
         document.addEventListener('keydown', function(e) {
-            if (!isKioskMode) return;
-            
-            // Handle Enter/Space on barber chips (presence toggle)
-            if (e.key === 'Enter' || e.key === ' ') {
+            // Handle Enter/Space on barber chips (presence toggle) - kiosk mode only
+            if (isKioskMode && (e.key === 'Enter' || e.key === ' ')) {
                 const barberChip = e.target.closest('.kiosk-barber-chip');
                 if (barberChip) {
                     e.preventDefault();
@@ -3661,7 +4550,7 @@
                 }
             }
             
-            // Handle Escape to close barber selection overlay
+            // Handle Escape to close barber selection overlay (works in both modes)
             if (e.key === 'Escape') {
                 const overlay = document.getElementById('barberSelectionOverlay');
                 if (overlay && overlay.classList.contains('show')) {
@@ -3674,60 +4563,27 @@
         function generateQRCode() {
             const qrContainer = document.getElementById('kioskQRCode');
             if (!qrContainer) {
-                console.log('QR container not found');
                 return;
             }
             
-            // Check if QRCode library is loaded
-            if (typeof QRCode === 'undefined') {
-                console.log('QRCode library not loaded yet, retrying...');
-                qrContainer.innerHTML = '<div style="color: #666; text-align: center; padding: 10px; font-size: 10px;">Loading...</div>';
-                // Retry after a short delay
-                setTimeout(generateQRCode, 200);
-                return;
-            }
+            // Use the actual queue-join page URL
+            const joinUrl = 'https://eutonafila-hiyh.onrender.com/queue-join.html';
             
-            // Get current origin and construct join URL
-            // In production, this should be the actual domain where the web app is hosted
-            let joinUrl = window.location.origin + '/join';
-            
-            // If we're in a mockup directory, adjust the path
-            const pathname = window.location.pathname;
-            if (pathname.includes('/mockups/') || pathname.includes('barber-queue-manager')) {
-                // For mockups, use a relative path that will work in production
-                joinUrl = window.location.origin + '/join';
-            }
-            
-            console.log('Generating QR code for:', joinUrl);
-            
-            // Clear existing QR code
+            // Clear any existing content
             qrContainer.innerHTML = '';
             
-            // Create a canvas element for the QR code
-            const canvas = document.createElement('canvas');
-            qrContainer.appendChild(canvas);
+            // Use QR code API service directly
+            const encodedUrl = encodeURIComponent(joinUrl);
+            const qrImage = document.createElement('img');
+            qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodedUrl}`;
+            qrImage.alt = 'QR Code - Escaneie para entrar na fila';
+            qrImage.style.cssText = 'width: 100%; height: auto; display: block; border-radius: 4px;';
             
-            // Generate QR code - QRCode.toCanvas requires a canvas element
-            QRCode.toCanvas(canvas, joinUrl, {
-                width: 84,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                },
-                errorCorrectionLevel: 'M'
-            }, function (error) {
-                if (error) {
-                    console.error('Error generating QR code:', error);
-                    qrContainer.innerHTML = '<div style="color: #666; text-align: center; padding: 10px; font-size: 9px;">QR Error</div>';
-                } else {
-                    console.log('QR code generated successfully for:', joinUrl);
-                    // Ensure canvas is visible
-                    if (canvas) {
-                        canvas.style.display = 'block';
-                    }
-                }
-            });
+            qrImage.onerror = function() {
+                qrContainer.innerHTML = '<div style="color: #f00; text-align: center; padding: 10px; font-size: 9px;">QR Error</div>';
+            };
+            
+            qrContainer.appendChild(qrImage);
         }
 
         // Open check-in modal
@@ -3819,15 +4675,18 @@
                                      target.closest('.kiosk-barber-chip') || 
                                      target.closest('.kiosk-queue-item.clickable') ||
                                      target.closest('.checkin-modal') ||
-                                     target.closest('.kiosk-checkin-btn-small') ||
+                                     target.closest('.kiosk-unified-btn') ||
                                      target.closest('.kiosk-qr-corner') ||
                                      target.closest('.kiosk-queue-item');
                 
                 if (!isInteractive) {
-                    if (kioskViewIndex > 0) {
+                    const currentViewId = kioskViews[kioskViewIndex];
+                    const isAdView = currentViewId !== 'kioskQueueView';
+                    
+                    if (isAdView) {
                         // Touching ad - go to queue
                         handleTouchToQueue();
-                    } else if (kioskViewIndex === 0 && isManualQueueView) {
+                    } else if (isManualQueueView) {
                         // Touching queue view - reset idle timer
                         resetIdleTimer();
                     }
@@ -3844,16 +4703,19 @@
                                      target.closest('.kiosk-barber-chip') || 
                                      target.closest('.kiosk-queue-item.clickable') ||
                                      target.closest('.checkin-modal') ||
-                                     target.closest('.kiosk-checkin-btn-small') ||
+                                     target.closest('.kiosk-unified-btn') ||
                                      target.closest('.kiosk-qr-corner') ||
                                      target.closest('.kiosk-mode-toggle') ||
                                      target.closest('.kiosk-queue-item');
                 
                 if (!isInteractive) {
-                    if (kioskViewIndex > 0) {
+                    const currentViewId = kioskViews[kioskViewIndex];
+                    const isAdView = currentViewId !== 'kioskQueueView';
+                    
+                    if (isAdView) {
                         // Clicking on ad - go to queue
                         handleTouchToQueue();
-                    } else if (kioskViewIndex === 0 && isManualQueueView) {
+                    } else if (isManualQueueView) {
                         // Clicking on queue view - reset idle timer
                         resetIdleTimer();
                     }
@@ -3870,14 +4732,10 @@
             previousQueueData = '';
             renderKioskQueue();
             renderKioskBarberSelector();
-            // Wait for QRCode library to load before generating
-            if (typeof QRCode !== 'undefined') {
+            // Generate QR code
+            setTimeout(() => {
                 generateQRCode();
-            } else {
-                window.addEventListener('load', function() {
-                    setTimeout(generateQRCode, 100);
-                });
-            }
+            }, 100);
         }
 
         // Escape key exits kiosk mode (only if modal is not open)
@@ -3912,6 +4770,31 @@
                 }
             }, 250);
         });
+        
+        // Global click handler for management mode queue items (barber selection)
+        // Removed in favor of direct onclick handler on queue items for better reliability
+        /*
+        document.addEventListener('click', function(e) {
+            if (isKioskMode) return; // Kiosk mode has its own handler
+            
+            // ... logic removed ...
+        });
+        */
+        
+        // Generate QR code on page load
+        function initQRCode() {
+            // Only generate if kiosk mode is active or if container exists
+            const qrContainer = document.getElementById('kioskQRCode');
+            if (qrContainer) {
+                generateQRCode();
+            }
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initQRCode);
+        } else {
+            initQRCode();
+        }
     </script>
 </body>
 </html>
