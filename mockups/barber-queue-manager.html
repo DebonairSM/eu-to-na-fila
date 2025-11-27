@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Fila - Barbearia Mineiro</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     
@@ -1193,10 +1193,13 @@
             margin: 0 auto;
             width: 90%;
             overflow-y: auto;
+            overflow-x: hidden;
             position: relative;
             padding: 8px 0;
             align-self: center;
             box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
+            min-width: 0;
         }
         
         /* Hide scrollbar but keep scrolling functionality */
@@ -1271,8 +1274,9 @@
             transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             box-sizing: border-box;
             position: relative;
-            overflow: visible;
+            overflow: hidden;
             width: 100%;
+            min-width: 0;
             flex-shrink: 0;
             backdrop-filter: blur(12px) saturate(180%);
         }
@@ -2131,6 +2135,8 @@
             text-overflow: ellipsis;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         .kiosk-queue-item.serving .kiosk-customer-name {
@@ -2163,6 +2169,8 @@
             gap: 4px;
             flex: 1;
             min-width: 0;
+            overflow: hidden;
+            box-sizing: border-box;
         }
         
         .kiosk-queue-item-actions {
@@ -2913,9 +2921,10 @@
         /* Tablet Landscape (1024px - 1366px) */
         @media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
             .kiosk-queue-view {
-                padding: 60px 28px 120px 28px;
+                padding: 40px 20px 140px 20px;
                 height: 100vh;
                 overflow: hidden;
+                align-items: center;
             }
             
             .kiosk-mode-toggle {
@@ -2957,6 +2966,7 @@
                 gap: var(--spacing-sm);
                 width: 88%;
                 max-width: 1100px;
+                margin: 0 auto;
             }
             
             .kiosk-queue-item {
@@ -3003,9 +3013,10 @@
         /* Tablet Portrait (768px - 1024px) */
         @media (min-width: 768px) and (max-width: 1024px) {
             .kiosk-queue-view {
-                padding: 60px 24px 120px 24px;
+                padding: 40px 20px 140px 20px;
                 height: 100vh;
                 overflow: hidden;
+                align-items: center;
             }
             
             .kiosk-mode-toggle {
@@ -3042,6 +3053,9 @@
             
             .kiosk-queue-list {
                 gap: var(--spacing-md);
+                width: 90%;
+                max-width: 900px;
+                margin: 0 auto;
             }
             
             .kiosk-queue-item {
@@ -3082,9 +3096,10 @@
         /* Tablet Portrait - Specific adjustments */
         @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
             .kiosk-queue-view {
-                padding: 60px 20px 120px 20px;
+                padding: 40px 20px 140px 20px;
                 height: 100vh;
                 overflow: hidden;
+                align-items: center;
             }
             
             .kiosk-mode-toggle {
@@ -3123,6 +3138,7 @@
                 gap: var(--spacing-md);
                 width: 90%;
                 max-width: 900px;
+                margin: 0 auto;
             }
             
             .kiosk-queue-item {
@@ -3163,9 +3179,10 @@
         /* Small Tablets / Large Phones (600px - 768px) */
         @media (min-width: 600px) and (max-width: 768px) {
             .kiosk-queue-view {
-                padding: 70px 18px 140px 18px;
+                padding: 40px 20px 140px 20px;
                 height: 100vh;
                 overflow: hidden;
+                align-items: center;
             }
             
             .kiosk-header {
@@ -3188,6 +3205,12 @@
             
             .kiosk-subtitle {
                 font-size: 0.875rem;
+            }
+            
+            .kiosk-queue-list {
+                width: 92%;
+                max-width: 1000px;
+                margin: 0 auto;
             }
             
             .kiosk-queue-item {
@@ -3967,6 +3990,7 @@
             }
 
             // Calculate position for waiting customers
+            // Reset counter to ensure accurate numbering
             let waitingPosition = 1;
             sortedQueue.forEach((item, index) => {
                 const queueItem = document.createElement('div');
@@ -4040,6 +4064,16 @@
                 queueItem.style.animationDelay = `${index * 0.08}s`;
 
                 kioskQueueList.appendChild(queueItem);
+            });
+            
+            // Ensure all items are visible and properly rendered
+            requestAnimationFrame(() => {
+                const items = kioskQueueList.querySelectorAll('.kiosk-queue-item');
+                items.forEach((item, idx) => {
+                    item.style.display = 'flex';
+                    item.style.visibility = 'visible';
+                    item.style.opacity = '1';
+                });
             });
         }
 
