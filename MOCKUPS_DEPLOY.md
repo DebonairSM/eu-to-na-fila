@@ -36,3 +36,4 @@ Once deployed, your mockups will be available at:
 - No build process needed - just serve the files as-is
 - The `mockups` directory will be the root of your static site
 - You can set a custom domain if desired
+

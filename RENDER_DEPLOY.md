@@ -57,3 +57,4 @@ If Blueprint doesn't work, create the service manually:
 - **SPA**: `https://your-app.onrender.com/mineiro`
 - **API**: `https://your-app.onrender.com/api`
 - **Health Check**: `https://your-app.onrender.com/health`
+
