@@ -1189,9 +1189,9 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
-            width: 90%;
+            width: 92%;
             overflow-y: auto;
             position: relative;
             padding: 8px 0;
@@ -1221,15 +1221,16 @@
         /* Landscape orientation optimizations */
         @media (orientation: landscape) {
             .kiosk-queue-list {
-                width: 85%;
-                max-width: 1200px;
+                width: 90%;
+                max-width: 1500px;
                 margin: 80px auto 0 auto;
             }
             
             /* Compact spacing in landscape for better use of horizontal space */
             @media (max-height: 600px) {
                 .kiosk-queue-list {
-                    width: 92%;
+                    width: 94%;
+                    max-width: 1600px;
                     gap: 12px;
                     margin: 60px auto 0 auto;
                 }
@@ -1244,15 +1245,16 @@
         /* Portrait orientation optimizations */
         @media (orientation: portrait) {
             .kiosk-queue-list {
-                width: 92%;
+                width: 94%;
+                max-width: 1000px;
                 margin: 120px auto 0 auto;
             }
             
             /* Tall screens in portrait - use more width */
             @media (min-height: 900px) {
                 .kiosk-queue-list {
-                    width: 88%;
-                    max-width: 800px;
+                    width: 92%;
+                    max-width: 1000px;
                     margin: 140px auto 0 auto;
                 }
             }
@@ -1290,6 +1292,11 @@
         
         /* Adaptive card sizing for larger screens */
         @media (min-width: 1920px) {
+            .kiosk-queue-list {
+                width: 95%;
+                max-width: 1800px;
+            }
+            
             .kiosk-queue-item {
                 padding: 32px 44px;
                 gap: 36px;
@@ -1307,6 +1314,11 @@
         }
         
         @media (min-width: 1600px) and (max-width: 1919px) {
+            .kiosk-queue-list {
+                width: 94%;
+                max-width: 1700px;
+            }
+            
             .kiosk-queue-item {
                 padding: 30px 40px;
                 gap: 32px;
@@ -2852,6 +2864,8 @@
             
             .kiosk-queue-list {
                 gap: var(--spacing-sm);
+                width: 94%;
+                max-width: 1600px;
             }
             
             .kiosk-queue-item {
@@ -2955,8 +2969,8 @@
             
             .kiosk-queue-list {
                 gap: var(--spacing-sm);
-                width: 88%;
-                max-width: 1100px;
+                width: 92%;
+                max-width: 1400px;
                 margin: 0 auto;
                 margin-top: 30px;
             }
@@ -3124,8 +3138,8 @@
             
             .kiosk-queue-list {
                 gap: var(--spacing-md);
-                width: 90%;
-                max-width: 900px;
+                width: 94%;
+                max-width: 1100px;
                 margin: 0 auto;
                 margin-top: 30px;
             }
@@ -3193,6 +3207,13 @@
             
             .kiosk-subtitle {
                 font-size: 0.875rem;
+            }
+            
+            .kiosk-queue-list {
+                width: 96%;
+                max-width: 1200px;
+                margin: 0 auto;
+                margin-top: 20px;
             }
             
             .kiosk-queue-item {
