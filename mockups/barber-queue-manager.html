@@ -1069,7 +1069,7 @@
 
         .kiosk-header {
             text-align: center;
-            margin-bottom: 120px;
+            margin-bottom: 100px;
             flex-shrink: 0;
             padding-bottom: 24px;
             padding-left: 0;
@@ -1086,13 +1086,13 @@
         /* Increase spacing between header and queue list based on orientation */
         @media (orientation: portrait) {
             .kiosk-header {
-                margin-bottom: 220px;
+                margin-bottom: 200px;
             }
         }
         
         @media (orientation: landscape) {
             .kiosk-header {
-                margin-bottom: 180px;
+                margin-bottom: 160px;
             }
         }
         
@@ -1221,57 +1221,35 @@
         /* Landscape orientation optimizations */
         @media (orientation: landscape) {
             .kiosk-queue-list {
-                width: 90%;
-                max-width: 1500px;
-                margin: 120px auto 0 auto;
+                width: 96%;
+                max-width: 1600px;
+                margin: 100px auto 0 auto;
             }
             
             /* Compact spacing in landscape for better use of horizontal space */
             @media (max-height: 600px) {
                 .kiosk-queue-list {
-                    width: 94%;
-                    max-width: 1600px;
-                    gap: 12px;
-                    margin: 100px auto 0 auto;
+                    width: 98%;
+                    max-width: 1800px;
+                    gap: 10px;
+                    margin: 80px auto 0 auto;
                 }
                 
                 .kiosk-queue-item {
-                    padding: 16px 24px;
-                    gap: 16px;
+                    padding: 12px 20px;
+                    gap: 14px;
+                    min-height: 56px;
                 }
-            }
-        }
-        
-        /* Grid layout for landscape tablets - show multiple people per row */
-        @media (orientation: landscape) and (min-width: 768px) and (max-width: 1366px) {
-            .kiosk-queue-list {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                grid-auto-rows: min-content;
-                gap: 16px;
-                width: 95%;
-                max-width: 1600px;
-                margin: 120px auto 0 auto;
-                padding: 20px;
-                overflow-y: auto;
-                align-items: start;
-            }
-            
-            .kiosk-queue-item {
-                width: 100%;
-                min-width: 0;
-                padding: 20px 24px;
-                gap: 16px;
-            }
-            
-            .kiosk-customer-name {
-                font-size: 1.125rem; /* 18px */
-            }
-            
-            .kiosk-position {
-                width: 36px;
-                height: 36px;
-                font-size: 1rem; /* 16px */
+                
+                .kiosk-customer-name {
+                    font-size: 1rem;
+                }
+                
+                .kiosk-position {
+                    width: 32px;
+                    height: 32px;
+                    font-size: 14px;
+                }
             }
         }
         
@@ -1328,7 +1306,7 @@
             .kiosk-queue-list {
                 width: 95%;
                 max-width: 1800px;
-                margin-top: 100px;
+                margin-top: 70px;
             }
             
             .kiosk-queue-item {
@@ -1351,7 +1329,7 @@
             .kiosk-queue-list {
                 width: 94%;
                 max-width: 1700px;
-                margin-top: 80px;
+                margin-top: 60px;
             }
             
             .kiosk-queue-item {
@@ -2901,7 +2879,7 @@
                 gap: var(--spacing-sm);
                 width: 94%;
                 max-width: 1600px;
-                margin-top: 80px;
+                margin-top: 60px;
             }
             
             .kiosk-queue-item {
@@ -2976,7 +2954,7 @@
             }
             
             .kiosk-header {
-                margin-bottom: 120px !important;
+                margin-bottom: 100px !important;
                 padding-left: 0;
                 padding-top: 0;
                 padding-bottom: var(--spacing-md);
@@ -3004,16 +2982,17 @@
             }
             
             .kiosk-queue-list {
-                gap: var(--spacing-sm);
-                width: 92%;
-                max-width: 1400px;
+                gap: 10px;
+                width: 98%;
+                max-width: 1600px;
                 margin: 0 auto;
-                margin-top: 80px;
+                margin-top: 40px;
             }
             
             .kiosk-queue-item {
-                padding: var(--spacing-sm) var(--spacing-md);
-                gap: var(--spacing-md);
+                padding: 12px 20px;
+                gap: 16px;
+                min-height: 60px;
             }
             
             .kiosk-customer-name {
@@ -3021,9 +3000,9 @@
             }
             
             .kiosk-position {
-                width: 2.25rem; /* 36px */
-                height: 2.25rem; /* 36px */
-                font-size: 1rem; /* 16px */
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
             }
             
             .kiosk-atender-btn {
@@ -3069,7 +3048,7 @@
             }
             
             .kiosk-header {
-                margin-bottom: 120px !important;
+                margin-bottom: 100px !important;
                 padding-left: 0;
                 padding-top: 0;
                 padding-bottom: var(--spacing-md);
@@ -3095,7 +3074,7 @@
             .kiosk-queue-list {
                 gap: var(--spacing-md);
                 margin: 0 auto;
-                margin-top: 80px;
+                margin-top: 60px;
             }
             
             .kiosk-queue-item {
@@ -3150,7 +3129,7 @@
             }
             
             .kiosk-header {
-                margin-bottom: 120px !important;
+                margin-bottom: 100px !important;
                 padding-left: 0;
                 padding-top: 0;
                 padding-bottom: var(--spacing-md);
@@ -3178,7 +3157,7 @@
                 width: 94%;
                 max-width: 1100px;
                 margin: 0 auto;
-                margin-top: 80px;
+                margin-top: 60px;
             }
             
             .kiosk-queue-item {
@@ -3250,7 +3229,7 @@
                 width: 96%;
                 max-width: 1200px;
                 margin: 0 auto;
-                margin-top: 60px;
+                margin-top: 70px;
             }
             
             .kiosk-queue-item {
