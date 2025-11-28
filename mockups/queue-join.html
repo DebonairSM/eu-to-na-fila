@@ -386,62 +386,6 @@
             height: 300px;
         }
 
-        /* Success Message */
-        .success-card {
-            background-color: var(--md-sys-color-primary-container);
-            border-radius: 16px;
-            padding: 24px;
-            margin-top: 24px;
-            box-shadow: var(--md-sys-elevation-2);
-            display: none;
-            text-align: center;
-        }
-
-        .success-card.show {
-            display: block;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .success-icon {
-            font-size: 64px;
-            color: var(--md-sys-color-primary);
-            margin-bottom: 16px;
-            filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3));
-        }
-
-        .success-title {
-            font-size: 20px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-primary-container);
-            margin-bottom: 8px;
-        }
-
-        .success-message {
-            font-size: 14px;
-            color: var(--md-sys-color-on-primary-container);
-            opacity: 0.8;
-        }
-
-        .queue-position {
-            font-size: 16px;
-            font-weight: 500;
-            margin-top: 16px;
-            padding: 12px;
-            background-color: rgba(212, 175, 55, 0.1);
-            border-radius: 8px;
-        }
-
         /* Material Icons */
         .material-symbols-outlined {
             font-variation-settings:
@@ -449,68 +393,6 @@
             'wght' 400,
             'GRAD' 0,
             'opsz' 24;
-        }
-
-        /* Custom Modal */
-        .custom-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .custom-modal.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 28px;
-            padding: 40px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: modalSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            text-align: center;
-        }
-
-        @keyframes modalSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(50px) scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .modal-icon-large {
-            font-size: 64px;
-            color: var(--md-sys-color-primary);
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 24px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface);
-            margin-bottom: 12px;
-        }
-
-        .modal-message {
-            font-size: 16px;
-            color: var(--md-sys-color-on-surface-variant);
-            margin-bottom: 24px;
-            line-height: 1.5;
         }
 
         /* Responsive */
@@ -567,13 +449,23 @@
                 <div class="text-field">
                     <input 
                         type="text" 
-                        id="nameInput" 
+                        id="firstNameInput" 
                         placeholder=" " 
                         autocomplete="off"
                         required
                     >
-                    <label for="nameInput">Nome</label>
+                    <label for="firstNameInput">Nome</label>
                     <div class="error-message" id="errorMessage">Nome inválido</div>
+                </div>
+
+                <div class="text-field">
+                    <input 
+                        type="text" 
+                        id="lastNameInput" 
+                        placeholder=" " 
+                        autocomplete="off"
+                    >
+                    <label for="lastNameInput">Sobrenome</label>
                 </div>
 
                 <button type="submit" class="button" id="joinButton">
@@ -582,46 +474,10 @@
                 </button>
             </form>
         </div>
-
-        <div class="success-card" id="successCard">
-            <span class="material-symbols-outlined success-icon">check_circle</span>
-            <div class="success-title">Você está na fila!</div>
-            <div class="success-message" id="successMessage">Olá, <strong id="customerName"></strong>! Você será chamado em breve.</div>
-            <div class="queue-position" id="queuePosition">Posição na fila: #<span id="positionNumber">5</span>            </div>
-        </div>
     </div>
 
-    <!-- Custom Modal -->
-    <div class="custom-modal" id="customModal">
-        <div class="modal-content">
-            <span class="material-symbols-outlined modal-icon-large" id="modalIcon">check_circle</span>
-            <div class="modal-title" id="modalTitle">Sucesso!</div>
-            <div class="modal-message" id="modalMessage">Você entrou na fila</div>
-            <button class="button primary" id="modalButton" style="margin-top: 8px;">
-                <span>OK</span>
-            </button>
-        </div>
-    </div>
 
     <script>
-        // Custom modal function
-        function showModal(title, message, icon = 'check_circle', callback = null) {
-            const modal = document.getElementById('customModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalMessage = document.getElementById('modalMessage');
-            const modalIcon = document.getElementById('modalIcon');
-            const modalButton = document.getElementById('modalButton');
-
-            modalTitle.textContent = title;
-            modalMessage.textContent = message;
-            modalIcon.textContent = icon;
-            modal.classList.add('show');
-
-            modalButton.onclick = () => {
-                modal.classList.remove('show');
-                if (callback) callback();
-            };
-        }
 
         // Profanity filter for Brazilian Portuguese
         const profanityList = [
@@ -639,14 +495,11 @@
         // DOM elements
         const form = document.getElementById('queueForm');
         const formCard = document.querySelector('.form-card');
-        const nameInput = document.getElementById('nameInput');
+        const firstNameInput = document.getElementById('firstNameInput');
+        const lastNameInput = document.getElementById('lastNameInput');
         const errorMessage = document.getElementById('errorMessage');
         const joinButton = document.getElementById('joinButton');
         const waitTimeDisplay = document.getElementById('waitTime');
-        const successCard = document.getElementById('successCard');
-        const customerNameDisplay = document.getElementById('customerName');
-        const positionNumber = document.getElementById('positionNumber');
-        const queuePosition = document.getElementById('queuePosition');
 
         // Update wait time display
         function updateWaitTime() {
@@ -661,20 +514,22 @@
         }
 
         // Validate name input
-        function validateName(name) {
-            const trimmedName = name.trim();
+        function validateName(firstName, lastName) {
+            const trimmedFirstName = firstName.trim();
+            const trimmedLastName = lastName ? lastName.trim() : '';
             
-            if (trimmedName.length === 0) {
+            if (trimmedFirstName.length === 0) {
                 errorMessage.textContent = 'Por favor, digite seu nome';
                 return false;
             }
 
-            if (trimmedName.length < 2) {
+            if (trimmedFirstName.length < 2) {
                 errorMessage.textContent = 'Nome muito curto';
                 return false;
             }
 
-            if (containsProfanity(trimmedName)) {
+            const fullName = trimmedLastName ? `${trimmedFirstName} ${trimmedLastName}` : trimmedFirstName;
+            if (containsProfanity(fullName)) {
                 errorMessage.textContent = 'Por favor, use um nome apropriado';
                 return false;
             }
@@ -683,8 +538,27 @@
         }
 
         // Real-time validation
-        nameInput.addEventListener('input', function() {
-            const isValid = validateName(this.value);
+        firstNameInput.addEventListener('input', function() {
+            const lastName = lastNameInput ? lastNameInput.value : '';
+            const isValid = validateName(this.value, lastName);
+            
+            if (this.value.trim().length > 0) {
+                if (isValid) {
+                    this.classList.remove('error');
+                    errorMessage.classList.remove('show');
+                } else {
+                    this.classList.add('error');
+                    errorMessage.classList.add('show');
+                }
+            } else {
+                this.classList.remove('error');
+                errorMessage.classList.remove('show');
+            }
+        });
+
+        lastNameInput.addEventListener('input', function() {
+            const firstName = firstNameInput ? firstNameInput.value : '';
+            const isValid = validateName(firstName, this.value);
             
             if (this.value.trim().length > 0) {
                 if (isValid) {
@@ -704,15 +578,19 @@
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const name = nameInput.value;
-            const isValid = validateName(name);
+            const firstName = firstNameInput.value;
+            const lastName = lastNameInput ? lastNameInput.value : '';
+            const isValid = validateName(firstName, lastName);
 
             if (!isValid) {
-                nameInput.classList.add('error');
+                firstNameInput.classList.add('error');
                 errorMessage.classList.add('show');
                 return;
             }
 
+            // Combine first and last name
+            const fullName = lastName.trim() ? `${firstName.trim()} ${lastName.trim()}` : firstName.trim();
+            
             // Add to queue
             currentQueueSize++;
             const position = currentQueueSize;
@@ -720,32 +598,10 @@
             // In real app, would get ticket ID from API
             const ticketId = Math.floor(Math.random() * 10000);
             
-            // Show custom modal and redirect
-            showModal(
-                'Você está na fila!',
-                `Posição: ${position}\n\nRedirecionando para página de status...`,
-                'check_circle',
-                () => {
-                    window.location.href = 'customer-status.html';
-                }
-            );
+            // Redirect immediately to status page (no success message)
+            window.location.href = 'customer-status.html';
         });
 
-        // Simulate queue progression
-        function simulateQueueProgress() {
-            setInterval(() => {
-                if (currentQueueSize > 1) {
-                    currentQueueSize--;
-                    const newPosition = currentQueueSize;
-                    positionNumber.textContent = newPosition;
-                    updateWaitTime();
-                    
-                    if (newPosition === 1) {
-                        queuePosition.innerHTML = '<span style="color: #D4AF37; font-weight: 700;">Você é o próximo!</span>';
-                    }
-                }
-            }, 5000); // Update every 5 seconds for demo purposes
-        }
 
         // Initialize
         updateWaitTime();

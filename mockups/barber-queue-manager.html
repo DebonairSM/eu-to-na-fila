@@ -3600,28 +3600,6 @@
         </div>
     </div>
     
-    <!-- Remove Confirmation Modal -->
-    <div class="remove-confirm-modal" id="removeConfirmModal">
-        <div class="remove-confirm-content">
-            <div class="remove-confirm-icon">
-                <span class="material-symbols-outlined">warning</span>
-            </div>
-            <h2 class="remove-confirm-title">Remover da Fila?</h2>
-            <p class="remove-confirm-message">
-                Tem certeza que deseja remover <strong id="removeCustomerName">cliente</strong> da fila?
-            </p>
-            <div class="remove-confirm-buttons">
-                <button class="remove-confirm-btn cancel" onclick="closeRemoveConfirmModal(false)">
-                    <span class="material-symbols-outlined">close</span>
-                    <span>Cancelar</span>
-                </button>
-                <button class="remove-confirm-btn confirm" onclick="closeRemoveConfirmModal(true)">
-                    <span class="material-symbols-outlined">check</span>
-                    <span>Remover</span>
-                </button>
-            </div>
-        </div>
-    </div>
 
     <div class="progress-bar" id="progressBar"></div>
 
@@ -3632,12 +3610,19 @@
             <form class="checkin-modal-form" onsubmit="event.preventDefault(); addCustomerFromKiosk();">
                 <input 
                     type="text" 
-                    id="kioskCustomerName" 
+                    id="kioskCustomerFirstName" 
                     class="checkin-modal-input" 
-                    placeholder="Digite seu nome"
-                    maxlength="200"
+                    placeholder="Nome"
+                    maxlength="100"
                     required
                     autofocus
+                />
+                <input 
+                    type="text" 
+                    id="kioskCustomerLastName" 
+                    class="checkin-modal-input" 
+                    placeholder="Sobrenome"
+                    maxlength="100"
                 />
                 <div class="checkin-modal-buttons">
                     <button type="button" class="checkin-modal-btn secondary" onclick="closeCheckinModal()">
@@ -4302,68 +4287,13 @@
         }
 
         function removeCustomer(customerId) {
-            // Find customer to get their name
-            const customer = queueData.find(c => c.id === customerId);
-            if (!customer) return;
-            
-            // Show confirmation modal
-            showRemoveConfirmModal(customer.name, () => {
-                // This callback runs when user confirms
-                queueData = queueData.filter(c => c.id !== customerId);
-                // Reset previous queue data to force re-render
-                previousQueueData = '';
-                renderAll();
-            });
+            // Remove customer directly without confirmation
+            queueData = queueData.filter(c => c.id !== customerId);
+            // Reset previous queue data to force re-render
+            previousQueueData = '';
+            renderAll();
         }
         
-        function showRemoveConfirmModal(customerName, onConfirm) {
-            const modal = document.getElementById('removeConfirmModal');
-            const customerNameSpan = document.getElementById('removeCustomerName');
-            if (customerNameSpan) {
-                customerNameSpan.textContent = customerName;
-            }
-            if (modal) {
-                modal.style.display = 'flex';
-                // Store confirm callback
-                modal.dataset.confirmCallback = 'true';
-                window.removeConfirmCallback = onConfirm;
-                
-                // Close on background click
-                modal.onclick = function(e) {
-                    if (e.target === modal) {
-                        closeRemoveConfirmModal(false);
-                    }
-                };
-                
-                // Close on Escape key
-                const escapeHandler = function(e) {
-                    if (e.key === 'Escape') {
-                        closeRemoveConfirmModal(false);
-                        document.removeEventListener('keydown', escapeHandler);
-                    }
-                };
-                document.addEventListener('keydown', escapeHandler);
-                // Store handler for cleanup
-                modal._escapeHandler = escapeHandler;
-            }
-        }
-        
-        function closeRemoveConfirmModal(confirmed = false) {
-            const modal = document.getElementById('removeConfirmModal');
-            if (modal) {
-                modal.style.display = 'none';
-                modal.onclick = null; // Remove background click handler
-                // Remove escape handler if it exists
-                if (modal._escapeHandler) {
-                    document.removeEventListener('keydown', modal._escapeHandler);
-                    modal._escapeHandler = null;
-                }
-                if (confirmed && window.removeConfirmCallback) {
-                    window.removeConfirmCallback();
-                    window.removeConfirmCallback = null;
-                }
-            }
-        }
         
         // Handle touch to return to queue from ads
         function handleTouchToQueue() {
@@ -4712,9 +4642,9 @@
             const modal = document.getElementById('checkinModal');
             if (modal) {
                 modal.classList.add('show');
-                const nameInput = document.getElementById('kioskCustomerName');
-                if (nameInput) {
-                    setTimeout(() => nameInput.focus(), 100);
+                const firstNameInput = document.getElementById('kioskCustomerFirstName');
+                if (firstNameInput) {
+                    setTimeout(() => firstNameInput.focus(), 100);
                 }
             }
         }
@@ -4724,29 +4654,43 @@
             const modal = document.getElementById('checkinModal');
             if (modal) {
                 modal.classList.remove('show');
-                const nameInput = document.getElementById('kioskCustomerName');
-                if (nameInput) {
-                    nameInput.value = '';
+                const firstNameInput = document.getElementById('kioskCustomerFirstName');
+                const lastNameInput = document.getElementById('kioskCustomerLastName');
+                if (firstNameInput) {
+                    firstNameInput.value = '';
+                }
+                if (lastNameInput) {
+                    lastNameInput.value = '';
                 }
             }
         }
 
         // Add customer from kiosk check-in form
         function addCustomerFromKiosk() {
-            const nameInput = document.getElementById('kioskCustomerName');
-            if (!nameInput) return;
+            const firstNameInput = document.getElementById('kioskCustomerFirstName');
+            const lastNameInput = document.getElementById('kioskCustomerLastName');
+            if (!firstNameInput) return;
             
-            const customerName = nameInput.value.trim();
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput ? lastNameInput.value.trim() : '';
             
-            if (!customerName || customerName.length === 0) {
+            if (!firstName || firstName.length === 0) {
                 alert('Por favor, digite seu nome');
                 return;
             }
             
-            if (customerName.length > 200) {
-                alert('Nome muito longo (máximo 200 caracteres)');
+            if (firstName.length > 100) {
+                alert('Nome muito longo (máximo 100 caracteres)');
                 return;
             }
+            
+            if (lastName && lastName.length > 100) {
+                alert('Sobrenome muito longo (máximo 100 caracteres)');
+                return;
+            }
+            
+            // Combine first and last name
+            const customerName = lastName ? `${firstName} ${lastName}` : firstName;
             
             // Add to queue data
             const newId = Math.max(...queueData.map(c => c.id), 0) + 1;
@@ -4759,8 +4703,9 @@
             
             queueData.push(newCustomer);
             
-            // Clear input and close modal
-            nameInput.value = '';
+            // Clear inputs and close modal
+            firstNameInput.value = '';
+            if (lastNameInput) lastNameInput.value = '';
             closeCheckinModal();
             
             // Re-render queue
