@@ -1092,7 +1092,7 @@
         
         @media (orientation: landscape) {
             .kiosk-header {
-                margin-bottom: 160px;
+                margin-bottom: 100px;
             }
         }
         
@@ -1223,7 +1223,24 @@
             .kiosk-queue-list {
                 width: 96%;
                 max-width: 1600px;
-                margin: 100px auto 0 auto;
+                margin: 60px auto 0 auto;
+                gap: 6px;
+            }
+            
+            .kiosk-queue-item {
+                padding: 8px 16px;
+                gap: 12px;
+                min-height: 48px;
+            }
+            
+            .kiosk-customer-name {
+                font-size: 1rem; /* 16px */
+            }
+            
+            .kiosk-position {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
             }
             
             /* Compact spacing in landscape for better use of horizontal space */
@@ -1231,24 +1248,24 @@
                 .kiosk-queue-list {
                     width: 98%;
                     max-width: 1800px;
-                    gap: 10px;
+                    gap: 6px;
                     margin: 80px auto 0 auto;
                 }
                 
                 .kiosk-queue-item {
-                    padding: 12px 20px;
-                    gap: 14px;
-                    min-height: 56px;
+                    padding: 8px 16px;
+                    gap: 12px;
+                    min-height: 48px;
                 }
                 
                 .kiosk-customer-name {
-                    font-size: 1rem;
+                    font-size: 0.9375rem; /* 15px */
                 }
                 
                 .kiosk-position {
-                    width: 32px;
-                    height: 32px;
-                    font-size: 14px;
+                    width: 30px;
+                    height: 30px;
+                    font-size: 13px;
                 }
             }
         }
@@ -2954,61 +2971,61 @@
             }
             
             .kiosk-header {
-                margin-bottom: 100px !important;
+                margin-bottom: 60px !important;
                 padding-left: 0;
                 padding-top: 0;
-                padding-bottom: var(--spacing-md);
+                padding-bottom: var(--spacing-sm);
                 align-items: center;
                 justify-content: center;
-                min-height: 48px;
+                min-height: 44px;
             }
             
             .kiosk-title-text {
-                font-size: 2rem; /* 32px */
+                font-size: 1.75rem; /* 28px */
                 line-height: 1.1;
             }
             
             .kiosk-unified-btn {
-                min-width: 240px;
-                height: 48px;
+                min-width: 220px;
+                height: 44px;
             }
             
             .kiosk-unified-btn .material-symbols-outlined {
-                font-size: 28px;
+                font-size: 24px;
             }
             
             .kiosk-subtitle {
-                font-size: 0.875rem;
+                font-size: 0.8125rem;
             }
             
             .kiosk-queue-list {
-                gap: 10px;
+                gap: 6px;
                 width: 98%;
                 max-width: 1600px;
                 margin: 0 auto;
-                margin-top: 40px;
+                margin-top: 20px;
             }
             
             .kiosk-queue-item {
-                padding: 12px 20px;
-                gap: 16px;
-                min-height: 60px;
+                padding: 8px 16px;
+                gap: 12px;
+                min-height: 48px;
             }
             
             .kiosk-customer-name {
-                font-size: 1.125rem; /* 18px */
+                font-size: 1rem; /* 16px */
             }
             
             .kiosk-position {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
             }
             
             .kiosk-atender-btn {
-                padding: 10px 20px !important;
-                font-size: 16px !important;
-                min-height: 44px; /* Touch target */
+                padding: 8px 16px !important;
+                font-size: 14px !important;
+                min-height: 40px; /* Touch target */
             }
             
             .kiosk-barber-selector {
