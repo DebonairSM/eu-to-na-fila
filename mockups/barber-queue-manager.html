@@ -1688,6 +1688,10 @@
             animation: fadeIn 0.3s ease;
         }
         
+        .remove-confirm-modal.show {
+            display: flex;
+        }
+        
         .remove-confirm-content {
             background: #1A1A1A;
             border: 3px solid #EF4444;
@@ -2540,10 +2544,9 @@
         }
 
         .barber-selection-list {
-            display: flex !important;
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr);
             gap: 16px;
-            flex-wrap: wrap;
-            justify-content: center;
             visibility: visible !important;
             opacity: 1 !important;
         }
@@ -2559,7 +2562,7 @@
             border-radius: 16px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-width: 100px;
+            width: 100%;
             visibility: visible !important;
             opacity: 1 !important;
         }
@@ -2620,6 +2623,29 @@
             text-align: center;
         }
 
+        /* Responsive barber selection */
+        @media (max-width: 768px) {
+            .barber-selection-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .barber-selection-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            
+            .barber-selection-item {
+                padding: 12px;
+            }
+            
+            .barber-selection-avatar {
+                width: 60px;
+                height: 60px;
+            }
+        }
+
         /* Kiosk Ad Views */
         .kiosk-ad-view {
             display: flex;
@@ -2664,6 +2690,32 @@
             font-weight: 400;
             color: rgba(255, 255, 255, 0.9);
             line-height: 1.4;
+        }
+
+        .ad-qr-code {
+            position: fixed;
+            top: var(--spacing-xl);
+            right: var(--spacing-xl);
+            width: 100px;
+            height: 100px;
+            background: #FFFFFF;
+            padding: 10px;
+            border-radius: 16px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .ad-qr-code img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            display: block;
         }
 
         /* Progress bar */
@@ -3582,18 +3634,27 @@
 
         <!-- Ad Views -->
         <div class="kiosk-view kiosk-ad-view ad-1" id="ad1">
+            <div class="ad-qr-code">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=PLACEHOLDER_QR_CODE" alt="QR Code" />
+            </div>
             <span class="material-symbols-outlined ad-icon">content_cut</span>
             <div class="ad-title">CORTE + BARBA</div>
             <div class="ad-subtitle">O melhor atendimento da região<br>Venha conhecer</div>
         </div>
 
         <div class="kiosk-view kiosk-ad-view ad-2" id="ad2">
+            <div class="ad-qr-code">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=PLACEHOLDER_QR_CODE" alt="QR Code" />
+            </div>
             <span class="material-symbols-outlined ad-icon">workspace_premium</span>
             <div class="ad-title">PRODUTOS<br>PROFISSIONAIS</div>
             <div class="ad-subtitle">Linha completa para cuidados<br>com cabelo e barba</div>
         </div>
 
         <div class="kiosk-view kiosk-ad-view ad-3" id="ad3">
+            <div class="ad-qr-code">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=PLACEHOLDER_QR_CODE" alt="QR Code" />
+            </div>
             <span class="material-symbols-outlined ad-icon">schedule</span>
             <div class="ad-title">ABERTO DE<br>SEG A SÁB</div>
             <div class="ad-subtitle">Segunda a Sexta: 9h às 19h<br>Sábado: 9h às 17h</div>
@@ -3633,6 +3694,29 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Remove/Complete Confirmation Modal -->
+    <div class="remove-confirm-modal" id="removeConfirmModal">
+        <div class="remove-confirm-content">
+            <div class="remove-confirm-icon">
+                <span class="material-symbols-outlined" id="removeConfirmIcon">warning</span>
+            </div>
+            <div class="remove-confirm-title" id="removeConfirmTitle">Confirmar Ação</div>
+            <div class="remove-confirm-message" id="removeConfirmMessage">
+                Realizar esta ação?
+            </div>
+            <div class="remove-confirm-buttons">
+                <button class="remove-confirm-btn cancel" onclick="closeRemoveConfirmModal()">
+                    <span class="material-symbols-outlined">close</span>
+                    Cancelar
+                </button>
+                <button class="remove-confirm-btn confirm" onclick="confirmRemoveAction()">
+                    <span class="material-symbols-outlined" id="removeConfirmButtonIcon">check</span>
+                    <span id="removeConfirmButtonText">Confirmar</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -3954,6 +4038,13 @@
         
         // Unassign barber and return customer to waiting
         function unassignBarber(customerId) {
+            // On mobile/tablet, require going through barber selection overlay
+            if (isMobileOrTablet()) {
+                showBarberSelection(customerId);
+                return;
+            }
+            
+            // On desktop, allow direct unassign
             const customer = queueData.find(c => c.id === customerId);
             if (!customer) return;
             
@@ -4163,6 +4254,14 @@
                     kioskInterval = null;
                 }
                 return;
+            } else if (viewId === 'kioskQueueView') {
+                // Normal rotation hitting queue view - ensure manual flag is false
+                isManualQueueView = false;
+                // Clear idle timer since this is normal rotation
+                if (idleTimer) {
+                    clearTimeout(idleTimer);
+                    idleTimer = null;
+                }
             } else if (viewId !== 'kioskQueueView') {
                 // Starting an ad - record start time
                 adStartTime = Date.now();
@@ -4281,17 +4380,81 @@
             }
         }
 
+        // Confirmation modal state
+        let pendingAction = null;
+        let pendingCustomerId = null;
+
+        // Helper function to detect mobile/tablet devices
+        function isMobileOrTablet() {
+            return window.innerWidth <= 1024;
+        }
+
+        // Show confirmation modal
+        function showRemoveConfirmModal(customerId, actionType) {
+            const modal = document.getElementById('removeConfirmModal');
+            const icon = document.getElementById('removeConfirmIcon');
+            const title = document.getElementById('removeConfirmTitle');
+            const message = document.getElementById('removeConfirmMessage');
+            const buttonIcon = document.getElementById('removeConfirmButtonIcon');
+            const buttonText = document.getElementById('removeConfirmButtonText');
+            
+            if (!modal) return;
+            
+            const customer = queueData.find(c => c.id === customerId);
+            const customerName = customer ? customer.name : 'cliente';
+            
+            pendingAction = actionType;
+            pendingCustomerId = customerId;
+            
+            if (actionType === 'complete') {
+                icon.textContent = 'check_circle';
+                title.textContent = 'Finalizar Atendimento';
+                message.innerHTML = `Finalizar o atendimento de <strong>${customerName}</strong>?`;
+                buttonIcon.textContent = 'check';
+                buttonText.textContent = 'Finalizar';
+            } else {
+                icon.textContent = 'delete';
+                title.textContent = 'Remover da Fila';
+                message.innerHTML = `Remover <strong>${customerName}</strong> da fila?`;
+                buttonIcon.textContent = 'delete';
+                buttonText.textContent = 'Remover';
+            }
+            
+            modal.style.display = 'flex';
+        }
+
+        // Close confirmation modal
+        function closeRemoveConfirmModal() {
+            const modal = document.getElementById('removeConfirmModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            pendingAction = null;
+            pendingCustomerId = null;
+        }
+
+        // Confirm and execute the pending action
+        function confirmRemoveAction() {
+            if (!pendingAction || !pendingCustomerId) return;
+            
+            if (pendingAction === 'complete') {
+                queueData = queueData.filter(c => c.id !== pendingCustomerId);
+                renderAll();
+            } else {
+                queueData = queueData.filter(c => c.id !== pendingCustomerId);
+                previousQueueData = '';
+                renderAll();
+            }
+            
+            closeRemoveConfirmModal();
+        }
+
         function completeService(customerId) {
-            queueData = queueData.filter(c => c.id !== customerId);
-            renderAll();
+            showRemoveConfirmModal(customerId, 'complete');
         }
 
         function removeCustomer(customerId) {
-            // Remove customer directly without confirmation
-            queueData = queueData.filter(c => c.id !== customerId);
-            // Reset previous queue data to force re-render
-            previousQueueData = '';
-            renderAll();
+            showRemoveConfirmModal(customerId, 'remove');
         }
         
         
@@ -4338,11 +4501,18 @@
                 clearTimeout(idleTimer);
             }
             
-            // Only start timer if we're on queue view
-            if (kioskViewIndex === 0 && isManualQueueView) {
+            // Only start timer if we're on queue view and it's a manual view
+            const currentViewId = kioskViews[kioskViewIndex];
+            const isQueueView = currentViewId === 'kioskQueueView';
+            
+            if (isQueueView && isManualQueueView) {
                 idleTimer = setTimeout(() => {
-                    if (isKioskMode && kioskViewIndex === 0 && isManualQueueView) {
-                        resumeAdRotation();
+                    if (isKioskMode) {
+                        const currentViewId = kioskViews[kioskViewIndex];
+                        const isQueueView = currentViewId === 'kioskQueueView';
+                        if (isQueueView && isManualQueueView) {
+                            resumeAdRotation();
+                        }
                     }
                 }, IDLE_TIMEOUT);
             }
@@ -4422,16 +4592,17 @@
             // Get current assigned barber
             const currentBarber = customer.barberId ? barbers.find(b => b.id === customer.barberId) : null;
             
-            // Clear and populate barber list (show ALL barbers)
+            // Clear and populate barber list (only show present barbers)
             selectionList.innerHTML = '';
             
-            barbers.forEach((barber, index) => {
+            // Filter to only show present barbers
+            const presentBarbers = barbers.filter(barber => barber.isPresent);
+            
+            presentBarbers.forEach((barber, index) => {
                 const isCurrentBarber = currentBarber && barber.id === currentBarber.id;
-                const isPresent = barber.isPresent;
                 const item = document.createElement('div');
-                item.className = `barber-selection-item ${isCurrentBarber ? 'current' : ''} ${!isPresent ? 'absent' : ''}`;
+                item.className = `barber-selection-item ${isCurrentBarber ? 'current' : ''}`;
                 item.onclick = () => {
-                    if (!isPresent) return; // Can't select absent barbers
                     if (isCurrentBarber) {
                         // Unselect current barber
                         unselectBarberForCustomer(customerId);
@@ -4446,7 +4617,6 @@
                          onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128';" />
                     <span class="barber-selection-name">${barber.name}</span>
                     ${isCurrentBarber ? '<span style="font-size: 0.75rem; color: var(--color-primary); margin-top: 4px;">Atual</span>' : ''}
-                    ${!isPresent ? '<span style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); margin-top: 4px;">Ausente</span>' : ''}
                 `;
                 
                 selectionList.appendChild(item);
@@ -4714,20 +4884,32 @@
 
         // Close modal when clicking outside
         document.addEventListener('click', function(e) {
-            const modal = document.getElementById('checkinModal');
-            if (modal && e.target === modal) {
+            const checkinModal = document.getElementById('checkinModal');
+            if (checkinModal && e.target === checkinModal) {
                 closeCheckinModal();
+            }
+            
+            const removeConfirmModal = document.getElementById('removeConfirmModal');
+            if (removeConfirmModal && e.target === removeConfirmModal) {
+                closeRemoveConfirmModal();
             }
         });
 
         // Close modal with Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                const modal = document.getElementById('checkinModal');
-                if (modal && modal.classList.contains('show')) {
+                const checkinModal = document.getElementById('checkinModal');
+                if (checkinModal && checkinModal.classList.contains('show')) {
                     e.preventDefault();
                     e.stopPropagation();
                     closeCheckinModal();
+                }
+                
+                const removeConfirmModal = document.getElementById('removeConfirmModal');
+                if (removeConfirmModal && removeConfirmModal.style.display === 'flex') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeRemoveConfirmModal();
                 }
             }
         });

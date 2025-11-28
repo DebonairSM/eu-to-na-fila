@@ -841,7 +841,7 @@
             <span class="material-symbols-outlined confirm-icon">warning</span>
             <div class="confirm-title">Remover Barbeiro?</div>
             <div class="confirm-message" id="confirmMessage">
-                Tem certeza que deseja remover este barbeiro? Esta ação não pode ser desfeita.
+                Remover este barbeiro? Esta ação não pode ser desfeita.
             </div>
             <div class="confirm-buttons">
                 <button class="button secondary" onclick="closeConfirmModal()">Cancelar</button>
@@ -974,7 +974,7 @@
         // Confirm delete barber
         function confirmDeleteBarber(barberId, barberName) {
             const confirmMessage = document.getElementById('confirmMessage');
-            confirmMessage.textContent = `Tem certeza que deseja remover ${barberName}? Esta ação não pode ser desfeita.`;
+            confirmMessage.textContent = `Deseja remover ${barberName}? Esta ação não pode ser desfeita.`;
             
             document.getElementById('confirmDeleteButton').onclick = () => {
                 deleteBarber(barberId);
