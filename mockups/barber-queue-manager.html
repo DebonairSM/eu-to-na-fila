@@ -4575,15 +4575,20 @@
             if (!pendingAction || !pendingCustomerId) return;
             
             try {
-                // Call API to delete ticket (works for both complete and remove)
-                await apiDeleteTicket(pendingCustomerId);
+                if (pendingAction === 'complete') {
+                    // Mark as completed
+                    await apiUpdateTicket(pendingCustomerId, { status: 'completed' });
+                } else {
+                    // Mark as cancelled
+                    await apiUpdateTicket(pendingCustomerId, { status: 'cancelled' });
+                }
                 
                 // Refresh data from server
                 previousQueueData = '';
                 await refreshData();
             } catch (error) {
-                console.error('Error removing customer:', error);
-                alert('Erro ao remover cliente. Por favor, tente novamente.');
+                console.error('Error updating customer:', error);
+                alert('Erro ao atualizar cliente. Por favor, tente novamente.');
             }
             
             closeRemoveConfirmModal();
