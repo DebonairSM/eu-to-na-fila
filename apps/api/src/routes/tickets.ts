@@ -82,6 +82,54 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
+   * Update a ticket (assign barber, change status).
+   * 
+   * @route PATCH /api/tickets/:id
+   * @param id - Ticket ID
+   * @body barberId - Barber ID to assign (optional, null to unassign)
+   * @body status - New status (optional)
+   * @returns Updated ticket
+   * @throws {404} If ticket not found
+   */
+  fastify.patch('/tickets/:id', async (request, reply) => {
+    const paramsSchema = z.object({
+      id: z.coerce.number().int().positive(),
+    });
+    const bodySchema = z.object({
+      barberId: z.number().int().positive().nullable().optional(),
+      status: z.enum(['waiting', 'in_progress', 'completed', 'cancelled']).optional(),
+    });
+
+    const { id } = validateRequest(paramsSchema, request.params);
+    const updates = validateRequest(bodySchema, request.body);
+
+    const existingTicket = await ticketService.getById(id);
+    if (!existingTicket) {
+      throw new NotFoundError(`Ticket with ID ${id} not found`);
+    }
+
+    // Build update object
+    const updateData: Record<string, unknown> = {
+      updatedAt: new Date(),
+    };
+
+    if (updates.barberId !== undefined) {
+      updateData.barberId = updates.barberId;
+    }
+    if (updates.status !== undefined) {
+      updateData.status = updates.status;
+    }
+
+    const [updatedTicket] = await db
+      .update(schema.tickets)
+      .set(updateData)
+      .where(eq(schema.tickets.id, id))
+      .returning();
+
+    return updatedTicket;
+  });
+
+  /**
    * Cancel a ticket.
    * 
    * @route DELETE /api/tickets/:id

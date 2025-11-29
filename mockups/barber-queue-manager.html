@@ -3839,6 +3839,21 @@
             }
         }
         
+        async function apiUpdateTicket(ticketId, updates) {
+            try {
+                const response = await fetch(`${API_BASE}/tickets/${ticketId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updates)
+                });
+                if (!response.ok) throw new Error('Failed to update ticket');
+                return await response.json();
+            } catch (error) {
+                console.error('Error updating ticket:', error);
+                return null;
+            }
+        }
+        
         async function refreshData() {
             if (isLoading) return;
             isLoading = true;
@@ -4123,7 +4138,7 @@
         }
         
         // Assign barber and start service in one action
-        function assignBarberAndStart(customerId, barberId) {
+        async function assignBarberAndStart(customerId, barberId) {
             const customer = queueData.find(c => c.id === customerId);
             if (!customer) return;
             
@@ -4131,14 +4146,25 @@
             const barber = barbers.find(b => b.id === barberId);
             if (!barber || !barber.isPresent) return;
             
-            // Assign barber and start service (or change barber if already serving)
+            // Optimistic update
             customer.barberId = barberId;
             customer.status = 'serving';
-                renderAll();
+            renderAll();
+            
+            // Call API
+            const result = await apiUpdateTicket(customerId, { 
+                barberId: barberId, 
+                status: 'in_progress' 
+            });
+            
+            if (!result) {
+                // Revert on failure
+                await refreshData();
             }
+        }
         
         // Unassign barber and return customer to waiting
-        function unassignBarber(customerId) {
+        async function unassignBarber(customerId) {
             // On mobile/tablet, require going through barber selection overlay
             if (isMobileOrTablet()) {
                 showBarberSelection(customerId);
@@ -4149,10 +4175,20 @@
             const customer = queueData.find(c => c.id === customerId);
             if (!customer) return;
             
-            // Remove barber assignment and return to waiting
+            // Optimistic update
             customer.barberId = null;
             customer.status = 'waiting';
             renderAll();
+            
+            // Call API
+            const result = await apiUpdateTicket(customerId, { 
+                barberId: null, 
+                status: 'waiting' 
+            });
+            
+            if (!result) {
+                await refreshData();
+            }
         }
         
 
@@ -4769,7 +4805,7 @@
         }
         
         // Select barber for customer (automatically sets to serving)
-        function selectBarberForCustomer(customerId, barberId) {
+        async function selectBarberForCustomer(customerId, barberId) {
             const customer = queueData.find(c => c.id === customerId);
             const barber = barbers.find(b => b.id === barberId);
             
@@ -4777,7 +4813,7 @@
             // Allow selecting barber for waiting customers or changing barber for serving customers
             if (customer.status !== 'waiting' && customer.status !== 'serving') return;
             
-            // Assign barber and set to serving (or keep serving if already serving)
+            // Optimistic update
             customer.barberId = barberId;
             customer.status = 'serving';
             
@@ -4787,15 +4823,25 @@
             // Re-render
             previousQueueData = '';
             renderAll();
+            
+            // Call API
+            const result = await apiUpdateTicket(customerId, { 
+                barberId: barberId, 
+                status: 'in_progress' 
+            });
+            
+            if (!result) {
+                await refreshData();
+            }
         }
         
         // Unselect barber for customer (removes assignment and returns to waiting)
-        function unselectBarberForCustomer(customerId) {
+        async function unselectBarberForCustomer(customerId) {
             const customer = queueData.find(c => c.id === customerId);
             
             if (!customer) return;
             
-            // Remove barber assignment and return to waiting
+            // Optimistic update
             customer.barberId = null;
             customer.status = 'waiting';
             
@@ -4805,6 +4851,16 @@
             // Re-render
             previousQueueData = '';
             renderAll();
+            
+            // Call API
+            const result = await apiUpdateTicket(customerId, { 
+                barberId: null, 
+                status: 'waiting' 
+            });
+            
+            if (!result) {
+                await refreshData();
+            }
         }
 
         // Event delegation for kiosk mode interactions
