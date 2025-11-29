@@ -26,6 +26,7 @@ async function seed() {
           primary: '#3E2723',
           accent: '#FFD54F',
         }),
+        ownerPin: '1234', // Default PIN - change in production!
       })
       .returning();
 

@@ -8,6 +8,13 @@
       "when": 1764451863417,
       "tag": "0000_futuristic_brother_voodoo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1764455295989,
+      "tag": "0001_slim_chameleon",
+      "breakpoints": true
     }
   ]
 }

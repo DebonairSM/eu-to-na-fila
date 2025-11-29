@@ -1,0 +1,1 @@
+ALTER TABLE "shops" ADD COLUMN "owner_pin" text;
