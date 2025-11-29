@@ -37,8 +37,31 @@ fastify.register(fastifyHelmet, {
   },
 });
 
+// CORS: Allow multiple origins (localhost for dev, Render domains for prod)
+const allowedOrigins = [
+  'http://localhost:4040',
+  'http://localhost:3000',
+  'https://eutonafila-hiyh.onrender.com',
+  'https://eutonafila.onrender.com',
+  env.CORS_ORIGIN
+].filter(Boolean);
+
 fastify.register(fastifyCors, {
-  origin: env.CORS_ORIGIN,
+  origin: (origin, cb) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return cb(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      return cb(null, true);
+    }
+    
+    // In development, allow all origins
+    if (env.NODE_ENV === 'development') {
+      return cb(null, true);
+    }
+    
+    cb(new Error('Not allowed by CORS'), false);
+  },
   credentials: true,
 });
 
