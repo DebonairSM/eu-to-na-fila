@@ -9,7 +9,7 @@ Complete backend documentation for EuToNaFila queue management system.
 | Runtime | Node.js 20+ |
 | Framework | Fastify |
 | ORM | Drizzle ORM |
-| Database | libSQL (SQLite) |
+| Database | PostgreSQL 16 |
 | Validation | Zod |
 | Language | TypeScript |
 
@@ -24,6 +24,7 @@ apps/api/
 │   ├── routes/
 │   │   ├── queue.ts          # Queue endpoints
 │   │   ├── tickets.ts        # Ticket endpoints
+│   │   ├── barbers.ts        # Barber endpoints
 │   │   └── status.ts         # Status update endpoint
 │   ├── services/
 │   │   ├── TicketService.ts  # Ticket business logic
@@ -55,15 +56,15 @@ Store configuration for each barbershop.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | INTEGER | Primary key |
+| id | SERIAL | Primary key |
 | slug | TEXT | URL identifier (unique) |
 | name | TEXT | Display name |
 | domain | TEXT | Custom domain |
 | path | TEXT | URL path |
-| apiBase | TEXT | API base URL |
-| theme | JSON | `{ primary, accent }` colors |
-| createdAt | TEXT | ISO timestamp |
-| updatedAt | TEXT | ISO timestamp |
+| api_base | TEXT | API base URL |
+| theme | TEXT | JSON string `{ primary, accent }` |
+| created_at | TIMESTAMP | Creation timestamp |
+| updated_at | TIMESTAMP | Last update timestamp |
 
 #### services
 
@@ -71,15 +72,15 @@ Available services offered by the shop.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | INTEGER | Primary key |
-| shopId | INTEGER | Foreign key to shops |
+| id | SERIAL | Primary key |
+| shop_id | INTEGER | Foreign key to shops |
 | name | TEXT | Service name |
 | description | TEXT | Service description |
 | duration | INTEGER | Duration in minutes |
 | price | INTEGER | Price in cents |
-| isActive | BOOLEAN | Active status |
-| createdAt | TEXT | ISO timestamp |
-| updatedAt | TEXT | ISO timestamp |
+| is_active | BOOLEAN | Active status (default true) |
+| created_at | TIMESTAMP | Creation timestamp |
+| updated_at | TIMESTAMP | Last update timestamp |
 
 #### barbers
 
@@ -87,18 +88,18 @@ Staff members who serve customers.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | INTEGER | Primary key |
-| shopId | INTEGER | Foreign key to shops |
+| id | SERIAL | Primary key |
+| shop_id | INTEGER | Foreign key to shops |
 | name | TEXT | Barber name |
 | email | TEXT | Email address |
 | phone | TEXT | Phone number |
-| avatarUrl | TEXT | Profile photo URL |
-| isActive | BOOLEAN | Account active status |
-| isPresent | BOOLEAN | Currently at work (default false) |
-| createdAt | TEXT | ISO timestamp |
-| updatedAt | TEXT | ISO timestamp |
+| avatar_url | TEXT | Profile photo URL |
+| is_active | BOOLEAN | Account active status (default true) |
+| is_present | BOOLEAN | Currently at work (default true) |
+| created_at | TIMESTAMP | Creation timestamp |
+| updated_at | TIMESTAMP | Last update timestamp |
 
-**Note:** `isActive` indicates the barber account exists and can be used. `isPresent` indicates the barber is currently at the shop and available for assignment. When `isPresent` is set to false, any customers assigned to that barber should be unassigned and returned to waiting status.
+**Note:** `is_active` indicates the barber account exists and can be used. `is_present` indicates the barber is currently at the shop and available for assignment. When `is_present` is set to false, any customers assigned to that barber with status `in_progress` are automatically unassigned and returned to `waiting` status.
 
 #### tickets
 
@@ -106,17 +107,17 @@ Queue entries representing customer visits.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | INTEGER | Primary key |
-| shopId | INTEGER | Foreign key to shops |
-| serviceId | INTEGER | Foreign key to services |
-| barberId | INTEGER | Foreign key to barbers (nullable) |
-| customerName | TEXT | Customer name |
-| customerPhone | TEXT | Phone (optional) |
+| id | SERIAL | Primary key |
+| shop_id | INTEGER | Foreign key to shops |
+| service_id | INTEGER | Foreign key to services |
+| barber_id | INTEGER | Foreign key to barbers (nullable) |
+| customer_name | TEXT | Customer name |
+| customer_phone | TEXT | Phone (optional) |
 | status | TEXT | waiting, in_progress, completed, cancelled |
-| position | INTEGER | Queue position (0 = not in queue) |
-| estimatedWaitTime | INTEGER | Wait time in minutes |
-| createdAt | TEXT | ISO timestamp |
-| updatedAt | TEXT | ISO timestamp |
+| position | INTEGER | Queue position (default 0) |
+| estimated_wait_time | INTEGER | Wait time in minutes |
+| created_at | TIMESTAMP | Creation timestamp |
+| updated_at | TIMESTAMP | Last update timestamp |
 
 ### Relationships
 
@@ -350,6 +351,41 @@ Get ticket by ID.
 
 ---
 
+#### PATCH /api/tickets/:id
+
+Update a ticket (assign/unassign barber, change status).
+
+**Parameters**
+- `id` (path) - Ticket ID
+
+**Request Body**
+
+```json
+{
+  "barberId": 3,
+  "status": "in_progress"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| barberId | number \| null | Barber ID to assign, or null to unassign |
+| status | string | New status (optional) |
+
+**Response**
+
+Returns updated ticket.
+
+**Errors**
+- `404` - Ticket not found
+
+**Use Cases:**
+- Assign barber to customer: `{ "barberId": 3, "status": "in_progress" }`
+- Unassign barber (return to queue): `{ "barberId": null, "status": "waiting" }`
+- Change assigned barber: `{ "barberId": 5 }`
+
+---
+
 #### DELETE /api/tickets/:id
 
 Cancel a ticket.
@@ -366,7 +402,7 @@ Returns the cancelled ticket with `status: "cancelled"`.
 
 ---
 
-#### PATCH /api/tickets/:id/status
+#### PATCH /api/tickets/:id/status (Legacy)
 
 Update ticket status.
 
@@ -570,10 +606,15 @@ const isFull = await queueService.isQueueFull(shopId, 50);
 |----------|-------------|---------|----------|
 | `NODE_ENV` | Environment | development | No |
 | `PORT` | Server port | 4041 | No |
-| `DATA_PATH` | SQLite file path | ./data/eutonafila.sqlite | Yes |
+| `DATABASE_URL` | PostgreSQL connection string | - | Yes |
 | `JWT_SECRET` | JWT signing secret | - | Yes |
-| `CORS_ORIGIN` | Allowed origin | http://localhost:4040 | Yes |
+| `CORS_ORIGIN` | Allowed origin | http://localhost:4040 | No |
 | `SHOP_SLUG` | Default shop | mineiro | No |
+
+**Example DATABASE_URL:**
+```
+postgresql://user:password@host:5432/database
+```
 
 ---
 
@@ -631,6 +672,11 @@ pnpm db:seed
 
 # Open Drizzle Studio (GUI)
 pnpm --filter api db:studio
+```
+
+**Note:** On Render deployment, migrations and seeding run automatically on each deploy via the start script:
+```bash
+pnpm db:migrate && pnpm db:seed && pnpm --filter api start
 ```
 
 ---
