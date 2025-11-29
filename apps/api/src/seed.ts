@@ -70,8 +70,8 @@ async function seed() {
   } else {
     // Create barbers
     const barberData = [
-      { name: 'João Silva', email: 'joao@mineiro.com', phone: '+5511999999999' },
-      { name: 'Pedro Santos', email: 'pedro@mineiro.com', phone: '+5511988888888' },
+      { name: 'João Silva', email: 'joao@mineiro.com', phone: '+5511999999999', avatarUrl: null, isPresent: true },
+      { name: 'Pedro Santos', email: 'pedro@mineiro.com', phone: '+5511988888888', avatarUrl: null, isPresent: true },
     ];
 
     const barbers = await db

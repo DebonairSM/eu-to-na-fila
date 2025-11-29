@@ -32,7 +32,9 @@ export const barbers = sqliteTable('barbers', {
   name: text('name').notNull(),
   email: text('email'),
   phone: text('phone'),
+  avatarUrl: text('avatar_url'),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  isPresent: integer('is_present', { mode: 'boolean' }).notNull().default(true),
   createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });

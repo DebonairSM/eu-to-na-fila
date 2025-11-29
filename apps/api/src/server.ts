@@ -11,6 +11,7 @@ import { db } from './db/index.js';
 import { queueRoutes } from './routes/queue.js';
 import { ticketRoutes } from './routes/tickets.js';
 import { statusRoutes } from './routes/status.js';
+import { barberRoutes } from './routes/barbers.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -99,6 +100,7 @@ fastify.register(
     instance.register(queueRoutes);
     instance.register(ticketRoutes);
     instance.register(statusRoutes);
+    instance.register(barberRoutes);
   },
   { prefix: '/api' }
 );
