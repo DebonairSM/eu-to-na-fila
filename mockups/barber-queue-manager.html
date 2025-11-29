@@ -3543,10 +3543,7 @@
                     </div>
                 </div>
                 <div class="header-actions">
-                    <button class="icon-button" onclick="toggleKioskMode()" title="Modo Display">
-                        <span class="material-symbols-outlined">tv</span>
-                    </button>
-                    <a href="staff-login.html" class="icon-button" title="Voltar">
+                    <a href="index.html" class="icon-button" title="Voltar">
                         <span class="material-symbols-outlined">arrow_back</span>
                     </a>
                 </div>
@@ -3599,10 +3596,6 @@
 
     <!-- Kiosk Mode Content -->
     <div class="kiosk-container">
-        <!-- Mode Toggle Button - Only visible in queue view -->
-        <button class="kiosk-mode-toggle" id="kioskModeToggle" onclick="toggleKioskMode()" title="Alternar entre modo barbeiro e modo display">
-            <span class="material-symbols-outlined" id="kioskModeToggleIcon">settings</span>
-        </button>
 
         <!-- Kiosk Barber Selector - Presence toggle in kiosk mode -->
         <div class="kiosk-barber-selector">
@@ -5150,6 +5143,13 @@
 
         // Initialize - fetch data from API first
         async function init() {
+            // Check if we should auto-enable kiosk mode (coming from kiosk login)
+            if (sessionStorage.getItem('kioskMode') === 'true') {
+                sessionStorage.removeItem('kioskMode'); // Clear the flag
+                isKioskMode = true;
+                document.body.classList.add('kiosk-mode');
+            }
+            
             // Show loading state
             const queueList = document.getElementById('queueList');
             if (queueList) queueList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--color-text-secondary);">Carregando...</div>';
@@ -5176,13 +5176,13 @@
         
         init();
 
-        // Escape key exits kiosk mode (only if modal is not open)
+        // Escape key exits kiosk mode and returns to home (only if modal is not open)
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && isKioskMode) {
                 const modal = document.getElementById('checkinModal');
                 // Don't exit kiosk mode if check-in modal is open
                 if (!modal || !modal.classList.contains('show')) {
-                toggleKioskMode();
+                    window.location.href = 'index.html';
                 }
             }
         });
