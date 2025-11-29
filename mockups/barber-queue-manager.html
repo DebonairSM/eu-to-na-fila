@@ -3734,29 +3734,126 @@
     </div>
 
     <script>
-        // Hard-seeded barbers with real images
-        const barbers = [
-            { id: 1, name: 'João', avatar: 'https://i.pravatar.cc/150?img=12', isPresent: true },
-            { id: 2, name: 'Pedro', avatar: 'https://i.pravatar.cc/150?img=33', isPresent: true },
-            { id: 3, name: 'Carlos', avatar: 'https://i.pravatar.cc/150?img=47', isPresent: true },
-            { id: 4, name: 'Miguel', avatar: 'https://i.pravatar.cc/150?img=68', isPresent: true },
-            { id: 5, name: 'Rafael', avatar: 'https://i.pravatar.cc/150?img=51', isPresent: true },
-            { id: 6, name: 'Lucas', avatar: 'https://i.pravatar.cc/150?img=27', isPresent: true }
-        ];
-
-        // Queue data with hard-seeded barber assignments
-        let queueData = [
-            { id: 1, name: 'Carlos Silva', status: 'serving', barberId: 1 },
-            { id: 2, name: 'João Santos', status: 'waiting', barberId: null },
-            { id: 3, name: 'Pedro Oliveira', status: 'waiting', barberId: null },
-            { id: 4, name: 'Maria Costa', status: 'waiting', barberId: null },
-            { id: 5, name: 'Ana Paula', status: 'waiting', barberId: null },
-            { id: 6, name: 'Roberto Alves', status: 'waiting', barberId: null },
-            { id: 7, name: 'Fernanda Lima', status: 'waiting', barberId: null },
-            { id: 8, name: 'Lucas Mendes', status: 'waiting', barberId: null },
-            { id: 9, name: 'Juliana Souza', status: 'waiting', barberId: null },
-            { id: 10, name: 'Ricardo Gomes', status: 'waiting', barberId: null }
-        ];
+        // ============ API CONFIGURATION ============
+        const API_BASE = 'https://eu-to-na-fila.onrender.com/api';
+        const SHOP_SLUG = 'mineiro';
+        const POLL_INTERVAL = 5000; // 5 seconds
+        
+        // ============ DATA STATE ============
+        let barbers = [];
+        let queueData = [];
+        let isLoading = false;
+        
+        // ============ API FUNCTIONS ============
+        async function fetchBarbers() {
+            try {
+                const response = await fetch(`${API_BASE}/shops/${SHOP_SLUG}/barbers`);
+                if (!response.ok) throw new Error('Failed to fetch barbers');
+                const data = await response.json();
+                // Map API response to mockup format
+                barbers = data.map(b => ({
+                    id: b.id,
+                    name: b.name.split(' ')[0], // First name only for display
+                    avatar: b.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&background=D4AF37&color=000&size=128`,
+                    isPresent: b.isPresent
+                }));
+                return barbers;
+            } catch (error) {
+                console.error('Error fetching barbers:', error);
+                return [];
+            }
+        }
+        
+        async function fetchQueue() {
+            try {
+                const response = await fetch(`${API_BASE}/shops/${SHOP_SLUG}/queue`);
+                if (!response.ok) throw new Error('Failed to fetch queue');
+                const data = await response.json();
+                // Map API tickets to mockup format (only waiting and in_progress)
+                queueData = (data.tickets || [])
+                    .filter(t => t.status === 'waiting' || t.status === 'in_progress')
+                    .map(t => ({
+                        id: t.id,
+                        name: t.customerName,
+                        status: t.status === 'in_progress' ? 'serving' : 'waiting',
+                        barberId: t.barberId
+                    }));
+                return queueData;
+            } catch (error) {
+                console.error('Error fetching queue:', error);
+                return [];
+            }
+        }
+        
+        async function apiToggleBarberPresence(barberId, isPresent) {
+            try {
+                const response = await fetch(`${API_BASE}/barbers/${barberId}/presence`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isPresent })
+                });
+                if (!response.ok) throw new Error('Failed to update barber presence');
+                return await response.json();
+            } catch (error) {
+                console.error('Error toggling barber presence:', error);
+                return null;
+            }
+        }
+        
+        async function apiCreateTicket(customerName) {
+            try {
+                // Get first service ID (we need at least one)
+                const servicesResponse = await fetch(`${API_BASE}/shops/${SHOP_SLUG}/queue`);
+                const servicesData = await servicesResponse.json();
+                
+                // For now, use service ID 1 (default service)
+                const response = await fetch(`${API_BASE}/shops/${SHOP_SLUG}/tickets`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        customerName,
+                        serviceId: 1 // Default service
+                    })
+                });
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to create ticket');
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('Error creating ticket:', error);
+                throw error;
+            }
+        }
+        
+        async function apiDeleteTicket(ticketId) {
+            try {
+                const response = await fetch(`${API_BASE}/tickets/${ticketId}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) throw new Error('Failed to delete ticket');
+                return await response.json();
+            } catch (error) {
+                console.error('Error deleting ticket:', error);
+                throw error;
+            }
+        }
+        
+        async function refreshData() {
+            if (isLoading) return;
+            isLoading = true;
+            try {
+                await Promise.all([fetchBarbers(), fetchQueue()]);
+                renderAll();
+            } finally {
+                isLoading = false;
+            }
+        }
+        
+        // Start polling for updates
+        function startPolling() {
+            setInterval(refreshData, POLL_INTERVAL);
+        }
 
         let selectedBarberId = null;
         let isKioskMode = false;
@@ -3881,23 +3978,27 @@
         }
 
         // Toggle barber presence
-        function toggleBarberPresence(barberId) {
+        async function toggleBarberPresence(barberId) {
             const barber = barbers.find(b => b.id === barberId);
             if (barber) {
-                const wasPresent = barber.isPresent;
-                barber.isPresent = !barber.isPresent;
+                const newPresence = !barber.isPresent;
                 
-                // If barber is now absent, unassign all customers assigned to them
-                if (!barber.isPresent && wasPresent) {
-                    queueData.forEach(customer => {
-                        if (customer.barberId === barberId) {
-                            customer.barberId = null;
-                            // If customer was serving, change back to waiting
-                            if (customer.status === 'serving') {
-                                customer.status = 'waiting';
-                            }
-                        }
-                    });
+                // Optimistic update
+                barber.isPresent = newPresence;
+                renderBarberPresence();
+                renderKioskBarberSelector();
+                
+                // Call API
+                const result = await apiToggleBarberPresence(barberId, newPresence);
+                
+                if (result) {
+                    // Refresh data to get updated queue (API handles unassigning)
+                    await refreshData();
+                } else {
+                    // Revert on failure
+                    barber.isPresent = !newPresence;
+                    renderBarberPresence();
+                    renderKioskBarberSelector();
                 }
                 
                 renderBarberPresence();
@@ -4434,16 +4535,19 @@
         }
 
         // Confirm and execute the pending action
-        function confirmRemoveAction() {
+        async function confirmRemoveAction() {
             if (!pendingAction || !pendingCustomerId) return;
             
-            if (pendingAction === 'complete') {
-                queueData = queueData.filter(c => c.id !== pendingCustomerId);
-                renderAll();
-            } else {
-                queueData = queueData.filter(c => c.id !== pendingCustomerId);
+            try {
+                // Call API to delete ticket (works for both complete and remove)
+                await apiDeleteTicket(pendingCustomerId);
+                
+                // Refresh data from server
                 previousQueueData = '';
-                renderAll();
+                await refreshData();
+            } catch (error) {
+                console.error('Error removing customer:', error);
+                alert('Erro ao remover cliente. Por favor, tente novamente.');
             }
             
             closeRemoveConfirmModal();
@@ -4836,7 +4940,7 @@
         }
 
         // Add customer from kiosk check-in form
-        function addCustomerFromKiosk() {
+        async function addCustomerFromKiosk() {
             const firstNameInput = document.getElementById('kioskCustomerFirstName');
             const lastNameInput = document.getElementById('kioskCustomerLastName');
             if (!firstNameInput) return;
@@ -4862,24 +4966,20 @@
             // Combine first and last name
             const customerName = lastName ? `${firstName} ${lastName}` : firstName;
             
-            // Add to queue data
-            const newId = Math.max(...queueData.map(c => c.id), 0) + 1;
-            const newCustomer = {
-                id: newId,
-                name: customerName,
-                status: 'waiting',
-                barberId: null
-            };
-            
-            queueData.push(newCustomer);
-            
-            // Clear inputs and close modal
-            firstNameInput.value = '';
-            if (lastNameInput) lastNameInput.value = '';
-            closeCheckinModal();
-            
-            // Re-render queue
-            renderAll();
+            try {
+                // Call API to create ticket
+                await apiCreateTicket(customerName);
+                
+                // Clear inputs and close modal
+                firstNameInput.value = '';
+                if (lastNameInput) lastNameInput.value = '';
+                closeCheckinModal();
+                
+                // Refresh data from server
+                await refreshData();
+            } catch (error) {
+                alert('Erro ao entrar na fila. Por favor, tente novamente.');
+            }
         }
 
         // Close modal when clicking outside
@@ -4971,20 +5071,33 @@
             }
         });
 
-        // Initialize
-        renderAll();
-        updateModeToggleButton(); // Set initial button state
+        // Initialize - fetch data from API first
+        async function init() {
+            // Show loading state
+            const queueList = document.getElementById('queueList');
+            if (queueList) queueList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--color-text-secondary);">Carregando...</div>';
+            
+            // Fetch initial data
+            await refreshData();
+            
+            updateModeToggleButton(); // Set initial button state
+            
+            // Start polling for updates
+            startPolling();
 
-        // Ensure kiosk queue renders if already in kiosk mode
-        if (document.body.classList.contains('kiosk-mode')) {
-            previousQueueData = '';
-            renderKioskQueue();
-            renderKioskBarberSelector();
-            // Generate QR code
-            setTimeout(() => {
-                generateQRCode();
-            }, 100);
+            // Ensure kiosk queue renders if already in kiosk mode
+            if (document.body.classList.contains('kiosk-mode')) {
+                previousQueueData = '';
+                renderKioskQueue();
+                renderKioskBarberSelector();
+                // Generate QR code
+                setTimeout(() => {
+                    generateQRCode();
+                }, 100);
+            }
         }
+        
+        init();
 
         // Escape key exits kiosk mode (only if modal is not open)
         document.addEventListener('keydown', (e) => {
@@ -4997,14 +5110,7 @@
             }
         });
 
-        // Poll for updates every 30 seconds (simulate API call)
-        setInterval(() => {
-            if (isKioskMode) {
-                // In real app, this would fetch from API
-                // Only re-render if data actually changed (handled in renderKioskQueue)
-                renderKioskQueue();
-            }
-        }, 30000);
+        // Polling is now handled by startPolling() in init()
         
         // Re-render on window resize to adapt to screen size changes
         let resizeTimeout;

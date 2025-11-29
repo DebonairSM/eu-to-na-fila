@@ -715,6 +715,26 @@
     </div>
 
     <script>
+        // ============ API CONFIGURATION ============
+        const API_BASE = 'https://eu-to-na-fila.onrender.com/api';
+        const SHOP_SLUG = 'mineiro';
+        const POLL_INTERVAL = 5000; // 5 seconds
+        const AVG_SERVICE_TIME = 15; // minutes per customer
+
+        // Get ticket ID from URL or sessionStorage
+        function getTicketId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlTicketId = urlParams.get('ticket');
+            if (urlTicketId) return parseInt(urlTicketId);
+            
+            const storedId = sessionStorage.getItem('ticketId');
+            if (storedId) return parseInt(storedId);
+            
+            return null;
+        }
+
+        const ticketId = getTicketId();
+
         // Custom alert function
         function showAlert(title, message, icon = 'check_circle', callback = null) {
             const modal = document.getElementById('alertModal');
@@ -758,16 +778,98 @@
             };
         }
 
-        // Simulate ticket data
+        // Ticket data from API
         let ticketData = {
-            customerName: 'João Silva',
-            position: 3,
-            waitTime: 45,
-            status: 'waiting' // waiting, in_progress, completed
+            customerName: sessionStorage.getItem('customerName') || 'Cliente',
+            position: 0,
+            waitTime: 0,
+            status: 'waiting' // waiting, in_progress, completed, cancelled
         };
 
         // Store previous data to detect changes
         let previousData = JSON.stringify(ticketData);
+
+        // Fetch ticket data from API
+        async function fetchTicketData() {
+            if (!ticketId) {
+                showAlert('Erro', 'Ticket não encontrado. Redirecionando...', 'error', () => {
+                    window.location.href = 'queue-join.html';
+                });
+                return;
+            }
+
+            try {
+                // Fetch ticket details
+                const ticketResponse = await fetch(`${API_BASE}/tickets/${ticketId}`);
+                if (!ticketResponse.ok) {
+                    if (ticketResponse.status === 404) {
+                        // Ticket was deleted/completed
+                        ticketData.status = 'cancelled';
+                        updateUI();
+                        return;
+                    }
+                    throw new Error('Failed to fetch ticket');
+                }
+                const ticket = await ticketResponse.json();
+                
+                // Fetch queue to calculate position
+                const queueResponse = await fetch(`${API_BASE}/shops/${SHOP_SLUG}/queue`);
+                const queueData = await queueResponse.json();
+                const waitingTickets = (queueData.tickets || [])
+                    .filter(t => t.status === 'waiting')
+                    .sort((a, b) => a.position - b.position);
+                
+                // Find position in queue
+                const position = waitingTickets.findIndex(t => t.id === ticketId) + 1;
+                
+                // Update ticket data
+                ticketData = {
+                    customerName: ticket.customerName,
+                    position: position,
+                    waitTime: Math.max(position * AVG_SERVICE_TIME, 5),
+                    status: ticket.status === 'in_progress' ? 'in_progress' : 
+                            ticket.status === 'completed' ? 'completed' :
+                            ticket.status === 'cancelled' ? 'cancelled' : 'waiting'
+                };
+                
+                // Check if data changed
+                const newDataString = JSON.stringify(ticketData);
+                if (newDataString !== previousData) {
+                    previousData = newDataString;
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Error fetching ticket:', error);
+            }
+        }
+
+        // Leave queue via API
+        async function leaveQueue() {
+            if (!ticketId) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/tickets/${ticketId}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) throw new Error('Failed to leave queue');
+                
+                // Clear stored data
+                sessionStorage.removeItem('ticketId');
+                sessionStorage.removeItem('customerName');
+                
+                showAlert(
+                    'Até Logo!',
+                    'Você saiu da fila. Até a próxima!',
+                    'waving_hand',
+                    () => {
+                        window.location.href = 'index.html';
+                    }
+                );
+            } catch (error) {
+                console.error('Error leaving queue:', error);
+                showAlert('Erro', 'Erro ao sair da fila. Tente novamente.', 'error');
+            }
+        }
 
         // DOM elements
         const customerName = document.getElementById('customerName');
@@ -816,58 +918,35 @@
                 'Sair da Fila?',
                 'Sair da fila?',
                 'exit_to_app',
-                () => {
-                    showAlert(
-                        'Até Logo!',
-                        'Você saiu da fila. Até a próxima!',
-                        'waving_hand',
-                        () => {
-                            window.location.href = 'index.html';
-                        }
-                    );
-                }
+                leaveQueue
             );
         });
 
-        // Auto-update every 30 seconds, only show changes when data actually changes
-        function autoUpdate() {
-            setInterval(() => {
-                // Simulate fetching new data (in real app, this would be an API call)
-                const newData = {
-                    customerName: ticketData.customerName,
-                    position: ticketData.position > 0 ? Math.max(1, ticketData.position - (Math.random() > 0.7 ? 1 : 0)) : 0,
-                    waitTime: Math.max(5, ticketData.waitTime - (Math.random() > 0.7 ? 15 : 0)),
-                    status: ticketData.status
-                };
-
-                // Only update if data actually changed
-                const newDataString = JSON.stringify(newData);
-                if (newDataString !== previousData) {
-                    ticketData = newData;
-                    previousData = newDataString;
-                    updateUI();
-                }
-            }, 30000); // 30 seconds
-        }
-
-        // Simulate status changes (for demo)
-        function simulateStatusChange() {
-            setTimeout(() => {
-                ticketData.status = 'in_progress';
-                updateUI();
-                
-                setTimeout(() => {
-                    ticketData.status = 'completed';
-                    updateUI();
-                }, 10000);
-            }, 15000);
+        // Auto-update from API
+        function startPolling() {
+            setInterval(fetchTicketData, POLL_INTERVAL);
         }
 
         // Initialize
-        updateUI();
-        autoUpdate();
-        // Uncomment to see status transitions:
-        // simulateStatusChange();
+        async function init() {
+            if (!ticketId) {
+                showAlert('Erro', 'Ticket não encontrado. Redirecionando...', 'error', () => {
+                    window.location.href = 'queue-join.html';
+                });
+                return;
+            }
+            
+            // Show loading state
+            waitTimeValue.textContent = '...';
+            
+            // Fetch initial data
+            await fetchTicketData();
+            
+            // Start polling for updates
+            startPolling();
+        }
+        
+        init();
     </script>
 </body>
 </html>

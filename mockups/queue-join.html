@@ -478,6 +478,9 @@
 
 
     <script>
+        // ============ API CONFIGURATION ============
+        const API_BASE = 'https://eu-to-na-fila.onrender.com/api';
+        const SHOP_SLUG = 'mineiro';
 
         // Profanity filter for Brazilian Portuguese
         const profanityList = [
@@ -488,9 +491,9 @@
             'putaria', 'vagabundo', 'safado', 'piranha', 'vadia'
         ];
 
-        // Queue simulation data
-        let currentQueueSize = 4;
-        const avgServiceTime = 25; // minutes per customer
+        // Queue data from API
+        let currentQueueSize = 0;
+        const avgServiceTime = 15; // minutes per customer
 
         // DOM elements
         const form = document.getElementById('queueForm');
@@ -501,9 +504,40 @@
         const joinButton = document.getElementById('joinButton');
         const waitTimeDisplay = document.getElementById('waitTime');
 
+        // Fetch queue data from API
+        async function fetchQueueData() {
+            try {
+                const response = await fetch(`${API_BASE}/shops/${SHOP_SLUG}/queue`);
+                if (!response.ok) throw new Error('Failed to fetch queue');
+                const data = await response.json();
+                const waitingTickets = (data.tickets || []).filter(t => t.status === 'waiting');
+                currentQueueSize = waitingTickets.length;
+                updateWaitTime();
+            } catch (error) {
+                console.error('Error fetching queue:', error);
+            }
+        }
+
+        // Create ticket via API
+        async function createTicket(customerName) {
+            const response = await fetch(`${API_BASE}/shops/${SHOP_SLUG}/tickets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    customerName,
+                    serviceId: 1 // Default service
+                })
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to create ticket');
+            }
+            return await response.json();
+        }
+
         // Update wait time display
         function updateWaitTime() {
-            const estimatedWait = currentQueueSize * avgServiceTime;
+            const estimatedWait = Math.max(currentQueueSize * avgServiceTime, 5);
             waitTimeDisplay.textContent = estimatedWait;
         }
 
@@ -575,7 +609,7 @@
         });
 
         // Form submission
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const firstName = firstNameInput.value;
@@ -591,20 +625,34 @@
             // Combine first and last name
             const fullName = lastName.trim() ? `${firstName.trim()} ${lastName.trim()}` : firstName.trim();
             
-            // Add to queue
-            currentQueueSize++;
-            const position = currentQueueSize;
+            // Disable button while submitting
+            joinButton.disabled = true;
+            joinButton.innerHTML = '<span class="material-symbols-outlined">hourglass_top</span><span>Entrando...</span>';
             
-            // In real app, would get ticket ID from API
-            const ticketId = Math.floor(Math.random() * 10000);
-            
-            // Redirect immediately to status page (no success message)
-            window.location.href = 'customer-status.html';
+            try {
+                // Create ticket via API
+                const ticket = await createTicket(fullName);
+                
+                // Store ticket ID for status page
+                sessionStorage.setItem('ticketId', ticket.id);
+                sessionStorage.setItem('customerName', fullName);
+                
+                // Redirect to status page
+                window.location.href = `customer-status.html?ticket=${ticket.id}`;
+            } catch (error) {
+                console.error('Error creating ticket:', error);
+                errorMessage.textContent = 'Erro ao entrar na fila. Tente novamente.';
+                errorMessage.classList.add('show');
+                joinButton.disabled = false;
+                joinButton.innerHTML = '<span class="material-symbols-outlined">person_add</span><span>Entrar na Fila</span>';
+            }
         });
 
 
-        // Initialize
-        updateWaitTime();
+        // Initialize - fetch queue data
+        fetchQueueData();
+        // Refresh every 30 seconds
+        setInterval(fetchQueueData, 30000);
     </script>
 </body>
 </html>
