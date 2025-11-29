@@ -6,10 +6,10 @@
     <title>Minha Posição - Barbearia Mineiro</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     
-    <!-- Google Fonts - Roboto -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <!-- Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -22,476 +22,286 @@
         }
 
         :root {
-            /* Gold and White Color Scheme for Mineiro Barber Shop */
-            --md-sys-color-primary: #D4AF37;
-            --md-sys-color-on-primary: #FFFFFF;
-            --md-sys-color-primary-container: #FFF8E1;
-            --md-sys-color-on-primary-container: #3E2723;
-            --md-sys-color-secondary: #8B7355;
-            --md-sys-color-on-secondary: #FFFFFF;
-            --md-sys-color-surface: #FFFFFF;
-            --md-sys-color-on-surface: #1D1B20;
-            --md-sys-color-surface-variant: #F5F5F5;
-            --md-sys-color-on-surface-variant: #5D5D5D;
-            --md-sys-color-outline: #C4C4C4;
-            --md-sys-color-error: #BA1A1A;
-            --md-sys-color-on-error: #FFFFFF;
-            --md-sys-color-success: #2E7D32;
-            --md-sys-color-success-container: #C8E6C9;
-            
-            /* Elevation shadows with gold tint */
-            --md-sys-elevation-1: 0px 1px 2px rgba(212, 175, 55, 0.2), 0px 1px 3px 1px rgba(0, 0, 0, 0.1);
-            --md-sys-elevation-2: 0px 1px 2px rgba(212, 175, 55, 0.25), 0px 2px 6px 2px rgba(0, 0, 0, 0.12);
-            --md-sys-elevation-3: 0px 4px 8px 3px rgba(212, 175, 55, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.2);
+            --gold: #D4AF37;
+            --gold-light: #E8C547;
+            --black: #0a0a0a;
+            --dark: #1a1a1a;
+            --white: #FFFFFF;
+            --gray: rgba(255, 255, 255, 0.7);
+            --gray-dark: rgba(255, 255, 255, 0.5);
+            --success: #22c55e;
+            --success-dark: #16a34a;
+            --error: #ef4444;
         }
 
         body {
             font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #f0f2f5 0%, #e3e7ed 50%, #d4d9e2 100%);
-            background-attachment: fixed;
-            color: var(--md-sys-color-on-surface);
+            background: linear-gradient(135deg, var(--black) 0%, var(--dark) 50%, #2d2416 100%);
+            color: var(--white);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 16px;
-            position: relative;
-            overflow-x: hidden;
+            padding: 20px;
         }
 
         body::before {
             content: '';
             position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.03) 0%, transparent 50%);
+            animation: rotate 40s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 80% 70%, rgba(46, 125, 50, 0.06) 0%, transparent 40%);
-            pointer-events: none;
-            animation: backgroundShift 20s ease-in-out infinite;
+            right: 0;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
         }
 
-        @keyframes backgroundShift {
-            0%, 100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.8;
-                transform: scale(1.1);
-            }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gold);
+            text-decoration: none;
         }
 
+        .nav-back {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .nav-back:hover {
+            color: var(--gold);
+        }
+
+        /* Container */
         .container {
             width: 100%;
             max-width: 480px;
-            margin-top: 24px;
+            margin-top: 100px;
             position: relative;
             z-index: 1;
             animation: fadeIn 0.8s ease-out;
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Header */
         .header {
             text-align: center;
             margin-bottom: 32px;
         }
 
-        .header-icon {
-            font-size: 48px;
-            color: var(--md-sys-color-primary);
-            margin-bottom: 16px;
-            filter: drop-shadow(0 4px 16px rgba(212, 175, 55, 0.5));
-            animation: iconFloat 3s ease-in-out infinite;
-        }
-
-        @keyframes iconFloat {
-            0%, 100% {
-                transform: translateY(0) rotate(0deg);
-            }
-            50% {
-                transform: translateY(-10px) rotate(5deg);
-            }
-        }
-
-        h1 {
-            font-size: 24px;
-            font-weight: 400;
-            line-height: 32px;
-            color: var(--md-sys-color-on-surface);
-            margin-bottom: 8px;
-        }
-
         .customer-name {
-            font-size: 18px;
-            font-weight: 500;
-            color: var(--md-sys-color-primary);
+            font-family: 'Playfair Display', serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 12px;
         }
 
-        /* Status Badge */
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 6px 16px;
+            padding: 8px 16px;
             border-radius: 100px;
-            font-size: 12px;
+            font-size: 0.8rem;
             font-weight: 500;
-            letter-spacing: 0.5px;
             text-transform: uppercase;
-            margin-top: 12px;
+            letter-spacing: 0.5px;
         }
 
         .status-badge.waiting {
-            background-color: var(--md-sys-color-primary-container);
-            color: var(--md-sys-color-on-primary-container);
+            background: rgba(212, 175, 55, 0.2);
+            color: var(--gold);
+            border: 1px solid rgba(212, 175, 55, 0.3);
         }
 
-        .status-badge.in-progress {
-            background-color: var(--md-sys-color-success-container);
-            color: var(--md-sys-color-success);
+        .status-badge.in_progress {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+            border: 1px solid rgba(34, 197, 94, 0.3);
         }
 
         .status-badge.completed {
-            background-color: var(--md-sys-color-success);
-            color: var(--md-sys-color-on-primary);
+            background: var(--success);
+            color: var(--white);
         }
 
-        /* Position Card */
-        .position-card {
-            background: linear-gradient(135deg, #D4AF37 0%, #B8941F 50%, #D4AF37 100%);
-            background-size: 200% 200%;
-            color: var(--md-sys-color-on-primary);
-            border-radius: 32px;
-            padding: 48px 24px;
+        /* Main Card */
+        .main-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 24px;
+            padding: 48px 32px;
             margin-bottom: 24px;
-            box-shadow: 0 16px 48px rgba(212, 175, 55, 0.4), 0 8px 16px rgba(0, 0, 0, 0.2);
             text-align: center;
+            backdrop-filter: blur(10px);
             position: relative;
             overflow: hidden;
-            animation: gradientShift 8s ease infinite, cardAppear 0.8s ease-out 0.2s both;
         }
 
-        @keyframes gradientShift {
-            0%, 100% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-        }
-
-        @keyframes cardAppear {
-            from {
-                opacity: 0;
-                transform: scale(0.9) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        .position-card::before {
+        .main-card::before {
             content: '';
             position: absolute;
             top: -50%;
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-            animation: rotate 10s linear infinite;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+            animation: rotate 15s linear infinite;
         }
 
-        @keyframes rotate {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .position-label {
-            font-size: 14px;
-            font-weight: 500;
-            opacity: 0.9;
-            margin-bottom: 16px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .position-number {
-            font-size: 120px;
-            font-weight: 200;
-            line-height: 120px;
-            margin-bottom: 16px;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            animation: numberPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes numberPulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-        }
-
-        .position-text {
-            font-size: 18px;
-            font-weight: 400;
-            opacity: 0.95;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Wait Time Card */
-        .wait-time-card {
-            background: linear-gradient(135deg, #D4AF37 0%, #B8941F 50%, #D4AF37 100%);
-            background-size: 200% 200%;
-            color: var(--md-sys-color-on-primary);
-            border-radius: 32px;
-            padding: 64px 32px;
-            margin-bottom: 24px;
-            box-shadow: 0 16px 48px rgba(212, 175, 55, 0.4), 0 8px 16px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            animation: gradientShift 8s ease infinite, cardAppear 0.8s ease-out 0.2s both;
-        }
-
-        .wait-time-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-            animation: rotate 10s linear infinite;
-        }
-
-        .wait-time-header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 24px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .wait-time-icon {
-            font-size: 40px;
-            color: var(--md-sys-color-on-primary);
-            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
-        }
-
-        .wait-time-label {
-            font-size: 18px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-primary);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            opacity: 0.95;
-        }
-
-        .wait-time-value {
-            font-size: 120px;
-            font-weight: 200;
-            line-height: 120px;
-            color: var(--md-sys-color-on-primary);
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            animation: numberPulse 2s ease-in-out infinite;
-            margin-bottom: 8px;
-        }
-
-        .wait-time-unit {
-            font-size: 28px;
-            font-weight: 400;
-            color: var(--md-sys-color-on-primary);
-            opacity: 0.95;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Info Card */
-        .info-card {
-            background-color: var(--md-sys-color-primary-container);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: start;
-            gap: 16px;
-        }
-
-        .info-icon {
-            font-size: 24px;
-            color: var(--md-sys-color-primary);
-            flex-shrink: 0;
-        }
-
-        .info-text {
-            font-size: 14px;
-            color: var(--md-sys-color-on-primary-container);
-            line-height: 20px;
-        }
-
-        /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .button {
-            width: 100%;
-            padding: 18px 24px;
-            font-size: 15px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            font-family: 'Roboto', sans-serif;
-            border: none;
-            border-radius: 100px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .wait-label {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            font-size: 0.875rem;
+            color: var(--gold);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             position: relative;
-            overflow: hidden;
+            z-index: 1;
         }
 
-        .button::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
+        .wait-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 6rem;
+            font-weight: 600;
+            color: var(--white);
+            line-height: 1;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
         }
 
-        .button:hover::before {
-            width: 300px;
-            height: 300px;
+        .wait-unit {
+            font-size: 1.25rem;
+            color: var(--gray);
+            position: relative;
+            z-index: 1;
         }
 
-        .button.primary {
-            background: linear-gradient(135deg, #D4AF37 0%, #C49B2E 100%);
-            color: var(--md-sys-color-on-primary);
-        }
-
-        .button.secondary {
-            background: rgba(255, 255, 255, 0.9);
-            color: var(--md-sys-color-on-surface);
-            border: 2px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .button.danger {
-            background: linear-gradient(135deg, #BA1A1A 0%, #A01010 100%);
-            color: var(--md-sys-color-on-error);
-        }
-
-        .button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-        }
-
-        .button:active {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .button:disabled {
-            background-color: rgba(29, 27, 32, 0.12);
-            color: rgba(29, 27, 32, 0.38);
-            box-shadow: none;
-            cursor: not-allowed;
-        }
-
-        /* Pulsing animation for "You're next!" */
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-        }
-
-        .position-card.next {
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        /* Material Icons */
-        .material-symbols-outlined {
-            font-variation-settings:
-            'FILL' 0,
-            'wght' 400,
-            'GRAD' 0,
-            'opsz' 24;
-        }
-
-        /* In Progress State */
-        .in-progress-card {
-            background-color: var(--md-sys-color-success-container);
-            border-radius: 16px;
-            padding: 32px 24px;
+        /* In Progress Card */
+        .progress-card {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.05) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 24px;
+            padding: 48px 32px;
             margin-bottom: 24px;
-            box-shadow: var(--md-sys-elevation-2);
             text-align: center;
         }
 
-        .in-progress-icon {
+        .progress-icon {
             font-size: 64px;
-            color: var(--md-sys-color-success);
+            color: var(--success);
             margin-bottom: 16px;
         }
 
-        .in-progress-title {
-            font-size: 24px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface);
+        .progress-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--white);
             margin-bottom: 8px;
         }
 
-        .in-progress-message {
-            font-size: 14px;
-            color: var(--md-sys-color-on-surface-variant);
+        .progress-message {
+            color: var(--gray);
         }
 
-        /* Auto-refresh indicator */
+        /* Completed Card */
+        .completed-card {
+            background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+            border-radius: 24px;
+            padding: 48px 32px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .completed-card .progress-icon,
+        .completed-card .progress-title,
+        .completed-card .progress-message {
+            color: var(--white);
+        }
+
+        /* Action Button */
+        .action-btn {
+            width: 100%;
+            padding: 18px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Roboto', sans-serif;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn.danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .action-btn.danger:hover {
+            background: var(--error);
+            color: var(--white);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--black);
+        }
+
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
+        }
+
+        /* Refresh Indicator */
         .refresh-indicator {
             text-align: center;
-            font-size: 12px;
-            color: var(--md-sys-color-on-surface-variant);
+            font-size: 0.75rem;
+            color: var(--gray-dark);
             margin-top: 24px;
             display: flex;
             align-items: center;
@@ -500,30 +310,26 @@
         }
 
         .refresh-dot {
-            width: 8px;
-            height: 8px;
-            background-color: var(--md-sys-color-primary);
+            width: 6px;
+            height: 6px;
+            background: var(--gold);
             border-radius: 50%;
             animation: blink 2s ease-in-out infinite;
         }
 
         @keyframes blink {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.3;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
 
-        /* Custom Confirm Modal */
-        .confirm-modal {
+        /* Modal */
+        .modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(10px);
             display: none;
             align-items: center;
@@ -531,112 +337,106 @@
             z-index: 9999;
         }
 
-        .confirm-modal.show {
+        .modal.show {
             display: flex;
         }
 
-        .confirm-content {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 28px;
+        .modal-content {
+            background: var(--dark);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
             padding: 40px;
             max-width: 400px;
             width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: confirmSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             text-align: center;
+            animation: modalSlide 0.3s ease;
         }
 
-        @keyframes confirmSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(50px) scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+        @keyframes modalSlide {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .confirm-icon {
-            font-size: 64px;
-            color: var(--md-sys-color-error);
+        .modal-icon {
+            font-size: 56px;
             margin-bottom: 20px;
         }
 
-        .confirm-title {
-            font-size: 24px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface);
+        .modal-icon.error { color: var(--error); }
+        .modal-icon.success { color: var(--success); }
+        .modal-icon.warning { color: var(--gold); }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--white);
             margin-bottom: 12px;
         }
 
-        .confirm-message {
-            font-size: 16px;
-            color: var(--md-sys-color-on-surface-variant);
+        .modal-message {
+            color: var(--gray);
             margin-bottom: 24px;
-            line-height: 1.5;
         }
 
-        .confirm-buttons {
+        .modal-buttons {
             display: flex;
             gap: 12px;
         }
 
-        .confirm-buttons .button {
+        .modal-btn {
             flex: 1;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .modal-btn.cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+        }
+
+        .modal-btn.confirm {
+            background: var(--error);
+            color: var(--white);
+        }
+
+        .modal-btn.ok {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--black);
+            width: 100%;
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
-            .container {
-                margin-top: 16px;
-                padding: 0 8px;
-            }
-
-            h1 {
-                font-size: 20px;
-            }
-
-            .header-icon {
-                font-size: 40px;
-            }
-
-            .wait-time-value {
-                font-size: 80px;
-                line-height: 80px;
-            }
-
-            .wait-time-unit {
-                font-size: 20px;
-            }
-
-            .wait-time-card {
-                padding: 48px 24px;
-            }
-
-            .action-buttons {
-                gap: 10px;
-            }
-
-            .button {
-                padding: 16px 20px;
-                font-size: 14px;
-            }
-        }
-
-        @media (min-width: 769px) {
-            body {
-                justify-content: center;
-            }
+        @media (max-width: 640px) {
+            .nav { padding: 16px 20px; }
+            .nav-logo { font-size: 1rem; }
+            .container { margin-top: 80px; }
+            .customer-name { font-size: 1.5rem; }
+            .wait-value { font-size: 4rem; }
+            .main-card, .progress-card, .completed-card { padding: 32px 24px; }
         }
     </style>
 </head>
 <body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <a href="index.html" class="nav-logo">
+            <span class="material-symbols-outlined">content_cut</span>
+            Barbearia Mineiro
+        </a>
+        <a href="index.html" class="nav-back">
+            <span class="material-symbols-outlined">home</span>
+            Início
+        </a>
+    </nav>
+
     <div class="container">
         <div class="header">
-            <span class="material-symbols-outlined header-icon">content_cut</span>
-            <h1>Barbearia Mineiro</h1>
-            <div class="customer-name" id="customerName">João Silva</div>
+            <div class="customer-name" id="customerName">Carregando...</div>
             <div class="status-badge waiting" id="statusBadge">
                 <span class="material-symbols-outlined" style="font-size: 16px;">schedule</span>
                 <span>Aguardando</span>
@@ -645,323 +445,228 @@
 
         <!-- Waiting State -->
         <div id="waitingState">
-            <div class="wait-time-card">
-                <div class="wait-time-header">
-                    <span class="material-symbols-outlined wait-time-icon">schedule</span>
-                    <div class="wait-time-label">Tempo estimado</div>
+            <div class="main-card">
+                <div class="wait-label">
+                    <span class="material-symbols-outlined">schedule</span>
+                    Tempo estimado
                 </div>
-                <div>
-                    <div class="wait-time-value" id="waitTimeValue">45</div>
-                    <div class="wait-time-unit">minutos</div>
-                </div>
+                <div class="wait-value" id="waitTimeValue">--</div>
+                <div class="wait-unit">minutos</div>
             </div>
 
-            <div class="action-buttons">
-                <button class="button danger" id="leaveButton">
-                    <span class="material-symbols-outlined">exit_to_app</span>
-                    <span>Sair da Fila</span>
-                </button>
-            </div>
+            <button class="action-btn danger" id="leaveButton">
+                <span class="material-symbols-outlined">exit_to_app</span>
+                Sair da Fila
+            </button>
         </div>
 
-        <!-- In Progress State (hidden by default) -->
+        <!-- In Progress State -->
         <div id="inProgressState" style="display: none;">
-            <div class="in-progress-card">
-                <span class="material-symbols-outlined in-progress-icon">cut</span>
-                <div class="in-progress-title">Você está sendo atendido!</div>
-                <div class="in-progress-message">Aproveite seu corte</div>
+            <div class="progress-card">
+                <span class="material-symbols-outlined progress-icon">cut</span>
+                <div class="progress-title">Você está sendo atendido!</div>
+                <div class="progress-message">Aproveite seu corte</div>
             </div>
         </div>
 
-        <!-- Completed State (hidden by default) -->
+        <!-- Completed State -->
         <div id="completedState" style="display: none;">
-            <div class="in-progress-card" style="background-color: var(--md-sys-color-success); color: var(--md-sys-color-on-primary);">
-                <span class="material-symbols-outlined in-progress-icon" style="color: var(--md-sys-color-on-primary);">check_circle</span>
-                <div class="in-progress-title" style="color: var(--md-sys-color-on-primary);">Atendimento concluído!</div>
-                <div class="in-progress-message" style="color: var(--md-sys-color-on-primary); opacity: 0.9;">Obrigado por usar nosso sistema</div>
+            <div class="completed-card">
+                <span class="material-symbols-outlined progress-icon">check_circle</span>
+                <div class="progress-title">Atendimento concluído!</div>
+                <div class="progress-message">Obrigado por usar nosso sistema</div>
             </div>
 
-            <div class="action-buttons">
-                <button class="button primary" onclick="window.location.href = 'index.html'" style="background-color: var(--md-sys-color-surface); color: var(--md-sys-color-primary);">
-                    <span class="material-symbols-outlined">home</span>
-                    <span>Voltar ao Início</span>
-                </button>
-            </div>
+            <button class="action-btn primary" onclick="window.location.href = 'index.html'">
+                <span class="material-symbols-outlined">home</span>
+                Voltar ao Início
+            </button>
         </div>
 
-    </div>
-
-    <!-- Custom Confirm Modal -->
-    <div class="confirm-modal" id="confirmModal">
-        <div class="confirm-content">
-            <span class="material-symbols-outlined confirm-icon" id="confirmIcon">help</span>
-            <div class="confirm-title" id="confirmTitle">Confirmar ação</div>
-            <div class="confirm-message" id="confirmMessage">Tem certeza?</div>
-            <div class="confirm-buttons">
-                <button class="button secondary" id="confirmCancel">Cancelar</button>
-                <button class="button danger" id="confirmOk">Confirmar</button>
-            </div>
+        <div class="refresh-indicator">
+            <span class="refresh-dot"></span>
+            Atualizando automaticamente
         </div>
     </div>
 
-    <!-- Custom Alert Modal -->
-    <div class="confirm-modal" id="alertModal">
-        <div class="confirm-content">
-            <span class="material-symbols-outlined confirm-icon" style="color: var(--md-sys-color-primary);" id="alertIcon">check_circle</span>
-            <div class="confirm-title" id="alertTitle">Sucesso!</div>
-            <div class="confirm-message" id="alertMessage">Operação concluída</div>
-            <button class="button primary" id="alertOk" style="width: 100%;">OK</button>
+    <!-- Confirm Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <span class="material-symbols-outlined modal-icon warning">help</span>
+            <div class="modal-title">Sair da Fila?</div>
+            <div class="modal-message">Você perderá sua posição na fila.</div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="confirmCancel">Cancelar</button>
+                <button class="modal-btn confirm" id="confirmOk">Sair</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div class="modal" id="alertModal">
+        <div class="modal-content">
+            <span class="material-symbols-outlined modal-icon success" id="alertIcon">check_circle</span>
+            <div class="modal-title" id="alertTitle">Sucesso!</div>
+            <div class="modal-message" id="alertMessage">Operação concluída</div>
+            <button class="modal-btn ok" id="alertOk">OK</button>
         </div>
     </div>
 
     <script>
-        // ============ API CONFIGURATION ============
         const API_BASE = 'https://eu-to-na-fila.onrender.com/api';
         const SHOP_SLUG = 'mineiro';
-        const POLL_INTERVAL = 5000; // 5 seconds
-        const AVG_SERVICE_TIME = 20; // minutes per haircut
+        const POLL_INTERVAL = 5000;
+        const AVG_SERVICE_TIME = 20;
 
-        // Get ticket ID from URL or sessionStorage
         function getTicketId() {
             const urlParams = new URLSearchParams(window.location.search);
             const urlTicketId = urlParams.get('ticket');
             if (urlTicketId) return parseInt(urlTicketId);
-            
             const storedId = sessionStorage.getItem('ticketId');
             if (storedId) return parseInt(storedId);
-            
             return null;
         }
 
         const ticketId = getTicketId();
 
-        // Custom alert function
         function showAlert(title, message, icon = 'check_circle', callback = null) {
             const modal = document.getElementById('alertModal');
-            const alertTitle = document.getElementById('alertTitle');
-            const alertMessage = document.getElementById('alertMessage');
-            const alertIcon = document.getElementById('alertIcon');
-            const alertOk = document.getElementById('alertOk');
-
-            alertTitle.textContent = title;
-            alertMessage.textContent = message;
-            alertIcon.textContent = icon;
+            document.getElementById('alertTitle').textContent = title;
+            document.getElementById('alertMessage').textContent = message;
+            document.getElementById('alertIcon').textContent = icon;
+            document.getElementById('alertIcon').className = `material-symbols-outlined modal-icon ${icon === 'error' ? 'error' : 'success'}`;
             modal.classList.add('show');
-
-            alertOk.onclick = () => {
+            document.getElementById('alertOk').onclick = () => {
                 modal.classList.remove('show');
                 if (callback) callback();
             };
         }
 
-        // Custom confirm function
-        function showConfirm(title, message, icon = 'help', onConfirm = null) {
+        function showConfirm(onConfirm) {
             const modal = document.getElementById('confirmModal');
-            const confirmTitle = document.getElementById('confirmTitle');
-            const confirmMessage = document.getElementById('confirmMessage');
-            const confirmIcon = document.getElementById('confirmIcon');
-            const confirmOk = document.getElementById('confirmOk');
-            const confirmCancel = document.getElementById('confirmCancel');
-
-            confirmTitle.textContent = title;
-            confirmMessage.textContent = message;
-            confirmIcon.textContent = icon;
             modal.classList.add('show');
-
-            confirmOk.onclick = () => {
+            document.getElementById('confirmOk').onclick = () => {
                 modal.classList.remove('show');
                 if (onConfirm) onConfirm();
             };
-
-            confirmCancel.onclick = () => {
+            document.getElementById('confirmCancel').onclick = () => {
                 modal.classList.remove('show');
             };
         }
 
-        // Ticket data from API
         let ticketData = {
             customerName: sessionStorage.getItem('customerName') || 'Cliente',
-            position: 0,
             waitTime: 0,
-            status: 'waiting' // waiting, in_progress, completed, cancelled
+            status: 'waiting'
         };
 
-        // Store previous data to detect changes
-        let previousData = JSON.stringify(ticketData);
-
-        // Fetch ticket data from API
         async function fetchTicketData() {
             if (!ticketId) {
-                showAlert('Erro', 'Ticket não encontrado. Redirecionando...', 'error', () => {
+                showAlert('Erro', 'Ticket não encontrado.', 'error', () => {
                     window.location.href = 'queue-join.html';
                 });
                 return;
             }
 
             try {
-                // Fetch ticket, queue, and barbers in parallel
                 const [ticketRes, queueRes, barbersRes] = await Promise.all([
                     fetch(`${API_BASE}/tickets/${ticketId}`),
                     fetch(`${API_BASE}/shops/${SHOP_SLUG}/queue`),
                     fetch(`${API_BASE}/shops/${SHOP_SLUG}/barbers`)
                 ]);
-                
+
                 if (!ticketRes.ok) {
                     if (ticketRes.status === 404) {
-                        // Ticket was deleted/completed
                         ticketData.status = 'cancelled';
                         updateUI();
                         return;
                     }
                     throw new Error('Failed to fetch ticket');
                 }
-                
+
                 const ticket = await ticketRes.json();
                 const queueDataRes = await queueRes.json();
                 const barbersData = await barbersRes.json();
-                
-                // Get waiting tickets sorted by position
+
                 const waitingTickets = (queueDataRes.tickets || [])
                     .filter(t => t.status === 'waiting')
                     .sort((a, b) => a.position - b.position);
-                
-                // Find position in queue (0 if being served or not in waiting list)
+
                 const position = waitingTickets.findIndex(t => t.id === ticketId) + 1;
-                
-                // Count present barbers (minimum 1 to avoid division by zero)
                 const presentBarbers = Math.max(1, barbersData.filter(b => b.isPresent).length);
-                
-                // Calculate wait time: (position / present_barbers) * avg_service_time
-                // Round to nearest 5 minutes
                 const rawWaitTime = (position / presentBarbers) * AVG_SERVICE_TIME;
                 const waitTime = position > 0 ? Math.max(5, Math.round(rawWaitTime / 5) * 5) : 0;
-                
-                // Update ticket data
+
                 ticketData = {
                     customerName: ticket.customerName,
-                    position: position,
                     waitTime: waitTime,
-                    status: ticket.status === 'in_progress' ? 'in_progress' : 
-                            ticket.status === 'completed' ? 'completed' :
-                            ticket.status === 'cancelled' ? 'cancelled' : 'waiting'
+                    status: ticket.status
                 };
-                
-                // Check if data changed
-                const newDataString = JSON.stringify(ticketData);
-                if (newDataString !== previousData) {
-                    previousData = newDataString;
-                    updateUI();
-                }
+
+                updateUI();
             } catch (error) {
                 console.error('Error fetching ticket:', error);
             }
         }
 
-        // Leave queue via API
         async function leaveQueue() {
             if (!ticketId) return;
-            
             try {
-                const response = await fetch(`${API_BASE}/tickets/${ticketId}`, {
-                    method: 'DELETE'
-                });
-                if (!response.ok) throw new Error('Failed to leave queue');
-                
-                // Clear stored data
+                await fetch(`${API_BASE}/tickets/${ticketId}`, { method: 'DELETE' });
                 sessionStorage.removeItem('ticketId');
                 sessionStorage.removeItem('customerName');
-                
-                showAlert(
-                    'Até Logo!',
-                    'Você saiu da fila. Até a próxima!',
-                    'waving_hand',
-                    () => {
-                        window.location.href = 'index.html';
-                    }
-                );
+                showAlert('Até Logo!', 'Você saiu da fila.', 'waving_hand', () => {
+                    window.location.href = 'index.html';
+                });
             } catch (error) {
-                console.error('Error leaving queue:', error);
-                showAlert('Erro', 'Erro ao sair da fila. Tente novamente.', 'error');
+                showAlert('Erro', 'Erro ao sair da fila.', 'error');
             }
         }
 
-        // DOM elements
         const customerName = document.getElementById('customerName');
         const statusBadge = document.getElementById('statusBadge');
         const waitTimeValue = document.getElementById('waitTimeValue');
-        const leaveButton = document.getElementById('leaveButton');
         const waitingState = document.getElementById('waitingState');
         const inProgressState = document.getElementById('inProgressState');
         const completedState = document.getElementById('completedState');
 
-        // Update UI based on ticket data
         function updateUI() {
             customerName.textContent = ticketData.customerName;
-            
-            // Update status badge
+
             statusBadge.className = `status-badge ${ticketData.status}`;
             if (ticketData.status === 'waiting') {
                 statusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">schedule</span><span>Aguardando</span>';
-            } else if (ticketData.status === 'in_progress') {
-                statusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">cut</span><span>Em Atendimento</span>';
-            } else if (ticketData.status === 'completed') {
-                statusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">check_circle</span><span>Concluído</span>';
-            }
-
-            // Show appropriate state
-            if (ticketData.status === 'waiting') {
                 waitingState.style.display = 'block';
                 inProgressState.style.display = 'none';
                 completedState.style.display = 'none';
-
                 waitTimeValue.textContent = ticketData.waitTime;
             } else if (ticketData.status === 'in_progress') {
+                statusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">cut</span><span>Em Atendimento</span>';
                 waitingState.style.display = 'none';
                 inProgressState.style.display = 'block';
                 completedState.style.display = 'none';
             } else if (ticketData.status === 'completed') {
+                statusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">check_circle</span><span>Concluído</span>';
                 waitingState.style.display = 'none';
                 inProgressState.style.display = 'none';
                 completedState.style.display = 'block';
             }
         }
 
-        // Handle leave queue button
-        leaveButton.addEventListener('click', function() {
-            showConfirm(
-                'Sair da Fila?',
-                'Sair da fila?',
-                'exit_to_app',
-                leaveQueue
-            );
-        });
+        document.getElementById('leaveButton').addEventListener('click', () => showConfirm(leaveQueue));
 
-        // Auto-update from API
-        function startPolling() {
-            setInterval(fetchTicketData, POLL_INTERVAL);
-        }
-
-        // Initialize
         async function init() {
             if (!ticketId) {
-                showAlert('Erro', 'Ticket não encontrado. Redirecionando...', 'error', () => {
+                showAlert('Erro', 'Ticket não encontrado.', 'error', () => {
                     window.location.href = 'queue-join.html';
                 });
                 return;
             }
-            
-            // Show loading state
-            waitTimeValue.textContent = '...';
-            
-            // Fetch initial data
             await fetchTicketData();
-            
-            // Start polling for updates
-            startPolling();
+            setInterval(fetchTicketData, POLL_INTERVAL);
         }
-        
+
         init();
     </script>
 </body>
 </html>
-

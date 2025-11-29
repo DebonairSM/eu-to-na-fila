@@ -6,10 +6,10 @@
     <title>Entrar na Fila - Barbearia Mineiro</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     
-    <!-- Google Fonts - Roboto -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <!-- Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -22,286 +22,242 @@
         }
 
         :root {
-            /* Gold and White Color Scheme for Mineiro Barber Shop */
-            --md-sys-color-primary: #D4AF37;
-            --md-sys-color-on-primary: #FFFFFF;
-            --md-sys-color-primary-container: #FFF8E1;
-            --md-sys-color-on-primary-container: #3E2723;
-            --md-sys-color-secondary: #8B7355;
-            --md-sys-color-on-secondary: #FFFFFF;
-            --md-sys-color-surface: #FFFFFF;
-            --md-sys-color-on-surface: #1D1B20;
-            --md-sys-color-surface-variant: #F5F5F5;
-            --md-sys-color-on-surface-variant: #5D5D5D;
-            --md-sys-color-outline: #C4C4C4;
-            --md-sys-color-error: #BA1A1A;
-            --md-sys-color-on-error: #FFFFFF;
-            --md-sys-color-error-container: #FFDAD6;
-            --md-sys-color-on-error-container: #410002;
-            
-            /* Elevation shadows with gold tint */
-            --md-sys-elevation-1: 0px 1px 2px rgba(212, 175, 55, 0.2), 0px 1px 3px 1px rgba(0, 0, 0, 0.1);
-            --md-sys-elevation-2: 0px 1px 2px rgba(212, 175, 55, 0.25), 0px 2px 6px 2px rgba(0, 0, 0, 0.12);
-            --md-sys-elevation-3: 0px 4px 8px 3px rgba(212, 175, 55, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.2);
+            --gold: #D4AF37;
+            --gold-light: #E8C547;
+            --gold-dark: #B8960C;
+            --black: #0a0a0a;
+            --dark: #1a1a1a;
+            --dark-lighter: #2a2a2a;
+            --white: #FFFFFF;
+            --gray: rgba(255, 255, 255, 0.7);
+            --gray-dark: rgba(255, 255, 255, 0.5);
+            --error: #ef4444;
         }
 
         body {
             font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            background-attachment: fixed;
-            color: var(--md-sys-color-on-surface);
+            background: linear-gradient(135deg, var(--black) 0%, var(--dark) 50%, #2d2416 100%);
+            color: var(--white);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 16px;
+            padding: 20px;
             position: relative;
-            overflow-x: hidden;
         }
 
         body::before {
             content: '';
             position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.03) 0%, transparent 50%);
+            animation: rotate 40s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 30% 50%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
-                        radial-gradient(circle at 70% 80%, rgba(212, 175, 55, 0.06) 0%, transparent 50%);
-            pointer-events: none;
-            animation: float 20s ease-in-out infinite;
+            right: 0;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
         }
 
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-20px);
-            }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gold);
+            text-decoration: none;
         }
 
+        .nav-logo .material-symbols-outlined {
+            font-size: 1.5rem;
+        }
+
+        .nav-back {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .nav-back:hover {
+            color: var(--gold);
+        }
+
+        /* Container */
         .container {
             width: 100%;
             max-width: 480px;
-            margin-top: 48px;
+            margin-top: 100px;
             position: relative;
             z-index: 1;
             animation: fadeInUp 0.8s ease-out;
         }
 
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Header */
         .header {
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 40px;
         }
 
         .header-icon {
-            font-size: 64px;
-            color: var(--md-sys-color-primary);
-            margin-bottom: 16px;
-            filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.4));
-            animation: bounce 2s ease-in-out infinite;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.4);
         }
 
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
+        .header-icon .material-symbols-outlined {
+            font-size: 40px;
+            color: var(--black);
         }
 
         h1 {
-            font-size: 28px;
-            font-weight: 400;
-            line-height: 36px;
-            color: var(--md-sys-color-on-surface);
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--white);
             margin-bottom: 8px;
         }
 
         .subtitle {
-            font-size: 14px;
-            font-weight: 400;
-            color: var(--md-sys-color-on-surface-variant);
+            font-size: 1rem;
+            color: var(--gray);
         }
 
         /* Wait Time Card */
-        .wait-time-card {
-            background: linear-gradient(135deg, #FFF8E1 0%, #FFE082 100%);
-            color: var(--md-sys-color-on-primary-container);
-            border-radius: 24px;
+        .wait-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
             padding: 32px;
             margin-bottom: 24px;
-            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.2);
             text-align: center;
-            position: relative;
-            overflow: hidden;
-            animation: slideInLeft 0.6s ease-out 0.2s both;
+            backdrop-filter: blur(10px);
         }
 
-        .wait-time-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-            animation: shine 3s ease-in-out infinite;
-        }
-
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes shine {
-            0%, 100% {
-                transform: rotate(0deg);
-            }
-            50% {
-                transform: rotate(180deg);
-            }
-        }
-
-        .wait-time-label {
-            font-size: 14px;
-            font-weight: 500;
-            letter-spacing: 0.1px;
-            margin-bottom: 8px;
+        .wait-label {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            position: relative;
-            z-index: 1;
+            font-size: 0.875rem;
+            color: var(--gold);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .wait-time-value {
-            font-size: 64px;
-            font-weight: 300;
-            line-height: 72px;
+        .wait-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            font-weight: 600;
+            color: var(--white);
+            line-height: 1;
             margin-bottom: 4px;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
-            transition: transform 0.3s ease;
         }
 
-        .wait-time-value:hover {
-            transform: scale(1.1);
-        }
-
-        .wait-time-unit {
-            font-size: 16px;
-            font-weight: 400;
-            color: var(--md-sys-color-on-primary-container);
-            opacity: 0.8;
+        .wait-unit {
+            font-size: 1rem;
+            color: var(--gray);
         }
 
         /* Form Card */
         .form-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
             padding: 32px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            animation: slideInRight 0.6s ease-out 0.4s both;
+            backdrop-filter: blur(10px);
         }
 
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        /* Text Field */
-        .text-field {
-            position: relative;
+        .form-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            color: var(--white);
             margin-bottom: 24px;
+            text-align: center;
         }
 
-        .text-field input {
+        /* Input Fields */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--gray);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-field {
             width: 100%;
-            padding: 16px;
-            padding-top: 24px;
-            font-size: 18px;
+            padding: 16px 20px;
+            font-size: 1rem;
             font-family: 'Roboto', sans-serif;
-            border: 2px solid var(--md-sys-color-outline);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
-            background-color: rgba(255, 255, 255, 0.5);
-            color: var(--md-sys-color-on-surface);
+            color: var(--white);
             outline: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
         }
 
-        .text-field input:focus {
-            border-color: var(--md-sys-color-primary);
-            border-width: 2px;
-            padding: 16px;
-            padding-top: 24px;
-            background-color: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
-            transform: translateY(-2px);
+        .input-field::placeholder {
+            color: var(--gray-dark);
         }
 
-        .text-field input:focus + label,
-        .text-field input:not(:placeholder-shown) + label {
-            top: 8px;
-            font-size: 12px;
-            color: var(--md-sys-color-primary);
+        .input-field:focus {
+            border-color: var(--gold);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
         }
 
-        .text-field input.error {
-            border-color: var(--md-sys-color-error);
-        }
-
-        .text-field input.error:focus + label,
-        .text-field input.error:not(:placeholder-shown) + label {
-            color: var(--md-sys-color-error);
-        }
-
-        .text-field label {
-            position: absolute;
-            left: 16px;
-            top: 16px;
-            font-size: 16px;
-            color: var(--md-sys-color-on-surface-variant);
-            pointer-events: none;
-            transition: all 0.2s ease;
-            background-color: var(--md-sys-color-surface);
-            padding: 0 4px;
+        .input-field.error {
+            border-color: var(--error);
         }
 
         .error-message {
-            font-size: 12px;
-            color: var(--md-sys-color-error);
-            margin-top: 4px;
-            margin-left: 16px;
+            font-size: 0.8rem;
+            color: var(--error);
+            margin-top: 8px;
             display: none;
         }
 
@@ -309,173 +265,150 @@
             display: block;
         }
 
-        /* Button */
-        .button {
+        /* Submit Button */
+        .submit-btn {
             width: 100%;
-            padding: 16px 24px;
-            font-size: 14px;
-            font-weight: 500;
-            letter-spacing: 0.1px;
+            padding: 18px 24px;
+            margin-top: 8px;
+            font-size: 1rem;
+            font-weight: 600;
             font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--black);
             border: none;
-            border-radius: 100px;
-            background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, #c49b2e 100%);
-            color: var(--md-sys-color-on-primary);
+            border-radius: 12px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            position: relative;
-            overflow: hidden;
+            gap: 10px;
+            transition: all 0.3s ease;
         }
 
-        .button::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .button:hover:not(:disabled) {
+        .submit-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.5);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
         }
 
-        .button:hover:not(:disabled)::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .button:active:not(:disabled) {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
-        }
-
-        .button:disabled {
-            background-color: rgba(29, 27, 32, 0.12);
-            color: rgba(29, 27, 32, 0.38);
-            box-shadow: none;
+        .submit-btn:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
         }
 
-        /* Ripple Effect */
-        .button::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.5);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
+        /* Info Text */
+        .info-text {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.85rem;
+            color: var(--gray-dark);
         }
 
-        .button:active:not(:disabled)::before {
-            width: 300px;
-            height: 300px;
+        .info-text a {
+            color: var(--gold);
+            text-decoration: none;
         }
 
-        /* Material Icons */
-        .material-symbols-outlined {
-            font-variation-settings:
-            'FILL' 0,
-            'wght' 400,
-            'GRAD' 0,
-            'opsz' 24;
+        .info-text a:hover {
+            text-decoration: underline;
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 640px) {
+            .nav {
+                padding: 16px 20px;
+            }
+
+            .nav-logo {
+                font-size: 1rem;
+            }
+
             .container {
-                margin-top: 24px;
-                padding: 0 8px;
+                margin-top: 80px;
             }
 
             h1 {
-                font-size: 24px;
+                font-size: 1.75rem;
             }
 
-            .header-icon {
-                font-size: 48px;
+            .wait-value {
+                font-size: 3rem;
             }
 
-            .wait-time-value {
-                font-size: 48px;
-            }
-
-            .button {
-                padding: 18px 24px;
-                font-size: 16px;
-            }
-        }
-
-        @media (min-width: 769px) {
-            body {
-                justify-content: center;
+            .form-card, .wait-card {
+                padding: 24px;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <a href="index.html" class="nav-logo">
+            <span class="material-symbols-outlined">content_cut</span>
+            Barbearia Mineiro
+        </a>
+        <a href="index.html" class="nav-back">
+            <span class="material-symbols-outlined">arrow_back</span>
+            Voltar
+        </a>
+    </nav>
+
     <div class="container">
         <div class="header">
-            <span class="material-symbols-outlined header-icon">content_cut</span>
-            <h1>Barbearia Mineiro</h1>
+            <div class="header-icon">
+                <span class="material-symbols-outlined">person_add</span>
+            </div>
+            <h1>Entrar na Fila</h1>
             <p class="subtitle">Adicione seu nome e aguarde ser chamado</p>
         </div>
 
-        <div class="wait-time-card">
-            <div class="wait-time-label">
+        <div class="wait-card">
+            <div class="wait-label">
                 <span class="material-symbols-outlined">schedule</span>
-                <span>Tempo estimado de espera</span>
+                Tempo estimado de espera
             </div>
-            <div class="wait-time-value" id="waitTime">25</div>
-            <div class="wait-time-unit">minutos</div>
+            <div class="wait-value" id="waitTime">--</div>
+            <div class="wait-unit">minutos</div>
         </div>
 
         <div class="form-card">
             <form id="queueForm">
-                <div class="text-field">
+                <div class="input-group">
+                    <label class="input-label" for="firstNameInput">Nome *</label>
                     <input 
                         type="text" 
                         id="firstNameInput" 
-                        placeholder=" " 
+                        class="input-field"
+                        placeholder="Seu primeiro nome"
                         autocomplete="off"
                         required
                     >
-                    <label for="firstNameInput">Nome</label>
                     <div class="error-message" id="errorMessage">Nome inválido</div>
                 </div>
 
-                <div class="text-field">
+                <div class="input-group">
+                    <label class="input-label" for="lastNameInput">Sobrenome (opcional)</label>
                     <input 
                         type="text" 
                         id="lastNameInput" 
-                        placeholder=" " 
+                        class="input-field"
+                        placeholder="Seu sobrenome"
                         autocomplete="off"
                     >
-                    <label for="lastNameInput">Sobrenome</label>
                 </div>
 
-                <button type="submit" class="button" id="joinButton">
-                    <span class="material-symbols-outlined">person_add</span>
-                    <span>Entrar na Fila</span>
+                <button type="submit" class="submit-btn" id="joinButton">
+                    <span class="material-symbols-outlined">check</span>
+                    Entrar na Fila
                 </button>
             </form>
         </div>
-    </div>
 
+        <p class="info-text">
+            Já está na fila? <a href="customer-status.html">Verificar status</a>
+        </p>
+    </div>
 
     <script>
         // ============ API CONFIGURATION ============
@@ -494,21 +427,19 @@
         // Queue data from API
         let waitingCount = 0;
         let presentBarbers = 1;
-        const AVG_SERVICE_TIME = 20; // minutes per haircut
+        const AVG_SERVICE_TIME = 20;
 
         // DOM elements
         const form = document.getElementById('queueForm');
-        const formCard = document.querySelector('.form-card');
         const firstNameInput = document.getElementById('firstNameInput');
         const lastNameInput = document.getElementById('lastNameInput');
         const errorMessage = document.getElementById('errorMessage');
         const joinButton = document.getElementById('joinButton');
         const waitTimeDisplay = document.getElementById('waitTime');
 
-        // Fetch queue and barber data from API
+        // Fetch queue data
         async function fetchQueueData() {
             try {
-                // Fetch queue and barbers in parallel
                 const [queueRes, barbersRes] = await Promise.all([
                     fetch(`${API_BASE}/shops/${SHOP_SLUG}/queue`),
                     fetch(`${API_BASE}/shops/${SHOP_SLUG}/barbers`)
@@ -519,28 +450,23 @@
                 const queueData = await queueRes.json();
                 const barbersData = await barbersRes.json();
                 
-                // Count waiting tickets
                 const tickets = queueData.tickets || [];
                 waitingCount = tickets.filter(t => t.status === 'waiting').length;
-                
-                // Count present barbers (minimum 1 to avoid division by zero)
                 presentBarbers = Math.max(1, barbersData.filter(b => b.isPresent).length);
                 
                 updateWaitTime();
             } catch (error) {
                 console.error('Error fetching queue:', error);
+                waitTimeDisplay.textContent = '--';
             }
         }
 
-        // Create ticket via API
+        // Create ticket
         async function createTicket(customerName) {
             const response = await fetch(`${API_BASE}/shops/${SHOP_SLUG}/tickets`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    customerName,
-                    serviceId: 1 // Default service
-                })
+                body: JSON.stringify({ customerName, serviceId: 1 })
             });
             if (!response.ok) {
                 const error = await response.json();
@@ -549,77 +475,46 @@
             return await response.json();
         }
 
-        // Calculate and update wait time display
-        // Formula: (people_ahead / present_barbers) * avg_service_time
+        // Update wait time
         function updateWaitTime() {
-            // If no one waiting, immediate service (0 min wait)
             if (waitingCount === 0) {
                 waitTimeDisplay.textContent = '0';
                 return;
             }
-            
-            // Calculate based on position in queue
             const estimatedWait = Math.ceil((waitingCount / presentBarbers) * AVG_SERVICE_TIME);
-            // Round to nearest 5, minimum 5 if anyone is waiting
             const rounded = Math.max(5, Math.round(estimatedWait / 5) * 5);
             waitTimeDisplay.textContent = rounded;
         }
 
-        // Check for profanity
+        // Profanity check
         function containsProfanity(text) {
             const lowerText = text.toLowerCase().trim();
-            return profanityList.some(profanity => lowerText.includes(profanity));
+            return profanityList.some(word => lowerText.includes(word));
         }
 
-        // Validate name input
+        // Validate name
         function validateName(firstName, lastName) {
-            const trimmedFirstName = firstName.trim();
-            const trimmedLastName = lastName ? lastName.trim() : '';
-            
-            if (trimmedFirstName.length === 0) {
+            const trimmed = firstName.trim();
+            if (trimmed.length === 0) {
                 errorMessage.textContent = 'Por favor, digite seu nome';
                 return false;
             }
-
-            if (trimmedFirstName.length < 2) {
+            if (trimmed.length < 2) {
                 errorMessage.textContent = 'Nome muito curto';
                 return false;
             }
-
-            const fullName = trimmedLastName ? `${trimmedFirstName} ${trimmedLastName}` : trimmedFirstName;
+            const fullName = lastName.trim() ? `${trimmed} ${lastName.trim()}` : trimmed;
             if (containsProfanity(fullName)) {
                 errorMessage.textContent = 'Por favor, use um nome apropriado';
                 return false;
             }
-
             return true;
         }
 
-        // Real-time validation
+        // Input validation
         firstNameInput.addEventListener('input', function() {
-            const lastName = lastNameInput ? lastNameInput.value : '';
-            const isValid = validateName(this.value, lastName);
-            
             if (this.value.trim().length > 0) {
-                if (isValid) {
-                    this.classList.remove('error');
-                    errorMessage.classList.remove('show');
-                } else {
-                    this.classList.add('error');
-                    errorMessage.classList.add('show');
-                }
-            } else {
-                this.classList.remove('error');
-                errorMessage.classList.remove('show');
-            }
-        });
-
-        lastNameInput.addEventListener('input', function() {
-            const firstName = firstNameInput ? firstNameInput.value : '';
-            const isValid = validateName(firstName, this.value);
-            
-            if (this.value.trim().length > 0) {
-                if (isValid) {
+                if (validateName(this.value, lastNameInput.value)) {
                     this.classList.remove('error');
                     errorMessage.classList.remove('show');
                 } else {
@@ -637,47 +532,36 @@
             e.preventDefault();
             
             const firstName = firstNameInput.value;
-            const lastName = lastNameInput ? lastNameInput.value : '';
-            const isValid = validateName(firstName, lastName);
-
-            if (!isValid) {
+            const lastName = lastNameInput.value;
+            
+            if (!validateName(firstName, lastName)) {
                 firstNameInput.classList.add('error');
                 errorMessage.classList.add('show');
                 return;
             }
 
-            // Combine first and last name
             const fullName = lastName.trim() ? `${firstName.trim()} ${lastName.trim()}` : firstName.trim();
             
-            // Disable button while submitting
             joinButton.disabled = true;
-            joinButton.innerHTML = '<span class="material-symbols-outlined">hourglass_top</span><span>Entrando...</span>';
+            joinButton.innerHTML = '<span class="material-symbols-outlined">hourglass_top</span> Entrando...';
             
             try {
-                // Create ticket via API
                 const ticket = await createTicket(fullName);
-                
-                // Store ticket ID for status page
                 sessionStorage.setItem('ticketId', ticket.id);
                 sessionStorage.setItem('customerName', fullName);
-                
-                // Redirect to status page
                 window.location.href = `customer-status.html?ticket=${ticket.id}`;
             } catch (error) {
-                console.error('Error creating ticket:', error);
+                console.error('Error:', error);
                 errorMessage.textContent = 'Erro ao entrar na fila. Tente novamente.';
                 errorMessage.classList.add('show');
                 joinButton.disabled = false;
-                joinButton.innerHTML = '<span class="material-symbols-outlined">person_add</span><span>Entrar na Fila</span>';
+                joinButton.innerHTML = '<span class="material-symbols-outlined">check</span> Entrar na Fila';
             }
         });
 
-
-        // Initialize - fetch queue data
+        // Initialize
         fetchQueueData();
-        // Refresh every 30 seconds
         setInterval(fetchQueueData, 30000);
     </script>
 </body>
 </html>
-
