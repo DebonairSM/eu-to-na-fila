@@ -4738,6 +4738,22 @@
             // Filter to only show present barbers
             const presentBarbers = barbers.filter(barber => barber.isPresent);
             
+            // If customer has a barber assigned, add "Remove" button first
+            if (currentBarber) {
+                const removeItem = document.createElement('div');
+                removeItem.className = 'barber-selection-item remove-barber';
+                removeItem.style.cssText = 'background: rgba(220, 53, 69, 0.15); border: 1px solid rgba(220, 53, 69, 0.3);';
+                removeItem.onclick = () => unselectBarberForCustomer(customerId);
+                removeItem.innerHTML = `
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(220, 53, 69, 0.2); display: flex; align-items: center; justify-content: center;">
+                        <span class="material-symbols-outlined" style="color: #dc3545; font-size: 24px;">person_remove</span>
+                    </div>
+                    <span class="barber-selection-name" style="color: #dc3545;">Remover Barbeiro</span>
+                    <span style="font-size: 0.75rem; color: rgba(220, 53, 69, 0.7); margin-top: 4px;">Voltar para fila</span>
+                `;
+                selectionList.appendChild(removeItem);
+            }
+            
             presentBarbers.forEach((barber, index) => {
                 const isCurrentBarber = currentBarber && barber.id === currentBarber.id;
                 const item = document.createElement('div');

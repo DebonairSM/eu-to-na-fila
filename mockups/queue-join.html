@@ -552,10 +552,15 @@
         // Calculate and update wait time display
         // Formula: (people_ahead / present_barbers) * avg_service_time
         function updateWaitTime() {
-            // New customer would be at position waitingCount + 1
-            const position = waitingCount + 1;
-            const estimatedWait = Math.ceil((position / presentBarbers) * AVG_SERVICE_TIME);
-            // Minimum 5 min, round to nearest 5
+            // If no one waiting, immediate service (0 min wait)
+            if (waitingCount === 0) {
+                waitTimeDisplay.textContent = '0';
+                return;
+            }
+            
+            // Calculate based on position in queue
+            const estimatedWait = Math.ceil((waitingCount / presentBarbers) * AVG_SERVICE_TIME);
+            // Round to nearest 5, minimum 5 if anyone is waiting
             const rounded = Math.max(5, Math.round(estimatedWait / 5) * 5);
             waitTimeDisplay.textContent = rounded;
         }
