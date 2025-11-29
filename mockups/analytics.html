@@ -28,6 +28,8 @@
             --gray-dark: rgba(255, 255, 255, 0.5);
             --success: #22c55e;
             --error: #ef4444;
+            --blue: #3b82f6;
+            --purple: #a855f7;
         }
 
         body {
@@ -35,6 +37,23 @@
             background: linear-gradient(135deg, var(--black) 0%, var(--dark) 50%, #2d2416 100%);
             color: var(--white);
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.03) 0%, transparent 50%);
+            animation: rotate 40s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            to { transform: rotate(360deg); }
         }
 
         /* Navigation */
@@ -231,111 +250,270 @@
         .dashboard-container {
             display: none;
             padding: 100px 40px 40px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
         .dashboard-container.show { display: block; }
 
         .dashboard-header {
-            margin-bottom: 32px;
+            margin-bottom: 40px;
+            text-align: center;
         }
 
         .dashboard-title {
             font-family: 'Playfair Display', serif;
-            font-size: 2rem;
+            font-size: 3rem;
             color: var(--white);
             margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .dashboard-subtitle {
             color: var(--gray);
+            font-size: 1.1rem;
         }
 
-        /* Stats Grid */
-        .stats-grid {
+        /* Hero Stats */
+        .hero-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .hero-stat {
+            background: var(--dark-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .hero-stat:hover {
+            transform: translateY(-4px);
+            border-color: var(--gold);
+            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.2);
+        }
+
+        .hero-stat::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        .hero-stat-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 600;
+            line-height: 1;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-stat-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-stat.total .hero-stat-icon { color: var(--gold); }
+        .hero-stat.total .hero-stat-value { color: var(--gold); }
+        .hero-stat.completed .hero-stat-icon { color: var(--success); }
+        .hero-stat.completed .hero-stat-value { color: var(--success); }
+        .hero-stat.cancelled .hero-stat-icon { color: var(--error); }
+        .hero-stat.cancelled .hero-stat-value { color: var(--error); }
+        .hero-stat.rate .hero-stat-icon { color: var(--blue); }
+        .hero-stat.rate .hero-stat-value { color: var(--blue); }
+
+        /* Chart Section */
+        .chart-section {
+            background: var(--dark-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 32px;
             margin-bottom: 32px;
         }
 
-        .stat-card {
-            background: var(--dark-card);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 24px;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--gray);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-
-        .stat-value {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
-            font-weight: 600;
-            color: var(--white);
-        }
-
-        .stat-value.success { color: var(--success); }
-        .stat-value.error { color: var(--error); }
-        .stat-value.gold { color: var(--gold); }
-
-        /* Barbers Section */
         .section-title {
             font-family: 'Playfair Display', serif;
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             color: var(--white);
-            margin-bottom: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title .material-symbols-outlined {
+            color: var(--gold);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            padding: 20px 0;
+        }
+
+        .chart-bar-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+        }
+
+        .chart-bar {
+            width: 100%;
+            background: linear-gradient(to top, var(--gold), var(--gold-light));
+            border-radius: 8px 8px 0 0;
+            min-height: 4px;
+            position: relative;
+            transition: all 0.3s ease;
+            animation: growUp 0.8s ease-out;
+        }
+
+        @keyframes growUp {
+            from { height: 0; }
+        }
+
+        .chart-bar:hover {
+            opacity: 0.8;
+            transform: scaleY(1.05);
+        }
+
+        .chart-label {
+            margin-top: 12px;
+            font-size: 0.75rem;
+            color: var(--gray);
+            text-align: center;
+        }
+
+        .chart-value {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--gold);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .chart-bar-wrapper:hover .chart-value {
+            opacity: 1;
+        }
+
+        /* Barbers Section */
+        .barbers-section {
+            margin-bottom: 32px;
         }
 
         .barbers-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
         }
 
         .barber-card {
             background: var(--dark-card);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 16px;
-            padding: 20px;
+            padding: 24px;
             display: flex;
             align-items: center;
             gap: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .barber-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--gold);
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.15);
         }
 
         .barber-avatar {
-            width: 48px;
-            height: 48px;
+            width: 64px;
+            height: 64px;
             background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.5rem;
             font-weight: 600;
             color: var(--black);
+            flex-shrink: 0;
+        }
+
+        .barber-info {
+            flex: 1;
         }
 
         .barber-info h4 {
             color: var(--white);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            font-size: 1.1rem;
         }
 
         .barber-info p {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: var(--gray);
         }
 
+        .barber-stats {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .barber-stat {
+            text-align: center;
+        }
+
+        .barber-stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gold);
+            line-height: 1;
+        }
+
+        .barber-stat-label {
+            font-size: 0.7rem;
+            color: var(--gray-dark);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
         .barber-status {
-            margin-left: auto;
-            padding: 4px 12px;
+            padding: 6px 12px;
             border-radius: 100px;
             font-size: 0.75rem;
             font-weight: 500;
@@ -351,38 +529,21 @@
             color: var(--gray);
         }
 
-        /* Chart */
-        .chart-card {
-            background: var(--dark-card);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 24px;
+        /* Peak Hour Card */
+        .peak-hour-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
         }
 
-        .chart-bars {
-            display: flex;
-            align-items: flex-end;
-            gap: 8px;
-            height: 150px;
-            margin-top: 16px;
-        }
-
-        .chart-bar {
-            flex: 1;
-            background: linear-gradient(to top, var(--gold), var(--gold-light));
-            border-radius: 4px 4px 0 0;
-            min-height: 4px;
-            position: relative;
-        }
-
-        .chart-bar-label {
-            position: absolute;
-            bottom: -24px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.7rem;
-            color: var(--gray);
-            white-space: nowrap;
+        .peak-hour-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            font-weight: 600;
+            color: var(--gold);
+            margin: 16px 0;
         }
 
         /* Responsive */
@@ -390,14 +551,15 @@
             .nav { padding: 16px 20px; }
             .nav-logo { font-size: 1rem; }
             .dashboard-container { padding: 80px 20px 20px; }
-            .dashboard-title { font-size: 1.5rem; }
-            .stat-value { font-size: 2rem; }
+            .dashboard-title { font-size: 2rem; }
+            .hero-stat-value { font-size: 2.5rem; }
             .login-card { padding: 32px 24px; }
+            .chart-container { height: 150px; }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation (hidden until logged in) -->
+    <!-- Navigation -->
     <nav class="nav" id="mainNav" style="display: none;">
         <a href="#" class="nav-logo" id="navLogo" onclick="handleNavLogoClick(event)">
             <span class="material-symbols-outlined">content_cut</span>
@@ -447,12 +609,12 @@
     <!-- Dashboard -->
     <div class="dashboard-container" id="dashboardContainer">
         <div class="dashboard-header">
-            <h1 class="dashboard-title">Dashboard</h1>
+            <h1 class="dashboard-title">Dashboard Analytics</h1>
             <p class="dashboard-subtitle" id="periodText">Últimos 7 dias</p>
         </div>
 
         <div id="dashboardContent">
-            <p style="color: var(--gray);">Carregando dados...</p>
+            <p style="color: var(--gray); text-align: center;">Carregando dados...</p>
         </div>
     </div>
 
@@ -471,9 +633,7 @@
         const periodText = document.getElementById('periodText');
         const pinInputs = document.querySelectorAll('.pin-input');
 
-        // Check if coming from staff-login (one-time use flag)
         let isAuthenticated = sessionStorage.getItem('analyticsAuth') === 'true';
-        // Clear the flag immediately so it doesn't persist
         sessionStorage.removeItem('analyticsAuth');
 
         // PIN input handling
@@ -563,31 +723,54 @@
             loadAnalytics();
         }
 
+        // Animated counter
+        function animateValue(element, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                element.textContent = value;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
         async function loadAnalytics() {
             const days = periodSelect.value;
             periodText.textContent = periodSelect.options[periodSelect.selectedIndex].text;
-            dashboardContent.innerHTML = '<p style="color: var(--gray);">Carregando dados...</p>';
+            dashboardContent.innerHTML = '<p style="color: var(--gray); text-align: center;">Carregando dados...</p>';
 
             try {
                 const response = await fetch(`${API_BASE}/shops/${SHOP_SLUG}/analytics?days=${days}`);
                 const data = await response.json();
                 renderDashboard(data);
             } catch (error) {
-                dashboardContent.innerHTML = '<p style="color: var(--error);">Erro ao carregar dados</p>';
+                dashboardContent.innerHTML = '<p style="color: var(--error); text-align: center;">Erro ao carregar dados</p>';
             }
         }
 
         function renderDashboard(data) {
             const { summary, barbers, ticketsByDay, peakHour } = data;
             
-            // Build chart bars
+            // Build chart
             const days = Object.keys(ticketsByDay || {}).sort();
             const maxTickets = Math.max(...Object.values(ticketsByDay || { '': 1 }), 1);
             const chartBars = days.slice(-7).map(day => {
                 const count = ticketsByDay[day] || 0;
                 const height = (count / maxTickets) * 100;
                 const label = new Date(day).toLocaleDateString('pt-BR', { weekday: 'short' });
-                return `<div class="chart-bar" style="height: ${Math.max(height, 4)}%"><span class="chart-bar-label">${label}</span></div>`;
+                const dateLabel = new Date(day).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                return `
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-bar" style="height: ${Math.max(height, 4)}%">
+                            <span class="chart-value">${count}</span>
+                        </div>
+                        <div class="chart-label">${label}<br>${dateLabel}</div>
+                    </div>
+                `;
             }).join('');
 
             // Build barber cards
@@ -596,61 +779,88 @@
                     <div class="barber-avatar">${b.name.charAt(0)}</div>
                     <div class="barber-info">
                         <h4>${b.name}</h4>
-                        <p>${b.totalServed} atendimentos</p>
+                        <p>Barbeiro</p>
                     </div>
-                    <span class="barber-status ${b.isPresent ? 'present' : 'absent'}">${b.isPresent ? 'Presente' : 'Ausente'}</span>
+                    <div class="barber-stats">
+                        <div class="barber-stat">
+                            <div class="barber-stat-value">${b.totalServed}</div>
+                            <div class="barber-stat-label">Atendidos</div>
+                        </div>
+                        <span class="barber-status ${b.isPresent ? 'present' : 'absent'}">${b.isPresent ? 'Presente' : 'Ausente'}</span>
+                    </div>
                 </div>
             `).join('');
 
             dashboardContent.innerHTML = `
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Total de Tickets</div>
-                        <div class="stat-value">${summary.total}</div>
+                <div class="hero-stats">
+                    <div class="hero-stat total">
+                        <span class="material-symbols-outlined hero-stat-icon">receipt_long</span>
+                        <div class="hero-stat-value" data-value="${summary.total}">0</div>
+                        <div class="hero-stat-label">Total de Tickets</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Concluídos</div>
-                        <div class="stat-value success">${summary.completed}</div>
+                    <div class="hero-stat completed">
+                        <span class="material-symbols-outlined hero-stat-icon">check_circle</span>
+                        <div class="hero-stat-value" data-value="${summary.completed}">0</div>
+                        <div class="hero-stat-label">Concluídos</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Cancelados</div>
-                        <div class="stat-value error">${summary.cancelled}</div>
+                    <div class="hero-stat cancelled">
+                        <span class="material-symbols-outlined hero-stat-icon">cancel</span>
+                        <div class="hero-stat-value" data-value="${summary.cancelled}">0</div>
+                        <div class="hero-stat-label">Cancelados</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Taxa de Conclusão</div>
-                        <div class="stat-value gold">${summary.completionRate}%</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Média por Dia</div>
-                        <div class="stat-value">${summary.avgPerDay}</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Horário de Pico</div>
-                        <div class="stat-value">${peakHour ? peakHour.hour + 'h' : '--'}</div>
+                    <div class="hero-stat rate">
+                        <span class="material-symbols-outlined hero-stat-icon">trending_up</span>
+                        <div class="hero-stat-value" data-value="${summary.completionRate}">0</div>
+                        <div class="hero-stat-label">Taxa de Conclusão (%)</div>
                     </div>
                 </div>
 
-                <h3 class="section-title">Desempenho dos Barbeiros</h3>
-                <div class="barbers-grid">
-                    ${barberCards || '<p style="color: var(--gray);">Nenhum barbeiro encontrado</p>'}
-                </div>
-
-                <h3 class="section-title">Tickets por Dia</h3>
-                <div class="chart-card">
-                    <div class="chart-bars">
+                <div class="chart-section">
+                    <h3 class="section-title">
+                        <span class="material-symbols-outlined">bar_chart</span>
+                        Tickets por Dia
+                    </h3>
+                    <div class="chart-container">
                         ${chartBars || '<p style="color: var(--gray);">Sem dados</p>'}
                     </div>
                 </div>
+
+                <div class="barbers-section">
+                    <h3 class="section-title">
+                        <span class="material-symbols-outlined">groups</span>
+                        Desempenho dos Barbeiros
+                    </h3>
+                    <div class="barbers-grid">
+                        ${barberCards || '<p style="color: var(--gray);">Nenhum barbeiro encontrado</p>'}
+                    </div>
+                </div>
+
+                ${peakHour ? `
+                <div class="peak-hour-card">
+                    <h3 class="section-title" style="justify-content: center; margin-bottom: 16px;">
+                        <span class="material-symbols-outlined">schedule</span>
+                        Horário de Pico
+                    </h3>
+                    <div class="peak-hour-value">${peakHour.hour}h</div>
+                    <p style="color: var(--gray);">${peakHour.count} tickets neste horário</p>
+                </div>
+                ` : ''}
             `;
+
+            // Animate counters
+            setTimeout(() => {
+                document.querySelectorAll('.hero-stat-value').forEach(el => {
+                    const target = parseInt(el.getAttribute('data-value'));
+                    animateValue(el, 0, target, 1500);
+                });
+            }, 100);
         }
 
-        // Handle nav logo click - go to dashboard if owner, otherwise homepage
         function handleNavLogoClick(e) {
             e.preventDefault();
             const isOwner = sessionStorage.getItem('staffAuth') === 'true' && 
                            sessionStorage.getItem('staffRole') === 'owner';
             if (isOwner) {
-                // Add parameter to indicate returning from owner page
                 window.location.href = 'staff-login.html?return=true';
             } else {
                 window.location.href = 'index.html';

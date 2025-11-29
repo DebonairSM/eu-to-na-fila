@@ -486,6 +486,13 @@
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> Verificando...';
 
+            // Check for kiosk PIN first (9999)
+            if (pin === '9999') {
+                sessionStorage.setItem('kioskMode', 'true');
+                window.location.href = 'barber-queue-manager.html';
+                return;
+            }
+
             try {
                 const response = await fetch(`${API_BASE}/shops/${SHOP_SLUG}/auth`, {
                     method: 'POST',
