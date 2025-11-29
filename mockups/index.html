@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barbearia Mineiro - Sistema de Fila</title>
+    <title>Barbearia Mineiro - Cortes Tradicionais em Orlando, FL</title>
+    <meta name="description" content="Barbearia Mineiro - Cortes de cabelo tradicionais e modernos em Orlando, Florida. Entre na fila online e economize tempo.">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     
-    <!-- Google Fonts - Roboto -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <!-- Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -22,377 +23,862 @@
         }
 
         :root {
-            --md-sys-color-primary: #D4AF37;
-            --md-sys-color-on-primary: #FFFFFF;
-            --md-sys-color-primary-container: #FFF8E1;
-            --md-sys-color-on-primary-container: #3E2723;
-            --md-sys-color-surface: #FFFFFF;
-            --md-sys-color-on-surface: #1D1B20;
-            --md-sys-color-surface-variant: #F5F5F5;
-            --md-sys-color-on-surface-variant: #5D5D5D;
-            --md-sys-color-outline: #C4C4C4;
-            
-            --md-sys-elevation-1: 0px 1px 2px rgba(212, 175, 55, 0.2), 0px 1px 3px 1px rgba(0, 0, 0, 0.1);
-            --md-sys-elevation-2: 0px 1px 2px rgba(212, 175, 55, 0.25), 0px 2px 6px 2px rgba(0, 0, 0, 0.12);
+            --gold: #D4AF37;
+            --gold-light: #E8C547;
+            --gold-dark: #B8962E;
+            --black: #0a0a0a;
+            --dark: #1a1a1a;
+            --dark-brown: #2d2416;
+            --white: #FFFFFF;
+            --gray: rgba(255, 255, 255, 0.7);
+            --gray-dark: rgba(255, 255, 255, 0.5);
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
             font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2d2416 100%);
-            background-attachment: fixed;
-            min-height: 100vh;
-            padding: 40px 20px;
-            position: relative;
+            background: var(--black);
+            color: var(--white);
             overflow-x: hidden;
         }
 
-        body::before {
-            content: '';
+        /* Navigation */
+        .nav {
             position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.03) 0%, transparent 70%);
-            animation: rotate 30s linear infinite;
-            pointer-events: none;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
         }
 
-        @keyframes rotate {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
+        .nav.scrolled {
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 16px 40px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Header */
-        .header {
-            text-align: center;
-            margin-bottom: 60px;
-            animation: fadeInDown 0.8s ease-out;
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .logo {
-            font-size: 80px;
-            color: var(--md-sys-color-primary);
-            margin-bottom: 20px;
-            filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.6));
-            animation: pulse 3s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-                filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.6));
-            }
-            50% {
-                transform: scale(1.05);
-                filter: drop-shadow(0 6px 20px rgba(212, 175, 55, 0.8));
-            }
-        }
-
-        .title {
-            font-size: 48px;
-            font-weight: 700;
-            color: var(--md-sys-color-primary);
-            margin-bottom: 12px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .subtitle {
-            font-size: 20px;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 8px 20px;
-            background-color: rgba(212, 175, 55, 0.2);
-            border: 2px solid rgba(212, 175, 55, 0.5);
-            border-radius: 100px;
-            color: var(--md-sys-color-primary);
-            font-size: 14px;
-            font-weight: 500;
-            margin-top: 20px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Sections */
-        .section {
-            margin-bottom: 40px;
-        }
-
-        .section-title {
-            font-size: 24px;
-            font-weight: 500;
-            color: var(--md-sys-color-primary);
-            margin-bottom: 20px;
+        .nav-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gold);
+            text-decoration: none;
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .section-title .material-symbols-outlined {
-            font-size: 32px;
+        .nav-logo .material-symbols-outlined {
+            font-size: 28px;
         }
 
-        /* Card Grid */
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
         }
 
-        /* Card */
-        .card {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(212, 175, 55, 0.06) 100%);
-            border: 2px solid rgba(212, 175, 55, 0.3);
-            border-radius: 24px;
-            padding: 32px;
+        .nav-links a {
+            color: var(--gray);
             text-decoration: none;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--gold);
+        }
+
+        .nav-cta {
+            padding: 12px 24px;
+            background: var(--gold);
+            color: var(--black);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-cta:hover {
+            background: var(--gold-light);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: linear-gradient(135deg, var(--black) 0%, var(--dark) 50%, var(--dark-brown) 100%);
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+            animation: rotate 40s linear infinite;
+        }
+
+        @keyframes rotate {
+            to { transform: rotate(360deg); }
+        }
+
+        .hero-content {
+            text-align: center;
+            z-index: 1;
+            padding: 0 20px;
+            max-width: 900px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 100px;
+            color: var(--gold);
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 32px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .hero-title span {
+            color: var(--gold);
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray);
+            margin-bottom: 48px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.7;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+        }
+
+        .btn {
+            padding: 18px 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--gold);
+            color: var(--black);
+        }
+
+        .btn-primary:hover {
+            background: var(--gold-light);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--white);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .hero-scroll {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--gray-dark);
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(10px); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Services Section */
+        .section {
+            padding: 120px 40px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .section-label {
+            color: var(--gold);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 600;
+        }
+
+        .services {
+            background: var(--dark);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .service-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.02) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 12px;
+            padding: 40px 32px;
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--gold);
+            box-shadow: 0 20px 40px rgba(212, 175, 55, 0.15);
+        }
+
+        .service-icon {
+            font-size: 48px;
+            color: var(--gold);
+            margin-bottom: 24px;
+        }
+
+        .service-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+
+        .service-desc {
+            color: var(--gray);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .service-price {
+            color: var(--gold);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* About Section */
+        .about {
+            background: var(--black);
+        }
+
+        .about-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .about-text h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 24px;
+            line-height: 1.2;
+        }
+
+        .about-text h3 span {
+            color: var(--gold);
+        }
+
+        .about-text p {
+            color: var(--gray);
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .about-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .about-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .about-feature .material-symbols-outlined {
+            color: var(--gold);
+            font-size: 24px;
+        }
+
+        .about-feature span {
+            font-size: 0.9rem;
+        }
+
+        .about-image {
+            position: relative;
+        }
+
+        .about-image-placeholder {
+            aspect-ratio: 4/5;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .about-image-placeholder .material-symbols-outlined {
+            font-size: 120px;
+            color: rgba(212, 175, 55, 0.3);
+        }
+
+        /* Location Section */
+        .location {
+            background: var(--dark);
+        }
+
+        .location-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+        }
+
+        .location-info h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 32px;
+        }
+
+        .location-item {
+            display: flex;
             gap: 16px;
-            cursor: pointer;
-            backdrop-filter: blur(20px);
+            margin-bottom: 28px;
+        }
+
+        .location-item .material-symbols-outlined {
+            color: var(--gold);
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .location-item-content h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .location-item-content p {
+            color: var(--gray);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .location-item-content a {
+            color: var(--gold);
+            text-decoration: none;
+        }
+
+        .location-item-content a:hover {
+            text-decoration: underline;
+        }
+
+        .location-map {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .location-map iframe {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            border: 0;
+            filter: grayscale(100%) contrast(1.1);
+            transition: filter 0.3s ease;
+        }
+
+        .location-map:hover iframe {
+            filter: grayscale(0%) contrast(1);
+        }
+
+        /* CTA Section */
+        .cta {
+            background: linear-gradient(135deg, var(--dark-brown) 0%, var(--dark) 100%);
+            text-align: center;
             position: relative;
             overflow: hidden;
         }
 
-        .card::before {
+        .cta::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, transparent 100%);
-            opacity: 0;
-            transition: opacity 0.4s ease;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
         }
 
-        .card:hover {
-            transform: translateY(-8px) scale(1.02);
-            border-color: var(--md-sys-color-primary);
-            box-shadow: 0 16px 48px rgba(212, 175, 55, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3);
-        }
-
-        .card:hover::before {
-            opacity: 1;
-        }
-
-        .card:active {
-            transform: translateY(-4px) scale(1.01);
-        }
-
-        .card-icon {
-            font-size: 48px;
-            color: var(--md-sys-color-primary);
+        .cta-content {
             position: relative;
             z-index: 1;
-            transition: all 0.3s ease;
+            max-width: 700px;
+            margin: 0 auto;
         }
 
-        .card:hover .card-icon {
-            transform: scale(1.1) rotate(5deg);
-            filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.6));
+        .cta h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            margin-bottom: 20px;
         }
 
-        .card-title {
-            font-size: 24px;
-            font-weight: 500;
-            color: #FFFFFF;
-            margin: 0;
-        }
-
-        .card-description {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.6;
-            flex: 1;
-        }
-
-        .card-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            color: var(--md-sys-color-primary);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .cta p {
+            color: var(--gray);
+            font-size: 1.125rem;
+            margin-bottom: 40px;
         }
 
         /* Footer */
         .footer {
+            background: var(--black);
+            padding: 60px 40px 30px;
+            border-top: 1px solid rgba(212, 175, 55, 0.1);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .footer-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 32px;
+        }
+
+        .footer-links a {
+            color: var(--gray-dark);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--gold);
+        }
+
+        .footer-copy {
+            width: 100%;
             text-align: center;
-            margin-top: 60px;
-            padding-top: 40px;
-            border-top: 1px solid rgba(212, 175, 55, 0.2);
+            padding-top: 30px;
+            margin-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--gray-dark);
+            font-size: 0.8rem;
         }
 
-        .footer-text {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        /* Material Icons */
-        .material-symbols-outlined {
-            font-variation-settings:
-            'FILL' 0,
-            'wght' 400,
-            'GRAD' 0,
-            'opsz' 24;
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 28px;
+            cursor: pointer;
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
-            .title {
-                font-size: 36px;
+        @media (max-width: 968px) {
+            .nav-links {
+                display: none;
             }
 
-            .card-grid {
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .about-content,
+            .location-content {
                 grid-template-columns: 1fr;
+                gap: 48px;
+            }
+
+            .about-image {
+                order: -1;
+            }
+
+            .section {
+                padding: 80px 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .nav {
+                padding: 16px 20px;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                width: 100%;
+                padding: 0 20px;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .about-features {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                justify-content: center;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <span class="material-symbols-outlined logo">content_cut</span>
-            <h1 class="title">Barbearia Mineiro</h1>
-            <p class="subtitle">Sistema de Gerenciamento de Fila</p>
-            <div class="badge">Mockups UI/UX</div>
-        </div>
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <a href="#" class="nav-logo">
+            <span class="material-symbols-outlined">content_cut</span>
+            Barbearia Mineiro
+        </a>
+        <ul class="nav-links">
+            <li><a href="#services">Serviços</a></li>
+            <li><a href="#about">Sobre</a></li>
+            <li><a href="#location">Localização</a></li>
+            <li><a href="barber-queue-manager.html">Staff</a></li>
+        </ul>
+        <a href="queue-join.html" class="nav-cta">Entrar na Fila</a>
+        <button class="mobile-menu-btn">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+    </nav>
 
-        <!-- Main Options -->
-        <div class="section">
-            <div class="card-grid" style="max-width: 600px; margin: 0 auto;">
-                <a href="queue-join.html" class="card">
-                    <span class="material-symbols-outlined card-icon">person_add</span>
-                    <h3 class="card-title">Entrar na Fila</h3>
-                    <p class="card-description">
-                        Registre-se na fila com apenas seu nome
-                    </p>
-                    <div class="card-label">
-                        <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
-                        <span>Abrir</span>
-                    </div>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">Orlando, Florida</div>
+            <h1 class="hero-title">
+                <span>Barbearia</span><br>Mineiro
+            </h1>
+            <p class="hero-subtitle">
+                Tradição e qualidade em cada corte. Entre na fila online e seja atendido sem espera.
+            </p>
+            <div class="hero-actions">
+                <a href="queue-join.html" class="btn btn-primary">
+                    <span class="material-symbols-outlined">person_add</span>
+                    Entrar na Fila
                 </a>
-
-                <a href="login-modal.html" class="card" style="border-color: rgba(212, 175, 55, 0.6);">
-                    <span class="material-symbols-outlined card-icon">lock</span>
-                    <h3 class="card-title">Entrar (Staff)</h3>
-                    <p class="card-description">
-                        Login para barbeiros e proprietários
-                    </p>
-                    <div class="card-label">
-                        <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
-                        <span>Login</span>
-                    </div>
-                </a>
-
-                <a href="barber-queue-manager.html" class="card" style="border-color: rgba(212, 175, 55, 0.4); opacity: 0.9;">
-                    <span class="material-symbols-outlined card-icon">dashboard</span>
-                    <h3 class="card-title">Gerenciar Fila</h3>
-                    <p class="card-description">
-                        Acesso direto ao gerenciamento da fila (sem login)
-                    </p>
-                    <div class="card-label">
-                        <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
-                        <span>Abrir</span>
-                    </div>
+                <a href="#location" class="btn btn-outline">
+                    <span class="material-symbols-outlined">location_on</span>
+                    Como Chegar
                 </a>
             </div>
         </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p class="footer-text">Sistema de Fila para Barbearias • Mockups UI/UX</p>
+        <div class="hero-scroll">
+            <span>Scroll</span>
+            <span class="material-symbols-outlined">expand_more</span>
         </div>
-    </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="section services" id="services">
+        <div class="section-header">
+            <p class="section-label">Nossos Serviços</p>
+            <h2 class="section-title">Cortes & Tratamentos</h2>
+        </div>
+        <div class="services-grid">
+            <div class="service-card">
+                <span class="material-symbols-outlined service-icon">content_cut</span>
+                <h3 class="service-name">Corte de Cabelo</h3>
+                <p class="service-desc">Corte tradicional ou moderno, feito com precisão e cuidado.</p>
+                <p class="service-price">$30</p>
+            </div>
+            <div class="service-card">
+                <span class="material-symbols-outlined service-icon">face_6</span>
+                <h3 class="service-name">Barba</h3>
+                <p class="service-desc">Aparar, modelar e cuidar da sua barba com produtos premium.</p>
+                <p class="service-price">$20</p>
+            </div>
+            <div class="service-card">
+                <span class="material-symbols-outlined service-icon">star</span>
+                <h3 class="service-name">Corte + Barba</h3>
+                <p class="service-desc">O combo completo para você sair renovado.</p>
+                <p class="service-price">$45</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="section about" id="about">
+        <div class="about-content">
+            <div class="about-text">
+                <p class="section-label">Sobre Nós</p>
+                <h3>Uma experiência <span>autêntica</span> de barbearia</h3>
+                <p>
+                    Na Barbearia Mineiro, combinamos técnicas tradicionais com tendências modernas 
+                    para oferecer cortes de qualidade. Nossa equipe é apaixonada pelo que faz e 
+                    comprometida em proporcionar a melhor experiência.
+                </p>
+                <p>
+                    Localizada em Orlando, FL, atendemos a comunidade brasileira e todos que 
+                    buscam um serviço de excelência em um ambiente acolhedor.
+                </p>
+                <div class="about-features">
+                    <div class="about-feature">
+                        <span class="material-symbols-outlined">schedule</span>
+                        <span>Fila online</span>
+                    </div>
+                    <div class="about-feature">
+                        <span class="material-symbols-outlined">workspace_premium</span>
+                        <span>Produtos premium</span>
+                    </div>
+                    <div class="about-feature">
+                        <span class="material-symbols-outlined">groups</span>
+                        <span>Equipe experiente</span>
+                    </div>
+                    <div class="about-feature">
+                        <span class="material-symbols-outlined">local_parking</span>
+                        <span>Estacionamento fácil</span>
+                    </div>
+                </div>
+            </div>
+            <div class="about-image">
+                <div class="about-image-placeholder">
+                    <span class="material-symbols-outlined">storefront</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Location Section -->
+    <section class="section location" id="location">
+        <div class="section-header">
+            <p class="section-label">Localização</p>
+            <h2 class="section-title">Visite-nos</h2>
+        </div>
+        <div class="location-content">
+            <div class="location-info">
+                <h3>Informações de Contato</h3>
+                <div class="location-item">
+                    <span class="material-symbols-outlined">location_on</span>
+                    <div class="location-item-content">
+                        <h4>Endereço</h4>
+                        <p>Orlando, FL<br>
+                        <a href="https://maps.app.goo.gl/ZBiFuM3hgavG7ctM9" target="_blank">Ver no Google Maps</a></p>
+                    </div>
+                </div>
+                <div class="location-item">
+                    <span class="material-symbols-outlined">schedule</span>
+                    <div class="location-item-content">
+                        <h4>Horário de Funcionamento</h4>
+                        <p>Segunda a Sábado: 9:00 - 19:00<br>
+                        Domingo: Fechado</p>
+                    </div>
+                </div>
+                <div class="location-item">
+                    <span class="material-symbols-outlined">phone</span>
+                    <div class="location-item-content">
+                        <h4>Telefone</h4>
+                        <p><a href="tel:+14071234567">(407) 123-4567</a></p>
+                    </div>
+                </div>
+                <div class="location-item">
+                    <span class="material-symbols-outlined">language</span>
+                    <div class="location-item-content">
+                        <h4>Idiomas</h4>
+                        <p>Português & English</p>
+                    </div>
+                </div>
+            </div>
+            <div class="location-map">
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224444.94052046655!2d-81.52451835!3d28.481398349999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88e773d8fecdbc77%3A0xac3b2063ca5bf9e!2sOrlando%2C%20FL!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section cta">
+        <div class="cta-content">
+            <h2>Pronto para um novo visual?</h2>
+            <p>Entre na fila online agora e seja atendido sem espera.</p>
+            <a href="queue-join.html" class="btn btn-primary">
+                <span class="material-symbols-outlined">person_add</span>
+                Entrar na Fila Agora
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <span class="material-symbols-outlined">content_cut</span>
+                Barbearia Mineiro
+            </div>
+            <div class="footer-links">
+                <a href="#services">Serviços</a>
+                <a href="#about">Sobre</a>
+                <a href="#location">Localização</a>
+                <a href="analytics.html">Analytics</a>
+            </div>
+            <p class="footer-copy">© 2024 Barbearia Mineiro. Todos os direitos reservados.</p>
+        </div>
+    </footer>
 
     <script>
-        // Staggered fade-in animations
-        document.addEventListener('DOMContentLoaded', function() {
-            const sections = document.querySelectorAll('.section');
-            sections.forEach((section, index) => {
-                section.style.opacity = '0';
-                section.style.transform = 'translateY(30px)';
-                
-                setTimeout(() => {
-                    section.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-                    section.style.opacity = '1';
-                    section.style.transform = 'translateY(0)';
-                }, 200 + (index * 150));
-            });
+        // Navbar scroll effect
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
 
-            // Animate cards on hover
-            const cards = document.querySelectorAll('.card');
-            cards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                
-                setTimeout(() => {
-                    card.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, 400 + (index * 100));
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
             });
         });
 
-        // Add ripple effect on card click
-        document.querySelectorAll('.card').forEach(card => {
-            card.addEventListener('click', function(e) {
-                const ripple = document.createElement('div');
-                ripple.style.position = 'absolute';
-                ripple.style.borderRadius = '50%';
-                ripple.style.background = 'rgba(212, 175, 55, 0.6)';
-                ripple.style.width = '20px';
-                ripple.style.height = '20px';
-                ripple.style.pointerEvents = 'none';
-                
-                const rect = this.getBoundingClientRect();
-                ripple.style.left = (e.clientX - rect.left - 10) + 'px';
-                ripple.style.top = (e.clientY - rect.top - 10) + 'px';
-                
-                this.appendChild(ripple);
-                
-                ripple.animate([
-                    { transform: 'scale(0)', opacity: 1 },
-                    { transform: 'scale(10)', opacity: 0 }
-                ], {
-                    duration: 600,
-                    easing: 'ease-out'
-                });
-                
-                setTimeout(() => ripple.remove(), 600);
+        // Animate elements on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
             });
+        }, observerOptions);
+
+        document.querySelectorAll('.service-card, .about-feature, .location-item').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'all 0.6s ease-out';
+            observer.observe(el);
         });
     </script>
 </body>
 </html>
-
