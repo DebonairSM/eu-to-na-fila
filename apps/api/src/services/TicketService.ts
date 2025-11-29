@@ -146,8 +146,6 @@ export class TicketService {
         status: 'waiting',
         position,
         estimatedWaitTime,
-        createdAt: now.toISOString(),
-        updatedAt: now.toISOString(),
       })
       .returning();
 
@@ -218,7 +216,7 @@ export class TicketService {
     // Update ticket
     const updateData: any = {
       status: data.status,
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date(),
     };
 
     // Set position based on status
@@ -272,7 +270,7 @@ export class TicketService {
         .update(schema.tickets)
         .set({ 
           estimatedWaitTime: waitTime,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
         })
         .where(eq(schema.tickets.id, ticket.id));
     }

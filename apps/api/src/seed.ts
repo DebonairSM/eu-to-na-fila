@@ -22,10 +22,10 @@ async function seed() {
         domain: 'eutonafila.com',
         path: '/mineiro',
         apiBase: 'https://eutonafila.com',
-        theme: {
+        theme: JSON.stringify({
           primary: '#3E2723',
           accent: '#FFD54F',
-        },
+        }),
       })
       .returning();
 
@@ -90,5 +90,10 @@ async function seed() {
   console.log('Seed complete!');
 }
 
-seed().catch(console.error);
+seed()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
 

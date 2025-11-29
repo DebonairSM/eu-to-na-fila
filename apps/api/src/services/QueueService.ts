@@ -170,7 +170,7 @@ export class QueueService {
           .update(schema.tickets)
           .set({ 
             position: newPosition,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date(),
           })
           .where(eq(schema.tickets.id, waitingTickets[i].id));
         

@@ -78,7 +78,7 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
         .set({ 
           barberId: null,
           status: 'waiting',
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
         })
         .where(
           and(
@@ -93,7 +93,7 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
       .update(schema.barbers)
       .set({ 
         isPresent,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       })
       .where(eq(schema.barbers.id, id))
       .returning();

@@ -1,46 +1,45 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
-import { sql } from 'drizzle-orm';
+import { pgTable, text, integer, boolean, timestamp, serial } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-export const shops = sqliteTable('shops', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
+export const shops = pgTable('shops', {
+  id: serial('id').primaryKey(),
   slug: text('slug').notNull().unique(),
   name: text('name').notNull(),
   domain: text('domain'),
   path: text('path'),
   apiBase: text('api_base'),
-  theme: text('theme', { mode: 'json' }).$type<{ primary: string; accent: string }>(),
-  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  theme: text('theme'), // JSON stored as text
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const services = sqliteTable('services', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
+export const services = pgTable('services', {
+  id: serial('id').primaryKey(),
   shopId: integer('shop_id').notNull().references(() => shops.id),
   name: text('name').notNull(),
   description: text('description'),
   duration: integer('duration').notNull(), // in minutes
   price: integer('price'), // in cents
-  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
-  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const barbers = sqliteTable('barbers', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
+export const barbers = pgTable('barbers', {
+  id: serial('id').primaryKey(),
   shopId: integer('shop_id').notNull().references(() => shops.id),
   name: text('name').notNull(),
   email: text('email'),
   phone: text('phone'),
   avatarUrl: text('avatar_url'),
-  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
-  isPresent: integer('is_present', { mode: 'boolean' }).notNull().default(true),
-  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  isActive: boolean('is_active').notNull().default(true),
+  isPresent: boolean('is_present').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const tickets = sqliteTable('tickets', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
+export const tickets = pgTable('tickets', {
+  id: serial('id').primaryKey(),
   shopId: integer('shop_id').notNull().references(() => shops.id),
   serviceId: integer('service_id').notNull().references(() => services.id),
   barberId: integer('barber_id').references(() => barbers.id),
@@ -49,8 +48,8 @@ export const tickets = sqliteTable('tickets', {
   status: text('status').notNull().default('waiting'), // waiting, in_progress, completed, cancelled
   position: integer('position').notNull().default(0),
   estimatedWaitTime: integer('estimated_wait_time'), // in minutes
-  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 // Relations
@@ -75,4 +74,3 @@ export const ticketsRelations = relations(tickets, ({ one }) => ({
   service: one(services, { fields: [tickets.serviceId], references: [services.id] }),
   barber: one(barbers, { fields: [tickets.barberId], references: [barbers.id] }),
 }));
-

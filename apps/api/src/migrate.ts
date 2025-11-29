@@ -1,25 +1,18 @@
-import { migrate } from 'drizzle-orm/libsql/migrator';
-import { createClient } from '@libsql/client';
-import { drizzle } from 'drizzle-orm/libsql';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import pg from 'pg';
 import { env } from './env.js';
-import { dirname } from 'path';
-import { mkdirSync, existsSync } from 'fs';
 
-// Ensure data directory exists
-const dataDir = dirname(env.DATA_PATH);
-if (!existsSync(dataDir)) {
-  mkdirSync(dataDir, { recursive: true });
-}
+const { Pool } = pg;
 
-const client = createClient({
-  url: `file:${env.DATA_PATH}`,
+const pool = new Pool({
+  connectionString: env.DATABASE_URL,
 });
 
-const db = drizzle(client);
+const db = drizzle(pool);
 
 console.log('Running migrations...');
 await migrate(db, { migrationsFolder: './drizzle' });
 console.log('Migrations complete!');
 
-client.close();
-
+await pool.end();

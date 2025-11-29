@@ -3,9 +3,8 @@ import type { Config } from 'drizzle-kit';
 export default {
   schema: './src/db/schema.ts',
   out: './drizzle',
-  driver: 'turso',
+  driver: 'pg',
   dbCredentials: {
-    url: `file:${process.env.DATA_PATH || './data/eutonafila.sqlite'}`,
+    connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/eutonafila',
   },
 } satisfies Config;
-

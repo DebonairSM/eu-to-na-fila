@@ -1,22 +1,13 @@
-import { createClient } from '@libsql/client';
-import { drizzle } from 'drizzle-orm/libsql';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import pg from 'pg';
 import { env } from '../env.js';
 import * as schema from './schema.js';
-import { dirname } from 'path';
-import { mkdirSync, existsSync } from 'fs';
 
-// Ensure data directory exists
-const dataDir = dirname(env.DATA_PATH);
-if (!existsSync(dataDir)) {
-  mkdirSync(dataDir, { recursive: true });
-}
+const { Pool } = pg;
 
-const client = createClient({
-  url: `file:${env.DATA_PATH}`,
+const pool = new Pool({
+  connectionString: env.DATABASE_URL,
 });
 
-export const db = drizzle(client, { 
-  schema,
-});
+export const db = drizzle(pool, { schema });
 export { schema };
-
