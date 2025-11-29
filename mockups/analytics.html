@@ -552,14 +552,13 @@
             checkPinComplete();
         });
 
-        // Logout
+        // Logout - go back to staff login
         logoutBtn.addEventListener('click', () => {
             isAuthenticated = false;
             sessionStorage.removeItem('analyticsAuth');
-            loginContainer.classList.remove('hidden');
-            dashboardContainer.classList.remove('show');
-            pinInputs.forEach(i => i.value = '');
-            pinInputs[0].focus();
+            sessionStorage.removeItem('staffAuth');
+            sessionStorage.removeItem('staffRole');
+            window.location.href = 'staff-login.html';
         });
 
         // Period change

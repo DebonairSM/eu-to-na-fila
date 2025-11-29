@@ -514,13 +514,12 @@
             checkPinComplete();
         }
 
-        // Logout handler
+        // Logout handler - go back to homepage
         logoutBtn.addEventListener('click', () => {
             sessionStorage.removeItem('staffAuth');
             sessionStorage.removeItem('staffRole');
-            loginForm.classList.remove('hidden');
-            dashboardSelection.classList.remove('show');
-            clearPin();
+            sessionStorage.removeItem('analyticsAuth');
+            window.location.href = 'index.html';
         });
 
         // Skip analytics PIN if coming from staff login
