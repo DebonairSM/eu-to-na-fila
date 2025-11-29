@@ -471,7 +471,10 @@
         const periodText = document.getElementById('periodText');
         const pinInputs = document.querySelectorAll('.pin-input');
 
+        // Check if coming from staff-login (one-time use flag)
         let isAuthenticated = sessionStorage.getItem('analyticsAuth') === 'true';
+        // Clear the flag immediately so it doesn't persist
+        sessionStorage.removeItem('analyticsAuth');
 
         // PIN input handling
         pinInputs.forEach((input, index) => {

@@ -235,6 +235,9 @@
     <script>
         const KIOSK_PIN = '9999'; // Kiosk PIN
         
+        // Clear any previous kiosk session
+        sessionStorage.removeItem('kioskMode');
+        
         const loginBtn = document.getElementById('loginBtn');
         const errorMessage = document.getElementById('errorMessage');
         const pinInputs = document.querySelectorAll('.pin-input');
