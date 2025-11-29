@@ -538,8 +538,13 @@
             sessionStorage.setItem('analyticsAuth', 'true');
         });
 
-        // Check if already logged in - show dashboard if so
-        if (sessionStorage.getItem('staffAuth') === 'true') {
+        // Check URL parameter to see if returning from owner pages
+        const urlParams = new URLSearchParams(window.location.search);
+        const isReturning = urlParams.get('return') === 'true';
+        
+        // If returning from owner page and already logged in, show dashboard
+        // Otherwise always require PIN (coming from homepage/Staff button)
+        if (isReturning && sessionStorage.getItem('staffAuth') === 'true') {
             const role = sessionStorage.getItem('staffRole');
             if (role === 'owner') {
                 loginForm.classList.add('hidden');
@@ -548,6 +553,11 @@
                 // Staff - redirect to queue manager
                 window.location.href = 'barber-queue-manager.html';
             }
+        } else {
+            // Coming from homepage or direct access - always require PIN
+            sessionStorage.removeItem('staffAuth');
+            sessionStorage.removeItem('staffRole');
+            sessionStorage.removeItem('analyticsAuth');
         }
     </script>
 </body>

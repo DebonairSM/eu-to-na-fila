@@ -649,7 +649,12 @@
             e.preventDefault();
             const isOwner = sessionStorage.getItem('staffAuth') === 'true' && 
                            sessionStorage.getItem('staffRole') === 'owner';
-            window.location.href = isOwner ? 'staff-login.html' : 'index.html';
+            if (isOwner) {
+                // Add parameter to indicate returning from owner page
+                window.location.href = 'staff-login.html?return=true';
+            } else {
+                window.location.href = 'index.html';
+            }
         }
 
         // Initialize
