@@ -11,7 +11,7 @@
     "integrate:web": "node scripts/integrate-web.js",
     "build:api": "pnpm --filter api build",
     "build": "pnpm build:shared && pnpm build:web && pnpm integrate:web && pnpm build:api",
-    "start": "pnpm --filter api start",
+    "start": "pnpm db:migrate && pnpm db:seed && pnpm --filter api start",
     "db:migrate": "pnpm --filter api db:migrate",
     "db:seed": "pnpm --filter api db:seed"
   },
