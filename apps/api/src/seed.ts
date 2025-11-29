@@ -12,6 +12,21 @@ async function seed() {
 
   if (shop) {
     console.log('Shop already exists:', shop);
+    
+    // Update PINs if they're null
+    if (!shop.ownerPin || !shop.staffPin) {
+      console.log('Updating shop PINs...');
+      [shop] = await db
+        .update(schema.shops)
+        .set({
+          ownerPin: shop.ownerPin || '1234',
+          staffPin: shop.staffPin || '0000',
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.shops.id, shop.id))
+        .returning();
+      console.log('Updated shop PINs:', { ownerPin: shop.ownerPin, staffPin: shop.staffPin });
+    }
   } else {
     // Create mineiro shop
     [shop] = await db
