@@ -235,7 +235,17 @@
     <script>
         const KIOSK_PIN = '9999'; // Kiosk PIN
         
-        // Clear any previous kiosk session
+        // Check if owner is already logged in - skip PIN if so
+        const isOwnerLoggedIn = sessionStorage.getItem('staffAuth') === 'true' && 
+                                 sessionStorage.getItem('staffRole') === 'owner';
+        
+        if (isOwnerLoggedIn) {
+            // Owner is logged in, go straight to kiosk mode
+            sessionStorage.setItem('kioskMode', 'true');
+            window.location.href = 'barber-queue-manager.html';
+        }
+        
+        // Clear any previous kiosk session (but keep owner login)
         sessionStorage.removeItem('kioskMode');
         
         const loginBtn = document.getElementById('loginBtn');

@@ -3543,7 +3543,7 @@
                     </div>
                 </div>
                 <div class="header-actions">
-                    <a href="index.html" class="icon-button" title="Voltar">
+                    <a href="#" class="icon-button" id="backButton" title="Voltar" onclick="handleBackClick(event)">
                         <span class="material-symbols-outlined">arrow_back</span>
                     </a>
                 </div>
@@ -5141,6 +5141,18 @@
             }
         });
 
+        // Handle back button - go to dashboard if owner, otherwise homepage
+        function handleBackClick(e) {
+            e.preventDefault();
+            const isOwner = sessionStorage.getItem('staffAuth') === 'true' && 
+                           sessionStorage.getItem('staffRole') === 'owner';
+            if (isOwner) {
+                window.location.href = 'staff-login.html';
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
         // Initialize - fetch data from API first
         async function init() {
             // Check if we should auto-enable kiosk mode (coming from kiosk login)
@@ -5176,13 +5188,15 @@
         
         init();
 
-        // Escape key exits kiosk mode and returns to home (only if modal is not open)
+        // Escape key exits kiosk mode and returns to home/dashboard (only if modal is not open)
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && isKioskMode) {
                 const modal = document.getElementById('checkinModal');
                 // Don't exit kiosk mode if check-in modal is open
                 if (!modal || !modal.classList.contains('show')) {
-                    window.location.href = 'index.html';
+                    const isOwner = sessionStorage.getItem('staffAuth') === 'true' && 
+                                   sessionStorage.getItem('staffRole') === 'owner';
+                    window.location.href = isOwner ? 'staff-login.html' : 'index.html';
                 }
             }
         });

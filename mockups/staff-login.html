@@ -538,10 +538,17 @@
             sessionStorage.setItem('analyticsAuth', 'true');
         });
 
-        // Always require fresh PIN - clear any previous session
-        sessionStorage.removeItem('staffAuth');
-        sessionStorage.removeItem('staffRole');
-        sessionStorage.removeItem('analyticsAuth');
+        // Check if already logged in - show dashboard if so
+        if (sessionStorage.getItem('staffAuth') === 'true') {
+            const role = sessionStorage.getItem('staffRole');
+            if (role === 'owner') {
+                loginForm.classList.add('hidden');
+                dashboardSelection.classList.add('show');
+            } else {
+                // Staff - redirect to queue manager
+                window.location.href = 'barber-queue-manager.html';
+            }
+        }
     </script>
 </body>
 </html>

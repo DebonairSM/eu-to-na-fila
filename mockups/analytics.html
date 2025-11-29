@@ -399,7 +399,7 @@
 <body>
     <!-- Navigation (hidden until logged in) -->
     <nav class="nav" id="mainNav" style="display: none;">
-        <a href="index.html" class="nav-logo">
+        <a href="#" class="nav-logo" id="navLogo" onclick="handleNavLogoClick(event)">
             <span class="material-symbols-outlined">content_cut</span>
             Barbearia Mineiro
         </a>
@@ -642,6 +642,14 @@
                     </div>
                 </div>
             `;
+        }
+
+        // Handle nav logo click - go to dashboard if owner, otherwise homepage
+        function handleNavLogoClick(e) {
+            e.preventDefault();
+            const isOwner = sessionStorage.getItem('staffAuth') === 'true' && 
+                           sessionStorage.getItem('staffRole') === 'owner';
+            window.location.href = isOwner ? 'staff-login.html' : 'index.html';
         }
 
         // Initialize
