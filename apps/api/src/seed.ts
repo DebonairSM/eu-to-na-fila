@@ -26,7 +26,8 @@ async function seed() {
           primary: '#3E2723',
           accent: '#FFD54F',
         }),
-        ownerPin: '1234', // Default PIN - change in production!
+        ownerPin: '1234', // Default owner PIN - change in production!
+        staffPin: '0000', // Default staff PIN - change in production!
       })
       .returning();
 

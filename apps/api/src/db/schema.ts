@@ -9,7 +9,8 @@ export const shops = pgTable('shops', {
   path: text('path'),
   apiBase: text('api_base'),
   theme: text('theme'), // JSON stored as text
-  ownerPin: text('owner_pin'), // Simple PIN for owner access
+  ownerPin: text('owner_pin'), // PIN for owner access (full)
+  staffPin: text('staff_pin'), // PIN for staff access (queue only)
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

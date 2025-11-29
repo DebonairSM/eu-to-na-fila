@@ -15,6 +15,13 @@
       "when": 1764455295989,
       "tag": "0001_slim_chameleon",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1764456254888,
+      "tag": "0002_hesitant_stephen_strange",
+      "breakpoints": true
     }
   ]
 }

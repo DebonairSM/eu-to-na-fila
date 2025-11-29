@@ -37,8 +37,17 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Shop with slug "${slug}" not found`);
     }
 
-    const valid = shop.ownerPin === pin;
+    // Check owner PIN first
+    if (shop.ownerPin === pin) {
+      return { valid: true, role: 'owner' };
+    }
+    
+    // Check staff PIN
+    if (shop.staffPin === pin) {
+      return { valid: true, role: 'staff' };
+    }
 
-    return { valid };
+    return { valid: false, role: null };
   });
 };
+

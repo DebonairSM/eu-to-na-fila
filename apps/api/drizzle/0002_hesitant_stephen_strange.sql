@@ -1,0 +1,1 @@
+ALTER TABLE "shops" ADD COLUMN "staff_pin" text;

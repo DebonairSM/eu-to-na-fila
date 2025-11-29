@@ -101,3 +101,4 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     return updatedBarber;
   });
 };
+
