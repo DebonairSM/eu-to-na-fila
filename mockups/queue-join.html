@@ -492,8 +492,9 @@
         ];
 
         // Queue data from API
-        let currentQueueSize = 0;
-        const avgServiceTime = 15; // minutes per customer
+        let waitingCount = 0;
+        let presentBarbers = 1;
+        const AVG_SERVICE_TIME = 20; // minutes per haircut
 
         // DOM elements
         const form = document.getElementById('queueForm');
@@ -504,14 +505,27 @@
         const joinButton = document.getElementById('joinButton');
         const waitTimeDisplay = document.getElementById('waitTime');
 
-        // Fetch queue data from API
+        // Fetch queue and barber data from API
         async function fetchQueueData() {
             try {
-                const response = await fetch(`${API_BASE}/shops/${SHOP_SLUG}/queue`);
-                if (!response.ok) throw new Error('Failed to fetch queue');
-                const data = await response.json();
-                const waitingTickets = (data.tickets || []).filter(t => t.status === 'waiting');
-                currentQueueSize = waitingTickets.length;
+                // Fetch queue and barbers in parallel
+                const [queueRes, barbersRes] = await Promise.all([
+                    fetch(`${API_BASE}/shops/${SHOP_SLUG}/queue`),
+                    fetch(`${API_BASE}/shops/${SHOP_SLUG}/barbers`)
+                ]);
+                
+                if (!queueRes.ok || !barbersRes.ok) throw new Error('Failed to fetch data');
+                
+                const queueData = await queueRes.json();
+                const barbersData = await barbersRes.json();
+                
+                // Count waiting tickets
+                const tickets = queueData.tickets || [];
+                waitingCount = tickets.filter(t => t.status === 'waiting').length;
+                
+                // Count present barbers (minimum 1 to avoid division by zero)
+                presentBarbers = Math.max(1, barbersData.filter(b => b.isPresent).length);
+                
                 updateWaitTime();
             } catch (error) {
                 console.error('Error fetching queue:', error);
@@ -535,10 +549,15 @@
             return await response.json();
         }
 
-        // Update wait time display
+        // Calculate and update wait time display
+        // Formula: (people_ahead / present_barbers) * avg_service_time
         function updateWaitTime() {
-            const estimatedWait = Math.max(currentQueueSize * avgServiceTime, 5);
-            waitTimeDisplay.textContent = estimatedWait;
+            // New customer would be at position waitingCount + 1
+            const position = waitingCount + 1;
+            const estimatedWait = Math.ceil((position / presentBarbers) * AVG_SERVICE_TIME);
+            // Minimum 5 min, round to nearest 5
+            const rounded = Math.max(5, Math.round(estimatedWait / 5) * 5);
+            waitTimeDisplay.textContent = rounded;
         }
 
         // Check for profanity

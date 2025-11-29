@@ -719,7 +719,7 @@
         const API_BASE = 'https://eu-to-na-fila.onrender.com/api';
         const SHOP_SLUG = 'mineiro';
         const POLL_INTERVAL = 5000; // 5 seconds
-        const AVG_SERVICE_TIME = 15; // minutes per customer
+        const AVG_SERVICE_TIME = 20; // minutes per haircut
 
         // Get ticket ID from URL or sessionStorage
         function getTicketId() {
@@ -799,10 +799,15 @@
             }
 
             try {
-                // Fetch ticket details
-                const ticketResponse = await fetch(`${API_BASE}/tickets/${ticketId}`);
-                if (!ticketResponse.ok) {
-                    if (ticketResponse.status === 404) {
+                // Fetch ticket, queue, and barbers in parallel
+                const [ticketRes, queueRes, barbersRes] = await Promise.all([
+                    fetch(`${API_BASE}/tickets/${ticketId}`),
+                    fetch(`${API_BASE}/shops/${SHOP_SLUG}/queue`),
+                    fetch(`${API_BASE}/shops/${SHOP_SLUG}/barbers`)
+                ]);
+                
+                if (!ticketRes.ok) {
+                    if (ticketRes.status === 404) {
                         // Ticket was deleted/completed
                         ticketData.status = 'cancelled';
                         updateUI();
@@ -810,23 +815,32 @@
                     }
                     throw new Error('Failed to fetch ticket');
                 }
-                const ticket = await ticketResponse.json();
                 
-                // Fetch queue to calculate position
-                const queueResponse = await fetch(`${API_BASE}/shops/${SHOP_SLUG}/queue`);
-                const queueData = await queueResponse.json();
-                const waitingTickets = (queueData.tickets || [])
+                const ticket = await ticketRes.json();
+                const queueDataRes = await queueRes.json();
+                const barbersData = await barbersRes.json();
+                
+                // Get waiting tickets sorted by position
+                const waitingTickets = (queueDataRes.tickets || [])
                     .filter(t => t.status === 'waiting')
                     .sort((a, b) => a.position - b.position);
                 
-                // Find position in queue
+                // Find position in queue (0 if being served or not in waiting list)
                 const position = waitingTickets.findIndex(t => t.id === ticketId) + 1;
+                
+                // Count present barbers (minimum 1 to avoid division by zero)
+                const presentBarbers = Math.max(1, barbersData.filter(b => b.isPresent).length);
+                
+                // Calculate wait time: (position / present_barbers) * avg_service_time
+                // Round to nearest 5 minutes
+                const rawWaitTime = (position / presentBarbers) * AVG_SERVICE_TIME;
+                const waitTime = position > 0 ? Math.max(5, Math.round(rawWaitTime / 5) * 5) : 0;
                 
                 // Update ticket data
                 ticketData = {
                     customerName: ticket.customerName,
                     position: position,
-                    waitTime: Math.max(position * AVG_SERVICE_TIME, 5),
+                    waitTime: waitTime,
                     status: ticket.status === 'in_progress' ? 'in_progress' : 
                             ticket.status === 'completed' ? 'completed' :
                             ticket.status === 'cancelled' ? 'cancelled' : 'waiting'
