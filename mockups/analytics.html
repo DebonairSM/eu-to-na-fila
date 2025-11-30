@@ -37,6 +37,14 @@
             color: var(--white);
             min-height: 100vh;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Touch improvements */
+        button, a, select {
+            -webkit-tap-highlight-color: rgba(212, 175, 55, 0.2);
+            touch-action: manipulation;
         }
 
         body::before {
@@ -757,16 +765,182 @@
             }
         }
 
-        /* Responsive */
+        /* Mobile First - Responsive */
         @media (max-width: 768px) {
-            .nav { padding: 16px 20px; }
-            .nav-logo { font-size: 1rem; }
-            .dashboard-container { padding: 80px 20px 20px; }
-            .dashboard-title { font-size: 2.5rem; }
-            .hero-stat-value { font-size: 2rem; }
-            .login-card { padding: 32px 24px; }
-            .daily-chart { height: 200px; }
-            .hourly-chart { grid-template-columns: repeat(6, 1fr); }
+            .nav { 
+                padding: 12px 16px; 
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            .nav-logo { 
+                font-size: 0.9rem; 
+                gap: 6px;
+            }
+            .nav-logo .material-symbols-outlined {
+                font-size: 1.2rem;
+            }
+            .nav-actions {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            .period-select {
+                font-size: 0.85rem;
+                padding: 8px 12px;
+            }
+            .logout-btn {
+                font-size: 0.85rem;
+                padding: 8px 12px;
+            }
+            .dashboard-container { 
+                padding: 70px 16px 20px; 
+            }
+            .dashboard-title { 
+                font-size: 2rem; 
+            }
+            .dashboard-subtitle {
+                font-size: 1rem;
+            }
+            .hero-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+            .hero-stat {
+                padding: 20px;
+            }
+            .hero-stat-icon {
+                font-size: 36px;
+                margin-bottom: 12px;
+            }
+            .hero-stat-value { 
+                font-size: 2rem; 
+            }
+            .hero-stat-label {
+                font-size: 0.75rem;
+            }
+            .chart-card {
+                padding: 24px 20px;
+            }
+            .section-title {
+                font-size: 1.25rem;
+            }
+            .section-title .material-symbols-outlined {
+                font-size: 1.5rem;
+            }
+            .daily-chart { 
+                height: 180px; 
+                gap: 8px;
+            }
+            .daily-bar-label {
+                font-size: 0.65rem;
+            }
+            .hourly-chart { 
+                grid-template-columns: repeat(6, 1fr); 
+                gap: 6px;
+            }
+            .hourly-bar-label {
+                font-size: 0.6rem;
+            }
+            .pie-chart-container {
+                flex-direction: column;
+                gap: 24px;
+            }
+            .pie-chart {
+                width: 180px;
+                height: 180px;
+            }
+            .pie-center {
+                width: 100px;
+                height: 100px;
+                font-size: 1.25rem;
+            }
+            .pie-legend {
+                width: 100%;
+            }
+            .barbers-grid {
+                grid-template-columns: 1fr;
+            }
+            .barber-card {
+                padding: 20px;
+            }
+            .barber-avatar {
+                width: 56px;
+                height: 56px;
+                font-size: 1.5rem;
+            }
+            .barber-info h4 {
+                font-size: 1.1rem;
+            }
+            .barber-stat-value {
+                font-size: 1.5rem;
+            }
+            .peak-hour-card {
+                padding: 32px 24px;
+            }
+            .peak-hour-value {
+                font-size: 3.5rem;
+            }
+            .login-card { 
+                padding: 32px 24px; 
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav { 
+                padding: 10px 12px; 
+            }
+            .dashboard-container { 
+                padding: 60px 12px 16px; 
+            }
+            .dashboard-title { 
+                font-size: 1.75rem; 
+            }
+            .hero-stats {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .hero-stat {
+                padding: 18px;
+            }
+            .hero-stat-value { 
+                font-size: 1.75rem; 
+            }
+            .chart-card {
+                padding: 20px 16px;
+            }
+            .daily-chart { 
+                height: 150px; 
+                gap: 6px;
+            }
+            .hourly-chart { 
+                grid-template-columns: repeat(4, 1fr); 
+            }
+            .pie-chart {
+                width: 150px;
+                height: 150px;
+            }
+            .pie-center {
+                width: 80px;
+                height: 80px;
+                font-size: 1rem;
+            }
+            .peak-hour-value {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .dashboard-title { 
+                font-size: 1.5rem; 
+            }
+            .hero-stat-value { 
+                font-size: 1.5rem; 
+            }
+            .daily-chart { 
+                height: 120px; 
+            }
+            .hourly-chart { 
+                grid-template-columns: repeat(3, 1fr); 
+            }
         }
     </style>
 </head>

@@ -43,6 +43,14 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Touch improvements */
+        button, a {
+            -webkit-tap-highlight-color: rgba(212, 175, 55, 0.2);
+            touch-action: manipulation;
         }
 
         body::before {
@@ -274,6 +282,7 @@
             justify-content: center;
             gap: 10px;
             transition: all 0.3s ease;
+            min-height: 48px; /* Minimum touch target */
         }
 
         .action-btn.danger {
@@ -410,14 +419,83 @@
             width: 100%;
         }
 
-        /* Responsive */
+        /* Mobile First - Responsive */
         @media (max-width: 640px) {
-            .nav { padding: 16px 20px; }
-            .nav-logo { font-size: 1rem; }
-            .container { margin-top: 80px; }
-            .customer-name { font-size: 1.5rem; }
-            .wait-value { font-size: 4rem; }
-            .main-card, .progress-card, .completed-card { padding: 32px 24px; }
+            .nav { 
+                padding: 12px 16px; 
+                flex-wrap: wrap;
+            }
+            .nav-logo { 
+                font-size: 0.9rem; 
+                gap: 6px;
+            }
+            .nav-logo .material-symbols-outlined {
+                font-size: 1.2rem;
+            }
+            .nav-back {
+                font-size: 0.8rem;
+                padding: 6px 0;
+            }
+            .container { 
+                margin-top: 70px; 
+                padding: 0 16px;
+            }
+            .customer-name { 
+                font-size: 1.25rem; 
+                margin-bottom: 8px;
+            }
+            .status-badge {
+                font-size: 0.7rem;
+                padding: 6px 12px;
+            }
+            .main-card, .progress-card, .completed-card { 
+                padding: 28px 20px; 
+                margin-bottom: 20px;
+            }
+            .wait-value { 
+                font-size: 3rem; 
+            }
+            .wait-unit {
+                font-size: 1rem;
+            }
+            .progress-icon {
+                font-size: 48px;
+                margin-bottom: 12px;
+            }
+            .progress-title {
+                font-size: 1.25rem;
+            }
+            .action-btn {
+                padding: 16px;
+                font-size: 0.95rem;
+            }
+            .refresh-indicator {
+                font-size: 0.7rem;
+                margin-top: 20px;
+            }
+            .modal-content {
+                padding: 32px 24px;
+                margin: 20px;
+            }
+            .modal-title {
+                font-size: 1.25rem;
+            }
+            .modal-message {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav { padding: 10px 12px; }
+            .container { margin-top: 60px; }
+            .customer-name { font-size: 1.1rem; }
+            .wait-value { font-size: 2.5rem; }
+            .main-card, .progress-card, .completed-card { 
+                padding: 24px 16px; 
+            }
+            .progress-icon {
+                font-size: 40px;
+            }
         }
     </style>
 </head>
