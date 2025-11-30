@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { QueuePage } from './pages/QueuePage';
 import { JoinPage } from './pages/JoinPage';
 import { StatusPage } from './pages/StatusPage';
+import { ThemeToggle } from './components/ThemeToggle';
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
         <Route path="/join" element={<JoinPage />} />
         <Route path="/status/:id" element={<StatusPage />} />
       </Routes>
+      <ThemeToggle />
     </div>
   );
 }

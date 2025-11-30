@@ -70,35 +70,129 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Skip to content link for accessibility */
+        .skip-link {
+            position: absolute;
+            top: -100px;
+            left: 0;
+            z-index: 1000;
+            padding: 12px 24px;
+            background: var(--gold);
+            color: var(--black);
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 0 0 4px 0;
+            transition: top 0.3s ease;
+        }
+
+        .skip-link:focus {
+            top: 0;
+            outline: 3px solid var(--gold-light);
+            outline-offset: 2px;
+        }
+
         /* Navigation */
         .nav {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
+            z-index: 100;
             padding: 20px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 100;
+            transition: all 0.3s ease;
             background: rgba(10, 10, 10, 0.8);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(212, 175, 55, 0.1);
         }
 
         .nav-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
             font-family: 'Playfair Display', serif;
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             font-weight: 600;
             color: var(--gold);
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 44px;
+            min-width: 44px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-logo:focus {
+            outline: 3px solid var(--gold-light);
+            outline-offset: 2px;
+        }
+
+        .nav-logo:hover {
+            color: var(--gold-light);
         }
 
         .nav-logo .material-symbols-outlined {
-            font-size: 1.5rem;
+            font-size: 28px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-links a {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+            padding: 8px 12px;
+            border-radius: 4px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .nav-links a:focus {
+            outline: 3px solid var(--gold-light);
+            outline-offset: 2px;
+            color: var(--gold);
+        }
+
+        .nav-links a:hover {
+            color: var(--gold);
+        }
+
+        .nav-cta {
+            padding: 12px 24px;
+            background: var(--gold);
+            color: var(--black);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-cta:focus {
+            outline: 3px solid var(--gold-light);
+            outline-offset: 2px;
+        }
+
+        .nav-cta:hover {
+            background: var(--gold-light);
+            transform: translateY(-2px);
         }
 
         .nav-back {
@@ -109,10 +203,173 @@
             text-decoration: none;
             font-size: 0.9rem;
             transition: color 0.3s ease;
+            padding: 8px 12px;
+            border-radius: 4px;
+            min-height: 44px;
+        }
+
+        .nav-back:focus {
+            outline: 3px solid var(--gold-light);
+            outline-offset: 2px;
+            color: var(--gold);
         }
 
         .nav-back:hover {
             color: var(--gold);
+        }
+
+        /* Mobile menu button */
+        .nav-menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--white);
+            cursor: pointer;
+            padding: 8px;
+            min-width: 44px;
+            min-height: 44px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-menu-toggle:focus {
+            outline: 3px solid var(--gold-light);
+            outline-offset: 2px;
+        }
+
+        .nav-menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-menu-toggle .material-symbols-outlined {
+            font-size: 28px;
+        }
+
+        /* Mobile menu */
+        .nav-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 10, 0.98);
+            backdrop-filter: blur(20px);
+            z-index: 99;
+            padding: 80px 40px 40px;
+            flex-direction: column;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-menu.active {
+            transform: translateX(0);
+        }
+
+        .nav-menu-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: var(--white);
+            cursor: pointer;
+            padding: 8px;
+            min-width: 44px;
+            min-height: 44px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .nav-menu-close:focus {
+            outline: 3px solid var(--gold-light);
+            outline-offset: 2px;
+        }
+
+        .nav-menu-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-menu-close .material-symbols-outlined {
+            font-size: 28px;
+        }
+
+        .nav-menu-links {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-menu-links a {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 1.125rem;
+            font-weight: 500;
+            padding: 16px 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-menu-links a:focus {
+            outline: 3px solid var(--gold-light);
+            outline-offset: 2px;
+            color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .nav-menu-links a:hover {
+            color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .nav-menu-cta {
+            margin-top: 24px;
+            padding: 16px 24px;
+            background: var(--gold);
+            color: var(--black);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-menu-cta:focus {
+            outline: 3px solid var(--gold-light);
+            outline-offset: 2px;
+        }
+
+        .nav-menu-cta:hover {
+            background: var(--gold-light);
+        }
+
+        .nav-menu-back {
+            margin-top: 12px;
+            background: transparent;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+        }
+
+        .nav-menu-back:hover {
+            background: rgba(212, 175, 55, 0.1);
+            border-color: var(--gold-light);
+            color: var(--gold-light);
         }
 
         /* Container */
@@ -323,21 +580,40 @@
         }
 
         /* Mobile First - Responsive */
+        @media (max-width: 968px) {
+            .nav { 
+                padding: 16px 20px;
+            }
+            .nav-logo { 
+                font-size: 1.2rem;
+            }
+            .nav-links {
+                display: none;
+            }
+            .nav-cta {
+                display: none;
+            }
+            .nav-back {
+                display: none;
+            }
+            .nav-menu-toggle {
+                display: flex;
+            }
+            .nav-menu {
+                display: flex;
+            }
+        }
+
         @media (max-width: 640px) {
             .nav { 
                 padding: 12px 16px; 
-                flex-wrap: wrap;
             }
             .nav-logo { 
-                font-size: 0.9rem; 
-                gap: 6px;
+                font-size: 1rem;
+                gap: 8px;
             }
             .nav-logo .material-symbols-outlined {
-                font-size: 1.2rem;
-            }
-            .nav-back {
-                font-size: 0.8rem;
-                padding: 6px 0;
+                font-size: 20px;
             }
             .container { 
                 margin-top: 70px; 
@@ -403,19 +679,48 @@
     </style>
 </head>
 <body>
+    <!-- Skip to content link -->
+    <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+
     <!-- Navigation -->
-    <nav class="nav">
-        <a href="index.html" class="nav-logo">
-            <span class="material-symbols-outlined">content_cut</span>
+    <nav class="nav" id="nav" role="navigation" aria-label="Navegação principal">
+        <a href="index.html" class="nav-logo" aria-label="Barbearia Mineiro - Página inicial">
+            <span class="material-symbols-outlined" aria-hidden="true">content_cut</span>
             Barbearia Mineiro
         </a>
-        <a href="index.html" class="nav-back">
-            <span class="material-symbols-outlined">arrow_back</span>
+        <ul class="nav-links" role="list">
+            <li role="listitem"><a href="index.html#services" aria-label="Ir para seção de serviços">Serviços</a></li>
+            <li role="listitem"><a href="index.html#about" aria-label="Ir para seção sobre">Sobre</a></li>
+            <li role="listitem"><a href="index.html#location" aria-label="Ir para seção de localização">Localização</a></li>
+        </ul>
+        <a href="queue-join.html" class="nav-cta" aria-label="Entrar na fila de espera">Entrar na Fila</a>
+        <a href="index.html" class="nav-back" aria-label="Voltar para página inicial">
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
             Voltar
         </a>
+        <button class="nav-menu-toggle" id="navMenuToggle" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="navMenu">
+            <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+        </button>
     </nav>
 
-    <div class="container">
+    <!-- Mobile Menu -->
+    <div class="nav-menu" id="navMenu" role="dialog" aria-modal="true" aria-label="Menu de navegação">
+        <button class="nav-menu-close" id="navMenuClose" aria-label="Fechar menu de navegação">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+        <ul class="nav-menu-links" role="list">
+            <li role="listitem"><a href="index.html#services" aria-label="Ir para seção de serviços">Serviços</a></li>
+            <li role="listitem"><a href="index.html#about" aria-label="Ir para seção sobre">Sobre</a></li>
+            <li role="listitem"><a href="index.html#location" aria-label="Ir para seção de localização">Localização</a></li>
+        </ul>
+        <a href="queue-join.html" class="nav-menu-cta" aria-label="Entrar na fila de espera">Entrar na Fila</a>
+        <a href="index.html" class="nav-menu-cta nav-menu-back" aria-label="Voltar para página inicial">
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+            Voltar
+        </a>
+    </div>
+
+    <div class="container" id="main-content">
         <div class="header">
             <div class="header-icon">
                 <span class="material-symbols-outlined">person_add</span>
@@ -619,6 +924,58 @@
                 joinButton.innerHTML = '<span class="material-symbols-outlined">check</span> Entrar na Fila';
             }
         });
+
+        // Mobile menu toggle
+        const navMenuToggle = document.getElementById('navMenuToggle');
+        const navMenu = document.getElementById('navMenu');
+        const navMenuClose = document.getElementById('navMenuClose');
+        const navMenuLinks = navMenu.querySelectorAll('a');
+
+        function openMenu() {
+            navMenu.classList.add('active');
+            navMenuToggle.setAttribute('aria-expanded', 'true');
+            document.body.style.overflow = 'hidden';
+            navMenuClose.focus();
+        }
+
+        function closeMenu() {
+            navMenu.classList.remove('active');
+            navMenuToggle.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+            navMenuToggle.focus();
+        }
+
+        if (navMenuToggle) {
+            navMenuToggle.addEventListener('click', openMenu);
+        }
+        if (navMenuClose) {
+            navMenuClose.addEventListener('click', closeMenu);
+        }
+
+        // Close menu when clicking on a link
+        if (navMenuLinks) {
+            navMenuLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    closeMenu();
+                });
+            });
+        }
+
+        // Close menu on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && navMenu && navMenu.classList.contains('active')) {
+                closeMenu();
+            }
+        });
+
+        // Close menu when clicking outside
+        if (navMenu) {
+            navMenu.addEventListener('click', (e) => {
+                if (e.target === navMenu) {
+                    closeMenu();
+                }
+            });
+        }
 
         // Initialize
         fetchQueueData();
