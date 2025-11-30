@@ -31,10 +31,11 @@ fastify.register(fastifyHelmet, {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Needed for Vite
-      styleSrc: ["'self'", "'unsafe-inline'"], // Needed for inline styles
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Allow Google Fonts
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'", "data:"],
+      connectSrc: ["'self'", "https://api.qrserver.com"], // Allow QR code API
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"], // Allow Google Fonts
+      frameSrc: ["'self'", "https://www.google.com"], // Allow Google Maps iframe
     },
   },
 });
