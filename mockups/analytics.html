@@ -1064,14 +1064,9 @@
             checkPinComplete();
         }
 
-        // Logout
+        // Logout - go back to owner menu (keep session)
         logoutBtn.addEventListener('click', () => {
-            isAuthenticated = false;
-            // Always clear session when leaving analytics (require PIN again)
-            sessionStorage.removeItem('analyticsAuth');
-            sessionStorage.removeItem('staffAuth');
-            sessionStorage.removeItem('staffRole');
-            window.location.href = 'staff-login.html';
+            window.location.href = 'staff-login.html?return=true';
         });
 
         // Period change
@@ -1313,11 +1308,8 @@
 
         function handleNavLogoClick(e) {
             e.preventDefault();
-            // Always clear session when leaving analytics (require PIN again)
-            sessionStorage.removeItem('analyticsAuth');
-            sessionStorage.removeItem('staffAuth');
-            sessionStorage.removeItem('staffRole');
-            window.location.href = 'staff-login.html';
+            // Go back to owner menu (keep session)
+            window.location.href = 'staff-login.html?return=true';
         }
 
         // Initialize
