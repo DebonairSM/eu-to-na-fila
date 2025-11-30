@@ -50,15 +50,6 @@ Visual design specifications for EuToNaFila queue management system.
 | Error | #EF4444 | Remove, cancel |
 | Warning | #F59E0B | Alerts |
 
-### Alternative Theme (Victorian)
-
-| Name | Hex | Usage |
-|------|-----|-------|
-| Deep Burgundy | #8B2635 | Primary accent |
-| Antique Gold | #C9A961 | Secondary accent |
-| Cream | #F5F1E8 | Background |
-| Navy Blue | #2C3E50 | Secondary background |
-
 ---
 
 ## Typography
@@ -241,8 +232,9 @@ Use sharp, defined shadows only. No soft blurs.
 
 - Floating animations
 - Shimmer effects
-- Backdrop blur
 - Glass-morphism
+
+**Note:** Backdrop blur is allowed only on modals and navigation overlays for depth. Not used on cards, headers, or other UI elements.
 
 ---
 

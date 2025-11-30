@@ -24,23 +24,26 @@ All user interactions supported by the queue management system.
 **Acceptance Criteria:**
 - Customer navigates to shop URL or scans QR code
 - System displays current estimated wait time before registration
-- Customer enters their first name (required, 2-100 characters)
-- Customer enters last name (optional, max 100 characters)
+- Customer enters their first name (required, minimum 2 characters)
+- Customer enters last name (optional)
 - System validates name is not empty and not too short
 - System filters inappropriate/profane names
-- System creates ticket with status `waiting`
+- Frontend combines first name and last name into single `customerName` field
+- System creates ticket with status `waiting` and required `serviceId`
 - System calculates queue position and estimated wait time
 - Customer is redirected to status page with their ticket
 
 **Validation Rules:**
-- First name: required, minimum 2 characters, maximum 100 characters
-- Last name: optional, maximum 100 characters
+- First name: required, minimum 2 characters
+- Last name: optional
+- Combined customerName: 1-200 characters (validated before API call)
 - Profanity filter applied to full name
 - Real-time validation feedback as user types
 
 **Technical Notes:**
 - POST /api/shops/:slug/tickets
-- Service selection handled in-person with barber
+- API receives single `customerName` field (frontend combines first/last name)
+- `serviceId` is required (default service ID used if not selected)
 
 ---
 
@@ -226,14 +229,16 @@ in_progress → completed
   - Cancel and Submit buttons
 - Staff enters customer name
 - On submit:
-  - Customer added to end of queue
+  - Frontend combines first name and last name into `customerName`
+  - Customer added to end of queue with required `serviceId`
   - Status set to `waiting`
   - Modal closes
   - Queue display updates
 
 **Validation:**
-- First name required
-- Maximum 100 characters per field
+- First name required, minimum 2 characters
+- Last name optional
+- Combined customerName: 1-200 characters
 - Same validation as customer self-registration
 
 ---
@@ -392,11 +397,11 @@ Queue View (15s) → Ad 1 (10s) → Queue View (15s) → Ad 2 (10s) → Queue Vi
 **Acceptance Criteria:**
 - Staff navigates to login page
 - Form displays:
-  - Username/email field
-  - Password field with visibility toggle
+  - Username/email field (for display/demo purposes)
+  - Password field (used to enter PIN) with visibility toggle
   - Cancel and Login buttons
-  - "Forgot password" link
-- Staff enters credentials
+  - "Forgot password" link (placeholder)
+- Staff enters PIN (via password field)
 - Loading state shown during authentication
 - Successful login:
   - Success message shown briefly
@@ -407,12 +412,18 @@ Queue View (15s) → Ad 1 (10s) → Queue View (15s) → Ad 2 (10s) → Queue Vi
 - Close button returns to previous page
 
 **Role-Based Redirect:**
-- Owner role (`admin`) → Owner Dashboard
-- Barber role (`barber`) → Queue Management
+- Owner role → Owner Dashboard (`/owner`)
+- Staff role → Queue Management (`/manage`)
 
-**Demo Credentials:**
-- `admin` / `admin123` → Owner role
-- `barber` / `barber123` → Barber role
+**Authentication:**
+- PIN-based authentication via `POST /api/shops/:slug/auth`
+- Owner PIN grants `owner` role (full access)
+- Staff PIN grants `staff` role (queue management only)
+
+**Demo Credentials (for backward compatibility):**
+- `admin` / `admin123` → Maps to owner PIN `1234`
+- `barber` / `barber123` → Maps to staff PIN `0000`
+- In production, users should enter PIN directly
 
 ---
 

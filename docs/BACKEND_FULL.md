@@ -25,7 +25,9 @@ apps/api/
 │   │   ├── queue.ts          # Queue endpoints
 │   │   ├── tickets.ts        # Ticket endpoints
 │   │   ├── barbers.ts        # Barber endpoints
-│   │   └── status.ts         # Status update endpoint
+│   │   ├── status.ts         # Status update endpoint
+│   │   ├── auth.ts           # Authentication endpoints
+│   │   └── analytics.ts      # Analytics endpoints
 │   ├── services/
 │   │   ├── TicketService.ts  # Ticket business logic
 │   │   └── QueueService.ts   # Queue calculations
@@ -63,6 +65,8 @@ Store configuration for each barbershop.
 | path | TEXT | URL path |
 | api_base | TEXT | API base URL |
 | theme | TEXT | JSON string `{ primary, accent }` |
+| owner_pin | TEXT | PIN for owner access (full permissions) |
+| staff_pin | TEXT | PIN for staff access (queue management only) |
 | created_at | TIMESTAMP | Creation timestamp |
 | updated_at | TIMESTAMP | Last update timestamp |
 
@@ -291,11 +295,11 @@ Create a new ticket (join queue).
 ```
 
 **Validation**
-- `customerName` - Required, 2-100 characters
+- `customerName` - Required, 1-200 characters (single field, frontend may collect first/last name separately and combine)
 - `customerPhone` - Optional string
-- `serviceId` - Optional, service selection handled in-person
+- `serviceId` - Required, must be valid service ID
 
-**Note:** Profanity filtering for customer names is handled on the frontend before submission.
+**Note:** Profanity filtering for customer names is handled on the frontend before submission. The frontend collects first name and last name separately, then combines them into a single `customerName` field before sending to the API.
 
 **Response (201)**
 
@@ -402,7 +406,7 @@ Returns the cancelled ticket with `status: "cancelled"`.
 
 ---
 
-#### PATCH /api/tickets/:id/status (Legacy)
+#### PATCH /api/tickets/:id/status
 
 Update ticket status.
 
@@ -430,6 +434,45 @@ Returns updated ticket.
 - `400` - Validation failed
 - `404` - Ticket or barber not found
 - `409` - Invalid status transition
+
+**Note:** Both `PATCH /api/tickets/:id` and `PATCH /api/tickets/:id/status` are available. The `/status` endpoint is more explicit for status-only updates, while the main endpoint supports both status and barber assignment updates.
+
+---
+
+### Authentication Endpoints
+
+#### POST /api/shops/:slug/auth
+
+Verify PIN for shop access.
+
+**Parameters**
+- `slug` (path) - Shop identifier
+
+**Request Body**
+
+```json
+{
+  "pin": "1234"
+}
+```
+
+**Response**
+
+```json
+{
+  "valid": true,
+  "role": "owner"
+}
+```
+
+**Roles:**
+- `owner` - Full access (owner PIN)
+- `staff` - Queue management only (staff PIN)
+
+**Errors**
+- `404` - Shop not found
+
+**Note:** Authentication is PIN-based. The system uses `ownerPin` and `staffPin` stored in the shops table. JWT is not currently implemented.
 
 ---
 
@@ -606,8 +649,8 @@ const isFull = await queueService.isQueueFull(shopId, 50);
 |----------|-------------|---------|----------|
 | `NODE_ENV` | Environment | development | No |
 | `PORT` | Server port | 4041 | No |
-| `DATABASE_URL` | PostgreSQL connection string | - | Yes |
-| `JWT_SECRET` | JWT signing secret | - | Yes |
+| `DATABASE_URL` | PostgreSQL connection string | postgresql://localhost:5432/eutonafila | Yes |
+| `JWT_SECRET` | JWT signing secret (reserved for future use) | change_me_in_production... | No |
 | `CORS_ORIGIN` | Allowed origin | http://localhost:4040 | No |
 | `SHOP_SLUG` | Default shop | mineiro | No |
 
@@ -615,6 +658,8 @@ const isFull = await queueService.isQueueFull(shopId, 50);
 ```
 postgresql://user:password@host:5432/database
 ```
+
+**Note:** Authentication is currently PIN-based (stored in shops table). JWT_SECRET is reserved for potential future JWT implementation but is not currently used.
 
 ---
 

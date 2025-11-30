@@ -149,11 +149,11 @@ Customer self-registration form.
 
 **API Integration:**
 ```typescript
-// On form submit
+// On form submit - firstName and lastName are combined into customerName
 POST /api/shops/:slug/tickets
 {
-  "customerName": "João Silva",
-  "serviceId": 1
+  "customerName": "João Silva",  // Combined from firstName + lastName
+  "serviceId": 1  // Required, default service
 }
 ```
 
@@ -163,6 +163,8 @@ POST /api/shops/:slug/tickets
 - `validationError` - Validation error message
 - `isSubmitting` - Loading state
 - `submitError` - API error message
+
+**Note:** The frontend collects first name and last name separately for better UX, but combines them into a single `customerName` field before sending to the API. The API expects a single `customerName` field (1-200 characters).
 
 ---
 
@@ -207,8 +209,8 @@ Authentication page for staff access.
 **URL:** `/mineiro/login`
 
 **Features:**
-- Username/email field
-- Password field with visibility toggle
+- Username/email field (for display purposes)
+- Password field (used as PIN input) with visibility toggle
 - Loading state during authentication
 - Error message display
 - Role-based redirect after login
@@ -224,17 +226,17 @@ Authentication page for staff access.
 // Authentication (PIN-based)
 POST /api/shops/:slug/auth
 {
-  "pin": "1234"
+  "pin": "1234"  // PIN from password field
 }
 
 // Returns:
 {
   "valid": true,
-  "role": "owner" | "barber"
+  "role": "owner" | "staff"
 }
 ```
 
-**Note:** The implementation includes demo credential mapping for backward compatibility (username/password → PIN conversion).
+**Note:** Authentication is PIN-based. The password field is used to enter the PIN. The implementation includes demo credential mapping for backward compatibility (username/password → PIN conversion): `admin/admin123` maps to owner PIN `1234`, `barber/barber123` maps to staff PIN `0000`. In production, users should enter the PIN directly.
 
 ---
 
@@ -353,11 +355,15 @@ GET /api/shops/:slug/barbers
 
 // Add customer
 POST /api/shops/:slug/tickets
-{ "customerName": "João Silva", "serviceId": 1 }
+{ "customerName": "João Silva", "serviceId": 1 }  // serviceId is required
 
 // Start service (assign barber)
 PATCH /api/tickets/:id
 { "barberId": 3, "status": "in_progress" }
+
+// Or use status endpoint
+PATCH /api/tickets/:id/status
+{ "status": "in_progress", "barberId": 3 }
 
 // Complete service
 PATCH /api/tickets/:id
