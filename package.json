@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "concurrently \"pnpm --filter api dev\" \"pnpm --filter web dev\"",
     "build:shared": "pnpm --filter shared build",
-    "build:web": "echo 'Skipping React build - using HTML mockups'",
+    "build:web": "pnpm --filter web build",
     "integrate:web": "node scripts/integrate-web.js",
     "build:api": "pnpm --filter api build",
     "build": "pnpm build:shared && pnpm build:web && pnpm integrate:web && pnpm build:api",

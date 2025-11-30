@@ -366,10 +366,92 @@ class ApiClient {
    * @returns List of barbers
    */
   async getBarbers(shopSlug: string): Promise<Barber[]> {
-    const response = await this.get<{ barbers: Barber[] }>(
-      `/shops/${shopSlug}/barbers`
-    );
-    return response.barbers;
+    return this.get<Barber[]>(`/shops/${shopSlug}/barbers`);
+  }
+
+  /**
+   * Toggle barber presence.
+   * When setting isPresent to false, backend automatically unassigns customers.
+   * 
+   * @param barberId - Barber ID
+   * @param isPresent - Whether barber is present
+   * @returns Updated barber
+   */
+  async toggleBarberPresence(barberId: number, isPresent: boolean): Promise<Barber> {
+    return this.patch<Barber>(`/barbers/${barberId}/presence`, { isPresent });
+  }
+
+  /**
+   * Create a new barber for a shop.
+   * 
+   * @param shopSlug - Shop identifier
+   * @param data - Barber data
+   * @returns Created barber
+   */
+  async createBarber(shopSlug: string, data: { name: string; avatarUrl?: string | null }): Promise<Barber> {
+    return this.post<Barber>(`/shops/${shopSlug}/barbers`, data);
+  }
+
+  /**
+   * Update a barber's details.
+   * 
+   * @param barberId - Barber ID
+   * @param data - Update data
+   * @returns Updated barber
+   */
+  async updateBarber(barberId: number, data: { name?: string; avatarUrl?: string | null }): Promise<Barber> {
+    return this.patch<Barber>(`/barbers/${barberId}`, data);
+  }
+
+  /**
+   * Delete a barber.
+   * 
+   * @param barberId - Barber ID
+   * @returns Success message
+   */
+  async deleteBarber(barberId: number): Promise<{ success: boolean; message: string }> {
+    return this.delete(`/barbers/${barberId}`);
+  }
+
+  /**
+   * Update a ticket (assign barber, change status).
+   * 
+   * @param ticketId - Ticket ID
+   * @param updates - Update data
+   * @returns Updated ticket
+   */
+  async updateTicket(
+    ticketId: number,
+    updates: { barberId?: number | null; status?: 'waiting' | 'in_progress' | 'completed' | 'cancelled' }
+  ): Promise<Ticket> {
+    return this.patch<Ticket>(`/tickets/${ticketId}`, updates);
+  }
+
+  // ==================== Auth Endpoints ====================
+
+  /**
+   * Authenticate with shop PIN.
+   * 
+   * @param shopSlug - Shop identifier
+   * @param pin - PIN code
+   * @returns Authentication result with role
+   */
+  async authenticate(shopSlug: string, pin: string): Promise<{ valid: boolean; role: 'owner' | 'staff' | null }> {
+    return this.post(`/shops/${shopSlug}/auth`, { pin });
+  }
+
+  // ==================== Analytics Endpoints ====================
+
+  /**
+   * Get analytics for a shop.
+   * 
+   * @param shopSlug - Shop identifier
+   * @param days - Number of days to analyze (optional)
+   * @returns Analytics data
+   */
+  async getAnalytics(shopSlug: string, days?: number): Promise<any> {
+    const params = days ? `?days=${days}` : '';
+    return this.get(`/shops/${shopSlug}/analytics${params}`);
   }
 }
 
