@@ -693,6 +693,20 @@
                 text-overflow: ellipsis;
                 max-width: 100%;
             }
+            
+            .barber-presence-check {
+                display: none !important;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .barber-presence-check {
+                display: none !important;
+            }
+            
+            .barber-presence-status {
+                display: none !important;
+            }
         }
         
         @media (max-width: 480px) {
@@ -749,13 +763,12 @@
                 box-sizing: border-box;
             }
             
+            .barber-presence-check {
+                display: none !important;
+            }
+            
             .barber-presence-status {
-                font-size: 0.65rem;
-                padding: 3px 6px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 100%;
+                display: none !important;
             }
             
             .header {
