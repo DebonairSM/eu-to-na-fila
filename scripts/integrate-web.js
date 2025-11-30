@@ -3,11 +3,11 @@
 /**
  * integrate-web.js
  * 
- * Copies the built web app from apps/web/dist to apps/api/public/mineiro
+ * Copies HTML mockups from mockups/ to apps/api/public/mineiro
  * Run this after building the web app and before building the API.
  */
 
-import { cp, mkdir } from 'fs/promises';
+import { cp, mkdir, readdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -16,15 +16,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const rootDir = join(__dirname, '..');
-const webDistDir = join(rootDir, 'apps/web/dist');
+const mockupsDir = join(rootDir, 'mockups');
 const apiPublicDir = join(rootDir, 'apps/api/public/mineiro');
 
 async function integrate() {
-  console.log('🔄 Integrating web app into API...');
+  console.log('🔄 Integrating HTML mockups into API...');
 
-  // Check if web dist exists
-  if (!existsSync(webDistDir)) {
-    console.error('❌ Error: apps/web/dist does not exist. Run "pnpm build:web" first.');
+  // Check if mockups directory exists
+  if (!existsSync(mockupsDir)) {
+    console.error('❌ Error: mockups/ directory does not exist.');
     process.exit(1);
   }
 
@@ -35,10 +35,28 @@ async function integrate() {
     console.log('✅ Created apps/api/public directory');
   }
 
-  // Copy web dist to api public/mineiro
+  // Create mineiro directory if it doesn't exist
+  if (!existsSync(apiPublicDir)) {
+    await mkdir(apiPublicDir, { recursive: true });
+  }
+
+  // Copy HTML files and favicon, excluding archive folder and README
   try {
-    await cp(webDistDir, apiPublicDir, { recursive: true, force: true });
-    console.log('✅ Copied apps/web/dist to apps/api/public/mineiro');
+    const files = await readdir(mockupsDir);
+    
+    for (const file of files) {
+      const sourcePath = join(mockupsDir, file);
+      const destPath = join(apiPublicDir, file);
+      
+      // Skip archive folder and README
+      if (file === 'archive' || file === 'README.md') {
+        continue;
+      }
+      
+      await cp(sourcePath, destPath, { recursive: true, force: true });
+    }
+    
+    console.log('✅ Copied HTML mockups to apps/api/public/mineiro');
   } catch (error) {
     console.error('❌ Error copying files:', error);
     process.exit(1);
