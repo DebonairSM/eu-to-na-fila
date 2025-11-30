@@ -476,7 +476,7 @@
             color: var(--gray);
         }
 
-        /* Responsive */
+        /* Mobile First - Responsive */
         @media (max-width: 768px) {
             .nav {
                 padding: 12px 16px;
@@ -484,12 +484,27 @@
             }
             .nav-logo {
                 font-size: 0.9rem;
+                gap: 8px;
+            }
+            .nav-logo .material-symbols-outlined {
+                font-size: 1.2rem;
+            }
+            .back-btn {
+                font-size: 0.8rem;
+                padding: 6px 12px;
             }
             .container {
                 padding: 80px 16px 24px;
             }
             .header h1 {
                 font-size: 2rem;
+            }
+            .header p {
+                font-size: 1rem;
+            }
+            .add-barber-btn {
+                max-width: 100%;
+                padding: 14px 20px;
             }
             .barbers-grid {
                 grid-template-columns: 1fr;
@@ -498,14 +513,79 @@
             .barber-card {
                 padding: 20px;
             }
+            .barber-avatar {
+                width: 56px;
+                height: 56px;
+                font-size: 1.75rem;
+            }
+            .barber-name {
+                font-size: 1.1rem;
+            }
+            .stat-value {
+                font-size: 1.25rem;
+            }
+            .modal-content {
+                padding: 24px 20px;
+                margin: 16px;
+            }
+            .modal-title {
+                font-size: 1.25rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .nav {
+                padding: 10px 12px;
+            }
+            .container {
+                padding: 70px 12px 20px;
+            }
+            .header h1 {
+                font-size: 1.75rem;
+            }
+            .header p {
+                font-size: 0.9rem;
+            }
+            .barber-card {
+                padding: 16px;
+            }
+            .barber-header {
+                gap: 12px;
+            }
+            .barber-avatar {
+                width: 48px;
+                height: 48px;
+                font-size: 1.5rem;
+            }
+            .barber-stats {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .stat-item {
+                padding: 10px;
+            }
+            .stat-value {
+                font-size: 1.1rem;
+            }
+            .stat-label {
+                font-size: 0.7rem;
+            }
+            .action-btn {
+                font-size: 0.85rem;
+                padding: 10px;
+            }
         }
 
         @media (max-width: 480px) {
             .header h1 {
-                font-size: 1.75rem;
+                font-size: 1.5rem;
             }
-            .barber-stats {
-                grid-template-columns: 1fr;
+            .modal-content {
+                padding: 20px 16px;
+                margin: 12px;
+            }
+            .form-input {
+                font-size: 16px; /* Prevents iOS zoom */
             }
         }
     </style>

@@ -327,6 +327,80 @@
             border-color: var(--error);
             color: var(--error);
         }
+
+        /* Mobile First - Responsive */
+        @media (max-width: 640px) {
+            body {
+                padding: 16px;
+            }
+            .container {
+                max-width: 100%;
+            }
+            .login-card {
+                padding: 32px 24px;
+            }
+            .login-header {
+                margin-bottom: 32px;
+            }
+            .login-icon {
+                width: 64px;
+                height: 64px;
+            }
+            .login-icon .material-symbols-outlined {
+                font-size: 32px;
+            }
+            .login-title {
+                font-size: 1.75rem;
+            }
+            .login-subtitle {
+                font-size: 0.9rem;
+            }
+            .pin-inputs {
+                gap: 12px;
+            }
+            .pin-input {
+                width: 56px;
+                height: 56px;
+                font-size: 1.5rem;
+            }
+            .login-btn {
+                padding: 16px;
+                font-size: 0.95rem;
+            }
+            .welcome-text h2 {
+                font-size: 1.25rem;
+            }
+            .dashboard-option {
+                padding: 16px;
+            }
+            .dashboard-option-icon {
+                width: 48px;
+                height: 48px;
+            }
+            .dashboard-option-icon .material-symbols-outlined {
+                font-size: 24px;
+            }
+            .dashboard-option-text h3 {
+                font-size: 1rem;
+            }
+            .dashboard-option-text p {
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 24px 20px;
+            }
+            .login-title {
+                font-size: 1.5rem;
+            }
+            .pin-input {
+                width: 48px;
+                height: 48px;
+                font-size: 1.25rem;
+            }
+        }
     </style>
 </head>
 <body>
