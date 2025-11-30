@@ -363,6 +363,7 @@
             overflow: hidden;
         }
 
+
         .chart-card::before {
             content: '';
             position: absolute;
@@ -457,6 +458,8 @@
             grid-template-columns: repeat(12, 1fr);
             gap: 8px;
             padding: 20px 0;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .hourly-bar {
@@ -889,6 +892,7 @@
             }
             .chart-card {
                 padding: 20px 16px;
+                overflow-x: visible;
             }
             .section-title {
                 font-size: 1.1rem;
@@ -901,11 +905,24 @@
                 font-size: 0.6rem;
             }
             .hourly-chart {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 4px;
+                display: flex;
+                flex-direction: row;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                gap: 6px;
+                padding: 20px 0;
+                min-width: 100%;
+            }
+            .hourly-bar {
+                flex: 0 0 32px;
+                min-width: 32px;
+            }
+            .hourly-bar-fill {
+                min-height: 20px;
             }
             .hourly-bar-label {
                 font-size: 0.55rem;
+                white-space: nowrap;
             }
             .pie-chart {
                 width: 140px;
@@ -965,13 +982,26 @@
             }
             .chart-card {
                 padding: 16px 12px;
+                overflow-x: visible;
             }
             .daily-chart { 
                 height: 120px; 
                 gap: 3px;
             }
             .hourly-chart { 
-                grid-template-columns: repeat(3, 1fr); 
+                display: flex;
+                flex-direction: row;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                gap: 5px;
+                padding: 20px 0;
+            }
+            .hourly-bar {
+                flex: 0 0 28px;
+                min-width: 28px;
+            }
+            .hourly-bar-fill {
+                min-height: 18px;
             }
             .pie-chart {
                 width: 120px;
@@ -998,7 +1028,19 @@
                 height: 120px; 
             }
             .hourly-chart { 
-                grid-template-columns: repeat(3, 1fr); 
+                display: flex;
+                flex-direction: row;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                gap: 4px;
+                padding: 20px 0;
+            }
+            .hourly-bar {
+                flex: 0 0 26px;
+                min-width: 26px;
+            }
+            .hourly-bar-fill {
+                min-height: 16px;
             }
         }
     </style>
