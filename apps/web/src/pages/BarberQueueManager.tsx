@@ -301,91 +301,100 @@ export function BarberQueueManager() {
 
   // Management Mode View
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+    <div className="min-h-screen bg-black p-4 pb-[200px]">
+      <div className="container max-w-[600px] mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate(isOwner ? '/owner' : '/staff')}
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
-              aria-label="Back"
-            >
-              <span className="material-symbols-outlined">arrow_back</span>
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                <span className="material-symbols-outlined">content_cut</span>
-                {config.name}
-              </h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Aguardando</p>
-              <p className="text-2xl font-bold">{waitingCount}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Atendendo</p>
-              <p className="text-2xl font-bold text-green-500">{servingCount}</p>
+        <div className="header bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-6 mb-4 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate(isOwner ? '/owner' : '/staff')}
+                className="icon-button w-12 h-12 rounded-lg border-[3px] border-[rgba(212,175,55,0.3)] bg-[rgba(20,20,20,0.8)] text-[rgba(255,255,255,0.8)] flex items-center justify-center transition-all hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] hover:translate-x-0.5 hover:shadow-[0_4px_16px_rgba(212,175,55,0.2)]"
+                aria-label="Back"
+              >
+                <span className="material-symbols-outlined text-xl">arrow_back</span>
+              </button>
+              <div className="header-title">
+                <h1 className="text-2xl font-semibold text-white flex items-center gap-2">
+                  <span className="material-symbols-outlined text-2xl text-[#D4AF37]">content_cut</span>
+                  {config.name}
+                </h1>
+              </div>
             </div>
             <button
               onClick={enterKioskMode}
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
+              className="icon-button w-12 h-12 rounded-lg border-[3px] border-[rgba(212,175,55,0.3)] bg-[rgba(20,20,20,0.8)] text-[rgba(255,255,255,0.8)] flex items-center justify-center transition-all hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] hover:translate-x-0.5 hover:shadow-[0_4px_16px_rgba(212,175,55,0.2)]"
               aria-label="Enter kiosk mode"
             >
-              <span className="material-symbols-outlined">tv</span>
+              <span className="material-symbols-outlined text-xl">tv</span>
             </button>
           </div>
-        </div>
-
-        {/* Add Customer Button */}
-        <div className="mb-6">
-          <Button onClick={checkInModal.open} size="lg">
-            <span className="material-symbols-outlined">person_add</span>
-            Adicionar Cliente
-          </Button>
-        </div>
-
-        {/* Queue List */}
-        {queueData ? (
-          <div className="space-y-3">
-            {sortedTickets.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                Nenhum cliente na fila
-              </div>
-            ) : (
-              sortedTickets.map((ticket) => {
-                const assignedBarber = getAssignedBarber(ticket);
-                return (
-                  <QueueCard
-                    key={ticket.id}
-                    ticket={ticket}
-                    assignedBarber={assignedBarber}
-                    onClick={() => {
-                      setSelectedCustomerId(ticket.id);
-                      barberSelectorModal.open();
-                    }}
-                    onRemove={() => {
-                      setCustomerToRemove(ticket.id);
-                      removeConfirmModal.open();
-                    }}
-                    onComplete={() => {
-                      setCustomerToComplete(ticket.id);
-                      completeConfirmModal.open();
-                    }}
-                  />
-                );
-              })
-            )}
+          <div className="stats flex gap-6 pt-4 border-t border-[rgba(0,0,0,0.06)]">
+            <div className="stat-item flex-1 text-center">
+              <div className="stat-value text-3xl font-semibold text-[#D4AF37]">{waitingCount}</div>
+              <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">Aguardando</div>
+            </div>
+            <div className="stat-item flex-1 text-center">
+              <div className="stat-value text-3xl font-semibold text-[#22c55e]">{servingCount}</div>
+              <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">Atendendo</div>
+            </div>
           </div>
-        ) : (
-          <LoadingSpinner size="lg" />
-        )}
+        </div>
+
+        {/* Queue Section */}
+        <div className="queue-section bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-6 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+          {/* Add Customer Button */}
+          <div className="queue-header mb-6">
+            <button
+              onClick={checkInModal.open}
+              className="checkin-btn flex items-center justify-center gap-2 px-8 py-4 bg-[#D4AF37] text-[#000000] border-2 border-[#D4AF37] rounded-lg font-semibold w-full transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_24px_rgba(212,175,55,0.4)] hover:bg-[rgba(212,175,55,0.9)]"
+            >
+              <span className="material-symbols-outlined">person_add</span>
+              Adicionar Cliente
+            </button>
+          </div>
+
+          {/* Queue List */}
+          <div className="section-header text-2xl font-semibold text-white mb-6">Fila</div>
+          {queueData ? (
+            <div className="space-y-3">
+              {sortedTickets.length === 0 ? (
+                <div className="text-center py-12 text-[rgba(255,255,255,0.7)]">
+                  Nenhum cliente na fila
+                </div>
+              ) : (
+                sortedTickets.map((ticket) => {
+                  const assignedBarber = getAssignedBarber(ticket);
+                  return (
+                    <QueueCard
+                      key={ticket.id}
+                      ticket={ticket}
+                      assignedBarber={assignedBarber}
+                      onClick={() => {
+                        setSelectedCustomerId(ticket.id);
+                        barberSelectorModal.open();
+                      }}
+                      onRemove={() => {
+                        setCustomerToRemove(ticket.id);
+                        removeConfirmModal.open();
+                      }}
+                      onComplete={() => {
+                        setCustomerToComplete(ticket.id);
+                        completeConfirmModal.open();
+                      }}
+                    />
+                  );
+                })
+              )}
+            </div>
+          ) : (
+            <LoadingSpinner size="lg" />
+          )}
+        </div>
 
         {/* Barber Presence Section */}
-        <div className="mt-8 pt-8 border-t border-border">
-          <h2 className="text-xl font-semibold mb-4">Barbeiros Presentes</h2>
+        <div className="mt-6 bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-6 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+          <h2 className="section-header text-2xl font-semibold text-white mb-4">Barbeiros Presentes</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {barbers.map((barber) => (
               <BarberCard

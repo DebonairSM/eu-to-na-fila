@@ -4,7 +4,6 @@ import { api } from '@/lib/api';
 import { config } from '@/lib/config';
 import { useQueue } from '@/hooks/useQueue';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
-import { Button } from '@/components/ui/button';
 import { WaitTimeDisplay } from '@/components/WaitTimeDisplay';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Navigation } from '@/components/Navigation';
@@ -88,19 +87,22 @@ export function JoinPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
+      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      <div className="container mx-auto px-4 pt-24 pb-12 max-w-md">
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="container relative z-10 mx-auto px-5 pt-[100px] pb-12 max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-6">
           {/* Header */}
-          <div className="text-center space-y-2">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
-              <span className="material-symbols-outlined text-4xl text-primary-foreground">
+          <div className="header text-center mb-8">
+            <div className="header-icon w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
+              <span className="material-symbols-outlined text-4xl text-[#0a0a0a]">
                 person_add
               </span>
             </div>
-            <h1 className="text-3xl font-bold">Entrar na Fila</h1>
-            <p className="text-muted-foreground">Adicione seu nome e aguarde ser chamado</p>
+            <h1 className="font-['Playfair_Display',serif] text-[1.75rem] font-semibold text-white mb-3">
+              Entrar na Fila
+            </h1>
+            <p className="subtitle text-[rgba(255,255,255,0.7)]">Adicione seu nome e aguarde ser chamado</p>
           </div>
 
           {/* Wait Time Display */}
@@ -119,13 +121,13 @@ export function JoinPage() {
           )}
 
           {/* Form */}
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <div className="form-card bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] rounded-lg p-6 shadow-lg">
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* First Name */}
-              <div>
+              <div className="input-group">
                 <label
                   htmlFor="firstName"
-                  className="block text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2"
+                  className="input-label block text-xs font-medium text-[rgba(255,255,255,0.7)] uppercase tracking-wide mb-2"
                 >
                   Nome *
                 </label>
@@ -137,21 +139,21 @@ export function JoinPage() {
                   placeholder="Seu primeiro nome"
                   autoComplete="off"
                   required
-                  className={`w-full px-4 py-3 rounded-lg bg-muted/50 border transition-colors
-                    focus:outline-none focus:ring-2 focus:ring-ring
-                    ${validationError ? 'border-destructive' : 'border-border'}
+                  className={`input-field w-full px-4 py-3 rounded-lg bg-[#2a2a2a] border transition-colors text-white placeholder:text-[rgba(255,255,255,0.5)]
+                    focus:outline-none focus:ring-2 focus:ring-[#D4AF37]
+                    ${validationError ? 'border-[#ef4444]' : 'border-[rgba(255,255,255,0.2)]'}
                   `}
                 />
                 {validationError && (
-                  <p className="mt-2 text-sm text-destructive">{validationError}</p>
+                  <div className="error-message mt-2 text-sm text-[#ef4444]">{validationError}</div>
                 )}
               </div>
 
               {/* Last Name */}
-              <div>
+              <div className="input-group">
                 <label
                   htmlFor="lastName"
-                  className="block text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2"
+                  className="input-label block text-xs font-medium text-[rgba(255,255,255,0.7)] uppercase tracking-wide mb-2"
                 >
                   Sobrenome (opcional)
                 </label>
@@ -162,24 +164,23 @@ export function JoinPage() {
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Seu sobrenome"
                   autoComplete="off"
-                  className="w-full px-4 py-3 rounded-lg bg-muted/50 border border-border transition-colors
-                    focus:outline-none focus:ring-2 focus:ring-ring
+                  className="input-field w-full px-4 py-3 rounded-lg bg-[#2a2a2a] border border-[rgba(255,255,255,0.2)] transition-colors text-white placeholder:text-[rgba(255,255,255,0.5)]
+                    focus:outline-none focus:ring-2 focus:ring-[#D4AF37]
                   "
                 />
               </div>
 
               {/* Submit Error */}
               {submitError && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                  <p className="text-sm text-destructive">{submitError}</p>
+                <div className="p-3 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/20">
+                  <p className="text-sm text-[#ef4444]">{submitError}</p>
                 </div>
               )}
 
               {/* Submit Button */}
-              <Button
+              <button
                 type="submit"
-                className="w-full"
-                size="lg"
+                className="submit-btn w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-2 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmitting || !!validationError}
               >
                 {isSubmitting ? (
@@ -193,14 +194,14 @@ export function JoinPage() {
                     Entrar na Fila
                   </>
                 )}
-              </Button>
+              </button>
             </form>
           </div>
 
           {/* Info Text */}
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="info-text text-center text-sm text-[rgba(255,255,255,0.7)]">
             Já está na fila?{' '}
-            <Link to="/" className="text-primary hover:underline">
+            <Link to="/" className="text-[#D4AF37] hover:underline">
               Verificar status
             </Link>
           </p>

@@ -30,11 +30,11 @@ export function QueueCard({
   return (
     <div
       className={cn(
-        'p-4 rounded-lg border bg-card transition-all',
-        'hover:border-primary cursor-pointer',
+        'queue-item p-4 rounded-lg border-2 transition-all cursor-pointer',
+        'hover:border-[#D4AF37] hover:bg-[rgba(212,175,55,0.05)]',
         {
-          'border-green-500 bg-green-500/10': isServing,
-          'border-border': isWaiting,
+          'border-[#22c55e] bg-[rgba(34,197,94,0.1)]': isServing,
+          'border-[rgba(212,175,55,0.3)] bg-[rgba(20,20,20,0.5)]': isWaiting,
         },
         className
       )}
@@ -45,10 +45,10 @@ export function QueueCard({
           {/* Position Badge */}
           <div
             className={cn(
-              'flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm',
+              'flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-base',
               {
-                'bg-primary text-primary-foreground': isWaiting,
-                'bg-green-500 text-white': isServing,
+                'bg-[#D4AF37] text-[#0a0a0a]': isWaiting,
+                'bg-[#22c55e] text-white': isServing,
               }
             )}
             onClick={(e) => {
@@ -65,7 +65,7 @@ export function QueueCard({
             }
           >
             {isServing ? (
-              <span className="material-symbols-outlined text-lg">check</span>
+              <span className="material-symbols-outlined text-xl">check</span>
             ) : (
               ticket.position
             )}
@@ -73,9 +73,9 @@ export function QueueCard({
 
           {/* Customer Name */}
           <div className="flex-1 min-w-0">
-            <p className="font-semibold truncate">{ticket.customerName}</p>
+            <p className="font-semibold text-white truncate">{ticket.customerName}</p>
             {assignedBarber && (
-              <p className="text-sm text-muted-foreground truncate">
+              <p className="text-sm text-[rgba(255,255,255,0.7)] truncate">
                 {assignedBarber.name}
               </p>
             )}
@@ -88,7 +88,7 @@ export function QueueCard({
             <img
               src={barberAvatarUrl}
               alt={assignedBarber?.name || 'Barber'}
-              className="w-10 h-10 rounded-full object-cover"
+              className="w-12 h-12 rounded-full object-cover border-2 border-[rgba(212,175,55,0.3)]"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 if (assignedBarber) {

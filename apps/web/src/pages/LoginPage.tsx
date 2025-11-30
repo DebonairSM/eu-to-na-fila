@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { config } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
 import { Navigation } from '@/components/Navigation';
 
 export function LoginPage() {
@@ -67,92 +66,90 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative flex items-center justify-center p-5">
+      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.05)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      <div className="container mx-auto px-4 pt-24 pb-12 max-w-md">
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Header */}
-          <div className="text-center space-y-2">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
-              <span className="material-symbols-outlined text-4xl text-primary-foreground">
-                lock
-              </span>
+      <div className="modal-backdrop fixed inset-0 bg-[rgba(0,0,0,0.7)] backdrop-blur-md flex items-center justify-center z-40">
+        <div className="modal bg-[rgba(255,255,255,0.98)] rounded-2xl p-8 max-w-md w-full mx-4 shadow-[0px_4px_8px_3px_rgba(212,175,55,0.15),0px_1px_3px_rgba(0,0,0,0.2)] animate-in fade-in">
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="text-center space-y-2">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
+                <span className="material-symbols-outlined text-4xl text-[#0a0a0a]">
+                  lock
+                </span>
+              </div>
+              <h1 className="text-3xl font-bold text-[#1D1B20]">Entrar</h1>
+              <p className="text-[#5D5D5D]">Acesso para funcionários</p>
             </div>
-            <h1 className="text-3xl font-bold">Entrar</h1>
-            <p className="text-muted-foreground">Acesso para funcionários</p>
-          </div>
 
-          {/* Form */}
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Username/Email */}
-              <div>
-                <label
-                  htmlFor="username"
-                  className="block text-sm font-medium mb-2"
-                >
-                  Usuário / Email
-                </label>
+              <div className="text-field relative">
                 <input
                   id="username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Digite seu usuário ou email"
+                  placeholder=" "
                   autoComplete="username"
                   required
-                  className="w-full px-4 py-3 rounded-lg bg-muted/50 border border-border transition-colors
-                    focus:outline-none focus:ring-2 focus:ring-ring
-                  "
+                  className="w-full px-4 py-4 pt-6 rounded border border-[#C4C4C4] bg-transparent text-[#1D1B20] transition-all focus:border-[#D4AF37] focus:border-2 focus:p-[15px] focus:pt-[23px]"
                 />
+                <label
+                  htmlFor="username"
+                  className={`absolute left-4 text-base text-[#5D5D5D] pointer-events-none transition-all ${
+                    username ? 'top-2 text-xs text-[#D4AF37]' : 'top-4'
+                  }`}
+                >
+                  Usuário / Email
+                </label>
               </div>
 
               {/* Password */}
-              <div>
+              <div className="password-field relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder=" "
+                  autoComplete="current-password"
+                  required
+                  className="w-full px-4 py-4 pt-6 pr-12 rounded border border-[#C4C4C4] bg-transparent text-[#1D1B20] transition-all focus:border-[#D4AF37] focus:border-2 focus:p-[15px] focus:pt-[23px]"
+                />
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium mb-2"
+                  className={`absolute left-4 text-base text-[#5D5D5D] pointer-events-none transition-all ${
+                    password ? 'top-2 text-xs text-[#D4AF37]' : 'top-4'
+                  }`}
                 >
                   Senha
                 </label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Digite sua senha"
-                    autoComplete="current-password"
-                    required
-                    className="w-full px-4 py-3 pr-12 rounded-lg bg-muted/50 border border-border transition-colors
-                      focus:outline-none focus:ring-2 focus:ring-ring
-                    "
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    <span className="material-symbols-outlined">
-                      {showPassword ? 'visibility_off' : 'visibility'}
-                    </span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="password-toggle absolute right-3 top-1/2 -translate-y-1/2 text-[#5D5D5D] hover:bg-[#F5F5F5] p-2 rounded-full transition-all"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  <span className="material-symbols-outlined">
+                    {showPassword ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
               </div>
 
               {/* Error */}
               {error && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                  <p className="text-sm text-destructive">{error}</p>
+                <div className="error-message p-3 rounded-lg bg-[rgba(186,26,26,0.1)] border border-[rgba(186,26,26,0.2)]">
+                  <p className="text-sm text-[#BA1A1A]">{error}</p>
                 </div>
               )}
 
               {/* Submit Button */}
-              <Button
+              <button
                 type="submit"
-                className="w-full"
-                size="lg"
+                className="w-full px-6 py-4 bg-[#D4AF37] text-[#0a0a0a] font-semibold rounded-full flex items-center justify-center gap-2 hover:bg-[#E8C547] transition-all disabled:opacity-50"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -166,33 +163,33 @@ export function LoginPage() {
                     Entrar
                   </>
                 )}
-              </Button>
+              </button>
             </form>
 
             {/* Forgot Password Link */}
             <div className="mt-4 text-center">
-              <a href="#" className="text-sm text-primary hover:underline">
+              <a href="#" className="text-sm text-[#D4AF37] hover:underline">
                 Esqueceu a senha?
               </a>
             </div>
-          </div>
 
-          {/* Demo Credentials */}
-          <div className="p-4 rounded-lg bg-muted/50 border border-border">
-            <p className="text-xs text-muted-foreground text-center mb-2">
-              Credenciais de demonstração:
-            </p>
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p>Owner: admin / admin123</p>
-              <p>Barber: barber / barber123</p>
+            {/* Demo Credentials */}
+            <div className="p-4 rounded-lg bg-[#F5F5F5] border border-[#C4C4C4]">
+              <p className="text-xs text-[#5D5D5D] text-center mb-2">
+                Credenciais de demonstração:
+              </p>
+              <div className="text-xs text-[#5D5D5D] space-y-1">
+                <p>Owner: admin / admin123</p>
+                <p>Barber: barber / barber123</p>
+              </div>
             </div>
-          </div>
 
-          {/* Back Link */}
-          <div className="text-center">
-            <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
-              ← Voltar ao início
-            </Link>
+            {/* Back Link */}
+            <div className="text-center">
+              <Link to="/" className="text-sm text-[#5D5D5D] hover:text-[#D4AF37]">
+                ← Voltar ao início
+              </Link>
+            </div>
           </div>
         </div>
       </div>

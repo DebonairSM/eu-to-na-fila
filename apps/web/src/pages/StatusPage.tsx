@@ -107,14 +107,16 @@ export function StatusPage() {
   const isCompleted = ticket.status === 'completed';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
+      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      <div className="container mx-auto px-4 pt-24 pb-12 max-w-md">
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="container relative z-10 mx-auto px-5 pt-[100px] pb-12 max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-6">
           {/* Header */}
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold">Status do Atendimento</h1>
-            <p className="text-muted-foreground">{ticket.customerName}</p>
+          <div className="header text-center mb-8">
+            <h1 className="customer-name font-['Playfair_Display',serif] text-[1.75rem] font-semibold text-white mb-3">
+              {ticket.customerName}
+            </h1>
           </div>
 
           {/* Wait Time Display - Large and Prominent */}
@@ -123,52 +125,45 @@ export function StatusPage() {
           {/* Status Badge */}
           <div
             className={cn(
-              'p-6 rounded-xl border-2 text-center',
+              'status-badge inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium uppercase',
               {
-                'bg-amber-500/10 border-amber-500': isWaiting,
-                'bg-green-500/10 border-green-500': isInProgress || isCompleted,
+                'bg-[rgba(212,175,55,0.2)] border-2 border-[#D4AF37] text-[#D4AF37]': isWaiting,
+                'bg-[rgba(34,197,94,0.2)] border-2 border-[#22c55e] text-[#22c55e]': isInProgress || isCompleted,
               }
             )}
           >
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <span
-                className={cn('material-symbols-outlined text-3xl', {
-                  'text-amber-500': isWaiting,
-                  'text-green-500': isInProgress || isCompleted,
-                })}
-              >
-                {isWaiting
-                  ? 'schedule'
-                  : isInProgress
-                  ? 'content_cut'
-                  : 'check_circle'}
-              </span>
-              <h2 className="text-2xl font-bold">
-                {isWaiting
-                  ? 'Aguardando'
-                  : isInProgress
-                  ? 'Em Atendimento'
-                  : 'Concluído'}
-              </h2>
-            </div>
-            {isInProgress && (
-              <p className="text-lg text-muted-foreground mt-2">
-                Você está sendo atendido!
-              </p>
-            )}
-            {isCompleted && (
-              <p className="text-lg text-muted-foreground mt-2">
-                Atendimento concluído!
-              </p>
-            )}
+            <span className="material-symbols-outlined text-lg">
+              {isWaiting
+                ? 'schedule'
+                : isInProgress
+                ? 'content_cut'
+                : 'check_circle'}
+            </span>
+            <span>
+              {isWaiting
+                ? 'Aguardando'
+                : isInProgress
+                ? 'Em Atendimento'
+                : 'Concluído'}
+            </span>
           </div>
+          
+          {isInProgress && (
+            <p className="text-center text-lg text-[rgba(255,255,255,0.7)]">
+              Você está sendo atendido!
+            </p>
+          )}
+          {isCompleted && (
+            <p className="text-center text-lg text-[rgba(255,255,255,0.7)]">
+              Atendimento concluído!
+            </p>
+          )}
 
           {/* Actions */}
           <div className="space-y-3">
             {isWaiting && (
-              <Button
-                variant="destructive"
-                className="w-full"
+              <button
+                className="w-full px-6 py-4 bg-[#ef4444] text-white font-semibold rounded-lg flex items-center justify-center gap-2 hover:bg-[#dc2626] transition-all disabled:opacity-50"
                 onClick={() => setShowLeaveConfirm(true)}
                 disabled={isLeaving}
               >
@@ -183,28 +178,28 @@ export function StatusPage() {
                     Sair da Fila
                   </>
                 )}
-              </Button>
+              </button>
             )}
 
             {isCompleted && (
               <Link to="/">
-                <Button className="w-full" size="lg">
+                <button className="w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-2 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all">
                   <span className="material-symbols-outlined">home</span>
                   Voltar ao Início
-                </Button>
+                </button>
               </Link>
             )}
 
             <Link to="/">
-              <Button variant="outline" className="w-full">
+              <button className="w-full px-4 py-3 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all">
                 Voltar
-              </Button>
+              </button>
             </Link>
           </div>
 
           {/* Auto-update notice */}
-          <div className="p-3 rounded-lg bg-muted/50 text-center">
-            <p className="text-xs text-muted-foreground">
+          <div className="p-3 rounded-lg bg-[#1a1a1a]/50 text-center border border-[rgba(255,255,255,0.1)]">
+            <p className="text-xs text-[rgba(255,255,255,0.5)]">
               Atualiza automaticamente a cada 3 segundos
             </p>
           </div>

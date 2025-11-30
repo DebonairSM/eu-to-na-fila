@@ -1,12 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { config } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
 
 export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { user, logout } = useAuthContext();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -16,85 +25,103 @@ export function Navigation() {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border"
+      className={`nav fixed top-0 left-0 right-0 z-50 transition-all ${
+        isScrolled
+          ? 'bg-[rgba(10,10,10,0.95)] backdrop-blur-[20px] py-4 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
+          : 'bg-[rgba(10,10,10,0.8)] backdrop-blur-[20px] py-5'
+      } border-b border-[rgba(212,175,55,0.1)]`}
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="container mx-auto px-10">
+        <div className="flex items-center justify-between">
           {/* Logo */}
           <Link
             to="/"
-            className="flex items-center gap-3 text-xl font-semibold text-primary focus:outline-none focus:ring-2 focus:ring-ring rounded px-2 py-1"
+            className="nav-logo font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37] flex items-center gap-3 min-h-[44px] min-w-[44px] px-2 py-1 rounded transition-all hover:text-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
             aria-label={`${config.name} - Home`}
           >
-            <span className="material-symbols-outlined">content_cut</span>
+            <span className="material-symbols-outlined text-[28px]">content_cut</span>
             <span className="hidden sm:inline">{config.name}</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link
-              to="/#services"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Serviços
-            </Link>
-            <Link
-              to="/#about"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Sobre
-            </Link>
-            <Link
-              to="/#location"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Localização
-            </Link>
+          <ul className="nav-links hidden md:flex items-center gap-8 list-none m-0 p-0">
+            <li>
+              <Link
+                to="/#services"
+                className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+              >
+                Serviços
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/#about"
+                className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+              >
+                Sobre
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/#location"
+                className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+              >
+                Localização
+              </Link>
+            </li>
             {user ? (
-              <div className="flex items-center gap-4">
+              <>
                 {user.role === 'owner' && (
-                  <Link
-                    to="/owner"
-                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Dashboard
-                  </Link>
+                  <li>
+                    <Link
+                      to="/owner"
+                      className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+                    >
+                      Dashboard
+                    </Link>
+                  </li>
                 )}
-                <button
-                  onClick={handleLogout}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Sair
-                </button>
-              </div>
+                <li>
+                  <button
+                    onClick={handleLogout}
+                    className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+                  >
+                    Sair
+                  </button>
+                </li>
+              </>
             ) : (
               <>
-                <Link
-                  to="/join"
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors"
-                >
-                  Entrar na Fila
-                </Link>
-                <Link
-                  to="/login"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Entrar (Staff)
-                </Link>
+                <li>
+                  <Link
+                    to="/join"
+                    className="nav-cta px-6 py-3 bg-[#D4AF37] text-[#0a0a0a] font-semibold text-sm rounded min-h-[44px] flex items-center justify-center hover:bg-[#E8C547] hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+                  >
+                    Entrar na Fila
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/login"
+                    className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+                  >
+                    Entrar (Staff)
+                  </Link>
+                </li>
               </>
             )}
-          </div>
+          </ul>
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
+            className="nav-menu-toggle md:hidden bg-transparent border-none text-white cursor-pointer p-2 min-w-[44px] min-h-[44px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
             aria-expanded={isMobileMenuOpen}
           >
-            <span className="material-symbols-outlined">
+            <span className="material-symbols-outlined text-[28px]">
               {isMobileMenuOpen ? 'close' : 'menu'}
             </span>
           </button>
@@ -102,69 +129,87 @@ export function Navigation() {
       </div>
 
       {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background">
-          <div className="px-4 py-4 space-y-2">
+      <div
+        className={`nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[rgba(10,10,10,0.98)] backdrop-blur-[20px] z-[99] p-10 pt-20 flex flex-col transform transition-transform duration-300 ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:hidden`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu de navegação"
+      >
+        <button
+          className="nav-menu-close absolute top-5 right-5 bg-transparent border-none text-white cursor-pointer p-2 min-w-[44px] min-h-[44px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+          onClick={() => setIsMobileMenuOpen(false)}
+          aria-label="Fechar menu de navegação"
+        >
+          <span className="material-symbols-outlined text-[28px]">close</span>
+        </button>
+        <ul className="nav-menu-links list-none m-0 p-0 flex flex-col gap-2">
+          <li>
             <Link
               to="/#services"
-              className="block px-4 py-2 rounded-md hover:bg-muted"
+              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Serviços
             </Link>
+          </li>
+          <li>
             <Link
               to="/#about"
-              className="block px-4 py-2 rounded-md hover:bg-muted"
+              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Sobre
             </Link>
+          </li>
+          <li>
             <Link
               to="/#location"
-              className="block px-4 py-2 rounded-md hover:bg-muted"
+              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Localização
             </Link>
-            {user ? (
-              <>
-                {user.role === 'owner' && (
-                  <Link
-                    to="/owner"
-                    className="block px-4 py-2 rounded-md hover:bg-muted"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                )}
-                <button
-                  onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 rounded-md hover:bg-muted"
-                >
-                  Sair
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/join"
-                  className="block px-4 py-2 bg-primary text-primary-foreground rounded-md font-medium text-center"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Entrar na Fila
-                </Link>
-                <Link
-                  to="/login"
-                  className="block px-4 py-2 rounded-md hover:bg-muted"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Entrar (Staff)
-                </Link>
-              </>
+          </li>
+        </ul>
+        {user ? (
+          <>
+            {user.role === 'owner' && (
+              <Link
+                to="/owner"
+                className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center mt-6 focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
             )}
-          </div>
-        </div>
-      )}
+            <button
+              onClick={handleLogout}
+              className="block w-full text-left text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center mt-2 focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+            >
+              Sair
+            </button>
+          </>
+        ) : (
+          <>
+            <Link
+              to="/join"
+              className="nav-menu-cta block mt-6 px-6 py-4 bg-[#D4AF37] text-[#0a0a0a] font-semibold rounded-lg text-center min-h-[44px] flex items-center justify-center hover:bg-[#E8C547] transition-all focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Entrar na Fila
+            </Link>
+            <Link
+              to="/login"
+              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center mt-2 focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Entrar (Staff)
+            </Link>
+          </>
+        )}
+      </div>
     </nav>
   );
 }
