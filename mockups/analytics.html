@@ -279,12 +279,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            animation: shimmer 3s ease-in-out infinite;
-        }
-
-        @keyframes shimmer {
-            0%, 100% { filter: hue-rotate(0deg); }
-            50% { filter: hue-rotate(20deg); }
         }
 
         .dashboard-subtitle {
@@ -376,14 +370,7 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, var(--gold), var(--blue));
-            background-size: 200% 100%;
-            animation: gradientShift 3s ease infinite;
-        }
-
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
         }
 
         .section-title {
@@ -979,7 +966,7 @@
     <!-- Dashboard -->
     <div class="dashboard-container" id="dashboardContainer">
         <div class="dashboard-header">
-            <h1 class="dashboard-title">🎠 Analytics Dashboard 🎠</h1>
+            <h1 class="dashboard-title">Analytics Dashboard</h1>
             <p class="dashboard-subtitle" id="periodText">Últimos 7 dias</p>
         </div>
 
@@ -1145,14 +1132,25 @@
                 var(--gray-dark) ${completedDeg + cancelledDeg + waitingDeg + inProgressDeg}deg 360deg
             )`;
 
-            // Daily chart
-            const days = Object.keys(ticketsByDay || {}).sort();
-            const maxDaily = Math.max(...Object.values(ticketsByDay || { '': 1 }), 1);
-            const dailyBars = days.slice(-7).map(day => {
+            // Daily chart - generate all days in period
+            const periodDays = parseInt(periodSelect.value) || 7;
+            const allDays = [];
+            const today = new Date();
+            for (let i = periodDays - 1; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dayStr = date.toISOString().split('T')[0];
+                allDays.push(dayStr);
+            }
+            
+            const dailyValues = Object.values(ticketsByDay || {});
+            const maxDaily = dailyValues.length > 0 ? Math.max(...dailyValues, 1) : 1;
+            const dailyBars = allDays.map(day => {
                 const count = ticketsByDay[day] || 0;
-                const height = (count / maxDaily) * 100;
-                const label = new Date(day).toLocaleDateString('pt-BR', { weekday: 'short' });
-                const dateLabel = new Date(day).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                const height = maxDaily > 0 ? (count / maxDaily) * 100 : 0;
+                const dateObj = new Date(day + 'T00:00:00');
+                const label = dateObj.toLocaleDateString('pt-BR', { weekday: 'short' });
+                const dateLabel = dateObj.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
                 return `
                     <div class="daily-bar">
                         <div class="daily-bar-fill" style="height: ${Math.max(height, 4)}%">
