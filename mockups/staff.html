@@ -476,7 +476,7 @@
                         </div>
                     </a>
 
-                    <a href="kiosk.html" class="dashboard-option">
+                    <a href="#" class="dashboard-option" id="kioskOption" onclick="event.preventDefault(); enableKioskMode();">
                         <div class="dashboard-option-icon">
                             <span class="material-symbols-outlined">tv</span>
                         </div>
@@ -628,6 +628,12 @@
             // Set flag so analytics page knows user is authenticated
             sessionStorage.setItem('analyticsAuth', 'true');
         });
+
+        // Enable kiosk mode and redirect to queue manager
+        function enableKioskMode() {
+            sessionStorage.setItem('kioskMode', 'true');
+            window.location.href = 'barber-queue-manager.html';
+        }
 
         // Check if owner or staff is already logged in
         const isOwnerLoggedIn = sessionStorage.getItem('staffAuth') === 'true' && 
