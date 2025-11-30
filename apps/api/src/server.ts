@@ -76,10 +76,16 @@ const publicPath = join(__dirname, '..', 'public');
 const mineiroPath = join(publicPath, 'mineiro');
 
 // Register static file serving for /mineiro/ assets
+// This must be registered BEFORE routes to ensure assets are served first
 fastify.register(fastifyStatic, {
   root: mineiroPath,
   prefix: '/mineiro/',
   decorateReply: false, // Don't add sendFile to reply
+  // Ensure proper MIME types are set
+  setHeaders: (res, pathName) => {
+    // Let fastify-static handle MIME types automatically
+    // This ensures CSS files get text/css, JS files get application/javascript, etc.
+  },
 });
 
 // Health check with database and WebSocket status
@@ -171,8 +177,26 @@ fastify.setErrorHandler(errorHandler);
 // SPA history fallback - register as 404 handler AFTER static files and API routes
 // This will only catch routes that don't match static files
 fastify.setNotFoundHandler(async (request, reply) => {
-  // Only handle SPA fallback for /mineiro/* routes (but not /mineiro/ itself, handled above)
-  if (request.url.startsWith('/mineiro/') && request.url !== '/mineiro/') {
+  const url = request.url;
+  
+  // Don't handle asset files - let them 404 properly
+  // Asset files have extensions like .js, .css, .svg, .png, etc.
+  const assetExtensions = ['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.json', '.map'];
+  const hasAssetExtension = assetExtensions.some(ext => {
+    // Check if URL contains the extension (accounting for query strings)
+    const urlPath = url.split('?')[0];
+    return urlPath.endsWith(ext);
+  });
+  
+  // If it's an asset file that 404s, log it and return proper 404
+  if (hasAssetExtension && url.startsWith('/mineiro/')) {
+    fastify.log.warn({ url }, 'Static asset not found - this may indicate a build/integration issue');
+    return notFoundHandler(request, reply);
+  }
+  
+  // Only handle SPA fallback for /mineiro/* routes that are NOT asset files
+  // and not /mineiro/ itself (handled above)
+  if (url.startsWith('/mineiro/') && url !== '/mineiro/' && !hasAssetExtension) {
     const indexPath = join(mineiroPath, 'index.html');
     if (existsSync(indexPath)) {
       try {
