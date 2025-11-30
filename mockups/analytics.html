@@ -330,18 +330,6 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
         }
 
-        .hero-stat-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-            position: relative;
-            z-index: 1;
-            animation: bounce 2s ease-in-out infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
 
         .hero-stat-value {
             font-family: 'Playfair Display', serif;
@@ -807,10 +795,6 @@
             .hero-stat {
                 padding: 20px;
             }
-            .hero-stat-icon {
-                font-size: 36px;
-                margin-bottom: 12px;
-            }
             .hero-stat-value { 
                 font-size: 2rem; 
             }
@@ -1217,37 +1201,30 @@
             dashboardContent.innerHTML = `
                 <div class="hero-stats">
                     <div class="hero-stat total">
-                        <span class="material-symbols-outlined hero-stat-icon">receipt_long</span>
                         <div class="hero-stat-value" data-value="${summary.total}">0</div>
                         <div class="hero-stat-label">Total</div>
                     </div>
                     <div class="hero-stat completed">
-                        <span class="material-symbols-outlined hero-stat-icon">check_circle</span>
                         <div class="hero-stat-value" data-value="${summary.completed}">0</div>
                         <div class="hero-stat-label">Concluídos</div>
                     </div>
                     <div class="hero-stat cancelled">
-                        <span class="material-symbols-outlined hero-stat-icon">cancel</span>
                         <div class="hero-stat-value" data-value="${summary.cancelled}">0</div>
                         <div class="hero-stat-label">Cancelados</div>
                     </div>
                     <div class="hero-stat waiting">
-                        <span class="material-symbols-outlined hero-stat-icon">schedule</span>
                         <div class="hero-stat-value" data-value="${summary.waiting}">0</div>
                         <div class="hero-stat-label">Aguardando</div>
                     </div>
                     <div class="hero-stat inProgress">
-                        <span class="material-symbols-outlined hero-stat-icon">cut</span>
                         <div class="hero-stat-value" data-value="${summary.inProgress}">0</div>
                         <div class="hero-stat-label">Em Progresso</div>
                     </div>
                     <div class="hero-stat rate">
-                        <span class="material-symbols-outlined hero-stat-icon">trending_up</span>
                         <div class="hero-stat-value" data-value="${summary.completionRate}">0</div>
                         <div class="hero-stat-label">Taxa (%)</div>
                     </div>
                     <div class="hero-stat avg">
-                        <span class="material-symbols-outlined hero-stat-icon">calendar_today</span>
                         <div class="hero-stat-value" data-value="${summary.avgPerDay}">0</div>
                         <div class="hero-stat-label">Média/Dia</div>
                     </div>
@@ -1256,7 +1233,6 @@
                 <div class="two-column">
                     <div class="chart-card">
                         <h3 class="section-title">
-                            <span class="material-symbols-outlined">bar_chart</span>
                             Tickets por Dia
                         </h3>
                         <div class="daily-chart">
@@ -1266,7 +1242,6 @@
 
                     <div class="chart-card">
                         <h3 class="section-title">
-                            <span class="material-symbols-outlined">pie_chart</span>
                             Distribuição por Status
                         </h3>
                         <div class="pie-chart-container">
@@ -1297,7 +1272,6 @@
 
                 <div class="chart-card">
                     <h3 class="section-title">
-                        <span class="material-symbols-outlined">schedule</span>
                         Distribuição por Horário (24h)
                     </h3>
                     <div class="hourly-chart">
@@ -1307,7 +1281,6 @@
 
                 <div class="chart-card">
                     <h3 class="section-title">
-                        <span class="material-symbols-outlined">groups</span>
                         Desempenho dos Barbeiros
                     </h3>
                     <div class="barbers-grid">
@@ -1318,7 +1291,6 @@
                 ${peakHour ? `
                 <div class="peak-hour-card">
                     <h3 class="section-title" style="justify-content: center; margin-bottom: 16px;">
-                        <span class="material-symbols-outlined">schedule</span>
                         Horário de Pico
                     </h3>
                     <div class="peak-hour-value">${peakHour.hour}h</div>
