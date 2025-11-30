@@ -100,5 +100,94 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
 
     return updatedBarber;
   });
+
+  /**
+   * Create a new barber for a shop.
+   * 
+   * @route POST /api/shops/:slug/barbers
+   * @param slug - Shop slug identifier
+   * @body name - Barber name
+   * @body avatarUrl - Optional avatar URL
+   * @returns Created barber
+   * @throws {404} If shop not found
+   */
+  fastify.post('/shops/:slug/barbers', async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+    });
+    const bodySchema = z.object({
+      name: z.string().min(1).max(100),
+      avatarUrl: z.string().url().optional().nullable(),
+    });
+
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { name, avatarUrl } = validateRequest(bodySchema, request.body);
+
+    // Get shop
+    const shop = await db.query.shops.findFirst({
+      where: eq(schema.shops.slug, slug),
+    });
+
+    if (!shop) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    }
+
+    // Create barber
+    const [newBarber] = await db
+      .insert(schema.barbers)
+      .values({
+        shopId: shop.id,
+        name,
+        avatarUrl: avatarUrl || null,
+        isPresent: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    return newBarber;
+  });
+
+  /**
+   * Delete a barber.
+   * 
+   * @route DELETE /api/barbers/:id
+   * @param id - Barber ID
+   * @returns Success message
+   * @throws {404} If barber not found
+   */
+  fastify.delete('/barbers/:id', async (request, reply) => {
+    const paramsSchema = z.object({
+      id: z.coerce.number().int().positive(),
+    });
+
+    const { id } = validateRequest(paramsSchema, request.params);
+
+    // Get barber
+    const barber = await db.query.barbers.findFirst({
+      where: eq(schema.barbers.id, id),
+    });
+
+    if (!barber) {
+      throw new NotFoundError(`Barber with ID ${id} not found`);
+    }
+
+    // Unassign any tickets assigned to this barber
+    await db
+      .update(schema.tickets)
+      .set({ 
+        barberId: null,
+        status: 'waiting',
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.tickets.barberId, id));
+
+    // Delete barber
+    await db
+      .delete(schema.barbers)
+      .where(eq(schema.barbers.id, id));
+
+    return { success: true, message: 'Barber deleted successfully' };
+  });
 };
 

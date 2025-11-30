@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Barbeiros - Barbearia Mineiro</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gold: #D4AF37;
+            --gold-light: #E8C547;
+            --black: #0a0a0a;
+            --dark: #1a1a1a;
+            --dark-card: #242424;
+            --white: #FFFFFF;
+            --gray: rgba(255, 255, 255, 0.7);
+            --gray-dark: rgba(255, 255, 255, 0.5);
+            --success: #22c55e;
+            --error: #ef4444;
+            --blue: #3b82f6;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, var(--black) 0%, var(--dark) 50%, #2d2416 100%);
+            color: var(--white);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Touch improvements */
+        button, a {
+            -webkit-tap-highlight-color: rgba(212, 175, 55, 0.2);
+            touch-action: manipulation;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+            animation: rotate 40s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes rotate {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--white);
+            text-decoration: none;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .nav-logo .material-symbols-outlined {
+            color: var(--gold);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 24px 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        /* Add Barber Button */
+        .add-barber-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto 40px;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--black);
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 48px;
+        }
+
+        .add-barber-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
+        }
+
+        /* Barbers Grid */
+        .barbers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        /* Barber Card */
+        .barber-card {
+            background: rgba(36, 36, 36, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .barber-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2);
+        }
+
+        .barber-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .barber-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--black);
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .barber-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .barber-info {
+            flex: 1;
+        }
+
+        .barber-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 4px;
+        }
+
+        .barber-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .barber-status.present {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+        }
+
+        .barber-status.absent {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-dark);
+        }
+
+        /* Analytics Stats */
+        .barber-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--gray-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Actions */
+        .barber-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 44px;
+        }
+
+        .action-btn.delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--dark-card);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--gold);
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: var(--white);
+            font-size: 1rem;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 44px;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--black);
+        }
+
+        .modal-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray);
+        }
+
+        .empty-state .material-symbols-outlined {
+            font-size: 4rem;
+            color: var(--gray-dark);
+            margin-bottom: 16px;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--gray);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+            }
+            .nav-logo {
+                font-size: 0.9rem;
+            }
+            .container {
+                padding: 80px 16px 24px;
+            }
+            .header h1 {
+                font-size: 2rem;
+            }
+            .barbers-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .barber-card {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.75rem;
+            }
+            .barber-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <a href="staff-login.html?return=true" class="nav-logo">
+            <span class="material-symbols-outlined">content_cut</span>
+            Barbearia Mineiro
+        </a>
+        <div class="nav-actions">
+            <a href="staff-login.html?return=true" class="back-btn">
+                <span class="material-symbols-outlined">arrow_back</span>
+                Voltar
+            </a>
+        </div>
+    </nav>
+
+    <!-- Container -->
+    <div class="container">
+        <div class="header">
+            <h1>Gerenciar Barbeiros</h1>
+            <p>Adicione, remova e visualize estatísticas dos barbeiros</p>
+        </div>
+
+        <button class="add-barber-btn" id="addBarberBtn">
+            <span class="material-symbols-outlined">person_add</span>
+            Adicionar Barbeiro
+        </button>
+
+        <div id="barbersContainer" class="loading">Carregando barbeiros...</div>
+    </div>
+
+    <!-- Add Barber Modal -->
+    <div class="modal" id="addBarberModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Adicionar Barbeiro</h2>
+            <form id="addBarberForm">
+                <div class="form-group">
+                    <label class="form-label" for="barberName">Nome *</label>
+                    <input 
+                        type="text" 
+                        id="barberName" 
+                        class="form-input" 
+                        placeholder="Nome do barbeiro"
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="barberAvatar">URL do Avatar (opcional)</label>
+                    <input 
+                        type="url" 
+                        id="barberAvatar" 
+                        class="form-input" 
+                        placeholder="https://exemplo.com/avatar.jpg"
+                        autocomplete="off"
+                    >
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn secondary" onclick="closeAddModal()">Cancelar</button>
+                    <button type="submit" class="modal-btn primary">Adicionar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Remover Barbeiro</h2>
+            <p style="color: var(--gray); margin-bottom: 24px;" id="deleteMessage">
+                Tem certeza que deseja remover este barbeiro? Esta ação não pode ser desfeita.
+            </p>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn secondary" onclick="closeDeleteModal()">Cancelar</button>
+                <button type="button" class="modal-btn delete" onclick="confirmDelete()">Remover</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://eu-to-na-fila.onrender.com/api';
+        const SHOP_SLUG = 'mineiro';
+
+        // Check authentication
+        const isOwnerLoggedIn = sessionStorage.getItem('staffAuth') === 'true' && 
+                               sessionStorage.getItem('staffRole') === 'owner';
+        
+        if (!isOwnerLoggedIn) {
+            window.location.href = 'staff-login.html';
+        }
+
+        const barbersContainer = document.getElementById('barbersContainer');
+        const addBarberBtn = document.getElementById('addBarberBtn');
+        const addBarberModal = document.getElementById('addBarberModal');
+        const addBarberForm = document.getElementById('addBarberForm');
+        const deleteModal = document.getElementById('deleteModal');
+        
+        let barbers = [];
+        let analyticsData = null;
+        let pendingDeleteId = null;
+
+        // Load data
+        async function loadData() {
+            try {
+                const [barbersRes, analyticsRes] = await Promise.all([
+                    fetch(`${API_BASE}/shops/${SHOP_SLUG}/barbers`),
+                    fetch(`${API_BASE}/shops/${SHOP_SLUG}/analytics?days=30`)
+                ]);
+
+                if (!barbersRes.ok || !analyticsRes.ok) throw new Error('Failed to fetch data');
+
+                barbers = await barbersRes.json();
+                analyticsData = await analyticsRes.json();
+                
+                renderBarbers();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                barbersContainer.innerHTML = '<p style="color: var(--error); text-align: center;">Erro ao carregar dados</p>';
+            }
+        }
+
+        function renderBarbers() {
+            if (barbers.length === 0) {
+                barbersContainer.innerHTML = `
+                    <div class="empty-state">
+                        <span class="material-symbols-outlined">content_cut</span>
+                        <p>Nenhum barbeiro cadastrado</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const barberStatsMap = {};
+            if (analyticsData && analyticsData.barbers) {
+                analyticsData.barbers.forEach(stat => {
+                    barberStatsMap[stat.id] = stat;
+                });
+            }
+
+            barbersContainer.innerHTML = `
+                <div class="barbers-grid">
+                    ${barbers.map(barber => {
+                        const stats = barberStatsMap[barber.id] || { totalServed: 0 };
+                        const initials = barber.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                        
+                        return `
+                            <div class="barber-card">
+                                <div class="barber-header">
+                                    <div class="barber-avatar">
+                                        ${barber.avatarUrl 
+                                            ? `<img src="${barber.avatarUrl}" alt="${barber.name}">`
+                                            : initials
+                                        }
+                                    </div>
+                                    <div class="barber-info">
+                                        <div class="barber-name">${barber.name}</div>
+                                        <div class="barber-status ${barber.isPresent ? 'present' : 'absent'}">
+                                            <span class="material-symbols-outlined" style="font-size: 14px;">
+                                                ${barber.isPresent ? 'check_circle' : 'cancel'}
+                                            </span>
+                                            ${barber.isPresent ? 'Presente' : 'Ausente'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="barber-stats">
+                                    <div class="stat-item">
+                                        <div class="stat-value">${stats.totalServed || 0}</div>
+                                        <div class="stat-label">Atendidos (30d)</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value">${stats.totalServed > 0 ? Math.round((stats.totalServed / (analyticsData?.summary?.total || 1)) * 100) : 0}%</div>
+                                        <div class="stat-label">Participação</div>
+                                    </div>
+                                </div>
+                                <div class="barber-actions">
+                                    <button class="action-btn delete" onclick="handleDelete(${barber.id}, '${barber.name.replace(/'/g, "\\'")}')">
+                                        <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+                                        Remover
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        // Add barber
+        addBarberBtn.addEventListener('click', () => {
+            addBarberModal.classList.add('show');
+            document.getElementById('barberName').focus();
+        });
+
+        addBarberForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('barberName').value.trim();
+            const avatarUrl = document.getElementById('barberAvatar').value.trim();
+
+            if (!name) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/shops/${SHOP_SLUG}/barbers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        avatarUrl: avatarUrl || null
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to create barber');
+
+                closeAddModal();
+                await loadData();
+            } catch (error) {
+                console.error('Error adding barber:', error);
+                alert('Erro ao adicionar barbeiro. Por favor, tente novamente.');
+            }
+        });
+
+        function closeAddModal() {
+            addBarberModal.classList.remove('show');
+            addBarberForm.reset();
+        }
+
+        // Delete barber
+        function handleDelete(id, name) {
+            pendingDeleteId = id;
+            document.getElementById('deleteMessage').textContent = 
+                `Tem certeza que deseja remover "${name}"? Esta ação não pode ser desfeita e todos os atendimentos em andamento serão cancelados.`;
+            deleteModal.classList.add('show');
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.remove('show');
+            pendingDeleteId = null;
+        }
+
+        async function confirmDelete() {
+            if (!pendingDeleteId) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/barbers/${pendingDeleteId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error('Failed to delete barber');
+
+                closeDeleteModal();
+                await loadData();
+            } catch (error) {
+                console.error('Error deleting barber:', error);
+                alert('Erro ao remover barbeiro. Por favor, tente novamente.');
+            }
+        }
+
+        // Close modals on outside click
+        addBarberModal.addEventListener('click', (e) => {
+            if (e.target === addBarberModal) closeAddModal();
+        });
+
+        deleteModal.addEventListener('click', (e) => {
+            if (e.target === deleteModal) closeDeleteModal();
+        });
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>

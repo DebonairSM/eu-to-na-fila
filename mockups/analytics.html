@@ -1019,7 +1019,10 @@
         const periodText = document.getElementById('periodText');
         const pinInputs = document.querySelectorAll('.pin-input');
 
-        let isAuthenticated = sessionStorage.getItem('analyticsAuth') === 'true';
+        // Check if owner is already logged in
+        const isOwnerLoggedIn = sessionStorage.getItem('staffAuth') === 'true' && 
+                               sessionStorage.getItem('staffRole') === 'owner';
+        let isAuthenticated = sessionStorage.getItem('analyticsAuth') === 'true' || isOwnerLoggedIn;
         sessionStorage.removeItem('analyticsAuth');
 
         // PIN input handling
@@ -1071,6 +1074,8 @@
                 if (data.valid && data.role === 'owner') {
                     isAuthenticated = true;
                     sessionStorage.setItem('analyticsAuth', 'true');
+                    sessionStorage.setItem('staffAuth', 'true');
+                    sessionStorage.setItem('staffRole', 'owner');
                     showDashboard();
                 } else {
                     loginError.textContent = data.role === 'staff' ? 'Acesso apenas para proprietários' : 'PIN incorreto';
