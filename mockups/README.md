@@ -1,5 +1,25 @@
 # UI Mockups
 
+> **⚠️ DEPRECATED:** These HTML mockups are deprecated in favor of the React application. The production system uses the React app deployed at `/mineiro/`. These mockups are kept for reference only and should not be deployed.
+
+## React App Equivalents
+
+The following mockup pages have been implemented in the React app:
+
+- **queue-join.html** → React: `JoinPage` at `/mineiro/join`
+- **customer-status.html** → React: `StatusPage` at `/mineiro/status/:id`
+- **index.html** → React: `QueuePage` at `/mineiro/`
+
+The following mockup pages do not yet have React equivalents:
+
+- **barber-queue-manager.html** - Queue management interface
+- **owner-dashboard.html** - Owner dashboard
+- **login-modal.html** - Staff authentication
+- **analytics.html** - Analytics dashboard (archived)
+- **manage-barbers.html** - Barber management (archived)
+
+---
+
 Static HTML mockups for all pages and components of the queue management system.
 
 ## Mockup Files

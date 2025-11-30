@@ -1,6 +1,0 @@
-services:
-  - type: static
-    name: eutonafila-mockups
-    buildCommand: echo "No build needed for static HTML files"
-    staticPublishPath: mockups
-

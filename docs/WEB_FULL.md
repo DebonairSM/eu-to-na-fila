@@ -2,6 +2,8 @@
 
 Complete frontend documentation for EuToNaFila queue management system.
 
+> **Note:** The HTML mockups in the `mockups/` directory are deprecated. The production application uses a React app. See the React app routes below for the current implementation.
+
 ## Technology Stack
 
 | Component | Technology |
@@ -39,11 +41,11 @@ mockups/
 Navigation hub with links to main features.
 
 **Features:**
-- "Entrar na Fila" card → queue-join.html
-- "Entrar (Staff)" card → login-modal.html
-- "Gerenciar Fila" card → barber-queue-manager.html (direct access for development)
+- "Entrar na Fila" card → `/mineiro/join` (React: JoinPage)
+- "Entrar (Staff)" card → login-modal.html (no React equivalent yet)
+- "Gerenciar Fila" card → barber-queue-manager.html (no React equivalent yet)
 
-**URL:** `/` or `/index.html`
+**URL:** `/` or `/index.html` (mockup) | `/mineiro/` (React: QueuePage)
 
 ---
 
@@ -57,9 +59,9 @@ Customer self-registration form.
 - Current wait time display
 - Real-time validation
 - Profanity filter
-- Redirects to customer-status.html on success
+- Redirects to `/mineiro/status/:id` on success
 
-**URL:** `/queue-join.html` or via QR code scan
+**URL:** `/queue-join.html` (mockup, deprecated) | `/mineiro/join` (React: JoinPage)
 
 **API Integration:**
 ```javascript
@@ -83,7 +85,7 @@ Individual customer status display.
 - Auto-polling for updates (3 second interval)
 - State transitions with visual feedback
 
-**URL:** `/customer-status.html?id=:ticketId`
+**URL:** `/customer-status.html?id=:ticketId` (mockup, deprecated) | `/mineiro/status/:id` (React: StatusPage)
 
 **States:**
 1. **Waiting** - Shows wait time, leave button available

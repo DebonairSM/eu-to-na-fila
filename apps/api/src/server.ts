@@ -43,7 +43,6 @@ fastify.register(fastifyHelmet, {
 const allowedOrigins = [
   'http://localhost:4040',
   'http://localhost:3000',
-  'https://eutonafila-hiyh.onrender.com',
   'https://eutonafila.onrender.com',
   env.CORS_ORIGIN
 ].filter(Boolean);
