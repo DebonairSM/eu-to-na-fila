@@ -1315,22 +1315,42 @@
                 `;
             }).join('');
 
-            // Hourly chart (12 hour format)
+            // Hourly chart (12 hour format) - only show business hours (6 AM to 10 PM)
             const hourlyBars = [];
-            for (let h = 0; h < 24; h++) {
+            const businessHoursStart = 6; // 6 AM
+            const businessHoursEnd = 22; // 10 PM
+            
+            // Calculate max only from business hours
+            const businessHourCounts = [];
+            for (let h = businessHoursStart; h <= businessHoursEnd; h++) {
+                businessHourCounts.push(hourlyDistribution[h] || 0);
+            }
+            const maxHourly = Math.max(...businessHourCounts, 1);
+            
+            for (let h = businessHoursStart; h <= businessHoursEnd; h++) {
                 const count = hourlyDistribution[h] || 0;
-                const maxHourly = Math.max(...Object.values(hourlyDistribution || {}), 1);
-                const height = (count / maxHourly) * 100;
+                const height = maxHourly > 0 ? (count / maxHourly) * 100 : 0;
                 const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
                 const ampm = h < 12 ? 'AM' : 'PM';
-                hourlyBars.push(`
-                    <div class="hourly-bar">
-                        <div class="hourly-bar-fill" style="height: ${Math.max(height, 4)}%">
-                            <span class="hourly-bar-value">${count}</span>
+                
+                // If count is 0, only show label with "0", no bar
+                if (count === 0) {
+                    hourlyBars.push(`
+                        <div class="hourly-bar">
+                            <div class="hourly-bar-fill" style="display: none;"></div>
+                            <div class="hourly-bar-label">${hour12}${ampm}<br><span style="color: var(--gray-dark); font-size: 0.5rem;">0</span></div>
                         </div>
-                        <div class="hourly-bar-label">${hour12}${ampm}</div>
-                    </div>
-                `);
+                    `);
+                } else {
+                    hourlyBars.push(`
+                        <div class="hourly-bar">
+                            <div class="hourly-bar-fill" style="height: ${Math.max(height, 4)}%">
+                                <span class="hourly-bar-value">${count}</span>
+                            </div>
+                            <div class="hourly-bar-label">${hour12}${ampm}</div>
+                        </div>
+                    `);
+                }
             }
 
             // Barber cards
