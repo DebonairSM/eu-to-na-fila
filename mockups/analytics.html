@@ -855,47 +855,135 @@
             }
         }
 
-        @media (max-width: 480px) {
-            .nav { 
-                padding: 10px 12px; 
+        @media (max-width: 640px) {
+            .nav-actions {
+                flex-direction: column;
+                width: 100%;
+                gap: 8px;
             }
-            .dashboard-container { 
-                padding: 60px 12px 16px; 
+            .period-select,
+            .logout-btn {
+                width: 100%;
             }
-            .dashboard-title { 
-                font-size: 1.75rem; 
+            .dashboard-container {
+                padding: 80px 12px 16px;
+            }
+            .dashboard-title {
+                font-size: 1.5rem;
+            }
+            .dashboard-subtitle {
+                font-size: 0.9rem;
             }
             .hero-stats {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
                 gap: 12px;
             }
             .hero-stat {
-                padding: 18px;
+                padding: 16px 12px;
             }
-            .hero-stat-value { 
-                font-size: 1.75rem; 
+            .hero-stat-value {
+                font-size: 1.5rem;
+            }
+            .hero-stat-label {
+                font-size: 0.7rem;
             }
             .chart-card {
                 padding: 20px 16px;
             }
-            .daily-chart { 
-                height: 150px; 
-                gap: 6px;
+            .section-title {
+                font-size: 1.1rem;
             }
-            .hourly-chart { 
-                grid-template-columns: repeat(4, 1fr); 
+            .daily-chart {
+                height: 140px;
+                gap: 4px;
+            }
+            .daily-bar-label {
+                font-size: 0.6rem;
+            }
+            .hourly-chart {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 4px;
+            }
+            .hourly-bar-label {
+                font-size: 0.55rem;
             }
             .pie-chart {
-                width: 150px;
-                height: 150px;
+                width: 140px;
+                height: 140px;
             }
             .pie-center {
-                width: 80px;
-                height: 80px;
-                font-size: 1rem;
+                width: 70px;
+                height: 70px;
+                font-size: 0.9rem;
+            }
+            .barber-card {
+                padding: 16px;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .barber-stats-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .barber-stat {
+                width: 100%;
+            }
+            .peak-hour-card {
+                padding: 24px 16px;
             }
             .peak-hour-value {
                 font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav { 
+                padding: 10px 12px; 
+                flex-wrap: wrap;
+            }
+            .nav-logo {
+                font-size: 0.85rem;
+            }
+            .dashboard-container { 
+                padding: 70px 10px 12px; 
+            }
+            .dashboard-title { 
+                font-size: 1.25rem; 
+            }
+            .hero-stats {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .hero-stat {
+                padding: 14px 10px;
+            }
+            .hero-stat-value { 
+                font-size: 1.5rem; 
+            }
+            .hero-stat-label {
+                font-size: 0.65rem;
+            }
+            .chart-card {
+                padding: 16px 12px;
+            }
+            .daily-chart { 
+                height: 120px; 
+                gap: 3px;
+            }
+            .hourly-chart { 
+                grid-template-columns: repeat(3, 1fr); 
+            }
+            .pie-chart {
+                width: 120px;
+                height: 120px;
+            }
+            .pie-center {
+                width: 60px;
+                height: 60px;
+                font-size: 0.85rem;
+            }
+            .peak-hour-value {
+                font-size: 2rem;
             }
         }
 
@@ -1186,6 +1274,10 @@
                                 <div class="barber-stat-value" data-value="${b.totalServed}">0</div>
                                 <div class="barber-stat-label">Atendidos</div>
                             </div>
+                            <div class="barber-stat">
+                                <div class="barber-stat-value" data-value="${b.avgServiceTime || 0}">0</div>
+                                <div class="barber-stat-label">Tempo Médio (min)</div>
+                            </div>
                         </div>
                     </div>
                     <span class="barber-status ${b.isPresent ? 'present' : 'absent'}">${b.isPresent ? 'Presente' : 'Ausente'}</span>
@@ -1221,6 +1313,10 @@
                     <div class="hero-stat avg">
                         <div class="hero-stat-value" data-value="${summary.avgPerDay}">0</div>
                         <div class="hero-stat-label">Média/Dia</div>
+                    </div>
+                    <div class="hero-stat serviceTime">
+                        <div class="hero-stat-value" data-value="${summary.avgServiceTime || 0}">0</div>
+                        <div class="hero-stat-label">Tempo Médio (min)</div>
                     </div>
                 </div>
 

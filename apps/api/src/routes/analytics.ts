@@ -70,6 +70,26 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     // Average per day
     const avgPerDay = days > 0 ? Math.round(total / days) : 0;
 
+    // Calculate average service time (for completed tickets)
+    const completedTickets = tickets.filter(t => t.status === 'completed');
+    let totalServiceTime = 0;
+    let serviceTimeCount = 0;
+    
+    completedTickets.forEach(ticket => {
+      // Calculate time from in_progress to completed
+      // If updatedAt is after createdAt, use the difference
+      // Otherwise estimate based on createdAt to updatedAt
+      if (ticket.updatedAt && ticket.createdAt) {
+        const serviceTime = (ticket.updatedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60); // minutes
+        if (serviceTime > 0 && serviceTime < 120) { // Reasonable range: 0-120 minutes
+          totalServiceTime += serviceTime;
+          serviceTimeCount++;
+        }
+      }
+    });
+    
+    const avgServiceTime = serviceTimeCount > 0 ? Math.round(totalServiceTime / serviceTimeCount) : 0;
+
     // Get barber stats
     const barbers = await db.query.barbers.findMany({
       where: eq(schema.barbers.shopId, shop.id),
@@ -77,11 +97,31 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const barberStats = barbers.map(barber => {
       const barberTickets = tickets.filter(t => t.barberId === barber.id);
-      const barberCompleted = barberTickets.filter(t => t.status === 'completed').length;
+      const barberCompleted = barberTickets.filter(t => t.status === 'completed');
+      
+      // Calculate average service time for this barber
+      let barberTotalServiceTime = 0;
+      let barberServiceTimeCount = 0;
+      
+      barberCompleted.forEach(ticket => {
+        if (ticket.updatedAt && ticket.createdAt) {
+          const serviceTime = (ticket.updatedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60); // minutes
+          if (serviceTime > 0 && serviceTime < 120) {
+            barberTotalServiceTime += serviceTime;
+            barberServiceTimeCount++;
+          }
+        }
+      });
+      
+      const barberAvgServiceTime = barberServiceTimeCount > 0 
+        ? Math.round(barberTotalServiceTime / barberServiceTimeCount) 
+        : 0;
+      
       return {
         id: barber.id,
         name: barber.name,
-        totalServed: barberCompleted,
+        totalServed: barberCompleted.length,
+        avgServiceTime: barberAvgServiceTime,
         isPresent: barber.isPresent,
       };
     });
@@ -117,6 +157,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         completionRate,
         cancellationRate,
         avgPerDay,
+        avgServiceTime,
       },
       barbers: barberStats,
       ticketsByDay,
