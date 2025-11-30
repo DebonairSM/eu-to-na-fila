@@ -5,7 +5,7 @@ import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { env } from './env.js';
 import { db } from './db/index.js';
 import { queueRoutes } from './routes/queue.js';
@@ -152,7 +152,17 @@ fastify.get('/mineiro/', async (request, reply) => {
       path: indexPath
     });
   }
-  return reply.sendFile('index.html', mineiroPath);
+  try {
+    const fileContent = readFileSync(indexPath, 'utf-8');
+    return reply.type('text/html').send(fileContent);
+  } catch (error) {
+    fastify.log.error({ err: error, path: indexPath }, 'Error reading index.html');
+    return reply.code(500).send({
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
+      statusCode: 500,
+    });
+  }
 });
 
 // Register error handler
@@ -165,7 +175,13 @@ fastify.setNotFoundHandler(async (request, reply) => {
   if (request.url.startsWith('/mineiro/') && request.url !== '/mineiro/') {
     const indexPath = join(mineiroPath, 'index.html');
     if (existsSync(indexPath)) {
-      return reply.sendFile('index.html', mineiroPath);
+      try {
+        const fileContent = readFileSync(indexPath, 'utf-8');
+        return reply.type('text/html').send(fileContent);
+      } catch (error) {
+        fastify.log.error({ err: error, path: indexPath }, 'Error reading index.html for SPA fallback');
+        // Fall through to 404 handler
+      }
     }
   }
   // For other 404s, use default handler
