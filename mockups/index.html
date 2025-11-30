@@ -572,16 +572,6 @@
             font-size: 0.8rem;
         }
 
-        /* Mobile Menu */
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--white);
-            font-size: 28px;
-            cursor: pointer;
-        }
-
         /* Mobile First - Responsive */
         @media (max-width: 968px) {
             .nav {
@@ -590,8 +580,8 @@
             .nav-logo {
                 font-size: 1.2rem;
             }
-            .mobile-menu-btn {
-                display: none;
+            .nav-links {
+                display: none !important;
             }
             .nav-cta {
                 padding: 10px 16px;
@@ -776,6 +766,11 @@
             <span class="material-symbols-outlined">content_cut</span>
             Barbearia Mineiro
         </a>
+        <ul class="nav-links">
+            <li><a href="#services">Serviços</a></li>
+            <li><a href="#about">Sobre</a></li>
+            <li><a href="#location">Localização</a></li>
+        </ul>
         <a href="queue-join.html" class="nav-cta">Entrar na Fila</a>
     </nav>
 
