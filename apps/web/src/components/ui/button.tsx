@@ -22,9 +22,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             'bg-destructive text-destructive-foreground hover:bg-destructive/90': variant === 'destructive',
           },
           {
-            'h-10 px-4 py-2': size === 'default',
-            'h-9 rounded-md px-3': size === 'sm',
-            'h-11 rounded-md px-8': size === 'lg',
+            'min-h-12 h-12 px-6 py-3': size === 'default', // 48px minimum for touch targets
+            'min-h-10 h-10 rounded-md px-4 py-2': size === 'sm', // 40px for small buttons
+            'min-h-12 h-12 rounded-md px-8 py-3': size === 'lg', // 48px for large buttons
           },
           className
         )}

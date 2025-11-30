@@ -30,11 +30,11 @@ export function QueueCard({
   return (
     <div
       className={cn(
-        'queue-item p-4 rounded-lg border-2 transition-all cursor-pointer',
-        'hover:border-[#D4AF37] hover:bg-[rgba(212,175,55,0.05)]',
+        'queue-item p-6 rounded-md border-2 transition-all cursor-pointer',
+        'hover:border-primary hover:bg-primary/5',
         {
-          'border-[#22c55e] bg-[rgba(34,197,94,0.1)]': isServing,
-          'border-[rgba(212,175,55,0.3)] bg-[rgba(20,20,20,0.5)]': isWaiting,
+          'border-[#10B981] bg-[#10B981]/10': isServing,
+          'border-primary/30 bg-card': isWaiting,
         },
         className
       )}
@@ -42,13 +42,13 @@ export function QueueCard({
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          {/* Position Badge */}
+          {/* Position Badge - 52px × 52px for management mode */}
           <div
             className={cn(
-              'flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-base',
+              'flex-shrink-0 w-[52px] h-[52px] rounded-md flex items-center justify-center font-bold text-lg',
               {
-                'bg-[#D4AF37] text-[#0a0a0a]': isWaiting,
-                'bg-[#22c55e] text-white': isServing,
+                'bg-primary text-primary-foreground': isWaiting,
+                'bg-[#10B981] text-white': isServing,
               }
             )}
             onClick={(e) => {
@@ -65,7 +65,7 @@ export function QueueCard({
             }
           >
             {isServing ? (
-              <span className="material-symbols-outlined text-xl">check</span>
+              <span className="material-symbols-outlined text-2xl">check</span>
             ) : (
               ticket.position
             )}
@@ -82,13 +82,13 @@ export function QueueCard({
           </div>
         </div>
 
-        {/* Barber Avatar */}
+        {/* Barber Avatar - 40px × 40px for management mode */}
         {barberAvatarUrl && (
           <div className="flex-shrink-0">
             <img
               src={barberAvatarUrl}
               alt={assignedBarber?.name || 'Barber'}
-              className="w-12 h-12 rounded-full object-cover border-2 border-[rgba(212,175,55,0.3)]"
+              className="w-10 h-10 rounded-md object-cover border-2 border-primary/30"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 if (assignedBarber) {

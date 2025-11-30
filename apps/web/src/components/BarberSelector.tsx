@@ -46,6 +46,7 @@ export function BarberSelector({
                 key={barber.id}
                 barber={barber}
                 isSelected={selectedBarberId === barber.id}
+                size="kiosk"
                 onClick={() => {
                   // If clicking the same barber, unassign
                   if (selectedBarberId === barber.id) {

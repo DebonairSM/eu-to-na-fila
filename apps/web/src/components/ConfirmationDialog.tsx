@@ -33,8 +33,8 @@ export function ConfirmationDialog({
     <Modal isOpen={isOpen} onClose={onClose} title={title} className="max-w-sm">
       <div className="space-y-4">
         {icon && (
-          <div className="flex justify-center">
-            <span className="material-symbols-outlined text-4xl text-muted-foreground">
+          <div className="flex justify-center mb-4">
+            <span className="material-symbols-outlined text-3xl text-muted-foreground">
               {icon}
             </span>
           </div>

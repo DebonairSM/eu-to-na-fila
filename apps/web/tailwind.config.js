@@ -47,9 +47,48 @@ export default {
         },
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        sm: '8px',   // Small buttons, badges
+        md: '12px',  // Cards, inputs, buttons
+        lg: '16px',  // Large cards, headers
+        xl: '24px',  // Modals
+        '2xl': '28px', // Large modals
+        full: '100px', // Pill buttons
+        round: '50%',  // Circular badges
+      },
+      spacing: {
+        // 8px base unit system
+        xs: '4px',   // 0.5 * 8px
+        sm: '8px',   // 1 * 8px
+        md: '16px',  // 2 * 8px
+        lg: '24px',  // 3 * 8px
+        xl: '32px',  // 4 * 8px
+        '2xl': '48px', // 6 * 8px
+        '3xl': '64px', // 8 * 8px
+      },
+      boxShadow: {
+        'elevation-1': '0 1px 3px rgba(0, 0, 0, 0.12)',
+        'elevation-2': '0 2px 8px rgba(0, 0, 0, 0.12)',
+        'elevation-3': '0 4px 16px rgba(0, 0, 0, 0.16)',
+        'elevation-4': '0 8px 32px rgba(0, 0, 0, 0.20)',
+      },
+      transitionTimingFunction: {
+        'ease-standard': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'ease-decelerate': 'cubic-bezier(0, 0, 0.2, 1)',
+        'ease-accelerate': 'cubic-bezier(0.4, 0, 1, 1)',
+      },
+      transitionDuration: {
+        'fast': '150ms',
+        'normal': '250ms',
+        'slow': '400ms',
+      },
+      screens: {
+        xs: '0px',
+        sm: '600px',
+        md: '768px',
+        lg: '1024px',
+        xl: '1400px',
+        '2xl': '1600px',
+        '3xl': '1920px',
       },
     },
   },

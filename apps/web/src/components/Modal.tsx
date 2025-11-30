@@ -119,14 +119,14 @@ export function Modal({
       <div
         ref={modalRef}
         className={cn(
-          'relative z-10 w-full max-w-md mx-4 bg-card border border-border rounded-lg shadow-lg',
-          'max-h-[90vh] overflow-y-auto',
+          'relative z-10 w-full max-w-md mx-4 bg-card border-2 border-primary rounded-2xl shadow-elevation-4',
+          'max-h-[90vh] overflow-y-auto p-10',
           className
         )}
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-border">
+          <div className="flex items-center justify-between mb-6 pb-6 border-b border-border">
             {title && (
               <h2 id="modal-title" className="text-xl font-semibold">
                 {title}
@@ -135,17 +135,17 @@ export function Modal({
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="ml-auto rounded-sm opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
+                className="ml-auto rounded-md opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 aria-label="Close modal"
               >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined text-2xl">close</span>
               </button>
             )}
           </div>
         )}
 
         {/* Content */}
-        <div className="p-6">{children}</div>
+        <div>{children}</div>
       </div>
     </div>
   );

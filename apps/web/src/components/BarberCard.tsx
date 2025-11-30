@@ -7,6 +7,7 @@ export interface BarberCardProps {
   onClick?: () => void;
   showPresence?: boolean;
   className?: string;
+  size?: 'management' | 'kiosk'; // Size context: management = 40px, kiosk = 56px
 }
 
 export function BarberCard({
@@ -15,17 +16,21 @@ export function BarberCard({
   onClick,
   showPresence = false,
   className,
+  size = 'management',
 }: BarberCardProps) {
   const avatarUrl =
     barber.avatarUrl ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128`;
 
+  const avatarSize = size === 'kiosk' ? 'w-14 h-14' : 'w-10 h-10'; // 56px for kiosk, 40px for management
+  const avatarSizePx = size === 'kiosk' ? 56 : 40;
+
   return (
     <button
       onClick={onClick}
       className={cn(
-        'flex flex-col items-center gap-2 p-4 rounded-lg border transition-all',
-        'hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring',
+        'flex flex-col items-center gap-2 p-4 rounded-md border-2 transition-all',
+        'hover:border-primary hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
         {
           'border-primary bg-primary/10': isSelected,
           'border-border': !isSelected,
@@ -39,17 +44,17 @@ export function BarberCard({
         <img
           src={avatarUrl}
           alt={barber.name}
-          className="w-16 h-16 rounded-full object-cover"
+          className={cn(avatarSize, 'rounded-md object-cover')}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128`;
+            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=${avatarSizePx * 2}`;
           }}
         />
         {showPresence && (
           <div
             className={cn(
               'absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-background',
-              barber.isPresent ? 'bg-green-500' : 'bg-gray-400'
+              barber.isPresent ? 'bg-[#10B981]' : 'bg-gray-400'
             )}
             aria-label={barber.isPresent ? 'Present' : 'Absent'}
           />

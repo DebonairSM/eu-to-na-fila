@@ -10,38 +10,66 @@
 
 @layer base {
   :root {
-    /* Gold theme colors matching mockups */
+    /* Design System Colors - Primary */
     --gold: #D4AF37;
-    --gold-light: #E8C547;
-    --gold-dark: #B8962E;
-    --black: #0a0a0a;
-    --dark: #1a1a1a;
-    --dark-brown: #2d2416;
+    --gold-hover: #E5C047;
+    --gold-active: #C49B2E;
+    --gold-light: rgba(212, 175, 55, 0.1);
+    
+    /* Surface Colors */
     --white: #FFFFFF;
-    --gray: rgba(255, 255, 255, 0.7);
-    --gray-dark: rgba(255, 255, 255, 0.5);
+    --surface-variant: #F8F9FA;
+    --black: #0A0A0A;
+    --charcoal: #1A1A1A;
+    
+    /* Text Colors */
+    --on-surface: #1A1A1A;
+    --on-surface-variant: #6B7280;
+    --on-surface-disabled: #9CA3AF;
+    --on-primary: #FFFFFF;
+    
+    /* Status Colors */
+    --success: #10B981;
+    --error: #EF4444;
+    --warning: #F59E0B;
     
     /* Tailwind-compatible HSL values */
     --background: 0 0% 4%; /* --black */
     --foreground: 0 0% 100%; /* --white */
-    --card: 0 0% 10%; /* --dark */
+    --card: 0 0% 10%; /* --charcoal */
     --card-foreground: 0 0% 100%;
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 100%;
     --primary: 45 75% 52%; /* --gold */
     --primary-foreground: 0 0% 4%; /* --black */
-    --secondary: 0 0% 10%; /* --dark */
+    --secondary: 0 0% 10%; /* --charcoal */
     --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 10%;
     --muted-foreground: 0 0% 70%;
     --accent: 45 75% 52%; /* --gold */
     --accent-foreground: 0 0% 4%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 84% 60%; /* --error */
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 20%;
     --input: 0 0% 20%;
     --ring: 45 75% 52%; /* --gold */
-    --radius: 0.5rem;
+    
+    /* Border Radius Scale (8px base) */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-2xl: 28px;
+    --radius-full: 100px;
+    --radius-round: 50%;
+    
+    /* Animation Timing */
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+    --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
+    --duration-fast: 150ms;
+    --duration-normal: 250ms;
+    --duration-slow: 400ms;
   }
 }
 
@@ -109,8 +137,21 @@
   }
 }
 
+@keyframes serving-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 .animate-spin-slow {
   animation: spin-slow 40s linear infinite;
+}
+
+.animate-serving-pulse {
+  animation: serving-pulse 2s ease-in-out infinite;
 }
 
 /* Animation utilities */

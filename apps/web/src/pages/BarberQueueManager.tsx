@@ -205,10 +205,10 @@ export function BarberQueueManager() {
                   <div
                     key={ticket.id}
                     className={cn(
-                      'p-6 rounded-lg border-2 text-2xl',
+                      'px-9 py-7 rounded-lg border-2 text-2xl cursor-pointer transition-all',
                       {
-                        'bg-green-500/20 border-green-500': isServing,
-                        'bg-white/5 border-white/20': !isServing,
+                        'bg-[#10B981]/20 border-[#10B981]': isServing,
+                        'bg-white/5 border-primary/30': !isServing,
                       }
                     )}
                     onClick={() => {
@@ -218,17 +218,18 @@ export function BarberQueueManager() {
                     }}
                   >
                     <div className="flex items-center gap-6">
+                      {/* Position Badge - 56px × 56px circular for kiosk mode */}
                       <div
                         className={cn(
-                          'w-16 h-16 rounded-full flex items-center justify-center font-bold text-xl',
+                          'w-14 h-14 rounded-full flex items-center justify-center font-bold text-2xl',
                           {
-                            'bg-green-500': isServing,
+                            'bg-[#10B981]': isServing,
                             'bg-primary': !isServing,
                           }
                         )}
                       >
                         {isServing ? (
-                          <span className="material-symbols-outlined text-white">check</span>
+                          <span className="material-symbols-outlined text-white text-3xl">check</span>
                         ) : (
                           ticket.position
                         )}

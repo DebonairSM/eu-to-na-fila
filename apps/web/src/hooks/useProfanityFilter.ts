@@ -47,16 +47,18 @@ export function useProfanityFilter() {
     }
 
     if (trimmed.length < 2) {
-      return { isValid: false, error: 'Nome muito curto' };
+      return { isValid: false, error: 'Nome muito curto (mínimo 2 caracteres)' };
     }
 
-    if (trimmed.length > 100) {
-      return { isValid: false, error: 'Nome muito longo' };
-    }
-
+    // Combine first and last name for full validation
     const fullName = lastName?.trim()
       ? `${trimmed} ${lastName.trim()}`
       : trimmed;
+
+    // Check combined name length (1-200 characters per API spec)
+    if (fullName.length > 200) {
+      return { isValid: false, error: 'Nome muito longo (máximo 200 caracteres)' };
+    }
 
     if (containsProfanity(fullName)) {
       return { isValid: false, error: 'Por favor, use um nome apropriado' };
