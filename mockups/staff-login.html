@@ -555,7 +555,7 @@
             sessionStorage.setItem('analyticsAuth', 'true');
         });
 
-        // Check if owner is already logged in
+        // Check if owner or staff is already logged in
         const isOwnerLoggedIn = sessionStorage.getItem('staffAuth') === 'true' && 
                                sessionStorage.getItem('staffRole') === 'owner';
         const isStaffLoggedIn = sessionStorage.getItem('staffAuth') === 'true' && 
@@ -565,26 +565,19 @@
         const referrer = document.referrer;
         const fromHomepage = referrer.includes('index.html');
         
-        // If owner is logged in, always show dashboard (unless coming from homepage)
-        if (isOwnerLoggedIn) {
-            if (fromHomepage) {
-                // Coming from homepage Staff button - require fresh PIN
-                sessionStorage.removeItem('staffAuth');
-                sessionStorage.removeItem('staffRole');
-                sessionStorage.removeItem('analyticsAuth');
-            } else {
-                // Coming from other pages - show dashboard
-                loginForm.classList.add('hidden');
-                dashboardSelection.classList.add('show');
-            }
-        } else if (isStaffLoggedIn) {
-            // Staff - redirect to queue manager
-            window.location.href = 'barber-queue-manager.html';
-        } else if (fromHomepage) {
-            // Coming from homepage and not logged in - clear any stale session
+        // If coming from homepage, always require fresh PIN (clear session)
+        if (fromHomepage) {
             sessionStorage.removeItem('staffAuth');
             sessionStorage.removeItem('staffRole');
             sessionStorage.removeItem('analyticsAuth');
+            // Show PIN form (already default state)
+        } else if (isOwnerLoggedIn) {
+            // Owner logged in and NOT from homepage - show dashboard
+            loginForm.classList.add('hidden');
+            dashboardSelection.classList.add('show');
+        } else if (isStaffLoggedIn) {
+            // Staff logged in and NOT from homepage - redirect to queue manager
+            window.location.href = 'barber-queue-manager.html';
         }
         // If not logged in and not from homepage, just show PIN form (already default state)
     </script>
