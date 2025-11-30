@@ -513,12 +513,12 @@
 <body>
     <!-- Navigation -->
     <nav class="nav">
-        <a href="staff-login.html?return=true" class="nav-logo">
+        <a href="staff.html?return=true" class="nav-logo">
             <span class="material-symbols-outlined">content_cut</span>
             Barbearia Mineiro
         </a>
         <div class="nav-actions">
-            <a href="staff-login.html?return=true" class="back-btn">
+            <a href="staff.html?return=true" class="back-btn">
                 <span class="material-symbols-outlined">arrow_back</span>
                 Voltar
             </a>
@@ -623,7 +623,7 @@
                                sessionStorage.getItem('staffRole') === 'owner';
         
         if (!isOwnerLoggedIn) {
-            window.location.href = 'staff-login.html';
+            window.location.href = 'staff.html';
         }
 
         const barbersContainer = document.getElementById('barbersContainer');

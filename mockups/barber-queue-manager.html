@@ -5148,7 +5148,7 @@
                            sessionStorage.getItem('staffRole') === 'owner';
             if (isOwner) {
                 // Add parameter to indicate returning from owner page
-                window.location.href = 'staff-login.html?return=true';
+                window.location.href = 'staff.html?return=true';
             } else {
                 window.location.href = 'index.html';
             }
@@ -5198,7 +5198,7 @@
                     const isOwner = sessionStorage.getItem('staffAuth') === 'true' && 
                                    sessionStorage.getItem('staffRole') === 'owner';
                     if (isOwner) {
-                        window.location.href = 'staff-login.html?return=true';
+                        window.location.href = 'staff.html?return=true';
                     } else {
                         window.location.href = 'index.html';
                     }
