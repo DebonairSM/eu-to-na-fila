@@ -328,3 +328,67 @@
   box-shadow: 0px 4px 8px 3px rgba(212, 175, 55, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+/* Chart animations */
+@keyframes growUp {
+  from {
+    height: 0;
+  }
+}
+
+.daily-bar:hover .daily-bar-fill {
+  opacity: 0.8;
+  transform: scaleY(1.05);
+  filter: brightness(1.2);
+}
+
+.daily-bar:hover .daily-bar-value {
+  opacity: 1;
+}
+
+.hourly-bar:hover .hourly-bar-fill {
+  opacity: 0.9;
+  transform: scaleY(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+}
+
+.hourly-bar:hover .hourly-bar-value {
+  opacity: 1;
+}
+
+/* Responsive improvements */
+@media (max-width: 640px) {
+  .hero-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .hero-stat {
+    padding: 16px 12px;
+  }
+  
+  .hero-stat-value {
+    font-size: 2rem !important;
+  }
+  
+  .chart-card {
+    padding: 16px !important;
+  }
+  
+  .daily-chart {
+    height: 200px;
+    gap: 8px;
+  }
+  
+  .hourly-chart {
+    grid-template-columns: repeat(12, 1fr);
+    gap: 4px;
+  }
+  
+  @media (min-width: 640px) {
+    .hourly-chart {
+      grid-template-columns: repeat(24, 1fr);
+    }
+  }
+}
+

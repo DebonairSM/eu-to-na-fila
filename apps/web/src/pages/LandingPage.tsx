@@ -13,19 +13,19 @@ export function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.05)_0%,transparent_50%)] animate-spin-slow" />
 
-        <div className="hero-content relative z-10 text-center px-5 max-w-[900px] mx-auto">
-          <div className="hero-badge inline-block px-5 py-2 mb-8 border border-[rgba(212,175,55,0.4)] rounded-full text-[#D4AF37] text-xs font-medium uppercase tracking-widest fade-in-down">
+        <div className="hero-content relative z-10 text-center px-4 sm:px-5 max-w-[900px] mx-auto">
+          <div className="hero-badge inline-block px-4 sm:px-5 py-2 mb-6 sm:mb-8 border border-[rgba(212,175,55,0.4)] rounded-full text-[#D4AF37] text-xs font-medium uppercase tracking-widest fade-in-down">
             Orlando, Florida
           </div>
-          <h1 className="hero-title font-['Playfair_Display',serif] text-[clamp(3rem,10vw,6rem)] font-bold leading-[1.1] mb-6 fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <h1 className="hero-title font-['Playfair_Display',serif] text-[clamp(2.5rem,8vw,6rem)] font-bold leading-[1.1] mb-4 sm:mb-6 fade-in-up" style={{ animationDelay: '0.2s' }}>
             <span className="text-[#D4AF37]">Barbearia</span>
             <br />
             Mineiro
           </h1>
-          <p className="hero-subtitle text-xl text-[rgba(255,255,255,0.7)] mb-12 max-w-[600px] mx-auto leading-[1.7] fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <p className="hero-subtitle text-lg sm:text-xl text-[rgba(255,255,255,0.7)] mb-8 sm:mb-12 max-w-[600px] mx-auto leading-[1.7] fade-in-up" style={{ animationDelay: '0.4s' }}>
             Tradição e qualidade em cada corte. Entre na fila online e seja atendido sem espera.
           </p>
-          <div className="hero-actions flex gap-4 justify-center flex-wrap fade-in-up" style={{ animationDelay: '0.6s' }}>
+          <div className="hero-actions flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center fade-in-up" style={{ animationDelay: '0.6s' }}>
             <Link to="/join">
               <Button size="lg" className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#E8C547] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all">
                 <span className="material-symbols-outlined">person_add</span>
@@ -49,7 +49,7 @@ export function LandingPage() {
       </section>
 
       {/* Services Section */}
-      <section id="services" className="section py-[120px] px-10 bg-[#1a1a1a]">
+      <section id="services" className="section py-16 sm:py-24 lg:py-[120px] px-4 sm:px-6 lg:px-10 bg-[#1a1a1a]">
         <div className="container mx-auto px-4">
           <div className="section-header text-center mb-16 max-w-full">
             <p className="section-label text-[#D4AF37] text-xs font-semibold uppercase tracking-[3px] mb-4">
@@ -96,7 +96,7 @@ export function LandingPage() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="section py-[120px] px-10">
+      <section id="about" className="section py-16 sm:py-24 lg:py-[120px] px-4 sm:px-6 lg:px-10">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center max-w-5xl mx-auto">
             <div>
@@ -141,7 +141,7 @@ export function LandingPage() {
       </section>
 
       {/* Location Section */}
-      <section id="location" className="section py-[120px] px-10 bg-[#1a1a1a]">
+      <section id="location" className="section py-16 sm:py-24 lg:py-[120px] px-4 sm:px-6 lg:px-10 bg-[#1a1a1a]">
         <div className="container mx-auto px-4">
           <div className="section-header text-center mb-16 max-w-full">
             <p className="section-label text-[#D4AF37] text-xs font-semibold uppercase tracking-[3px] mb-4">
@@ -227,7 +227,7 @@ export function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="section py-[120px] px-10 bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
+      <section className="section py-16 sm:py-24 lg:py-[120px] px-4 sm:px-6 lg:px-10 bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
         <div className="container mx-auto px-4 text-center max-w-2xl">
           <h2 className="font-['Playfair_Display',serif] text-[clamp(2rem,5vw,3rem)] font-semibold mb-5">
             Pronto para um novo visual?

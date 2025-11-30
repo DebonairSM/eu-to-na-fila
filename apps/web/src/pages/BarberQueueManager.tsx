@@ -306,10 +306,10 @@ export function BarberQueueManager() {
 
   // Management Mode View
   return (
-    <div className="min-h-screen bg-black p-4 pb-[200px]">
+    <div className="min-h-screen bg-black p-3 sm:p-4 pb-[200px]">
       <div className="container max-w-[600px] mx-auto">
         {/* Header */}
-        <div className="header bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-6 mb-4 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+        <div className="header bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-4 sm:p-6 mb-4 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
           <div className="flex items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-4">
               <button
@@ -320,9 +320,9 @@ export function BarberQueueManager() {
                 <span className="material-symbols-outlined text-xl">arrow_back</span>
               </button>
               <div className="header-title">
-                <h1 className="text-2xl font-semibold text-white flex items-center gap-2">
-                  <span className="material-symbols-outlined text-2xl text-[#D4AF37]">content_cut</span>
-                  {config.name}
+                <h1 className="text-lg sm:text-2xl font-semibold text-white flex items-center gap-2">
+                  <span className="material-symbols-outlined text-xl sm:text-2xl text-[#D4AF37]">content_cut</span>
+                  <span className="hidden sm:inline">{config.name}</span>
                 </h1>
               </div>
             </div>
@@ -334,20 +334,20 @@ export function BarberQueueManager() {
               <span className="material-symbols-outlined text-xl">tv</span>
             </button>
           </div>
-          <div className="stats flex gap-6 pt-4 border-t border-[rgba(0,0,0,0.06)]">
+          <div className="stats flex gap-4 sm:gap-6 pt-4 border-t border-[rgba(0,0,0,0.06)]">
             <div className="stat-item flex-1 text-center">
-              <div className="stat-value text-3xl font-semibold text-[#D4AF37]">{waitingCount}</div>
+              <div className="stat-value text-2xl sm:text-3xl font-semibold text-[#D4AF37]">{waitingCount}</div>
               <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">Aguardando</div>
             </div>
             <div className="stat-item flex-1 text-center">
-              <div className="stat-value text-3xl font-semibold text-[#22c55e]">{servingCount}</div>
+              <div className="stat-value text-2xl sm:text-3xl font-semibold text-[#22c55e]">{servingCount}</div>
               <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">Atendendo</div>
             </div>
           </div>
         </div>
 
         {/* Queue Section */}
-        <div className="queue-section bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-6 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+        <div className="queue-section bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-4 sm:p-6 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
           {/* Add Customer Button */}
           <div className="queue-header mb-6">
             <button
@@ -360,7 +360,7 @@ export function BarberQueueManager() {
           </div>
 
           {/* Queue List */}
-          <div className="section-header text-2xl font-semibold text-white mb-6">Fila</div>
+          <div className="section-header text-xl sm:text-2xl font-semibold text-white mb-4 sm:mb-6">Fila</div>
           {queueData ? (
             <div className="space-y-3">
               {sortedTickets.length === 0 ? (
@@ -398,9 +398,9 @@ export function BarberQueueManager() {
         </div>
 
         {/* Barber Presence Section */}
-        <div className="mt-6 bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-6 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
-          <h2 className="section-header text-2xl font-semibold text-white mb-4">Barbeiros Presentes</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="mt-4 sm:mt-6 bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-4 sm:p-6 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+          <h2 className="section-header text-xl sm:text-2xl font-semibold text-white mb-4">Barbeiros Presentes</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
             {barbers.map((barber) => (
               <BarberCard
                 key={barber.id}

@@ -33,15 +33,15 @@ export function Navigation() {
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="container mx-auto px-10">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-10">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link
             to="/"
-            className="nav-logo font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37] flex items-center gap-3 min-h-[44px] min-w-[44px] px-2 py-1 rounded transition-all hover:text-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+            className="nav-logo font-['Playfair_Display',serif] text-xl sm:text-2xl font-semibold text-[#D4AF37] flex items-center gap-2 sm:gap-3 min-h-[44px] min-w-[44px] px-2 py-1 rounded transition-all hover:text-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
             aria-label={`${config.name} - Home`}
           >
-            <span className="material-symbols-outlined text-[28px]">content_cut</span>
+            <span className="material-symbols-outlined text-2xl sm:text-[28px]">content_cut</span>
             <span className="hidden sm:inline">{config.name}</span>
           </Link>
 
@@ -130,7 +130,7 @@ export function Navigation() {
 
       {/* Mobile Menu */}
       <div
-        className={`nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[rgba(10,10,10,0.98)] backdrop-blur-[20px] z-[99] p-10 pt-20 flex flex-col transform transition-transform duration-300 ${
+        className={`nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[rgba(10,10,10,0.98)] backdrop-blur-[20px] z-[99] p-6 sm:p-10 pt-20 flex flex-col transform transition-transform duration-300 ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         } md:hidden`}
         role="dialog"

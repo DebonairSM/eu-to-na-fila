@@ -90,19 +90,19 @@ export function JoinPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      <div className="container relative z-10 mx-auto px-5 pt-[100px] pb-12 max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12 max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="space-y-6">
           {/* Header */}
-          <div className="header text-center mb-8">
-            <div className="header-icon w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
-              <span className="material-symbols-outlined text-4xl text-[#0a0a0a]">
+          <div className="header text-center mb-6 sm:mb-8">
+            <div className="header-icon w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
+              <span className="material-symbols-outlined text-3xl sm:text-4xl text-[#0a0a0a]">
                 person_add
               </span>
             </div>
-            <h1 className="font-['Playfair_Display',serif] text-[1.75rem] font-semibold text-white mb-3">
+            <h1 className="font-['Playfair_Display',serif] text-xl sm:text-[1.75rem] font-semibold text-white mb-3">
               Entrar na Fila
             </h1>
-            <p className="subtitle text-[rgba(255,255,255,0.7)]">Adicione seu nome e aguarde ser chamado</p>
+            <p className="subtitle text-sm sm:text-base text-[rgba(255,255,255,0.7)]">Adicione seu nome e aguarde ser chamado</p>
           </div>
 
           {/* Wait Time Display */}

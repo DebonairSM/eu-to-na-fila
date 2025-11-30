@@ -4,10 +4,8 @@ import { api } from '@/lib/api';
 import { useTicketStatus } from '@/hooks/useTicketStatus';
 import { useQueue } from '@/hooks/useQueue';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
-import { WaitTimeDisplay } from '@/components/WaitTimeDisplay';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
-import { Button } from '@/components/ui/button';
 import { Navigation } from '@/components/Navigation';
 import { cn } from '@/lib/utils';
 
@@ -62,7 +60,9 @@ export function StatusPage() {
           <div className="text-center space-y-4">
             <p className="text-muted-foreground">Nenhum ticket ID fornecido</p>
             <Link to="/">
-              <Button variant="outline">Voltar ao Início</Button>
+              <button className="px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all">
+                Voltar ao Início
+              </button>
             </Link>
           </div>
         </div>
@@ -92,9 +92,9 @@ export function StatusPage() {
           />
           <div className="mt-4">
             <Link to="/">
-              <Button variant="outline" className="w-full">
+              <button className="w-full px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all">
                 Voltar ao Início
-              </Button>
+              </button>
             </Link>
           </div>
         </div>
@@ -106,57 +106,109 @@ export function StatusPage() {
   const isInProgress = ticket.status === 'in_progress';
   const isCompleted = ticket.status === 'completed';
 
+  // Calculate position info
+  const positionInfo = (() => {
+    if (!isWaiting || !queueData) return null;
+    const waitingTickets = queueData.tickets.filter((t) => t.status === 'waiting');
+    const aheadCount = waitingTickets.filter((t) => t.position < ticket.position).length;
+    return {
+      position: ticket.position,
+      ahead: aheadCount,
+      total: waitingTickets.length,
+    };
+  })();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      <div className="container relative z-10 mx-auto px-5 pt-[100px] pb-12 max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12 max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="space-y-6">
           {/* Header */}
           <div className="header text-center mb-8">
             <h1 className="customer-name font-['Playfair_Display',serif] text-[1.75rem] font-semibold text-white mb-3">
               {ticket.customerName}
             </h1>
+            <div
+              className={cn(
+                'status-badge inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium uppercase mb-4',
+                {
+                  'bg-[rgba(212,175,55,0.2)] border-2 border-[#D4AF37] text-[#D4AF37]': isWaiting,
+                  'bg-[rgba(34,197,94,0.2)] border-2 border-[#22c55e] text-[#22c55e]': isInProgress || isCompleted,
+                }
+              )}
+            >
+              <span className="material-symbols-outlined text-lg">
+                {isWaiting
+                  ? 'schedule'
+                  : isInProgress
+                  ? 'content_cut'
+                  : 'check_circle'}
+              </span>
+              <span>
+                {isWaiting
+                  ? 'Aguardando'
+                  : isInProgress
+                  ? 'Em Atendimento'
+                  : 'Concluído'}
+              </span>
+            </div>
           </div>
 
-          {/* Wait Time Display - Large and Prominent */}
-          {isWaiting && <WaitTimeDisplay minutes={waitTime} size="lg" />}
-
-          {/* Status Badge */}
-          <div
-            className={cn(
-              'status-badge inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium uppercase',
-              {
-                'bg-[rgba(212,175,55,0.2)] border-2 border-[#D4AF37] text-[#D4AF37]': isWaiting,
-                'bg-[rgba(34,197,94,0.2)] border-2 border-[#22c55e] text-[#22c55e]': isInProgress || isCompleted,
-              }
-            )}
-          >
-            <span className="material-symbols-outlined text-lg">
-              {isWaiting
-                ? 'schedule'
-                : isInProgress
-                ? 'content_cut'
-                : 'check_circle'}
-            </span>
-            <span>
-              {isWaiting
-                ? 'Aguardando'
-                : isInProgress
-                ? 'Em Atendimento'
-                : 'Concluído'}
-            </span>
-          </div>
-          
-          {isInProgress && (
-            <p className="text-center text-lg text-[rgba(255,255,255,0.7)]">
-              Você está sendo atendido!
-            </p>
+          {/* Waiting State */}
+          {isWaiting && (
+            <div className="main-card bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border-2 border-[rgba(212,175,55,0.3)] rounded-3xl p-8 sm:p-12 text-center mb-6">
+              <div className="wait-label flex items-center justify-center gap-2 mb-4 text-[rgba(255,255,255,0.7)] text-xs sm:text-sm uppercase tracking-wider">
+                <span className="material-symbols-outlined text-[#D4AF37]">schedule</span>
+                Tempo estimado
+              </div>
+              <div className="wait-value font-['Playfair_Display',serif] text-4xl sm:text-6xl font-semibold text-white mb-2 drop-shadow-[0_4px_20px_rgba(212,175,55,0.3)]">
+                {waitTime !== null ? waitTime : '--'}
+              </div>
+              <div className="wait-unit text-lg sm:text-xl text-[rgba(255,255,255,0.7)] mb-6">minutos</div>
+              
+              {positionInfo && (
+                <div className="mt-6 pt-6 border-t border-[rgba(212,175,55,0.2)]">
+                  <p className="text-sm text-[rgba(255,255,255,0.7)] mb-2">
+                    Posição na fila
+                  </p>
+                  <p className="text-2xl font-semibold text-[#D4AF37]">
+                    {positionInfo.position} de {positionInfo.total}
+                  </p>
+                  {positionInfo.ahead > 0 && (
+                    <p className="text-xs text-[rgba(255,255,255,0.5)] mt-2">
+                      {positionInfo.ahead} {positionInfo.ahead === 1 ? 'pessoa à frente' : 'pessoas à frente'}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           )}
+
+          {/* In Progress State */}
+          {isInProgress && (
+            <div className="progress-card bg-gradient-to-br from-[rgba(34,197,94,0.2)] to-[rgba(34,197,94,0.05)] border-2 border-[rgba(34,197,94,0.3)] rounded-3xl p-8 sm:p-12 text-center mb-6">
+              <span className="material-symbols-outlined text-5xl sm:text-6xl text-[#22c55e] mb-4 block">content_cut</span>
+              <div className="progress-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-white mb-2">
+                Você está sendo atendido!
+              </div>
+              <div className="progress-message text-[rgba(255,255,255,0.7)]">
+                Aproveite seu corte
+              </div>
+            </div>
+          )}
+
+          {/* Completed State */}
           {isCompleted && (
-            <p className="text-center text-lg text-[rgba(255,255,255,0.7)]">
-              Atendimento concluído!
-            </p>
+            <div className="completed-card bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-3xl p-8 sm:p-12 text-center mb-6">
+              <span className="material-symbols-outlined text-5xl sm:text-6xl text-white mb-4 block">check_circle</span>
+              <div className="progress-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-white mb-2">
+                Atendimento concluído!
+              </div>
+              <div className="progress-message text-white/90">
+                Obrigado por usar nosso sistema
+              </div>
+            </div>
           )}
 
           {/* Actions */}
@@ -198,10 +250,9 @@ export function StatusPage() {
           </div>
 
           {/* Auto-update notice */}
-          <div className="p-3 rounded-lg bg-[#1a1a1a]/50 text-center border border-[rgba(255,255,255,0.1)]">
-            <p className="text-xs text-[rgba(255,255,255,0.5)]">
-              Atualiza automaticamente a cada 3 segundos
-            </p>
+          <div className="refresh-indicator flex items-center justify-center gap-2 mt-6 text-xs text-[rgba(255,255,255,0.5)]">
+            <span className="refresh-dot w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-pulse" />
+            Atualizando automaticamente
           </div>
         </div>
       </div>
