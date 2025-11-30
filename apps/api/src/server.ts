@@ -5,7 +5,7 @@ import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 import { env } from './env.js';
 import { db } from './db/index.js';
 import { queueRoutes } from './routes/queue.js';
@@ -75,17 +75,33 @@ fastify.register(fastifyRateLimit, {
 const publicPath = join(__dirname, '..', 'public');
 const mineiroPath = join(publicPath, 'mineiro');
 
+// Log static file directory status
+if (!existsSync(mineiroPath)) {
+  fastify.log.warn(`Static files directory not found: ${mineiroPath}. Static assets will not be served.`);
+} else {
+  try {
+    const files = readdirSync(mineiroPath, { recursive: true, withFileTypes: true });
+    const fileCount = files.filter(f => f.isFile()).length;
+    fastify.log.info(`Static files directory found: ${mineiroPath} (${fileCount} files)`);
+    // Log assets directory if it exists
+    const assetsPath = join(mineiroPath, 'assets');
+    if (existsSync(assetsPath)) {
+      const assetFiles = readdirSync(assetsPath);
+      fastify.log.info(`Assets directory found with ${assetFiles.length} files: ${assetFiles.slice(0, 5).join(', ')}${assetFiles.length > 5 ? '...' : ''}`);
+    }
+  } catch (error) {
+    fastify.log.warn({ err: error }, 'Error reading static files directory');
+  }
+}
+
 // Register static file serving for /mineiro/ assets
 // This must be registered BEFORE routes to ensure assets are served first
 fastify.register(fastifyStatic, {
   root: mineiroPath,
   prefix: '/mineiro/',
   decorateReply: false, // Don't add sendFile to reply
-  // Ensure proper MIME types are set
-  setHeaders: (res, pathName) => {
-    // Let fastify-static handle MIME types automatically
-    // This ensures CSS files get text/css, JS files get application/javascript, etc.
-  },
+  // Don't throw errors for missing files - let 404 handler deal with it
+  wildcard: false,
 });
 
 // Health check with database and WebSocket status
