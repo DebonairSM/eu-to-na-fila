@@ -102,6 +102,58 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
+   * Update a barber's details.
+   * 
+   * @route PATCH /api/barbers/:id
+   * @param id - Barber ID
+   * @body name - Optional barber name
+   * @body avatarUrl - Optional avatar URL
+   * @returns Updated barber
+   * @throws {404} If barber not found
+   */
+  fastify.patch('/barbers/:id', async (request, reply) => {
+    const paramsSchema = z.object({
+      id: z.coerce.number().int().positive(),
+    });
+    const bodySchema = z.object({
+      name: z.string().min(1).max(100).optional(),
+      avatarUrl: z.string().url().optional().nullable(),
+    });
+
+    const { id } = validateRequest(paramsSchema, request.params);
+    const body = validateRequest(bodySchema, request.body);
+
+    // Get barber
+    const barber = await db.query.barbers.findFirst({
+      where: eq(schema.barbers.id, id),
+    });
+
+    if (!barber) {
+      throw new NotFoundError(`Barber with ID ${id} not found`);
+    }
+
+    // Build update object
+    const updateData: { name?: string; avatarUrl?: string | null; updatedAt: Date } = {
+      updatedAt: new Date(),
+    };
+    if (body.name !== undefined) {
+      updateData.name = body.name;
+    }
+    if (body.avatarUrl !== undefined) {
+      updateData.avatarUrl = body.avatarUrl;
+    }
+
+    // Update barber
+    const [updatedBarber] = await db
+      .update(schema.barbers)
+      .set(updateData)
+      .where(eq(schema.barbers.id, id))
+      .returning();
+
+    return updatedBarber;
+  });
+
+  /**
    * Create a new barber for a shop.
    * 
    * @route POST /api/shops/:slug/barbers
