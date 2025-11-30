@@ -551,20 +551,27 @@
         const isStaffLoggedIn = sessionStorage.getItem('staffAuth') === 'true' && 
                                sessionStorage.getItem('staffRole') === 'staff';
         
-        // Check referrer to see if coming from homepage
+        // Check referrer to see if coming from homepage (Staff button click)
         const referrer = document.referrer;
         const fromHomepage = referrer.includes('index.html');
         
-        // If owner is logged in and NOT coming from homepage, show dashboard
-        // If coming from homepage, always require PIN (fresh login)
-        if (isOwnerLoggedIn && !fromHomepage) {
-            loginForm.classList.add('hidden');
-            dashboardSelection.classList.add('show');
+        // If owner is logged in, always show dashboard (unless coming from homepage)
+        if (isOwnerLoggedIn) {
+            if (fromHomepage) {
+                // Coming from homepage Staff button - require fresh PIN
+                sessionStorage.removeItem('staffAuth');
+                sessionStorage.removeItem('staffRole');
+                sessionStorage.removeItem('analyticsAuth');
+            } else {
+                // Coming from other pages - show dashboard
+                loginForm.classList.add('hidden');
+                dashboardSelection.classList.add('show');
+            }
         } else if (isStaffLoggedIn) {
             // Staff - redirect to queue manager
             window.location.href = 'barber-queue-manager.html';
         } else if (fromHomepage) {
-            // Coming from homepage - clear session and require PIN
+            // Coming from homepage and not logged in - clear any stale session
             sessionStorage.removeItem('staffAuth');
             sessionStorage.removeItem('staffRole');
             sessionStorage.removeItem('analyticsAuth');
