@@ -43,13 +43,13 @@ fastify.register(fastifyHelmet, {
 const allowedOrigins = [
   'http://localhost:4040',
   'http://localhost:3000',
-  'https://eutonafila.onrender.com',
+  'https://eu-to-na-fila.onrender.com', // Render deployment URL
   env.CORS_ORIGIN
 ].filter(Boolean);
 
 fastify.register(fastifyCors, {
   origin: (origin, cb) => {
-    // Allow requests with no origin (mobile apps, curl, etc.)
+    // Allow requests with no origin (same-origin requests, mobile apps, curl, etc.)
     if (!origin) return cb(null, true);
     
     if (allowedOrigins.includes(origin)) {
@@ -58,6 +58,11 @@ fastify.register(fastifyCors, {
     
     // In development, allow all origins
     if (env.NODE_ENV === 'development') {
+      return cb(null, true);
+    }
+    
+    // For same-site requests (SPA loading its own assets), allow if origin matches our domain
+    if (origin.includes('eu-to-na-fila.onrender.com') || origin.includes('eutonafila')) {
       return cb(null, true);
     }
     
