@@ -147,6 +147,7 @@
             z-index: 1;
             padding: 0 20px;
             max-width: 900px;
+            margin: 0 auto;
         }
 
         .hero-badge {
@@ -268,6 +269,7 @@
         .section-header {
             text-align: center;
             margin-bottom: 64px;
+            max-width: 100%;
         }
 
         .section-label {
@@ -313,9 +315,9 @@
         }
 
         .service-icon {
-            font-size: 48px;
+            font-size: 40px;
             color: var(--gold);
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .service-name {
@@ -383,7 +385,7 @@
 
         .about-feature .material-symbols-outlined {
             color: var(--gold);
-            font-size: 24px;
+            font-size: 20px;
         }
 
         .about-feature span {
@@ -406,7 +408,7 @@
         }
 
         .about-image-placeholder .material-symbols-outlined {
-            font-size: 120px;
+            font-size: 80px;
             color: rgba(212, 175, 55, 0.3);
         }
 
@@ -437,7 +439,7 @@
 
         .location-item .material-symbols-outlined {
             color: var(--gold);
-            font-size: 28px;
+            font-size: 22px;
             flex-shrink: 0;
         }
 
@@ -589,7 +591,7 @@
                 font-size: 1.2rem;
             }
             .nav-links {
-                display: none;
+                display: none !important;
             }
             .mobile-menu-btn {
                 display: block;
@@ -622,6 +624,15 @@
             }
             .section {
                 padding: 60px 16px;
+            }
+            .section-header {
+                margin: 0 auto;
+                max-width: 100%;
+            }
+            .services-grid,
+            .about-content,
+            .location-content {
+                margin: 0 auto;
             }
             .section-title {
                 font-size: clamp(1.5rem, 6vw, 2.5rem);
@@ -693,7 +704,7 @@
                 padding: 24px 20px;
             }
             .service-icon {
-                font-size: 40px;
+                font-size: 36px;
             }
             .service-name {
                 font-size: 1.25rem;
@@ -716,7 +727,10 @@
                 gap: 8px;
             }
             .location-item .material-symbols-outlined {
-                font-size: 24px;
+                font-size: 20px;
+            }
+            .about-image-placeholder .material-symbols-outlined {
+                font-size: 60px;
             }
             .location-map iframe {
                 min-height: 250px;
