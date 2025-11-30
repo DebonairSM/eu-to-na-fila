@@ -80,9 +80,8 @@ if (!existsSync(mineiroPath)) {
   fastify.log.warn(`Static files directory not found: ${mineiroPath}. Static assets will not be served.`);
 } else {
   try {
-    const files = readdirSync(mineiroPath, { recursive: true, withFileTypes: true });
-    const fileCount = files.filter(f => f.isFile()).length;
-    fastify.log.info(`Static files directory found: ${mineiroPath} (${fileCount} files)`);
+    const files = readdirSync(mineiroPath);
+    fastify.log.info(`Static files directory found: ${mineiroPath} (${files.length} items)`);
     // Log assets directory if it exists
     const assetsPath = join(mineiroPath, 'assets');
     if (existsSync(assetsPath)) {
