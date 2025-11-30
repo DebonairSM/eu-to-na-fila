@@ -14,6 +14,7 @@ import { BarberCard } from '@/components/BarberCard';
 import { QueueCard } from '@/components/QueueCard';
 import { QRCode } from '@/components/QRCode';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Button } from '@/components/ui/button';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { cn } from '@/lib/utils';
@@ -25,7 +26,7 @@ export function BarberQueueManager() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isOwner } = useAuthContext();
-  const { data: queueData, refetch: refetchQueue } = useQueue(5000); // Poll every 5s
+  const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(5000); // Poll every 5s
   const { barbers, togglePresence, refetch: refetchBarbers } = useBarbers();
   const {
     isKioskMode,
@@ -83,8 +84,13 @@ export function BarberQueueManager() {
       checkInModal.close();
       await refetchQueue();
     } catch (error) {
-      console.error('Error adding customer:', error);
-      alert('Erro ao adicionar cliente. Tente novamente.');
+      if (error instanceof Error) {
+        alert(error.message);
+      } else if (error && typeof error === 'object' && 'error' in error) {
+        alert((error as { error: string }).error);
+      } else {
+        alert('Erro ao adicionar cliente. Tente novamente.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -111,8 +117,13 @@ export function BarberQueueManager() {
       barberSelectorModal.close();
       setSelectedCustomerId(null);
     } catch (error) {
-      console.error('Error assigning barber:', error);
-      alert('Erro ao atribuir barbeiro. Tente novamente.');
+      if (error instanceof Error) {
+        alert(error.message);
+      } else if (error && typeof error === 'object' && 'error' in error) {
+        alert((error as { error: string }).error);
+      } else {
+        alert('Erro ao atribuir barbeiro. Tente novamente.');
+      }
     }
   };
 
@@ -125,8 +136,13 @@ export function BarberQueueManager() {
       removeConfirmModal.close();
       setCustomerToRemove(null);
     } catch (error) {
-      console.error('Error removing customer:', error);
-      alert('Erro ao remover cliente. Tente novamente.');
+      if (error instanceof Error) {
+        alert(error.message);
+      } else if (error && typeof error === 'object' && 'error' in error) {
+        alert((error as { error: string }).error);
+      } else {
+        alert('Erro ao remover cliente. Tente novamente.');
+      }
     }
   };
 
@@ -141,8 +157,13 @@ export function BarberQueueManager() {
       completeConfirmModal.close();
       setCustomerToComplete(null);
     } catch (error) {
-      console.error('Error completing service:', error);
-      alert('Erro ao finalizar atendimento. Tente novamente.');
+      if (error instanceof Error) {
+        alert(error.message);
+      } else if (error && typeof error === 'object' && 'error' in error) {
+        alert((error as { error: string }).error);
+      } else {
+        alert('Erro ao finalizar atendimento. Tente novamente.');
+      }
     }
   };
 
@@ -236,7 +257,13 @@ export function BarberQueueManager() {
                         await refetchBarbers();
                         await refetchQueue();
                       } catch (error) {
-                        console.error('Error toggling barber presence:', error);
+                        if (error instanceof Error) {
+                          alert(error.message);
+                        } else if (error && typeof error === 'object' && 'error' in error) {
+                          alert((error as { error: string }).error);
+                        } else {
+                          alert('Erro ao alterar presença do barbeiro. Tente novamente.');
+                        }
                       }
                     }}
                     className={cn(
@@ -361,7 +388,11 @@ export function BarberQueueManager() {
 
           {/* Queue List */}
           <div className="section-header text-xl sm:text-2xl font-semibold text-white mb-4 sm:mb-6">Fila</div>
-          {queueData ? (
+          {queueLoading ? (
+            <LoadingSpinner size="lg" text="Carregando fila..." />
+          ) : queueError ? (
+            <ErrorDisplay error={queueError} onRetry={refetchQueue} />
+          ) : (
             <div className="space-y-3">
               {sortedTickets.length === 0 ? (
                 <div className="text-center py-12 text-[rgba(255,255,255,0.7)]">
@@ -392,8 +423,6 @@ export function BarberQueueManager() {
                 })
               )}
             </div>
-          ) : (
-            <LoadingSpinner size="lg" />
           )}
         </div>
 
@@ -412,7 +441,13 @@ export function BarberQueueManager() {
                     await refetchBarbers();
                     await refetchQueue();
                   } catch (error) {
-                    console.error('Error toggling barber presence:', error);
+                    if (error instanceof Error) {
+                      alert(error.message);
+                    } else if (error && typeof error === 'object' && 'error' in error) {
+                      alert((error as { error: string }).error);
+                    } else {
+                      alert('Erro ao alterar presença do barbeiro. Tente novamente.');
+                    }
                   }
                 }}
               />

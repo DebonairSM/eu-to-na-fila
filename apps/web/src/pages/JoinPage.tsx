@@ -6,6 +6,7 @@ import { useQueue } from '@/hooks/useQueue';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { WaitTimeDisplay } from '@/components/WaitTimeDisplay';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
 
 const AVG_SERVICE_TIME = 20; // minutes
@@ -73,11 +74,11 @@ export function JoinPage() {
       });
 
       navigate(`/status/${ticket.id}`);
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof Error) {
         setSubmitError(error.message);
-      } else if (error?.error) {
-        setSubmitError(error.error);
+      } else if (error && typeof error === 'object' && 'error' in error) {
+        setSubmitError((error as { error: string }).error);
       } else {
         setSubmitError('Erro ao entrar na fila. Tente novamente.');
       }
@@ -112,9 +113,10 @@ export function JoinPage() {
             </div>
           ) : queueError ? (
             <div className="py-4">
-              <p className="text-sm text-muted-foreground text-center">
-                Não foi possível calcular o tempo de espera
-              </p>
+              <ErrorDisplay 
+                error={queueError} 
+                onRetry={() => window.location.reload()} 
+              />
             </div>
           ) : (
             <WaitTimeDisplay minutes={waitTime} />

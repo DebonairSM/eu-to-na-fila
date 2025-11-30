@@ -52,11 +52,11 @@ export function LoginPage() {
       } else {
         setError('Credenciais inválidas. Tente novamente.');
       }
-    } catch (err: any) {
+    } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
-      } else if (err?.error) {
-        setError(err.error);
+      } else if (err && typeof err === 'object' && 'error' in err) {
+        setError((err as { error: string }).error);
       } else {
         setError('Erro ao fazer login. Tente novamente.');
       }

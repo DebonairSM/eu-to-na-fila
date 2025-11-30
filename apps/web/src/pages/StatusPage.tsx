@@ -44,8 +44,13 @@ export function StatusPage() {
       await api.cancelTicket(ticketId);
       navigate('/');
     } catch (error) {
-      console.error('Error leaving queue:', error);
-      alert('Erro ao sair da fila. Tente novamente.');
+      if (error instanceof Error) {
+        alert(error.message);
+      } else if (error && typeof error === 'object' && 'error' in error) {
+        alert((error as { error: string }).error);
+      } else {
+        alert('Erro ao sair da fila. Tente novamente.');
+      }
     } finally {
       setIsLeaving(false);
       setShowLeaveConfirm(false);

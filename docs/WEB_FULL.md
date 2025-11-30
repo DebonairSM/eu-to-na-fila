@@ -2,98 +2,195 @@
 
 Complete frontend documentation for EuToNaFila queue management system.
 
-> **Note:** The HTML mockups in the `mockups/` directory are deprecated. The production application uses a React app. See the React app routes below for the current implementation.
+> **Note:** The HTML mockups in the `mockups/` directory are deprecated. The production application uses a React app built with Vite and TypeScript.
 
 ## Technology Stack
 
 | Component | Technology |
 |-----------|------------|
-| Markup | HTML5 |
-| Styling | CSS3 (no preprocessor) |
-| Scripts | Vanilla JavaScript |
+| Framework | React 18 |
+| Language | TypeScript |
+| Build Tool | Vite |
+| Styling | Tailwind CSS |
+| Routing | React Router v6 |
 | Icons | Material Symbols |
 | Fonts | Google Fonts (Roboto, Inter, Playfair Display) |
 | QR Codes | QR Server API |
+| State Management | React Hooks + Context API |
 
-No build step required. Files are served statically.
+Build step required: `pnpm build` (production) or `pnpm dev` (development).
 
 ---
 
 ## Project Structure
 
 ```
-mockups/
-├── index.html              # Landing page / navigation hub
-├── queue-join.html         # Customer registration form
-├── customer-status.html    # Customer ticket status
-├── login-modal.html        # Staff authentication
-├── owner-dashboard.html    # Owner navigation
-├── barber-queue-manager.html # Queue management + kiosk mode
-└── favicon.svg             # App icon
+apps/web/
+├── src/
+│   ├── pages/              # Page components
+│   │   ├── LandingPage.tsx
+│   │   ├── JoinPage.tsx
+│   │   ├── StatusPage.tsx
+│   │   ├── LoginPage.tsx
+│   │   ├── OwnerDashboard.tsx
+│   │   ├── StaffPage.tsx
+│   │   ├── BarberQueueManager.tsx
+│   │   ├── AnalyticsPage.tsx
+│   │   └── BarberManagementPage.tsx
+│   ├── components/         # Reusable components
+│   │   ├── Navigation.tsx
+│   │   ├── QueueCard.tsx
+│   │   ├── BarberCard.tsx
+│   │   ├── BarberSelector.tsx
+│   │   ├── Modal.tsx
+│   │   ├── ConfirmationDialog.tsx
+│   │   ├── QRCode.tsx
+│   │   ├── WaitTimeDisplay.tsx
+│   │   ├── LoadingSpinner.tsx
+│   │   ├── ErrorDisplay.tsx
+│   │   ├── DailyChart.tsx
+│   │   ├── HourlyChart.tsx
+│   │   └── ui/             # shadcn/ui components
+│   ├── hooks/              # Custom React hooks
+│   │   ├── useQueue.ts
+│   │   ├── useBarbers.ts
+│   │   ├── useTicketStatus.ts
+│   │   ├── useKiosk.ts
+│   │   ├── useModal.ts
+│   │   ├── usePolling.ts
+│   │   └── useProfanityFilter.ts
+│   ├── contexts/           # React contexts
+│   │   └── AuthContext.tsx
+│   ├── lib/                # Utilities
+│   │   ├── api.ts
+│   │   ├── config.ts
+│   │   └── utils.ts
+│   ├── styles/
+│   │   └── globals.css
+│   ├── App.tsx             # Main app component
+│   └── main.tsx            # Entry point
+├── public/                 # Static assets
+│   ├── favicon.svg
+│   ├── manifest.json
+│   └── sw.js              # Service worker
+├── index.html
+├── package.json
+├── vite.config.ts
+└── tailwind.config.js
 ```
+
+---
+
+## Routing
+
+The app uses React Router with a base path of `/mineiro`. All routes are relative to this base.
+
+### Public Routes
+
+| Route | Component | Description |
+|-------|-----------|-------------|
+| `/` | `LandingPage` | Marketing landing page |
+| `/join` | `JoinPage` | Customer registration form |
+| `/status/:id` | `StatusPage` | Customer ticket status |
+| `/login` | `LoginPage` | Staff authentication |
+
+### Protected Routes
+
+| Route | Component | Access | Description |
+|-------|-----------|--------|-------------|
+| `/staff` | `StaffPage` | Authenticated | Staff dashboard |
+| `/owner` | `OwnerDashboard` | Owner only | Owner dashboard |
+| `/manage` | `BarberQueueManager` | Authenticated | Queue management + kiosk |
+| `/analytics` | `AnalyticsPage` | Owner only | Analytics and statistics |
+| `/barbers` | `BarberManagementPage` | Owner only | Barber management |
 
 ---
 
 ## Pages
 
-### index.html - Landing Page
+### LandingPage - Landing Page
 
-Navigation hub with links to main features.
+Full marketing website with multiple sections.
+
+**URL:** `/mineiro/` (base path `/`)
 
 **Features:**
-- "Entrar na Fila" card → `/mineiro/join` (React: JoinPage)
-- "Entrar (Staff)" card → login-modal.html (no React equivalent yet)
-- "Gerenciar Fila" card → barber-queue-manager.html (no React equivalent yet)
+- Hero section with call-to-action
+- Services section (Corte, Barba, Corte + Barba)
+- About section
+- Location section with Google Maps embed
+- CTA sections
+- Navigation component
 
-**URL:** `/` or `/index.html` (mockup) | `/mineiro/` (React: QueuePage)
+**Components:**
+- `Navigation` - Site navigation
+- `Button` - CTA buttons
+- `Card` - Service cards
 
 ---
 
-### queue-join.html - Join Queue
+### JoinPage - Join Queue
 
 Customer self-registration form.
+
+**URL:** `/mineiro/join`
 
 **Features:**
 - First name input (required, min 2 chars)
 - Last name input (optional)
-- Current wait time display
+- Current wait time display (calculated from queue)
 - Real-time validation
 - Profanity filter
 - Redirects to `/mineiro/status/:id` on success
 
-**URL:** `/queue-join.html` (mockup, deprecated) | `/mineiro/join` (React: JoinPage)
+**Hooks Used:**
+- `useQueue` - Polls queue data every 30s
+- `useProfanityFilter` - Validates customer names
 
 **API Integration:**
-```javascript
+```typescript
 // On form submit
 POST /api/shops/:slug/tickets
 {
-  "customerName": "João Silva"
+  "customerName": "João Silva",
+  "serviceId": 1
 }
 ```
 
+**State:**
+- `firstName` - First name input
+- `lastName` - Last name input
+- `validationError` - Validation error message
+- `isSubmitting` - Loading state
+- `submitError` - API error message
+
 ---
 
-### customer-status.html - Ticket Status
+### StatusPage - Ticket Status
 
-Individual customer status display.
+Individual customer status display with auto-updates.
+
+**URL:** `/mineiro/status/:id`
 
 **Features:**
-- Large wait time display (minutes)
+- Large wait time display (minutes, calculated)
+- Position in queue display
 - Status badge (Aguardando, Em Atendimento, Concluído)
-- Leave queue button with confirmation
+- Leave queue button with confirmation dialog
 - Auto-polling for updates (3 second interval)
 - State transitions with visual feedback
 
-**URL:** `/customer-status.html?id=:ticketId` (mockup, deprecated) | `/mineiro/status/:id` (React: StatusPage)
-
 **States:**
-1. **Waiting** - Shows wait time, leave button available
+1. **Waiting** - Shows wait time, position, leave button
 2. **In Progress** - "Você está sendo atendido!" message
 3. **Completed** - Success message, return to home button
 
+**Hooks Used:**
+- `useTicketStatus` - Polls ticket status every 3s
+- `useQueue` - Gets queue data for wait time calculation
+
 **API Integration:**
-```javascript
+```typescript
 // Poll for updates
 GET /api/tickets/:id
 
@@ -103,9 +200,11 @@ DELETE /api/tickets/:id
 
 ---
 
-### login-modal.html - Staff Login
+### LoginPage - Staff Login
 
-Authentication modal for staff access.
+Authentication page for staff access.
+
+**URL:** `/mineiro/login`
 
 **Features:**
 - Username/email field
@@ -114,43 +213,81 @@ Authentication modal for staff access.
 - Error message display
 - Role-based redirect after login
 - "Forgot password" placeholder link
-
-**URL:** `/login-modal.html`
+- Demo credentials display
 
 **Redirects:**
-- Owner (`admin`) → owner-dashboard.html
-- Barber (`barber`) → barber-queue-manager.html
+- Owner → `/mineiro/owner` (OwnerDashboard)
+- Barber → `/mineiro/manage` (BarberQueueManager)
 
 **API Integration:**
-```javascript
-// Login
-POST /api/auth/login
+```typescript
+// Authentication (PIN-based)
+POST /api/shops/:slug/auth
 {
-  "username": "admin",
-  "password": "admin123"
+  "pin": "1234"
+}
+
+// Returns:
+{
+  "valid": true,
+  "role": "owner" | "barber"
 }
 ```
 
+**Note:** The implementation includes demo credential mapping for backward compatibility (username/password → PIN conversion).
+
 ---
 
-### owner-dashboard.html - Owner Dashboard
+### OwnerDashboard - Owner Dashboard
 
 Navigation hub for shop owners.
 
+**URL:** `/mineiro/owner`
+
 **Features:**
 - Welcome message with user name
-- "Gerenciar Fila" card → barber-queue-manager.html
-- Logout button → index.html
+- Three navigation cards:
+  - "Gerenciar Fila" → `/mineiro/manage`
+  - "Analytics" → `/mineiro/analytics`
+  - "Gerenciar Barbeiros" → `/mineiro/barbers`
+- Logout button
 
-**URL:** `/owner-dashboard.html`
+**Access Control:**
+- Protected route requiring owner role
+- Redirects to `/mineiro/staff` if not owner
 
 ---
 
-### barber-queue-manager.html - Queue Management
+### StaffPage - Staff Dashboard
 
-Main staff interface with dual modes.
+Navigation hub for staff members.
 
-**URL:** `/barber-queue-manager.html`
+**URL:** `/mineiro/staff`
+
+**Features:**
+- Welcome message with user name
+- Navigation cards:
+  - "Gerenciar Fila" → `/mineiro/manage`
+  - "Modo Kiosk" → `/mineiro/manage?kiosk=true`
+  - Conditionally shows owner-only options if user is owner:
+    - "Analytics" → `/mineiro/analytics`
+    - "Gerenciar Barbeiros" → `/mineiro/barbers`
+- Logout button
+
+**Access Control:**
+- Protected route requiring authentication
+- Shows owner features if user has owner role
+
+---
+
+### BarberQueueManager - Queue Management
+
+Main staff interface with dual modes: Management and Kiosk.
+
+**URL:** `/mineiro/manage`
+
+**Query Parameters:**
+- `?kiosk=true` - Automatically enters kiosk mode
 
 #### Management Mode
 
@@ -160,18 +297,26 @@ Default view for queue operations.
 - Header with statistics (waiting count, serving count)
 - "Adicionar Cliente" button → check-in modal
 - Queue list with customer cards
-- Click customer card → barber selection overlay
-- Position badge click → remove (waiting) or complete (serving)
+- Click customer card → barber selection modal
+- Position badge actions → remove (waiting) or complete (serving)
 - Barber avatars show assignment
 - Barber presence section (toggle present/absent)
 - TV icon → enter kiosk mode
-- Back arrow → owner dashboard
+- Back arrow → owner/staff dashboard
 
 **Components:**
-- Queue cards with customer name, position badge, barber avatar
-- Barber selection overlay (grid of present barbers)
-- Check-in modal (name input form)
-- Confirmation modals (remove, complete)
+- `QueueCard` - Customer queue card
+- `BarberCard` - Barber presence card
+- `BarberSelector` - Barber selection modal
+- `Modal` - Check-in modal
+- `ConfirmationDialog` - Remove/complete confirmations
+
+**Hooks Used:**
+- `useQueue` - Polls queue every 5s
+- `useBarbers` - Manages barber data
+- `useModal` - Modal state management
+- `useKiosk` - Kiosk mode state
+- `useProfanityFilter` - Name validation
 
 #### Kiosk Mode
 
@@ -188,16 +333,18 @@ Fullscreen display for shop TV/tablet.
 - Ad rotation between queue views
 - Touch ad to return to queue view
 - Idle timer returns to ad rotation
-- Gear icon → exit kiosk mode
-- Escape key → exit kiosk mode
+- Settings icon → exit kiosk mode
 
 **Ad Rotation Timing:**
 ```
-Ad 1 (10s) → Queue (15s) → Ad 2 (10s) → Queue (15s) → ...
+Queue (15s) → Ad 1 (10s) → Queue (15s) → Ad 2 (10s) → Queue (15s) → Ad 3 (10s) → ...
 ```
 
+**Hooks Used:**
+- `useKiosk` - Manages kiosk state and rotation
+
 **API Integration:**
-```javascript
+```typescript
 // Get queue
 GET /api/shops/:slug/queue
 
@@ -206,14 +353,14 @@ GET /api/shops/:slug/barbers
 
 // Add customer
 POST /api/shops/:slug/tickets
-{ "customerName": "João Silva" }
+{ "customerName": "João Silva", "serviceId": 1 }
 
 // Start service (assign barber)
-PATCH /api/tickets/:id/status
-{ "status": "in_progress", "barberId": 3 }
+PATCH /api/tickets/:id
+{ "barberId": 3, "status": "in_progress" }
 
 // Complete service
-PATCH /api/tickets/:id/status
+PATCH /api/tickets/:id
 { "status": "completed" }
 
 // Remove customer
@@ -226,10 +373,175 @@ PATCH /api/barbers/:id/presence
 
 ---
 
+### AnalyticsPage - Analytics Dashboard
+
+Statistics and metrics dashboard for owners.
+
+**URL:** `/mineiro/analytics`
+
+**Features:**
+- Period selector (7, 30, 90 days)
+- Summary statistics:
+  - Total tickets
+  - Completed tickets
+  - Cancelled tickets
+  - Completion rate
+  - Average per day
+  - Average service time
+- Daily chart (tickets by day)
+- Hourly chart (tickets by hour)
+- Peak hour display
+- Barber performance stats
+
+**Access Control:**
+- Owner only
+- Redirects to `/mineiro/staff` if not owner
+
+**Components:**
+- `DailyChart` - Daily ticket distribution
+- `HourlyChart` - Hourly ticket distribution
+
+**API Integration:**
+```typescript
+// Get analytics
+GET /api/shops/:slug/analytics?days=30
+```
+
+---
+
+### BarberManagementPage - Barber Management
+
+Manage barbers (add, edit, remove).
+
+**URL:** `/mineiro/barbers`
+
+**Features:**
+- List of all barbers
+- Add barber button → add modal
+- Edit barber (click avatar) → edit modal
+- Remove barber → confirmation dialog
+- Barber presence status display
+- Barber stats (placeholder)
+
+**Access Control:**
+- Owner only
+- Redirects to `/mineiro/staff` if not owner
+
+**API Integration:**
+```typescript
+// Get barbers
+GET /api/shops/:slug/barbers
+
+// Create barber
+POST /api/shops/:slug/barbers
+{ "name": "João", "avatarUrl": "https://..." }
+
+// Update barber
+PATCH /api/barbers/:id
+{ "name": "João Silva", "avatarUrl": "https://..." }
+
+// Delete barber
+DELETE /api/barbers/:id
+```
+
+---
+
+## Components
+
+### ErrorDisplay
+
+Error display component with retry functionality.
+
+**Props:**
+- `error: Error | string` - Error to display
+- `onRetry?: () => void` - Optional retry callback
+- `className?: string` - Optional CSS classes
+
+**Usage:**
+```tsx
+<ErrorDisplay
+  error={error}
+  onRetry={() => refetch()}
+/>
+```
+
+**Features:**
+- Displays error icon and message
+- Shows retry button if `onRetry` provided
+- Accessible with `role="alert"`
+
+---
+
+### LoadingSpinner
+
+Loading state component with customizable size and text.
+
+**Props:**
+- `size?: 'sm' | 'md' | 'lg'` - Spinner size (default: 'md')
+- `text?: string` - Optional loading text
+- `className?: string` - Optional CSS classes
+
+**Usage:**
+```tsx
+<LoadingSpinner size="lg" text="Carregando..." />
+```
+
+**Features:**
+- Animated spinner
+- Optional loading text
+- Accessible with `role="status"` and `aria-label`
+
+---
+
+### DailyChart
+
+Chart component for displaying daily ticket distribution.
+
+**Props:**
+- `data: Record<string, number>` - Daily ticket counts keyed by date (YYYY-MM-DD)
+
+**Usage:**
+```tsx
+<DailyChart data={data.ticketsByDay} />
+```
+
+**Features:**
+- Bar chart showing last 7 days
+- Hover tooltips with values
+- Responsive design
+- Gradient bars (gold theme)
+
+---
+
+### HourlyChart
+
+Chart component for displaying hourly ticket distribution.
+
+**Props:**
+- `data: Record<number, number>` - Hourly ticket counts keyed by hour (0-23)
+- `peakHour: { hour: number; count: number } | null` - Peak hour highlight
+
+**Usage:**
+```tsx
+<HourlyChart 
+  data={data.hourlyDistribution} 
+  peakHour={data.peakHour} 
+/>
+```
+
+**Features:**
+- Bar chart showing 24 hours
+- Highlights peak hour with gold ring
+- Hover tooltips with values
+- Responsive grid layout
+
+---
+
 ## External Dependencies
 
 ### Google Fonts
 
+Loaded in `index.html`:
 ```html
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -238,261 +550,330 @@ PATCH /api/barbers/:id/presence
 
 ### Material Symbols
 
+Loaded in `index.html`:
 ```html
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 ```
 
-Usage:
-```html
-<span class="material-symbols-outlined">content_cut</span>
+Usage in React:
+```tsx
+<span className="material-symbols-outlined">content_cut</span>
 ```
 
 ### QR Code Generation
 
 Using QR Server API:
-```javascript
+```typescript
 const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(url)}`;
 ```
+
+Implemented in `QRCode` component.
 
 ---
 
 ## CSS Architecture
 
-### CSS Variables
+### Tailwind CSS
 
-All pages use CSS custom properties for theming:
+The application uses Tailwind CSS for styling. Configuration in `tailwind.config.js`.
 
-```css
-:root {
-  /* Primary Colors */
-  --md-sys-color-primary: #D4AF37;
-  --md-sys-color-on-primary: #FFFFFF;
-  
-  /* Surface Colors */
-  --md-sys-color-surface: #FFFFFF;
-  --md-sys-color-on-surface: #1D1B20;
-  
-  /* Status Colors */
-  --md-sys-color-success: #10B981;
-  --md-sys-color-error: #EF4444;
-  
-  /* Spacing */
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  
-  /* Border Radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-}
+**Key Features:**
+- Utility-first CSS framework
+- Responsive design with breakpoint prefixes (`sm:`, `md:`, `lg:`, etc.)
+- Dark theme by default
+- Custom color palette:
+  - Primary: `#D4AF37` (gold)
+  - Success: `#22c55e` (green)
+  - Error: `#ef4444` (red)
+
+**Responsive Breakpoints:**
+- `sm:` - 640px and up
+- `md:` - 768px and up
+- `lg:` - 1024px and up
+- `xl:` - 1280px and up
+- `2xl:` - 1536px and up
+
+**Example:**
+```tsx
+<div className="p-4 sm:p-6 lg:p-8 bg-[#1a1a1a] text-white">
+  Content
+</div>
 ```
 
-### Responsive Breakpoints
+### Custom CSS Variables
 
+Some custom properties in `globals.css`:
 ```css
-/* Mobile */
-@media (max-width: 480px) { }
-
-/* Small mobile */
-@media (max-width: 375px) { }
-
-/* Tablet */
-@media (max-width: 768px) { }
-
-/* Desktop */
-@media (max-width: 1024px) { }
-
-/* Large screens */
-@media (min-width: 1400px) { }
-@media (min-width: 1600px) { }
-@media (min-width: 1920px) { }
-
-/* Orientation */
-@media (orientation: portrait) { }
-@media (orientation: landscape) { }
+:root {
+  --primary: #D4AF37;
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+}
 ```
 
 ---
 
-## JavaScript Patterns
+## React Patterns
 
 ### State Management
 
-Each page manages its own state with plain objects:
+React hooks for component state:
 
-```javascript
-// Queue data
-let queueData = [
-  { id: 1, name: 'Carlos Silva', status: 'serving', barberId: 1 },
-  { id: 2, name: 'João Santos', status: 'waiting', barberId: null }
-];
+```typescript
+// Component state
+const [firstName, setFirstName] = useState('');
+const [isLoading, setIsLoading] = useState(false);
 
-// Barber data
-const barbers = [
-  { id: 1, name: 'João', avatar: 'url', isPresent: true }
-];
+// Context for global state
+const { user, isAuthenticated, login } = useAuthContext();
 ```
 
-### Rendering
+### Custom Hooks
 
-DOM updates via innerHTML replacement:
+Reusable logic in custom hooks:
 
-```javascript
-function renderQueue() {
-  const list = document.getElementById('queueList');
-  list.innerHTML = '';
-  
-  queueData.forEach(customer => {
-    const item = document.createElement('div');
-    item.className = 'queue-item';
-    item.innerHTML = `...`;
-    list.appendChild(item);
-  });
+```typescript
+// Queue data with polling
+const { data, isLoading, error, refetch } = useQueue(5000);
+
+// Ticket status with polling
+const { ticket, isLoading, error } = useTicketStatus(ticketId);
+
+// Barber management
+const { barbers, togglePresence, refetch } = useBarbers();
+
+// Modal state
+const modal = useModal();
+// modal.isOpen, modal.open(), modal.close()
+
+// Kiosk mode
+const { isKioskMode, enterKioskMode, exitKioskMode } = useKiosk();
+```
+
+### Component Rendering
+
+React component-based rendering:
+
+```tsx
+function QueueList({ tickets }: { tickets: Ticket[] }) {
+  return (
+    <div className="space-y-3">
+      {tickets.map((ticket) => (
+        <QueueCard key={ticket.id} ticket={ticket} />
+      ))}
+    </div>
+  );
 }
 ```
 
 ### Event Handling
 
-Event delegation for dynamic content:
+React event handlers:
 
-```javascript
-document.addEventListener('click', function(e) {
-  const card = e.target.closest('.queue-item');
-  if (card) {
-    const customerId = parseInt(card.dataset.customerId);
-    showBarberSelection(customerId);
-  }
-});
+```tsx
+<button
+  onClick={async () => {
+    setIsLoading(true);
+    try {
+      await api.createTicket(slug, { customerName });
+      navigate(`/status/${ticket.id}`);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }}
+>
+  Submit
+</button>
 ```
 
 ### Polling
 
-Simple setInterval for updates:
+Custom hook for polling:
 
-```javascript
-setInterval(() => {
-  fetchTicketStatus();
-}, 3000);
+```typescript
+// usePolling hook
+const { data, isLoading } = useQueue(3000); // Poll every 3s
+
+// Implementation uses useEffect + setInterval
+useEffect(() => {
+  const interval = setInterval(() => {
+    refetch();
+  }, intervalMs);
+  return () => clearInterval(interval);
+}, []);
 ```
 
 ### Modal Pattern
 
-```javascript
-function showModal(modalId) {
-  document.getElementById(modalId).classList.add('show');
-}
+Modal component with hook:
 
-function hideModal(modalId) {
-  document.getElementById(modalId).classList.remove('show');
-}
+```tsx
+const modal = useModal();
 
-// Close on backdrop click
-modal.addEventListener('click', (e) => {
-  if (e.target === modal) hideModal(modalId);
-});
-
-// Close on Escape
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') hideModal(modalId);
-});
+<Modal
+  isOpen={modal.isOpen}
+  onClose={modal.close}
+  title="Add Customer"
+>
+  {/* Modal content */}
+</Modal>
 ```
 
 ---
 
 ## API Integration
 
-### Converting Mock Data to Real API
+### API Client
 
-Current mockups use hardcoded data. To connect to real backend:
+Centralized API client in `lib/api.ts`:
 
-1. **Replace mock data initialization:**
-```javascript
-// Before (mock)
-let queueData = [{ id: 1, name: 'Carlos', ... }];
+```typescript
+import { api } from '@/lib/api';
+import { config } from '@/lib/config';
 
-// After (API)
-let queueData = [];
-async function loadQueue() {
-  const response = await fetch('/api/shops/mineiro/queue');
-  const data = await response.json();
-  queueData = data.tickets;
-  renderQueue();
-}
+// Create ticket
+const ticket = await api.createTicket(config.slug, {
+  customerName: 'João Silva',
+  serviceId: 1,
+});
+
+// Get queue
+const queue = await api.getQueue(config.slug);
+
+// Update ticket
+await api.updateTicket(ticketId, {
+  status: 'in_progress',
+  barberId: 3,
+});
+
+// Cancel ticket
+await api.cancelTicket(ticketId);
 ```
 
-2. **Replace mock actions with API calls:**
-```javascript
-// Before (mock)
-function removeCustomer(id) {
-  queueData = queueData.filter(c => c.id !== id);
-  renderAll();
-}
+### Error Handling
 
-// After (API)
-async function removeCustomer(id) {
-  await fetch(`/api/tickets/${id}`, { method: 'DELETE' });
-  await loadQueue();
-}
-```
+Error handling with React error boundaries and try/catch:
 
-3. **Add error handling:**
-```javascript
-async function apiCall(url, options = {}) {
-  try {
-    const response = await fetch(url, options);
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message);
-    }
-    return response.json();
-  } catch (error) {
-    showError(error.message);
-    throw error;
+```typescript
+try {
+  const ticket = await api.createTicket(slug, data);
+  navigate(`/status/${ticket.id}`);
+} catch (error) {
+  if (error instanceof Error) {
+    setError(error.message);
+  } else if (error?.error) {
+    setError(error.error);
+  } else {
+    setError('Erro ao criar ticket. Tente novamente.');
   }
 }
 ```
+
+### Loading States
+
+Loading states with custom component:
+
+```tsx
+{isLoading ? (
+  <LoadingSpinner size="lg" text="Carregando..." />
+) : error ? (
+  <ErrorDisplay error={error} onRetry={refetch} />
+) : (
+  <QueueList tickets={data.tickets} />
+)}
+```
+
+---
+
+## Authentication
+
+### Auth Context
+
+Global authentication state via React Context:
+
+```typescript
+const { user, isAuthenticated, isOwner, login, logout } = useAuthContext();
+```
+
+### Protected Routes
+
+Route protection with `ProtectedRoute` component:
+
+```tsx
+<Route
+  path="/owner"
+  element={
+    <ProtectedRoute requireOwner>
+      <OwnerDashboard />
+    </ProtectedRoute>
+  }
+/>
+```
+
+### Authentication Flow
+
+1. User enters PIN on `/login`
+2. API validates PIN: `POST /api/shops/:slug/auth`
+3. Context stores user data and role
+4. Redirect based on role:
+   - Owner → `/owner`
+   - Barber → `/manage`
 
 ---
 
 ## Deployment
 
-### Static File Serving
-
-Files can be served by any static file server:
+### Build Process
 
 ```bash
-# Using Python
-python -m http.server 8000
+# Install dependencies
+pnpm install
 
-# Using Node.js (serve package)
-npx serve mockups
+# Development server
+pnpm dev
 
-# Using nginx, Apache, Caddy, etc.
+# Production build
+pnpm build
 ```
+
+### Static File Serving
+
+The built app is served from `/mineiro/` path by the API server.
+
+**Vite Configuration:**
+- Base path: `/mineiro/`
+- Output directory: `dist/`
+- SPA fallback: `index.html`
 
 ### Production Checklist
 
-- [ ] Update API base URL in each file
-- [ ] Replace mock data with API calls
-- [ ] Configure CORS on backend
-- [ ] Set up proper error handling
-- [ ] Test on target devices (tablets, phones)
-- [ ] Verify QR code URLs point to production
+- [x] API base URL configured (`/api`)
+- [x] All API calls integrated
+- [x] CORS configured on backend
+- [x] Error handling implemented
+- [x] Loading states for all async operations
+- [x] Responsive design tested
+- [x] QR code URLs point to production
+- [x] Service worker configured (PWA)
+- [x] Authentication flow working
+- [x] Protected routes working
 
-### Environment-Specific URLs
+### Environment Configuration
 
-```javascript
-// Development
-const API_BASE = 'http://localhost:4041';
+Configuration in `lib/config.ts`:
 
-// Production
-const API_BASE = 'https://api.eutonafila.com';
-
-// Or detect automatically
-const API_BASE = window.location.hostname === 'localhost' 
-  ? 'http://localhost:4041' 
-  : '';
+```typescript
+export const config = {
+  slug: 'mineiro',
+  name: 'Barbearia Mineiro',
+  apiBase: '/api', // Relative to same origin
+  theme: {
+    primary: '#3E2723',
+    accent: '#FFD54F',
+  },
+};
 ```
 
 ---
@@ -513,3 +894,16 @@ Target devices:
 - Desktop browsers (management)
 - Android tablets (kiosk mode)
 - Mobile phones (customer pages)
+
+---
+
+## PWA Support
+
+The application includes Progressive Web App (PWA) support:
+
+- Service worker (`public/sw.js`)
+- Web app manifest (`public/manifest.json`)
+- Offline caching
+- Install prompt support
+
+See `public/PWA_SETUP.md` for details.

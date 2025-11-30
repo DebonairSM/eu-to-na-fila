@@ -60,7 +60,13 @@ export function AnalyticsPage() {
         const analyticsData = await api.getAnalytics(config.slug, days);
         setData(analyticsData);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch analytics'));
+        if (err instanceof Error) {
+          setError(err);
+        } else if (err && typeof err === 'object' && 'error' in err) {
+          setError(new Error((err as { error: string }).error));
+        } else {
+          setError(new Error('Erro ao carregar analytics. Tente novamente.'));
+        }
       } finally {
         setIsLoading(false);
       }

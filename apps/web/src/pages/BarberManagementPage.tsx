@@ -42,8 +42,13 @@ export function BarberManagementPage() {
       addModal.close();
       await refetch();
     } catch (error) {
-      console.error('Error adding barber:', error);
-      alert('Erro ao adicionar barbeiro. Tente novamente.');
+      if (error instanceof Error) {
+        alert(error.message);
+      } else if (error && typeof error === 'object' && 'error' in error) {
+        alert((error as { error: string }).error);
+      } else {
+        alert('Erro ao adicionar barbeiro. Tente novamente.');
+      }
     }
   };
 
@@ -63,8 +68,13 @@ export function BarberManagementPage() {
       editModal.close();
       await refetch();
     } catch (error) {
-      console.error('Error updating barber:', error);
-      alert('Erro ao atualizar barbeiro. Tente novamente.');
+      if (error instanceof Error) {
+        alert(error.message);
+      } else if (error && typeof error === 'object' && 'error' in error) {
+        alert((error as { error: string }).error);
+      } else {
+        alert('Erro ao atualizar barbeiro. Tente novamente.');
+      }
     }
   };
 
@@ -77,8 +87,13 @@ export function BarberManagementPage() {
       setBarberToDelete(null);
       await refetch();
     } catch (error) {
-      console.error('Error deleting barber:', error);
-      alert('Erro ao remover barbeiro. Tente novamente.');
+      if (error instanceof Error) {
+        alert(error.message);
+      } else if (error && typeof error === 'object' && 'error' in error) {
+        alert((error as { error: string }).error);
+      } else {
+        alert('Erro ao remover barbeiro. Tente novamente.');
+      }
     }
   };
 
