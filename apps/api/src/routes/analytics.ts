@@ -86,7 +86,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       };
     });
 
-    // Peak hours (simplified - just count by hour)
+    // Peak hours and hourly distribution
     const hourCounts: Record<number, number> = {};
     tickets.forEach(t => {
       const hour = t.createdAt.getHours();
@@ -95,6 +95,12 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     
     const peakHour = Object.entries(hourCounts)
       .sort(([,a], [,b]) => b - a)[0];
+
+    // Hourly distribution (all 24 hours)
+    const hourlyDistribution: Record<number, number> = {};
+    for (let h = 0; h < 24; h++) {
+      hourlyDistribution[h] = hourCounts[h] || 0;
+    }
 
     return {
       period: {
@@ -114,6 +120,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       },
       barbers: barberStats,
       ticketsByDay,
+      hourlyDistribution,
       peakHour: peakHour ? { hour: parseInt(peakHour[0]), count: peakHour[1] } : null,
     };
   });
