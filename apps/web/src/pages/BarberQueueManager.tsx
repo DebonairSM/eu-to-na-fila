@@ -26,7 +26,7 @@ export function BarberQueueManager() {
   const navigate = useNavigate();
   const { isOwner } = useAuthContext();
   const { data: queueData, refetch: refetchQueue } = useQueue(5000); // Poll every 5s
-  const { barbers, togglePresence } = useBarbers();
+  const { barbers, togglePresence, refetch: refetchBarbers } = useBarbers();
   const {
     isKioskMode,
     currentView,
@@ -231,8 +231,13 @@ export function BarberQueueManager() {
                   <button
                     key={barber.id}
                     onClick={async () => {
-                      await togglePresence(barber.id, !barber.isPresent);
-                      await refetchQueue();
+                      try {
+                        await togglePresence(barber.id, !barber.isPresent);
+                        await refetchBarbers();
+                        await refetchQueue();
+                      } catch (error) {
+                        console.error('Error toggling barber presence:', error);
+                      }
                     }}
                     className={cn(
                       'px-4 py-2 rounded-lg border-2 transition-colors',
@@ -402,8 +407,13 @@ export function BarberQueueManager() {
                 barber={barber}
                 showPresence
                 onClick={async () => {
-                  await togglePresence(barber.id, !barber.isPresent);
-                  await refetchQueue();
+                  try {
+                    await togglePresence(barber.id, !barber.isPresent);
+                    await refetchBarbers();
+                    await refetchQueue();
+                  } catch (error) {
+                    console.error('Error toggling barber presence:', error);
+                  }
                 }}
               />
             ))}

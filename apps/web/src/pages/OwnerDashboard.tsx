@@ -51,6 +51,42 @@ export function OwnerDashboard() {
               arrow_forward
             </span>
           </Link>
+
+          <Link
+            to="/analytics"
+            className="option-card bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-[28px] p-12 flex flex-col items-center gap-5 transition-all hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.3)] hover:-translate-y-1"
+          >
+            <div className="option-icon text-[64px] text-[#D4AF37]">
+              <span className="material-symbols-outlined">analytics</span>
+            </div>
+            <h2 className="option-title text-2xl font-semibold text-white text-center">
+              Analytics
+            </h2>
+            <p className="option-desc text-center text-[rgba(255,255,255,0.7)]">
+              Visualize estatísticas, métricas de desempenho e gráficos de atendimentos.
+            </p>
+            <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
+              arrow_forward
+            </span>
+          </Link>
+
+          <Link
+            to="/barbers"
+            className="option-card bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-[28px] p-12 flex flex-col items-center gap-5 transition-all hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.3)] hover:-translate-y-1"
+          >
+            <div className="option-icon text-[64px] text-[#D4AF37]">
+              <span className="material-symbols-outlined">content_cut</span>
+            </div>
+            <h2 className="option-title text-2xl font-semibold text-white text-center">
+              Gerenciar Barbeiros
+            </h2>
+            <p className="option-desc text-center text-[rgba(255,255,255,0.7)]">
+              Adicione, edite ou remova barbeiros da equipe.
+            </p>
+            <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
+              arrow_forward
+            </span>
+          </Link>
         </div>
 
         {/* Logout */}

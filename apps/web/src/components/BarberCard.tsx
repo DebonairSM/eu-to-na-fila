@@ -29,12 +29,11 @@ export function BarberCard({
         {
           'border-primary bg-primary/10': isSelected,
           'border-border': !isSelected,
-          'opacity-50 cursor-not-allowed': showPresence && !barber.isPresent,
+          'opacity-50': showPresence && !barber.isPresent,
         },
         className
       )}
-      disabled={showPresence && !barber.isPresent}
-      aria-label={`Select barber ${barber.name}`}
+      aria-label={`${showPresence ? (barber.isPresent ? 'Mark absent' : 'Mark present') : 'Select barber'} ${barber.name}`}
     >
       <div className="relative">
         <img
