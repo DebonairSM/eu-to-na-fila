@@ -545,27 +545,31 @@
             sessionStorage.setItem('analyticsAuth', 'true');
         });
 
-        // Check URL parameter to see if returning from owner pages
-        const urlParams = new URLSearchParams(window.location.search);
-        const isReturning = urlParams.get('return') === 'true';
+        // Check if owner is already logged in
+        const isOwnerLoggedIn = sessionStorage.getItem('staffAuth') === 'true' && 
+                               sessionStorage.getItem('staffRole') === 'owner';
+        const isStaffLoggedIn = sessionStorage.getItem('staffAuth') === 'true' && 
+                               sessionStorage.getItem('staffRole') === 'staff';
         
-        // If returning from owner page and already logged in, show dashboard
-        // Otherwise always require PIN (coming from homepage/Staff button)
-        if (isReturning && sessionStorage.getItem('staffAuth') === 'true') {
-            const role = sessionStorage.getItem('staffRole');
-            if (role === 'owner') {
-                loginForm.classList.add('hidden');
-                dashboardSelection.classList.add('show');
-            } else {
-                // Staff - redirect to queue manager
-                window.location.href = 'barber-queue-manager.html';
-            }
-        } else {
-            // Coming from homepage or direct access - always require PIN
+        // Check referrer to see if coming from homepage
+        const referrer = document.referrer;
+        const fromHomepage = referrer.includes('index.html');
+        
+        // If owner is logged in and NOT coming from homepage, show dashboard
+        // If coming from homepage, always require PIN (fresh login)
+        if (isOwnerLoggedIn && !fromHomepage) {
+            loginForm.classList.add('hidden');
+            dashboardSelection.classList.add('show');
+        } else if (isStaffLoggedIn) {
+            // Staff - redirect to queue manager
+            window.location.href = 'barber-queue-manager.html';
+        } else if (fromHomepage) {
+            // Coming from homepage - clear session and require PIN
             sessionStorage.removeItem('staffAuth');
             sessionStorage.removeItem('staffRole');
             sessionStorage.removeItem('analyticsAuth');
         }
+        // If not logged in and not from homepage, just show PIN form (already default state)
     </script>
 </body>
 </html>

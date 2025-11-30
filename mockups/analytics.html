@@ -29,11 +29,6 @@
             --success: #22c55e;
             --error: #ef4444;
             --blue: #3b82f6;
-            --purple: #a855f7;
-            --pink: #ec4899;
-            --orange: #f97316;
-            --cyan: #06b6d4;
-            --lime: #84cc16;
         }
 
         body {
@@ -53,8 +48,7 @@
             height: 200%;
             background: 
                 radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.03) 0%, transparent 50%);
+                radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
             animation: rotate 60s linear infinite;
             pointer-events: none;
         }
@@ -273,7 +267,7 @@
             font-size: 3.5rem;
             color: var(--white);
             margin-bottom: 8px;
-            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--blue) 100%);
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -363,10 +357,10 @@
         .hero-stat.total { color: var(--gold); }
         .hero-stat.completed { color: var(--success); }
         .hero-stat.cancelled { color: var(--error); }
-        .hero-stat.waiting { color: var(--orange); }
+        .hero-stat.waiting { color: var(--gold); }
         .hero-stat.inProgress { color: var(--blue); }
-        .hero-stat.rate { color: var(--purple); }
-        .hero-stat.avg { color: var(--cyan); }
+        .hero-stat.rate { color: var(--gold); }
+        .hero-stat.avg { color: var(--blue); }
 
         /* Chart Cards */
         .chart-card {
@@ -386,7 +380,7 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, var(--gold), var(--blue), var(--purple), var(--pink));
+            background: linear-gradient(90deg, var(--gold), var(--blue));
             background-size: 200% 100%;
             animation: gradientShift 3s ease infinite;
         }
@@ -712,7 +706,7 @@
 
         /* Peak Hour Card */
         .peak-hour-card {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
             border: 1px solid rgba(212, 175, 55, 0.3);
             border-radius: 24px;
             padding: 40px;
@@ -926,7 +920,7 @@
             sessionStorage.removeItem('analyticsAuth');
             sessionStorage.removeItem('staffAuth');
             sessionStorage.removeItem('staffRole');
-            window.location.href = 'staff-login.html';
+            window.location.href = 'staff-login.html?return=true';
         });
 
         // Period change
@@ -983,7 +977,7 @@
             const pieGradient = `conic-gradient(
                 var(--success) 0deg ${completedDeg}deg,
                 var(--error) ${completedDeg}deg ${completedDeg + cancelledDeg}deg,
-                var(--orange) ${completedDeg + cancelledDeg}deg ${completedDeg + cancelledDeg + waitingDeg}deg,
+                var(--gold) ${completedDeg + cancelledDeg}deg ${completedDeg + cancelledDeg + waitingDeg}deg,
                 var(--blue) ${completedDeg + cancelledDeg + waitingDeg}deg ${completedDeg + cancelledDeg + waitingDeg + inProgressDeg}deg,
                 var(--gray-dark) ${completedDeg + cancelledDeg + waitingDeg + inProgressDeg}deg 360deg
             )`;
@@ -1110,7 +1104,7 @@
                                     <div class="pie-legend-text">Cancelados: ${summary.cancelled} (${summary.cancellationRate}%)</div>
                                 </div>
                                 <div class="pie-legend-item">
-                                    <div class="pie-legend-color" style="background: var(--orange);"></div>
+                                    <div class="pie-legend-color" style="background: var(--gold);"></div>
                                     <div class="pie-legend-text">Aguardando: ${summary.waiting}</div>
                                 </div>
                                 <div class="pie-legend-item">
