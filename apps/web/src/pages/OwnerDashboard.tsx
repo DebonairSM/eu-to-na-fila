@@ -3,7 +3,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 
 export function OwnerDashboard() {
-  const { user, logout } = useAuthContext();
+  const { logout } = useAuthContext();
   const navigate = useNavigate();
 
   const handleLogout = () => {
