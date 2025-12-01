@@ -129,27 +129,42 @@ export function Navigation() {
       </div>
 
       {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
       <div
-        className={`nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[rgba(10,10,10,0.98)] backdrop-blur-[20px] z-40 p-6 sm:p-10 pt-20 flex flex-col transform transition-transform duration-300 ${
+        className={`nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[rgba(10,10,10,0.98)] backdrop-blur-[20px] z-50 p-6 sm:p-10 pt-20 flex flex-col transform transition-transform duration-300 ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:hidden`}
+        } md:hidden pointer-events-auto`}
         role="dialog"
         aria-modal="true"
         aria-label="Menu de navegação"
       >
         <button
-          className="nav-menu-close absolute top-5 right-5 bg-transparent border-none text-white cursor-pointer p-2 min-w-[44px] min-h-[44px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
-          onClick={() => setIsMobileMenuOpen(false)}
+          className="nav-menu-close absolute top-5 right-5 bg-transparent border-none text-white cursor-pointer p-2 min-w-[44px] min-h-[44px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 z-10"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsMobileMenuOpen(false);
+          }}
           aria-label="Fechar menu de navegação"
+          type="button"
         >
           <span className="material-symbols-outlined text-[28px]">close</span>
         </button>
-        <ul className="nav-menu-links list-none m-0 p-0 flex flex-col gap-2">
+        <ul className="nav-menu-links list-none m-0 p-0 flex flex-col gap-2 relative z-10">
           <li>
             <Link
               to="/#services"
               className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMobileMenuOpen(false);
+              }}
             >
               Serviços
             </Link>
@@ -158,7 +173,10 @@ export function Navigation() {
             <Link
               to="/#about"
               className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMobileMenuOpen(false);
+              }}
             >
               Sobre
             </Link>
@@ -167,48 +185,67 @@ export function Navigation() {
             <Link
               to="/#location"
               className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMobileMenuOpen(false);
+              }}
             >
               Localização
             </Link>
           </li>
         </ul>
-        {user ? (
-          <>
-            {user.role === 'owner' && (
-              <Link
-                to="/owner"
-                className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center mt-6 focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
-                onClick={() => setIsMobileMenuOpen(false)}
+        <div className="relative z-10">
+          {user ? (
+            <>
+              {user.role === 'owner' && (
+                <Link
+                  to="/owner"
+                  className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center mt-6 focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  Dashboard
+                </Link>
+              )}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleLogout();
+                }}
+                className="block w-full text-left text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center mt-2 focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                type="button"
               >
-                Dashboard
+                Sair
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/join"
+                className="nav-menu-cta block mt-6 px-6 py-4 bg-[#D4AF37] text-[#0a0a0a] font-semibold rounded-lg text-center min-h-[44px] flex items-center justify-center hover:bg-[#E8C547] transition-all focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                Entrar na Fila
               </Link>
-            )}
-            <button
-              onClick={handleLogout}
-              className="block w-full text-left text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center mt-2 focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
-            >
-              Sair
-            </button>
-          </>
-        ) : (
-          <>
-            <Link
-              to="/join"
-              className="nav-menu-cta block mt-6 px-6 py-4 bg-[#D4AF37] text-[#0a0a0a] font-semibold rounded-lg text-center min-h-[44px] flex items-center justify-center hover:bg-[#E8C547] transition-all focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Entrar na Fila
-            </Link>
-            <Link
-              to="/login"
-              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center mt-2 focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Entrar (Staff)
-            </Link>
-          </>
-        )}
+              <Link
+                to="/login"
+                className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center mt-2 focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                Entrar (Staff)
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </nav>
   );
