@@ -6,45 +6,133 @@ Queue management system for barbershops. Single-tenant deployment with hosted ba
 
 | Layer | Technology |
 |-------|------------|
-| Backend | Node.js 20+, Fastify, Drizzle ORM, libSQL (SQLite) |
+| Backend | Node.js 20+, Fastify, Drizzle ORM, PostgreSQL |
 | Frontend | React, Vite, TypeScript, TailwindCSS, shadcn/ui |
 | Shared | Zod schemas, TypeScript types |
 | Tablet | PWA (Progressive Web App) |
 
-## Quick Start
+## Local Development Setup
 
 ### Prerequisites
 
-- Node.js 20+
-- pnpm 8+
+- Node.js 20+ ([download](https://nodejs.org/))
+- pnpm 8+ (`npm install -g pnpm`)
+- PostgreSQL 12+ ([download](https://www.postgresql.org/download/))
 
-### Installation
+### Step 1: Install Dependencies
 
 ```bash
 pnpm install
+```
+
+### Step 2: Set Up PostgreSQL Database
+
+Create a PostgreSQL database for local development:
+
+```bash
+# Using psql
+createdb eutonafila
+
+# Or using PostgreSQL CLI
+psql -U postgres
+CREATE DATABASE eutonafila;
+\q
+```
+
+### Step 3: Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```bash
 cp .env.example .env
 ```
 
-### Development
+Edit `.env` with your local configuration:
+
+```env
+NODE_ENV=development
+PORT=4041
+DATABASE_URL=postgresql://localhost:5432/eutonafila
+JWT_SECRET=your-local-development-secret-at-least-32-characters-long
+CORS_ORIGIN=http://localhost:4040
+SHOP_SLUG=mineiro
+```
+
+**Note:** Replace `DATABASE_URL` with your PostgreSQL connection string if using different credentials:
+- Format: `postgresql://username:password@localhost:5432/eutonafila`
+- Default: `postgresql://localhost:5432/eutonafila` (assumes local PostgreSQL with default user)
+
+### Step 4: Run Database Migrations
 
 ```bash
-# Run API and Web concurrently
+pnpm db:migrate
+```
+
+This creates all necessary tables in your database.
+
+### Step 5: Seed Test Data (Optional)
+
+```bash
+pnpm db:seed
+```
+
+This creates:
+- Shop: "Barbearia Mineiro" (slug: `mineiro`)
+- Default PINs: Owner `1234`, Staff `0000`
+- Sample services and barbers
+
+### Step 6: Start Development Servers
+
+```bash
+# Run both API and Web concurrently
 pnpm dev
 
-# Or separately
-pnpm --filter api dev
-pnpm --filter web dev
+# Or run separately in different terminals
+pnpm --filter api dev    # API server
+pnpm --filter web dev    # Web frontend
 ```
 
-- Web: http://localhost:4040/mineiro
+**Access the application:**
+- Web UI: http://localhost:4040/mineiro
 - API: http://localhost:4041/api
+- Health Check: http://localhost:4041/health
 
-### Database
+### Testing
 
-```bash
-pnpm db:migrate    # Run migrations
-pnpm db:seed       # Seed test data
-```
+Currently, there are no automated tests configured. To test manually:
+
+1. **Test Queue Flow:**
+   - Visit http://localhost:4040/mineiro
+   - Join the queue as a customer
+   - Check ticket status
+
+2. **Test Staff Features:**
+   - Login with staff PIN: `0000`
+   - Manage queue and tickets
+
+3. **Test API Endpoints:**
+   ```bash
+   # Health check
+   curl http://localhost:4041/health
+   
+   # Get queue
+   curl http://localhost:4041/api/shops/mineiro/queue
+   ```
+
+### Troubleshooting
+
+**Database connection errors:**
+- Ensure PostgreSQL is running: `pg_isready` or `psql -U postgres -c "SELECT 1"`
+- Verify `DATABASE_URL` in `.env` matches your PostgreSQL setup
+- Check PostgreSQL is listening on port 5432
+
+**Port already in use:**
+- Change `PORT` in `.env` for API
+- Update Vite port in `apps/web/vite.config.ts` for frontend
+
+**Migration errors:**
+- Ensure database exists: `psql -l | grep eutonafila`
+- Drop and recreate if needed: `dropdb eutonafila && createdb eutonafila`
 
 ### Production Build
 
@@ -101,14 +189,16 @@ SHOP_SLUG=mineiro
 
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `NODE_ENV` | Environment (production/development) | No |
-| `PORT` | Server port (default: 4041) | No |
-| `DATA_PATH` | SQLite database path | Yes |
-| `JWT_SECRET` | JWT signing secret | Yes |
-| `CORS_ORIGIN` | Allowed origin | Yes |
-| `SHOP_SLUG` | Shop identifier | No |
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `NODE_ENV` | Environment (development/production/test) | `development` | No |
+| `PORT` | Server port | `4041` | No |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://localhost:5432/eutonafila` | Yes* |
+| `JWT_SECRET` | JWT signing secret (min 32 chars) | `change_me_in_production...` | Yes* |
+| `CORS_ORIGIN` | Allowed origin for CORS | `http://localhost:4040` | Yes* |
+| `SHOP_SLUG` | Shop identifier | `mineiro` | No |
+
+*Required in production, has defaults for development
 
 ## Tablet Installation (PWA)
 
