@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
 import { useTicketStatus } from '@/hooks/useTicketStatus';
 import { useQueue } from '@/hooks/useQueue';
@@ -19,6 +19,8 @@ export function StatusPage() {
   const { data: queueData } = useQueue(3000); // Poll every 3s
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const prevStatusRef = useRef<string | null>(null);
+  const hasStoredTicketRef = useRef(false);
 
   // Calculate wait time
   const waitTime = (() => {
@@ -107,25 +109,38 @@ export function StatusPage() {
   const isInProgress = ticket.status === 'in_progress';
   const isCompleted = ticket.status === 'completed';
 
-  // Clear stored ticket ID when ticket is completed or cancelled
+  // Extract stable values for dependencies
+  const ticketId = ticket?.id ?? null;
+  const ticketStatus = ticket?.status ?? null;
+
+  // Handle localStorage updates based on ticket status
   useEffect(() => {
-    if (!ticket) return;
+    if (!ticketStatus || ticketId === null) return;
     
-    const storedTicketId = localStorage.getItem('eutonafila_active_ticket_id');
-    const currentTicketId = ticket.id.toString();
+    const prevStatus = prevStatusRef.current;
     
-    if (ticket.status === 'completed' || ticket.status === 'cancelled') {
-      // Only remove if it was stored
-      if (storedTicketId === currentTicketId) {
-        localStorage.removeItem('eutonafila_active_ticket_id');
-      }
-    } else if (ticket.status === 'waiting' || ticket.status === 'in_progress') {
-      // Only store if it's different from what's already stored
-      if (storedTicketId !== currentTicketId) {
-        localStorage.setItem('eutonafila_active_ticket_id', currentTicketId);
-      }
+    // Only update if status actually changed
+    if (prevStatus === ticketStatus) {
+      return;
     }
-  }, [ticket?.id, ticket?.status]);
+    
+    // Update ref immediately to prevent re-running
+    prevStatusRef.current = ticketStatus;
+    
+    // Handle localStorage based on status
+    if (ticketStatus === 'completed' || ticketStatus === 'cancelled') {
+      // Clear if it was stored
+      const storedTicketId = localStorage.getItem('eutonafila_active_ticket_id');
+      if (storedTicketId === ticketId.toString()) {
+        localStorage.removeItem('eutonafila_active_ticket_id');
+        hasStoredTicketRef.current = false;
+      }
+    } else if ((ticketStatus === 'waiting' || ticketStatus === 'in_progress') && !hasStoredTicketRef.current) {
+      // Store only if we haven't stored it yet
+      localStorage.setItem('eutonafila_active_ticket_id', ticketId.toString());
+      hasStoredTicketRef.current = true;
+    }
+  }, [ticketStatus, ticketId]);
 
   // Calculate position info
   const positionInfo = (() => {
