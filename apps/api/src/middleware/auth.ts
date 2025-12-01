@@ -1,14 +1,14 @@
 import type { FastifyRequest, FastifyReply, preHandlerHookHandler } from 'fastify';
 import { UnauthorizedError, ForbiddenError } from '../lib/errors.js';
+import { verifyToken } from '../lib/jwt.js';
 
 /**
  * User information extracted from JWT token.
- * This interface should be extended when implementing authentication.
  */
 export interface AuthUser {
   id: number;
   shopId: number;
-  role: 'admin' | 'barber' | 'staff';
+  role: 'owner' | 'staff';
 }
 
 /**
@@ -21,7 +21,7 @@ declare module 'fastify' {
 }
 
 /**
- * Authentication middleware (placeholder).
+ * Authentication middleware.
  * Validates JWT token and attaches user to request.
  * 
  * @returns Fastify pre-handler hook
@@ -35,9 +35,6 @@ declare module 'fastify' {
  *   console.log(request.user.id);
  * });
  * ```
- * 
- * @note This is a placeholder implementation.
- * Implement actual JWT validation when adding authentication.
  */
 export function requireAuth(): preHandlerHookHandler {
   return async (request: FastifyRequest, reply: FastifyReply) => {
@@ -58,21 +55,18 @@ export function requireAuth(): preHandlerHookHandler {
       throw new UnauthorizedError('Missing token');
     }
 
-    // TODO: Implement JWT verification
-    // For now, this is a placeholder that always fails
-    throw new UnauthorizedError('Authentication not yet implemented');
-
-    // Future implementation:
-    // try {
-    //   const decoded = await verifyJWT(token);
-    //   request.user = {
-    //     id: decoded.userId,
-    //     shopId: decoded.shopId,
-    //     role: decoded.role
-    //   };
-    // } catch (error) {
-    //   throw new UnauthorizedError('Invalid or expired token');
-    // }
+    // Verify JWT token
+    try {
+      const decoded = verifyToken(token);
+      request.user = {
+        id: decoded.userId,
+        shopId: decoded.shopId,
+        role: decoded.role,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid or expired token';
+      throw new UnauthorizedError(message);
+    }
   };
 }
 
@@ -96,7 +90,7 @@ export function requireAuth(): preHandlerHookHandler {
  * ```
  */
 export function requireRole(
-  allowedRoles: Array<'admin' | 'barber' | 'staff'>
+  allowedRoles: Array<'owner' | 'staff'>
 ): preHandlerHookHandler {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     if (!request.user) {
@@ -140,12 +134,12 @@ export function requireShopAccess(
 
     const requestedShopId = shopIdGetter(request);
 
-    // Admins can access any shop
-    if (request.user.role === 'admin') {
+    // Owners can access any shop (for multi-shop support in future)
+    if (request.user.role === 'owner') {
       return;
     }
 
-    // Other users can only access their own shop
+    // Staff can only access their own shop
     if (request.user.shopId !== requestedShopId) {
       throw new ForbiddenError('Access denied to this shop');
     }
@@ -186,20 +180,18 @@ export function optionalAuth(): preHandlerHookHandler {
       return;
     }
 
-    // TODO: Implement JWT verification
-    // For now, skip authentication
-    // Future implementation:
-    // try {
-    //   const decoded = await verifyJWT(token);
-    //   request.user = {
-    //     id: decoded.userId,
-    //     shopId: decoded.shopId,
-    //     role: decoded.role
-    //   };
-    // } catch (error) {
-    //   // Invalid token, but that's okay for optional auth
-    //   return;
-    // }
+    // Verify JWT token, but don't fail if invalid (optional auth)
+    try {
+      const decoded = verifyToken(token);
+      request.user = {
+        id: decoded.userId,
+        shopId: decoded.shopId,
+        role: decoded.role,
+      };
+    } catch (error) {
+      // Invalid token, but that's okay for optional auth
+      return;
+    }
   };
 }
 

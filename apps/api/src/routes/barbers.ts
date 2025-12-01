@@ -4,6 +4,7 @@ import { db, schema } from '../db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
 
 /**
  * Barber routes.
@@ -44,14 +45,18 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * Toggle barber presence.
    * When setting isPresent to false, unassigns any customer currently being served.
+   * Requires staff or owner authentication.
    * 
    * @route PATCH /api/barbers/:id/presence
    * @param id - Barber ID
    * @body isPresent - Whether the barber is present
    * @returns Updated barber
+   * @throws {401} If not authenticated
    * @throws {404} If barber not found
    */
-  fastify.patch('/barbers/:id/presence', async (request, reply) => {
+  fastify.patch('/barbers/:id/presence', {
+    preHandler: [requireAuth(), requireRole(['owner', 'staff'])],
+  }, async (request, reply) => {
     const paramsSchema = z.object({
       id: z.coerce.number().int().positive(),
     });
@@ -103,15 +108,20 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Update a barber's details.
+   * Requires owner authentication (only owners can modify barber details).
    * 
    * @route PATCH /api/barbers/:id
    * @param id - Barber ID
    * @body name - Optional barber name
    * @body avatarUrl - Optional avatar URL
    * @returns Updated barber
+   * @throws {401} If not authenticated
+   * @throws {403} If not owner
    * @throws {404} If barber not found
    */
-  fastify.patch('/barbers/:id', async (request, reply) => {
+  fastify.patch('/barbers/:id', {
+    preHandler: [requireAuth(), requireRole(['owner'])],
+  }, async (request, reply) => {
     const paramsSchema = z.object({
       id: z.coerce.number().int().positive(),
     });
@@ -155,15 +165,20 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Create a new barber for a shop.
+   * Requires owner authentication (only owners can create barbers).
    * 
    * @route POST /api/shops/:slug/barbers
    * @param slug - Shop slug identifier
    * @body name - Barber name
    * @body avatarUrl - Optional avatar URL
    * @returns Created barber
+   * @throws {401} If not authenticated
+   * @throws {403} If not owner
    * @throws {404} If shop not found
    */
-  fastify.post('/shops/:slug/barbers', async (request, reply) => {
+  fastify.post('/shops/:slug/barbers', {
+    preHandler: [requireAuth(), requireRole(['owner'])],
+  }, async (request, reply) => {
     const paramsSchema = z.object({
       slug: z.string().min(1),
     });
@@ -202,13 +217,18 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Delete a barber.
+   * Requires owner authentication (only owners can delete barbers).
    * 
    * @route DELETE /api/barbers/:id
    * @param id - Barber ID
    * @returns Success message
+   * @throws {401} If not authenticated
+   * @throws {403} If not owner
    * @throws {404} If barber not found
    */
-  fastify.delete('/barbers/:id', async (request, reply) => {
+  fastify.delete('/barbers/:id', {
+    preHandler: [requireAuth(), requireRole(['owner'])],
+  }, async (request, reply) => {
     const paramsSchema = z.object({
       id: z.coerce.number().int().positive(),
     });

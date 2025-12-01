@@ -2,6 +2,38 @@
 
 Complete backend documentation for EuToNaFila queue management system.
 
+## Implementation Status
+
+**Status:** ✅ Fully Implemented
+
+All core backend functionality is complete and operational. The backend provides:
+
+- ✅ Full REST API with all required endpoints
+- ✅ Database schema with migrations
+- ✅ Authentication system (PIN-based with JWT tokens)
+- ✅ JWT token-based authorization for protected endpoints
+- ✅ Queue management and calculations
+- ✅ Ticket lifecycle management
+- ✅ Barber management
+- ✅ Service management
+- ✅ Analytics endpoints
+- ✅ Error handling and validation
+- ✅ Service layer architecture
+
+### API Endpoints Status
+
+| Endpoint Group | Status | Notes |
+|----------------|--------|-------|
+| Queue Endpoints | ✅ Complete | GET queue, metrics, statistics |
+| Ticket Endpoints | ✅ Complete | CRUD operations fully implemented |
+| Authentication | ✅ Complete | PIN-based auth with JWT tokens and role-based access control |
+| Barber Endpoints | ✅ Complete | CRUD + presence toggle |
+| Service Endpoints | ✅ Complete | CRUD operations for service management |
+| Analytics | ✅ Complete | Statistics and metrics |
+| Health Check | ✅ Complete | Server status endpoint |
+
+---
+
 ## Technology Stack
 
 | Component | Technology |
@@ -25,6 +57,7 @@ apps/api/
 │   │   ├── queue.ts          # Queue endpoints
 │   │   ├── tickets.ts        # Ticket endpoints
 │   │   ├── barbers.ts        # Barber endpoints
+│   │   ├── services.ts       # Service endpoints
 │   │   ├── status.ts         # Status update endpoint
 │   │   ├── auth.ts           # Authentication endpoints
 │   │   └── analytics.ts      # Analytics endpoints
@@ -188,6 +221,70 @@ Check server status.
   }
 }
 ```
+
+---
+
+## Authentication
+
+The API uses JWT (JSON Web Tokens) for authentication. After verifying a PIN via `POST /api/shops/:slug/auth`, the API returns a JWT token that must be included in subsequent requests.
+
+### JWT Implementation Details
+
+**Token Structure:**
+- Algorithm: HS256 (HMAC SHA-256)
+- Expiration: 24 hours
+- Issuer: `eutonafila-api`
+- Audience: `eutonafila-client`
+- Payload includes:
+  - `userId`: Shop ID (used as user identifier)
+  - `shopId`: Shop ID
+  - `role`: `owner` or `staff`
+
+**Token Storage:**
+- Tokens are stateless and do not require server-side storage
+- Clients should store tokens securely (e.g., in memory or secure storage)
+- Tokens are automatically included in API client requests after authentication
+
+### Using JWT Tokens
+
+Include the token in the `Authorization` header:
+
+```
+Authorization: Bearer <token>
+```
+
+### Protected Endpoints
+
+The following endpoints require authentication:
+
+**Owner-only endpoints:**
+- `GET /api/shops/:slug/analytics` - View analytics
+- `POST /api/shops/:slug/barbers` - Create barber
+- `PATCH /api/barbers/:id` - Update barber details
+- `DELETE /api/barbers/:id` - Delete barber
+- `POST /api/shops/:slug/services` - Create service
+- `PATCH /api/services/:id` - Update service
+- `DELETE /api/services/:id` - Delete service
+
+**Staff and Owner endpoints:**
+- `PATCH /api/tickets/:id` - Update ticket
+- `PATCH /api/tickets/:id/status` - Update ticket status
+- `DELETE /api/tickets/:id` - Cancel ticket
+- `PATCH /api/barbers/:id/presence` - Toggle barber presence
+
+**Public endpoints (no authentication required):**
+- `GET /api/shops/:slug/queue` - View queue
+- `GET /api/shops/:slug/metrics` - View metrics
+- `GET /api/shops/:slug/statistics` - View statistics
+- `GET /api/shops/:slug/barbers` - List barbers
+- `GET /api/shops/:slug/services` - List services
+- `POST /api/shops/:slug/tickets` - Create ticket (join queue)
+- `GET /api/tickets/:id` - Get ticket status
+- `POST /api/shops/:slug/auth` - Authenticate
+
+### Token Expiration
+
+JWT tokens expire after 24 hours. When a token expires, clients should re-authenticate using the PIN to obtain a new token. Expired tokens will return a 401 Unauthorized error.
 
 ---
 
@@ -357,10 +454,14 @@ Get ticket by ID.
 
 #### PATCH /api/tickets/:id
 
-Update a ticket (assign/unassign barber, change status).
+Update a ticket (assign/unassign barber, change status).  
+**Requires authentication (staff or owner).**
 
 **Parameters**
 - `id` (path) - Ticket ID
+
+**Headers**
+- `Authorization: Bearer <token>` - JWT token (required)
 
 **Request Body**
 
@@ -381,6 +482,8 @@ Update a ticket (assign/unassign barber, change status).
 Returns updated ticket.
 
 **Errors**
+- `401` - Not authenticated
+- `403` - Insufficient permissions
 - `404` - Ticket not found
 
 **Use Cases:**
@@ -392,26 +495,36 @@ Returns updated ticket.
 
 #### DELETE /api/tickets/:id
 
-Cancel a ticket.
+Cancel a ticket.  
+**Requires authentication (staff or owner).**
 
 **Parameters**
 - `id` (path) - Ticket ID
+
+**Headers**
+- `Authorization: Bearer <token>` - JWT token (required)
 
 **Response**
 
 Returns the cancelled ticket with `status: "cancelled"`.
 
 **Errors**
+- `401` - Not authenticated
+- `403` - Insufficient permissions
 - `404` - Ticket not found
 
 ---
 
 #### PATCH /api/tickets/:id/status
 
-Update ticket status.
+Update ticket status.  
+**Requires authentication (staff or owner).**
 
 **Parameters**
 - `id` (path) - Ticket ID
+
+**Headers**
+- `Authorization: Bearer <token>` - JWT token (required)
 
 **Request Body**
 
@@ -431,6 +544,8 @@ Update ticket status.
 Returns updated ticket.
 
 **Errors**
+- `401` - Not authenticated
+- `403` - Insufficient permissions
 - `400` - Validation failed
 - `404` - Ticket or barber not found
 - `409` - Invalid status transition
@@ -461,7 +576,8 @@ Verify PIN for shop access.
 ```json
 {
   "valid": true,
-  "role": "owner"
+  "role": "owner",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
@@ -472,7 +588,7 @@ Verify PIN for shop access.
 **Errors**
 - `404` - Shop not found
 
-**Note:** Authentication is PIN-based. The system uses `ownerPin` and `staffPin` stored in the shops table. JWT is not currently implemented.
+**Note:** Authentication is PIN-based with JWT tokens. Users authenticate with a PIN, and the system issues a JWT token for subsequent requests. The system uses `ownerPin` and `staffPin` stored in the shops table.
 
 ---
 
@@ -504,10 +620,14 @@ Get all barbers for a shop.
 
 #### PATCH /api/barbers/:id/presence
 
-Toggle barber presence status.
+Toggle barber presence status.  
+**Requires authentication (staff or owner).**
 
 **Parameters**
 - `id` (path) - Barber ID
+
+**Headers**
+- `Authorization: Bearer <token>` - JWT token (required)
 
 **Request Body**
 
@@ -528,7 +648,149 @@ When setting `isPresent: false`:
 - Queue positions are recalculated
 
 **Errors**
+- `401` - Not authenticated
+- `403` - Insufficient permissions
 - `404` - Barber not found
+
+---
+
+### Service Endpoints
+
+#### GET /api/shops/:slug/services
+
+Get all services for a shop.
+
+**Parameters**
+- `slug` (path) - Shop identifier
+
+**Response**
+
+```json
+[
+  {
+    "id": 1,
+    "shopId": 1,
+    "name": "Corte de Cabelo",
+    "description": "Corte tradicional",
+    "duration": 30,
+    "price": 3000,
+    "isActive": true,
+    "createdAt": "2024-01-15T10:00:00.000Z",
+    "updatedAt": "2024-01-15T10:00:00.000Z"
+  }
+]
+```
+
+**Errors**
+- `404` - Shop not found
+
+---
+
+#### POST /api/shops/:slug/services
+
+Create a new service for a shop.  
+**Requires owner authentication.**
+
+**Parameters**
+- `slug` (path) - Shop identifier
+
+**Headers**
+- `Authorization: Bearer <token>` - JWT token (required)
+
+**Request Body**
+
+```json
+{
+  "name": "Corte + Barba",
+  "description": "Combo completo",
+  "duration": 45,
+  "price": 4500,
+  "isActive": true
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| name | string | Service name (required, 1-200 chars) |
+| description | string | Service description (optional, max 500 chars) |
+| duration | number | Duration in minutes (required, positive) |
+| price | number | Price in cents (optional, positive) |
+| isActive | boolean | Whether service is active (default true) |
+
+**Response (201)**
+
+Returns created service.
+
+**Errors**
+- `401` - Not authenticated
+- `403` - Insufficient permissions (not owner)
+- `404` - Shop not found
+- `400` - Validation failed
+
+---
+
+#### PATCH /api/services/:id
+
+Update a service's details.  
+**Requires owner authentication.**
+
+**Parameters**
+- `id` (path) - Service ID
+
+**Headers**
+- `Authorization: Bearer <token>` - JWT token (required)
+
+**Request Body**
+
+```json
+{
+  "name": "Corte Premium",
+  "price": 5000,
+  "isActive": false
+}
+```
+
+All fields are optional. Only provided fields will be updated.
+
+**Response**
+
+Returns updated service.
+
+**Errors**
+- `401` - Not authenticated
+- `403` - Insufficient permissions (not owner)
+- `404` - Service not found
+- `400` - Validation failed
+
+---
+
+#### DELETE /api/services/:id
+
+Delete a service.  
+**Requires owner authentication.**
+
+**Parameters**
+- `id` (path) - Service ID
+
+**Headers**
+- `Authorization: Bearer <token>` - JWT token (required)
+
+**Response**
+
+```json
+{
+  "success": true,
+  "message": "Service deleted successfully"
+}
+```
+
+**Errors**
+- `401` - Not authenticated
+- `403` - Insufficient permissions (not owner)
+- `404` - Service not found
+- `409` - Service is in use by active tickets
+
+**Note:** Services cannot be deleted if they are currently in use by tickets with status `waiting` or `in_progress`. Deactivate the service instead by setting `isActive: false`.
 
 ---
 
@@ -659,7 +921,7 @@ const isFull = await queueService.isQueueFull(shopId, 50);
 postgresql://user:password@host:5432/database
 ```
 
-**Note:** Authentication is currently PIN-based (stored in shops table). JWT_SECRET is reserved for potential future JWT implementation but is not currently used.
+**Note:** Authentication is PIN-based with JWT tokens. Users authenticate with a PIN via `POST /api/shops/:slug/auth`, which returns a JWT token. This token must be included in the `Authorization: Bearer <token>` header for protected endpoints. Tokens expire after 24 hours.
 
 ---
 

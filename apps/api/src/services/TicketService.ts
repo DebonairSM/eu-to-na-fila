@@ -1,5 +1,5 @@
 import { db, schema } from '../db/index.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or } from 'drizzle-orm';
 import type { CreateTicket, UpdateTicketStatus, Ticket } from '@eutonafila/shared';
 import { queueService } from './QueueService.js';
 
@@ -80,11 +80,48 @@ export class TicketService {
   }
 
   /**
+   * Find an active ticket for a customer (waiting or in_progress status).
+   * 
+   * @param shopId - Shop database ID
+   * @param customerName - Customer's name
+   * @returns The active ticket if found, null otherwise
+   * 
+   * @example
+   * ```typescript
+   * const existingTicket = await ticketService.findActiveTicketByCustomer(1, 'João Silva');
+   * if (existingTicket) {
+   *   // Customer already in queue
+   * }
+   * ```
+   */
+  async findActiveTicketByCustomer(shopId: number, customerName: string): Promise<Ticket | null> {
+    const ticket = await db.query.tickets.findFirst({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.customerName, customerName),
+        or(
+          eq(schema.tickets.status, 'waiting'),
+          eq(schema.tickets.status, 'in_progress')
+        )
+      ),
+      with: {
+        shop: true,
+        service: true,
+        barber: true,
+      },
+      orderBy: (tickets, { desc }) => [desc(tickets.createdAt)], // Get most recent
+    });
+
+    return ticket as Ticket | null;
+  }
+
+  /**
    * Create a new ticket and add it to the queue.
+   * If customer already has an active ticket, returns the existing ticket instead.
    * 
    * @param shopId - Shop database ID
    * @param data - Ticket creation data
-   * @returns The created ticket with position and estimated wait time
+   * @returns The created ticket (or existing ticket if customer already in queue) with position and estimated wait time
    * @throws {Error} If shop or service doesn't exist
    * @throws {Error} If queue is full
    * 
@@ -96,6 +133,7 @@ export class TicketService {
    *   customerPhone: '11999999999'
    * });
    * // Returns ticket with position: 3, estimatedWaitTime: 45
+   * // Or returns existing ticket if customer already in queue
    * ```
    */
   async create(shopId: number, data: CreateTicket): Promise<Ticket> {
@@ -122,6 +160,13 @@ export class TicketService {
 
     if (!service.isActive) {
       throw new Error('Service is not active');
+    }
+
+    // Check if customer already has an active ticket
+    const existingTicket = await this.findActiveTicketByCustomer(shopId, data.customerName);
+    if (existingTicket) {
+      // Return existing ticket instead of creating a new one
+      return existingTicket;
     }
 
     // Check if queue is full

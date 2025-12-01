@@ -4,6 +4,7 @@ import { api } from '@/lib/api';
 import { config } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
+import { getErrorMessage } from '@/lib/utils';
 
 export function LoginPage() {
   const [username, setUsername] = useState('');
@@ -34,8 +35,8 @@ export function LoginPage() {
 
       const result = await api.authenticate(config.slug, pin);
 
-      if (result.valid && result.role) {
-        // Login successful
+      if (result.valid && result.role && result.token) {
+        // Login successful - token is automatically stored in API client
         login({
           id: 1,
           username: username || 'user',
@@ -53,13 +54,7 @@ export function LoginPage() {
         setError('Credenciais inválidas. Tente novamente.');
       }
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else if (err && typeof err === 'object' && 'error' in err) {
-        setError((err as { error: string }).error);
-      } else {
-        setError('Erro ao fazer login. Tente novamente.');
-      }
+      setError(getErrorMessage(err, 'Erro ao fazer login. Tente novamente.'));
     } finally {
       setIsLoading(false);
     }

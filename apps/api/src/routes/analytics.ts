@@ -4,6 +4,7 @@ import { db, schema } from '../db/index.js';
 import { eq, and, gte, sql, desc } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
 
 /**
  * Analytics routes.
@@ -12,14 +13,18 @@ import { NotFoundError } from '../lib/errors.js';
 export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * Get detailed analytics for a shop.
-   * Requires PIN verification (done on frontend).
+   * Requires owner authentication (only owners can view analytics).
    * 
    * @route GET /api/shops/:slug/analytics
    * @param slug - Shop slug identifier
    * @query days - Number of days to look back (default 7)
    * @returns Detailed analytics data
+   * @throws {401} If not authenticated
+   * @throws {403} If not owner
    */
-  fastify.get('/shops/:slug/analytics', async (request, reply) => {
+  fastify.get('/shops/:slug/analytics', {
+    preHandler: [requireAuth(), requireRole(['owner'])],
+  }, async (request, reply) => {
     const paramsSchema = z.object({
       slug: z.string().min(1),
     });

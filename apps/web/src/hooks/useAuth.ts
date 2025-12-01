@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { api } from '@/lib/api';
 
 export type UserRole = 'owner' | 'barber';
 
@@ -66,6 +67,7 @@ export function useAuth() {
     sessionStorage.removeItem('staffAuth');
     sessionStorage.removeItem('staffUser');
     sessionStorage.removeItem('staffRole');
+    api.clearAuthToken(); // Clear JWT token from API client
     setAuthState({
       user: null,
       isAuthenticated: false,

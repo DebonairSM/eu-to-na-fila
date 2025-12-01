@@ -6,6 +6,7 @@ import { updateTicketStatusSchema } from '@eutonafila/shared';
 import { ticketService } from '../services/TicketService.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
 
 /**
  * Status routes.
@@ -14,17 +15,21 @@ import { NotFoundError } from '../lib/errors.js';
 export const statusRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * Update ticket status.
+   * Requires staff or owner authentication.
    * 
    * @route PATCH /api/tickets/:id/status
    * @param id - Ticket ID
    * @body status - New status (waiting, in_progress, completed, cancelled)
    * @body barberId - Barber ID (optional, required for in_progress)
    * @returns Updated ticket
+   * @throws {401} If not authenticated
    * @throws {404} If ticket or barber not found
    * @throws {400} If validation fails
    * @throws {409} If status transition is invalid
    */
-  fastify.patch('/tickets/:id/status', async (request, reply) => {
+  fastify.patch('/tickets/:id/status', {
+    preHandler: [requireAuth(), requireRole(['owner', 'staff'])],
+  }, async (request, reply) => {
     // Validate params
     const paramsSchema = z.object({
       id: z.coerce.number().int().positive(),

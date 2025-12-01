@@ -9,6 +9,7 @@ import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
+import { getErrorMessage } from '@/lib/utils';
 
 export function BarberManagementPage() {
   const { isOwner } = useAuthContext();
@@ -42,13 +43,7 @@ export function BarberManagementPage() {
       addModal.close();
       await refetch();
     } catch (error) {
-      if (error instanceof Error) {
-        alert(error.message);
-      } else if (error && typeof error === 'object' && 'error' in error) {
-        alert((error as { error: string }).error);
-      } else {
-        alert('Erro ao adicionar barbeiro. Tente novamente.');
-      }
+      alert(getErrorMessage(error, 'Erro ao adicionar barbeiro. Tente novamente.'));
     }
   };
 
@@ -68,13 +63,7 @@ export function BarberManagementPage() {
       editModal.close();
       await refetch();
     } catch (error) {
-      if (error instanceof Error) {
-        alert(error.message);
-      } else if (error && typeof error === 'object' && 'error' in error) {
-        alert((error as { error: string }).error);
-      } else {
-        alert('Erro ao atualizar barbeiro. Tente novamente.');
-      }
+      alert(getErrorMessage(error, 'Erro ao atualizar barbeiro. Tente novamente.'));
     }
   };
 
@@ -87,13 +76,7 @@ export function BarberManagementPage() {
       setBarberToDelete(null);
       await refetch();
     } catch (error) {
-      if (error instanceof Error) {
-        alert(error.message);
-      } else if (error && typeof error === 'object' && 'error' in error) {
-        alert((error as { error: string }).error);
-      } else {
-        alert('Erro ao remover barbeiro. Tente novamente.');
-      }
+      alert(getErrorMessage(error, 'Erro ao remover barbeiro. Tente novamente.'));
     }
   };
 

@@ -4,19 +4,20 @@ import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
+import { signToken } from '../lib/jwt.js';
 
 /**
  * Auth routes.
- * Simple PIN-based authentication for shop owners.
+ * PIN-based authentication that issues JWT tokens.
  */
 export const authRoutes: FastifyPluginAsync = async (fastify) => {
   /**
-   * Verify shop owner PIN.
+   * Verify shop PIN and issue JWT token.
    * 
    * @route POST /api/shops/:slug/auth
    * @param slug - Shop slug identifier
-   * @body pin - Owner PIN
-   * @returns { valid: boolean }
+   * @body pin - Owner or staff PIN
+   * @returns { valid: boolean, role: string, token?: string }
    */
   fastify.post('/shops/:slug/auth', async (request, reply) => {
     const paramsSchema = z.object({
@@ -37,17 +38,32 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Shop with slug "${slug}" not found`);
     }
 
+    let role: 'owner' | 'staff' | null = null;
+
     // Check owner PIN first
     if (shop.ownerPin === pin) {
-      return { valid: true, role: 'owner' };
-    }
-    
-    // Check staff PIN
-    if (shop.staffPin === pin) {
-      return { valid: true, role: 'staff' };
+      role = 'owner';
+    } else if (shop.staffPin === pin) {
+      // Check staff PIN
+      role = 'staff';
     }
 
-    return { valid: false, role: null };
+    if (!role) {
+      return { valid: false, role: null };
+    }
+
+    // Issue JWT token
+    const token = signToken({
+      userId: shop.id, // Using shop ID as user ID for now (no separate user table)
+      shopId: shop.id,
+      role,
+    });
+
+    return {
+      valid: true,
+      role,
+      token,
+    };
   });
 };
 

@@ -265,10 +265,11 @@ class ApiClient {
 
   /**
    * Create a new ticket (join queue).
+   * If customer already has an active ticket, returns the existing ticket instead.
    * 
    * @param shopSlug - Shop identifier
    * @param data - Ticket data
-   * @returns Created ticket with position and wait time
+   * @returns Ticket with position and wait time (may be existing ticket if customer already in queue)
    * @throws {ApiError} If validation fails or queue is full
    * 
    * @example
@@ -280,6 +281,7 @@ class ApiClient {
    *     customerPhone: '11999999999'
    *   });
    *   console.log(`Position in queue: ${ticket.position}`);
+   *   // Note: ticket may be an existing ticket if customer already in queue
    * } catch (error) {
    *   if (error instanceof ApiError && error.isValidationError()) {
    *     console.log('Validation errors:', error.getFieldErrors());
@@ -434,10 +436,17 @@ class ApiClient {
    * 
    * @param shopSlug - Shop identifier
    * @param pin - PIN code
-   * @returns Authentication result with role
+   * @returns Authentication result with role and token
    */
-  async authenticate(shopSlug: string, pin: string): Promise<{ valid: boolean; role: 'owner' | 'staff' | null }> {
-    return this.post(`/shops/${shopSlug}/auth`, { pin });
+  async authenticate(shopSlug: string, pin: string): Promise<{ valid: boolean; role: 'owner' | 'staff' | null; token?: string }> {
+    const result = await this.post<{ valid: boolean; role: 'owner' | 'staff' | null; token?: string }>(`/shops/${shopSlug}/auth`, { pin });
+    
+    // Store token if authentication was successful
+    if (result.valid && result.token) {
+      this.setAuthToken(result.token);
+    }
+    
+    return result;
   }
 
   // ==================== Analytics Endpoints ====================

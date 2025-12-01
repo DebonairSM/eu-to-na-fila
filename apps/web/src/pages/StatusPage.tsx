@@ -7,7 +7,7 @@ import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
-import { cn } from '@/lib/utils';
+import { cn, getErrorMessage } from '@/lib/utils';
 
 const AVG_SERVICE_TIME = 20; // minutes
 
@@ -44,13 +44,7 @@ export function StatusPage() {
       await api.cancelTicket(ticketId);
       navigate('/');
     } catch (error) {
-      if (error instanceof Error) {
-        alert(error.message);
-      } else if (error && typeof error === 'object' && 'error' in error) {
-        alert((error as { error: string }).error);
-      } else {
-        alert('Erro ao sair da fila. Tente novamente.');
-      }
+      alert(getErrorMessage(error, 'Erro ao sair da fila. Tente novamente.'));
     } finally {
       setIsLeaving(false);
       setShowLeaveConfirm(false);

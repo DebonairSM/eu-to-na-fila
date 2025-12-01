@@ -17,7 +17,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Button } from '@/components/ui/button';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
-import { cn } from '@/lib/utils';
+import { cn, getErrorMessage } from '@/lib/utils';
 
 const QUEUE_VIEW_DURATION = 15000; // 15 seconds
 const AD_VIEW_DURATION = 10000; // 10 seconds
@@ -84,13 +84,7 @@ export function BarberQueueManager() {
       checkInModal.close();
       await refetchQueue();
     } catch (error) {
-      if (error instanceof Error) {
-        alert(error.message);
-      } else if (error && typeof error === 'object' && 'error' in error) {
-        alert((error as { error: string }).error);
-      } else {
-        alert('Erro ao adicionar cliente. Tente novamente.');
-      }
+      alert(getErrorMessage(error, 'Erro ao adicionar cliente. Tente novamente.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -117,13 +111,7 @@ export function BarberQueueManager() {
       barberSelectorModal.close();
       setSelectedCustomerId(null);
     } catch (error) {
-      if (error instanceof Error) {
-        alert(error.message);
-      } else if (error && typeof error === 'object' && 'error' in error) {
-        alert((error as { error: string }).error);
-      } else {
-        alert('Erro ao atribuir barbeiro. Tente novamente.');
-      }
+      alert(getErrorMessage(error, 'Erro ao atribuir barbeiro. Tente novamente.'));
     }
   };
 
@@ -136,13 +124,7 @@ export function BarberQueueManager() {
       removeConfirmModal.close();
       setCustomerToRemove(null);
     } catch (error) {
-      if (error instanceof Error) {
-        alert(error.message);
-      } else if (error && typeof error === 'object' && 'error' in error) {
-        alert((error as { error: string }).error);
-      } else {
-        alert('Erro ao remover cliente. Tente novamente.');
-      }
+      alert(getErrorMessage(error, 'Erro ao remover cliente. Tente novamente.'));
     }
   };
 
@@ -157,13 +139,7 @@ export function BarberQueueManager() {
       completeConfirmModal.close();
       setCustomerToComplete(null);
     } catch (error) {
-      if (error instanceof Error) {
-        alert(error.message);
-      } else if (error && typeof error === 'object' && 'error' in error) {
-        alert((error as { error: string }).error);
-      } else {
-        alert('Erro ao finalizar atendimento. Tente novamente.');
-      }
+      alert(getErrorMessage(error, 'Erro ao finalizar atendimento. Tente novamente.'));
     }
   };
 
@@ -202,10 +178,11 @@ export function BarberQueueManager() {
                 const isServing = ticket.status === 'in_progress';
 
                 return (
-                  <div
+                  <button
                     key={ticket.id}
+                    type="button"
                     className={cn(
-                      'px-9 py-7 rounded-lg border-2 text-2xl cursor-pointer transition-all',
+                      'w-full px-9 py-7 rounded-lg border-2 text-2xl cursor-pointer transition-all text-left',
                       {
                         'bg-[#10B981]/20 border-[#10B981]': isServing,
                         'bg-white/5 border-primary/30': !isServing,
@@ -216,6 +193,7 @@ export function BarberQueueManager() {
                       barberSelectorModal.open();
                       showQueueView();
                     }}
+                    aria-label={`${ticket.customerName}, posição ${ticket.position}${assignedBarber ? `, atendido por ${assignedBarber.name}` : ''}`}
                   >
                     <div className="flex items-center gap-6">
                       {/* Position Badge - 56px × 56px circular for kiosk mode */}
@@ -241,7 +219,7 @@ export function BarberQueueManager() {
                         )}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -258,13 +236,7 @@ export function BarberQueueManager() {
                         await refetchBarbers();
                         await refetchQueue();
                       } catch (error) {
-                        if (error instanceof Error) {
-                          alert(error.message);
-                        } else if (error && typeof error === 'object' && 'error' in error) {
-                          alert((error as { error: string }).error);
-                        } else {
-                          alert('Erro ao alterar presença do barbeiro. Tente novamente.');
-                        }
+                        alert(getErrorMessage(error, 'Erro ao alterar presença do barbeiro. Tente novamente.'));
                       }
                     }}
                     className={cn(
@@ -273,6 +245,7 @@ export function BarberQueueManager() {
                         ? 'bg-green-500/20 border-green-500'
                         : 'bg-white/5 border-white/20 opacity-50'
                     )}
+                    aria-label={`${barber.isPresent ? 'Marcar' : 'Desmarcar'} ${barber.name} como ${barber.isPresent ? 'ausente' : 'presente'}`}
                   >
                     {barber.name}
                   </button>
@@ -288,6 +261,7 @@ export function BarberQueueManager() {
                   showQueueView();
                 }}
                 className="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-bold text-xl hover:bg-primary/90 transition-colors"
+                aria-label="Adicionar cliente à fila"
               >
                 {config.name}
               </button>
@@ -297,9 +271,11 @@ export function BarberQueueManager() {
 
         {/* Ad Views */}
         {(currentView === 'ad1' || currentView === 'ad2' || currentView === 'ad3') && (
-          <div
-            className="h-full flex items-center justify-center p-8 cursor-pointer relative"
+          <button
+            type="button"
+            className="h-full w-full flex items-center justify-center p-8 cursor-pointer relative"
             onClick={showQueueView}
+            aria-label="Voltar para visualização da fila"
           >
             <div className="text-center space-y-8 max-w-4xl">
               <h2 className="text-6xl font-bold">Anúncio {currentView.slice(-1)}</h2>
@@ -313,7 +289,7 @@ export function BarberQueueManager() {
             <div className="absolute bottom-4 right-4">
               <QRCode url={joinUrl} size={100} />
             </div>
-          </div>
+          </button>
         )}
 
         {/* Progress Bar */}

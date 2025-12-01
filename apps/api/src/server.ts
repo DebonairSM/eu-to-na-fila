@@ -12,6 +12,7 @@ import { queueRoutes } from './routes/queue.js';
 import { ticketRoutes } from './routes/tickets.js';
 import { statusRoutes } from './routes/status.js';
 import { barberRoutes } from './routes/barbers.js';
+import { serviceRoutes } from './routes/services.js';
 import { authRoutes } from './routes/auth.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
@@ -153,6 +154,7 @@ fastify.register(
     instance.register(ticketRoutes);
     instance.register(statusRoutes);
     instance.register(barberRoutes);
+    instance.register(serviceRoutes);
     instance.register(authRoutes);
     instance.register(analyticsRoutes);
   },

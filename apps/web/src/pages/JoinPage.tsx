@@ -8,6 +8,7 @@ import { WaitTimeDisplay } from '@/components/WaitTimeDisplay';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
+import { getErrorMessage } from '@/lib/utils';
 
 const AVG_SERVICE_TIME = 20; // minutes
 
@@ -17,6 +18,8 @@ export function JoinPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isAlreadyInQueue, setIsAlreadyInQueue] = useState(false);
+  const [existingTicketId, setExistingTicketId] = useState<number | null>(null);
   const navigate = useNavigate();
   const { validateName } = useProfanityFilter();
   const { data, isLoading: queueLoading, error: queueError } = useQueue(30000); // Poll every 30s
@@ -54,6 +57,8 @@ export function JoinPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
+    setIsAlreadyInQueue(false);
+    setExistingTicketId(null);
 
     const validation = validateName(firstName, lastName);
     if (!validation.isValid) {
@@ -65,6 +70,20 @@ export function JoinPage() {
       ? `${firstName.trim()} ${lastName.trim()}`
       : firstName.trim();
 
+    // Check if customer is already in queue before submitting
+    if (data) {
+      const existingTicket = data.tickets.find(
+        (t) =>
+          t.customerName === fullName &&
+          (t.status === 'waiting' || t.status === 'in_progress')
+      );
+      if (existingTicket) {
+        setIsAlreadyInQueue(true);
+        setExistingTicketId(existingTicket.id);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -73,15 +92,19 @@ export function JoinPage() {
         serviceId: 1, // Default service
       });
 
-      navigate(`/status/${ticket.id}`);
-    } catch (error) {
-      if (error instanceof Error) {
-        setSubmitError(error.message);
-      } else if (error && typeof error === 'object' && 'error' in error) {
-        setSubmitError((error as { error: string }).error);
+      // Check if this is likely an existing ticket (created more than 1 second ago)
+      // If the ticket was just created, createdAt should be very recent
+      const ticketAge = Date.now() - new Date(ticket.createdAt).getTime();
+      const isExistingTicket = ticketAge > 1000; // More than 1 second old
+
+      if (isExistingTicket) {
+        setIsAlreadyInQueue(true);
+        setExistingTicketId(ticket.id);
       } else {
-        setSubmitError('Erro ao entrar na fila. Tente novamente.');
+        navigate(`/status/${ticket.id}`);
       }
+    } catch (error) {
+      setSubmitError(getErrorMessage(error, 'Erro ao entrar na fila. Tente novamente.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -172,6 +195,32 @@ export function JoinPage() {
                 />
               </div>
 
+              {/* Already in Queue Message */}
+              {isAlreadyInQueue && existingTicketId && (
+                <div className="p-4 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30">
+                  <div className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
+                      info
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-[#D4AF37] mb-2">
+                        Você já está na fila!
+                      </p>
+                      <p className="text-sm text-[rgba(255,255,255,0.8)] mb-3">
+                        Você já possui um ticket ativo na fila. Clique no botão abaixo para ver seu status.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/status/${existingTicketId}`)}
+                        className="w-full px-4 py-2 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all"
+                      >
+                        Ver Meu Status
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Submit Error */}
               {submitError && (
                 <div className="p-3 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/20">
@@ -183,7 +232,7 @@ export function JoinPage() {
               <button
                 type="submit"
                 className="submit-btn w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-2 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isSubmitting || !!validationError}
+                disabled={isSubmitting || !!validationError || isAlreadyInQueue}
               >
                 {isSubmitting ? (
                   <>

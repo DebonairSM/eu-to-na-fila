@@ -2,6 +2,46 @@
 
 All user interactions supported by the queue management system.
 
+## Implementation Status
+
+| Category | Complete | Total | Status |
+|----------|----------|-------|--------|
+| Customer Stories | 4 | 4 | ✅ 100% |
+| Staff Stories | 7 | 7 | ✅ 100% |
+| Kiosk Stories | 5 | 5 | ✅ 100% |
+| Authentication | 2 | 2 | ✅ 100% |
+| Future Stories | 1 | 5 | 🟡 Partial |
+| **Total** | **19** | **23** | **✅ 83%** |
+
+### Completed User Stories
+- ✅ US-001: Join Queue
+- ✅ US-002: Check Queue Status
+- ✅ US-003: Leave Queue
+- ✅ US-018: Prevent Duplicate Queue Entry
+- ✅ US-004: View Queue
+- ✅ US-005: Start Service
+- ✅ US-006: Complete Service
+- ✅ US-007: Remove Customer
+- ✅ US-008: Add Customer (Staff Check-in)
+- ✅ US-009: Change Barber Assignment
+- ✅ US-010: Toggle Barber Presence
+- ✅ US-011: Display Queue (Kiosk)
+- ✅ US-012: Kiosk Mode Toggle
+- ✅ US-013: Kiosk Ad Rotation
+- ✅ US-014: Kiosk Touch Interaction
+- ✅ US-015: Kiosk QR Code
+- ✅ US-016: Staff Login
+- ✅ US-017: Owner Dashboard
+- ✅ US-F04: Analytics (Implemented)
+
+### Future Stories (Not Yet Implemented)
+- ⏳ US-F01: Service Selection
+- ⏳ US-F02: Barber Preference
+- ⏳ US-F03: Notifications
+- ⏳ US-F05: Appointments
+
+---
+
 ## Actors
 
 | Actor | Description |
@@ -16,6 +56,8 @@ All user interactions supported by the queue management system.
 ## Customer Stories
 
 ### US-001: Join Queue
+
+**Status:** ✅ Complete
 
 **As a** customer  
 **I want to** join the barbershop queue  
@@ -48,6 +90,8 @@ All user interactions supported by the queue management system.
 ---
 
 ### US-002: Check Queue Status
+
+**Status:** ✅ Complete
 
 **As a** customer  
 **I want to** see my position in the queue  
@@ -89,6 +133,8 @@ Estimated wait = (average service time × people ahead) / active barbers
 
 ### US-003: Leave Queue
 
+**Status:** ✅ Complete
+
 **As a** customer  
 **I want to** remove myself from the queue  
 **So that** I can leave if I no longer want to wait
@@ -113,9 +159,47 @@ Estimated wait = (average service time × people ahead) / active barbers
 
 ---
 
+### US-018: Prevent Duplicate Queue Entry
+
+**Status:** ✅ Complete
+
+**As a** customer  
+**I want to** be informed if I'm already in the queue  
+**So that** I don't accidentally create duplicate entries
+
+**Acceptance Criteria:**
+- Customer enters their name to join the queue
+- System checks for existing active tickets (status `waiting` or `in_progress`) with matching customer name
+- If customer already has an active ticket:
+  - System returns the existing ticket instead of creating a new one
+  - Frontend displays message: "Você já está na fila!"
+  - Shows customer's current position and estimated wait time
+  - Provides button to view their status page
+  - Customer is redirected to their existing ticket status page
+- If customer is not in queue:
+  - System creates new ticket as normal
+  - Customer proceeds to status page
+
+**Removal from Queue:**
+- Customer is removed from queue when:
+  - Barber removes them (status changes to `cancelled`)
+  - Barber finalizes their haircut (status changes to `completed`)
+- After removal, customer can join queue again with same name
+
+**Technical Notes:**
+- Duplicate check performed by matching `customerName` and `shopId`
+- Only checks tickets with status `waiting` or `in_progress`
+- Case-sensitive name matching (exact match required)
+- Returns existing ticket with 200 status (vs 201 for new ticket)
+- POST /api/shops/:slug/tickets may return existing ticket
+
+---
+
 ## Staff Stories
 
 ### US-004: View Queue
+
+**Status:** ✅ Complete
 
 **As a** staff member  
 **I want to** see the current queue  
@@ -140,6 +224,8 @@ Estimated wait = (average service time × people ahead) / active barbers
 
 ### US-005: Start Service
 
+**Status:** ✅ Complete
+
 **As a** staff member  
 **I want to** start serving a customer  
 **So that** they know their turn has come
@@ -163,6 +249,8 @@ waiting → in_progress (with barber assignment)
 ---
 
 ### US-006: Complete Service
+
+**Status:** ✅ Complete
 
 **As a** staff member  
 **I want to** mark a service as complete  
@@ -191,6 +279,8 @@ in_progress → completed
 
 ### US-007: Remove Customer
 
+**Status:** ✅ Complete
+
 **As a** staff member  
 **I want to** remove a customer from the queue  
 **So that** absent customers don't hold up the line
@@ -215,6 +305,8 @@ in_progress → completed
 ---
 
 ### US-008: Add Customer (Staff Check-in)
+
+**Status:** ✅ Complete
 
 **As a** staff member  
 **I want to** add a customer to the queue directly  
@@ -245,6 +337,8 @@ in_progress → completed
 
 ### US-009: Change Barber Assignment
 
+**Status:** ✅ Complete
+
 **As a** staff member  
 **I want to** change which barber is serving a customer  
 **So that** I can reassign when needed
@@ -268,6 +362,8 @@ waiting → serving (barber)  // Assign
 ---
 
 ### US-010: Toggle Barber Presence
+
+**Status:** ✅ Complete
 
 **As a** staff member  
 **I want to** mark barbers as present or absent  
@@ -294,6 +390,8 @@ waiting → serving (barber)  // Assign
 
 ### US-011: Display Queue
 
+**Status:** ✅ Complete
+
 **As a** display screen  
 **I want to** show the current queue  
 **So that** customers in the shop can see their position
@@ -314,6 +412,8 @@ waiting → serving (barber)  // Assign
 
 ### US-012: Kiosk Mode Toggle
 
+**Status:** ✅ Complete
+
 **As a** staff member  
 **I want to** toggle kiosk mode  
 **So that** I can use the same device for management and display
@@ -330,6 +430,8 @@ waiting → serving (barber)  // Assign
 ---
 
 ### US-013: Kiosk Ad Rotation
+
+**Status:** ✅ Complete
 
 **As a** shop owner  
 **I want to** display advertisements between queue views  
@@ -356,6 +458,8 @@ Queue View (15s) → Ad 1 (10s) → Queue View (15s) → Ad 2 (10s) → Queue Vi
 
 ### US-014: Kiosk Touch Interaction
 
+**Status:** ✅ Complete
+
 **As a** staff member viewing kiosk  
 **I want to** interact with the queue from kiosk mode  
 **So that** I don't need to switch modes frequently
@@ -373,6 +477,8 @@ Queue View (15s) → Ad 1 (10s) → Queue View (15s) → Ad 2 (10s) → Queue Vi
 
 ### US-015: Kiosk QR Code
 
+**Status:** ✅ Complete
+
 **As a** customer  
 **I want to** scan a QR code to join the queue  
 **So that** I can register without talking to staff
@@ -389,6 +495,8 @@ Queue View (15s) → Ad 1 (10s) → Queue View (15s) → Ad 2 (10s) → Queue Vi
 ## Authentication Stories
 
 ### US-016: Staff Login
+
+**Status:** ✅ Complete
 
 **As a** staff member  
 **I want to** log in to the system  
@@ -428,6 +536,8 @@ Queue View (15s) → Ad 1 (10s) → Queue View (15s) → Ad 2 (10s) → Queue Vi
 ---
 
 ### US-017: Owner Dashboard
+
+**Status:** ✅ Complete
 
 **As a** shop owner  
 **I want to** access administrative functions  
@@ -473,6 +583,8 @@ Queue View (15s) → Ad 1 (10s) → Queue View (15s) → Ad 2 (10s) → Queue Vi
 ---
 
 ### US-F04: Analytics
+
+**Status:** ✅ Complete
 
 **As a** shop owner  
 **I want to** view queue statistics  
