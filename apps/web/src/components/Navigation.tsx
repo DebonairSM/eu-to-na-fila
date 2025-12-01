@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { config } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
 
@@ -8,6 +8,7 @@ export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, logout } = useAuthContext();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,6 +22,39 @@ export function Navigation() {
     logout();
     navigate('/');
     setIsMobileMenuOpen(false);
+  };
+
+  const scrollToSection = (targetId: string) => {
+    const element = document.getElementById(targetId);
+    if (element) {
+      const headerOffset = 100; // Account for fixed header
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleHashLink = (e: React.MouseEvent<HTMLAnchorElement>, hash: string) => {
+    e.preventDefault();
+    const targetId = hash.replace('#', '');
+    
+    // If we're already on the landing page, just scroll
+    if (location.pathname === '/') {
+      scrollToSection(targetId);
+      setIsMobileMenuOpen(false);
+    } else {
+      // Navigate to landing page with hash, then scroll after a short delay
+      navigate(`/${hash}`);
+      setIsMobileMenuOpen(false);
+      // Wait for navigation and DOM update, then scroll
+      setTimeout(() => {
+        scrollToSection(targetId);
+      }, 300);
+    }
   };
 
   return (
@@ -48,28 +82,31 @@ export function Navigation() {
           {/* Desktop Navigation */}
           <ul className="nav-links hidden md:flex items-center gap-8 list-none m-0 p-0">
             <li>
-              <Link
-                to="/#services"
-                className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+              <a
+                href="/#services"
+                onClick={(e) => handleHashLink(e, '#services')}
+                className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 cursor-pointer"
               >
                 Serviços
-              </Link>
+              </a>
             </li>
             <li>
-              <Link
-                to="/#about"
-                className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+              <a
+                href="/#about"
+                onClick={(e) => handleHashLink(e, '#about')}
+                className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 cursor-pointer"
               >
                 Sobre
-              </Link>
+              </a>
             </li>
             <li>
-              <Link
-                to="/#location"
-                className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+              <a
+                href="/#location"
+                onClick={(e) => handleHashLink(e, '#location')}
+                className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 cursor-pointer"
               >
                 Localização
-              </Link>
+              </a>
             </li>
             {user ? (
               <>
@@ -158,40 +195,40 @@ export function Navigation() {
         </button>
         <ul className="nav-menu-links list-none m-0 p-0 flex flex-col gap-2 relative z-10">
           <li>
-            <Link
-              to="/#services"
-              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+            <a
+              href="/#services"
               onClick={(e) => {
                 e.stopPropagation();
-                setIsMobileMenuOpen(false);
+                handleHashLink(e, '#services');
               }}
+              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
             >
               Serviços
-            </Link>
+            </a>
           </li>
           <li>
-            <Link
-              to="/#about"
-              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+            <a
+              href="/#about"
               onClick={(e) => {
                 e.stopPropagation();
-                setIsMobileMenuOpen(false);
+                handleHashLink(e, '#about');
               }}
+              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
             >
               Sobre
-            </Link>
+            </a>
           </li>
           <li>
-            <Link
-              to="/#location"
-              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+            <a
+              href="/#location"
               onClick={(e) => {
                 e.stopPropagation();
-                setIsMobileMenuOpen(false);
+                handleHashLink(e, '#location');
               }}
+              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
             >
               Localização
-            </Link>
+            </a>
           </li>
         </ul>
         <div className="relative z-10">
