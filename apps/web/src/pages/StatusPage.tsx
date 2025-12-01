@@ -55,11 +55,11 @@ export function StatusPage() {
 
   if (!id) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
         <Navigation />
-        <div className="container mx-auto px-4 pt-24 pb-12 max-w-md">
+        <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12 max-w-[480px]">
           <div className="text-center space-y-4">
-            <p className="text-muted-foreground">Nenhum ticket ID fornecido</p>
+            <p className="text-[rgba(255,255,255,0.7)]">Nenhum ticket ID fornecido</p>
             <Link to="/">
               <button className="px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all">
                 Voltar ao Início
@@ -73,9 +73,9 @@ export function StatusPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
         <Navigation />
-        <div className="container mx-auto px-4 pt-24 pb-12 max-w-md">
+        <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12 max-w-[480px]">
           <LoadingSpinner size="lg" text="Carregando status do ticket..." />
         </div>
       </div>
@@ -84,9 +84,9 @@ export function StatusPage() {
 
   if (error || !ticket) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
         <Navigation />
-        <div className="container mx-auto px-4 pt-24 pb-12 max-w-md">
+        <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12 max-w-[480px]">
           <ErrorDisplay
             error={error || new Error('Ticket não encontrado')}
             onRetry={() => window.location.reload()}
