@@ -37,7 +37,7 @@ function ProtectedRoute({
 
 function App() {
   return (
-    <div className="min-h-screen bg-background">
+    <>
       {/* Skip to content link for accessibility */}
       <a href="#main-content" className="skip-link">
         Pular para o conteúdo principal
@@ -94,7 +94,7 @@ function App() {
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </div>
+    </>
   );
 }
 
