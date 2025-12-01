@@ -26,7 +26,7 @@ export function JoinPage() {
   const { validateName } = useProfanityFilter();
   const { data, isLoading: queueLoading, error: queueError } = useQueue(30000); // Poll every 30s
 
-  // Check for stored ticket on mount
+  // Check for stored ticket on mount (only once)
   useEffect(() => {
     const checkStoredTicket = async () => {
       const storedTicketId = localStorage.getItem(STORAGE_KEY);
@@ -62,7 +62,8 @@ export function JoinPage() {
     };
 
     checkStoredTicket();
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   // Calculate wait time
   const waitTime = (() => {

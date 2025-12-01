@@ -109,13 +109,23 @@ export function StatusPage() {
 
   // Clear stored ticket ID when ticket is completed or cancelled
   useEffect(() => {
-    if (ticket && (ticket.status === 'completed' || ticket.status === 'cancelled')) {
-      localStorage.removeItem('eutonafila_active_ticket_id');
-    } else if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
-      // Store ticket ID when viewing active ticket
-      localStorage.setItem('eutonafila_active_ticket_id', ticket.id.toString());
+    if (!ticket) return;
+    
+    const storedTicketId = localStorage.getItem('eutonafila_active_ticket_id');
+    const currentTicketId = ticket.id.toString();
+    
+    if (ticket.status === 'completed' || ticket.status === 'cancelled') {
+      // Only remove if it was stored
+      if (storedTicketId === currentTicketId) {
+        localStorage.removeItem('eutonafila_active_ticket_id');
+      }
+    } else if (ticket.status === 'waiting' || ticket.status === 'in_progress') {
+      // Only store if it's different from what's already stored
+      if (storedTicketId !== currentTicketId) {
+        localStorage.setItem('eutonafila_active_ticket_id', currentTicketId);
+      }
     }
-  }, [ticket]);
+  }, [ticket?.id, ticket?.status]);
 
   // Calculate position info
   const positionInfo = (() => {
