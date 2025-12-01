@@ -13,9 +13,9 @@ const AVG_SERVICE_TIME = 20; // minutes
 
 export function StatusPage() {
   const { id } = useParams<{ id: string }>();
-  const ticketId = id ? parseInt(id, 10) : null;
+  const ticketIdFromParams = id ? parseInt(id, 10) : null;
   const navigate = useNavigate();
-  const { ticket, isLoading, error } = useTicketStatus(ticketId);
+  const { ticket, isLoading, error } = useTicketStatus(ticketIdFromParams);
   const { data: queueData } = useQueue(3000); // Poll every 3s
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
@@ -39,11 +39,11 @@ export function StatusPage() {
   })();
 
   const handleLeaveQueue = async () => {
-    if (!ticketId) return;
+    if (!ticketIdFromParams) return;
 
     setIsLeaving(true);
     try {
-      await api.cancelTicket(ticketId);
+      await api.cancelTicket(ticketIdFromParams);
       // Clear stored ticket ID when leaving queue
       localStorage.removeItem('eutonafila_active_ticket_id');
       navigate('/');
