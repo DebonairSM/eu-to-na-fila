@@ -22,6 +22,39 @@ export function StatusPage() {
   const prevStatusRef = useRef<string | null>(null);
   const hasStoredTicketRef = useRef(false);
 
+  // Extract stable values for dependencies (must be before conditional returns)
+  const ticketId = ticket?.id ?? null;
+  const ticketStatus = ticket?.status ?? null;
+
+  // Handle localStorage updates based on ticket status (MUST be before conditional returns)
+  useEffect(() => {
+    if (!ticketStatus || ticketId === null) return;
+    
+    const prevStatus = prevStatusRef.current;
+    
+    // Only update if status actually changed
+    if (prevStatus === ticketStatus) {
+      return;
+    }
+    
+    // Update ref immediately to prevent re-running
+    prevStatusRef.current = ticketStatus;
+    
+    // Handle localStorage based on status
+    if (ticketStatus === 'completed' || ticketStatus === 'cancelled') {
+      // Clear if it was stored
+      const storedTicketId = localStorage.getItem('eutonafila_active_ticket_id');
+      if (storedTicketId === ticketId.toString()) {
+        localStorage.removeItem('eutonafila_active_ticket_id');
+        hasStoredTicketRef.current = false;
+      }
+    } else if ((ticketStatus === 'waiting' || ticketStatus === 'in_progress') && !hasStoredTicketRef.current) {
+      // Store only if we haven't stored it yet
+      localStorage.setItem('eutonafila_active_ticket_id', ticketId.toString());
+      hasStoredTicketRef.current = true;
+    }
+  }, [ticketStatus, ticketId]);
+
   // Calculate wait time
   const waitTime = (() => {
     if (!ticket || ticket.status !== 'waiting' || !queueData) return null;
@@ -108,39 +141,6 @@ export function StatusPage() {
   const isWaiting = ticket.status === 'waiting';
   const isInProgress = ticket.status === 'in_progress';
   const isCompleted = ticket.status === 'completed';
-
-  // Extract stable values for dependencies
-  const ticketId = ticket?.id ?? null;
-  const ticketStatus = ticket?.status ?? null;
-
-  // Handle localStorage updates based on ticket status
-  useEffect(() => {
-    if (!ticketStatus || ticketId === null) return;
-    
-    const prevStatus = prevStatusRef.current;
-    
-    // Only update if status actually changed
-    if (prevStatus === ticketStatus) {
-      return;
-    }
-    
-    // Update ref immediately to prevent re-running
-    prevStatusRef.current = ticketStatus;
-    
-    // Handle localStorage based on status
-    if (ticketStatus === 'completed' || ticketStatus === 'cancelled') {
-      // Clear if it was stored
-      const storedTicketId = localStorage.getItem('eutonafila_active_ticket_id');
-      if (storedTicketId === ticketId.toString()) {
-        localStorage.removeItem('eutonafila_active_ticket_id');
-        hasStoredTicketRef.current = false;
-      }
-    } else if ((ticketStatus === 'waiting' || ticketStatus === 'in_progress') && !hasStoredTicketRef.current) {
-      // Store only if we haven't stored it yet
-      localStorage.setItem('eutonafila_active_ticket_id', ticketId.toString());
-      hasStoredTicketRef.current = true;
-    }
-  }, [ticketStatus, ticketId]);
 
   // Calculate position info
   const positionInfo = (() => {
