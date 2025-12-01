@@ -12,18 +12,15 @@ export function OwnerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
-      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_70%)] animate-spin-slow pointer-events-none" />
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative" style={{ backgroundAttachment: 'fixed' }}>
+      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_70%)] animate-spin-slow pointer-events-none" style={{ backgroundAttachment: 'fixed' }} />
       <Navigation />
-      <div className="container max-w-[800px] mx-auto relative z-10 pt-24 sm:pt-28 px-4 sm:px-6 lg:px-10">
+      <div className="container max-w-[800px] mx-auto relative z-10 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-12">
         {/* Header */}
-        <div className="header text-center mb-12 sm:mb-16">
-          <h1 className="title font-['Playfair_Display',serif] text-[2rem] sm:text-[2.5rem] font-semibold text-[#D4AF37] mb-2">
+        <div className="header text-center mb-10 sm:mb-12">
+          <h1 className="title font-['Playfair_Display',serif] text-xl sm:text-2xl font-semibold text-[#D4AF37]">
             Dashboard
           </h1>
-          <p className="subtitle text-sm sm:text-base text-[rgba(255,255,255,0.6)]">
-            {user?.name || user?.username || 'Proprietário'}
-          </p>
         </div>
 
         {/* Options Grid */}
