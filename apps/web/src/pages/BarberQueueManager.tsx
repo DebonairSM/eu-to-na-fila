@@ -119,7 +119,7 @@ export function BarberQueueManager() {
     if (!customerToRemove) return;
 
     try {
-      await api.cancelTicket(customerToRemove);
+      await api.cancelTicketAsStaff(customerToRemove);
       await refetchQueue();
       removeConfirmModal.close();
       setCustomerToRemove(null);

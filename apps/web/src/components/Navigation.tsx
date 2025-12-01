@@ -25,7 +25,7 @@ export function Navigation() {
 
   return (
     <nav
-      className={`nav fixed top-0 left-0 right-0 z-50 transition-all ${
+      className={`nav fixed top-0 left-0 right-0 z-30 transition-all ${
         isScrolled
           ? 'bg-[rgba(10,10,10,0.95)] backdrop-blur-[20px] py-4 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
           : 'bg-[rgba(10,10,10,0.8)] backdrop-blur-[20px] py-5'
@@ -130,7 +130,7 @@ export function Navigation() {
 
       {/* Mobile Menu */}
       <div
-        className={`nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[rgba(10,10,10,0.98)] backdrop-blur-[20px] z-[99] p-6 sm:p-10 pt-20 flex flex-col transform transition-transform duration-300 ${
+        className={`nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[rgba(10,10,10,0.98)] backdrop-blur-[20px] z-40 p-6 sm:p-10 pt-20 flex flex-col transform transition-transform duration-300 ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         } md:hidden`}
         role="dialog"

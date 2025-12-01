@@ -15,7 +15,7 @@ export function LandingPage() {
 
         <div className="hero-content relative z-10 text-center px-4 sm:px-5 max-w-[900px] mx-auto">
           <div className="hero-badge inline-block px-4 sm:px-5 py-2 mb-6 sm:mb-8 border border-[rgba(212,175,55,0.4)] rounded-full text-[#D4AF37] text-xs font-medium uppercase tracking-widest fade-in-down">
-            Orlando, Florida
+            Sangão, Santa Catarina
           </div>
           <h1 className="hero-title font-['Playfair_Display',serif] text-[clamp(2.5rem,8vw,6rem)] font-bold leading-[1.1] mb-4 sm:mb-6 fade-in-up" style={{ animationDelay: '0.2s' }}>
             <span className="text-[#D4AF37]">Barbearia</span>
@@ -112,7 +112,7 @@ export function LandingPage() {
                 comprometida em proporcionar a melhor experiência.
               </p>
               <p className="text-muted-foreground mb-8 leading-relaxed">
-                Localizada em Orlando, FL, atendemos a comunidade brasileira e todos que
+                Localizada em Sangão, SC, atendemos a comunidade local e todos que
                 buscam um serviço de excelência em um ambiente acolhedor.
               </p>
               <div className="grid grid-cols-2 gap-4">
@@ -160,10 +160,12 @@ export function LandingPage() {
                   title: 'Endereço',
                   content: (
                     <>
-                      Orlando, FL
+                      R. João M Silvano, 281 - Morro Grande
+                      <br />
+                      Sangão - SC, 88717-000
                       <br />
                       <a
-                        href="https://maps.app.goo.gl/ZBiFuM3hgavG7ctM9"
+                        href="https://www.google.com/maps/search/?api=1&query=R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline"
@@ -188,8 +190,8 @@ export function LandingPage() {
                   icon: 'phone',
                   title: 'Telefone',
                   content: (
-                    <a href="tel:+14071234567" className="text-primary hover:underline">
-                      (407) 123-4567
+                    <a href="tel:+5548998354097" className="text-primary hover:underline">
+                      (48) 99835-4097
                     </a>
                   ),
                 },
@@ -212,7 +214,7 @@ export function LandingPage() {
             </div>
             <div className="rounded-xl overflow-hidden border border-primary/20">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224444.94052046655!2d-81.52451835!3d28.481398349999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88e773d8fecdbc77%3A0xac3b2063ca5bf9e!2sOrlando%2C%20FL!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
+                src="https://www.google.com/maps?q=R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000&output=embed"
                 width="100%"
                 height="400"
                 style={{ border: 0 }}
@@ -220,6 +222,7 @@ export function LandingPage() {
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 className="grayscale hover:grayscale-0 transition-all"
+                title="Localização da Barbearia Mineiro"
               />
             </div>
           </div>

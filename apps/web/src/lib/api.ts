@@ -80,9 +80,15 @@ export class ApiError extends Error {
 class ApiClient {
   private baseUrl: string;
   private authToken?: string;
+  private readonly TOKEN_STORAGE_KEY = 'eutonafila_auth_token';
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+    // Load token from sessionStorage on initialization
+    const storedToken = sessionStorage.getItem(this.TOKEN_STORAGE_KEY);
+    if (storedToken) {
+      this.authToken = storedToken;
+    }
   }
 
   /**
@@ -92,6 +98,8 @@ class ApiClient {
    */
   setAuthToken(token: string): void {
     this.authToken = token;
+    // Persist token to sessionStorage
+    sessionStorage.setItem(this.TOKEN_STORAGE_KEY, token);
   }
 
   /**
@@ -99,6 +107,8 @@ class ApiClient {
    */
   clearAuthToken(): void {
     this.authToken = undefined;
+    // Remove token from sessionStorage
+    sessionStorage.removeItem(this.TOKEN_STORAGE_KEY);
   }
 
   /**
@@ -339,6 +349,7 @@ class ApiClient {
   /**
    * Cancel a ticket (customer self-service).
    * Public endpoint that allows customers to cancel their own tickets.
+   * Only works for tickets with status 'waiting'.
    * 
    * @param ticketId - Ticket ID
    * @returns Cancelled ticket
@@ -346,6 +357,18 @@ class ApiClient {
    */
   async cancelTicket(ticketId: number): Promise<Ticket> {
     return this.post(`/tickets/${ticketId}/cancel`, {});
+  }
+
+  /**
+   * Cancel a ticket (staff/owner only).
+   * Requires authentication. Can cancel tickets in any status.
+   * 
+   * @param ticketId - Ticket ID
+   * @returns Cancelled ticket
+   * @throws {ApiError} If not authenticated or ticket not found
+   */
+  async cancelTicketAsStaff(ticketId: number): Promise<Ticket> {
+    return this.delete(`/tickets/${ticketId}`);
   }
 
   // ==================== Future Endpoints ====================
