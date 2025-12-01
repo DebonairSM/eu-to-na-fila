@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useTicketStatus } from '@/hooks/useTicketStatus';
 import { useQueue } from '@/hooks/useQueue';
@@ -42,6 +42,8 @@ export function StatusPage() {
     setIsLeaving(true);
     try {
       await api.cancelTicket(ticketId);
+      // Clear stored ticket ID when leaving queue
+      localStorage.removeItem('eutonafila_active_ticket_id');
       navigate('/');
     } catch (error) {
       alert(getErrorMessage(error, 'Erro ao sair da fila. Tente novamente.'));
@@ -104,6 +106,16 @@ export function StatusPage() {
   const isWaiting = ticket.status === 'waiting';
   const isInProgress = ticket.status === 'in_progress';
   const isCompleted = ticket.status === 'completed';
+
+  // Clear stored ticket ID when ticket is completed or cancelled
+  useEffect(() => {
+    if (ticket && (ticket.status === 'completed' || ticket.status === 'cancelled')) {
+      localStorage.removeItem('eutonafila_active_ticket_id');
+    } else if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
+      // Store ticket ID when viewing active ticket
+      localStorage.setItem('eutonafila_active_ticket_id', ticket.id.toString());
+    }
+  }, [ticket]);
 
   // Calculate position info
   const positionInfo = (() => {

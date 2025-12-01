@@ -11,6 +11,7 @@ import { Navigation } from '@/components/Navigation';
 import { getErrorMessage } from '@/lib/utils';
 
 const AVG_SERVICE_TIME = 20; // minutes
+const STORAGE_KEY = 'eutonafila_active_ticket_id';
 
 export function JoinPage() {
   const [firstName, setFirstName] = useState('');
@@ -20,9 +21,48 @@ export function JoinPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isAlreadyInQueue, setIsAlreadyInQueue] = useState(false);
   const [existingTicketId, setExistingTicketId] = useState<number | null>(null);
+  const [isCheckingStoredTicket, setIsCheckingStoredTicket] = useState(true);
   const navigate = useNavigate();
   const { validateName } = useProfanityFilter();
   const { data, isLoading: queueLoading, error: queueError } = useQueue(30000); // Poll every 30s
+
+  // Check for stored ticket on mount
+  useEffect(() => {
+    const checkStoredTicket = async () => {
+      const storedTicketId = localStorage.getItem(STORAGE_KEY);
+      if (!storedTicketId) {
+        setIsCheckingStoredTicket(false);
+        return;
+      }
+
+      const ticketId = parseInt(storedTicketId, 10);
+      if (isNaN(ticketId)) {
+        localStorage.removeItem(STORAGE_KEY);
+        setIsCheckingStoredTicket(false);
+        return;
+      }
+
+      try {
+        // Verify ticket still exists and is active
+        const ticket = await api.getTicket(ticketId);
+        if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
+          // Ticket is still active, redirect to status page
+          navigate(`/status/${ticketId}`, { replace: true });
+          return;
+        } else {
+          // Ticket is completed or cancelled, clear storage
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      } catch (error) {
+        // Ticket not found or error, clear storage
+        localStorage.removeItem(STORAGE_KEY);
+      } finally {
+        setIsCheckingStoredTicket(false);
+      }
+    };
+
+    checkStoredTicket();
+  }, [navigate]);
 
   // Calculate wait time
   const waitTime = (() => {
@@ -80,6 +120,8 @@ export function JoinPage() {
       if (existingTicket) {
         setIsAlreadyInQueue(true);
         setExistingTicketId(existingTicket.id);
+        // Store ticket ID in localStorage
+        localStorage.setItem(STORAGE_KEY, existingTicket.id.toString());
         return;
       }
     }
@@ -91,6 +133,9 @@ export function JoinPage() {
         customerName: fullName,
         serviceId: 1, // Default service
       });
+
+      // Store ticket ID in localStorage for persistence
+      localStorage.setItem(STORAGE_KEY, ticket.id.toString());
 
       // Check if this is likely an existing ticket (created more than 1 second ago)
       // If the ticket was just created, createdAt should be very recent
@@ -109,6 +154,18 @@ export function JoinPage() {
       setIsSubmitting(false);
     }
   };
+
+  // Show loading while checking stored ticket
+  if (isCheckingStoredTicket) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
+        <Navigation />
+        <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12 max-w-[480px]">
+          <LoadingSpinner text="Verificando seu status..." />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
