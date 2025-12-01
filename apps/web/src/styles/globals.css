@@ -80,15 +80,23 @@
   
   html {
     scroll-behavior: smooth;
+    background-color: transparent; /* Don't apply background to html */
   }
   
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
     font-family: 'Roboto', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    background-color: #0a0a0a; /* Fallback dark background */
+    background-color: transparent; /* Let page components handle their own backgrounds */
+    margin: 0;
+    padding: 0;
+  }
+  
+  #root {
+    background-color: transparent;
+    min-height: 100vh;
   }
   
   /* Touch improvements */
