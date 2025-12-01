@@ -144,7 +144,39 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
-   * Cancel a ticket.
+   * Cancel a ticket (public endpoint for customers).
+   * Allows customers to cancel their own tickets without authentication.
+   * 
+   * @route POST /api/tickets/:id/cancel
+   * @param id - Ticket ID
+   * @returns Cancelled ticket
+   * @throws {404} If ticket not found
+   */
+  fastify.post('/tickets/:id/cancel', async (request, reply) => {
+    const paramsSchema = z.object({
+      id: z.coerce.number().int().positive(),
+    });
+    const { id } = validateRequest(paramsSchema, request.params);
+
+    // Get ticket before cancelling
+    const existingTicket = await ticketService.getById(id);
+    if (!existingTicket) {
+      throw new NotFoundError(`Ticket with ID ${id} not found`);
+    }
+
+    // Only allow cancelling tickets that are waiting (customers can't cancel in_progress)
+    if (existingTicket.status !== 'waiting') {
+      throw new Error('Only waiting tickets can be cancelled by customers');
+    }
+
+    // Cancel ticket
+    const ticket = await ticketService.cancel(id);
+
+    return ticket;
+  });
+
+  /**
+   * Cancel a ticket (staff/owner endpoint).
    * Requires staff or owner authentication.
    * 
    * @route DELETE /api/tickets/:id

@@ -337,13 +337,15 @@ class ApiClient {
   }
 
   /**
-   * Cancel a ticket.
+   * Cancel a ticket (customer self-service).
+   * Public endpoint that allows customers to cancel their own tickets.
    * 
    * @param ticketId - Ticket ID
    * @returns Cancelled ticket
+   * @throws {ApiError} If ticket not found or cannot be cancelled
    */
   async cancelTicket(ticketId: number): Promise<Ticket> {
-    return this.delete(`/tickets/${ticketId}`);
+    return this.post(`/tickets/${ticketId}/cancel`, {});
   }
 
   // ==================== Future Endpoints ====================
