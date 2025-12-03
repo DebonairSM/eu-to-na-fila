@@ -1,668 +1,459 @@
 # User Stories
 
-All user interactions supported by the queue management system.
+User interactions and implementation status for EuToNaFila queue management system.
 
-## Implementation Status
+## Status Summary
 
-| Category | Complete | Total | Status |
-|----------|----------|-------|--------|
-| Customer Stories | 4 | 4 | ✅ 100% |
-| Staff Stories | 7 | 7 | ✅ 100% |
-| Kiosk Stories | 5 | 5 | ✅ 100% |
-| Authentication | 2 | 2 | ✅ 100% |
-| Future Stories | 1 | 5 | 🟡 Partial |
-| **Total** | **19** | **23** | **✅ 83%** |
-
-### Completed User Stories
-- ✅ US-001: Join Queue
-- ✅ US-002: Check Queue Status
-- ✅ US-003: Leave Queue
-- ✅ US-018: Prevent Duplicate Queue Entry
-- ✅ US-004: View Queue
-- ✅ US-005: Start Service
-- ✅ US-006: Complete Service
-- ✅ US-007: Remove Customer
-- ✅ US-008: Add Customer (Staff Check-in)
-- ✅ US-009: Change Barber Assignment
-- ✅ US-010: Toggle Barber Presence
-- ✅ US-011: Display Queue (Kiosk)
-- ✅ US-012: Kiosk Mode Toggle
-- ✅ US-013: Kiosk Ad Rotation
-- ✅ US-014: Kiosk Touch Interaction
-- ✅ US-015: Kiosk QR Code
-- ✅ US-016: Staff Login
-- ✅ US-017: Owner Dashboard
-- ✅ US-F04: Analytics (Implemented)
-
-### Future Stories (Not Yet Implemented)
-- ⏳ US-F01: Service Selection
-- ⏳ US-F02: Barber Preference
-- ⏳ US-F03: Notifications
-- ⏳ US-F05: Appointments
-
----
-
-## Actors
-
-| Actor | Description |
-|-------|-------------|
-| Customer | Person joining and monitoring their queue position |
-| Staff | Barber managing the queue and serving customers |
-| Owner | Shop owner with administrative access |
-| Display | Read-only kiosk showing queue status |
+| Category | Status |
+|----------|--------|
+| Customer Flow | ✅ Complete (4/4) |
+| Staff Management | ✅ Complete (7/7) |
+| Kiosk Mode | ✅ Complete (5/5) |
+| Authentication | ✅ Complete (2/2) |
+| Admin Features | 🟡 Partial (2/3) |
+| Future Features | ⏳ Planned (4/4) |
+| **Total** | **✅ 20/21 Core + 4 Future** |
 
 ---
 
 ## Customer Stories
 
-### US-001: Join Queue
-
-**Status:** ✅ Complete
+### US-001: Join Queue ✅
 
 **As a** customer  
-**I want to** join the barbershop queue  
-**So that** I can wait for my turn to be served
+**I want to** join the queue via web or QR code  
+**So that** I can wait for my turn
 
-**Acceptance Criteria:**
-- Customer navigates to shop URL or scans QR code
-- System displays current estimated wait time before registration
-- Customer enters their first name (required, minimum 2 characters)
-- Customer enters last name (optional)
-- System validates name is not empty and not too short
-- System filters inappropriate/profane names
-- Frontend combines first name and last name into single `customerName` field
-- System creates ticket with status `waiting` and required `serviceId`
-- System calculates queue position and estimated wait time
-- Customer is redirected to status page with their ticket
+**Implementation:**
+- Form: first name (required, 2+ chars), last name (optional)
+- Profanity filter validation
+- Real-time wait time display
+- Duplicate check: returns existing ticket if already in queue
+- Redirect to status page after join
 
-**Validation Rules:**
-- First name: required, minimum 2 characters
-- Last name: optional
-- Combined customerName: 1-200 characters (validated before API call)
-- Profanity filter applied to full name
-- Real-time validation feedback as user types
-
-**Technical Notes:**
-- POST /api/shops/:slug/tickets
-- API receives single `customerName` field (frontend combines first/last name)
-- `serviceId` is required (default service ID used if not selected)
+**Endpoint:** `POST /api/shops/:slug/tickets`
 
 ---
 
-### US-002: Check Queue Status
-
-**Status:** ✅ Complete
+### US-002: Check Queue Status ✅
 
 **As a** customer  
-**I want to** see my position in the queue  
-**So that** I know how long until I'm served
+**I want to** see my position and wait time  
+**So that** I know when I'll be served
 
-**Acceptance Criteria:**
-- Customer views their status page (`/status/:ticketId`)
-- Page displays prominently:
-  - Estimated wait time in minutes (large, central display)
-  - Customer name
-  - Status badge showing current state
-- Status states:
-  - `waiting` - "Aguardando" with clock icon
-  - `in_progress` - "Em Atendimento" with scissors icon
-  - `completed` - "Concluído" with checkmark icon
-- Page polls for updates every 3 seconds
-- Wait time updates when queue changes
-- Transitions between states shown with visual feedback
+**Implementation:**
+- Large wait time display (minutes)
+- Status badge: Aguardando / Em Atendimento / Concluído
+- Auto-refresh every 3 seconds
+- Shows position in queue
 
-**Status Display States:**
-1. **Waiting State:**
-   - Large wait time display with minutes unit
-   - "Leave Queue" button available
-   
-2. **In Progress State:**
-   - "Você está sendo atendido!" message
-   - No action buttons
-   
-3. **Completed State:**
-   - "Atendimento concluído!" message
-   - "Voltar ao Início" button to return home
-
-**Calculation:**
-```
-Estimated wait = (average service time × people ahead) / active barbers
-```
+**Endpoint:** `GET /api/tickets/:id`
 
 ---
 
-### US-003: Leave Queue
-
-**Status:** ✅ Complete
+### US-003: Leave Queue ✅
 
 **As a** customer  
-**I want to** remove myself from the queue  
-**So that** I can leave if I no longer want to wait
+**I want to** remove myself from queue  
+**So that** I can leave if needed
 
-**Acceptance Criteria:**
-- Customer views their status page
-- Customer clicks "Sair da Fila" (Leave Queue) button
-- System shows confirmation modal:
-  - Icon indicating action
-  - "Sair da Fila?" title
-  - Confirm/Cancel buttons
-- On confirmation:
-  - Ticket status changes to `cancelled`
-  - Success message displayed
-  - Customer redirected to home page
-- Other customers' positions are updated
-- Customer can rejoin later if needed
+**Implementation:**
+- "Sair da Fila" button (waiting status only)
+- Confirmation modal
+- Status changes to cancelled
+- Redirect to home
 
-**Restrictions:**
-- Cannot leave if already being served (status `in_progress`)
-- Leave button hidden when not in `waiting` status
+**Endpoint:** `DELETE /api/tickets/:id`
 
 ---
 
-### US-018: Prevent Duplicate Queue Entry
-
-**Status:** ✅ Complete
+### US-004: Prevent Duplicate Entry ✅
 
 **As a** customer  
-**I want to** be informed if I'm already in the queue  
-**So that** I don't accidentally create duplicate entries
+**I want to** be notified if I'm already in queue  
+**So that** I don't create duplicates
 
-**Acceptance Criteria:**
-- Customer enters their name to join the queue
-- System checks for existing active tickets (status `waiting` or `in_progress`) with matching customer name
-- If customer already has an active ticket:
-  - System returns the existing ticket instead of creating a new one
-  - Frontend displays message: "Você já está na fila!"
-  - Shows customer's current position and estimated wait time
-  - Provides button to view their status page
-  - Customer is redirected to their existing ticket status page
-- If customer is not in queue:
-  - System creates new ticket as normal
-  - Customer proceeds to status page
+**Implementation:**
+- Backend checks for active tickets with same name
+- Returns existing ticket (200) instead of creating new one (201)
+- Shows current position and wait time
+- Duplicate check by customerName + shopId
 
-**Removal from Queue:**
-- Customer is removed from queue when:
-  - Barber removes them (status changes to `cancelled`)
-  - Barber finalizes their haircut (status changes to `completed`)
-- After removal, customer can join queue again with same name
-
-**Technical Notes:**
-- Duplicate check performed by matching `customerName` and `shopId`
-- Only checks tickets with status `waiting` or `in_progress`
-- Case-sensitive name matching (exact match required)
-- Returns existing ticket with 200 status (vs 201 for new ticket)
-- POST /api/shops/:slug/tickets may return existing ticket
+**Technical:** Implemented in `POST /api/shops/:slug/tickets` (lines 54-60 of tickets.ts)
 
 ---
 
 ## Staff Stories
 
-### US-004: View Queue
-
-**Status:** ✅ Complete
+### US-005: View Queue ✅
 
 **As a** staff member  
 **I want to** see the current queue  
 **So that** I know who to serve next
 
-**Acceptance Criteria:**
-- Staff views queue management page
-- Header displays:
-  - Shop name and icon
-  - Waiting count statistic
-  - Serving count statistic
-  - Kiosk mode toggle button
-  - Back to dashboard link
-- Queue list shows:
-  - Customer cards with name
-  - Position badge (serving customers show checkmark)
-  - Assigned barber avatar (if assigned)
-- Cards sorted: serving customers first, then waiting by order
-- List updates when changes occur
+**Implementation:**
+- Queue list with customer cards
+- Header stats: waiting count, serving count
+- Position badges, barber avatars
+- Sorted: serving first, then by order
+- Polling: 5 seconds
 
 ---
 
-### US-005: Start Service
-
-**Status:** ✅ Complete
+### US-006: Start Service ✅
 
 **As a** staff member  
-**I want to** start serving a customer  
+**I want to** assign customer to barber  
 **So that** they know their turn has come
 
-**Acceptance Criteria:**
-- Staff clicks on a waiting customer's card
-- Barber selection overlay appears showing:
-  - Customer name
-  - Grid of present barbers with avatars
-  - Only present barbers are selectable
-- Staff selects a barber
-- System assigns barber and changes status to `in_progress`
-- Customer's status page shows "Em Atendimento"
-- Queue positions recalculated for remaining waiting customers
+**Implementation:**
+- Click customer card → barber selector modal
+- Shows present barbers only
+- Sets status to in_progress
+- Recalculates queue positions
 
-**State Change:**
-```
-waiting → in_progress (with barber assignment)
-```
+**Endpoint:** `PATCH /api/tickets/:id`
 
 ---
 
-### US-006: Complete Service
-
-**Status:** ✅ Complete
+### US-007: Complete Service ✅
 
 **As a** staff member  
-**I want to** mark a service as complete  
-**So that** the customer knows they're done
+**I want to** mark service as complete  
+**So that** customer knows they're done
 
-**Acceptance Criteria:**
-- Staff views in-progress customer (shown with green checkmark badge)
-- Staff clicks the checkmark badge
-- System shows confirmation modal:
-  - "Finalizar Atendimento" title
-  - Customer name displayed
-  - Confirm/Cancel buttons
-- On confirmation:
-  - Ticket status changes to `completed`
-  - Completion timestamp recorded
-  - Customer removed from queue display
-  - Customer's status page shows "Concluído"
-  - Barber becomes available
+**Implementation:**
+- Click checkmark badge on serving customer
+- Confirmation modal
+- Status changes to completed
+- Removes from queue display
 
-**State Change:**
-```
-in_progress → completed
-```
+**Endpoint:** `PATCH /api/tickets/:id/status`
 
 ---
 
-### US-007: Remove Customer
-
-**Status:** ✅ Complete
+### US-008: Remove Customer ✅
 
 **As a** staff member  
-**I want to** remove a customer from the queue  
-**So that** absent customers don't hold up the line
+**I want to** remove absent customers  
+**So that** queue keeps moving
 
-**Acceptance Criteria:**
-- Staff identifies customer to remove (waiting status)
-- Staff clicks remove button (X icon on position badge)
-- System shows confirmation modal:
-  - "Remover da Fila" title
-  - Customer name displayed
-  - Confirm/Cancel buttons
-- On confirmation:
-  - Ticket status changes to `cancelled`
-  - Customer removed from queue display
-  - Queue positions recalculated
+**Implementation:**
+- Click X badge on waiting customer
+- Confirmation modal
+- Status changes to cancelled
+- Queue recalculates
 
-**Use Cases:**
-- Customer not present when called
-- Customer requests to leave
-- Duplicate ticket removal
+**Endpoint:** `DELETE /api/tickets/:id`
 
 ---
 
-### US-008: Add Customer (Staff Check-in)
-
-**Status:** ✅ Complete
+### US-009: Add Customer (Check-in) ✅
 
 **As a** staff member  
-**I want to** add a customer to the queue directly  
-**So that** customers without phones can join
+**I want to** add customers without phones  
+**So that** everyone can join
 
-**Acceptance Criteria:**
-- Staff clicks "Adicionar Cliente" button
-- Check-in modal appears with:
-  - "Entrar na Fila" title
-  - First name input (required)
-  - Last name input (optional)
-  - Cancel and Submit buttons
-- Staff enters customer name
-- On submit:
-  - Frontend combines first name and last name into `customerName`
-  - Customer added to end of queue with required `serviceId`
-  - Status set to `waiting`
-  - Modal closes
-  - Queue display updates
-
-**Validation:**
-- First name required, minimum 2 characters
-- Last name optional
-- Combined customerName: 1-200 characters
-- Same validation as customer self-registration
+**Implementation:**
+- "Adicionar Cliente" button → modal
+- First/last name inputs
+- Same validation as customer self-join
+- Duplicate check applies here too
+- Added to end of queue
 
 ---
 
-### US-009: Change Barber Assignment
-
-**Status:** ✅ Complete
+### US-010: Change Barber Assignment ✅
 
 **As a** staff member  
-**I want to** change which barber is serving a customer  
-**So that** I can reassign when needed
+**I want to** reassign customers  
+**So that** I can balance workload
 
-**Acceptance Criteria:**
-- Staff clicks on a customer card (waiting or serving)
-- Barber selection overlay appears
-- If customer already has assigned barber:
-  - Current barber marked as "Atual"
-  - Clicking current barber unassigns them (returns customer to waiting)
-- Selecting different barber reassigns and sets to serving
-- Only present barbers shown in selection
-
-**State Changes:**
-```
-serving (barber A) → serving (barber B)  // Reassign
-serving (barber A) → waiting (no barber)  // Unassign
-waiting → serving (barber)  // Assign
-```
+**Implementation:**
+- Click customer card → barber selector
+- Shows current barber as "Atual"
+- Can unassign (return to waiting)
+- Can reassign to different barber
 
 ---
 
-### US-010: Toggle Barber Presence
-
-**Status:** ✅ Complete
+### US-011: Toggle Barber Presence ✅
 
 **As a** staff member  
-**I want to** mark barbers as present or absent  
-**So that** wait times are calculated correctly
+**I want to** mark barbers as present/absent  
+**So that** wait times are accurate
 
-**Acceptance Criteria:**
-- Staff views "Barbeiros Presentes" section
-- Each barber shown with:
-  - Avatar photo
-  - Name
-  - Presence status (Presente/Ausente)
-  - Visual indicator (checkmark for present, grayed out for absent)
-- Staff clicks barber to toggle presence
-- When barber marked as absent:
-  - All customers assigned to that barber are unassigned
-  - Those serving customers return to `waiting` status
-  - Wait time calculations update
-- When barber marked as present:
-  - Barber becomes available for assignment
+**Implementation:**
+- "Barbeiros Presentes" section in queue manager
+- Click to toggle presence
+- Absent barbers: unassign all in_progress customers, return to waiting
+- Present barbers: available for assignment
+
+**Endpoint:** `PATCH /api/barbers/:id/presence`  
+**Side effect:** Sets barberId=null, status=waiting for all in_progress tickets
 
 ---
 
 ## Kiosk Stories
 
-### US-011: Display Queue
-
-**Status:** ✅ Complete
+### US-012: Display Queue ✅
 
 **As a** display screen  
-**I want to** show the current queue  
-**So that** customers in the shop can see their position
+**I want to** show current queue  
+**So that** customers see their position
 
-**Acceptance Criteria:**
-- Display shows queue in large, readable format
-- Each entry shows:
-  - Position number (or checkmark for serving)
-  - Customer name
-  - Assigned barber name (if any)
-- Serving customers shown at bottom with different styling
-- Waiting customers listed in order
-- Large text readable from distance
-- Dark background for better visibility
-- Auto-refreshes to show current state
+**Implementation:**
+- Large format, dark background (#0A0A0A)
+- Position number or checkmark (in_progress)
+- Customer name + barber name
+- Responsive grid: 3 cols (large), 2 cols (medium), 1 col (small)
 
 ---
 
-### US-012: Kiosk Mode Toggle
-
-**Status:** ✅ Complete
+### US-013: Kiosk Mode Toggle ✅
 
 **As a** staff member  
 **I want to** toggle kiosk mode  
-**So that** I can use the same device for management and display
+**So that** I can use device for both purposes
 
-**Acceptance Criteria:**
-- Staff clicks TV icon to enter kiosk mode
-- Display switches to fullscreen
-- Back button (gear icon) visible in corner to exit
-- Queue view shows with large format
-- Barber presence selector visible at bottom
-- QR code displayed in corner for customer self-registration
-- Press Escape key or click back button to exit
+**Implementation:**
+- TV icon button to enter kiosk
+- Fullscreen display
+- Gear icon (top-left) to exit
+- ESC key to exit
 
 ---
 
-### US-013: Kiosk Ad Rotation
+### US-014: Ad Rotation ✅
 
-**Status:** ✅ Complete
+**As an** owner  
+**I want to** display ads between queue views  
+**So that** I can promote services
 
-**As a** shop owner  
-**I want to** display advertisements between queue views  
-**So that** I can promote services while customers wait
-
-**Acceptance Criteria:**
-- Kiosk mode rotates between views automatically
-- Rotation pattern: Ad1 → Queue → Ad2 → Queue → Ad3 → Queue → repeat
-- Progress bar shows current view duration
-- Queue view duration: 15 seconds
-- Ad view duration: 10 seconds each
-- Ads display:
-  - Service promotions
-  - Business hours
-  - Products available
-  - QR code in corner
-
-**Timing:**
-```
-Queue View (15s) → Ad 1 (10s) → Queue View (15s) → Ad 2 (10s) → Queue View (15s) → Ad 3 (10s) → [repeat]
-```
+**Implementation:**
+- Rotation: Queue (15s) → Ad (10s) → Queue (15s) → Ad (10s) → repeat
+- 3 ad slots (hardcoded content)
+- Progress bar shows duration
+- Touch ad to skip to queue
 
 ---
 
-### US-014: Kiosk Touch Interaction
+### US-15: Kiosk Touch Interaction ✅
 
-**Status:** ✅ Complete
+**As a** staff member  
+**I want to** interact from kiosk mode  
+**So that** I don't switch modes frequently
 
-**As a** staff member viewing kiosk  
-**I want to** interact with the queue from kiosk mode  
-**So that** I don't need to switch modes frequently
-
-**Acceptance Criteria:**
-- Touching/clicking on ad view immediately shows queue view
-- When manually viewing queue, idle timer starts (10 seconds)
-- If no interaction for 10 seconds, returns to ad rotation
-- Queue items clickable to show barber selection
-- Barber presence toggleable from bottom selector
-- Check-in button allows adding customers directly
-- Remove/Complete buttons on customer cards work
+**Implementation:**
+- Touch ad → show queue immediately
+- Idle timer: 10s of inactivity returns to rotation
+- Queue items clickable for barber assignment
+- Barber presence toggleable from bottom bar
+- Check-in and complete actions available
 
 ---
 
-### US-015: Kiosk QR Code
-
-**Status:** ✅ Complete
+### US-016: QR Code Display ✅
 
 **As a** customer  
-**I want to** scan a QR code to join the queue  
-**So that** I can register without talking to staff
+**I want to** scan QR code to join  
+**So that** I can register from phone
 
-**Acceptance Criteria:**
-- QR code displayed in corner of kiosk queue view
-- QR code links to queue-join page
-- Scanning with phone opens registration form
-- Customer can join queue from their device
-- Also displayed on ad views for visibility
+**Implementation:**
+- QR code in corner of kiosk (bottom-right)
+- Links to join page URL
+- Visible on both queue and ad views
+- Generated via QR Server API
 
 ---
 
 ## Authentication Stories
 
-### US-016: Staff Login
-
-**Status:** ✅ Complete
+### US-017: Staff Login ✅
 
 **As a** staff member  
-**I want to** log in to the system  
-**So that** I can manage the queue
+**I want to** log in with PIN  
+**So that** I can manage queue
 
-**Acceptance Criteria:**
-- Staff navigates to login page
-- Form displays:
-  - Username/email field (for display/demo purposes)
-  - Password field (used to enter PIN) with visibility toggle
-  - Cancel and Login buttons
-  - "Forgot password" link (placeholder)
-- Staff enters PIN (via password field)
-- Loading state shown during authentication
-- Successful login:
-  - Success message shown briefly
-  - Redirect based on role
-- Failed login:
-  - Error message displayed
-  - Form remains for retry
-- Close button returns to previous page
+**Implementation:**
+- PIN-based authentication
+- JWT token issued (24h expiry, HS256)
+- Token stored in sessionStorage
+- Role-based redirect: owner → /owner, staff → /manage
+- Demo credentials for backward compatibility (admin/admin123, barber/barber123)
 
-**Role-Based Redirect:**
-- Owner role → Owner Dashboard (`/owner`)
-- Staff role → Queue Management (`/manage`)
-
-**Authentication:**
-- PIN-based authentication via `POST /api/shops/:slug/auth`
-- Owner PIN grants `owner` role (full access)
-- Staff PIN grants `staff` role (queue management only)
-
-**Demo Credentials (for backward compatibility):**
-- `admin` / `admin123` → Maps to owner PIN `1234`
-- `barber` / `barber123` → Maps to staff PIN `0000`
-- In production, users should enter PIN directly
+**Endpoint:** `POST /api/shops/:slug/auth`
 
 ---
 
-### US-017: Owner Dashboard
+### US-018: Owner Dashboard ✅
 
-**Status:** ✅ Complete
+**As an** owner  
+**I want to** access admin functions  
+**So that** I can manage my shop
 
-**As a** shop owner  
-**I want to** access administrative functions  
-**So that** I can manage my barbershop
+**Implementation:**
+- Navigation hub with 3 cards:
+  - "Gerenciar Fila" → `/manage`
+  - "Analytics" → `/analytics`
+  - "Gerenciar Barbeiros" → `/barbers`
+- Logout button
+- Responsive grid layout
 
-**Acceptance Criteria:**
-- Owner sees dashboard after login
-- Dashboard displays:
-  - Welcome message with user name
-  - "Gerenciar Fila" card linking to queue management
-  - Logout button
-- Clicking queue management navigates to barber-queue-manager
-- Clicking logout returns to home page
+**Note:** Service management UI not yet implemented (see US-021)
+
+---
+
+## Admin Stories
+
+### US-019: View Analytics ✅
+
+**As an** owner  
+**I want to** view queue statistics  
+**So that** I can optimize staffing
+
+**Implementation:**
+- Period selector: 7, 30, 90 days
+- Summary stats: total, completed, cancelled, avg per day, completion rate
+- Daily chart (last 7 days), hourly chart (24 hours)
+- Peak hour display
+- Barber performance metrics
+
+**Endpoint:** `GET /api/shops/:slug/analytics?days=30`
+
+---
+
+### US-020: Manage Barbers ✅
+
+**As an** owner  
+**I want to** add/edit/remove barbers  
+**So that** I can maintain staff list
+
+**Implementation:**
+- Barber list with avatars and status
+- Add button → create modal (name, avatarUrl)
+- Click avatar → edit modal
+- Remove button → confirmation dialog
+- Shows presence status (Presente/Ausente)
+- New barbers default to isPresent=false
+
+**Endpoints:**
+- `GET /api/shops/:slug/barbers` - List barbers
+- `POST /api/shops/:slug/barbers` - Create barber (owner only)
+- `PATCH /api/barbers/:id` - Update details (owner only)
+- `DELETE /api/barbers/:id` - Delete barber (owner only)
+
+**Side effect on delete:** Unassigns all tickets (barberId=null, status=waiting)
+
+---
+
+### US-021: Manage Services 🟡
+
+**As an** owner  
+**I want to** create/edit/remove services  
+**So that** I can update offerings
+
+**Status:** Backend ✅ Complete | Frontend ❌ Not Implemented
+
+**Backend Implementation:**
+- Service CRUD endpoints fully functional
+- Name, description, duration (required), price (optional), isActive
+- Cannot delete if in use by active tickets (waiting/in_progress)
+- Validation: name 1-200 chars, description max 500 chars
+
+**Endpoints:**
+- `GET /api/shops/:slug/services` - List services ✅
+- `POST /api/shops/:slug/services` - Create service (owner only) ✅
+- `PATCH /api/services/:id` - Update service (owner only) ✅
+- `DELETE /api/services/:id` - Delete service (owner only) ✅
+
+**Missing Frontend:**
+- Service management page
+- API client methods (createService, updateService, deleteService)
+- Link from Owner Dashboard
+- UI for CRUD operations
+
+**Workaround:** Services currently managed directly via API or database.
 
 ---
 
 ## Future Stories
 
-### US-F01: Service Selection
+### US-F01: Service Selection at Join ⏳
 
 **As a** customer  
-**I want to** select my desired service  
-**So that** the shop knows what I need
+**I want to** select service when joining  
+**So that** shop knows what I need
 
-*Currently handled in-person with barber*
+*Currently: Default service (ID=1) assigned, service discussed in person with barber*
 
 ---
 
-### US-F02: Barber Preference
+### US-F02: Barber Preference ⏳
 
 **As a** customer  
-**I want to** choose my preferred barber  
-**So that** I'm served by who I prefer
+**I want to** choose preferred barber  
+**So that** I get my favorite
+
+*Currently: Barbers assigned by staff based on availability*
 
 ---
 
-### US-F03: Notifications
+### US-F03: Notifications ⏳
 
 **As a** customer  
-**I want to** receive a notification  
+**I want to** receive notifications  
 **So that** I know when I'm next
 
----
-
-### US-F04: Analytics
-
-**Status:** ✅ Complete
-
-**As a** shop owner  
-**I want to** view queue statistics  
-**So that** I can optimize staffing
+*Potential: SMS, push notifications, or browser notifications*  
+*Requires: Notification service integration*
 
 ---
 
-### US-F05: Appointments
+### US-F04: Appointments ⏳
 
 **As a** customer  
-**I want to** book a specific time  
-**So that** I don't have to wait in line
+**I want to** book specific time  
+**So that** I don't wait in line
+
+*Would require: Calendar system, time slot management, booking conflicts*
 
 ---
 
 ## Technical Requirements
 
-### Real-Time Updates
-
-All queue modifications trigger updates:
-- Customer status pages: Poll every 3 seconds
-- Staff management: Updates on action
-- Kiosk display: Updates on action, rotation timer independent
+### Polling Intervals
+- Customer status page: 3s
+- Staff queue view: 5s  
+- Kiosk display: Updates on action (not polling)
 
 ### Confirmation Dialogs
+- Leave queue (customer)
+- Remove customer (staff)
+- Complete service (staff)
+- Delete barber (owner)
+- Delete service (owner) - backend only
 
-Actions requiring confirmation:
-- Customer leaving queue
-- Staff removing customer
-- Staff completing service
+### Access Control
 
-### Error Handling
+**Public (no auth):**
+- Join queue, view queue, view status, list services, list barbers
 
-Standard errors across all stories:
-- Network issues: Retry with backoff
-- Invalid input: Display validation messages
-- Resource not found: User-friendly error
-- Server errors: Log and display generic message
+**Staff + Owner:**
+- Manage queue, update tickets, toggle presence
+
+**Owner only:**
+- View analytics, manage barbers, manage services (API only)
 
 ### Mobile Support
+- Customer pages: Mobile-first responsive
+- Staff pages: Tablet-optimized (minimum 768px width recommended)
+- Kiosk: Large screen (tablet/TV, 1024px+)
 
-All customer stories work on:
-- Desktop browsers
-- Mobile phones (iOS, Android)
-- Tablets via PWA
-
-Staff management optimized for:
-- Desktop browsers
-- Tablet devices
-
-### Offline Support
-
-When network unavailable:
-- Recently viewed data remains visible
-- Forms disabled with message
-- Reconnects automatically
-
----
-
-## UI Components
-
-### Modals
-
-| Modal | Trigger | Contents |
-|-------|---------|----------|
-| Check-in | "Adicionar Cliente" button | Name fields, Cancel/Submit |
-| Confirmation | Remove/Complete actions | Icon, Title, Message, Cancel/Confirm |
-| Barber Selection | Click customer card | Customer name, Barber grid |
-| Alert | Various actions | Icon, Title, Message, OK button |
-
-### Status Badges
-
-| Status | Badge Color | Icon | Label |
-|--------|-------------|------|-------|
-| waiting | Gold/Amber | schedule | Aguardando |
-| in_progress | Green | cut | Em Atendimento |
-| completed | Green solid | check_circle | Concluído |
-| cancelled | - | - | (not displayed) |
+### Error Handling
+- Network failures: Retry with exponential backoff
+- Validation errors: Inline feedback with field highlighting
+- Server errors: User-friendly messages, technical details logged
 
 ---
 
@@ -670,10 +461,21 @@ When network unavailable:
 
 | Metric | Target |
 |--------|--------|
-| API response time | < 200ms |
-| Status page polling | 3 seconds |
-| Kiosk queue view | 15 seconds |
-| Kiosk ad view | 10 seconds |
-| Idle timeout | 10 seconds |
+| API response | < 200ms |
+| Status page polling | 3s interval |
+| Queue page polling | 5s interval |
+| Kiosk queue view | 15s display |
+| Kiosk ad view | 10s display |
 | Max concurrent users | ~30 |
 | Max queue size | 50 tickets |
+| Database queries | < 50ms |
+
+---
+
+## Known Limitations
+
+1. **Service Management UI:** Backend complete, frontend UI not implemented
+2. **Single Tenant:** Currently supports one shop per deployment
+3. **No Multi-language:** Portuguese only
+4. **No Email Notifications:** Real-time updates via polling only
+5. **No Appointment System:** Walk-in queue only

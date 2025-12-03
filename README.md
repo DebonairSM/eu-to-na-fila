@@ -1,17 +1,17 @@
 # EuToNaFila
 
-Queue management system for barbershops. Single-tenant deployment with hosted backend, React SPA, and PWA tablet support.
+Queue management system for barbershops. Single-tenant deployment with React SPA and PWA tablet support.
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Backend | Node.js 20+, Fastify, Drizzle ORM, PostgreSQL |
-| Frontend | React, Vite, TypeScript, TailwindCSS, shadcn/ui |
+| Backend | Node.js 20+, Fastify, Drizzle ORM, PostgreSQL 16 |
+| Frontend | React 18, Vite, TypeScript, TailwindCSS |
 | Shared | Zod schemas, TypeScript types |
 | Tablet | PWA (Progressive Web App) |
 
-## Local Development Setup
+## Quick Start
 
 ### Prerequisites
 
@@ -19,120 +19,157 @@ Queue management system for barbershops. Single-tenant deployment with hosted ba
 - pnpm 8+ (`npm install -g pnpm`)
 - PostgreSQL 12+ ([download](https://www.postgresql.org/download/))
 
-### Step 1: Install Dependencies
+### Setup
 
 ```bash
+# 1. Install dependencies
 pnpm install
-```
 
-### Step 2: Set Up PostgreSQL Database
-
-Create a PostgreSQL database for local development:
-
-```bash
-# Using psql
+# 2. Create database
 createdb eutonafila
 
-# Or using PostgreSQL CLI
-psql -U postgres
-CREATE DATABASE eutonafila;
-\q
-```
-
-### Step 3: Configure Environment Variables
-
-Create a `.env` file in the project root:
-
-```bash
+# 3. Configure environment
 cp .env.example .env
+# Edit .env with your DATABASE_URL
+
+# 4. Run migrations
+pnpm db:migrate
+
+# 5. Seed test data (optional)
+pnpm db:seed
+
+# 6. Start dev servers
+pnpm dev
 ```
 
-Edit `.env` with your local configuration:
+**Access:**
+- Web: http://localhost:4040/mineiro
+- API: http://localhost:4041/api
+- Health: http://localhost:4041/health
+
+### Environment Variables
+
+Create `.env` file:
 
 ```env
 NODE_ENV=development
 PORT=4041
 DATABASE_URL=postgresql://localhost:5432/eutonafila
-JWT_SECRET=your-local-development-secret-at-least-32-characters-long
+JWT_SECRET=your-secret-at-least-32-characters-long
 CORS_ORIGIN=http://localhost:4040
 SHOP_SLUG=mineiro
 ```
 
-**Note:** Replace `DATABASE_URL` with your PostgreSQL connection string if using different credentials:
-- Format: `postgresql://username:password@localhost:5432/eutonafila`
-- Default: `postgresql://localhost:5432/eutonafila` (assumes local PostgreSQL with default user)
+## Project Structure
 
-### Step 4: Run Database Migrations
+```
+eu-to-na-fila/
+├── apps/
+│   ├── api/                # Fastify backend
+│   │   ├── src/
+│   │   │   ├── db/         # Drizzle schema
+│   │   │   ├── routes/     # API endpoints
+│   │   │   ├── services/   # Business logic
+│   │   │   └── server.ts   # Entry point
+│   │   └── drizzle/        # Migrations
+│   └── web/                # React SPA
+│       ├── src/
+│       │   ├── pages/      # Route components
+│       │   ├── hooks/      # Custom hooks
+│       │   ├── lib/        # API client
+│       │   └── components/ # UI components
+│       └── public/         # Static assets, PWA
+├── packages/shared/        # Zod schemas, types
+├── docs/                   # Documentation
+└── scripts/                # Build scripts
+```
+
+## Features
+
+### Customer Flow ✅
+- Join queue via web or QR code
+- Duplicate detection (returns existing ticket)
+- Real-time status updates (3s polling)
+- Estimated wait time
+- Leave queue option
+
+### Staff Management ✅
+- View and manage queue
+- Assign customers to barbers
+- Mark services as complete
+- Toggle barber presence
+- Kiosk mode for display
+
+### Owner Dashboard ✅
+- Analytics and statistics
+- Manage barbers (full CRUD)
+- Manage services (API only - UI not implemented)
+- View performance metrics
+
+### Kiosk Mode ✅
+- Fullscreen queue display
+- Ad rotation (15s queue, 10s ads)
+- QR code for self-registration
+- Touch interactions with idle timer
+
+## API Overview
+
+### Public Endpoints
+- `GET /api/shops/:slug/queue` - Current queue
+- `POST /api/shops/:slug/tickets` - Join queue
+- `GET /api/tickets/:id` - Ticket status
+- `GET /health` - Health check
+
+### Staff Endpoints (Auth Required)
+- `PATCH /api/tickets/:id` - Update ticket
+- `PATCH /api/tickets/:id/status` - Update status
+- `DELETE /api/tickets/:id` - Cancel ticket
+- `PATCH /api/barbers/:id/presence` - Toggle presence
+
+### Owner Endpoints (Owner Role Required)
+- `GET /api/shops/:slug/analytics` - Analytics
+- `POST /api/shops/:slug/barbers` - Create barber
+- `PATCH /api/barbers/:id` - Update barber
+- `DELETE /api/barbers/:id` - Delete barber
+- `POST /api/shops/:slug/services` - Create service
+- `PATCH /api/services/:id` - Update service
+- `DELETE /api/services/:id` - Delete service
+
+## Authentication
+
+PIN-based JWT authentication:
 
 ```bash
+POST /api/shops/:slug/auth
+{ "pin": "1234" }
+
+# Returns:
+{ "valid": true, "role": "owner", "token": "eyJ..." }
+```
+
+**Roles:**
+- `owner` - Full access (default PIN: 1234)
+- `staff` - Queue management only (default PIN: 0000)
+
+Tokens expire after 24 hours.
+
+## Database Commands
+
+```bash
+# Generate migration from schema
+pnpm --filter api db:generate
+
+# Run migrations
 pnpm db:migrate
-```
 
-This creates all necessary tables in your database.
-
-### Step 5: Seed Test Data (Optional)
-
-```bash
+# Seed test data
 pnpm db:seed
+
+# Open Drizzle Studio
+pnpm --filter api db:studio
 ```
 
-This creates:
-- Shop: "Barbearia Mineiro" (slug: `mineiro`)
-- Default PINs: Owner `1234`, Staff `0000`
-- Sample services and barbers
-
-### Step 6: Start Development Servers
-
-```bash
-# Run both API and Web concurrently
-pnpm dev
-
-# Or run separately in different terminals
-pnpm --filter api dev    # API server
-pnpm --filter web dev    # Web frontend
-```
-
-**Access the application:**
-- Web UI: http://localhost:4040/mineiro
-- API: http://localhost:4041/api
-- Health Check: http://localhost:4041/health
-
-### Testing
-
-Currently, there are no automated tests configured. To test manually:
-
-1. **Test Queue Flow:**
-   - Visit http://localhost:4040/mineiro
-   - Join the queue as a customer
-   - Check ticket status
-
-2. **Test Staff Features:**
-   - Login with staff PIN: `0000`
-   - Manage queue and tickets
-
-3. **Test API Endpoints:**
-   ```bash
-   # Health check
-   curl http://localhost:4041/health
-   
-   # Get queue
-   curl http://localhost:4041/api/shops/mineiro/queue
-   ```
-
-### Troubleshooting
-
-**Database connection errors:**
-- Ensure PostgreSQL is running: `pg_isready` or `psql -U postgres -c "SELECT 1"`
-- Verify `DATABASE_URL` in `.env` matches your PostgreSQL setup
-- Check PostgreSQL is listening on port 5432
-
-**Port already in use:**
-- Change `PORT` in `.env` for API
-- Update Vite port in `apps/web/vite.config.ts` for frontend
-
-**Migration errors:**
-- Ensure database exists: `psql -l | grep eutonafila`
-- Drop and recreate if needed: `dropdb eutonafila && createdb eutonafila`
+## Build & Deploy
 
 ### Production Build
 
@@ -143,104 +180,132 @@ pnpm build:api
 pnpm start
 ```
 
-## Project Structure
+### Deploy to Render/Railway
 
-```
-eu-to-na-fila/
-├── apps/
-│   ├── api/                 # Fastify backend
-│   │   ├── src/
-│   │   │   ├── db/          # Drizzle ORM schema
-│   │   │   ├── routes/      # API endpoints
-│   │   │   ├── services/    # Business logic
-│   │   │   └── server.ts    # Entry point
-│   │   └── drizzle/         # Migrations
-│   └── web/                 # React SPA
-│       ├── src/
-│       │   ├── pages/       # Route components
-│       │   ├── hooks/       # Custom hooks
-│       │   ├── lib/         # API client, utils
-│       │   └── components/  # UI components
-│       └── public/          # Static assets, PWA
-├── packages/
-│   └── shared/              # Zod schemas, types
-├── docs/                    # Documentation
-├── mockups/                 # HTML mockups
-└── scripts/                 # Build scripts
-```
+1. Create Web Service from repo
+2. Build command:
+   ```bash
+   pnpm install --frozen-lockfile && pnpm build:web && pnpm integrate:web && pnpm build:api
+   ```
+3. Start command:
+   ```bash
+   node apps/api/dist/server.js
+   ```
+4. Environment variables:
+   ```
+   NODE_ENV=production
+   DATABASE_URL=<postgres-connection-string>
+   JWT_SECRET=<secure-random-string>
+   CORS_ORIGIN=https://yourdomain.com
+   SHOP_SLUG=mineiro
+   ```
 
-## Deployment
-
-### Render / Railway
-
-1. Create Web Service from repository
-2. Build command: `pnpm install --frozen-lockfile && pnpm build:web && pnpm integrate:web && pnpm build:api`
-3. Start command: `node apps/api/dist/server.js`
-4. Add persistent disk at `/var/data` (1GB)
-5. Set environment variables:
-
-```
-NODE_ENV=production
-DATA_PATH=/var/data/eutonafila.sqlite
-JWT_SECRET=<secure-random-string>
-CORS_ORIGIN=https://yourdomain.com
-SHOP_SLUG=mineiro
-```
-
-### Environment Variables
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `NODE_ENV` | Environment (development/production/test) | `development` | No |
-| `PORT` | Server port | `4041` | No |
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://localhost:5432/eutonafila` | Yes* |
-| `JWT_SECRET` | JWT signing secret (min 32 chars) | `change_me_in_production...` | Yes* |
-| `CORS_ORIGIN` | Allowed origin for CORS | `http://localhost:4040` | Yes* |
-| `SHOP_SLUG` | Shop identifier | `mineiro` | No |
-
-*Required in production, has defaults for development
-
-## Tablet Installation (PWA)
+### Tablet Installation (PWA)
 
 1. Open Chrome on Android tablet
 2. Navigate to shop URL (e.g., `https://yourdomain.com/mineiro`)
 3. Tap menu (⋮) → "Add to Home screen"
-4. App launches fullscreen like a native app
-
-PWA provides:
-- Offline viewing of cached queue data
-- Auto-updates on deployment
-- No app store required
-
-## API Overview
-
-### Public Endpoints
-
-- `GET /api/shops/:slug/queue` - Current queue with tickets
-- `POST /api/shops/:slug/tickets` - Join queue
-- `GET /health` - Health check
-
-### Staff Endpoints
-
-- `PATCH /api/tickets/:id/status` - Update ticket status
-- `GET /api/barbers` - List barbers
-- `GET /api/services` - List services
+4. App launches fullscreen
 
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
-| [Backend Reference](./docs/BACKEND_FULL.md) | API, database, services, conventions |
-| [Frontend Reference](./docs/WEB_FULL.md) | React components, hooks, styling |
-| [User Stories](./docs/USER_STORIES.md) | All user interactions |
+| [Backend Reference](./docs/BACKEND_FULL.md) | API, database, services |
+| [Frontend Reference](./docs/WEB_FULL.md) | React components, hooks |
+| [User Stories](./docs/USER_STORIES.md) | Feature implementation status |
 | [Design System](./docs/DESIGN.md) | Colors, typography, components |
+
+## Testing
+
+### Manual Testing
+
+**Customer Flow:**
+```bash
+# 1. Visit landing page
+open http://localhost:4040/mineiro
+
+# 2. Join queue
+# 3. Check status page
+# 4. Leave queue
+```
+
+**Staff Flow:**
+```bash
+# 1. Login with staff PIN: 0000
+# 2. View queue
+# 3. Assign customer to barber
+# 4. Complete service
+```
+
+**API Testing:**
+```bash
+# Health check
+curl http://localhost:4041/health
+
+# Get queue
+curl http://localhost:4041/api/shops/mineiro/queue
+
+# Join queue
+curl -X POST http://localhost:4041/api/shops/mineiro/tickets \
+  -H "Content-Type: application/json" \
+  -d '{"customerName":"João Silva","serviceId":1}'
+```
+
+## Troubleshooting
+
+### Database Connection Errors
+```bash
+# Check PostgreSQL is running
+pg_isready
+
+# Verify database exists
+psql -l | grep eutonafila
+
+# Recreate if needed
+dropdb eutonafila && createdb eutonafila
+```
+
+### Port Already in Use
+Edit `.env` to change `PORT` or update `apps/web/vite.config.ts` for frontend port.
+
+### Migration Errors
+```bash
+# Reset database
+dropdb eutonafila
+createdb eutonafila
+pnpm db:migrate
+pnpm db:seed
+```
 
 ## Target Scale
 
 Designed for single barbershop deployment:
-- 5 barbers working simultaneously
+- 5 barbers simultaneously
 - ~30 concurrent users
-- 100-200 tickets per day
+- 100-200 tickets/day
+- PostgreSQL database
+- Single tenant per instance
+
+## Known Limitations
+
+1. **Service Management UI:** Backend complete, frontend UI not implemented
+2. **Single Tenant:** One shop per deployment (multi-tenancy not supported)
+3. **Polling Updates:** 3-5s intervals (no WebSocket real-time)
+4. **Portuguese Only:** No multi-language support
+5. **No Appointments:** Walk-in queue system only
+
+See `docs/USER_STORIES.md` for detailed implementation status.
+
+## Browser Support
+
+**Desktop:** Chrome, Safari, Firefox, Edge (latest)  
+**Mobile:** Chrome for Android, Safari for iOS  
+**Optimal Devices:** Desktop (management), tablets (kiosk), mobile (customers)
+
+## Contributing
+
+See `CONTRIBUTING.md` for development guidelines and code conventions.
 
 ## License
 
