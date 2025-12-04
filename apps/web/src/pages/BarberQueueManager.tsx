@@ -328,6 +328,105 @@ export function BarberQueueManager() {
             />
           </div>
         )}
+
+        {/* Kiosk Modals - Styled for fullscreen display */}
+        {/* Check-in Modal */}
+        {checkInModal.isOpen && (
+          <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-8">
+            <div className="bg-[#1a1a1a] border-2 border-[#D4AF37]/30 rounded-3xl p-10 max-w-2xl w-full">
+              <h2 className="text-4xl font-['Playfair_Display',serif] text-[#D4AF37] mb-8 text-center">
+                Entrar na Fila
+              </h2>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleAddCustomer();
+                }}
+                className="space-y-6"
+              >
+                <div>
+                  <label htmlFor="kioskCheckInFirst" className="block text-xl font-medium mb-3 text-white">
+                    Nome *
+                  </label>
+                  <input
+                    id="kioskCheckInFirst"
+                    type="text"
+                    value={checkInName.first}
+                    onChange={(e) => setCheckInName({ ...checkInName, first: e.target.value })}
+                    placeholder="Primeiro nome"
+                    required
+                    className="w-full px-6 py-5 text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="kioskCheckInLast" className="block text-xl font-medium mb-3 text-white">
+                    Sobrenome (opcional)
+                  </label>
+                  <input
+                    id="kioskCheckInLast"
+                    type="text"
+                    value={checkInName.last}
+                    onChange={(e) => setCheckInName({ ...checkInName, last: e.target.value })}
+                    placeholder="Sobrenome"
+                    className="w-full px-6 py-5 text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+                <div className="flex gap-4 mt-8">
+                  <button
+                    type="button"
+                    onClick={checkInModal.close}
+                    className="flex-1 px-8 py-5 text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 px-8 py-5 text-xl rounded-2xl bg-[#D4AF37] text-black font-semibold hover:bg-[#E8C547] transition-all disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Adicionando...' : 'Adicionar'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Barber Selector Modal */}
+        {barberSelectorModal.isOpen && selectedCustomerId && (
+          <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-8">
+            <div className="bg-[#1a1a1a] border-2 border-[#D4AF37]/30 rounded-3xl p-10 max-w-3xl w-full">
+              <h2 className="text-4xl font-['Playfair_Display',serif] text-[#D4AF37] mb-3 text-center">
+                Selecionar Barbeiro
+              </h2>
+              <p className="text-xl text-white/70 mb-8 text-center">
+                {tickets.find((t) => t.id === selectedCustomerId)?.customerName}
+              </p>
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                {barbers.filter(b => b.isPresent).map((barber) => (
+                  <button
+                    key={barber.id}
+                    onClick={() => handleSelectBarber(barber.id)}
+                    className={cn(
+                      'p-6 rounded-2xl border-2 transition-all text-xl font-medium',
+                      tickets.find((t) => t.id === selectedCustomerId)?.barberId === barber.id
+                        ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]'
+                        : 'bg-white/5 border-white/20 text-white hover:border-[#D4AF37]/50'
+                    )}
+                  >
+                    {barber.name}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={barberSelectorModal.close}
+                className="w-full px-8 py-5 text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
