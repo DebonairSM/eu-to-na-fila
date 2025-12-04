@@ -440,5 +440,27 @@
       grid-template-columns: repeat(24, 1fr);
     }
   }
+  
+  /* Mobile login page optimizations */
+  .modal {
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  
+  /* Ensure minimum touch target sizes */
+  button, 
+  a, 
+  input, 
+  .password-toggle {
+    min-height: 44px;
+  }
+  
+  /* Input fields should have proper touch targets */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="tel"] {
+    min-height: 44px;
+  }
 }
 

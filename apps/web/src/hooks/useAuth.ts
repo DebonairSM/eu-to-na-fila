@@ -27,16 +27,25 @@ export function useAuth() {
   useEffect(() => {
     const storedAuth = sessionStorage.getItem('staffAuth');
     const storedUser = sessionStorage.getItem('staffUser');
+    const storedToken = sessionStorage.getItem('eutonafila_auth_token');
     
     if (storedAuth === 'true' && storedUser) {
       try {
         const user = JSON.parse(storedUser);
+        
+        // Ensure API client has the token
+        if (storedToken) {
+          api.setAuthToken(storedToken);
+        }
+        
         setAuthState({
           user,
           isAuthenticated: true,
           isLoading: false,
         });
       } catch {
+        // Clear all auth data on error
+        api.clearAuthToken();
         setAuthState({
           user: null,
           isAuthenticated: false,
@@ -44,6 +53,8 @@ export function useAuth() {
         });
       }
     } else {
+      // Clear token if not authenticated
+      api.clearAuthToken();
       setAuthState({
         user: null,
         isAuthenticated: false,

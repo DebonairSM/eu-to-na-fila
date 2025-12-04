@@ -85,9 +85,15 @@ class ApiClient {
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
     // Load token from sessionStorage on initialization
-    const storedToken = sessionStorage.getItem(this.TOKEN_STORAGE_KEY);
-    if (storedToken) {
-      this.authToken = storedToken;
+    try {
+      const storedToken = sessionStorage.getItem(this.TOKEN_STORAGE_KEY);
+      if (storedToken) {
+        this.authToken = storedToken;
+      }
+    } catch (error) {
+      // sessionStorage might not be available during module initialization
+      // Token will be set later by useAuth hook
+      console.warn('Failed to load auth token from sessionStorage:', error);
     }
   }
 

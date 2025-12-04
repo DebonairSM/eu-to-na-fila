@@ -65,21 +65,21 @@ export function LoginPage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.05)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
       <div className="modal-backdrop fixed inset-0 bg-[rgba(0,0,0,0.7)] backdrop-blur-md flex items-center justify-center z-40">
-        <div className="modal bg-[rgba(255,255,255,0.98)] rounded-2xl p-8 max-w-md w-full mx-4 shadow-[0px_4px_8px_3px_rgba(212,175,55,0.15),0px_1px_3px_rgba(0,0,0,0.2)] animate-in fade-in">
-          <div className="space-y-6">
+        <div className="modal bg-[rgba(255,255,255,0.98)] rounded-2xl p-4 sm:p-6 md:p-8 max-w-md w-full mx-3 sm:mx-4 shadow-[0px_4px_8px_3px_rgba(212,175,55,0.15),0px_1px_3px_rgba(0,0,0,0.2)] animate-in fade-in">
+          <div className="space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="text-center space-y-2">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
-                <span className="material-symbols-outlined text-4xl text-[#0a0a0a]">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
+                <span className="material-symbols-outlined text-3xl sm:text-4xl text-[#0a0a0a]">
                   lock
                 </span>
               </div>
-              <h1 className="text-3xl font-bold text-[#1D1B20]">Entrar</h1>
-              <p className="text-[#5D5D5D]">Acesso para funcionários</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#1D1B20]">Entrar</h1>
+              <p className="text-sm sm:text-base text-[#5D5D5D]">Acesso para funcionários</p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               {/* Username/Email */}
               <div className="text-field relative">
                 <input
@@ -90,12 +90,12 @@ export function LoginPage() {
                   placeholder=" "
                   autoComplete="username"
                   required
-                  className="w-full px-4 py-4 pt-6 rounded border border-[#C4C4C4] bg-transparent text-[#1D1B20] transition-all focus:border-[#D4AF37] focus:border-2 focus:p-[15px] focus:pt-[23px]"
+                  className="w-full px-3 py-3 pt-5 sm:px-4 sm:py-4 sm:pt-6 rounded border border-[#C4C4C4] bg-transparent text-[#1D1B20] transition-all focus:border-[#D4AF37] focus:border-2 focus:px-[11px] focus:pt-[19px] sm:focus:px-[15px] sm:focus:pt-[23px]"
                 />
                 <label
                   htmlFor="username"
-                  className={`absolute left-4 text-base text-[#5D5D5D] pointer-events-none transition-all ${
-                    username ? 'top-2 text-xs text-[#D4AF37]' : 'top-4'
+                  className={`absolute left-3 sm:left-4 text-sm sm:text-base text-[#5D5D5D] pointer-events-none transition-all ${
+                    username ? 'top-1.5 sm:top-2 text-xs text-[#D4AF37]' : 'top-3 sm:top-4'
                   }`}
                 >
                   Usuário / Email
@@ -112,12 +112,12 @@ export function LoginPage() {
                   placeholder=" "
                   autoComplete="current-password"
                   required
-                  className="w-full px-4 py-4 pt-6 pr-12 rounded border border-[#C4C4C4] bg-transparent text-[#1D1B20] transition-all focus:border-[#D4AF37] focus:border-2 focus:p-[15px] focus:pt-[23px]"
+                  className="w-full px-3 py-3 pt-5 pr-11 sm:px-4 sm:py-4 sm:pt-6 sm:pr-12 rounded border border-[#C4C4C4] bg-transparent text-[#1D1B20] transition-all focus:border-[#D4AF37] focus:border-2 focus:px-[11px] focus:pt-[19px] sm:focus:px-[15px] sm:focus:pt-[23px]"
                 />
                 <label
                   htmlFor="password"
-                  className={`absolute left-4 text-base text-[#5D5D5D] pointer-events-none transition-all ${
-                    password ? 'top-2 text-xs text-[#D4AF37]' : 'top-4'
+                  className={`absolute left-3 sm:left-4 text-sm sm:text-base text-[#5D5D5D] pointer-events-none transition-all ${
+                    password ? 'top-1.5 sm:top-2 text-xs text-[#D4AF37]' : 'top-3 sm:top-4'
                   }`}
                 >
                   Senha
@@ -125,10 +125,10 @@ export function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="password-toggle absolute right-3 top-1/2 -translate-y-1/2 text-[#5D5D5D] hover:bg-[#F5F5F5] p-2 rounded-full transition-all"
+                  className="password-toggle absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-[#5D5D5D] hover:bg-[#F5F5F5] p-2 rounded-full transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  <span className="material-symbols-outlined">
+                  <span className="material-symbols-outlined text-xl sm:text-2xl">
                     {showPassword ? 'visibility_off' : 'visibility'}
                   </span>
                 </button>
@@ -144,7 +144,7 @@ export function LoginPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full px-6 py-4 bg-[#D4AF37] text-[#0a0a0a] font-semibold rounded-full flex items-center justify-center gap-2 hover:bg-[#E8C547] transition-all disabled:opacity-50"
+                className="w-full px-4 py-3 sm:px-6 sm:py-4 min-h-[44px] bg-[#D4AF37] text-[#0a0a0a] font-semibold rounded-full flex items-center justify-center gap-2 hover:bg-[#E8C547] transition-all disabled:opacity-50"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -162,18 +162,18 @@ export function LoginPage() {
             </form>
 
             {/* Forgot Password Link */}
-            <div className="mt-4 text-center">
-              <a href="#" className="text-sm text-[#D4AF37] hover:underline">
+            <div className="mt-3 sm:mt-4 text-center">
+              <a href="#" className="text-sm text-[#D4AF37] hover:underline inline-block min-h-[44px] flex items-center justify-center">
                 Esqueceu a senha?
               </a>
             </div>
 
             {/* Demo Credentials */}
-            <div className="p-4 rounded-lg bg-[#F5F5F5] border border-[#C4C4C4]">
-              <p className="text-xs text-[#5D5D5D] text-center mb-2">
+            <div className="p-3 sm:p-4 rounded-lg bg-[#F5F5F5] border border-[#C4C4C4]">
+              <p className="text-[10px] sm:text-xs text-[#5D5D5D] text-center mb-1.5 sm:mb-2">
                 Credenciais de demonstração:
               </p>
-              <div className="text-xs text-[#5D5D5D] space-y-1">
+              <div className="text-[10px] sm:text-xs text-[#5D5D5D] space-y-0.5 sm:space-y-1">
                 <p>Owner: admin / admin123</p>
                 <p>Barber: barber / barber123</p>
               </div>
@@ -181,7 +181,7 @@ export function LoginPage() {
 
             {/* Back Link */}
             <div className="text-center">
-              <Link to="/" className="text-sm text-[#5D5D5D] hover:text-[#D4AF37]">
+              <Link to="/" className="text-sm text-[#5D5D5D] hover:text-[#D4AF37] inline-block min-h-[44px] flex items-center justify-center">
                 ← Voltar ao início
               </Link>
             </div>
