@@ -99,8 +99,8 @@ export function AnalyticsPage() {
   const stats = data.summary;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative overflow-x-hidden" style={{ backgroundAttachment: 'fixed' }}>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(212,175,55,0.05)_0%,transparent_50%),radial-gradient(circle_at_80%_70%,rgba(59,130,246,0.05)_0%,transparent_50%)] animate-spin-slow pointer-events-none" style={{ backgroundAttachment: 'fixed' }} />
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative overflow-x-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(212,175,55,0.05)_0%,transparent_50%),radial-gradient(circle_at_80%_70%,rgba(59,130,246,0.05)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
       <div className="dashboard-container show p-4 sm:p-6 lg:p-10 max-w-[1600px] mx-auto relative z-10 pt-24 sm:pt-28 md:pt-40 lg:pt-44 xl:pt-48">
         {/* Header */}
