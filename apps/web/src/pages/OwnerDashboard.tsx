@@ -12,10 +12,9 @@ export function OwnerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
-      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_70%)] animate-spin-slow pointer-events-none" />
+    <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
       <Navigation />
-      <div className="container max-w-[800px] mx-auto relative z-10 pt-28 px-4 sm:px-6 lg:px-10 pb-12">
+      <main className="container max-w-[800px] mx-auto relative z-10 pt-24 px-4 sm:px-6 lg:px-10 pb-12">
         {/* Header */}
         <div className="header text-center mb-8 sm:mb-10">
           <h1 className="title font-['Playfair_Display',serif] text-xl sm:text-2xl font-semibold text-[#D4AF37]">
@@ -84,13 +83,13 @@ export function OwnerDashboard() {
         <div className="text-center mt-8">
           <button
             onClick={handleLogout}
-            className="px-5 py-2.5 bg-transparent text-[rgba(255,255,255,0.6)] border border-[rgba(255,255,255,0.2)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all flex items-center gap-2 mx-auto text-sm"
+            className="px-5 py-2.5 bg-transparent text-[rgba(255,255,255,0.6)] border border-[rgba(255,255,255,0.2)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all flex items-center gap-3 mx-auto text-sm"
           >
             <span className="material-symbols-outlined text-lg">logout</span>
             Sair
           </button>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

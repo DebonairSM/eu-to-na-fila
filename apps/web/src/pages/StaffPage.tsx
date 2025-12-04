@@ -12,13 +12,12 @@ export function StaffPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative p-10">
-      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_70%)] animate-spin-slow pointer-events-none" />
+    <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
       <Navigation />
-      <div className="container max-w-[800px] mx-auto relative z-10 animate-in fade-in-up pt-28">
+      <main className="container max-w-[800px] mx-auto relative z-10 animate-in fade-in-up pt-24 px-6 pb-12">
         {/* Header */}
-        <div className="header text-center mb-12">
-          <h1 className="title text-[42px] font-bold text-[#D4AF37] mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]">
+        <div className="header text-center mb-10">
+          <h1 className="title text-3xl sm:text-[42px] font-bold text-[#D4AF37] mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]">
             Painel do Funcionário
           </h1>
           <p className="subtitle text-lg text-[rgba(255,255,255,0.7)]">
@@ -113,13 +112,13 @@ export function StaffPage() {
         <div className="text-center">
           <button
             onClick={handleLogout}
-            className="px-6 py-3 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-full hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all flex items-center gap-2 mx-auto"
+            className="px-6 py-3 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-full hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all flex items-center gap-3 mx-auto"
           >
-            <span className="material-symbols-outlined">logout</span>
+            <span className="material-symbols-outlined text-xl">logout</span>
             Sair
           </button>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

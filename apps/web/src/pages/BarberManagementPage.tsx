@@ -90,10 +90,9 @@ export function BarberManagementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
-      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.05)_0%,transparent_50%)] animate-spin-slow pointer-events-none z-0" />
+    <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
       <Navigation />
-      <div className="container max-w-[1200px] mx-auto px-6 pt-28 pb-10 relative z-10">
+      <main className="container max-w-[1200px] mx-auto px-6 pt-24 pb-10 relative z-10">
         {/* Header */}
         <div className="header text-center mb-8">
           <h1 className="font-['Playfair_Display',serif] text-[2.5rem] text-[#D4AF37] mb-3">
@@ -210,7 +209,7 @@ export function BarberManagementPage() {
             ))}
           </div>
         )}
-      </div>
+      </main>
 
       {/* Add Barber Modal */}
       {addModal.isOpen && (
