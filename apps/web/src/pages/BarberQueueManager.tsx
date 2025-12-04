@@ -201,23 +201,15 @@ export function BarberQueueManager() {
                     const isServing = ticket.status === 'in_progress';
 
                     return (
-                      <button
+                      <div
                         key={ticket.id}
-                        type="button"
                         className={cn(
-                          'w-full px-8 py-6 rounded-2xl border transition-all text-left',
-                          'hover:scale-[1.01] hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
+                          'w-full px-8 py-6 rounded-2xl border transition-all',
                           {
                             'bg-[#10B981]/15 border-[#10B981]/50': isServing,
-                            'bg-[rgba(20,20,20,0.8)] border-[rgba(212,175,55,0.2)] hover:border-[rgba(212,175,55,0.4)]': !isServing,
+                            'bg-[rgba(20,20,20,0.8)] border-[rgba(212,175,55,0.2)]': !isServing,
                           }
                         )}
-                        onClick={() => {
-                          setSelectedCustomerId(ticket.id);
-                          barberSelectorModal.open();
-                          showQueueView();
-                        }}
-                        aria-label={`${ticket.customerName}, posição ${ticket.position}${assignedBarber ? `, atendido por ${assignedBarber.name}` : ''}`}
                       >
                         <div className="flex items-center gap-6">
                           {/* Position Badge */}
@@ -246,14 +238,37 @@ export function BarberQueueManager() {
                               </p>
                             )}
                           </div>
-                          {/* Status indicator */}
-                          {isServing && (
-                            <div className="flex-shrink-0 px-4 py-2 bg-[#10B981]/20 rounded-xl">
-                              <span className="text-[#10B981] text-sm font-medium uppercase tracking-wider">Atendendo</span>
-                            </div>
-                          )}
+                          {/* Action Buttons */}
+                          <div className="flex gap-3 flex-shrink-0">
+                            <button
+                              onClick={() => {
+                                setSelectedCustomerId(ticket.id);
+                                barberSelectorModal.open();
+                                showQueueView();
+                              }}
+                              className="px-5 py-3 rounded-xl bg-[#D4AF37] text-black font-medium hover:bg-[#E8C547] transition-all flex items-center gap-2"
+                              aria-label={`Atribuir barbeiro para ${ticket.customerName}`}
+                            >
+                              <span className="material-symbols-outlined text-xl">content_cut</span>
+                              <span>Atribuir</span>
+                            </button>
+                            {isServing && (
+                              <button
+                                onClick={() => {
+                                  setCustomerToComplete(ticket.id);
+                                  completeConfirmModal.open();
+                                  showQueueView();
+                                }}
+                                className="px-5 py-3 rounded-xl bg-[#10B981] text-white font-medium hover:bg-[#0ea872] transition-all flex items-center gap-2"
+                                aria-label={`Finalizar atendimento de ${ticket.customerName}`}
+                              >
+                                <span className="material-symbols-outlined text-xl">check_circle</span>
+                                <span>Finalizar</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </button>
+                      </div>
                     );
                   })
                 )}
@@ -424,6 +439,43 @@ export function BarberQueueManager() {
               >
                 Fechar
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Complete Confirmation Modal */}
+        {completeConfirmModal.isOpen && customerToComplete && (
+          <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-8">
+            <div className="bg-[#1a1a1a] border-2 border-[#10B981]/30 rounded-3xl p-10 max-w-2xl w-full">
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 rounded-full bg-[#10B981]/20 flex items-center justify-center mx-auto mb-6">
+                  <span className="material-symbols-outlined text-[#10B981] text-5xl">check_circle</span>
+                </div>
+                <h2 className="text-4xl font-['Playfair_Display',serif] text-[#10B981] mb-4">
+                  Finalizar Atendimento
+                </h2>
+                <p className="text-2xl text-white/70">
+                  Tem certeza que deseja finalizar o atendimento de{' '}
+                  <span className="text-white font-semibold">
+                    {tickets.find((t) => t.id === customerToComplete)?.customerName}
+                  </span>
+                  ?
+                </p>
+              </div>
+              <div className="flex gap-4">
+                <button
+                  onClick={completeConfirmModal.close}
+                  className="flex-1 px-8 py-5 text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleCompleteService}
+                  className="flex-1 px-8 py-5 text-xl rounded-2xl bg-[#10B981] text-white font-semibold hover:bg-[#0ea872] transition-all"
+                >
+                  Finalizar
+                </button>
+              </div>
             </div>
           </div>
         )}

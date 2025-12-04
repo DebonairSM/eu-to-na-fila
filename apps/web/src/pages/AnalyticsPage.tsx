@@ -101,7 +101,7 @@ export function AnalyticsPage() {
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] overflow-x-hidden">
       <Navigation />
-      <main className="dashboard-container show p-4 sm:p-6 lg:p-10 max-w-[1600px] mx-auto relative z-10 pt-24 sm:pt-28">
+      <main className="dashboard-container show p-4 sm:p-6 lg:p-10 max-w-[1600px] mx-auto relative z-10 pt-32 sm:pt-36">
         {/* Header */}
         <div className="dashboard-header mb-6 sm:mb-10 text-center">
           <div className="flex items-center justify-center gap-6 mb-4">
