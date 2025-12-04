@@ -310,7 +310,7 @@ export function BarberQueueManager() {
 
   // Management Mode View
   return (
-    <div className="min-h-screen bg-black p-3 sm:p-4 pb-[200px]">
+    <div className="min-h-screen bg-black p-3 sm:p-4 pb-20">
       <div className="container max-w-[600px] mx-auto">
         {/* Header */}
         <div className="header bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-4 sm:p-6 mb-4 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
@@ -324,7 +324,7 @@ export function BarberQueueManager() {
                 <span className="material-symbols-outlined text-xl">arrow_back</span>
               </button>
               <div className="header-title">
-                <h1 className="text-lg sm:text-2xl font-semibold text-white flex items-center gap-2">
+                <h1 className="text-lg sm:text-2xl font-semibold text-white flex items-center gap-3">
                   <span className="material-symbols-outlined text-xl sm:text-2xl text-[#D4AF37]">content_cut</span>
                   <span className="hidden sm:inline">{config.name}</span>
                 </h1>
@@ -356,9 +356,9 @@ export function BarberQueueManager() {
           <div className="queue-header mb-6">
             <button
               onClick={checkInModal.open}
-              className="checkin-btn flex items-center justify-center gap-2 px-8 py-4 bg-[#D4AF37] text-[#000000] border-2 border-[#D4AF37] rounded-lg font-semibold w-full transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_24px_rgba(212,175,55,0.4)] hover:bg-[rgba(212,175,55,0.9)]"
+              className="checkin-btn flex items-center justify-center gap-3 px-8 py-4 bg-[#D4AF37] text-[#000000] border-2 border-[#D4AF37] rounded-lg font-semibold w-full transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_24px_rgba(212,175,55,0.4)] hover:bg-[rgba(212,175,55,0.9)]"
             >
-              <span className="material-symbols-outlined">person_add</span>
+              <span className="material-symbols-outlined text-xl">person_add</span>
               Adicionar Cliente
             </button>
           </div>

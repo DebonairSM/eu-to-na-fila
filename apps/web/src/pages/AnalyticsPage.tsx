@@ -102,10 +102,10 @@ export function AnalyticsPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative overflow-x-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(212,175,55,0.05)_0%,transparent_50%),radial-gradient(circle_at_80%_70%,rgba(59,130,246,0.05)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      <div className="dashboard-container show p-4 sm:p-6 lg:p-10 max-w-[1600px] mx-auto relative z-10 pt-24 sm:pt-28 md:pt-40 lg:pt-44 xl:pt-48">
+      <div className="dashboard-container show p-4 sm:p-6 lg:p-10 max-w-[1600px] mx-auto relative z-10 pt-20 sm:pt-24 md:pt-28">
         {/* Header */}
         <div className="dashboard-header mb-6 sm:mb-10 text-center">
-          <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="flex items-center justify-center gap-6 mb-4">
             <h1 className="dashboard-title font-['Playfair_Display',serif] text-[2rem] sm:text-[3.5rem] text-white bg-gradient-to-r from-[#D4AF37] to-[#E8C547] bg-clip-text text-transparent">
               Analytics
             </h1>
@@ -179,8 +179,8 @@ export function AnalyticsPage() {
         {/* Daily Chart */}
         <div className="chart-card bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-4 sm:p-8 mb-6 sm:mb-8 relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
-          <div className="section-title font-['Playfair_Display',serif] text-xl sm:text-[1.75rem] text-white mb-4 sm:mb-6 flex items-center gap-3">
-            <span className="material-symbols-outlined text-[#D4AF37] text-2xl sm:text-3xl">bar_chart</span>
+          <div className="section-title font-['Playfair_Display',serif] text-xl sm:text-[1.75rem] text-white mb-4 sm:mb-6 flex items-center gap-4">
+            <span className="material-symbols-outlined text-[#D4AF37] text-3xl">bar_chart</span>
             Atendimentos por Dia
           </div>
           <DailyChart data={data.ticketsByDay} />
@@ -189,8 +189,8 @@ export function AnalyticsPage() {
         {/* Hourly Chart */}
         <div className="chart-card bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-4 sm:p-8 mb-6 sm:mb-8 relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
-          <div className="section-title font-['Playfair_Display',serif] text-xl sm:text-[1.75rem] text-white mb-4 sm:mb-6 flex items-center gap-3">
-            <span className="material-symbols-outlined text-[#D4AF37] text-2xl sm:text-3xl">schedule</span>
+          <div className="section-title font-['Playfair_Display',serif] text-xl sm:text-[1.75rem] text-white mb-4 sm:mb-6 flex items-center gap-4">
+            <span className="material-symbols-outlined text-[#D4AF37] text-3xl">schedule</span>
             Atendimentos por Hora
           </div>
           <HourlyChart data={data.hourlyDistribution} peakHour={data.peakHour} />
@@ -216,8 +216,8 @@ export function AnalyticsPage() {
         {data.barbers.length > 0 && (
           <div className="chart-card bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-4 sm:p-8 mb-6 sm:mb-8 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
-            <div className="section-title font-['Playfair_Display',serif] text-xl sm:text-[1.75rem] text-white mb-4 sm:mb-6 flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#D4AF37] text-2xl sm:text-3xl">content_cut</span>
+            <div className="section-title font-['Playfair_Display',serif] text-xl sm:text-[1.75rem] text-white mb-4 sm:mb-6 flex items-center gap-4">
+              <span className="material-symbols-outlined text-[#D4AF37] text-3xl">content_cut</span>
               Desempenho por Barbeiro
             </div>
             <div className="barbers-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

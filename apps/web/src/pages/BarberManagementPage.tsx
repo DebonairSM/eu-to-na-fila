@@ -93,9 +93,9 @@ export function BarberManagementPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.05)_0%,transparent_50%)] animate-spin-slow pointer-events-none z-0" />
       <Navigation />
-      <div className="container max-w-[1200px] mx-auto px-6 pt-[100px] pb-10 relative z-10">
+      <div className="container max-w-[1200px] mx-auto px-6 pt-24 pb-10 relative z-10">
         {/* Header */}
-        <div className="header text-center mb-10">
+        <div className="header text-center mb-8">
           <h1 className="font-['Playfair_Display',serif] text-[2.5rem] text-[#D4AF37] mb-3">
             Gerenciar Barbeiros
           </h1>
@@ -107,9 +107,9 @@ export function BarberManagementPage() {
         {/* Add Barber Button */}
         <button
           onClick={addModal.open}
-          className="add-barber-btn flex items-center justify-center gap-2 w-full max-w-[300px] mx-auto mb-10 px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] border-none rounded-xl text-base font-semibold transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(212,175,55,0.4)] min-h-[48px]"
+          className="add-barber-btn flex items-center justify-center gap-3 w-full max-w-[300px] mx-auto mb-10 px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] border-none rounded-xl text-base font-semibold transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(212,175,55,0.4)] min-h-[48px]"
         >
-          <span className="material-symbols-outlined">add</span>
+          <span className="material-symbols-outlined text-xl">add</span>
           Adicionar Barbeiro
         </button>
 

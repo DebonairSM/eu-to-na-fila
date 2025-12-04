@@ -51,14 +51,14 @@ export function LandingPage() {
           </p>
           <div className="hero-actions flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center fade-in-up" style={{ animationDelay: '0.6s' }}>
             <Link to="/join">
-              <Button size="lg" className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#E8C547] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all">
-                <span className="material-symbols-outlined">person_add</span>
+              <Button size="lg" className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#E8C547] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all gap-3">
+                <span className="material-symbols-outlined text-xl">person_add</span>
                 Entrar na Fila
               </Button>
             </Link>
             <a href="#location">
-              <Button variant="outline" size="lg" className="bg-transparent text-white border-2 border-[rgba(255,255,255,0.3)] hover:border-[#D4AF37] hover:text-[#D4AF37]">
-                <span className="material-symbols-outlined">location_on</span>
+              <Button variant="outline" size="lg" className="bg-transparent text-white border-2 border-[rgba(255,255,255,0.3)] hover:border-[#D4AF37] hover:text-[#D4AF37] gap-3">
+                <span className="material-symbols-outlined text-xl">location_on</span>
                 Como Chegar
               </Button>
             </a>
@@ -263,8 +263,8 @@ export function LandingPage() {
             Entre na fila online agora e seja atendido sem espera.
           </p>
           <Link to="/join">
-            <Button size="lg" className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#E8C547]">
-              <span className="material-symbols-outlined">person_add</span>
+            <Button size="lg" className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#E8C547] gap-3">
+              <span className="material-symbols-outlined text-xl">person_add</span>
               Entrar na Fila Agora
             </Button>
           </Link>

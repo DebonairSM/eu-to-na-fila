@@ -144,17 +144,17 @@ export function LoginPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full px-4 py-3 sm:px-6 sm:py-4 min-h-[44px] bg-[#D4AF37] text-[#0a0a0a] font-semibold rounded-full flex items-center justify-center gap-2 hover:bg-[#E8C547] transition-all disabled:opacity-50"
+                className="w-full px-4 py-3 sm:px-6 sm:py-4 min-h-[44px] bg-[#D4AF37] text-[#0a0a0a] font-semibold rounded-full flex items-center justify-center gap-3 hover:bg-[#E8C547] transition-all disabled:opacity-50"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
-                    <span className="material-symbols-outlined animate-spin">hourglass_top</span>
+                    <span className="material-symbols-outlined animate-spin text-xl">hourglass_top</span>
                     Entrando...
                   </>
                 ) : (
                   <>
-                    <span className="material-symbols-outlined">login</span>
+                    <span className="material-symbols-outlined text-xl">login</span>
                     Entrar
                   </>
                 )}

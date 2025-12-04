@@ -256,8 +256,8 @@ export function JoinPage() {
               {/* Already in Queue Message */}
               {isAlreadyInQueue && existingTicketId && (
                 <div className="p-4 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30">
-                  <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
+                  <div className="flex items-start gap-4">
+                    <span className="material-symbols-outlined text-[#D4AF37] text-3xl">
                       info
                     </span>
                     <div className="flex-1">
@@ -289,17 +289,17 @@ export function JoinPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="submit-btn w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-2 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="submit-btn w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-3 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmitting || !!validationError || isAlreadyInQueue}
               >
                 {isSubmitting ? (
                   <>
-                    <span className="material-symbols-outlined animate-spin">hourglass_top</span>
+                    <span className="material-symbols-outlined animate-spin text-xl">hourglass_top</span>
                     Entrando...
                   </>
                 ) : (
                   <>
-                    <span className="material-symbols-outlined">check</span>
+                    <span className="material-symbols-outlined text-xl">check</span>
                     Entrar na Fila
                   </>
                 )}

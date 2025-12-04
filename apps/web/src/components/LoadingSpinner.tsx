@@ -18,7 +18,7 @@ export function LoadingSpinner({
   };
 
   return (
-    <div className={cn('flex flex-col items-center justify-center gap-2', className)}>
+    <div className={cn('flex flex-col items-center justify-center gap-4', className)}>
       <div
         className={cn(
           'border-2 border-muted border-t-primary rounded-full animate-spin',

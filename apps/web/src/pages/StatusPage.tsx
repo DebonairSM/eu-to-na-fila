@@ -167,14 +167,14 @@ export function StatusPage() {
             </h1>
             <div
               className={cn(
-                'status-badge inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium uppercase mb-4',
+                'status-badge inline-flex items-center gap-3 px-4 py-2 rounded-full text-sm font-medium uppercase mb-4',
                 {
                   'bg-[rgba(212,175,55,0.2)] border-2 border-[#D4AF37] text-[#D4AF37]': isWaiting,
                   'bg-[rgba(34,197,94,0.2)] border-2 border-[#22c55e] text-[#22c55e]': isInProgress || isCompleted,
                 }
               )}
             >
-              <span className="material-symbols-outlined text-lg">
+              <span className="material-symbols-outlined text-xl">
                 {isWaiting
                   ? 'schedule'
                   : isInProgress
@@ -194,8 +194,8 @@ export function StatusPage() {
           {/* Waiting State */}
           {isWaiting && (
             <div className="main-card bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border-2 border-[rgba(212,175,55,0.3)] rounded-3xl p-8 sm:p-12 text-center mb-6">
-              <div className="wait-label flex items-center justify-center gap-2 mb-4 text-[rgba(255,255,255,0.7)] text-xs sm:text-sm uppercase tracking-wider">
-                <span className="material-symbols-outlined text-[#D4AF37]">schedule</span>
+              <div className="wait-label flex items-center justify-center gap-3 mb-4 text-[rgba(255,255,255,0.7)] text-xs sm:text-sm uppercase tracking-wider">
+                <span className="material-symbols-outlined text-xl text-[#D4AF37]">schedule</span>
                 Tempo estimado
               </div>
               <div className="wait-value font-['Playfair_Display',serif] text-4xl sm:text-6xl font-semibold text-white mb-2 drop-shadow-[0_4px_20px_rgba(212,175,55,0.3)]">
@@ -251,18 +251,18 @@ export function StatusPage() {
           <div className="space-y-3">
             {isWaiting && (
               <button
-                className="w-full px-6 py-4 bg-[#ef4444] text-white font-semibold rounded-lg flex items-center justify-center gap-2 hover:bg-[#dc2626] transition-all disabled:opacity-50"
+                className="w-full px-6 py-4 bg-[#ef4444] text-white font-semibold rounded-lg flex items-center justify-center gap-3 hover:bg-[#dc2626] transition-all disabled:opacity-50"
                 onClick={() => setShowLeaveConfirm(true)}
                 disabled={isLeaving}
               >
                 {isLeaving ? (
                   <>
-                    <span className="material-symbols-outlined animate-spin">hourglass_top</span>
+                    <span className="material-symbols-outlined animate-spin text-xl">hourglass_top</span>
                     Saindo...
                   </>
                 ) : (
                   <>
-                    <span className="material-symbols-outlined">exit_to_app</span>
+                    <span className="material-symbols-outlined text-xl">exit_to_app</span>
                     Sair da Fila
                   </>
                 )}
@@ -271,8 +271,8 @@ export function StatusPage() {
 
             {isCompleted && (
               <Link to="/">
-                <button className="w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-2 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all">
-                  <span className="material-symbols-outlined">home</span>
+                <button className="w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-3 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all">
+                  <span className="material-symbols-outlined text-xl">home</span>
                   Voltar ao Início
                 </button>
               </Link>

@@ -13,12 +13,12 @@ export function ErrorDisplay({ error, onRetry, className }: ErrorDisplayProps) {
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center gap-4 p-8 text-center',
+        'flex flex-col items-center justify-center gap-5 p-8 text-center',
         className
       )}
       role="alert"
     >
-      <span className="material-symbols-outlined text-4xl text-destructive">
+      <span className="material-symbols-outlined text-5xl text-destructive">
         error
       </span>
       <div>

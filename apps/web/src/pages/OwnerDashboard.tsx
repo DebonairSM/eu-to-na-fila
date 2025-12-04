@@ -15,9 +15,9 @@ export function OwnerDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_70%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      <div className="container max-w-[800px] mx-auto relative z-10 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-12">
+      <div className="container max-w-[800px] mx-auto relative z-10 pt-24 px-4 sm:px-6 lg:px-10 pb-12">
         {/* Header */}
-        <div className="header text-center mb-10 sm:mb-12">
+        <div className="header text-center mb-8 sm:mb-10">
           <h1 className="title font-['Playfair_Display',serif] text-xl sm:text-2xl font-semibold text-[#D4AF37]">
             Dashboard
           </h1>
