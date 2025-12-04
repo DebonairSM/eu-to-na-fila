@@ -153,118 +153,99 @@ export function BarberQueueManager() {
     const joinUrl = `${window.location.origin}/mineiro/join`;
 
     return (
-      <div className="fixed inset-0 bg-black text-white z-50 overflow-hidden">
-        {/* Exit Button */}
-        <button
-          onClick={exitKioskMode}
-          className="absolute top-4 left-4 z-50 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-          aria-label="Exit kiosk mode"
-        >
-          <span className="material-symbols-outlined">settings</span>
-        </button>
-
-        {/* QR Code */}
-        <div className="absolute top-4 right-4 z-50">
-          <QRCode url={joinUrl} size={80} />
+      <div className="fixed inset-0 bg-black text-white z-50 overflow-hidden flex flex-col">
+        {/* Top Bar - Exit button and QR Code */}
+        <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 sm:p-6">
+          <button
+            onClick={exitKioskMode}
+            className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
+            aria-label="Exit kiosk mode"
+          >
+            <span className="material-symbols-outlined text-white/70">settings</span>
+          </button>
+          <div className="bg-white p-2 rounded-xl">
+            <QRCode url={joinUrl} size={72} />
+          </div>
         </div>
 
-        {/* Content */}
+        {/* Queue View */}
         {currentView === 'queue' && (
-          <div className="h-full flex flex-col p-8">
-            {/* Queue List */}
-            <div className="flex-1 overflow-y-auto space-y-4">
-              {sortedTickets.map((ticket) => {
-                const assignedBarber = getAssignedBarber(ticket);
-                const isServing = ticket.status === 'in_progress';
+          <div className="flex-1 flex flex-col pt-24 pb-36 px-4 sm:px-8 lg:px-16">
+            {/* Queue List - Centered */}
+            <div className="flex-1 w-full max-w-[1200px] mx-auto overflow-y-auto scrollbar-hide">
+              <div className="space-y-3 sm:space-y-4">
+                {sortedTickets.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-white/40">
+                    <span className="material-symbols-outlined text-6xl mb-4">group</span>
+                    <p className="text-xl">Nenhum cliente na fila</p>
+                  </div>
+                ) : (
+                  sortedTickets.map((ticket) => {
+                    const assignedBarber = getAssignedBarber(ticket);
+                    const isServing = ticket.status === 'in_progress';
 
-                return (
-                  <button
-                    key={ticket.id}
-                    type="button"
-                    className={cn(
-                      'w-full px-9 py-7 rounded-lg border-2 text-2xl cursor-pointer transition-all text-left',
-                      {
-                        'bg-[#10B981]/20 border-[#10B981]': isServing,
-                        'bg-white/5 border-primary/30': !isServing,
-                      }
-                    )}
-                    onClick={() => {
-                      setSelectedCustomerId(ticket.id);
-                      barberSelectorModal.open();
-                      showQueueView();
-                    }}
-                    aria-label={`${ticket.customerName}, posição ${ticket.position}${assignedBarber ? `, atendido por ${assignedBarber.name}` : ''}`}
-                  >
-                    <div className="flex items-center gap-6">
-                      {/* Position Badge - 56px × 56px circular for kiosk mode */}
-                      <div
+                    return (
+                      <button
+                        key={ticket.id}
+                        type="button"
                         className={cn(
-                          'w-14 h-14 rounded-full flex items-center justify-center font-bold text-2xl',
+                          'w-full rounded-2xl transition-all text-left backdrop-blur-sm',
+                          'px-6 py-5 sm:px-8 sm:py-6 lg:px-10 lg:py-7',
                           {
-                            'bg-[#10B981]': isServing,
-                            'bg-primary': !isServing,
+                            'bg-[#10B981]/15 border-2 border-[#10B981]/40': isServing,
+                            'bg-white/[0.03] border border-[#D4AF37]/20 hover:border-[#D4AF37]/40 hover:bg-white/[0.05]': !isServing,
                           }
                         )}
+                        onClick={() => {
+                          setSelectedCustomerId(ticket.id);
+                          barberSelectorModal.open();
+                          showQueueView();
+                        }}
+                        aria-label={`${ticket.customerName}, posição ${ticket.position}${assignedBarber ? `, atendido por ${assignedBarber.name}` : ''}`}
                       >
-                        {isServing ? (
-                          <span className="material-symbols-outlined text-white text-3xl">check</span>
-                        ) : (
-                          ticket.position
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold">{ticket.customerName}</p>
-                        {assignedBarber && (
-                          <p className="text-lg text-white/70">{assignedBarber.name}</p>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                        <div className="flex items-center gap-5 sm:gap-7">
+                          {/* Position Badge */}
+                          <div
+                            className={cn(
+                              'flex-shrink-0 rounded-xl flex items-center justify-center font-semibold',
+                              'w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-lg sm:text-xl lg:text-2xl',
+                              {
+                                'bg-[#10B981] text-white': isServing,
+                                'bg-[#D4AF37] text-black': !isServing,
+                              }
+                            )}
+                          >
+                            {isServing ? (
+                              <span className="material-symbols-outlined text-2xl sm:text-3xl">check</span>
+                            ) : (
+                              ticket.position
+                            )}
+                          </div>
+                          
+                          {/* Customer Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white text-lg sm:text-xl lg:text-2xl truncate">
+                              {ticket.customerName}
+                            </p>
+                            {assignedBarber && (
+                              <p className="text-sm sm:text-base text-white/50 mt-1 truncate">
+                                {assignedBarber.name}
+                              </p>
+                            )}
+                          </div>
 
-            {/* Barber Presence Selector */}
-            <div className="mt-8 pt-8 border-t border-white/20">
-              <div className="flex gap-4 justify-center flex-wrap">
-                {barbers.map((barber) => (
-                  <button
-                    key={barber.id}
-                    onClick={async () => {
-                      try {
-                        await togglePresence(barber.id, !barber.isPresent);
-                        await refetchBarbers();
-                        await refetchQueue();
-                      } catch (error) {
-                        alert(getErrorMessage(error, 'Erro ao alterar presença do barbeiro. Tente novamente.'));
-                      }
-                    }}
-                    className={cn(
-                      'px-4 py-2 rounded-lg border-2 transition-colors',
-                      barber.isPresent
-                        ? 'bg-green-500/20 border-green-500'
-                        : 'bg-white/5 border-white/20 opacity-50'
-                    )}
-                    aria-label={`${barber.isPresent ? 'Marcar' : 'Desmarcar'} ${barber.name} como ${barber.isPresent ? 'ausente' : 'presente'}`}
-                  >
-                    {barber.name}
-                  </button>
-                ))}
+                          {/* Status indicator for serving */}
+                          {isServing && (
+                            <div className="flex-shrink-0 flex items-center gap-2 text-[#10B981]">
+                              <span className="text-xs sm:text-sm uppercase tracking-wider font-medium">Atendendo</span>
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
               </div>
-            </div>
-
-            {/* Check-in Button */}
-            <div className="mt-4 text-center">
-              <button
-                onClick={() => {
-                  checkInModal.open();
-                  showQueueView();
-                }}
-                className="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-bold text-xl hover:bg-primary/90 transition-colors"
-                aria-label="Adicionar cliente à fila"
-              >
-                {config.name}
-              </button>
             </div>
           </div>
         )}
@@ -273,30 +254,74 @@ export function BarberQueueManager() {
         {(currentView === 'ad1' || currentView === 'ad2' || currentView === 'ad3') && (
           <button
             type="button"
-            className="h-full w-full flex items-center justify-center p-8 cursor-pointer relative"
+            className="flex-1 flex items-center justify-center p-8 cursor-pointer"
             onClick={showQueueView}
             aria-label="Voltar para visualização da fila"
           >
-            <div className="text-center space-y-8 max-w-4xl">
-              <h2 className="text-6xl font-bold">Anúncio {currentView.slice(-1)}</h2>
-              <p className="text-2xl text-white/70">
+            <div className="text-center space-y-6">
+              <span className="material-symbols-outlined text-7xl text-[#D4AF37]">campaign</span>
+              <h2 className="text-4xl sm:text-5xl font-semibold">Anúncio {currentView.slice(-1)}</h2>
+              <p className="text-xl text-white/60">
                 {currentView === 'ad1' && 'Promoções especiais'}
                 {currentView === 'ad2' && 'Horários de funcionamento'}
                 {currentView === 'ad3' && 'Produtos disponíveis'}
               </p>
-              <p className="text-xl text-white/50">Toque para voltar à fila</p>
-            </div>
-            <div className="absolute bottom-4 right-4">
-              <QRCode url={joinUrl} size={100} />
+              <p className="text-sm text-white/40 mt-8">Toque para voltar à fila</p>
             </div>
           </button>
         )}
 
+        {/* Bottom Fixed Bar */}
+        <div className="absolute bottom-0 left-0 right-0 bg-black/90 backdrop-blur-md border-t border-white/10">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-8 py-4 sm:py-5">
+            {/* Barber Presence Row */}
+            <div className="flex items-center justify-center gap-3 sm:gap-4 mb-4 flex-wrap">
+              {barbers.map((barber) => (
+                <button
+                  key={barber.id}
+                  onClick={async () => {
+                    try {
+                      await togglePresence(barber.id, !barber.isPresent);
+                      await refetchBarbers();
+                      await refetchQueue();
+                    } catch (error) {
+                      alert(getErrorMessage(error, 'Erro ao alterar presença do barbeiro. Tente novamente.'));
+                    }
+                  }}
+                  className={cn(
+                    'px-5 py-2.5 rounded-xl text-sm font-medium transition-all',
+                    barber.isPresent
+                      ? 'bg-[#10B981]/20 border-2 border-[#10B981]/50 text-[#10B981]'
+                      : 'bg-white/5 border-2 border-white/10 text-white/40 hover:border-white/20'
+                  )}
+                  aria-label={`${barber.isPresent ? 'Marcar' : 'Desmarcar'} ${barber.name} como ${barber.isPresent ? 'ausente' : 'presente'}`}
+                >
+                  {barber.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Shop Button / Check-in */}
+            <div className="flex justify-center">
+              <button
+                onClick={() => {
+                  checkInModal.open();
+                  showQueueView();
+                }}
+                className="px-8 py-3.5 bg-[#D4AF37] text-black rounded-xl font-semibold text-base sm:text-lg hover:bg-[#E8C547] transition-all shadow-[0_4px_16px_rgba(212,175,55,0.3)] hover:shadow-[0_6px_24px_rgba(212,175,55,0.4)]"
+                aria-label="Adicionar cliente à fila"
+              >
+                {config.name}
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Progress Bar */}
         {isInRotation && (
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-50">
             <div
-              className="h-full bg-primary"
+              className="h-full bg-[#D4AF37]"
               style={{
                 width: '100%',
                 animation: `progress ${currentView === 'queue' ? QUEUE_VIEW_DURATION : AD_VIEW_DURATION}ms linear`,

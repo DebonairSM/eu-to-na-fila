@@ -15,7 +15,7 @@ export function StaffPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative p-10">
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_70%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      <div className="container max-w-[800px] mx-auto relative z-10 animate-in fade-in-up pt-24">
+      <div className="container max-w-[800px] mx-auto relative z-10 animate-in fade-in-up pt-28">
         {/* Header */}
         <div className="header text-center mb-12">
           <h1 className="title text-[42px] font-bold text-[#D4AF37] mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]">

@@ -80,7 +80,7 @@
   
   html {
     scroll-behavior: smooth;
-    background-color: transparent; /* Don't apply background to html */
+    background-color: #0a0a0a;
   }
   
   body {
@@ -89,13 +89,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    background-color: transparent; /* Let page components handle their own backgrounds */
+    background-color: #0a0a0a;
     margin: 0;
     padding: 0;
+    min-height: 100vh;
   }
   
   #root {
-    background-color: transparent;
+    background-color: #0a0a0a;
     min-height: 100vh;
   }
   
@@ -404,6 +405,16 @@
 
 .hourly-bar:hover .hourly-bar-value {
   opacity: 1;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* Responsive improvements */
