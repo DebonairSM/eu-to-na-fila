@@ -52,12 +52,13 @@ export function QueueCard({
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           {/* Position Badge - 52px × 52px for management mode */}
-          <div
+          <button
+            type="button"
             className={cn(
-              'flex-shrink-0 w-[52px] h-[52px] rounded-md flex items-center justify-center font-bold text-lg',
+              'flex-shrink-0 w-[52px] h-[52px] rounded-md flex items-center justify-center font-bold text-lg cursor-pointer transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2',
               {
-                'bg-primary text-primary-foreground': isWaiting,
-                'bg-[#10B981] text-white': isServing,
+                'bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary': isWaiting,
+                'bg-[#10B981] text-white hover:bg-[#10B981]/90 focus:ring-[#10B981]': isServing,
               }
             )}
             onClick={(e) => {
@@ -68,17 +69,18 @@ export function QueueCard({
                 onRemove();
               }
             }}
-            role="button"
             aria-label={
-              isServing ? 'Finalizar atendimento' : 'Remover da fila'
+              isServing 
+                ? `Finalizar atendimento de ${ticket.customerName}` 
+                : `Remover ${ticket.customerName} da fila`
             }
           >
             {isServing ? (
-              <span className="material-symbols-outlined text-2xl">check</span>
+              <span className="material-symbols-outlined text-2xl" aria-hidden="true">check</span>
             ) : (
-              ticket.position
+              <span aria-hidden="true">{ticket.position}</span>
             )}
-          </div>
+          </button>
 
           {/* Customer Name */}
           <div className="flex-1 min-w-0">

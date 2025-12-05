@@ -38,12 +38,16 @@ export function BarberCard({
         },
         className
       )}
-      aria-label={`${showPresence ? (barber.isPresent ? 'Mark absent' : 'Mark present') : 'Select barber'} ${barber.name}`}
+      aria-label={showPresence 
+        ? `${barber.name} - ${barber.isPresent ? 'Presente, clique para marcar ausente' : 'Ausente, clique para marcar presente'}` 
+        : `Selecionar barbeiro ${barber.name}`}
+      aria-pressed={isSelected}
     >
       <div className="relative">
         <img
           src={avatarUrl}
-          alt={barber.name}
+          alt=""
+          aria-hidden="true"
           className={cn(avatarSize, 'rounded-md object-cover')}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
@@ -56,7 +60,7 @@ export function BarberCard({
               'absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-background',
               barber.isPresent ? 'bg-[#10B981]' : 'bg-gray-400'
             )}
-            aria-label={barber.isPresent ? 'Present' : 'Absent'}
+            aria-hidden="true"
           />
         )}
       </div>

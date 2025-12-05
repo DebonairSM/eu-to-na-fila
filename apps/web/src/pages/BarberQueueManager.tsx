@@ -26,10 +26,6 @@ export function BarberQueueManager() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isOwner } = useAuthContext();
-  // Use longer polling interval in kiosk mode to improve performance
-  const isKioskRequested = searchParams.get('kiosk') === 'true';
-  const pollInterval = isKioskMode ? 10000 : 5000; // 10s for kiosk, 5s for management
-  const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval);
   const { barbers, togglePresence, refetch: refetchBarbers } = useBarbers();
   const {
     isKioskMode,
@@ -39,6 +35,10 @@ export function BarberQueueManager() {
     exitKioskMode,
     showQueueView,
   } = useKiosk();
+  
+  // Use longer polling interval in kiosk mode to improve performance
+  const pollInterval = isKioskMode ? 10000 : 5000; // 10s for kiosk, 5s for management
+  const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval);
   const checkInModal = useModal();
   const barberSelectorModal = useModal();
   const removeConfirmModal = useModal();
@@ -177,13 +177,17 @@ export function BarberQueueManager() {
       <div className="fixed inset-0 bg-black text-white z-50 overflow-hidden flex flex-col">
         {/* Error Message Toast */}
         {errorMessage && (
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[60] bg-[#ef4444] text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-md">
-            <span className="material-symbols-outlined">error</span>
-            <p className="flex-1">{errorMessage}</p>
+          <div 
+            className="absolute top-20 left-1/2 -translate-x-1/2 z-[60] bg-[#ef4444] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-[calc(100%-2rem)] sm:max-w-md"
+            role="alert"
+            aria-live="assertive"
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">error</span>
+            <p className="flex-1 text-sm sm:text-base">{errorMessage}</p>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-white/80 hover:text-white"
-              aria-label="Fechar erro"
+              className="text-white/80 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Fechar mensagem de erro"
             >
               <span className="material-symbols-outlined">close</span>
             </button>
@@ -553,13 +557,17 @@ export function BarberQueueManager() {
     <div className="min-h-screen bg-black p-3 sm:p-4 pb-20">
       {/* Error Message Toast */}
       {errorMessage && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#ef4444] text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-md">
-          <span className="material-symbols-outlined">error</span>
-          <p className="flex-1">{errorMessage}</p>
+        <div 
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#ef4444] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-[calc(100%-2rem)] sm:max-w-md"
+          role="alert"
+          aria-live="assertive"
+        >
+          <span className="material-symbols-outlined" aria-hidden="true">error</span>
+          <p className="flex-1 text-sm sm:text-base">{errorMessage}</p>
           <button
             onClick={() => setErrorMessage(null)}
-            className="text-white/80 hover:text-white"
-            aria-label="Fechar erro"
+            className="text-white/80 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Fechar mensagem de erro"
           >
             <span className="material-symbols-outlined">close</span>
           </button>
