@@ -67,7 +67,7 @@ export function BarberQueueManager() {
   const handleAddCustomer = async () => {
     const validation = validateName(checkInName.first, checkInName.last);
     if (!validation.isValid) {
-      setErrorMessage(validation.error);
+      setErrorMessage(validation.error || 'Nome inválido');
       setTimeout(() => setErrorMessage(null), 5000);
       return;
     }

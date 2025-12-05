@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { getErrorMessage } from '@/lib/utils';
 
 const KIOSK_PIN = '9999'; // Kiosk PIN - should be configurable in production
 
@@ -90,11 +89,6 @@ export function KioskLoginPage() {
     }
 
     setIsSubmitting(false);
-  };
-
-  const clearPin = () => {
-    setPin(['', '', '', '']);
-    inputRefs.current[0]?.focus();
   };
 
   const isPinComplete = pin.every(digit => digit !== '');
