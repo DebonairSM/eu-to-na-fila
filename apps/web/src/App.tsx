@@ -4,6 +4,7 @@ import { LandingPage } from './pages/LandingPage';
 import { JoinPage } from './pages/JoinPage';
 import { StatusPage } from './pages/StatusPage';
 import { LoginPage } from './pages/LoginPage';
+import { KioskLoginPage } from './pages/KioskLoginPage';
 import { OwnerDashboard } from './pages/OwnerDashboard';
 import { StaffPage } from './pages/StaffPage';
 import { BarberQueueManager } from './pages/BarberQueueManager';
@@ -48,6 +49,7 @@ function App() {
         <Route path="/join" element={<JoinPage />} />
         <Route path="/status/:id" element={<StatusPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/kiosk" element={<KioskLoginPage />} />
 
         {/* Protected Routes */}
         <Route

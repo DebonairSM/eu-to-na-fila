@@ -47,6 +47,7 @@ export function BarberQueueManager() {
   const [customerToComplete, setCustomerToComplete] = useState<number | null>(null);
   const [checkInName, setCheckInName] = useState({ first: '', last: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Enter kiosk mode if ?kiosk=true in URL
   useEffect(() => {
@@ -66,7 +67,8 @@ export function BarberQueueManager() {
   const handleAddCustomer = async () => {
     const validation = validateName(checkInName.first, checkInName.last);
     if (!validation.isValid) {
-      alert(validation.error);
+      setErrorMessage(validation.error);
+      setTimeout(() => setErrorMessage(null), 5000);
       return;
     }
 
@@ -75,6 +77,7 @@ export function BarberQueueManager() {
       : checkInName.first.trim();
 
     setIsSubmitting(true);
+    setErrorMessage(null);
     try {
       await api.createTicket(config.slug, {
         customerName: fullName,
@@ -84,7 +87,9 @@ export function BarberQueueManager() {
       checkInModal.close();
       await refetchQueue();
     } catch (error) {
-      alert(getErrorMessage(error, 'Erro ao adicionar cliente. Tente novamente.'));
+      const errorMsg = getErrorMessage(error, 'Erro ao adicionar cliente. Tente novamente.');
+      setErrorMessage(errorMsg);
+      setTimeout(() => setErrorMessage(null), 5000);
     } finally {
       setIsSubmitting(false);
     }
@@ -111,7 +116,9 @@ export function BarberQueueManager() {
       barberSelectorModal.close();
       setSelectedCustomerId(null);
     } catch (error) {
-      alert(getErrorMessage(error, 'Erro ao atribuir barbeiro. Tente novamente.'));
+      const errorMsg = getErrorMessage(error, 'Erro ao atribuir barbeiro. Tente novamente.');
+      setErrorMessage(errorMsg);
+      setTimeout(() => setErrorMessage(null), 5000);
     }
   };
 
@@ -124,7 +131,10 @@ export function BarberQueueManager() {
       removeConfirmModal.close();
       setCustomerToRemove(null);
     } catch (error) {
-      alert(getErrorMessage(error, 'Erro ao remover cliente. Tente novamente.'));
+      const errorMsg = getErrorMessage(error, 'Erro ao remover cliente. Tente novamente.');
+      setErrorMessage(errorMsg);
+      setTimeout(() => setErrorMessage(null), 5000);
+      removeConfirmModal.close();
     }
   };
 
@@ -139,7 +149,10 @@ export function BarberQueueManager() {
       completeConfirmModal.close();
       setCustomerToComplete(null);
     } catch (error) {
-      alert(getErrorMessage(error, 'Erro ao finalizar atendimento. Tente novamente.'));
+      const errorMsg = getErrorMessage(error, 'Erro ao finalizar atendimento. Tente novamente.');
+      setErrorMessage(errorMsg);
+      setTimeout(() => setErrorMessage(null), 5000);
+      completeConfirmModal.close();
     }
   };
 
@@ -154,6 +167,21 @@ export function BarberQueueManager() {
 
     return (
       <div className="fixed inset-0 bg-black text-white z-50 overflow-hidden flex flex-col">
+        {/* Error Message Toast */}
+        {errorMessage && (
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[60] bg-[#ef4444] text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-md">
+            <span className="material-symbols-outlined">error</span>
+            <p className="flex-1">{errorMessage}</p>
+            <button
+              onClick={() => setErrorMessage(null)}
+              className="text-white/80 hover:text-white"
+              aria-label="Fechar erro"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        )}
+
         {/* Exit Button - Subtle in corner */}
         <button
           onClick={exitKioskMode}
@@ -294,7 +322,9 @@ export function BarberQueueManager() {
                           await refetchBarbers();
                           await refetchQueue();
                         } catch (error) {
-                          alert(getErrorMessage(error, 'Erro ao alterar presença do barbeiro. Tente novamente.'));
+                          const errorMsg = getErrorMessage(error, 'Erro ao alterar presença do barbeiro. Tente novamente.');
+                          setErrorMessage(errorMsg);
+                          setTimeout(() => setErrorMessage(null), 5000);
                         }
                       }}
                       className={cn(
@@ -492,6 +522,21 @@ export function BarberQueueManager() {
   // Management Mode View
   return (
     <div className="min-h-screen bg-black p-3 sm:p-4 pb-20">
+      {/* Error Message Toast */}
+      {errorMessage && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#ef4444] text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-md">
+          <span className="material-symbols-outlined">error</span>
+          <p className="flex-1">{errorMessage}</p>
+          <button
+            onClick={() => setErrorMessage(null)}
+            className="text-white/80 hover:text-white"
+            aria-label="Fechar erro"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      )}
+
       <div className="container max-w-[600px] mx-auto">
         {/* Header */}
         <div className="header bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-4 sm:p-6 mb-4 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
@@ -598,15 +643,16 @@ export function BarberQueueManager() {
                     await togglePresence(barber.id, !barber.isPresent);
                     await refetchBarbers();
                     await refetchQueue();
-                  } catch (error) {
-                    if (error instanceof Error) {
-                      alert(error.message);
-                    } else if (error && typeof error === 'object' && 'error' in error) {
-                      alert((error as { error: string }).error);
-                    } else {
-                      alert('Erro ao alterar presença do barbeiro. Tente novamente.');
-                    }
-                  }
+                      } catch (error) {
+                        let errorMsg = 'Erro ao alterar presença do barbeiro. Tente novamente.';
+                        if (error instanceof Error) {
+                          errorMsg = error.message;
+                        } else if (error && typeof error === 'object' && 'error' in error) {
+                          errorMsg = (error as { error: string }).error;
+                        }
+                        setErrorMessage(errorMsg);
+                        setTimeout(() => setErrorMessage(null), 5000);
+                      }
                 }}
               />
             ))}

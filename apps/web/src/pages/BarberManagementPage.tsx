@@ -21,6 +21,7 @@ export function BarberManagementPage() {
   const [barberToDelete, setBarberToDelete] = useState<number | null>(null);
   const [editingBarber, setEditingBarber] = useState<any>(null);
   const [formData, setFormData] = useState({ name: '', avatarUrl: '' });
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Redirect if not owner
   if (!isOwner) {
@@ -30,7 +31,8 @@ export function BarberManagementPage() {
 
   const handleAdd = async () => {
     if (!formData.name.trim()) {
-      alert('Nome é obrigatório');
+      setErrorMessage('Nome é obrigatório');
+      setTimeout(() => setErrorMessage(null), 5000);
       return;
     }
 
@@ -43,13 +45,16 @@ export function BarberManagementPage() {
       addModal.close();
       await refetch();
     } catch (error) {
-      alert(getErrorMessage(error, 'Erro ao adicionar barbeiro. Tente novamente.'));
+      const errorMsg = getErrorMessage(error, 'Erro ao adicionar barbeiro. Tente novamente.');
+      setErrorMessage(errorMsg);
+      setTimeout(() => setErrorMessage(null), 5000);
     }
   };
 
   const handleEdit = async () => {
     if (!editingBarber || !formData.name.trim()) {
-      alert('Nome é obrigatório');
+      setErrorMessage('Nome é obrigatório');
+      setTimeout(() => setErrorMessage(null), 5000);
       return;
     }
 
@@ -63,7 +68,9 @@ export function BarberManagementPage() {
       editModal.close();
       await refetch();
     } catch (error) {
-      alert(getErrorMessage(error, 'Erro ao atualizar barbeiro. Tente novamente.'));
+      const errorMsg = getErrorMessage(error, 'Erro ao atualizar barbeiro. Tente novamente.');
+      setErrorMessage(errorMsg);
+      setTimeout(() => setErrorMessage(null), 5000);
     }
   };
 
@@ -76,7 +83,10 @@ export function BarberManagementPage() {
       setBarberToDelete(null);
       await refetch();
     } catch (error) {
-      alert(getErrorMessage(error, 'Erro ao remover barbeiro. Tente novamente.'));
+      const errorMsg = getErrorMessage(error, 'Erro ao remover barbeiro. Tente novamente.');
+      setErrorMessage(errorMsg);
+      setTimeout(() => setErrorMessage(null), 5000);
+      deleteConfirmModal.close();
     }
   };
 
@@ -92,6 +102,20 @@ export function BarberManagementPage() {
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
       <Navigation />
+      {/* Error Message Toast */}
+      {errorMessage && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#ef4444] text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-md">
+          <span className="material-symbols-outlined">error</span>
+          <p className="flex-1">{errorMessage}</p>
+          <button
+            onClick={() => setErrorMessage(null)}
+            className="text-white/80 hover:text-white"
+            aria-label="Fechar erro"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      )}
       <main className="container max-w-[1200px] mx-auto px-6 pt-24 pb-10 relative z-10">
         {/* Header */}
         <div className="header text-center mb-8">

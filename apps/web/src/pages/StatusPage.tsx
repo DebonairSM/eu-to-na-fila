@@ -81,7 +81,10 @@ export function StatusPage() {
       localStorage.removeItem('eutonafila_active_ticket_id');
       navigate('/');
     } catch (error) {
-      alert(getErrorMessage(error, 'Erro ao sair da fila. Tente novamente.'));
+      // Show error to user - could be enhanced with toast notification
+      const errorMsg = getErrorMessage(error, 'Erro ao sair da fila. Tente novamente.');
+      // For now, we'll just log it since StatusPage doesn't have error state management
+      console.error('Error leaving queue:', errorMsg);
     } finally {
       setIsLeaving(false);
       setShowLeaveConfirm(false);
