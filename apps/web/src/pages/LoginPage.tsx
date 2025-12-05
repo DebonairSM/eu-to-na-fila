@@ -21,11 +21,6 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      // For demo: support username/password OR PIN
-      // In production, this would use proper auth endpoint
-      // For now, map demo credentials to PINs
-      let pin = password;
-      
       // Check for kiosk mode login (admin/admin123)
       if (username === 'admin' && password === 'admin123') {
         // Navigate directly to kiosk mode without authentication
@@ -34,6 +29,7 @@ export function LoginPage() {
       }
 
       // Demo credentials mapping for regular login
+      // In production, this would use proper auth endpoint
       let pin = password;
       if (username === 'barber' && password === 'barber123') {
         pin = '0000'; // Staff PIN
