@@ -76,9 +76,9 @@ export function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
+      <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
         <Navigation />
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen pt-24">
           <LoadingSpinner size="lg" text="Carregando analytics..." />
         </div>
       </div>
@@ -87,9 +87,9 @@ export function AnalyticsPage() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
+      <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
         <Navigation />
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen pt-24">
           <ErrorDisplay error={error || new Error('Failed to load analytics')} />
         </div>
       </div>
@@ -99,161 +99,171 @@ export function AnalyticsPage() {
   const stats = data.summary;
 
   return (
-    <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] overflow-x-hidden">
+    <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
       <Navigation />
-      <main className="dashboard-container show p-4 sm:p-6 lg:p-10 max-w-[1600px] mx-auto relative z-10 pt-32 sm:pt-36">
-        {/* Header */}
-        <div className="dashboard-header mb-6 sm:mb-10 text-center">
-          <div className="flex items-center justify-center gap-6 mb-4">
-            <h1 className="dashboard-title font-['Playfair_Display',serif] text-[2rem] sm:text-[3.5rem] text-white bg-gradient-to-r from-[#D4AF37] to-[#E8C547] bg-clip-text text-transparent">
-              Analytics
-            </h1>
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 pt-32 pb-12">
+        {/* Header Section - Properly spaced from nav */}
+        <div className="mb-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h1 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl md:text-6xl text-white mb-3">
+                Analytics
+              </h1>
+              <p className="text-lg sm:text-xl text-white/70">
+                Estatísticas e métricas de desempenho
+              </p>
+            </div>
             <select
               value={days}
               onChange={(e) => setDays(Number(e.target.value))}
-              className="px-3 py-2 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.15)] rounded-lg text-white text-sm cursor-pointer focus:outline-none focus:border-[#D4AF37]"
+              className="px-4 py-2.5 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.15)] rounded-xl text-white text-base cursor-pointer focus:outline-none focus:border-[#D4AF37] transition-colors"
             >
               <option value={7}>7 dias</option>
               <option value={30}>30 dias</option>
               <option value={90}>90 dias</option>
             </select>
           </div>
-          <p className="dashboard-subtitle text-[rgba(255,255,255,0.7)] text-base sm:text-lg">
-            Estatísticas e métricas de desempenho
-          </p>
         </div>
 
-        {/* Hero Stats Grid */}
-        <div className="hero-stats grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-5 mb-6 sm:mb-10">
-          <div className="hero-stat total bg-[#242424] border-2 border-transparent rounded-[20px] p-4 sm:p-7 text-center relative overflow-hidden transition-all hover:-translate-y-2 hover:scale-[1.02] hover:border-[#D4AF37] hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] cursor-pointer">
-            <div className="hero-stat-value font-['Playfair_Display',serif] text-3xl sm:text-5xl font-semibold text-[#D4AF37] mb-2 relative z-10">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 mb-10">
+          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center transition-all hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.2)]">
+            <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#D4AF37] mb-2">
               {stats.total}
             </div>
-            <div className="hero-stat-label text-xs text-[rgba(255,255,255,0.7)] uppercase tracking-wider relative z-10">
+            <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
               Total
             </div>
           </div>
-          <div className="hero-stat completed bg-[#242424] border-2 border-transparent rounded-[20px] p-4 sm:p-7 text-center relative overflow-hidden transition-all hover:-translate-y-2 hover:scale-[1.02] hover:border-[#22c55e] hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] cursor-pointer">
-            <div className="hero-stat-value font-['Playfair_Display',serif] text-3xl sm:text-5xl font-semibold text-[#22c55e] mb-2 relative z-10">
+          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center transition-all hover:-translate-y-1 hover:border-[#22c55e] hover:shadow-[0_8px_32px_rgba(34,197,94,0.2)]">
+            <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#22c55e] mb-2">
               {stats.completed}
             </div>
-            <div className="hero-stat-label text-xs text-[rgba(255,255,255,0.7)] uppercase tracking-wider relative z-10">
+            <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
               Concluídos
             </div>
           </div>
-          <div className="hero-stat cancelled bg-[#242424] border-2 border-transparent rounded-[20px] p-4 sm:p-7 text-center relative overflow-hidden transition-all hover:-translate-y-2 hover:scale-[1.02] hover:border-[#ef4444] hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] cursor-pointer">
-            <div className="hero-stat-value font-['Playfair_Display',serif] text-3xl sm:text-5xl font-semibold text-[#ef4444] mb-2 relative z-10">
+          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center transition-all hover:-translate-y-1 hover:border-[#ef4444] hover:shadow-[0_8px_32px_rgba(239,68,68,0.2)]">
+            <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#ef4444] mb-2">
               {stats.cancelled}
             </div>
-            <div className="hero-stat-label text-xs text-[rgba(255,255,255,0.7)] uppercase tracking-wider relative z-10">
+            <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
               Cancelados
             </div>
           </div>
-          <div className="hero-stat rate bg-[#242424] border-2 border-transparent rounded-[20px] p-4 sm:p-7 text-center relative overflow-hidden transition-all hover:-translate-y-2 hover:scale-[1.02] hover:border-[#D4AF37] hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] cursor-pointer">
-            <div className="hero-stat-value font-['Playfair_Display',serif] text-3xl sm:text-5xl font-semibold text-[#D4AF37] mb-2 relative z-10">
+          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center transition-all hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.2)]">
+            <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#D4AF37] mb-2">
               {stats.completionRate}%
             </div>
-            <div className="hero-stat-label text-xs text-[rgba(255,255,255,0.7)] uppercase tracking-wider relative z-10">
+            <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
               Taxa Conclusão
             </div>
           </div>
-          <div className="hero-stat avg bg-[#242424] border-2 border-transparent rounded-[20px] p-4 sm:p-7 text-center relative overflow-hidden transition-all hover:-translate-y-2 hover:scale-[1.02] hover:border-[#3b82f6] hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] cursor-pointer">
-            <div className="hero-stat-value font-['Playfair_Display',serif] text-3xl sm:text-5xl font-semibold text-[#3b82f6] mb-2 relative z-10">
+          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center transition-all hover:-translate-y-1 hover:border-[#3b82f6] hover:shadow-[0_8px_32px_rgba(59,130,246,0.2)]">
+            <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#3b82f6] mb-2">
               {stats.avgPerDay}
             </div>
-            <div className="hero-stat-label text-xs text-[rgba(255,255,255,0.7)] uppercase tracking-wider relative z-10">
+            <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
               Média/Dia
             </div>
           </div>
-          <div className="hero-stat serviceTime bg-[#242424] border-2 border-transparent rounded-[20px] p-4 sm:p-7 text-center relative overflow-hidden transition-all hover:-translate-y-2 hover:scale-[1.02] hover:border-[#3b82f6] hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] cursor-pointer">
-            <div className="hero-stat-value font-['Playfair_Display',serif] text-3xl sm:text-5xl font-semibold text-[#3b82f6] mb-2 relative z-10">
+          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center transition-all hover:-translate-y-1 hover:border-[#3b82f6] hover:shadow-[0_8px_32px_rgba(59,130,246,0.2)]">
+            <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#3b82f6] mb-2">
               {stats.avgServiceTime}m
             </div>
-            <div className="hero-stat-label text-xs text-[rgba(255,255,255,0.7)] uppercase tracking-wider relative z-10">
+            <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
               Serviço Médio
             </div>
           </div>
         </div>
 
-        {/* Daily Chart */}
-        <div className="chart-card bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-4 sm:p-8 mb-6 sm:mb-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
-          <div className="section-title font-['Playfair_Display',serif] text-xl sm:text-[1.75rem] text-white mb-4 sm:mb-6 flex items-center gap-4">
-            <span className="material-symbols-outlined text-[#D4AF37] text-3xl">bar_chart</span>
-            Atendimentos por Dia
-          </div>
-          <DailyChart data={data.ticketsByDay} />
-        </div>
-
-        {/* Hourly Chart */}
-        <div className="chart-card bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-4 sm:p-8 mb-6 sm:mb-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
-          <div className="section-title font-['Playfair_Display',serif] text-xl sm:text-[1.75rem] text-white mb-4 sm:mb-6 flex items-center gap-4">
-            <span className="material-symbols-outlined text-[#D4AF37] text-3xl">schedule</span>
-            Atendimentos por Hora
-          </div>
-          <HourlyChart data={data.hourlyDistribution} peakHour={data.peakHour} />
-        </div>
-
-        {/* Peak Hour Card */}
-        {data.peakHour && (
-          <div className="peak-hour-card bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border border-[rgba(212,175,55,0.3)] rounded-3xl p-6 sm:p-10 text-center mb-6 sm:mb-8 relative overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.1)_0%,transparent_70%)] animate-spin-slow pointer-events-none" />
-            <p className="text-sm text-[rgba(255,255,255,0.7)] uppercase tracking-wider mb-2 relative z-10">
-              Horário de Pico
-            </p>
-            <div className="peak-hour-value font-['Playfair_Display',serif] text-4xl sm:text-5xl font-semibold text-[#D4AF37] mb-2 relative z-10 drop-shadow-[0_0_30px_rgba(212,175,55,0.5)]">
-              {data.peakHour.hour}:00
-            </div>
-            <p className="text-sm text-[rgba(255,255,255,0.7)] relative z-10">
-              {data.peakHour.count} {data.peakHour.count === 1 ? 'atendimento' : 'atendimentos'}
-            </p>
-          </div>
-        )}
-
-        {/* Barber Stats */}
-        {data.barbers.length > 0 && (
-          <div className="chart-card bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-4 sm:p-8 mb-6 sm:mb-8 relative overflow-hidden">
+        {/* Charts Section */}
+        <div className="space-y-8">
+          {/* Daily Chart */}
+          <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-6 sm:p-8 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
-            <div className="section-title font-['Playfair_Display',serif] text-xl sm:text-[1.75rem] text-white mb-4 sm:mb-6 flex items-center gap-4">
-              <span className="material-symbols-outlined text-[#D4AF37] text-3xl">content_cut</span>
-              Desempenho por Barbeiro
+            <div className="mb-6 flex items-center gap-4">
+              <span className="material-symbols-outlined text-[#D4AF37] text-3xl">bar_chart</span>
+              <h2 className="font-['Playfair_Display',serif] text-2xl sm:text-3xl text-white">
+                Atendimentos por Dia
+              </h2>
             </div>
-            <div className="barbers-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {data.barbers.map((barber) => (
-                <div
-                  key={barber.id}
-                  className="barber-card bg-[rgba(36,36,36,0.8)] border border-[rgba(255,255,255,0.05)] rounded-2xl p-4 sm:p-6 flex items-center gap-4 sm:gap-6 transition-all hover:border-[#D4AF37] hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(212,175,55,0.2)] relative overflow-hidden"
-                >
-                  <div className="barber-avatar w-14 h-14 sm:w-[70px] sm:h-[70px] bg-gradient-to-br from-[#D4AF37] to-[#E8C547] rounded-full flex items-center justify-center text-xl sm:text-[1.75rem] font-semibold text-[#0a0a0a] flex-shrink-0 shadow-[0_4px_20px_rgba(212,175,55,0.3)]">
-                    {barber.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="barber-info flex-1 min-w-0">
-                    <h4 className="text-lg sm:text-xl text-white mb-2 truncate">{barber.name}</h4>
-                    <div className="barber-stats-row flex gap-3 sm:gap-5">
-                      <div className="barber-stat text-center">
-                        <div className="barber-stat-value font-['Playfair_Display',serif] text-xl sm:text-[1.75rem] font-semibold text-[#D4AF37]">
-                          {barber.totalServed}
+            <DailyChart data={data.ticketsByDay} />
+          </div>
+
+          {/* Hourly Chart */}
+          <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+            <div className="mb-6 flex items-center gap-4">
+              <span className="material-symbols-outlined text-[#D4AF37] text-3xl">schedule</span>
+              <h2 className="font-['Playfair_Display',serif] text-2xl sm:text-3xl text-white">
+                Atendimentos por Hora
+              </h2>
+            </div>
+            <HourlyChart data={data.hourlyDistribution} peakHour={data.peakHour} />
+          </div>
+
+          {/* Peak Hour Card */}
+          {data.peakHour && (
+            <div className="bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border border-[rgba(212,175,55,0.3)] rounded-3xl p-8 sm:p-10 text-center">
+              <p className="text-sm text-white/70 uppercase tracking-wider mb-3">
+                Horário de Pico
+              </p>
+              <div className="font-['Playfair_Display',serif] text-5xl sm:text-6xl font-semibold text-[#D4AF37] mb-3">
+                {data.peakHour.hour}:00
+              </div>
+              <p className="text-base text-white/70">
+                {data.peakHour.count} {data.peakHour.count === 1 ? 'atendimento' : 'atendimentos'}
+              </p>
+            </div>
+          )}
+
+          {/* Barber Stats */}
+          {data.barbers.length > 0 && (
+            <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+              <div className="mb-6 flex items-center gap-4">
+                <span className="material-symbols-outlined text-[#D4AF37] text-3xl">content_cut</span>
+                <h2 className="font-['Playfair_Display',serif] text-2xl sm:text-3xl text-white">
+                  Desempenho por Barbeiro
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {data.barbers.map((barber) => (
+                  <div
+                    key={barber.id}
+                    className="bg-[rgba(36,36,36,0.8)] border border-[rgba(255,255,255,0.05)] rounded-2xl p-5 sm:p-6 flex items-center gap-4 sm:gap-6 transition-all hover:border-[#D4AF37] hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(212,175,55,0.2)]"
+                  >
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#D4AF37] to-[#E8C547] rounded-full flex items-center justify-center text-xl sm:text-2xl font-semibold text-[#0a0a0a] flex-shrink-0">
+                      {barber.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-lg sm:text-xl text-white mb-3 truncate">{barber.name}</h4>
+                      <div className="flex gap-4 sm:gap-6">
+                        <div className="text-center">
+                          <div className="font-['Playfair_Display',serif] text-xl sm:text-2xl font-semibold text-[#D4AF37]">
+                            {barber.totalServed}
+                          </div>
+                          <div className="text-xs text-white/50 uppercase mt-1">
+                            Atendidos
+                          </div>
                         </div>
-                        <div className="barber-stat-label text-xs text-[rgba(255,255,255,0.5)] uppercase mt-1">
-                          Atendidos
-                        </div>
-                      </div>
-                      <div className="barber-stat text-center">
-                        <div className="barber-stat-value font-['Playfair_Display',serif] text-xl sm:text-[1.75rem] font-semibold text-[#D4AF37]">
-                          {barber.avgServiceTime}m
-                        </div>
-                        <div className="barber-stat-label text-xs text-[rgba(255,255,255,0.5)] uppercase mt-1">
-                          Média
+                        <div className="text-center">
+                          <div className="font-['Playfair_Display',serif] text-xl sm:text-2xl font-semibold text-[#D4AF37]">
+                            {barber.avgServiceTime}m
+                          </div>
+                          <div className="text-xs text-white/50 uppercase mt-1">
+                            Média
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </main>
     </div>
   );
