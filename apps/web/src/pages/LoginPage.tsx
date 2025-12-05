@@ -21,17 +21,16 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Check for kiosk mode login (admin/admin123)
-      if (username === 'admin' && password === 'admin123') {
-        // Navigate directly to kiosk mode without authentication
-        navigate('/manage?kiosk=true');
-        return;
-      }
-
-      // Demo credentials mapping for regular login
+      // Demo credentials mapping
       // In production, this would use proper auth endpoint
       let pin = password;
-      if (username === 'barber' && password === 'barber123') {
+      let isKioskMode = false;
+      
+      // Check for kiosk mode login (admin/admin123)
+      if (username === 'admin' && password === 'admin123') {
+        pin = '1234'; // Use owner PIN for kiosk mode
+        isKioskMode = true;
+      } else if (username === 'barber' && password === 'barber123') {
         pin = '0000'; // Staff PIN
       }
 
@@ -49,8 +48,11 @@ export function LoginPage() {
           name: username,
         }, result.token);
 
-        // Role-based redirect
-        if (result.role === 'owner') {
+        // Handle navigation based on login type
+        if (isKioskMode) {
+          // Kiosk mode - go to manage page with kiosk flag
+          navigate('/manage?kiosk=true');
+        } else if (result.role === 'owner') {
           navigate('/owner');
         } else {
           navigate('/manage');
