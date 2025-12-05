@@ -38,13 +38,16 @@ export function LoginPage() {
       const result = await api.authenticate(config.slug, pin);
 
       if (result.valid && result.role && result.token) {
-        // Login successful - token is automatically stored in API client
+        // Set the token in the API client FIRST (before login)
+        api.setAuthToken(result.token);
+        
+        // Then login (which stores user info)
         login({
           id: 1,
           username: username || 'user',
           role: result.role === 'owner' ? 'owner' : 'barber',
           name: username,
-        });
+        }, result.token);
 
         // Role-based redirect
         if (result.role === 'owner') {
