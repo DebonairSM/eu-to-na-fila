@@ -26,10 +26,16 @@ export function LoginPage() {
       // For now, map demo credentials to PINs
       let pin = password;
       
-      // Demo credentials mapping
+      // Check for kiosk mode login (admin/admin123)
       if (username === 'admin' && password === 'admin123') {
-        pin = '1234'; // Owner PIN
-      } else if (username === 'barber' && password === 'barber123') {
+        // Navigate directly to kiosk mode without authentication
+        navigate('/manage?kiosk=true');
+        return;
+      }
+
+      // Demo credentials mapping for regular login
+      let pin = password;
+      if (username === 'barber' && password === 'barber123') {
         pin = '0000'; // Staff PIN
       }
 
@@ -174,7 +180,7 @@ export function LoginPage() {
                 Credenciais de demonstração:
               </p>
               <div className="text-[10px] sm:text-xs text-[#5D5D5D] space-y-0.5 sm:space-y-1">
-                <p>Owner: admin / admin123</p>
+                <p>Kiosk: admin / admin123</p>
                 <p>Barber: barber / barber123</p>
               </div>
             </div>
