@@ -68,7 +68,11 @@ function App() {
         />
         <Route
           path="/manage"
-          element={<BarberQueueManager />}
+          element={
+            <ProtectedRoute>
+              <BarberQueueManager />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/analytics"

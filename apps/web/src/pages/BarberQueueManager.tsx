@@ -25,7 +25,7 @@ const AD_VIEW_DURATION = 10000; // 10 seconds
 export function BarberQueueManager() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isOwner, isAuthenticated } = useAuthContext();
+  const { isOwner } = useAuthContext();
   const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(5000); // Poll every 5s
   const { barbers, togglePresence, refetch: refetchBarbers } = useBarbers();
   const {
@@ -55,13 +55,6 @@ export function BarberQueueManager() {
       enterKioskMode();
     }
   }, [searchParams, isKioskMode, enterKioskMode]);
-
-  // Require authentication for management mode (non-kiosk)
-  const isKioskRequested = searchParams.get('kiosk') === 'true';
-  if (!isKioskRequested && !isAuthenticated) {
-    navigate('/login');
-    return null;
-  }
 
   const tickets = queueData?.tickets || [];
   const waitingTickets = tickets.filter((t) => t.status === 'waiting');

@@ -158,16 +158,6 @@ class ApiClient {
       // Check if response is an error
       if (!response.ok) {
         const error = data as ApiErrorResponse;
-        
-        // Handle 401 Unauthorized - clear token and redirect to login
-        if (response.status === 401) {
-          this.clearAuthToken();
-          // Dispatch custom event for auth error handling
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('auth:unauthorized'));
-          }
-        }
-        
         throw new ApiError(
           error.error,
           error.statusCode,
@@ -384,9 +374,6 @@ class ApiClient {
    * @throws {ApiError} If not authenticated or ticket not found
    */
   async cancelTicketAsStaff(ticketId: number): Promise<Ticket> {
-    if (!this.authToken) {
-      throw new ApiError('Authentication required', 401, 'UNAUTHORIZED');
-    }
     return this.delete(`/tickets/${ticketId}`);
   }
 
@@ -417,18 +404,13 @@ class ApiClient {
 
   /**
    * Toggle barber presence.
-   * Requires authentication (staff/owner).
    * When setting isPresent to false, backend automatically unassigns customers.
    * 
    * @param barberId - Barber ID
    * @param isPresent - Whether barber is present
    * @returns Updated barber
-   * @throws {ApiError} If not authenticated
    */
   async toggleBarberPresence(barberId: number, isPresent: boolean): Promise<Barber> {
-    if (!this.authToken) {
-      throw new ApiError('Authentication required', 401, 'UNAUTHORIZED');
-    }
     return this.patch<Barber>(`/barbers/${barberId}/presence`, { isPresent });
   }
 
@@ -439,69 +421,42 @@ class ApiClient {
    * @param data - Barber data
    * @returns Created barber
    */
-  /**
-   * Create a new barber.
-   * Requires authentication (owner only).
-   * 
-   * @param shopSlug - Shop identifier
-   * @param data - Barber data
-   * @returns Created barber
-   * @throws {ApiError} If not authenticated
-   */
   async createBarber(shopSlug: string, data: { name: string; avatarUrl?: string | null }): Promise<Barber> {
-    if (!this.authToken) {
-      throw new ApiError('Authentication required', 401, 'UNAUTHORIZED');
-    }
     return this.post<Barber>(`/shops/${shopSlug}/barbers`, data);
   }
 
   /**
    * Update a barber's details.
-   * Requires authentication (owner only).
    * 
    * @param barberId - Barber ID
    * @param data - Update data
    * @returns Updated barber
-   * @throws {ApiError} If not authenticated
    */
   async updateBarber(barberId: number, data: { name?: string; avatarUrl?: string | null }): Promise<Barber> {
-    if (!this.authToken) {
-      throw new ApiError('Authentication required', 401, 'UNAUTHORIZED');
-    }
     return this.patch<Barber>(`/barbers/${barberId}`, data);
   }
 
   /**
    * Delete a barber.
-   * Requires authentication (owner only).
    * 
    * @param barberId - Barber ID
    * @returns Success message
-   * @throws {ApiError} If not authenticated
    */
   async deleteBarber(barberId: number): Promise<{ success: boolean; message: string }> {
-    if (!this.authToken) {
-      throw new ApiError('Authentication required', 401, 'UNAUTHORIZED');
-    }
     return this.delete(`/barbers/${barberId}`);
   }
 
   /**
    * Update a ticket (assign barber, change status).
-   * Requires authentication (staff/owner).
    * 
    * @param ticketId - Ticket ID
    * @param updates - Update data
    * @returns Updated ticket
-   * @throws {ApiError} If not authenticated
    */
   async updateTicket(
     ticketId: number,
     updates: { barberId?: number | null; status?: 'waiting' | 'in_progress' | 'completed' | 'cancelled' }
   ): Promise<Ticket> {
-    if (!this.authToken) {
-      throw new ApiError('Authentication required', 401, 'UNAUTHORIZED');
-    }
     return this.patch<Ticket>(`/tickets/${ticketId}`, updates);
   }
 
@@ -529,17 +484,12 @@ class ApiClient {
 
   /**
    * Get analytics for a shop.
-   * Requires authentication (owner only).
    * 
    * @param shopSlug - Shop identifier
    * @param days - Number of days to analyze (optional)
    * @returns Analytics data
-   * @throws {ApiError} If not authenticated
    */
   async getAnalytics(shopSlug: string, days?: number): Promise<any> {
-    if (!this.authToken) {
-      throw new ApiError('Authentication required', 401, 'UNAUTHORIZED');
-    }
     const params = days ? `?days=${days}` : '';
     return this.get(`/shops/${shopSlug}/analytics${params}`);
   }

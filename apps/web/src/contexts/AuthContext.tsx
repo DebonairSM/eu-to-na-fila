@@ -5,7 +5,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (user: User, token?: string) => void;
+  login: (user: User) => void;
   logout: () => void;
   isOwner: boolean;
   isBarber: boolean;

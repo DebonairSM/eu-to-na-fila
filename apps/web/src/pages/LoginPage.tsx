@@ -6,6 +6,13 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 import { getErrorMessage } from '@/lib/utils';
 
+// Demo credentials - In production, use real username/password authentication
+const CREDENTIALS = {
+  owner: { username: 'owner', password: 'owner123', pin: '1234' },
+  barber: { username: 'barber', password: 'barber123', pin: '0000' },
+  kiosk: { username: 'kiosk', password: 'kiosk123', pin: '0000' },
+};
+
 export function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -21,44 +28,46 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Demo credentials mapping
-      // In production, this would use proper auth endpoint
-      let pin = password;
-      let isKioskMode = false;
-      
-      // Check for kiosk mode login (admin/admin123)
-      if (username === 'admin' && password === 'admin123') {
-        pin = '1234'; // Use owner PIN for kiosk mode
-        isKioskMode = true;
-      } else if (username === 'barber' && password === 'barber123') {
-        pin = '0000'; // Staff PIN
+      // Check credentials and get corresponding PIN
+      let pin: string | null = null;
+      let role: 'owner' | 'barber' = 'barber';
+      let redirectTo = '/manage';
+      let isKiosk = false;
+
+      if (username === CREDENTIALS.owner.username && password === CREDENTIALS.owner.password) {
+        pin = CREDENTIALS.owner.pin;
+        role = 'owner';
+        redirectTo = '/owner';
+      } else if (username === CREDENTIALS.barber.username && password === CREDENTIALS.barber.password) {
+        pin = CREDENTIALS.barber.pin;
+        role = 'barber';
+        redirectTo = '/manage';
+      } else if (username === CREDENTIALS.kiosk.username && password === CREDENTIALS.kiosk.password) {
+        pin = CREDENTIALS.kiosk.pin;
+        role = 'barber'; // Kiosk uses staff-level access
+        redirectTo = '/manage?kiosk=true';
+        isKiosk = true;
+      } else {
+        setError('Credenciais inválidas. Verifique usuário e senha.');
+        setIsLoading(false);
+        return;
       }
 
+      // Authenticate with API
       const result = await api.authenticate(config.slug, pin);
 
-      if (result.valid && result.role && result.token) {
-        // Set the token in the API client FIRST (before login)
-        api.setAuthToken(result.token);
-        
-        // Then login (which stores user info)
+      if (result.valid && result.token) {
+        // Login successful - token is stored in API client
         login({
           id: 1,
-          username: username || 'user',
-          role: result.role === 'owner' ? 'owner' : 'barber',
+          username: username,
+          role: isKiosk ? 'barber' : role,
           name: username,
-        }, result.token);
+        });
 
-        // Handle navigation based on login type
-        if (isKioskMode) {
-          // Kiosk mode - go to manage page with kiosk flag
-          navigate('/manage?kiosk=true');
-        } else if (result.role === 'owner') {
-          navigate('/owner');
-        } else {
-          navigate('/manage');
-        }
+        navigate(redirectTo);
       } else {
-        setError('Credenciais inválidas. Tente novamente.');
+        setError('Erro de autenticação. Tente novamente.');
       }
     } catch (err) {
       setError(getErrorMessage(err, 'Erro ao fazer login. Tente novamente.'));
@@ -69,7 +78,6 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative flex items-center justify-center p-5">
-      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.05)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
       <div className="modal-backdrop fixed inset-0 bg-[rgba(0,0,0,0.7)] backdrop-blur-md flex items-center justify-center z-40">
         <div className="modal bg-[rgba(255,255,255,0.98)] rounded-2xl p-4 sm:p-6 md:p-8 max-w-md w-full mx-3 sm:mx-4 shadow-[0px_4px_8px_3px_rgba(212,175,55,0.15),0px_1px_3px_rgba(0,0,0,0.2)] animate-in fade-in">
@@ -87,7 +95,7 @@ export function LoginPage() {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-              {/* Username/Email */}
+              {/* Username */}
               <div className="text-field relative">
                 <input
                   id="username"
@@ -105,7 +113,7 @@ export function LoginPage() {
                     username ? 'top-1.5 sm:top-2 text-xs text-[#D4AF37]' : 'top-3 sm:top-4'
                   }`}
                 >
-                  Usuário / Email
+                  Usuário
                 </label>
               </div>
 
@@ -133,7 +141,7 @@ export function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="password-toggle absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-[#5D5D5D] hover:bg-[#F5F5F5] p-2 rounded-full transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 >
                   <span className="material-symbols-outlined text-xl sm:text-2xl">
                     {showPassword ? 'visibility_off' : 'visibility'}
@@ -168,27 +176,30 @@ export function LoginPage() {
               </button>
             </form>
 
-            {/* Forgot Password Link */}
-            <div className="mt-3 sm:mt-4 text-center">
-              <a href="#" className="text-sm text-[#D4AF37] hover:underline inline-block min-h-[44px] flex items-center justify-center">
-                Esqueceu a senha?
-              </a>
-            </div>
-
             {/* Demo Credentials */}
             <div className="p-3 sm:p-4 rounded-lg bg-[#F5F5F5] border border-[#C4C4C4]">
-              <p className="text-[10px] sm:text-xs text-[#5D5D5D] text-center mb-1.5 sm:mb-2">
-                Credenciais de demonstração:
+              <p className="text-[10px] sm:text-xs text-[#5D5D5D] text-center mb-2">
+                Credenciais de acesso:
               </p>
-              <div className="text-[10px] sm:text-xs text-[#5D5D5D] space-y-0.5 sm:space-y-1">
-                <p>Kiosk: admin / admin123</p>
-                <p>Barber: barber / barber123</p>
+              <div className="text-[10px] sm:text-xs text-[#5D5D5D] space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-sm text-[#D4AF37]">admin_panel_settings</span>
+                  <span>Owner: owner / owner123</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-sm text-[#D4AF37]">content_cut</span>
+                  <span>Barber: barber / barber123</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-sm text-[#D4AF37]">tv</span>
+                  <span>Kiosk: kiosk / kiosk123</span>
+                </div>
               </div>
             </div>
 
             {/* Back Link */}
             <div className="text-center">
-              <Link to="/" className="text-sm text-[#5D5D5D] hover:text-[#D4AF37] inline-block min-h-[44px] flex items-center justify-center">
+              <Link to="/" className="text-sm text-[#5D5D5D] hover:text-[#D4AF37] inline-flex items-center justify-center min-h-[44px]">
                 ← Voltar ao início
               </Link>
             </div>

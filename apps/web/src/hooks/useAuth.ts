@@ -63,16 +63,10 @@ export function useAuth() {
     }
   }, []);
 
-  const login = useCallback((user: User, token?: string) => {
+  const login = useCallback((user: User) => {
     sessionStorage.setItem('staffAuth', 'true');
     sessionStorage.setItem('staffUser', JSON.stringify(user));
     sessionStorage.setItem('staffRole', user.role);
-    
-    // Set token if provided
-    if (token) {
-      api.setAuthToken(token);
-    }
-    
     setAuthState({
       user,
       isAuthenticated: true,
