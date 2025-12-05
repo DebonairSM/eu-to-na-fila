@@ -65,7 +65,7 @@ export function useKiosk() {
     }, IDLE_TIMEOUT);
   }, []);
 
-  // Handle rotation
+  // Handle rotation - optimized to reduce re-renders
   useEffect(() => {
     if (!isKioskMode || !isInRotation) {
       if (rotationTimerRef.current) {
@@ -75,32 +75,34 @@ export function useKiosk() {
       return;
     }
 
-    const scheduleNextView = () => {
-      const currentDuration =
-        currentView === 'queue' ? QUEUE_VIEW_DURATION : AD_VIEW_DURATION;
+    // Clear any existing timer
+    if (rotationTimerRef.current) {
+      clearTimeout(rotationTimerRef.current);
+    }
 
-      rotationTimerRef.current = setTimeout(() => {
-        // Rotate: queue -> ad1 -> queue -> ad2 -> queue -> ad3 -> queue (repeat)
-        if (currentView === 'queue') {
-          // Show next ad in sequence
-          const nextAd = `ad${nextAdIndex}` as KioskView;
-          setCurrentView(nextAd);
-        } else {
-          // After ad, go back to queue and advance to next ad
-          setCurrentView('queue');
-          setNextAdIndex((prev) => {
-            // Cycle: 1 -> 2 -> 3 -> 1
-            return prev >= 3 ? 1 : prev + 1;
-          });
-        }
-      }, currentDuration);
-    };
+    const currentDuration =
+      currentView === 'queue' ? QUEUE_VIEW_DURATION : AD_VIEW_DURATION;
 
-    scheduleNextView();
+    rotationTimerRef.current = setTimeout(() => {
+      // Rotate: queue -> ad1 -> queue -> ad2 -> queue -> ad3 -> queue (repeat)
+      if (currentView === 'queue') {
+        // Show next ad in sequence
+        const nextAd = `ad${nextAdIndex}` as KioskView;
+        setCurrentView(nextAd);
+      } else {
+        // After ad, go back to queue and advance to next ad
+        setCurrentView('queue');
+        setNextAdIndex((prev) => {
+          // Cycle: 1 -> 2 -> 3 -> 1
+          return prev >= 3 ? 1 : prev + 1;
+        });
+      }
+    }, currentDuration);
 
     return () => {
       if (rotationTimerRef.current) {
         clearTimeout(rotationTimerRef.current);
+        rotationTimerRef.current = null;
       }
     };
   }, [isKioskMode, isInRotation, currentView, nextAdIndex]);

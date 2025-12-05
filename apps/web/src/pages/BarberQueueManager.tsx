@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { config } from '@/lib/config';
@@ -26,7 +26,10 @@ export function BarberQueueManager() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isOwner } = useAuthContext();
-  const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(5000); // Poll every 5s
+  // Use longer polling interval in kiosk mode to improve performance
+  const isKioskRequested = searchParams.get('kiosk') === 'true';
+  const pollInterval = isKioskMode ? 10000 : 5000; // 10s for kiosk, 5s for management
+  const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval);
   const { barbers, togglePresence, refetch: refetchBarbers } = useBarbers();
   const {
     isKioskMode,
@@ -57,12 +60,17 @@ export function BarberQueueManager() {
   }, [searchParams, isKioskMode, enterKioskMode]);
 
   const tickets = queueData?.tickets || [];
-  const waitingTickets = tickets.filter((t) => t.status === 'waiting');
-  const inProgressTickets = tickets.filter((t) => t.status === 'in_progress');
-  const sortedTickets = [...inProgressTickets, ...waitingTickets];
-
-  const waitingCount = waitingTickets.length;
-  const servingCount = inProgressTickets.length;
+  
+  // Memoize sorted tickets and counts to avoid recalculation on every render
+  const { sortedTickets, waitingCount, servingCount } = useMemo(() => {
+    const waitingTickets = tickets.filter((t) => t.status === 'waiting');
+    const inProgressTickets = tickets.filter((t) => t.status === 'in_progress');
+    return {
+      sortedTickets: [...inProgressTickets, ...waitingTickets],
+      waitingCount: waitingTickets.length,
+      servingCount: inProgressTickets.length,
+    };
+  }, [tickets]);
 
   const handleAddCustomer = async () => {
     const validation = validateName(checkInName.first, checkInName.last);
@@ -444,40 +452,61 @@ export function BarberQueueManager() {
         )}
 
         {/* Barber Selector Modal */}
-        {barberSelectorModal.isOpen && selectedCustomerId && (
-          <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-8">
-            <div className="bg-[#1a1a1a] border-2 border-[#D4AF37]/30 rounded-3xl p-10 max-w-3xl w-full">
-              <h2 className="text-4xl font-['Playfair_Display',serif] text-[#D4AF37] mb-3 text-center">
-                Selecionar Barbeiro
-              </h2>
-              <p className="text-xl text-white/70 mb-8 text-center">
-                {tickets.find((t) => t.id === selectedCustomerId)?.customerName}
-              </p>
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                {barbers.filter(b => b.isPresent).map((barber) => (
-                  <button
-                    key={barber.id}
-                    onClick={() => handleSelectBarber(barber.id)}
-                    className={cn(
-                      'p-6 rounded-2xl border-2 transition-all text-xl font-medium',
-                      tickets.find((t) => t.id === selectedCustomerId)?.barberId === barber.id
-                        ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]'
-                        : 'bg-white/5 border-white/20 text-white hover:border-[#D4AF37]/50'
-                    )}
-                  >
-                    {barber.name}
-                  </button>
-                ))}
+        {barberSelectorModal.isOpen && selectedCustomerId && (() => {
+          const selectedTicket = tickets.find((t) => t.id === selectedCustomerId);
+          const currentBarberId = selectedTicket?.barberId || null;
+          return (
+            <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-8">
+              <div className="bg-[#1a1a1a] border-2 border-[#D4AF37]/30 rounded-3xl p-10 max-w-3xl w-full">
+                <h2 className="text-4xl font-['Playfair_Display',serif] text-[#D4AF37] mb-3 text-center">
+                  Selecionar Barbeiro
+                </h2>
+                <p className="text-xl text-white/70 mb-8 text-center">
+                  {selectedTicket?.customerName}
+                </p>
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  {barbers.filter(b => b.isPresent).map((barber) => (
+                    <button
+                      key={barber.id}
+                      onClick={() => {
+                        // If clicking the same barber, unassign
+                        if (currentBarberId === barber.id) {
+                          handleSelectBarber(null);
+                        } else {
+                          handleSelectBarber(barber.id);
+                        }
+                      }}
+                      className={cn(
+                        'p-6 rounded-2xl border-2 transition-all text-xl font-medium',
+                        currentBarberId === barber.id
+                          ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]'
+                          : 'bg-white/5 border-white/20 text-white hover:border-[#D4AF37]/50'
+                      )}
+                    >
+                      {barber.name}
+                    </button>
+                  ))}
+                </div>
+                {currentBarberId && (
+                  <div className="mb-4 pb-4 border-b border-white/10">
+                    <button
+                      onClick={() => handleSelectBarber(null)}
+                      className="w-full px-8 py-5 text-xl rounded-2xl bg-white/5 border-2 border-white/20 text-white/70 hover:bg-white/10 hover:text-white hover:border-white/30 transition-all"
+                    >
+                      Remover Atribuição
+                    </button>
+                  </div>
+                )}
+                <button
+                  onClick={barberSelectorModal.close}
+                  className="w-full px-8 py-5 text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all"
+                >
+                  Fechar
+                </button>
               </div>
-              <button
-                onClick={barberSelectorModal.close}
-                className="w-full px-8 py-5 text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all"
-              >
-                Fechar
-              </button>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Complete Confirmation Modal */}
         {completeConfirmModal.isOpen && customerToComplete && (
