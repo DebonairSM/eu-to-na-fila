@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { Barber } from '@eutonafila/shared';
 
@@ -18,12 +19,14 @@ export function BarberCard({
   className,
   size = 'management',
 }: BarberCardProps) {
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const avatarUrl =
     barber.avatarUrl ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128`;
 
   const avatarSize = size === 'kiosk' ? 'w-14 h-14' : 'w-10 h-10'; // 56px for kiosk, 40px for management
   const avatarSizePx = size === 'kiosk' ? 56 : 40;
+  const initials = barber.name?.charAt(0)?.toUpperCase() || '?';
 
   return (
     <button
@@ -44,16 +47,26 @@ export function BarberCard({
       aria-pressed={isSelected}
     >
       <div className="relative">
-        <img
-          src={avatarUrl}
-          alt=""
-          aria-hidden="true"
-          className={cn(avatarSize, 'rounded-md object-cover')}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=${avatarSizePx * 2}`;
-          }}
-        />
+        {!avatarFailed && (
+          <img
+            src={avatarUrl}
+            alt=""
+            aria-hidden="true"
+            className={cn(avatarSize, 'rounded-md object-cover')}
+            onError={() => setAvatarFailed(true)}
+          />
+        )}
+        {avatarFailed && (
+          <div
+            aria-hidden="true"
+            className={cn(
+              avatarSize,
+              'rounded-md flex items-center justify-center bg-gradient-to-br from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold'
+            )}
+          >
+            {initials}
+          </div>
+        )}
         {showPresence && (
           <div
             className={cn(

@@ -242,3 +242,5 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
 
 
 
+
+
