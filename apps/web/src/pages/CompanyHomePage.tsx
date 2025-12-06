@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 export function CompanyHomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
-      <header className="border-b border-white/10 bg-[rgba(5,12,24,0.75)] backdrop-blur-lg">
+      <header className="border-b border-white/10 bg-[rgba(5,12,24,0.85)] backdrop-blur-lg">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg shadow-lg shadow-[#0f3d2e]/40">
@@ -16,6 +16,25 @@ export function CompanyHomePage() {
               <p className="text-lg font-semibold">Virtual Line Software</p>
             </div>
           </div>
+
+          <nav className="hidden md:flex items-center gap-4 text-sm">
+            <Link to="/home" className="text-white/80 hover:text-[#D4AF37] transition-colors px-2 py-1">
+              Home
+            </Link>
+            <Link to="/network" className="text-white/80 hover:text-[#D4AF37] transition-colors px-2 py-1">
+              Barbearias
+            </Link>
+            <Link to="/about" className="text-white/80 hover:text-[#D4AF37] transition-colors px-2 py-1">
+              Sobre
+            </Link>
+            <Link to="/contact" className="text-white/80 hover:text-[#D4AF37] transition-colors px-2 py-1">
+              Contato
+            </Link>
+            <Link to="/mineiro/home" className="text-white/80 hover:text-[#D4AF37] transition-colors px-2 py-1">
+              Barbearia Mineiro
+            </Link>
+          </nav>
+
           <div className="flex items-center gap-3">
             <Link to="/join">
               <Button variant="outline" className="border-white/20 text-white hover:border-[#D4AF37] hover:text-[#D4AF37]">
