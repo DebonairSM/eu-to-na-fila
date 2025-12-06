@@ -195,6 +195,9 @@ fastify.setNotFoundHandler(async (request, reply) => {
   // SPA fallback: serve index.html for client routes
   const spaPrefixes = [
     '/home',
+    '/contact',
+    '/network',
+    '/about',
     '/join',
     '/status',
     '/login',

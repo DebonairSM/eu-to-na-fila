@@ -82,6 +82,38 @@ export function Navigation() {
           {/* Desktop Navigation */}
           <ul className="nav-links hidden md:flex items-center gap-8 list-none m-0 p-0">
             <li>
+              <Link
+                to="/home"
+                className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+              >
+                EuToNaFila
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/network"
+                className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+              >
+                Barbearias
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/about"
+                className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+              >
+                Sobre
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/contact"
+                className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+              >
+                Contato
+              </Link>
+            </li>
+            <li>
               <a
                 href="/mineiro/home#services"
                 onClick={(e) => handleHashLink(e, '#services')}
@@ -194,6 +226,54 @@ export function Navigation() {
           <span className="material-symbols-outlined text-[28px]">close</span>
         </button>
         <ul className="nav-menu-links list-none m-0 p-0 flex flex-col gap-2 relative z-10">
+          <li>
+            <Link
+              to="/home"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMobileMenuOpen(false);
+              }}
+              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
+            >
+              EuToNaFila
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/network"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMobileMenuOpen(false);
+              }}
+              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
+            >
+              Barbearias
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/about"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMobileMenuOpen(false);
+              }}
+              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
+            >
+              Sobre
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/contact"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMobileMenuOpen(false);
+              }}
+              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
+            >
+              Contato
+            </Link>
+          </li>
           <li>
             <a
               href="/mineiro/home#services"

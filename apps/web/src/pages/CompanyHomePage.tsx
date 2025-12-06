@@ -5,10 +5,10 @@ import { Card, CardContent } from '@/components/ui/card';
 export function CompanyHomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
-      <header className="border-b border-white/10 bg-[rgba(5,12,24,0.7)] backdrop-blur-lg">
+      <header className="border-b border-white/10 bg-[rgba(5,12,24,0.75)] backdrop-blur-lg">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg shadow-lg shadow-[#0f3d2e]/40">
               E
             </div>
             <div>
@@ -19,7 +19,7 @@ export function CompanyHomePage() {
           <div className="flex items-center gap-3">
             <Link to="/join">
               <Button variant="outline" className="border-white/20 text-white hover:border-[#D4AF37] hover:text-[#D4AF37]">
-                Falar com equipe
+                Ver demo rápida
               </Button>
             </Link>
             <Link to="/login">
@@ -32,27 +32,79 @@ export function CompanyHomePage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-16">
-        <section className="text-center space-y-6 sm:space-y-8">
-          <p className="text-sm uppercase tracking-[0.3em] text-[#D4AF37]">Florianópolis, SC</p>
-          <h1 className="text-3xl sm:text-5xl font-semibold leading-tight">
-            Filas virtuais com padrão de luxo,
-            <br className="hidden sm:block" /> feitas para serem acessíveis.
-          </h1>
-          <p className="text-lg text-white/75 max-w-3xl mx-auto">
-            A EuToNaFila entrega experiências de espera e atendimento sem atrito. Orquestramos filas, presença e atendimento
-            em tempo real para redes que querem hospitalidade de alto nível com operação enxuta.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <Link to="/join">
-              <Button size="lg" className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#e2c25a]">
-                Pedir uma demonstração
-              </Button>
-            </Link>
-            <a href="#network">
-              <Button size="lg" variant="outline" className="border-white/20 text-white hover:border-[#0f3d2e] hover:text-[#0f3d2e]">
-                Ver rede de barbearias
-              </Button>
-            </a>
+        {/* Hero */}
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0f3d2e]/20 border border-[#0f3d2e]/40 text-[#8ad6b0] text-xs font-semibold uppercase tracking-[0.2em]">
+              Virtual lines • Florianópolis, SC
+            </div>
+            <h1 className="text-3.5xl sm:text-5xl font-semibold leading-tight">
+              Filas virtuais premium,
+              <br className="hidden sm:block" /> sem abrir mão da acessibilidade.
+            </h1>
+            <p className="text-lg text-white/75 max-w-2xl">
+              A EuToNaFila orquestra espera, presença e atendimento em tempo real. Experiências de alto padrão com operação enxuta
+              para redes que precisam de agilidade e hospitalidade.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+              <Link to="/join">
+                <Button size="lg" className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#e2c25a]">
+                  Pedir uma demonstração
+                </Button>
+              </Link>
+              <Link to="/contact">
+                <Button size="lg" variant="outline" className="border-white/20 text-white hover:border-[#0f3d2e] hover:text-[#0f3d2e]">
+                  Falar com a equipe
+                </Button>
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {[
+                { label: 'Atendimentos/dia', value: '240+' },
+                { label: 'Tempo médio de espera', value: '~6 min' },
+                { label: 'Uptime infra', value: '99.9%' },
+              ].map((item) => (
+                <div key={item.label} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                  <p className="text-sm text-white/60">{item.label}</p>
+                  <p className="text-xl font-semibold">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="relative">
+            <div className="absolute -top-6 -left-6 w-20 h-20 rounded-full bg-[#0f3d2e]/30 blur-2xl" />
+            <div className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full bg-[#D4AF37]/20 blur-3xl" />
+            <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 space-y-4 shadow-2xl shadow-black/40">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-white/70">Fila em tempo real</p>
+                <span className="text-xs px-3 py-1 rounded-full bg-[#0f3d2e]/30 text-[#8ad6b0]">Live</span>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { title: 'Cliente entrou', detail: 'Nome: Ana • Corte + Barba', time: 'agora' },
+                  { title: 'Presença confirmada', detail: '1 toque no totem', time: 'há 1 min' },
+                  { title: 'Barbeiro disponível', detail: 'Pedro chamou próximo', time: 'há 2 min' },
+                ].map((event, idx) => (
+                  <div key={idx} className="rounded-lg border border-white/10 bg-white/5 px-4 py-3">
+                    <div className="flex justify-between text-sm font-semibold">
+                      <span>{event.title}</span>
+                      <span className="text-white/60">{event.time}</span>
+                    </div>
+                    <p className="text-sm text-white/70">{event.detail}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Link to="/mineiro/home">
+                  <Button className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#e2c25a]">Ver experiência</Button>
+                </Link>
+                <Link to="/network">
+                  <Button variant="outline" className="border-white/15 text-white hover:border-[#0f3d2e] hover:text-[#0f3d2e]">
+                    Rede
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
 
