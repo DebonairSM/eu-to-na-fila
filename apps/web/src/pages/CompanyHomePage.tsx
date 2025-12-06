@@ -1,89 +1,50 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { CompanyNav } from '@/components/CompanyNav';
 
 export function CompanyHomePage() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
-      <header className="border-b border-white/10 bg-[rgba(5,12,24,0.85)] backdrop-blur-lg">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg shadow-lg shadow-[#0f3d2e]/40">
-              E
-            </div>
-            <div>
-              <p className="text-sm text-white/70">EuToNaFila</p>
-              <p className="text-lg font-semibold">Virtual Line Software</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Button
-                variant="outline"
-                className="border-white/20 text-white hover:border-[#D4AF37] hover:text-[#D4AF37] bg-white/5"
-                onClick={() => setIsMenuOpen((v) => !v)}
-              >
-                Menu
-              </Button>
-              {isMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-lg border border-white/10 bg-[#0b1a33]/95 backdrop-blur-xl shadow-lg shadow-black/30 p-2 space-y-1 text-sm">
-                  {[
-                    { label: 'Home', to: '/home' },
-                    { label: 'Sobre', to: '/about' },
-                    { label: 'Galeria', to: '/network' },
-                    { label: 'Contato', to: '/contact' },
-                  ].map((item) => (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      className="block rounded-md px-3 py-2 text-white/85 hover:text-[#D4AF37] hover:bg-white/5"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <CompanyNav />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-16">
         {/* Hero */}
-        <section className="flex flex-col items-center text-center gap-6 sm:gap-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#8ad6b0] text-xs font-semibold uppercase tracking-[0.2em]">
+        <section className="flex flex-col items-center text-center gap-7 sm:gap-9">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#8ad6b0] text-xs font-semibold uppercase tracking-[0.28em] animate-pulse">
             Virtual lines • Florianópolis, SC
           </div>
-          <h1 className="text-4xl sm:text-5xl font-semibold leading-tight max-w-3xl">
-            Filas virtuais premium. Minimalistas, vibrantes e elegantes.
+          <h1 className="text-4xl sm:text-5xl font-semibold leading-tight max-w-3xl drop-shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+            Filas virtuais premium. Vibrantes, elegantes, essenciais.
           </h1>
-          <p className="text-lg text-white/75 max-w-2xl">
-            Espera sem atrito: entrada em segundos, presença clara, acompanhamento em tempo real. Construído para redes que precisam de simplicidade, segurança e escala.
+          <p className="text-lg text-white/80 max-w-2xl">
+            Espera sem atrito: entrada em segundos, presença clara, acompanhamento ao vivo. Simplicidade radical para redes que exigem segurança e escala.
           </p>
           <div className="relative w-full max-w-3xl">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#0f3d2e]/25 via-[#D4AF37]/12 to-transparent blur-3xl" />
-            <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-7 space-y-4 shadow-2xl shadow-black/40 text-left">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#0f3d2e]/25 via-[#D4AF37]/16 to-[#0e1f3d]/30 blur-3xl animate-pulse" />
+            <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 space-y-5 shadow-2xl shadow-black/40 text-left">
               <p className="text-sm text-[#8ad6b0] uppercase tracking-[0.18em]">Fluxo essencial</p>
-              <h2 className="text-2xl font-semibold text-white">Fila, presença e atendimento em um só lugar</h2>
-              <p className="text-sm text-white/70">
+              <h2 className="text-2xl font-semibold text-white drop-shadow">Fila, presença e atendimento em um só lugar</h2>
+              <p className="text-sm text-white/75">
                 Entrada via QR ou link, presença confirmada em totem ou mobile, estimativas ao vivo. Equipes e clientes sempre sincronizados.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
-                  { title: 'Entrada rápida', detail: 'QR, link ou totem — sem app obrigatório.' },
-                  { title: 'Painel ao vivo', detail: 'Chamadas, estimativas e status em tempo real.' },
+                  { title: 'Entrada rápida', detail: 'QR, link ou totem — sem app obrigatório.', icon: 'bolt' },
+                  { title: 'Painel ao vivo', detail: 'Chamadas, estimativas e status em tempo real.', icon: 'timeline' },
                 ].map((card) => (
-                  <div key={card.title} className="rounded-lg border border-white/10 bg-white/5 px-4 py-3">
-                    <p className="text-sm font-semibold">{card.title}</p>
-                    <p className="text-sm text-white/70">{card.detail}</p>
+                  <div key={card.title} className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#D4AF37] text-lg">{card.icon}</span>
+                      <p className="text-sm font-semibold">{card.title}</p>
+                    </div>
+                    <p className="text-sm text-white/70 mt-1">{card.detail}</p>
                   </div>
                 ))}
               </div>
+              <p className="text-sm text-white/65">
+                Explore a galeria para ver experiências e casos. Quando quiser falar, estamos a um clique.
+              </p>
             </div>
           </div>
         </section>

@@ -1,4 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { CompanyNav } from '@/components/CompanyNav';
 
 const values = [
   { title: 'Hospitalidade', desc: 'Fila virtual sem fricção, com comunicação clara e humana.' },
@@ -14,6 +15,7 @@ const milestones = [
 export function AboutPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
+      <CompanyNav />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-10">
         <header className="space-y-3">
           <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37]">Sobre nós</p>
