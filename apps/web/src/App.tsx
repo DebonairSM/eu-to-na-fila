@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthContext } from './contexts/AuthContext';
 import { LandingPage } from './pages/LandingPage';
+import { CompanyHomePage } from './pages/CompanyHomePage';
 import { JoinPage } from './pages/JoinPage';
 import { StatusPage } from './pages/StatusPage';
 import { LoginPage } from './pages/LoginPage';
@@ -44,7 +45,9 @@ function App() {
       </a>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="/home" element={<CompanyHomePage />} />
+        <Route path="/mineiro/home" element={<LandingPage />} />
         <Route path="/join" element={<JoinPage />} />
         <Route path="/status/:id" element={<StatusPage />} />
         <Route path="/login" element={<LoginPage />} />

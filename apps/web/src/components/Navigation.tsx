@@ -20,7 +20,7 @@ export function Navigation() {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/home');
     setIsMobileMenuOpen(false);
   };
 
@@ -43,12 +43,12 @@ export function Navigation() {
     const targetId = hash.replace('#', '');
     
     // If we're already on the landing page, just scroll
-    if (location.pathname === '/') {
+    if (location.pathname === '/mineiro/home') {
       scrollToSection(targetId);
       setIsMobileMenuOpen(false);
     } else {
       // Navigate to landing page with hash, then scroll after a short delay
-      navigate(`/${hash}`);
+      navigate(`/mineiro/home${hash}`);
       setIsMobileMenuOpen(false);
       // Wait for navigation and DOM update, then scroll
       setTimeout(() => {
@@ -71,7 +71,7 @@ export function Navigation() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link
-            to="/"
+            to="/mineiro/home"
             className="nav-logo font-['Playfair_Display',serif] text-xl sm:text-2xl font-semibold text-[#D4AF37] flex items-center gap-2 sm:gap-3 min-h-[44px] min-w-[44px] px-2 py-1 rounded transition-all hover:text-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
             aria-label={`${config.name} - Home`}
           >
@@ -83,7 +83,7 @@ export function Navigation() {
           <ul className="nav-links hidden md:flex items-center gap-8 list-none m-0 p-0">
             <li>
               <a
-                href="/#services"
+                href="/mineiro/home#services"
                 onClick={(e) => handleHashLink(e, '#services')}
                 className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 cursor-pointer"
               >
@@ -92,7 +92,7 @@ export function Navigation() {
             </li>
             <li>
               <a
-                href="/#about"
+                href="/mineiro/home#about"
                 onClick={(e) => handleHashLink(e, '#about')}
                 className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 cursor-pointer"
               >
@@ -101,7 +101,7 @@ export function Navigation() {
             </li>
             <li>
               <a
-                href="/#location"
+                href="/mineiro/home#location"
                 onClick={(e) => handleHashLink(e, '#location')}
                 className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 cursor-pointer"
               >
@@ -132,12 +132,12 @@ export function Navigation() {
             ) : (
               <>
                 <li>
-                  <Link
-                    to="/join"
-                    className="nav-cta px-6 py-3 bg-[#D4AF37] text-[#0a0a0a] font-semibold text-sm rounded min-h-[44px] flex items-center justify-center hover:bg-[#E8C547] hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
-                  >
-                    Entrar na Fila
-                  </Link>
+            <Link
+              to="/join"
+              className="nav-cta px-6 py-3 bg-[#D4AF37] text-[#0a0a0a] font-semibold text-sm rounded min-h-[44px] flex items-center justify-center hover:bg-[#E8C547] hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+            >
+              Entrar na Fila
+            </Link>
                 </li>
                 <li>
                   <Link
@@ -196,7 +196,7 @@ export function Navigation() {
         <ul className="nav-menu-links list-none m-0 p-0 flex flex-col gap-2 relative z-10">
           <li>
             <a
-              href="/#services"
+              href="/mineiro/home#services"
               onClick={(e) => {
                 e.stopPropagation();
                 handleHashLink(e, '#services');
@@ -208,7 +208,7 @@ export function Navigation() {
           </li>
           <li>
             <a
-              href="/#about"
+              href="/mineiro/home#about"
               onClick={(e) => {
                 e.stopPropagation();
                 handleHashLink(e, '#about');
@@ -220,7 +220,7 @@ export function Navigation() {
           </li>
           <li>
             <a
-              href="/#location"
+              href="/mineiro/home#location"
               onClick={(e) => {
                 e.stopPropagation();
                 handleHashLink(e, '#location');

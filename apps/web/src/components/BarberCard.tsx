@@ -25,7 +25,6 @@ export function BarberCard({
     `https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128`;
 
   const avatarSize = size === 'kiosk' ? 'w-14 h-14' : 'w-10 h-10'; // 56px for kiosk, 40px for management
-  const avatarSizePx = size === 'kiosk' ? 56 : 40;
   const initials = barber.name?.charAt(0)?.toUpperCase() || '?';
 
   return (

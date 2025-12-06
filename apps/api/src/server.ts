@@ -163,7 +163,7 @@ fastify.register(
 
 // Redirect root to /mineiro/
 fastify.get('/', async (request, reply) => {
-  return reply.redirect('/mineiro/');
+  return reply.redirect('/home');
 });
 
 // Redirect /mineiro to /mineiro/ for proper base path
@@ -192,8 +192,27 @@ fastify.setNotFoundHandler(async (request, reply) => {
     return notFoundHandler(request, reply);
   }
   
-  // SPA fallback: serve index.html for any /mineiro/* route that's not a static file
-  if (url.startsWith('/mineiro/') || url === '/mineiro') {
+  // SPA fallback: serve index.html for client routes
+  const spaPrefixes = [
+    '/home',
+    '/join',
+    '/status',
+    '/login',
+    '/owner',
+    '/staff',
+    '/manage',
+    '/analytics',
+    '/barbers',
+    '/mineiro/home',
+    '/mineiro/',
+    '/mineiro'
+  ];
+
+  const isSpaRoute =
+    spaPrefixes.some((prefix) => urlPath === prefix || urlPath.startsWith(`${prefix}/`)) ||
+    urlPath === '/';
+
+  if (isSpaRoute) {
     const indexPath = join(mineiroPath, 'index.html');
     if (existsSync(indexPath)) {
       try {
