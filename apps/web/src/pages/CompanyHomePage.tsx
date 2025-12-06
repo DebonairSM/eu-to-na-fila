@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 export function CompanyHomePage() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#050c18] via-[#0a1528] to-[#0d1c34] text-white">
-      <header className="border-b border-white/10 bg-[rgba(7,15,30,0.9)] backdrop-blur-xl">
+    <div className="min-h-screen bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
+      <header className="border-b border-white/10 bg-[rgba(5,12,24,0.85)] backdrop-blur-lg">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg shadow-lg shadow-[#0f3d2e]/40">
@@ -17,19 +20,37 @@ export function CompanyHomePage() {
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-3 text-sm">
-            <Link to="/home" className="text-white/80 hover:text-[#D4AF37] transition-colors px-2 py-1">Home</Link>
-            <Link to="/about" className="text-white/80 hover:text-[#D4AF37] transition-colors px-2 py-1">Sobre</Link>
-            <Link to="/network" className="text-white/80 hover:text-[#D4AF37] transition-colors px-2 py-1">Galeria</Link>
-            <Link to="/contact" className="text-white/80 hover:text-[#D4AF37] transition-colors px-2 py-1">Contato</Link>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link to="/join">
-              <Button variant="outline" className="border-white/20 text-white hover:border-[#D4AF37] hover:text-[#D4AF37]">
-                Ver demo
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Button
+                variant="outline"
+                className="border-white/20 text-white hover:border-[#D4AF37] hover:text-[#D4AF37] bg-white/5"
+                onClick={() => setIsMenuOpen((v) => !v)}
+              >
+                Menu
               </Button>
-            </Link>
+              {isMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-lg border border-white/10 bg-[#0b1a33]/95 backdrop-blur-xl shadow-lg shadow-black/30 p-2 space-y-1 text-sm">
+                  {[
+                    { label: 'Home', to: '/home' },
+                    { label: 'Sobre', to: '/about' },
+                    { label: 'Galeria', to: '/network' },
+                    { label: 'Contato', to: '/contact' },
+                    { label: 'Ver demo', to: '/join' },
+                    { label: 'Entrar', to: '/login' },
+                  ].map((item) => (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className="block rounded-md px-3 py-2 text-white/85 hover:text-[#D4AF37] hover:bg-white/5"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
             <Link to="/login">
               <Button className="bg-[#0f3d2e] text-white hover:bg-[#15503c]">
                 Entrar
@@ -41,84 +62,46 @@ export function CompanyHomePage() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-16">
         {/* Hero */}
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0f3d2e]/25 border border-[#0f3d2e]/40 text-[#8ad6b0] text-xs font-semibold uppercase tracking-[0.2em]">
-              Virtual lines • Florianópolis, SC
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-semibold leading-tight max-w-3xl">
-              Filas virtuais elegantes,
-              <br className="hidden sm:block" /> com operação simples e confiável.
-            </h1>
-            <p className="text-lg text-white/75 max-w-2xl">
-              Espera premium sem atrito: entrada em segundos, presença clara e acompanhamento em tempo real. Infra segura para redes que não podem parar.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
-              <Link to="/join">
-                <Button size="lg" className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#e2c25a]">
-                  Ver demo
-                </Button>
-              </Link>
-              <Link to="/contact">
-                <Button size="lg" variant="outline" className="border-white/20 text-white hover:border-[#0f3d2e] hover:text-[#0f3d2e]">
-                  Falar com a equipe
-                </Button>
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {[
-                { label: 'Atendimentos/dia', value: '240+' },
-                { label: 'Tempo médio', value: '~6 min' },
-                { label: 'Disponibilidade', value: '99.9%' },
-              ].map((item) => (
-                <div key={item.label} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                  <p className="text-sm text-white/60">{item.label}</p>
-                  <p className="text-xl font-semibold">{item.value}</p>
-                </div>
-              ))}
-            </div>
+        <section className="flex flex-col items-center text-center gap-6 sm:gap-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#8ad6b0] text-xs font-semibold uppercase tracking-[0.2em]">
+            Virtual lines • Florianópolis, SC
           </div>
-          <div className="relative">
-            <div className="absolute -top-10 -left-6 w-24 h-24 rounded-full bg-[#0f3d2e]/25 blur-3xl" />
-            <div className="absolute -bottom-10 -right-8 w-28 h-28 rounded-full bg-[#D4AF37]/15 blur-3xl" />
-            <div className="relative rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-[#0c1a30]/60 backdrop-blur-2xl p-7 space-y-5 shadow-2xl shadow-black/40">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-bold text-lg">
-                  LX
-                </div>
-                <div>
-                  <p className="text-sm text-white/60 uppercase tracking-[0.14em]">Experiência</p>
-                  <p className="text-lg font-semibold">Linha premium, operação simples</p>
-                </div>
-              </div>
+          <h1 className="text-4xl sm:text-5xl font-semibold leading-tight max-w-3xl">
+            Filas virtuais premium. Minimalistas, vibrantes e elegantes.
+          </h1>
+          <p className="text-lg text-white/75 max-w-2xl">
+            Espera sem atrito: entrada em segundos, presença clara, acompanhamento em tempo real. Construído para redes que precisam de simplicidade, segurança e escala.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+            <Link to="/join">
+              <Button size="lg" className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#e2c25a]">
+                Ver demo
+              </Button>
+            </Link>
+            <Link to="/contact">
+              <Button size="lg" variant="outline" className="border-white/20 text-white hover:border-[#0f3d2e] hover:text-[#0f3d2e]">
+                Falar com a equipe
+              </Button>
+            </Link>
+          </div>
+          <div className="relative w-full max-w-3xl">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#0f3d2e]/25 via-[#D4AF37]/12 to-transparent blur-3xl" />
+            <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-7 space-y-4 shadow-2xl shadow-black/40 text-left">
+              <p className="text-sm text-[#8ad6b0] uppercase tracking-[0.18em]">Fluxo essencial</p>
+              <h2 className="text-2xl font-semibold text-white">Fila, presença e atendimento em um só lugar</h2>
+              <p className="text-sm text-white/70">
+                Entrada via QR ou link, presença confirmada em totem ou mobile, estimativas ao vivo. Equipes e clientes sempre sincronizados.
+              </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
-                  { title: 'Entrada em 3 toques', detail: 'QR, link ou totem — sem app obrigatório.' },
-                  { title: 'Presença clara', detail: 'Check-in rápido e estimativas ao vivo.' },
-                  { title: 'Painel unificado', detail: 'Equipes e clientes em sincronia, em tempo real.' },
-                  { title: 'Sem ruído', detail: 'Comunicação enxuta e orientada ao atendimento.' },
+                  { title: 'Entrada rápida', detail: 'QR, link ou totem — sem app obrigatório.' },
+                  { title: 'Painel ao vivo', detail: 'Chamadas, estimativas e status em tempo real.' },
                 ].map((card) => (
                   <div key={card.title} className="rounded-lg border border-white/10 bg-white/5 px-4 py-3">
                     <p className="text-sm font-semibold">{card.title}</p>
                     <p className="text-sm text-white/70">{card.detail}</p>
                   </div>
                 ))}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 rounded-full bg-white/10 text-sm text-white/80">WebSocket live</span>
-                <span className="px-3 py-1 rounded-full bg-white/10 text-sm text-white/80">Painéis e totem</span>
-                <span className="px-3 py-1 rounded-full bg-white/10 text-sm text-white/80">Branding ajustável</span>
-                <span className="px-3 py-1 rounded-full bg-white/10 text-sm text-white/80">Monitoração ativa</span>
-              </div>
-              <div className="flex gap-2">
-                <Link to="/about">
-                  <Button variant="outline" className="border-white/15 text-white hover:border-[#0f3d2e] hover:text-[#0f3d2e]">
-                    Sobre a plataforma
-                  </Button>
-                </Link>
-                <Link to="/contact">
-                  <Button className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#e2c25a]">Fale conosco</Button>
-                </Link>
               </div>
             </div>
           </div>
