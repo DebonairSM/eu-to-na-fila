@@ -6,7 +6,6 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useModal } from '@/hooks/useModal';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
 import { getErrorMessage } from '@/lib/utils';

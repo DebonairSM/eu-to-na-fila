@@ -13,7 +13,6 @@ import { BarberSelector } from '@/components/BarberSelector';
 import { BarberCard } from '@/components/BarberCard';
 import { QueueCard } from '@/components/QueueCard';
 import { QRCode } from '@/components/QRCode';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Button } from '@/components/ui/button';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
