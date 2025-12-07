@@ -204,5 +204,36 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
 
     return ticket;
   });
+
+  /**
+   * Bulk delete all tickets for a shop (owner only).
+   *
+   * @route DELETE /api/shops/:slug/tickets
+   * @param slug - Shop slug identifier
+   * @returns { deletedCount: number }
+   */
+  fastify.delete('/shops/:slug/tickets', {
+    preHandler: [requireAuth(), requireRole(['owner'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+
+    const shop = await db.query.shops.findFirst({
+      where: eq(schema.shops.slug, slug),
+    });
+
+    if (!shop) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    }
+
+    const deleted = await db
+      .delete(schema.tickets)
+      .where(eq(schema.tickets.shopId, shop.id))
+      .returning({ id: schema.tickets.id });
+
+    return { deletedCount: deleted.length };
+  });
 };
 
