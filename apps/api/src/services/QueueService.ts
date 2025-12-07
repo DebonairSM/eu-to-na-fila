@@ -260,7 +260,7 @@ export class QueueService {
    */
   async isQueueFull(
     shopId: number,
-    maxQueueSize: number = 50
+    maxQueueSize: number = 500
   ): Promise<boolean> {
     const { queueLength } = await this.getMetrics(shopId);
     return queueLength >= maxQueueSize;
