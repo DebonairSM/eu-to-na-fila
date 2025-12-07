@@ -2,6 +2,7 @@ import { db, schema } from '../db/index.js';
 import { eq, and, or } from 'drizzle-orm';
 import type { CreateTicket, UpdateTicketStatus, Ticket } from '@eutonafila/shared';
 import { queueService } from './QueueService.js';
+import { ConflictError, NotFoundError } from '../lib/errors.js';
 
 /**
  * Service for managing ticket operations.
@@ -143,7 +144,7 @@ export class TicketService {
     });
 
     if (!shop) {
-      throw new Error('Shop not found');
+      throw new NotFoundError('Shop not found');
     }
 
     // Verify service exists and belongs to shop
@@ -155,11 +156,11 @@ export class TicketService {
     });
 
     if (!service) {
-      throw new Error('Service not found');
+      throw new NotFoundError('Service not found');
     }
 
     if (!service.isActive) {
-      throw new Error('Service is not active');
+      throw new ConflictError('Service is not active');
     }
 
     // Check if customer already has an active ticket
@@ -172,7 +173,7 @@ export class TicketService {
     // Check if queue is full
     const isQueueFull = await queueService.isQueueFull(shopId);
     if (isQueueFull) {
-      throw new Error('Queue is full');
+      throw new ConflictError('Queue is full');
     }
 
     // Calculate position and wait time
