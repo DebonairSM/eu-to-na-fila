@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -12,6 +12,10 @@ const links = [
 export function CompanyNav() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    if (open) setOpen(false);
+  }, [location.pathname]);
 
   return (
     <header className="border-b border-white/10 bg-[rgba(5,12,24,0.88)] backdrop-blur-xl">
@@ -34,7 +38,7 @@ export function CompanyNav() {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`px-3 py-2 rounded-lg transition-all ${
+                  className={`px-3 py-2 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071124] ${
                     active
                       ? 'bg-white/10 text-[#D4AF37] border border-white/10 shadow-[0_0_0_1px_rgba(212,175,55,0.2)]'
                       : 'text-white/85 hover:text-[#D4AF37] hover:bg-white/5'
@@ -49,8 +53,14 @@ export function CompanyNav() {
           <div className="relative md:hidden">
             <Button
               variant="outline"
-              className="border-white/20 text-white hover:border-[#D4AF37] hover:text-[#D4AF37] bg-white/5"
+              className="border-white/20 text-white hover:border-[#D4AF37] hover:text-[#D4AF37] bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071124]"
               onClick={() => setOpen((v) => !v)}
+              aria-haspopup="true"
+              aria-expanded={open}
+              aria-label="Abrir menu"
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setOpen(false);
+              }}
             >
               Menu
             </Button>
@@ -60,8 +70,11 @@ export function CompanyNav() {
                   <Link
                     key={item.to}
                     to={item.to}
-                    className="block rounded-md px-3 py-2 text-white/85 hover:text-[#D4AF37] hover:bg-white/5"
+                    className="block rounded-md px-3 py-2 text-white/85 hover:text-[#D4AF37] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1a33]"
                     onClick={() => setOpen(false)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setOpen(false);
+                    }}
                   >
                     {item.label}
                   </Link>

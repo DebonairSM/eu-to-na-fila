@@ -143,8 +143,14 @@ export function BarberManagementPage() {
 
         {/* Barbers Grid */}
         {isLoading ? (
-          <div className="loading text-center py-10 text-[rgba(255,255,255,0.7)]">
-            <LoadingSpinner size="lg" text="Carregando barbeiros..." />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10" aria-busy="true" aria-live="polite">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="h-[220px] rounded-xl bg-white/5 border border-white/10 animate-pulse"
+                aria-hidden="true"
+              />
+            ))}
           </div>
         ) : error ? (
           <ErrorDisplay error={error} onRetry={refetch} />

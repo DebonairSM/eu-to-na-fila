@@ -629,11 +629,19 @@ export function BarberQueueManager() {
           {/* Queue List */}
           <div className="section-header text-xl sm:text-2xl font-semibold text-white mb-4 sm:mb-6">Fila</div>
           {queueLoading ? (
-            <LoadingSpinner size="lg" text="Carregando fila..." />
+            <div className="space-y-3" aria-busy="true" aria-live="polite">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-[82px] rounded-md border-2 border-white/5 bg-white/5 animate-pulse"
+                  aria-hidden="true"
+                />
+              ))}
+            </div>
           ) : queueError ? (
             <ErrorDisplay error={queueError} onRetry={refetchQueue} />
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3" aria-live="polite">
               {sortedTickets.length === 0 ? (
                 <div className="text-center py-12 text-[rgba(255,255,255,0.7)]">
                   Nenhum cliente na fila
