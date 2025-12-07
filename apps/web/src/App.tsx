@@ -66,63 +66,63 @@ function App() {
           </div>
         }
       >
-        <Routes>
-          {/* Public Routes */}
+      <Routes>
+        {/* Public Routes */}
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<CompanyHomePage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/network" element={<NetworkPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/mineiro/home" element={<LandingPage />} />
-          <Route path="/join" element={<JoinPage />} />
-          <Route path="/status/:id" element={<StatusPage />} />
-          <Route path="/login" element={<LoginPage />} />
+        <Route path="/join" element={<JoinPage />} />
+        <Route path="/status/:id" element={<StatusPage />} />
+        <Route path="/login" element={<LoginPage />} />
 
-          {/* Protected Routes */}
-          <Route
-            path="/staff"
-            element={
-              <ProtectedRoute>
-                <StaffPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/owner"
-            element={
-              <ProtectedRoute requireOwner>
-                <OwnerDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/manage"
-            element={
-              <ProtectedRoute>
-                <BarberQueueManager />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/analytics"
-            element={
-              <ProtectedRoute requireOwner>
-                <AnalyticsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/barbers"
-            element={
-              <ProtectedRoute requireOwner>
-                <BarberManagementPage />
-              </ProtectedRoute>
-            }
-          />
+        {/* Protected Routes */}
+        <Route
+          path="/staff"
+          element={
+            <ProtectedRoute>
+              <StaffPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/owner"
+          element={
+            <ProtectedRoute requireOwner>
+              <OwnerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manage"
+          element={
+            <ProtectedRoute>
+              <BarberQueueManager />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute requireOwner>
+              <AnalyticsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/barbers"
+          element={
+            <ProtectedRoute requireOwner>
+              <BarberManagementPage />
+            </ProtectedRoute>
+          }
+        />
 
-          {/* Catch all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        {/* Catch all */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
       </Suspense>
     </>
   );

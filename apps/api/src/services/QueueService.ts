@@ -123,7 +123,8 @@ export class QueueService {
     const activeBarbers = await db.query.barbers.findMany({
       where: and(
         eq(schema.barbers.shopId, shopId),
-        eq(schema.barbers.isActive, true)
+        eq(schema.barbers.isActive, true),
+        eq(schema.barbers.isPresent, true)
       ),
     });
 
@@ -230,7 +231,8 @@ export class QueueService {
     const activeBarbers = await db.query.barbers.findMany({
       where: and(
         eq(schema.barbers.shopId, shopId),
-        eq(schema.barbers.isActive, true)
+        eq(schema.barbers.isActive, true),
+        eq(schema.barbers.isPresent, true)
       ),
     });
 
@@ -260,7 +262,7 @@ export class QueueService {
    */
   async isQueueFull(
     shopId: number,
-    maxQueueSize: number = 500
+    maxQueueSize: number = 80
   ): Promise<boolean> {
     const { queueLength } = await this.getMetrics(shopId);
     return queueLength >= maxQueueSize;

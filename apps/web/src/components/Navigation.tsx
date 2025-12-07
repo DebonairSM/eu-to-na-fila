@@ -132,12 +132,12 @@ export function Navigation() {
             ) : (
               <>
                 <li>
-            <Link
-              to="/join"
-              className="nav-cta px-6 py-3 bg-[#D4AF37] text-[#0a0a0a] font-semibold text-sm rounded min-h-[44px] flex items-center justify-center hover:bg-[#E8C547] hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
-            >
-              Entrar na Fila
-            </Link>
+                  <Link
+                    to="/join"
+                    className="nav-cta px-6 py-3 bg-[#D4AF37] text-[#0a0a0a] font-semibold text-sm rounded min-h-[44px] flex items-center justify-center hover:bg-[#E8C547] hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+                  >
+                    Entrar na Fila
+                  </Link>
                 </li>
                 <li>
                   <Link
