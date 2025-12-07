@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense, useEffect } from 'react';
 import { useAuthContext } from './contexts/AuthContext';
-import { LoadingSpinner } from './components/LoadingSpinner';
 
 const LandingPage = lazy(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })));
 const CompanyHomePage = lazy(() => import('./pages/CompanyHomePage').then((m) => ({ default: m.CompanyHomePage })));
