@@ -632,7 +632,7 @@ export function BarberQueueManager() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-[82px] rounded-md border-2 border-white/5 bg-white/5 animate-pulse"
+                  className="h-16 rounded-md border border-white/8 bg-white/5 animate-pulse"
                   aria-hidden="true"
                 />
               ))}

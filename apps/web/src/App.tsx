@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { useAuthContext } from './contexts/AuthContext';
 import { LoadingSpinner } from './components/LoadingSpinner';
 
@@ -43,6 +43,16 @@ function ProtectedRoute({
 }
 
 function App() {
+  // Prefetch critical routes to improve perceived load for key flows
+  useEffect(() => {
+    const preload = [
+      import('./pages/JoinPage'),
+      import('./pages/StatusPage'),
+      import('./pages/CompanyHomePage'),
+    ];
+    preload.forEach((p) => p.catch(() => null));
+  }, []);
+
   return (
     <>
       {/* Skip to content link for accessibility */}
@@ -51,8 +61,9 @@ function App() {
       </a>
       <Suspense
         fallback={
-          <div className="flex items-center justify-center min-h-screen">
-            <LoadingSpinner size="lg" text="Carregando..." />
+          <div className="min-h-screen bg-[#0a0a0a] text-white">
+            <div className="h-1 w-full bg-gradient-to-r from-[#D4AF37]/50 via-[#0f3d2e]/30 to-[#D4AF37]/50 animate-pulse" />
+            <div className="p-6 text-sm text-white/60">Carregando…</div>
           </div>
         }
       >

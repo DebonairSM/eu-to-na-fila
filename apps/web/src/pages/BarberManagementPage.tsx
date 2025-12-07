@@ -146,7 +146,7 @@ export function BarberManagementPage() {
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="h-[220px] rounded-xl bg-white/5 border border-white/10 animate-pulse"
+                className="h-[200px] rounded-xl bg-white/5 border border-white/10 animate-pulse"
                 aria-hidden="true"
               />
             ))}
