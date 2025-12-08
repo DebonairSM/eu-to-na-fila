@@ -8,7 +8,7 @@ export function useTicketStatus(ticketId: number | null) {
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const previousDataRef = useRef<{ status: string; estimatedWaitTime: number | null; position: number } | null>(null);
+  const previousDataRef = useRef<{ status: string; estimatedWaitTime: number | undefined; position: number } | null>(null);
 
   const fetchTicket = useCallback(async () => {
     if (!ticketId) {
@@ -19,7 +19,7 @@ export function useTicketStatus(ticketId: number | null) {
     try {
       setError(null);
       const ticketData = await api.getTicket(ticketId);
-      const normalizedWait = ticketData.estimatedWaitTime ?? null;
+      const normalizedWait = ticketData.estimatedWaitTime ?? undefined;
 
       const prev = previousDataRef.current;
       const hasChanged =
