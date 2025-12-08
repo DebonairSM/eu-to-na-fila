@@ -9,8 +9,6 @@ import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
 import { cn, getErrorMessage } from '@/lib/utils';
 
-const AVG_SERVICE_TIME = 20; // minutes
-
 export function StatusPage() {
   const { id } = useParams<{ id: string }>();
   const ticketIdFromParams = id ? parseInt(id, 10) : null;
@@ -55,27 +53,8 @@ export function StatusPage() {
     }
   }, [ticketStatus, ticketId]);
 
-  // Calculate wait time
-  const waitTime = (() => {
-    if (!ticket || ticket.status !== 'waiting') return null;
-    // Prefer backend estimate when available
-    if (typeof ticket.estimatedWaitTime === 'number') {
-      return ticket.estimatedWaitTime;
-    }
-    if (!queueData) return null;
-
-    // Fallback client-side estimate if backend value missing
-    const waitingTickets = queueData.tickets.filter((t) => t.status === 'waiting');
-    const aheadCount = waitingTickets.filter((t) => t.position < ticket.position).length;
-    const inProgressTickets = queueData.tickets.filter((t) => t.status === 'in_progress');
-    const activeBarbers = new Set(
-      inProgressTickets.map((t) => t.barberId).filter((id): id is number => id !== null)
-    ).size || 1;
-
-    if (aheadCount === 0) return 0;
-    const estimated = Math.ceil((aheadCount / activeBarbers) * AVG_SERVICE_TIME);
-    return Math.max(5, Math.round(estimated / 5) * 5);
-  })();
+  // Use API-provided estimatedWaitTime only
+  const waitTime = ticket?.estimatedWaitTime ?? null;
 
   const handleLeaveQueue = async () => {
     if (!ticketIdFromParams) return;
