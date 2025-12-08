@@ -73,6 +73,68 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
+   * Diagnostic: expose current wait-time inputs for debugging.
+   *
+   * @route GET /api/shops/:slug/wait-debug
+   * @returns { peopleAhead, activePresentBarbers, inProgressRemaining, sampleEstimateForNext }
+   */
+  fastify.get('/shops/:slug/wait-debug', async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+
+    const shop = await db.query.shops.findFirst({
+      where: eq(schema.shops.slug, slug),
+    });
+
+    if (!shop) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    }
+
+    // Waiting tickets ordered
+    const waitingTickets = await db.query.tickets.findMany({
+      where: and(eq(schema.tickets.shopId, shop.id), eq(schema.tickets.status, 'waiting')),
+      orderBy: [asc(schema.tickets.createdAt)],
+    });
+    const peopleAhead = waitingTickets.length > 0 ? waitingTickets.length - 1 : 0;
+
+    // Active & present barbers
+    const activeBarbers = await db.query.barbers.findMany({
+      where: and(
+        eq(schema.barbers.shopId, shop.id),
+        eq(schema.barbers.isActive, true),
+        eq(schema.barbers.isPresent, true)
+      ),
+    });
+    const activePresentBarbers = Math.max(activeBarbers.length, 1);
+
+    // In-progress remaining
+    const now = new Date();
+    const inProgressTickets = await db.query.tickets.findMany({
+      where: and(eq(schema.tickets.shopId, shop.id), eq(schema.tickets.status, 'in_progress')),
+      orderBy: [asc(schema.tickets.updatedAt)],
+    });
+    const inProgressRemaining = inProgressTickets.reduce((sum, t) => {
+      const updatedAt = t.updatedAt ? new Date(t.updatedAt) : now;
+      const elapsedMinutes = Math.max(0, (now.getTime() - updatedAt.getTime()) / 60000);
+      const remaining = Math.max(0, 20 - elapsedMinutes);
+      return sum + remaining;
+    }, 0);
+
+    const sampleEstimateForNext = Math.ceil(
+      Math.max(0, (peopleAhead * 20) / activePresentBarbers) + inProgressRemaining
+    );
+
+    return {
+      peopleAhead,
+      activePresentBarbers,
+      inProgressRemaining,
+      sampleEstimateForNext,
+    };
+  });
+
+  /**
    * Get statistics for a shop.
    * 
    * @route GET /api/shops/:slug/statistics

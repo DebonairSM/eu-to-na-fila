@@ -109,7 +109,7 @@ export class QueueService {
       return sum + remaining;
     }, 0);
 
-    // Core rule: (peopleAhead * 20) / barberCount + remaining in-progress time
+    // Core rule: (peopleAhead * 20) / activePresentBarbers + remaining in-progress time
     const peopleAhead = ticketsAhead.length;
     const parallelShare = peopleAhead > 0 ? (peopleAhead * 20) / barberCount : 0;
     const totalWorkMinutes = Math.max(0, parallelShare) + remainingInProgress;
