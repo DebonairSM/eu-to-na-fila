@@ -261,6 +261,21 @@ class ApiClient {
   }
 
   /**
+   * Get wait-time debug info for a shop.
+   *
+   * @param shopSlug - Shop identifier
+   * @returns Debug info including sampleEstimateForNext
+   */
+  async getWaitDebug(shopSlug: string): Promise<{
+    peopleAhead: number;
+    activePresentBarbers: number;
+    inProgressRemaining: number;
+    sampleEstimateForNext: number;
+  }> {
+    return this.get(`/shops/${shopSlug}/wait-debug`);
+  }
+
+  /**
    * Get statistics for a shop.
    * 
    * @param shopSlug - Shop identifier
