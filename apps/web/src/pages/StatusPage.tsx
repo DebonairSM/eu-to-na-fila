@@ -98,7 +98,7 @@ export function StatusPage() {
         <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12 max-w-[480px]">
           <div className="text-center space-y-4">
             <p className="text-[rgba(255,255,255,0.7)]">Nenhum ticket ID fornecido</p>
-            <Link to="/">
+            <Link to="/mineiro/home">
               <button className="px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all">
                 Voltar ao Início
               </button>
@@ -130,7 +130,7 @@ export function StatusPage() {
             onRetry={() => window.location.reload()}
           />
           <div className="mt-4">
-            <Link to="/">
+            <Link to="/mineiro/home">
               <button className="w-full px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all">
                 Voltar ao Início
               </button>
@@ -273,7 +273,7 @@ export function StatusPage() {
             )}
 
             {isCompleted && (
-              <Link to="/">
+              <Link to="/mineiro/home">
                 <button className="w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-3 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all">
                   <span className="material-symbols-outlined text-xl">home</span>
                   Voltar ao Início
@@ -281,7 +281,7 @@ export function StatusPage() {
               </Link>
             )}
 
-            <Link to="/">
+            <Link to="/mineiro/home">
               <button className="w-full px-4 py-3 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all">
                 Voltar
               </button>

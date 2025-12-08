@@ -199,7 +199,7 @@ export function LoginPage() {
 
             {/* Back Link */}
             <div className="text-center">
-              <Link to="/" className="text-sm text-[#5D5D5D] hover:text-[#D4AF37] inline-flex items-center justify-center min-h-[44px]">
+              <Link to="/mineiro/home" className="text-sm text-[#5D5D5D] hover:text-[#D4AF37] inline-flex items-center justify-center min-h-[44px]">
                 ← Voltar ao início
               </Link>
             </div>

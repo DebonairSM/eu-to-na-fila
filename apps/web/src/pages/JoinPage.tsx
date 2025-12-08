@@ -310,7 +310,7 @@ export function JoinPage() {
           {/* Info Text */}
           <p className="info-text text-center text-sm text-[rgba(255,255,255,0.7)]">
             Já está na fila?{' '}
-            <Link to="/" className="text-[#D4AF37] hover:underline">
+            <Link to="/mineiro/home" className="text-[#D4AF37] hover:underline">
               Verificar status
             </Link>
           </p>

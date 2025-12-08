@@ -69,57 +69,11 @@ export class QueueService {
     shopId: number,
     position: number
   ): Promise<number | null> {
-    // Position 0 means not in active queue or currently being served
     if (position === 0) return null;
 
-    // Get all waiting tickets ahead of this position
-    const waitingTickets = await db.query.tickets.findMany({
-      where: and(
-        eq(schema.tickets.shopId, shopId),
-        eq(schema.tickets.status, 'waiting')
-      ),
-      orderBy: [asc(schema.tickets.createdAt)],
-      with: {
-        service: true,
-      },
-    });
+    const now = new Date();
 
-    // Take only tickets ahead of current position
-    const ticketsAhead = waitingTickets.slice(0, position - 1);
-
-    if (ticketsAhead.length === 0) {
-      // First in queue - check if any barbers are currently busy
-      const inProgressTickets = await db.query.tickets.findMany({
-        where: and(
-          eq(schema.tickets.shopId, shopId),
-          eq(schema.tickets.status, 'in_progress')
-        ),
-        with: {
-          service: true,
-        },
-      });
-
-      if (inProgressTickets.length === 0) {
-        // No one being served, can start immediately
-        return 0;
-      }
-
-      // Estimate based on average in-progress service time
-      const avgDuration = inProgressTickets.reduce(
-        (sum, t) => sum + (t.service?.duration || 30),
-        0
-      ) / inProgressTickets.length;
-
-      return Math.ceil(avgDuration / 2); // Assume halfway done
-    }
-
-    // Calculate total duration of tickets ahead
-    const totalDuration = ticketsAhead.reduce(
-      (sum, ticket) => sum + (ticket.service?.duration || 30),
-      0
-    );
-
-    // Get number of active barbers
+    // Count active & present barbers
     const activeBarbers = await db.query.barbers.findMany({
       where: and(
         eq(schema.barbers.shopId, shopId),
@@ -127,12 +81,36 @@ export class QueueService {
         eq(schema.barbers.isPresent, true)
       ),
     });
-
     const barberCount = Math.max(activeBarbers.length, 1);
 
-    // Divide by number of barbers (parallel processing)
-    // Add buffer of 10% for transitions
-    const estimatedTime = Math.ceil((totalDuration / barberCount) * 1.1);
+    // Waiting tickets ahead of this position
+    const waitingTickets = await db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.status, 'waiting')
+      ),
+      orderBy: [asc(schema.tickets.createdAt)],
+    });
+    const ticketsAhead = waitingTickets.slice(0, Math.max(position - 1, 0));
+
+    // In-progress tickets contribute remaining time (20 min minus elapsed)
+    const inProgressTickets = await db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.status, 'in_progress')
+      ),
+      orderBy: [asc(schema.tickets.updatedAt)],
+    });
+
+    const remainingInProgress = inProgressTickets.reduce((sum, t) => {
+      const updatedAt = t.updatedAt ? new Date(t.updatedAt) : now;
+      const elapsedMinutes = Math.max(0, (now.getTime() - updatedAt.getTime()) / 60000);
+      const remaining = Math.max(0, 20 - elapsedMinutes);
+      return sum + remaining;
+    }, 0);
+
+    const totalWorkMinutes = (ticketsAhead.length * 20) + remainingInProgress;
+    const estimatedTime = Math.ceil(totalWorkMinutes / barberCount);
 
     return estimatedTime;
   }
