@@ -21,9 +21,9 @@ export function JoinPage() {
   const [isAlreadyInQueue, setIsAlreadyInQueue] = useState(false);
   const [existingTicketId, setExistingTicketId] = useState<number | null>(null);
   const [isCheckingStoredTicket, setIsCheckingStoredTicket] = useState(true);
-  const [metricsWait, setMetricsWait] = useState<number | null>(null);
-  const [metricsLoading, setMetricsLoading] = useState(true);
-  const [metricsError, setMetricsError] = useState<Error | null>(null);
+  const [waitEstimate, setWaitEstimate] = useState<number | null>(null);
+  const [waitLoading, setWaitLoading] = useState(true);
+  const [waitError, setWaitError] = useState<Error | null>(null);
   const navigate = useNavigate();
   const { validateName } = useProfanityFilter();
   const { data, isLoading: queueLoading, error: queueError } = useQueue(30000); // Poll every 30s
@@ -67,28 +67,29 @@ export function JoinPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
-  // Poll metrics for wait-time display (API source of truth)
+  // Poll wait-debug for next-in-line estimate (API source of truth)
   useEffect(() => {
     let mounted = true;
-    const fetchMetrics = async () => {
+    const fetchWait = async () => {
       try {
-        setMetricsError(null);
-        const metrics = await api.getMetrics(config.slug);
+        setWaitError(null);
+        const debug = await api.getWaitDebug(config.slug);
         if (!mounted) return;
-        // averageWaitTime is already calculated server-side; fallback to 0 if missing
         const nextWait =
-          typeof metrics.averageWaitTime === 'number' ? metrics.averageWaitTime : null;
-        setMetricsWait(nextWait);
-        setMetricsLoading(false);
+          typeof debug.sampleEstimateForNext === 'number'
+            ? debug.sampleEstimateForNext
+            : null;
+        setWaitEstimate(nextWait);
+        setWaitLoading(false);
       } catch (err) {
         if (!mounted) return;
-        setMetricsError(err instanceof Error ? err : new Error('Erro ao obter tempo médio'));
-        setMetricsLoading(false);
+        setWaitError(err instanceof Error ? err : new Error('Erro ao obter tempo de espera'));
+        setWaitLoading(false);
       }
     };
 
-    fetchMetrics();
-    const interval = setInterval(fetchMetrics, 30000);
+    fetchWait();
+    const interval = setInterval(fetchWait, 30000);
     return () => {
       mounted = false;
       clearInterval(interval);
@@ -203,19 +204,19 @@ export function JoinPage() {
           </div>
 
           {/* Wait Time Display */}
-          {metricsLoading || queueLoading ? (
+          {waitLoading || queueLoading ? (
             <div className="py-8">
               <LoadingSpinner text="Calculando tempo de espera..." />
             </div>
-          ) : metricsError || queueError ? (
+          ) : waitError || queueError ? (
             <div className="py-4">
               <ErrorDisplay 
-                error={(metricsError || queueError) as Error} 
+                error={(waitError || queueError) as Error} 
                 onRetry={() => window.location.reload()} 
               />
             </div>
           ) : (
-            <WaitTimeDisplay minutes={metricsWait} />
+            <WaitTimeDisplay minutes={waitEstimate} />
           )}
 
           {/* Form */}
