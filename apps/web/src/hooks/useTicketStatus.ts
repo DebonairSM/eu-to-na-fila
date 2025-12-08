@@ -19,21 +19,22 @@ export function useTicketStatus(ticketId: number | null) {
     try {
       setError(null);
       const ticketData = await api.getTicket(ticketId);
+      const normalizedWait = ticketData.estimatedWaitTime ?? null;
 
       const prev = previousDataRef.current;
       const hasChanged =
         !prev ||
         ticketData.status !== prev.status ||
-        ticketData.estimatedWaitTime !== prev.estimatedWaitTime ||
+        normalizedWait !== prev.estimatedWaitTime ||
         ticketData.position !== prev.position;
 
       if (hasChanged) {
         previousDataRef.current = {
           status: ticketData.status,
-          estimatedWaitTime: ticketData.estimatedWaitTime,
+          estimatedWaitTime: normalizedWait,
           position: ticketData.position,
         };
-        setTicket(ticketData);
+        setTicket({ ...ticketData, estimatedWaitTime: normalizedWait });
       }
       setIsLoading(false);
     } catch (err) {
