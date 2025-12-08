@@ -10,7 +10,6 @@ import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
 import { getErrorMessage } from '@/lib/utils';
 
-const AVG_SERVICE_TIME = 20; // minutes
 const STORAGE_KEY = 'eutonafila_active_ticket_id';
 
 export function JoinPage() {
@@ -22,6 +21,9 @@ export function JoinPage() {
   const [isAlreadyInQueue, setIsAlreadyInQueue] = useState(false);
   const [existingTicketId, setExistingTicketId] = useState<number | null>(null);
   const [isCheckingStoredTicket, setIsCheckingStoredTicket] = useState(true);
+  const [metricsWait, setMetricsWait] = useState<number | null>(null);
+  const [metricsLoading, setMetricsLoading] = useState(true);
+  const [metricsError, setMetricsError] = useState<Error | null>(null);
   const navigate = useNavigate();
   const { validateName } = useProfanityFilter();
   const { data, isLoading: queueLoading, error: queueError } = useQueue(30000); // Poll every 30s
@@ -65,20 +67,33 @@ export function JoinPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
-  // Calculate wait time
-  const waitTime = (() => {
-    if (!data) return null;
-    const waitingCount = data.tickets.filter((t) => t.status === 'waiting').length;
-    const presentBarbers = data.tickets
-      .filter((t) => t.status === 'in_progress')
-      .map((t) => t.barberId)
-      .filter((id): id is number => id !== null);
-    const activeBarbers = new Set(presentBarbers).size || 1;
+  // Poll metrics for wait-time display (API source of truth)
+  useEffect(() => {
+    let mounted = true;
+    const fetchMetrics = async () => {
+      try {
+        setMetricsError(null);
+        const metrics = await api.getMetrics(config.slug);
+        if (!mounted) return;
+        // averageWaitTime is already calculated server-side; fallback to 0 if missing
+        const nextWait =
+          typeof metrics.averageWaitTime === 'number' ? metrics.averageWaitTime : null;
+        setMetricsWait(nextWait);
+        setMetricsLoading(false);
+      } catch (err) {
+        if (!mounted) return;
+        setMetricsError(err instanceof Error ? err : new Error('Erro ao obter tempo médio'));
+        setMetricsLoading(false);
+      }
+    };
 
-    if (waitingCount === 0) return 0;
-    const estimated = Math.ceil((waitingCount / activeBarbers) * AVG_SERVICE_TIME);
-    return Math.max(5, Math.round(estimated / 5) * 5); // Round to nearest 5
-  })();
+    fetchMetrics();
+    const interval = setInterval(fetchMetrics, 30000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Real-time validation
   useEffect(() => {
@@ -188,19 +203,19 @@ export function JoinPage() {
           </div>
 
           {/* Wait Time Display */}
-          {queueLoading ? (
+          {metricsLoading || queueLoading ? (
             <div className="py-8">
               <LoadingSpinner text="Calculando tempo de espera..." />
             </div>
-          ) : queueError ? (
+          ) : metricsError || queueError ? (
             <div className="py-4">
               <ErrorDisplay 
-                error={queueError} 
+                error={(metricsError || queueError) as Error} 
                 onRetry={() => window.location.reload()} 
               />
             </div>
           ) : (
-            <WaitTimeDisplay minutes={waitTime} />
+            <WaitTimeDisplay minutes={metricsWait} />
           )}
 
           {/* Form */}
