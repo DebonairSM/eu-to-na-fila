@@ -109,11 +109,10 @@ export class QueueService {
       return sum + remaining;
     }, 0);
 
-    // Use ceiling blocks so any remainder counts as another 20-min slice
-    // wait = max(0, ceil(peopleAhead / barberCount) * 20) + remainingInProgress
+    // Core rule: (peopleAhead * 20) / barberCount + remaining in-progress time
     const peopleAhead = ticketsAhead.length;
-    const blocks = peopleAhead > 0 ? Math.ceil(peopleAhead / barberCount) : 0;
-    const totalWorkMinutes = Math.max(0, blocks * 20) + remainingInProgress;
+    const parallelShare = peopleAhead > 0 ? (peopleAhead * 20) / barberCount : 0;
+    const totalWorkMinutes = Math.max(0, parallelShare) + remainingInProgress;
     const estimatedTime = Math.ceil(totalWorkMinutes);
 
     return estimatedTime;
