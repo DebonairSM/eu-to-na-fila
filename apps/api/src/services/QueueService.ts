@@ -109,8 +109,13 @@ export class QueueService {
       return sum + remaining;
     }, 0);
 
-    const totalWorkMinutes = (ticketsAhead.length * 20) + remainingInProgress;
-    const estimatedTime = Math.ceil(totalWorkMinutes / barberCount);
+    // New rule: count blocks of barbers; ignore remainder
+    // If people <= barbers, wait = 0 (can start immediately)
+    // Else blocks = floor(people / barbers), wait = blocks * 20 + remaining in-progress share
+    const peopleAhead = ticketsAhead.length;
+    const blocks = peopleAhead >= barberCount ? Math.floor(peopleAhead / barberCount) : 0;
+    const totalWorkMinutes = (blocks * 20) + remainingInProgress;
+    const estimatedTime = Math.ceil(totalWorkMinutes);
 
     return estimatedTime;
   }
