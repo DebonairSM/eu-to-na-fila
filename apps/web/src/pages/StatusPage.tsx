@@ -57,8 +57,14 @@ export function StatusPage() {
 
   // Calculate wait time
   const waitTime = (() => {
-    if (!ticket || ticket.status !== 'waiting' || !queueData) return null;
+    if (!ticket || ticket.status !== 'waiting') return null;
+    // Prefer backend estimate when available
+    if (typeof ticket.estimatedWaitTime === 'number') {
+      return ticket.estimatedWaitTime;
+    }
+    if (!queueData) return null;
 
+    // Fallback client-side estimate if backend value missing
     const waitingTickets = queueData.tickets.filter((t) => t.status === 'waiting');
     const aheadCount = waitingTickets.filter((t) => t.position < ticket.position).length;
     const inProgressTickets = queueData.tickets.filter((t) => t.status === 'in_progress');
