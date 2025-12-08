@@ -392,6 +392,14 @@ export class TicketService {
       cancelled: tickets.filter(t => t.status === 'cancelled').length,
     };
   }
+
+  /**
+   * Recalculate positions and wait times for a shop (owner/admin utility).
+   */
+  async recalculateShopQueue(shopId: number): Promise<void> {
+    await queueService.recalculatePositions(shopId);
+    await this.recalculateWaitTimes(shopId);
+  }
 }
 
 /**

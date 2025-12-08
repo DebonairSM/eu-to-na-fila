@@ -6,6 +6,7 @@ import { ticketService } from '../services/TicketService.js';
 import { queueService } from '../services/QueueService.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
 
 /**
  * Queue routes.
@@ -107,6 +108,31 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     );
 
     return statistics;
+  });
+
+  /**
+   * Recalculate positions and wait times for a shop (owner only).
+   *
+   * @route POST /api/shops/:slug/recalculate
+   */
+  fastify.post('/shops/:slug/recalculate', {
+    preHandler: [requireAuth(), requireRole(['owner'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+
+    const shop = await db.query.shops.findFirst({
+      where: eq(schema.shops.slug, slug),
+    });
+
+    if (!shop) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    }
+
+    await ticketService.recalculateShopQueue(shop.id);
+    return { ok: true };
   });
 };
 
