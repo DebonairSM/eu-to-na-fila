@@ -109,11 +109,11 @@ export class QueueService {
       return sum + remaining;
     }, 0);
 
-    // New rule: use integer blocks of barbers; ignore remainder for blocks
-    // wait = max(0, floor(peopleAhead / barberCount) * 20) + remainingInProgress
+    // Use ceiling blocks so any remainder counts as another 20-min slice
+    // wait = max(0, ceil(peopleAhead / barberCount) * 20) + remainingInProgress
     const peopleAhead = ticketsAhead.length;
-    const blocks = peopleAhead >= barberCount ? Math.floor(peopleAhead / barberCount) : 0;
-    const totalWorkMinutes = Math.max(0, (blocks * 20)) + remainingInProgress;
+    const blocks = peopleAhead > 0 ? Math.ceil(peopleAhead / barberCount) : 0;
+    const totalWorkMinutes = Math.max(0, blocks * 20) + remainingInProgress;
     const estimatedTime = Math.ceil(totalWorkMinutes);
 
     return estimatedTime;
