@@ -12,9 +12,9 @@ export function WaitTimeDisplay({
   size = 'lg',
 }: WaitTimeDisplayProps) {
   const sizeClasses = {
-    sm: 'text-2xl',
-    md: 'text-4xl',
-    lg: 'text-6xl',
+    sm: 'text-2xl sm:text-3xl',
+    md: 'text-3xl sm:text-4xl md:text-5xl',
+    lg: 'text-4xl sm:text-5xl md:text-6xl',
   };
 
   const displayValue = minutes !== null ? minutes : '--';
@@ -34,7 +34,12 @@ export function WaitTimeDisplay({
           Tempo estimado de espera
         </span>
       </div>
-      <div className={cn('wait-value font-bold text-[#D4AF37]', sizeClasses[size])}>
+      <div
+        className={cn(
+          'wait-value font-bold text-[#D4AF37] leading-tight',
+          sizeClasses[size]
+        )}
+      >
         {displayValue}
       </div>
       <div className="wait-unit text-sm text-[rgba(255,255,255,0.5)] mt-1">minutos</div>

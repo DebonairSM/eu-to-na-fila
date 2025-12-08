@@ -67,7 +67,7 @@ export function Navigation() {
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-10">
+      <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-10">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link
