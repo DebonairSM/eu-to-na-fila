@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db, schema } from '../db/index.js';
-import { eq } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 import { ticketService } from '../services/TicketService.js';
 import { queueService } from '../services/QueueService.js';
 import { validateRequest } from '../lib/validation.js';
