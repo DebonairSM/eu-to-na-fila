@@ -8,7 +8,7 @@ export function useTicketStatus(ticketId: number | null) {
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const previousStatusRef = useRef<string>('');
+  const previousDataRef = useRef<{ status: string; estimatedWaitTime: number | null; position: number } | null>(null);
 
   const fetchTicket = useCallback(async () => {
     if (!ticketId) {
@@ -20,21 +20,27 @@ export function useTicketStatus(ticketId: number | null) {
       setError(null);
       const ticketData = await api.getTicket(ticketId);
 
-      // Only update if status actually changed (smart diffing)
-      if (ticketData.status !== previousStatusRef.current) {
-        previousStatusRef.current = ticketData.status;
+      const prev = previousDataRef.current;
+      const hasChanged =
+        !prev ||
+        ticketData.status !== prev.status ||
+        ticketData.estimatedWaitTime !== prev.estimatedWaitTime ||
+        ticketData.position !== prev.position;
+
+      if (hasChanged) {
+        previousDataRef.current = {
+          status: ticketData.status,
+          estimatedWaitTime: ticketData.estimatedWaitTime,
+          position: ticketData.position,
+        };
         setTicket(ticketData);
-        setIsLoading(false);
-      } else if (!ticket) {
-        // Initial load
-        setTicket(ticketData);
-        setIsLoading(false);
       }
+      setIsLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch ticket'));
       setIsLoading(false);
     }
-  }, [ticketId, ticket]);
+  }, [ticketId]);
 
   useEffect(() => {
     fetchTicket();
