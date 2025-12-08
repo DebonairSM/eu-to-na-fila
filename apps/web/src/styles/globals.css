@@ -97,6 +97,11 @@
     @apply border-border;
   }
   
+  img, video, canvas, svg {
+    max-width: 100%;
+    height: auto;
+  }
+  
   html {
     scroll-behavior: smooth;
     background-color: #0a0a0a;

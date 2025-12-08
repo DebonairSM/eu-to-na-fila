@@ -15,7 +15,8 @@ const STATIC_ASSETS = [
   '/mineiro/favicon.svg',
   '/mineiro/manifest.json',
   '/mineiro/icon-192.png',
-  '/mineiro/icon-512.png'
+  '/mineiro/icon-512.png',
+  '/mineiro/fonts/MaterialSymbolsOutlined.ttf'
 ];
 
 // API endpoints to cache (with short TTL)
