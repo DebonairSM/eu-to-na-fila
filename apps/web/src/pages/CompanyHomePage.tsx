@@ -12,23 +12,19 @@ export function CompanyHomePage() {
             Virtual lines • Florianópolis, SC
           </div>
           <h1 className="text-[2.2rem] sm:text-5xl font-semibold leading-tight max-w-4xl drop-shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
-            Filas virtuais premium. Vibrantes, elegantes, essenciais.
+            Filas virtuais premium
           </h1>
           <p className="text-base sm:text-lg text-white/80 max-w-3xl leading-relaxed">
-            Espera sem atrito: entrada em segundos, presença clara, acompanhamento ao vivo. Simplicidade radical para redes que exigem segurança e escala.
+            Entrada rápida, presença clara, acompanhamento ao vivo.
           </p>
           <div className="relative w-full max-w-4xl">
             <div className="absolute inset-0 rounded-[28px] bg-gradient-to-r from-[#0f3d2e]/32 via-[#D4AF37]/18 to-[#0e1f3d]/30 blur-3xl animate-[pulse_6s_ease-in-out_infinite]" />
             <div className="relative rounded-[28px] border border-white/10 bg-white/5 backdrop-blur-2xl p-9 sm:p-12 space-y-6 sm:space-y-7 shadow-2xl shadow-black/40 text-left">
-              <p className="text-sm text-[#8ad6b0] uppercase tracking-[0.18em]">Fluxo essencial</p>
-              <h2 className="text-2xl sm:text-3xl font-semibold text-white drop-shadow">Fila, presença e atendimento em um só lugar</h2>
-              <p className="text-sm sm:text-base text-white/80 leading-relaxed">
-                Entrada via QR ou link, presença confirmada em totem ou mobile, estimativas ao vivo. Equipes e clientes sempre sincronizados.
-              </p>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-white drop-shadow">Fila, presença e atendimento</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 {[
-                  { title: 'Entrada rápida', detail: 'QR, link ou totem — sem app obrigatório.', icon: 'bolt' },
-                  { title: 'Painel ao vivo', detail: 'Chamadas, estimativas e status em tempo real.', icon: 'timeline' },
+                  { title: 'Entrada rápida', detail: 'QR, link ou totem', icon: 'bolt' },
+                  { title: 'Painel ao vivo', detail: 'Estimativas em tempo real', icon: 'timeline' },
                 ].map((card) => (
                   <div key={card.title} className="rounded-xl border border-white/10 bg-white/6 px-5 py-4 shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
                     <div className="flex items-center gap-3">
@@ -39,9 +35,6 @@ export function CompanyHomePage() {
                   </div>
                 ))}
               </div>
-              <p className="text-sm text-white/65">
-                Explore a galeria para ver experiências e casos. Quando quiser falar, estamos a um clique.
-              </p>
             </div>
           </div>
         </section>

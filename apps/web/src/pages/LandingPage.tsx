@@ -47,7 +47,7 @@ export function LandingPage() {
             Mineiro
           </h1>
           <p className="hero-subtitle text-base sm:text-xl text-[rgba(255,255,255,0.7)] mb-7 sm:mb-12 max-w-[600px] mx-auto leading-[1.65] fade-in-up" style={{ animationDelay: '0.4s' }}>
-            Tradição e qualidade em cada corte. Entre na fila online e seja atendido sem espera.
+            Entre na fila online
           </p>
           <div className="hero-actions flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center fade-in-up" style={{ animationDelay: '0.6s' }}>
             <Link to="/join">
@@ -65,42 +65,34 @@ export function LandingPage() {
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="hero-scroll absolute bottom-10 left-1/2 -translate-x-1/2 text-[rgba(255,255,255,0.5)] text-xs uppercase tracking-widest flex flex-col items-center gap-3 animate-bounce-slow">
-          <span>Scroll</span>
-          <span className="material-symbols-outlined">expand_more</span>
-        </div>
       </section>
 
       {/* Services Section */}
       <section id="services" className="section py-16 sm:py-24 lg:py-[120px] px-4 sm:px-6 lg:px-10 bg-[#1a1a1a]">
         <div className="container mx-auto px-4">
           <div className="section-header text-center mb-16 max-w-full">
-            <p className="section-label text-[#D4AF37] text-xs font-semibold uppercase tracking-[3px] mb-4">
-              Nossos Serviços
-            </p>
             <h2 className="section-title font-['Playfair_Display',serif] text-[clamp(2rem,5vw,3rem)] font-semibold">
-              Cortes & Tratamentos
+              Serviços
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-5xl mx-auto">
             {[
               {
                 icon: 'content_cut',
-                name: 'Corte de Cabelo',
-                desc: 'Corte tradicional ou moderno, feito com precisão e cuidado.',
+                name: 'Corte',
+                desc: '',
                 price: '$30',
               },
               {
                 icon: 'face_6',
                 name: 'Barba',
-                desc: 'Aparar, modelar e cuidar da sua barba com produtos premium.',
+                desc: '',
                 price: '$20',
               },
               {
                 icon: 'star',
                 name: 'Corte + Barba',
-                desc: 'O combo completo para você sair renovado.',
+                desc: '',
                 price: '$45',
               },
             ].map((service) => (
@@ -109,8 +101,7 @@ export function LandingPage() {
                   <span className="material-symbols-outlined text-4xl sm:text-5xl text-primary mb-3 sm:mb-4 block">
                     {service.icon}
                   </span>
-                  <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">{service.name}</h3>
-                  <p className="text-muted-foreground mb-3 sm:mb-4 text-sm">{service.desc}</p>
+                  <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">{service.name}</h3>
                   <p className="text-primary text-lg sm:text-xl font-semibold">{service.price}</p>
                 </CardContent>
               </Card>
@@ -124,20 +115,11 @@ export function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center max-w-5xl mx-auto">
             <div>
-              <p className="text-[#D4AF37] text-xs font-semibold uppercase tracking-[3px] mb-4">
-                Sobre Nós
-              </p>
               <h3 className="font-['Playfair_Display',serif] text-[clamp(1.5rem,4vw,3rem)] font-semibold mb-4 sm:mb-6">
-                Uma experiência <span className="text-[#D4AF37]">autêntica</span> de barbearia
+                Sobre
               </h3>
-              <p className="text-muted-foreground mb-4 leading-relaxed">
-                Na Barbearia Mineiro, combinamos técnicas tradicionais com tendências modernas
-                para oferecer cortes de qualidade. Nossa equipe é apaixonada pelo que faz e
-                comprometida em proporcionar a melhor experiência.
-              </p>
               <p className="text-muted-foreground mb-8 leading-relaxed">
-                Localizada em Sangão, SC, atendemos a comunidade local e todos que
-                buscam um serviço de excelência em um ambiente acolhedor.
+                Barbearia em Sangão, SC.
               </p>
               <div className="grid grid-cols-2 gap-4">
                 {[
@@ -168,16 +150,12 @@ export function LandingPage() {
       <section id="location" className="section py-16 sm:py-24 lg:py-[120px] px-4 sm:px-6 lg:px-10 bg-[#1a1a1a]">
         <div className="container mx-auto px-4">
           <div className="section-header text-center mb-16 max-w-full">
-            <p className="section-label text-[#D4AF37] text-xs font-semibold uppercase tracking-[3px] mb-4">
-              Localização
-            </p>
             <h2 className="section-title font-['Playfair_Display',serif] text-[clamp(2rem,5vw,3rem)] font-semibold">
-              Visite-nos
+              Localização
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 max-w-5xl mx-auto">
             <div className="space-y-6">
-              <h3 className="text-2xl font-semibold mb-6">Informações de Contato</h3>
               {[
                 {
                   icon: 'location_on',
@@ -253,23 +231,6 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="section py-16 sm:py-24 lg:py-[120px] px-4 sm:px-6 lg:px-10 bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
-        <div className="container mx-auto px-4 text-center max-w-2xl">
-          <h2 className="font-['Playfair_Display',serif] text-[clamp(2rem,5vw,3rem)] font-semibold mb-5">
-            Pronto para um novo visual?
-          </h2>
-          <p className="text-lg text-[rgba(255,255,255,0.7)] mb-8">
-            Entre na fila online agora e seja atendido sem espera.
-          </p>
-          <Link to="/join">
-            <Button size="lg" className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#E8C547] gap-3">
-              <span className="material-symbols-outlined text-xl">person_add</span>
-              Entrar na Fila Agora
-            </Button>
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }

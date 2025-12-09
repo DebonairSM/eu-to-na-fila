@@ -35,7 +35,7 @@ export function OwnerDashboard() {
               Gerenciar Fila
             </h2>
             <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-              Visualize e gerencie a fila de clientes, atribua barbeiros e monitore o atendimento.
+              Gerencie a fila
             </p>
             <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl mt-2">
               arrow_forward
@@ -53,7 +53,7 @@ export function OwnerDashboard() {
               Analytics
             </h2>
             <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-              Visualize estatísticas, métricas de desempenho e gráficos de atendimentos.
+              Estatísticas e métricas
             </p>
             <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl mt-2">
               arrow_forward
@@ -71,7 +71,7 @@ export function OwnerDashboard() {
               Gerenciar Barbeiros
             </h2>
             <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-              Adicione, edite ou remova barbeiros da equipe.
+              Gerencie barbeiros
             </p>
             <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl mt-2">
               arrow_forward

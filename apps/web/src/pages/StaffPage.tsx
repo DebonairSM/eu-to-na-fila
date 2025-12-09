@@ -18,11 +18,8 @@ export function StaffPage() {
         {/* Header */}
         <div className="header text-center mb-8 sm:mb-10">
           <h1 className="title text-2xl sm:text-3xl md:text-[42px] font-bold text-[#D4AF37] mb-2 sm:mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]">
-            Painel do Funcionário
+            Painel
           </h1>
-          <p className="subtitle text-base sm:text-lg text-[rgba(255,255,255,0.7)]">
-            Bem-vindo, {user?.name || user?.username || 'Funcionário'}
-          </p>
         </div>
 
         {/* Dashboard Options */}
@@ -40,7 +37,7 @@ export function StaffPage() {
               Gerenciar Fila
             </h2>
             <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-              Visualize e gerencie a fila de clientes
+              Gerencie a fila
             </p>
             <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl" aria-hidden="true">
               arrow_forward
@@ -60,9 +57,9 @@ export function StaffPage() {
               <h2 className="option-title text-xl sm:text-2xl font-semibold text-white text-center">
                 Analytics
               </h2>
-              <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-                Visualize estatísticas e métricas
-              </p>
+            <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
+              Estatísticas
+            </p>
               <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl" aria-hidden="true">
                 arrow_forward
               </span>
@@ -82,9 +79,9 @@ export function StaffPage() {
               <h2 className="option-title text-xl sm:text-2xl font-semibold text-white text-center">
                 Gerenciar Barbeiros
               </h2>
-              <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-                Adicione, edite ou remova barbeiros
-              </p>
+            <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
+              Gerencie barbeiros
+            </p>
               <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl" aria-hidden="true">
                 arrow_forward
               </span>
@@ -104,7 +101,7 @@ export function StaffPage() {
               Modo Kiosk
             </h2>
             <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-              Exibição em tela cheia para TV/tablet
+              Tela cheia
             </p>
             <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl" aria-hidden="true">
               arrow_forward

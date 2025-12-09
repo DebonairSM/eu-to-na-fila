@@ -22,7 +22,7 @@ export function NetworkPage() {
           <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37]">Rede EuToNaFila</p>
           <h1 className="text-3xl sm:text-4xl font-semibold">Barbearias conectadas</h1>
           <p className="text-white/75 max-w-3xl">
-            Veja unidades usando a plataforma. Explore o fluxo do cliente ou o painel do time.
+            Unidades usando a plataforma.
           </p>
         </header>
 
@@ -42,11 +42,11 @@ export function NetworkPage() {
                 <p className="text-sm text-white/70">{shop.description}</p>
                 <div className="flex gap-2 flex-wrap">
                   <Link to={shop.clientLink}>
-                    <Button className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#e2c25a]">Experiência do cliente</Button>
+                    <Button className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#e2c25a]">Cliente</Button>
                   </Link>
                   <Link to={shop.staffLink}>
                     <Button variant="outline" className="border-white/20 text-white hover:border-[#0f3d2e] hover:text-[#0f3d2e]">
-                      Fluxo da equipe
+                      Equipe
                     </Button>
                   </Link>
                 </div>
@@ -60,10 +60,9 @@ export function NetworkPage() {
             <div>
               <p className="text-sm uppercase tracking-[0.2em] text-[#8ad6b0]">Expansão</p>
               <h3 className="text-xl font-semibold text-white">Quer trazer sua rede?</h3>
-              <p className="text-sm text-white/70">Onboarding acompanhado e templates prontos para iniciar em poucos dias.</p>
             </div>
             <Link to="/contact">
-              <Button className="bg-[#0f3d2e] text-white hover:bg-[#15503c]">Falar com a equipe</Button>
+              <Button className="bg-[#0f3d2e] text-white hover:bg-[#15503c]">Contato</Button>
             </Link>
           </CardContent>
         </Card>

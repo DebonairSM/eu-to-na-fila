@@ -2,14 +2,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CompanyNav } from '@/components/CompanyNav';
 
 const values = [
-  { title: 'Hospitalidade', desc: 'Fila virtual sem fricção, com comunicação clara e humana.' },
-  { title: 'Confiabilidade', desc: 'Infra monitorada, WebSocket em tempo real e fallback seguro.' },
-  { title: 'Personalização', desc: 'Branding, serviços, horários e presença ajustados por unidade.' },
+  { title: 'Hospitalidade', desc: 'Fila sem fricção' },
+  { title: 'Confiabilidade', desc: 'Infra monitorada, tempo real' },
+  { title: 'Personalização', desc: 'Ajustado por unidade' },
 ];
 
 const milestones = [
-  { year: '2024', label: 'Piloto e Go-live', detail: 'Primeiro rollout com Barbearia Mineiro, fila virtual e totem.' },
-  { year: '2025', label: 'Expansão', detail: 'Infra pronta para múltiplas unidades com painéis e API.' },
+  { year: '2024', label: 'Piloto', detail: 'Rollout com Barbearia Mineiro' },
+  { year: '2025', label: 'Expansão', detail: 'Múltiplas unidades' },
 ];
 
 export function AboutPage() {
@@ -21,7 +21,7 @@ export function AboutPage() {
           <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37]">Sobre nós</p>
           <h1 className="text-3xl sm:text-4xl font-semibold">EuToNaFila</h1>
           <p className="text-white/75 max-w-3xl">
-            Virtual line software baseado em Florianópolis, criado para marcas que querem oferecer espera premium com operação leve.
+            Software de fila virtual baseado em Florianópolis.
           </p>
         </header>
 
@@ -55,12 +55,11 @@ export function AboutPage() {
 
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Equipe central</h2>
-          <Card className="bg-white/5 border-white/10">
-            <CardContent className="p-5 space-y-2">
-              <p className="text-sm text-white/70">Time compacto em Florianópolis, com produto, engenharia e atendimento próximos das operações.</p>
-              <p className="text-sm text-white/60">Disponível para onboarding, integrações e monitoramento.</p>
-            </CardContent>
-          </Card>
+            <Card className="bg-white/5 border-white/10">
+              <CardContent className="p-5 space-y-2">
+                <p className="text-sm text-white/70">Time em Florianópolis, próximo das operações.</p>
+              </CardContent>
+            </Card>
         </section>
       </div>
     </div>

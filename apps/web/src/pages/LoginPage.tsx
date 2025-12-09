@@ -90,7 +90,6 @@ export function LoginPage() {
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold text-[#1D1B20]">Entrar</h1>
-              <p className="text-sm sm:text-base text-[#5D5D5D]">Acesso para funcionários</p>
             </div>
 
             {/* Form */}

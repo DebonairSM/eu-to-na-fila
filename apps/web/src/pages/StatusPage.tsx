@@ -214,10 +214,7 @@ export function StatusPage() {
             <div className="progress-card bg-gradient-to-br from-[rgba(34,197,94,0.2)] to-[rgba(34,197,94,0.05)] border-2 border-[rgba(34,197,94,0.3)] rounded-3xl p-8 sm:p-12 text-center mb-6">
               <span className="material-symbols-outlined text-5xl sm:text-6xl text-[#22c55e] mb-4 block">content_cut</span>
               <div className="progress-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-white mb-2">
-                Você está sendo atendido!
-              </div>
-              <div className="progress-message text-[rgba(255,255,255,0.7)]">
-                Aproveite seu corte
+                Em atendimento
               </div>
             </div>
           )}
@@ -227,10 +224,7 @@ export function StatusPage() {
             <div className="completed-card bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-3xl p-8 sm:p-12 text-center mb-6">
               <span className="material-symbols-outlined text-5xl sm:text-6xl text-white mb-4 block">check_circle</span>
               <div className="progress-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-white mb-2">
-                Atendimento concluído!
-              </div>
-              <div className="progress-message text-white/90">
-                Obrigado por usar nosso sistema
+                Concluído
               </div>
             </div>
           )}
@@ -273,11 +267,6 @@ export function StatusPage() {
             </Link>
           </div>
 
-          {/* Auto-update notice */}
-          <div className="refresh-indicator flex items-center justify-center gap-2 mt-6 text-xs text-[rgba(255,255,255,0.5)]">
-            <span className="refresh-dot w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-pulse" />
-            Atualizando automaticamente
-          </div>
         </div>
       </div>
 

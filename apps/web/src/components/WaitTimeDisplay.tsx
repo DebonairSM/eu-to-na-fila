@@ -31,7 +31,7 @@ export function WaitTimeDisplay({
       <div className="wait-label flex items-center justify-center gap-2 mb-3">
         <span className="material-symbols-outlined text-[#D4AF37]">schedule</span>
         <span className="text-sm font-medium text-[rgba(255,255,255,0.7)] uppercase tracking-wide">
-          Tempo estimado de espera
+          Tempo estimado
         </span>
       </div>
       <div
