@@ -200,7 +200,6 @@ export function JoinPage() {
             <h1 className="font-['Playfair_Display',serif] text-xl sm:text-[1.75rem] font-semibold text-white mb-3">
               Entrar na Fila
             </h1>
-            <p className="subtitle text-sm sm:text-base text-[rgba(255,255,255,0.7)]">Adicione seu nome e aguarde ser chamado</p>
           </div>
 
           {/* Wait Time Display */}
@@ -222,73 +221,73 @@ export function JoinPage() {
           {/* Form */}
           <div className="form-card bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] rounded-lg p-5 sm:p-6 shadow-lg">
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-              {/* First Name */}
-              <div className="input-group">
-                <label
-                  htmlFor="firstName"
-                  className="input-label block text-xs font-medium text-[rgba(255,255,255,0.7)] uppercase tracking-wide mb-2"
-                >
-                  Nome *
-                </label>
-                <input
-                  id="firstName"
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Seu primeiro nome"
-                  autoComplete="off"
-                  required
-                  className={`input-field w-full px-4 py-3 rounded-lg bg-[#2a2a2a] border transition-colors text-white placeholder:text-[rgba(255,255,255,0.5)]
-                    focus:outline-none focus:ring-2 focus:ring-[#D4AF37]
-                    ${validationError ? 'border-[#ef4444]' : 'border-[rgba(255,255,255,0.2)]'}
-                  `}
-                />
-                {validationError && (
-                  <div className="error-message mt-2 text-sm text-[#ef4444]">{validationError}</div>
-                )}
+              <div className="flex flex-col sm:flex-row gap-3">
+                {/* First Name */}
+                <div className="input-group flex-1">
+                  <label
+                    htmlFor="firstName"
+                    className="input-label block text-xs font-medium text-[rgba(255,255,255,0.7)] uppercase tracking-wide mb-2"
+                  >
+                    Nome *
+                  </label>
+                  <input
+                    id="firstName"
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="Primeiro nome"
+                    autoComplete="off"
+                    required
+                    className={`input-field w-full px-4 py-3 rounded-lg bg-[#2a2a2a] border transition-colors text-white placeholder:text-[rgba(255,255,255,0.5)]
+                      focus:outline-none focus:ring-2 focus:ring-[#D4AF37]
+                      ${validationError ? 'border-[#ef4444]' : 'border-[rgba(255,255,255,0.2)]'}
+                    `}
+                  />
+                </div>
+
+                {/* Last Name */}
+                <div className="input-group sm:w-40">
+                  <label
+                    htmlFor="lastName"
+                    className="input-label block text-xs font-medium text-[rgba(255,255,255,0.7)] uppercase tracking-wide mb-2"
+                  >
+                    Sobrenome
+                  </label>
+                  <input
+                    id="lastName"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Opcional"
+                    autoComplete="off"
+                    className="input-field w-full px-4 py-3 rounded-lg bg-[#2a2a2a] border border-[rgba(255,255,255,0.2)] transition-colors text-white placeholder:text-[rgba(255,255,255,0.5)]
+                      focus:outline-none focus:ring-2 focus:ring-[#D4AF37]
+                    "
+                  />
+                </div>
               </div>
 
-              {/* Last Name */}
-              <div className="input-group">
-                <label
-                  htmlFor="lastName"
-                  className="input-label block text-xs font-medium text-[rgba(255,255,255,0.7)] uppercase tracking-wide mb-2"
-                >
-                  Sobrenome (opcional)
-                </label>
-                <input
-                  id="lastName"
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Seu sobrenome"
-                  autoComplete="off"
-                  className="input-field w-full px-4 py-3 rounded-lg bg-[#2a2a2a] border border-[rgba(255,255,255,0.2)] transition-colors text-white placeholder:text-[rgba(255,255,255,0.5)]
-                    focus:outline-none focus:ring-2 focus:ring-[#D4AF37]
-                  "
-                />
-              </div>
+              {validationError && (
+                <div className="error-message mt-1 text-sm text-[#ef4444]">{validationError}</div>
+              )}
 
               {/* Already in Queue Message */}
               {isAlreadyInQueue && existingTicketId && (
                 <div className="p-4 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30">
-                  <div className="flex items-start gap-4">
-                    <span className="material-symbols-outlined text-[#D4AF37] text-3xl">
+                  <div className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
                       info
                     </span>
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-[#D4AF37] mb-2">
-                        Você já está na fila!
-                      </p>
-                      <p className="text-sm text-[rgba(255,255,255,0.8)] mb-3">
-                        Você já possui um ticket ativo na fila. Clique no botão abaixo para ver seu status.
+                    <div className="flex-1 space-y-2">
+                      <p className="text-sm font-semibold text-[#D4AF37]">
+                        Ticket ativo encontrado
                       </p>
                       <button
                         type="button"
                         onClick={() => navigate(`/status/${existingTicketId}`)}
                         className="w-full px-4 py-2 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all"
                       >
-                        Ver Meu Status
+                        Ver status
                       </button>
                     </div>
                   </div>
@@ -316,7 +315,7 @@ export function JoinPage() {
                 ) : (
                   <>
                     <span className="material-symbols-outlined text-xl">check</span>
-                    Entrar na Fila
+                    Confirmar entrada
                   </>
                 )}
               </button>
@@ -327,7 +326,7 @@ export function JoinPage() {
           <p className="info-text text-center text-sm text-[rgba(255,255,255,0.7)]">
             Já está na fila?{' '}
             <Link to="/mineiro/home" className="text-[#D4AF37] hover:underline">
-              Verificar status
+              Ver status
             </Link>
           </p>
         </div>
