@@ -168,13 +168,13 @@ export function Navigation() {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
         />
       )}
       <div
-        className={`nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[rgba(10,10,10,0.96)] backdrop-blur-[20px] z-50 p-5 sm:p-8 pt-20 flex flex-col transform transition-transform duration-300 ${
+        className={`nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[rgba(10,10,10,0.97)] backdrop-blur-[20px] z-50 p-5 sm:p-8 pt-20 flex flex-col transform transition-transform duration-300 ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         } md:hidden pointer-events-auto`}
         role="dialog"
