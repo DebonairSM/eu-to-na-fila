@@ -97,7 +97,8 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
       where: and(eq(schema.tickets.shopId, shop.id), eq(schema.tickets.status, 'waiting')),
       orderBy: [asc(schema.tickets.createdAt)],
     });
-    const peopleAhead = waitingTickets.length > 0 ? waitingTickets.length - 1 : 0;
+    // For a new entrant, everyone currently waiting is ahead
+    const peopleAhead = waitingTickets.length;
 
     // Active & present barbers
     const activeBarbers = await db.query.barbers.findMany({
