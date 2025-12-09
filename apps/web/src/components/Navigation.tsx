@@ -20,7 +20,7 @@ export function Navigation() {
 
   const handleLogout = () => {
     logout();
-    navigate('/home');
+    navigate('/mineiro/home');
     setIsMobileMenuOpen(false);
   };
 
