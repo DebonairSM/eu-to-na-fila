@@ -24,14 +24,12 @@ export async function errorHandler(
   // For static asset requests that error, return proper 404 instead of JSON
   // This prevents CSS/JS files from getting application/json MIME type
   const url = request.url || '';
-  const assetExtensions = ['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.json', '.map'];
-  const isAssetRequest = assetExtensions.some(ext => {
-    const urlPath = url.split('?')[0];
-    return urlPath.endsWith(ext);
-  });
+  const urlPath = url.split('?')[0];
+  const assetExtensions = ['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.map'];
+  const isAssetRequest = assetExtensions.some(ext => urlPath.endsWith(ext));
   
-  if (isAssetRequest && url.startsWith('/mineiro/')) {
-    // For asset files, return 404 with proper content type
+  // For ANY asset file request (not just /mineiro/), return plain text 404
+  if (isAssetRequest) {
     request.log.warn({ url, error: error.message }, 'Static asset error - returning 404');
     reply.status(404).type('text/plain').send('Not Found');
     return;
@@ -143,6 +141,17 @@ export async function notFoundHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
+  const url = request.url || '';
+  const urlPath = url.split('?')[0];
+  const assetExtensions = ['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.map'];
+  const isAssetRequest = assetExtensions.some(ext => urlPath.endsWith(ext));
+
+  // For asset files, return plain text 404 (not JSON)
+  if (isAssetRequest) {
+    reply.status(404).type('text/plain').send('Not Found');
+    return;
+  }
+
   reply.status(404).send({
     error: `Route ${request.method} ${request.url} not found`,
     code: 'NOT_FOUND',

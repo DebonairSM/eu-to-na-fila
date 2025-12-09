@@ -61,8 +61,8 @@ export function Navigation() {
     <nav
       className={`nav fixed top-0 left-0 right-0 z-30 transition-all ${
         isScrolled
-          ? 'bg-[rgba(10,10,10,0.95)] backdrop-blur-[20px] py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
-          : 'bg-[rgba(10,10,10,0.85)] backdrop-blur-[20px] py-4'
+          ? 'bg-[#0a0a0a] py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
+          : 'bg-[#0a0a0a] py-4'
       } border-b border-[rgba(212,175,55,0.1)]`}
       role="navigation"
       aria-label="Main navigation"

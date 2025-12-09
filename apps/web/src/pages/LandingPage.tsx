@@ -83,7 +83,7 @@ export function LandingPage() {
               Cortes & Tratamentos
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-5xl mx-auto">
             {[
               {
                 icon: 'content_cut',
@@ -105,13 +105,13 @@ export function LandingPage() {
               },
             ].map((service) => (
               <Card key={service.name} className="text-center hover:border-primary transition-colors">
-                <CardContent className="p-8">
-                  <span className="material-symbols-outlined text-5xl text-primary mb-4 block">
+                <CardContent className="p-5 sm:p-6 md:p-8">
+                  <span className="material-symbols-outlined text-4xl sm:text-5xl text-primary mb-3 sm:mb-4 block">
                     {service.icon}
                   </span>
-                  <h3 className="text-xl font-semibold mb-3">{service.name}</h3>
-                  <p className="text-muted-foreground mb-4 text-sm">{service.desc}</p>
-                  <p className="text-primary text-xl font-semibold">{service.price}</p>
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">{service.name}</h3>
+                  <p className="text-muted-foreground mb-3 sm:mb-4 text-sm">{service.desc}</p>
+                  <p className="text-primary text-lg sm:text-xl font-semibold">{service.price}</p>
                 </CardContent>
               </Card>
             ))}
@@ -122,12 +122,12 @@ export function LandingPage() {
       {/* About Section */}
       <section id="about" className="section py-16 sm:py-24 lg:py-[120px] px-4 sm:px-6 lg:px-10">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center max-w-5xl mx-auto">
             <div>
               <p className="text-[#D4AF37] text-xs font-semibold uppercase tracking-[3px] mb-4">
                 Sobre Nós
               </p>
-              <h3 className="font-['Playfair_Display',serif] text-[clamp(2rem,5vw,3rem)] font-semibold mb-6">
+              <h3 className="font-['Playfair_Display',serif] text-[clamp(1.5rem,4vw,3rem)] font-semibold mb-4 sm:mb-6">
                 Uma experiência <span className="text-[#D4AF37]">autêntica</span> de barbearia
               </h3>
               <p className="text-muted-foreground mb-4 leading-relaxed">
@@ -175,7 +175,7 @@ export function LandingPage() {
               Visite-nos
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 max-w-5xl mx-auto">
             <div className="space-y-6">
               <h3 className="text-2xl font-semibold mb-6">Informações de Contato</h3>
               {[

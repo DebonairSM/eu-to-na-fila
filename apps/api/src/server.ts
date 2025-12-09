@@ -109,6 +109,20 @@ fastify.register(fastifyStatic, {
   decorateReply: false,
   wildcard: true,
   index: ['index.html'], // Serve index.html when /mineiro/ is requested
+  setHeaders: (res, path) => {
+    // Cache hashed assets (JS/CSS with hash in filename) for 1 year
+    if (path.includes('/assets/') && /\.[a-f0-9]{8,}\.(js|css)$/i.test(path)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+    // Cache other static assets (fonts, images) for 1 week
+    else if (/\.(woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|ico)$/i.test(path)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800');
+    }
+    // Don't cache HTML, SW, or manifest - always revalidate
+    else if (/\.(html|js|json)$/i.test(path) && !path.includes('/assets/')) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    }
+  },
 });
 
 // Health check with database and WebSocket status

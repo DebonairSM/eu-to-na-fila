@@ -64,7 +64,7 @@ export function StatusPage() {
       await api.cancelTicket(ticketIdFromParams);
       // Clear stored ticket ID when leaving queue
       localStorage.removeItem('eutonafila_active_ticket_id');
-      navigate('/');
+      navigate('/mineiro/home');
     } catch (error) {
       // Show error to user - could be enhanced with toast notification
       const errorMsg = getErrorMessage(error, 'Erro ao sair da fila. Tente novamente.');

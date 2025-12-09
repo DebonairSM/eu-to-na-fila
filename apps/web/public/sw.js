@@ -5,8 +5,8 @@
  * Auto-updates when new version is deployed.
  */
 
-const CACHE_NAME = 'eutonafila-v2';
-const API_CACHE_NAME = 'eutonafila-api-v2';
+const CACHE_NAME = 'eutonafila-v3';
+const API_CACHE_NAME = 'eutonafila-api-v3';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
