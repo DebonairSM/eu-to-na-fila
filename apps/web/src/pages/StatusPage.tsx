@@ -146,11 +146,11 @@ export function StatusPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12 max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="space-y-6">
+      <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-16 sm:pt-[96px] pb-10 max-w-[520px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-6 sm:space-y-7">
           {/* Header */}
-          <div className="header text-center mb-8">
-            <h1 className="customer-name font-['Playfair_Display',serif] text-[1.75rem] font-semibold text-white mb-3">
+          <div className="header text-center mb-6 sm:mb-8">
+            <h1 className="customer-name font-['Playfair_Display',serif] text-[1.6rem] sm:text-[1.75rem] font-semibold text-white mb-2 sm:mb-3">
               {ticket.customerName}
             </h1>
             <div
@@ -186,10 +186,10 @@ export function StatusPage() {
                 <span className="material-symbols-outlined text-xl text-[#D4AF37]">schedule</span>
                 Tempo estimado
               </div>
-              <div className="wait-value font-['Playfair_Display',serif] text-4xl sm:text-5xl font-semibold text-white mb-2 drop-shadow-[0_4px_20px_rgba(212,175,55,0.3)] leading-tight">
+            <div className="wait-value font-['Playfair_Display',serif] text-4xl sm:text-5xl font-semibold text-white mb-1 sm:mb-2 drop-shadow-[0_4px_20px_rgba(212,175,55,0.3)] leading-tight">
                 {waitTime !== null ? waitTime : '--'}
               </div>
-              <div className="wait-unit text-lg sm:text-xl text-[rgba(255,255,255,0.7)] mb-6">minutos</div>
+            <div className="wait-unit text-base sm:text-lg text-[rgba(255,255,255,0.7)] mb-4 sm:mb-6">minutos</div>
               
               {positionInfo && (
                 <div className="mt-6 pt-6 border-t border-[rgba(212,175,55,0.2)]">
@@ -236,7 +236,7 @@ export function StatusPage() {
           )}
 
           {/* Actions */}
-          <div className="space-y-3">
+          <div className="space-y-3 sm:space-y-4">
             {isWaiting && (
               <button
                 className="w-full px-6 py-4 bg-[#ef4444] text-white font-semibold rounded-lg flex items-center justify-center gap-3 hover:bg-[#dc2626] transition-all disabled:opacity-50"

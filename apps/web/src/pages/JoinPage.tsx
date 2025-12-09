@@ -188,11 +188,11 @@ export function JoinPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12 max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="space-y-6">
+      <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-16 sm:pt-[96px] pb-10 max-w-[520px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-6 sm:space-y-7">
           {/* Header */}
           <div className="header text-center mb-6 sm:mb-8">
-            <div className="header-icon w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
+            <div className="header-icon w-16 h-16 sm:w-18 sm:h-18 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
               <span className="material-symbols-outlined text-3xl sm:text-4xl text-[#0a0a0a]">
                 person_add
               </span>
@@ -220,8 +220,8 @@ export function JoinPage() {
           )}
 
           {/* Form */}
-          <div className="form-card bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] rounded-lg p-6 shadow-lg">
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="form-card bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] rounded-lg p-5 sm:p-6 shadow-lg">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               {/* First Name */}
               <div className="input-group">
                 <label

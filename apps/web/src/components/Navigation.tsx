@@ -61,14 +61,14 @@ export function Navigation() {
     <nav
       className={`nav fixed top-0 left-0 right-0 z-30 transition-all ${
         isScrolled
-          ? 'bg-[rgba(10,10,10,0.95)] backdrop-blur-[20px] py-4 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
-          : 'bg-[rgba(10,10,10,0.8)] backdrop-blur-[20px] py-5'
+          ? 'bg-[rgba(10,10,10,0.95)] backdrop-blur-[20px] py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
+          : 'bg-[rgba(10,10,10,0.85)] backdrop-blur-[20px] py-4'
       } border-b border-[rgba(212,175,55,0.1)]`}
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-10">
-        <div className="flex items-center justify-between">
+      <div className="container mx-auto max-w-6xl px-3 sm:px-5 lg:px-10">
+        <div className="flex items-center justify-between gap-3">
           {/* Logo */}
           <Link
             to="/mineiro/home"
@@ -153,12 +153,12 @@ export function Navigation() {
 
           {/* Mobile Menu Button */}
           <button
-            className="nav-menu-toggle md:hidden bg-transparent border-none text-white cursor-pointer p-2 min-w-[44px] min-h-[44px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+            className="nav-menu-toggle md:hidden bg-transparent border border-[rgba(255,255,255,0.1)] text-white cursor-pointer p-2 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
             aria-expanded={isMobileMenuOpen}
           >
-            <span className="material-symbols-outlined text-[28px]">
+            <span className="material-symbols-outlined text-[26px] leading-none">
               {isMobileMenuOpen ? 'close' : 'menu'}
             </span>
           </button>
@@ -168,13 +168,13 @@ export function Navigation() {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
         />
       )}
       <div
-        className={`nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[rgba(10,10,10,0.98)] backdrop-blur-[20px] z-50 p-6 sm:p-10 pt-20 flex flex-col transform transition-transform duration-300 ${
+        className={`nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[rgba(10,10,10,0.96)] backdrop-blur-[20px] z-50 p-5 sm:p-8 pt-20 flex flex-col transform transition-transform duration-300 ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         } md:hidden pointer-events-auto`}
         role="dialog"
@@ -201,7 +201,7 @@ export function Navigation() {
                 e.stopPropagation();
                 handleHashLink(e, '#services');
               }}
-              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
+              className="block text-base sm:text-lg font-medium text-[rgba(255,255,255,0.7)] px-4 py-3 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
             >
               Serviços
             </a>
@@ -213,7 +213,7 @@ export function Navigation() {
                 e.stopPropagation();
                 handleHashLink(e, '#about');
               }}
-              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
+              className="block text-base sm:text-lg font-medium text-[rgba(255,255,255,0.7)] px-4 py-3 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
             >
               Sobre
             </a>
@@ -225,7 +225,7 @@ export function Navigation() {
                 e.stopPropagation();
                 handleHashLink(e, '#location');
               }}
-              className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
+              className="block text-base sm:text-lg font-medium text-[rgba(255,255,255,0.7)] px-4 py-3 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
             >
               Localização
             </a>
