@@ -80,19 +80,16 @@ export function LandingPage() {
               {
                 icon: 'content_cut',
                 name: 'Corte',
-                desc: '',
                 price: '$30',
               },
               {
                 icon: 'face_6',
                 name: 'Barba',
-                desc: '',
                 price: '$20',
               },
               {
                 icon: 'star',
                 name: 'Corte + Barba',
-                desc: '',
                 price: '$45',
               },
             ].map((service) => (

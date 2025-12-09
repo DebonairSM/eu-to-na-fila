@@ -34,10 +34,7 @@ export function OwnerDashboard() {
             <h2 className="option-title text-xl sm:text-2xl font-semibold text-white text-center">
               Gerenciar Fila
             </h2>
-            <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-              Gerencie a fila
-            </p>
-            <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl mt-2">
+            <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl">
               arrow_forward
             </span>
           </Link>
@@ -52,10 +49,7 @@ export function OwnerDashboard() {
             <h2 className="option-title text-xl sm:text-2xl font-semibold text-white text-center">
               Analytics
             </h2>
-            <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-              Estatísticas e métricas
-            </p>
-            <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl mt-2">
+            <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl">
               arrow_forward
             </span>
           </Link>
@@ -70,10 +64,7 @@ export function OwnerDashboard() {
             <h2 className="option-title text-xl sm:text-2xl font-semibold text-white text-center">
               Gerenciar Barbeiros
             </h2>
-            <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-              Gerencie barbeiros
-            </p>
-            <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl mt-2">
+            <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl">
               arrow_forward
             </span>
           </Link>

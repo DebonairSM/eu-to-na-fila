@@ -101,10 +101,10 @@ export function QueueCard({
         {(barberAvatarUrl || assignedBarber) && (
           <div className="flex-shrink-0">
             {showAvatarImage && (
-            <img
+              <img
                 src={barberAvatarUrl || undefined}
-              alt={assignedBarber?.name || 'Barber'}
-              className="w-10 h-10 rounded-md object-cover border-2 border-primary/30"
+                alt={assignedBarber?.name || 'Barber'}
+                className="w-10 h-10 rounded-md object-cover border-2 border-primary/30"
                 onError={() => setBarberAvatarFailed(true)}
               />
             )}

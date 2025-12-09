@@ -21,9 +21,6 @@ export function NetworkPage() {
         <header className="space-y-3">
           <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37]">Rede EuToNaFila</p>
           <h1 className="text-3xl sm:text-4xl font-semibold">Barbearias conectadas</h1>
-          <p className="text-white/75 max-w-3xl">
-            Unidades usando a plataforma.
-          </p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

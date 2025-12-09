@@ -3,7 +3,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 
 export function StaffPage() {
-  const { user, logout, isOwner } = useAuthContext();
+  const { logout, isOwner } = useAuthContext();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -36,9 +36,6 @@ export function StaffPage() {
             <h2 className="option-title text-xl sm:text-2xl font-semibold text-white text-center">
               Gerenciar Fila
             </h2>
-            <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-              Gerencie a fila
-            </p>
             <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl" aria-hidden="true">
               arrow_forward
             </span>
@@ -57,9 +54,6 @@ export function StaffPage() {
               <h2 className="option-title text-xl sm:text-2xl font-semibold text-white text-center">
                 Analytics
               </h2>
-            <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-              Estatísticas
-            </p>
               <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl" aria-hidden="true">
                 arrow_forward
               </span>
@@ -79,9 +73,6 @@ export function StaffPage() {
               <h2 className="option-title text-xl sm:text-2xl font-semibold text-white text-center">
                 Gerenciar Barbeiros
               </h2>
-            <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-              Gerencie barbeiros
-            </p>
               <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl" aria-hidden="true">
                 arrow_forward
               </span>
@@ -100,9 +91,6 @@ export function StaffPage() {
             <h2 className="option-title text-xl sm:text-2xl font-semibold text-white text-center">
               Modo Kiosk
             </h2>
-            <p className="option-desc text-center text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
-              Tela cheia
-            </p>
             <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl" aria-hidden="true">
               arrow_forward
             </span>

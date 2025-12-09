@@ -47,11 +47,11 @@ export function BarberCard({
     >
       <div className="relative">
         {!avatarFailed && (
-        <img
-          src={avatarUrl}
-          alt=""
-          aria-hidden="true"
-          className={cn(avatarSize, 'rounded-md object-cover')}
+          <img
+            src={avatarUrl}
+            alt=""
+            aria-hidden="true"
+            className={cn(avatarSize, 'rounded-md object-cover')}
             onError={() => setAvatarFailed(true)}
           />
         )}

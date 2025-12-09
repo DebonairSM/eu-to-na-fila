@@ -210,22 +210,6 @@ export function BarberManagementPage() {
                   </div>
                 </div>
 
-                {/* Analytics Stats */}
-                <div className="barber-stats grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-5">
-                  <div className="stat-item text-center p-2 sm:p-3 bg-[rgba(255,255,255,0.05)] rounded-lg">
-                    <div className="stat-value text-xl sm:text-2xl font-bold text-[#D4AF37] mb-0.5 sm:mb-1">--</div>
-                    <div className="stat-label text-[10px] sm:text-xs text-[rgba(255,255,255,0.5)] uppercase tracking-wider">
-                      Atendimentos
-                    </div>
-                  </div>
-                  <div className="stat-item text-center p-2 sm:p-3 bg-[rgba(255,255,255,0.05)] rounded-lg">
-                    <div className="stat-value text-xl sm:text-2xl font-bold text-[#D4AF37] mb-0.5 sm:mb-1">--</div>
-                    <div className="stat-label text-[10px] sm:text-xs text-[rgba(255,255,255,0.5)] uppercase tracking-wider">
-                      Média
-                    </div>
-                  </div>
-                </div>
-
                 {/* Actions */}
                 <div className="barber-actions flex gap-2 sm:gap-3">
                   <button

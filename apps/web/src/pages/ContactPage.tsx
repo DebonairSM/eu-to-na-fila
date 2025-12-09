@@ -10,9 +10,6 @@ export function ContactPage() {
         <header className="space-y-3 text-center">
           <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37]">Contato</p>
           <h1 className="text-3xl sm:text-4xl font-semibold">Fale com a equipe EuToNaFila</h1>
-          <p className="text-white/75 max-w-3xl mx-auto">
-            Fale com a equipe.
-          </p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
