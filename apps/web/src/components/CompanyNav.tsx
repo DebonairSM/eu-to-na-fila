@@ -65,7 +65,7 @@ export function CompanyNav() {
               Menu
             </Button>
             {open && (
-              <div className="absolute right-0 mt-2 w-52 rounded-lg border border-white/20 bg-[rgba(7,17,34,0.95)] backdrop-blur-2xl shadow-lg shadow-black/30 p-2 space-y-1 text-sm">
+              <div className="absolute right-0 mt-2 w-52 rounded-lg border border-white/20 bg-[#071124] shadow-lg shadow-black/30 p-2 space-y-1 text-sm">
                 {links.map((item) => (
                   <Link
                     key={item.to}
