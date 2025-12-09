@@ -65,12 +65,12 @@ export function CompanyNav() {
               Menu
             </Button>
             {open && (
-              <div className="absolute right-0 mt-2 w-52 rounded-lg border border-white/20 bg-[#071124] shadow-lg shadow-black/30 p-2 space-y-1 text-sm">
+              <div className="absolute right-0 mt-2 w-52 rounded-lg border border-white/20 bg-[#050c18] shadow-lg shadow-black/30 p-2 space-y-1 text-sm">
                 {links.map((item) => (
                   <Link
                     key={item.to}
                     to={item.to}
-                    className="block rounded-md px-3 py-2 text-white/90 hover:text-[#D4AF37] hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1a33]"
+                    className="block rounded-md px-3 py-2 text-white hover:text-[#D4AF37] hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1a33]"
                     onClick={() => setOpen(false)}
                     onKeyDown={(e) => {
                       if (e.key === 'Escape') setOpen(false);

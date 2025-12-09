@@ -231,13 +231,13 @@ export function Navigation() {
             </a>
           </li>
         </ul>
-        <div className="relative z-10">
+        <div className="relative z-10 mt-4 space-y-2">
           {user ? (
             <>
               {user.role === 'owner' && (
                 <Link
                   to="/owner"
-                  className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center mt-6 focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                  className="block text-base sm:text-lg font-medium text-[rgba(255,255,255,0.85)] px-4 py-3 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.12)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsMobileMenuOpen(false);
@@ -252,35 +252,23 @@ export function Navigation() {
                   e.stopPropagation();
                   handleLogout();
                 }}
-                className="block w-full text-left text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center mt-2 focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                className="block w-full text-left text-base sm:text-lg font-medium text-[rgba(255,255,255,0.85)] px-4 py-3 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.12)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
                 type="button"
               >
                 Sair
               </button>
             </>
           ) : (
-            <>
-              <Link
-                to="/join"
-                className="nav-menu-cta block mt-6 px-6 py-4 bg-[#D4AF37] text-[#0a0a0a] font-semibold rounded-lg text-center min-h-[44px] flex items-center justify-center hover:bg-[#E8C547] transition-all focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                Entrar na Fila
-              </Link>
-              <Link
-                to="/login"
-                className="block text-lg font-medium text-[rgba(255,255,255,0.7)] px-5 py-4 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] min-h-[44px] flex items-center mt-2 focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                Entrar (Staff)
-              </Link>
-            </>
+            <Link
+              to="/login"
+              className="block text-base sm:text-lg font-medium text-[rgba(255,255,255,0.85)] px-4 py-3 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.12)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              Entrar (Staff)
+            </Link>
           )}
         </div>
       </div>
