@@ -20,6 +20,7 @@ export function JoinPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isAlreadyInQueue, setIsAlreadyInQueue] = useState(false);
   const [existingTicketId, setExistingTicketId] = useState<number | null>(null);
+  const [nameCollisionError, setNameCollisionError] = useState<string | null>(null);
   const [isCheckingStoredTicket, setIsCheckingStoredTicket] = useState(true);
   const [waitEstimate, setWaitEstimate] = useState<number | null>(null);
   const [waitLoading, setWaitLoading] = useState(true);
@@ -116,6 +117,7 @@ export function JoinPage() {
     setSubmitError(null);
     setIsAlreadyInQueue(false);
     setExistingTicketId(null);
+    setNameCollisionError(null);
 
     const validation = validateName(firstName, lastName);
     if (!validation.isValid) {
@@ -127,20 +129,43 @@ export function JoinPage() {
       ? `${firstName.trim()} ${lastName.trim()}`
       : firstName.trim();
 
-    // Only treat as the same person when we still have the stored ticket on this device
+    // Check if there's a stored ticket on this device
     const storedTicketId = localStorage.getItem(STORAGE_KEY);
-    const parsedStoredId = storedTicketId ? parseInt(storedTicketId, 10) : null;
+    let deviceTicketId: number | null = null;
+    if (storedTicketId) {
+      const parsed = parseInt(storedTicketId, 10);
+      if (!isNaN(parsed)) {
+        deviceTicketId = parsed;
+      }
+    }
 
-    if (data && parsedStoredId && !isNaN(parsedStoredId)) {
-      const storedTicket = data.tickets.find(
+    // Only treat as same person if there's a stored ticket on this device
+    if (deviceTicketId && data) {
+      const deviceTicket = data.tickets.find(
+        (t) => t.id === deviceTicketId && (t.status === 'waiting' || t.status === 'in_progress')
+      );
+      if (deviceTicket) {
+        // This device has an active ticket - redirect to status
+        setIsAlreadyInQueue(true);
+        setExistingTicketId(deviceTicketId);
+        return;
+      } else {
+        // Stored ticket is no longer active, clear it
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+
+    // Check if name matches an existing ticket in queue
+    // If it does but there's no stored ticket on this device, it's a different person
+    if (data) {
+      const nameMatchTicket = data.tickets.find(
         (t) =>
-          t.id === parsedStoredId &&
+          t.customerName === fullName &&
           (t.status === 'waiting' || t.status === 'in_progress')
       );
-
-      if (storedTicket) {
-        setIsAlreadyInQueue(true);
-        setExistingTicketId(storedTicket.id);
+      if (nameMatchTicket && nameMatchTicket.id !== deviceTicketId) {
+        // Name matches but it's not this device's ticket - ask for different name
+        setNameCollisionError('Este nome já está na fila. Por favor, use um nome diferente.');
         return;
       }
     }
@@ -156,17 +181,8 @@ export function JoinPage() {
       // Store ticket ID in localStorage for persistence
       localStorage.setItem(STORAGE_KEY, ticket.id.toString());
 
-      // Check if this is likely an existing ticket (created more than 1 second ago)
-      // If the ticket was just created, createdAt should be very recent
-      const ticketAge = Date.now() - new Date(ticket.createdAt).getTime();
-      const isExistingTicket = ticketAge > 1000; // More than 1 second old
-
-      if (isExistingTicket) {
-        setIsAlreadyInQueue(true);
-        setExistingTicketId(ticket.id);
-      } else {
-        navigate(`/status/${ticket.id}`);
-      }
+      // Navigate to status page
+      navigate(`/status/${ticket.id}`);
     } catch (error) {
       setSubmitError(getErrorMessage(error, 'Erro ao entrar na fila. Tente novamente.'));
     } finally {
@@ -273,6 +289,12 @@ export function JoinPage() {
                 <div className="error-message mt-1 text-sm text-[#ef4444]">{validationError}</div>
               )}
 
+              {nameCollisionError && (
+                <div className="p-3 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/20">
+                  <p className="text-sm text-[#ef4444]">{nameCollisionError}</p>
+                </div>
+              )}
+
               {/* Already in Queue Message */}
               {isAlreadyInQueue && existingTicketId && (
                 <div className="p-4 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30">
@@ -307,7 +329,7 @@ export function JoinPage() {
               <button
                 type="submit"
                 className="submit-btn w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-3 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isSubmitting || !!validationError || isAlreadyInQueue}
+                disabled={isSubmitting || !!validationError || isAlreadyInQueue || !!nameCollisionError}
               >
                 {isSubmitting ? (
                   <>

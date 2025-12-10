@@ -5,8 +5,8 @@
  * Auto-updates when new version is deployed.
  */
 
-const CACHE_NAME = 'eutonafila-v3';
-const API_CACHE_NAME = 'eutonafila-api-v3';
+const CACHE_NAME = 'eutonafila-v4';
+const API_CACHE_NAME = 'eutonafila-api-v4';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
@@ -61,6 +61,13 @@ self.addEventListener('activate', (event) => {
     }).then(() => {
       // Take control of all pages immediately
       return self.clients.claim();
+    }).then(() => {
+      // Notify all clients that new service worker is active
+      return self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'SW_ACTIVATED', cacheVersion: CACHE_NAME });
+        });
+      });
     })
   );
 });
@@ -103,7 +110,13 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
-    // Handle static assets (cache first, fallback to network)
+    // Don't cache HTML files aggressively - always check network first for HTML
+    if (request.mode === 'navigate' || (url.pathname.endsWith('.html') && !url.pathname.includes('index.html'))) {
+      event.respondWith(networkFirstStrategy(request));
+      return;
+    }
+    
+    // Handle static assets (stale-while-revalidate)
     event.respondWith(cacheFirstStrategy(request));
   } catch (error) {
     // Skip requests that can't be parsed as URLs
@@ -113,39 +126,60 @@ self.addEventListener('fetch', (event) => {
 });
 
 /**
- * Cache-first strategy for static assets
- * Fast loading, always uses cached version if available
+ * Stale-while-revalidate strategy for static assets
+ * Serves from cache immediately, then updates cache in background
+ * Prevents stale CSS/JS from causing black/white screens
  */
 async function cacheFirstStrategy(request) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);
 
-  if (cached) {
-    console.log('[SW] Cache hit:', request.url);
-    return cached;
-  }
-
-  try {
-    console.log('[SW] Fetching from network:', request.url);
-    const response = await fetch(request);
-    
+  // Always try to fetch fresh version in background
+  const fetchPromise = fetch(request).then((response) => {
     // Only cache successful responses from same origin
     if (response.status === 200 && response.type !== 'opaque') {
       try {
-        await cache.put(request, response.clone());
+        cache.put(request, response.clone());
       } catch (cacheError) {
         // Silently fail cache writes for unsupported requests
         console.warn('[SW] Failed to cache:', request.url, cacheError.message);
       }
     }
-    
     return response;
+  }).catch((error) => {
+    console.error('[SW] Background fetch failed:', error);
+    return null;
+  });
+
+  // If we have cached version, return it immediately
+  if (cached) {
+    console.log('[SW] Cache hit (stale-while-revalidate):', request.url);
+    // Update cache in background
+    fetchPromise.catch(() => {
+      // Ignore background update errors
+    });
+    return cached;
+  }
+
+  // No cache, wait for network
+  try {
+    console.log('[SW] Fetching from network:', request.url);
+    const response = await fetchPromise;
+    
+    if (response) {
+      return response;
+    }
+    
+    throw new Error('Network fetch failed');
   } catch (error) {
     console.error('[SW] Fetch failed:', error);
     
     // Return offline page for navigation requests
     if (request.mode === 'navigate') {
-      return cache.match('/mineiro/index.html');
+      const offlinePage = await cache.match('/mineiro/index.html');
+      if (offlinePage) {
+        return offlinePage;
+      }
     }
     
     throw error;

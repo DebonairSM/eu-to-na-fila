@@ -124,6 +124,16 @@
     min-height: 100vh;
   }
   
+  /* Fallback background to prevent black/white screens during cache issues */
+  html, body, #root {
+    background-color: #0a0a0a !important;
+  }
+  
+  /* Ensure critical styles load even if CSS is cached */
+  * {
+    box-sizing: border-box;
+  }
+  
   /* Touch improvements */
   button, a, input {
     -webkit-tap-highlight-color: rgba(212, 175, 55, 0.2);

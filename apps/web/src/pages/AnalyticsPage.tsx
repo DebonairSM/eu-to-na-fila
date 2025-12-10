@@ -116,7 +116,7 @@ export function AnalyticsPage() {
             <select
               value={days}
               onChange={(e) => setDays(Number(e.target.value))}
-              className="px-4 py-2.5 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.15)] rounded-xl text-white text-base cursor-pointer focus:outline-none focus:border-[#D4AF37] transition-colors"
+              className="px-4 py-2.5 bg-[#1a1a1a] border border-[rgba(255,255,255,0.15)] rounded-xl text-white text-base cursor-pointer focus:outline-none focus:border-[#D4AF37] transition-colors"
             >
               <option value={7}>7 dias</option>
               <option value={30}>30 dias</option>
