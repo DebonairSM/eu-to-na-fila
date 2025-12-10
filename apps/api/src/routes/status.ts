@@ -39,13 +39,11 @@ export const statusRoutes: FastifyPluginAsync = async (fastify) => {
     // Validate body
     const data = validateRequest(updateTicketStatusSchema, request.body);
 
-    // Get existing ticket (for previous status and shop slug)
+    // Get existing ticket (for validation)
     const existingTicket = await ticketService.getById(id);
     if (!existingTicket) {
       throw new NotFoundError(`Ticket with ID ${id} not found`);
     }
-
-    const previousStatus = existingTicket.status;
 
     // Update status using service (includes validation and queue recalculation)
     const ticket = await ticketService.updateStatus(id, data);

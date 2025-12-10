@@ -2,7 +2,6 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
-import { createTicketSchema } from '@eutonafila/shared';
 import { ticketService } from '../services/TicketService.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';

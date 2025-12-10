@@ -7,7 +7,7 @@
  * Run daily via cron: 0 3 * * * node scripts/backup-database.js
  */
 
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, unlinkSync } from 'fs';
+import { readFileSync, mkdirSync, readdirSync, statSync, unlinkSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createGzip } from 'zlib';
