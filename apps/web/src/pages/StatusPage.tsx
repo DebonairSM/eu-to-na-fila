@@ -8,6 +8,8 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
 import { cn, getErrorMessage } from '@/lib/utils';
+import type { Barber } from '@eutonafila/shared';
+import { config } from '@/lib/config';
 
 export function StatusPage() {
   const { id } = useParams<{ id: string }>();
@@ -17,8 +19,30 @@ export function StatusPage() {
   const { data: queueData } = useQueue(3000); // Poll every 3s
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [barber, setBarber] = useState<Barber | null>(null);
   const prevStatusRef = useRef<string | null>(null);
   const hasStoredTicketRef = useRef(false);
+
+  // Fetch barber information when ticket has barberId
+  useEffect(() => {
+    const fetchBarber = async () => {
+      if (!ticket?.barberId) {
+        setBarber(null);
+        return;
+      }
+
+      try {
+        const barbers = await api.getBarbers(config.slug);
+        const assignedBarber = barbers.find(b => b.id === ticket.barberId);
+        setBarber(assignedBarber || null);
+      } catch (error) {
+        console.error('Failed to fetch barber:', error);
+        setBarber(null);
+      }
+    };
+
+    fetchBarber();
+  }, [ticket?.barberId]);
 
   // Extract stable values for dependencies (must be before conditional returns)
   const ticketId = ticket?.id ?? null;
@@ -216,6 +240,17 @@ export function StatusPage() {
               <div className="progress-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-white mb-2">
                 Em atendimento
               </div>
+              {barber && (
+                <div className="mt-4 pt-4 border-t border-[rgba(34,197,94,0.2)]">
+                  <p className="text-sm text-[rgba(255,255,255,0.7)] mb-2">
+                    Seu barbeiro
+                  </p>
+                  <p className="text-xl sm:text-2xl font-semibold text-[#22c55e] flex items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-xl sm:text-2xl">content_cut</span>
+                    {barber.name}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -226,6 +261,17 @@ export function StatusPage() {
               <div className="progress-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-white mb-2">
                 Concluído
               </div>
+              {barber && (
+                <div className="mt-4 pt-4 border-t border-white/20">
+                  <p className="text-sm text-white/80 mb-2">
+                    Atendido por
+                  </p>
+                  <p className="text-xl sm:text-2xl font-semibold text-white flex items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-xl sm:text-2xl">content_cut</span>
+                    {barber.name}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

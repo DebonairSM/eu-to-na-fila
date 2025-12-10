@@ -87,7 +87,7 @@ export function Navigation() {
             className="nav-logo font-['Playfair_Display',serif] text-base sm:text-2xl font-semibold text-[#D4AF37] flex items-center justify-center gap-1 sm:gap-3 min-h-[28px] sm:min-h-[36px] min-w-[28px] sm:min-w-[36px] px-1 sm:px-2 py-0 rounded transition-all hover:text-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
             aria-label={`${config.name} - Home`}
           >
-            <span className="material-symbols-outlined text-xl sm:text-2xl leading-none flex items-center justify-center -mt-0.5 sm:mt-0">content_cut</span>
+            <span className="material-symbols-outlined text-xl sm:text-2xl leading-none flex items-center justify-center">content_cut</span>
             <span className="hidden sm:inline">{config.name}</span>
           </Link>
 
