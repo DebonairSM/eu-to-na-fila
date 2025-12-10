@@ -73,8 +73,8 @@ export function Navigation() {
     <nav
       className={`nav fixed top-0 left-0 right-0 z-50 transition-all ${
         isScrolled
-          ? 'bg-[#0a0a0a] py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
-          : 'bg-[#0a0a0a] py-4'
+          ? 'bg-[#0a0a0a] py-1.5 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
+          : 'bg-[#0a0a0a] py-2'
       } border-b border-[rgba(212,175,55,0.1)]`}
       role="navigation"
       aria-label="Main navigation"
@@ -84,10 +84,10 @@ export function Navigation() {
           {/* Logo */}
           <Link
             to="/mineiro/home"
-            className="nav-logo font-['Playfair_Display',serif] text-xl sm:text-2xl font-semibold text-[#D4AF37] flex items-center gap-2 sm:gap-3 min-h-[44px] min-w-[44px] px-2 py-1 rounded transition-all hover:text-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+            className="nav-logo font-['Playfair_Display',serif] text-xl sm:text-2xl font-semibold text-[#D4AF37] flex items-center gap-2 sm:gap-3 min-h-[36px] min-w-[36px] px-2 py-0.5 rounded transition-all hover:text-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
             aria-label={`${config.name} - Home`}
           >
-            <span className="material-symbols-outlined text-2xl sm:text-[28px]">content_cut</span>
+            <span className="material-symbols-outlined text-xl sm:text-2xl">content_cut</span>
             <span className="hidden sm:inline">{config.name}</span>
           </Link>
 

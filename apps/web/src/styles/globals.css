@@ -536,10 +536,10 @@
     width: 100%;
   }
   
-  /* Ensure proper spacing for fixed navigation on mobile */
-  @media (max-width: 768px) {
-    main, .container {
-      padding-top: 80px !important;
-    }
-  }
+        /* Ensure proper spacing for fixed navigation on mobile */
+        @media (max-width: 768px) {
+          main, .container {
+            padding-top: 60px !important;
+          }
+        }
 }
