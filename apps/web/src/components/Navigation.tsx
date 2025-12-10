@@ -180,32 +180,32 @@ export function Navigation() {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <>
-          <div
+        <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] md:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
-            aria-hidden="true"
-          />
-          <div
+          onClick={() => setIsMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      <div
             className="nav-menu fixed top-0 left-0 w-56 max-w-[70vw] h-full bg-[#0a0a0a] z-[101] p-4 flex flex-col overflow-y-auto md:hidden shadow-2xl border-r border-[rgba(212,175,55,0.1)]"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menu de navegação"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu de navegação"
             onClick={(e) => e.stopPropagation()}
-          >
+      >
         <div className="flex items-center justify-between mb-4 pb-3 border-b border-[rgba(255,255,255,0.1)]">
           <h2 className="text-base font-semibold text-[#D4AF37]">Menu</h2>
-          <button
+        <button
             className="bg-transparent border-none text-white cursor-pointer p-1.5 min-w-[36px] min-h-[36px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsMobileMenuOpen(false);
-            }}
-            aria-label="Fechar menu de navegação"
-            type="button"
-          >
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsMobileMenuOpen(false);
+          }}
+          aria-label="Fechar menu de navegação"
+          type="button"
+        >
             <span className="material-symbols-outlined text-lg">close</span>
-          </button>
+        </button>
         </div>
         <ul className="nav-menu-links list-none m-0 p-0 flex flex-col gap-0.5 relative z-10">
           <li>
@@ -285,7 +285,7 @@ export function Navigation() {
             </Link>
           )}
         </div>
-          </div>
+      </div>
         </>
       )}
     </nav>

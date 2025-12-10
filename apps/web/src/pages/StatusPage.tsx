@@ -186,7 +186,7 @@ export function StatusPage() {
                 <span className="material-symbols-outlined text-xl text-[#D4AF37]">schedule</span>
                 Tempo estimado
               </div>
-              <div className="wait-value font-['Playfair_Display',serif] text-4xl sm:text-5xl font-semibold text-white mb-1 sm:mb-2 drop-shadow-[0_4px_20px_rgba(212,175,55,0.3)] leading-tight">
+            <div className="wait-value font-['Playfair_Display',serif] text-4xl sm:text-5xl font-semibold text-white mb-1 sm:mb-2 drop-shadow-[0_4px_20px_rgba(212,175,55,0.3)] leading-tight">
                 {waitTime !== null ? waitTime : '--'}
               </div>
               <div className="wait-unit text-base sm:text-lg text-[rgba(255,255,255,0.7)]">minutos</div>

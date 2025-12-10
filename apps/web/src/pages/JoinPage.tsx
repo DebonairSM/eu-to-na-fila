@@ -187,7 +187,7 @@ export function JoinPage() {
       localStorage.setItem(STORAGE_KEY, ticket.id.toString());
 
       // Navigate to status page
-      navigate(`/status/${ticket.id}`);
+        navigate(`/status/${ticket.id}`);
     } catch (error) {
       setSubmitError(getErrorMessage(error, 'Erro ao entrar na fila. Tente novamente.'));
     } finally {

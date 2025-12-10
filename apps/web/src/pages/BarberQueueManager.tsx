@@ -661,16 +661,16 @@ export function BarberQueueManager() {
                     await togglePresence(barber.id, !barber.isPresent);
                     await refetchBarbers();
                     await refetchQueue();
-                  } catch (error) {
-                    let errorMsg = 'Erro ao alterar presença do barbeiro. Tente novamente.';
-                    if (error instanceof Error) {
-                      errorMsg = error.message;
-                    } else if (error && typeof error === 'object' && 'error' in error) {
-                      errorMsg = (error as { error: string }).error;
-                    }
-                    setErrorMessage(errorMsg);
-                    setTimeout(() => setErrorMessage(null), 5000);
-                  }
+                      } catch (error) {
+                        let errorMsg = 'Erro ao alterar presença do barbeiro. Tente novamente.';
+                        if (error instanceof Error) {
+                          errorMsg = error.message;
+                        } else if (error && typeof error === 'object' && 'error' in error) {
+                          errorMsg = (error as { error: string }).error;
+                        }
+                        setErrorMessage(errorMsg);
+                        setTimeout(() => setErrorMessage(null), 5000);
+                      }
                 }}
               />
             ))}
