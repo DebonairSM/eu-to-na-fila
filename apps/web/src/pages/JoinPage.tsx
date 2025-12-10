@@ -127,18 +127,20 @@ export function JoinPage() {
       ? `${firstName.trim()} ${lastName.trim()}`
       : firstName.trim();
 
-    // Check if customer is already in queue before submitting
-    if (data) {
-      const existingTicket = data.tickets.find(
+    // Only treat as the same person when we still have the stored ticket on this device
+    const storedTicketId = localStorage.getItem(STORAGE_KEY);
+    const parsedStoredId = storedTicketId ? parseInt(storedTicketId, 10) : null;
+
+    if (data && parsedStoredId && !isNaN(parsedStoredId)) {
+      const storedTicket = data.tickets.find(
         (t) =>
-          t.customerName === fullName &&
+          t.id === parsedStoredId &&
           (t.status === 'waiting' || t.status === 'in_progress')
       );
-      if (existingTicket) {
+
+      if (storedTicket) {
         setIsAlreadyInQueue(true);
-        setExistingTicketId(existingTicket.id);
-        // Store ticket ID in localStorage
-        localStorage.setItem(STORAGE_KEY, existingTicket.id.toString());
+        setExistingTicketId(storedTicket.id);
         return;
       }
     }
