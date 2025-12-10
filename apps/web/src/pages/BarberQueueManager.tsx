@@ -7,6 +7,7 @@ import { useBarbers } from '@/hooks/useBarbers';
 import { useKiosk } from '@/hooks/useKiosk';
 import { useModal } from '@/hooks/useModal';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { Navigation } from '@/components/Navigation';
 import { Modal } from '@/components/Modal';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { BarberSelector } from '@/components/BarberSelector';
@@ -554,6 +555,7 @@ export function BarberQueueManager() {
   // Management Mode View
   return (
     <div className="min-h-screen bg-black p-3 sm:p-4 pb-20">
+      <Navigation />
       {/* Error Message Toast */}
       {errorMessage && (
         <div 
@@ -573,34 +575,10 @@ export function BarberQueueManager() {
         </div>
       )}
 
-      <div className="container max-w-[600px] mx-auto">
-        {/* Header */}
+      <div className="container max-w-[600px] mx-auto pt-20 sm:pt-24">
+        {/* Stats Header */}
         <div className="header bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-4 sm:p-6 mb-4 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate(isOwner ? '/owner' : '/staff')}
-                className="icon-button w-12 h-12 rounded-lg border-[3px] border-[rgba(212,175,55,0.3)] bg-[rgba(20,20,20,0.8)] text-[rgba(255,255,255,0.8)] flex items-center justify-center transition-all hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] hover:translate-x-0.5 hover:shadow-[0_4px_16px_rgba(212,175,55,0.2)]"
-                aria-label="Back"
-              >
-                <span className="material-symbols-outlined text-xl">arrow_back</span>
-              </button>
-              <div className="header-title">
-                <h1 className="text-lg sm:text-2xl font-semibold text-white flex items-center gap-3">
-                  <span className="material-symbols-outlined text-xl sm:text-2xl text-[#D4AF37]">content_cut</span>
-                  <span className="hidden sm:inline">{config.name}</span>
-                </h1>
-              </div>
-            </div>
-            <button
-              onClick={enterKioskMode}
-              className="icon-button w-12 h-12 rounded-lg border-[3px] border-[rgba(212,175,55,0.3)] bg-[rgba(20,20,20,0.8)] text-[rgba(255,255,255,0.8)] flex items-center justify-center transition-all hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] hover:translate-x-0.5 hover:shadow-[0_4px_16px_rgba(212,175,55,0.2)]"
-              aria-label="Enter kiosk mode"
-            >
-              <span className="material-symbols-outlined text-xl">tv</span>
-            </button>
-          </div>
-          <div className="stats flex gap-4 sm:gap-6 pt-4 border-t border-[rgba(0,0,0,0.06)]">
+          <div className="stats flex gap-4 sm:gap-6">
             <div className="stat-item flex-1 text-center">
               <div className="stat-value text-2xl sm:text-3xl font-semibold text-[#D4AF37]">{waitingCount}</div>
               <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">Aguardando</div>
@@ -626,7 +604,6 @@ export function BarberQueueManager() {
           </div>
 
           {/* Queue List */}
-          <div className="section-header text-xl sm:text-2xl font-semibold text-white mb-4 sm:mb-6">Fila</div>
           {queueLoading ? (
             <div className="space-y-3" aria-busy="true" aria-live="polite">
               {[1, 2, 3].map((i) => (

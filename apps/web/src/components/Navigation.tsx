@@ -186,25 +186,28 @@ export function Navigation() {
             aria-hidden="true"
           />
           <div
-            className="nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[#0a0a0a] z-[101] p-5 sm:p-8 pt-20 flex flex-col overflow-y-auto md:hidden"
+            className="nav-menu fixed top-0 left-0 w-64 max-w-[80vw] h-full bg-[#0a0a0a] z-[101] p-5 flex flex-col overflow-y-auto md:hidden shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-label="Menu de navegação"
             onClick={(e) => e.stopPropagation()}
           >
-        <button
-          className="nav-menu-close absolute top-5 right-5 bg-transparent border-none text-white cursor-pointer p-2 min-w-[44px] min-h-[44px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 z-10"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsMobileMenuOpen(false);
-          }}
-          aria-label="Fechar menu de navegação"
-          type="button"
-        >
-          <span className="material-symbols-outlined text-[28px]">close</span>
-        </button>
-        <ul className="nav-menu-links list-none m-0 p-0 flex flex-col gap-2 relative z-10">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-[rgba(255,255,255,0.1)]">
+          <h2 className="text-lg font-semibold text-[#D4AF37]">Menu</h2>
+          <button
+            className="bg-transparent border-none text-white cursor-pointer p-2 min-w-[44px] min-h-[44px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsMobileMenuOpen(false);
+            }}
+            aria-label="Fechar menu de navegação"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
+        <ul className="nav-menu-links list-none m-0 p-0 flex flex-col gap-1 relative z-10">
           <li>
             <a
               href="/mineiro/home#services"
