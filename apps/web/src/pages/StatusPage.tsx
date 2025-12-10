@@ -230,10 +230,10 @@ export function StatusPage() {
           )}
 
           {/* Actions */}
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-4">
             {isWaiting && (
               <button
-                className="w-full px-6 py-4 bg-[#ef4444] text-white font-semibold rounded-lg flex items-center justify-center gap-3 hover:bg-[#dc2626] transition-all disabled:opacity-50"
+                className="w-full px-6 py-4 bg-[#ef4444] text-white font-semibold rounded-lg flex items-center justify-center gap-3 hover:bg-[#dc2626] transition-all disabled:opacity-50 min-h-[52px]"
                 onClick={() => setShowLeaveConfirm(true)}
                 disabled={isLeaving}
               >
@@ -253,7 +253,7 @@ export function StatusPage() {
 
             {isCompleted && (
               <Link to="/mineiro/home">
-                <button className="w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-3 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all">
+                <button className="w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-3 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all min-h-[52px]">
                   <span className="material-symbols-outlined text-xl">home</span>
                   Voltar ao Início
                 </button>
@@ -261,7 +261,7 @@ export function StatusPage() {
             )}
 
             <Link to="/mineiro/home">
-              <button className="w-full px-4 py-3 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all">
+              <button className="w-full px-6 py-4 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all min-h-[52px] flex items-center justify-center">
                 Voltar
               </button>
             </Link>

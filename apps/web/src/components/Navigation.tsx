@@ -71,11 +71,11 @@ export function Navigation() {
 
   return (
     <nav
-      className={`nav fixed top-0 left-0 right-0 z-30 transition-all ${
+      className={`nav fixed top-0 left-0 right-0 z-50 transition-all ${
         isScrolled
           ? 'bg-[#0a0a0a] py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
           : 'bg-[#0a0a0a] py-4'
-      } border-b border-[rgba(212,175,55,0.1)] ${isMobileMenuOpen ? 'z-[102]' : ''}`}
+      } border-b border-[rgba(212,175,55,0.1)]`}
       role="navigation"
       aria-label="Main navigation"
     >
@@ -181,21 +181,21 @@ export function Navigation() {
       {isMobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] md:hidden"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] md:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
           <div
-            className="nav-menu fixed top-0 left-0 w-64 max-w-[80vw] h-full bg-[#0a0a0a] z-[101] p-5 flex flex-col overflow-y-auto md:hidden shadow-2xl"
+            className="nav-menu fixed top-0 left-0 w-56 max-w-[70vw] h-full bg-[#0a0a0a] z-[101] p-4 flex flex-col overflow-y-auto md:hidden shadow-2xl border-r border-[rgba(212,175,55,0.1)]"
             role="dialog"
             aria-modal="true"
             aria-label="Menu de navegação"
             onClick={(e) => e.stopPropagation()}
           >
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-[rgba(255,255,255,0.1)]">
-          <h2 className="text-lg font-semibold text-[#D4AF37]">Menu</h2>
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-[rgba(255,255,255,0.1)]">
+          <h2 className="text-base font-semibold text-[#D4AF37]">Menu</h2>
           <button
-            className="bg-transparent border-none text-white cursor-pointer p-2 min-w-[44px] min-h-[44px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+            className="bg-transparent border-none text-white cursor-pointer p-1.5 min-w-[36px] min-h-[36px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -204,10 +204,10 @@ export function Navigation() {
             aria-label="Fechar menu de navegação"
             type="button"
           >
-            <span className="material-symbols-outlined text-xl">close</span>
+            <span className="material-symbols-outlined text-lg">close</span>
           </button>
         </div>
-        <ul className="nav-menu-links list-none m-0 p-0 flex flex-col gap-1 relative z-10">
+        <ul className="nav-menu-links list-none m-0 p-0 flex flex-col gap-0.5 relative z-10">
           <li>
             <a
               href="/mineiro/home#services"
@@ -215,7 +215,7 @@ export function Navigation() {
                 e.stopPropagation();
                 handleHashLink(e, '#services');
               }}
-              className="block text-base sm:text-lg font-medium text-[rgba(255,255,255,0.7)] px-4 py-3 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
+              className="block text-sm font-medium text-[rgba(255,255,255,0.7)] px-3 py-2 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[40px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
             >
               Serviços
             </a>
@@ -227,7 +227,7 @@ export function Navigation() {
                 e.stopPropagation();
                 handleHashLink(e, '#about');
               }}
-              className="block text-base sm:text-lg font-medium text-[rgba(255,255,255,0.7)] px-4 py-3 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
+              className="block text-sm font-medium text-[rgba(255,255,255,0.7)] px-3 py-2 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[40px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
             >
               Sobre
             </a>
@@ -239,7 +239,7 @@ export function Navigation() {
                 e.stopPropagation();
                 handleHashLink(e, '#location');
               }}
-              className="block text-base sm:text-lg font-medium text-[rgba(255,255,255,0.7)] px-4 py-3 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
+              className="block text-sm font-medium text-[rgba(255,255,255,0.7)] px-3 py-2 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[40px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
             >
               Localização
             </a>
@@ -251,7 +251,7 @@ export function Navigation() {
               {user.role === 'owner' && (
                 <Link
                   to="/owner"
-                  className="block text-base sm:text-lg font-medium text-[rgba(255,255,255,0.85)] px-4 py-3 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                  className="block text-sm font-medium text-[rgba(255,255,255,0.85)] px-3 py-2 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[40px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsMobileMenuOpen(false);
@@ -266,7 +266,7 @@ export function Navigation() {
                   e.stopPropagation();
                   handleLogout();
                 }}
-                className="block w-full text-left text-base sm:text-lg font-medium text-[rgba(255,255,255,0.85)] px-4 py-3 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                className="block w-full text-left text-sm font-medium text-[rgba(255,255,255,0.85)] px-3 py-2 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[40px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
                 type="button"
               >
                 Sair
@@ -275,7 +275,7 @@ export function Navigation() {
           ) : (
             <Link
               to="/login"
-              className="block text-base sm:text-lg font-medium text-[rgba(255,255,255,0.85)] px-4 py-3 rounded-lg transition-all hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.12)] min-h-[44px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+              className="block text-sm font-medium text-[rgba(255,255,255,0.85)] px-3 py-2 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[40px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsMobileMenuOpen(false);
