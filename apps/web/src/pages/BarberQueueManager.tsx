@@ -1,12 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { config } from '@/lib/config';
 import { useQueue } from '@/hooks/useQueue';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useKiosk } from '@/hooks/useKiosk';
 import { useModal } from '@/hooks/useModal';
-import { useAuthContext } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 import { Modal } from '@/components/Modal';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
@@ -24,8 +23,6 @@ const AD_VIEW_DURATION = 10000; // 10 seconds
 
 export function BarberQueueManager() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { isOwner } = useAuthContext();
   const { barbers, togglePresence, refetch: refetchBarbers } = useBarbers();
   const {
     isKioskMode,
