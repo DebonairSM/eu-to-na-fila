@@ -110,7 +110,12 @@ export function JoinPage() {
     } else {
       setValidationError(null);
     }
-  }, [firstName, lastName, validateName]);
+    
+    // Clear name collision error when user changes their name
+    if (nameCollisionError) {
+      setNameCollisionError(null);
+    }
+  }, [firstName, lastName, validateName, nameCollisionError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

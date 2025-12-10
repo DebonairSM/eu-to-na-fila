@@ -167,20 +167,19 @@ export function Navigation() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-[#0a0a0a] z-40 md:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-      <div
-        className={`nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[#0a0a0a] z-50 p-5 sm:p-8 pt-20 flex flex-col transform transition-transform duration-300 ${
-          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:hidden pointer-events-auto`}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Menu de navegação"
-      >
+        <>
+          <div
+            className="fixed inset-0 bg-[#0a0a0a] z-40 md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            className="nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[#0a0a0a] z-50 p-5 sm:p-8 pt-20 flex flex-col transform transition-transform duration-300 translate-x-0 md:hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu de navegação"
+            onClick={(e) => e.stopPropagation()}
+          >
         <button
           className="nav-menu-close absolute top-5 right-5 bg-transparent border-none text-white cursor-pointer p-2 min-w-[44px] min-h-[44px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 z-10"
           onClick={(e) => {
@@ -271,7 +270,9 @@ export function Navigation() {
             </Link>
           )}
         </div>
-      </div>
+          </div>
+        </>
+      )}
     </nav>
   );
 }
