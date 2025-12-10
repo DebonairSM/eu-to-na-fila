@@ -230,7 +230,7 @@ export function StatusPage() {
           )}
 
           {/* Actions */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             {isWaiting && (
               <button
                 className="w-full px-6 py-4 bg-[#ef4444] text-white font-semibold rounded-lg flex items-center justify-center gap-3 hover:bg-[#dc2626] transition-all disabled:opacity-50 min-h-[52px]"
