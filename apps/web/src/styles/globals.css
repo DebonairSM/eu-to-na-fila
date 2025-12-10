@@ -528,5 +528,18 @@
   input[type="tel"] {
     min-height: 44px;
   }
+  
+  /* Prevent mobile menu from overlapping content */
+  body.menu-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+  
+  /* Ensure proper spacing for fixed navigation on mobile */
+  @media (max-width: 768px) {
+    main, .container {
+      padding-top: 80px !important;
+    }
+  }
 }
-

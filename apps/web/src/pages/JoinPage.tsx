@@ -295,8 +295,12 @@ export function JoinPage() {
               )}
 
               {nameCollisionError && (
-                <div className="p-3 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/20">
-                  <p className="text-sm text-[#ef4444]">{nameCollisionError}</p>
+                <div className="p-4 rounded-lg bg-[#ef4444]/20 border-2 border-[#ef4444] flex items-start gap-3 animate-in slide-in-from-top-4">
+                  <span className="material-symbols-outlined text-[#ef4444] text-xl flex-shrink-0 mt-0.5">warning</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-[#ef4444] mb-1">Nome já está em uso</p>
+                    <p className="text-sm text-[#ef4444]/90">{nameCollisionError}</p>
+                  </div>
                 </div>
               )}
 

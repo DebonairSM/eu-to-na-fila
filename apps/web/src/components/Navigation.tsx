@@ -18,6 +18,18 @@ export function Navigation() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.classList.add('menu-open');
+    } else {
+      document.body.classList.remove('menu-open');
+    }
+    return () => {
+      document.body.classList.remove('menu-open');
+    };
+  }, [isMobileMenuOpen]);
+
   const handleLogout = () => {
     logout();
     navigate('/mineiro/home');
@@ -63,7 +75,7 @@ export function Navigation() {
         isScrolled
           ? 'bg-[#0a0a0a] py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
           : 'bg-[#0a0a0a] py-4'
-      } border-b border-[rgba(212,175,55,0.1)]`}
+      } border-b border-[rgba(212,175,55,0.1)] ${isMobileMenuOpen ? 'z-[102]' : ''}`}
       role="navigation"
       aria-label="Main navigation"
     >
@@ -169,12 +181,12 @@ export function Navigation() {
       {isMobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-[#0a0a0a] z-40 md:hidden"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] md:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
           <div
-            className="nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[#0a0a0a] z-50 p-5 sm:p-8 pt-20 flex flex-col transform transition-transform duration-300 translate-x-0 md:hidden"
+            className="nav-menu fixed top-0 left-0 right-0 bottom-0 bg-[#0a0a0a] z-[101] p-5 sm:p-8 pt-20 flex flex-col overflow-y-auto md:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="Menu de navegação"
