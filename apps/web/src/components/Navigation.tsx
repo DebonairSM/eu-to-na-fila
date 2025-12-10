@@ -73,8 +73,8 @@ export function Navigation() {
     <nav
       className={`nav fixed top-0 left-0 right-0 z-50 transition-all ${
         isScrolled
-          ? 'bg-[#0a0a0a] py-1 sm:py-1.5 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
-          : 'bg-[#0a0a0a] py-1 sm:py-2'
+          ? 'bg-[#0a0a0a] py-0.5 sm:py-1.5 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
+          : 'bg-[#0a0a0a] py-0.5 sm:py-2'
       } border-b border-[rgba(212,175,55,0.1)]`}
       role="navigation"
       aria-label="Main navigation"
@@ -84,10 +84,10 @@ export function Navigation() {
           {/* Logo */}
           <Link
             to="/mineiro/home"
-            className="nav-logo font-['Playfair_Display',serif] text-lg sm:text-2xl font-semibold text-[#D4AF37] flex items-center gap-1.5 sm:gap-3 min-h-[32px] sm:min-h-[36px] min-w-[32px] sm:min-w-[36px] px-1.5 sm:px-2 py-0 rounded transition-all hover:text-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+            className="nav-logo font-['Playfair_Display',serif] text-base sm:text-2xl font-semibold text-[#D4AF37] flex items-center gap-1 sm:gap-3 min-h-[28px] sm:min-h-[36px] min-w-[28px] sm:min-w-[36px] px-1 sm:px-2 py-0 rounded transition-all hover:text-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
             aria-label={`${config.name} - Home`}
           >
-            <span className="material-symbols-outlined text-lg sm:text-2xl">content_cut</span>
+            <span className="material-symbols-outlined text-base sm:text-2xl leading-none">content_cut</span>
             <span className="hidden sm:inline">{config.name}</span>
           </Link>
 
@@ -165,12 +165,12 @@ export function Navigation() {
 
           {/* Mobile Menu Button */}
           <button
-            className="nav-menu-toggle md:hidden bg-transparent border border-[rgba(255,255,255,0.1)] text-white cursor-pointer p-1.5 min-w-[32px] min-h-[32px] rounded-lg flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+            className="nav-menu-toggle md:hidden bg-transparent border border-[rgba(255,255,255,0.1)] text-white cursor-pointer p-1 min-w-[28px] min-h-[28px] rounded-lg flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
             aria-expanded={isMobileMenuOpen}
           >
-            <span className="material-symbols-outlined text-xl leading-none">
+            <span className="material-symbols-outlined text-lg leading-none">
               {isMobileMenuOpen ? 'close' : 'menu'}
             </span>
           </button>
