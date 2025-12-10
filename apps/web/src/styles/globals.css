@@ -539,7 +539,7 @@
         /* Ensure proper spacing for fixed navigation on mobile */
         @media (max-width: 768px) {
           main, .container {
-            padding-top: 60px !important;
+            padding-top: 50px !important;
           }
         }
 }
