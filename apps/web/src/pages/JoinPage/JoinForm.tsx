@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useJoinForm } from './hooks/useJoinForm';
 
 export function JoinForm() {
