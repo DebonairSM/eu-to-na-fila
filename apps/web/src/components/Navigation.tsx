@@ -164,7 +164,11 @@ export function Navigation() {
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden bg-transparent border border-[rgba(255,255,255,0.1)] text-white cursor-pointer p-2 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+          className="md:hidden bg-transparent border border-[rgba(255,255,255,0.1)] text-white cursor-pointer p-0 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+          style={{
+            borderImage: 'linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 1) 100%) 1',
+            backgroundColor: 'rgba(255, 255, 255, 0)',
+          }}
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label="Toggle menu"
           aria-expanded={isMobileMenuOpen}

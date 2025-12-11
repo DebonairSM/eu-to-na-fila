@@ -171,41 +171,41 @@ export function StatusPage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
       <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-16 sm:pt-[96px] pb-10 max-w-[520px] animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="space-y-6 sm:space-y-7">
-          {/* Header */}
-          <div className="header text-center mb-6 sm:mb-8">
-            <h1 className="customer-name font-['Playfair_Display',serif] text-[1.6rem] sm:text-[1.75rem] font-semibold text-white mb-2 sm:mb-3">
-              {ticket.customerName}
-            </h1>
-            <div
-              className={cn(
-                'status-badge inline-flex items-center gap-3 px-4 py-2 rounded-full text-sm font-medium uppercase mb-4',
-                {
-                  'bg-[rgba(212,175,55,0.2)] border-2 border-[#D4AF37] text-[#D4AF37]': isWaiting,
-                  'bg-[rgba(34,197,94,0.2)] border-2 border-[#22c55e] text-[#22c55e]': isInProgress || isCompleted,
-                }
-              )}
-            >
-              <span className="material-symbols-outlined text-xl">
-                {isWaiting
-                  ? 'schedule'
-                  : isInProgress
-                  ? 'content_cut'
-                  : 'check_circle'}
-              </span>
-              <span>
-                {isWaiting
-                  ? 'Aguardando'
-                  : isInProgress
-                  ? 'Em Atendimento'
-                  : 'Concluído'}
-              </span>
-            </div>
+        {/* Header */}
+        <div className="header text-center mb-6 sm:mb-8 absolute mt-2.5 left-[123px] top-[59px]">
+          <h1 className="customer-name font-['Playfair_Display',serif] text-[1.6rem] sm:text-[1.75rem] font-semibold text-white mb-2 sm:mb-3">
+            {ticket.customerName}
+          </h1>
+          <div
+            className={cn(
+              'status-badge inline-flex items-center gap-3 px-4 py-2 rounded-full text-sm font-medium uppercase mb-4',
+              {
+                'bg-[rgba(212,175,55,0.2)] border-2 border-[#D4AF37] text-[#D4AF37]': isWaiting,
+                'bg-[rgba(34,197,94,0.2)] border-2 border-[#22c55e] text-[#22c55e]': isInProgress || isCompleted,
+              }
+            )}
+          >
+            <span className="material-symbols-outlined text-xl">
+              {isWaiting
+                ? 'schedule'
+                : isInProgress
+                ? 'content_cut'
+                : 'check_circle'}
+            </span>
+            <span>
+              {isWaiting
+                ? 'Aguardando'
+                : isInProgress
+                ? 'Em Atendimento'
+                : 'Concluído'}
+            </span>
           </div>
+        </div>
 
+        <div className="space-y-6 sm:space-y-7">
           {/* Waiting State */}
           {isWaiting && (
-            <div className="main-card bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border-2 border-[rgba(212,175,55,0.3)] rounded-3xl p-6 sm:p-10 text-center mb-6">
+            <div className="main-card bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border-2 border-[rgba(212,175,55,0.3)] rounded-3xl p-6 sm:p-10 text-center mb-6 absolute left-[108px] top-[195px]">
               <div className="wait-label flex items-center justify-center gap-3 mb-4 text-[rgba(255,255,255,0.7)] text-xs sm:text-sm uppercase tracking-wider">
                 <span className="material-symbols-outlined text-xl text-[#D4AF37]">schedule</span>
                 Tempo estimado
@@ -277,26 +277,6 @@ export function StatusPage() {
 
           {/* Actions */}
           <div className="space-y-6">
-            {isWaiting && (
-              <button
-                className="w-full px-6 py-4 bg-[#ef4444] text-white font-semibold rounded-lg flex items-center justify-center gap-3 hover:bg-[#dc2626] transition-all disabled:opacity-50 min-h-[52px]"
-                onClick={() => setShowLeaveConfirm(true)}
-                disabled={isLeaving}
-              >
-                {isLeaving ? (
-                  <>
-                    <span className="material-symbols-outlined animate-spin text-xl">hourglass_top</span>
-                    Saindo...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined text-xl">exit_to_app</span>
-                    Sair da Fila
-                  </>
-                )}
-              </button>
-            )}
-
             {isCompleted && (
               <Link to="/mineiro/home">
                 <button className="w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-3 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all min-h-[52px]">
@@ -307,7 +287,7 @@ export function StatusPage() {
             )}
 
             <Link to="/mineiro/home">
-              <button className="w-full px-6 py-4 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all min-h-[52px] flex items-center justify-center">
+              <button className="w-full px-1.5 py-4 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all min-h-[52px] flex flex-col items-center justify-center gap-2.5 absolute left-0 top-[621px]">
                 Voltar
               </button>
             </Link>
@@ -315,6 +295,27 @@ export function StatusPage() {
 
         </div>
       </div>
+
+      {/* Exit Queue Button - Moved outside container */}
+      {isWaiting && (
+        <button
+          className="w-full px-6 py-4 bg-[#ef4444] text-white font-semibold rounded-lg flex items-center justify-center gap-3 hover:bg-[#dc2626] transition-all disabled:opacity-50 min-h-[52px] absolute left-0 top-[553px]"
+          onClick={() => setShowLeaveConfirm(true)}
+          disabled={isLeaving}
+        >
+          {isLeaving ? (
+            <>
+              <span className="material-symbols-outlined animate-spin text-xl">hourglass_top</span>
+              Saindo...
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-xl">exit_to_app</span>
+              Sair da Fila
+            </>
+          )}
+        </button>
+      )}
 
       {/* Leave Queue Confirmation */}
       <ConfirmationDialog
