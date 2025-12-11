@@ -104,17 +104,19 @@ export function validateParagraph(
   type: 'heroSubtitle' | 'body' | 'feature'
 ): boolean {
   const words = text.trim().split(/\s+/).length;
-  const guideline = paragraphGuidelines[type];
   
   if (type === 'heroSubtitle') {
+    const guideline = paragraphGuidelines.heroSubtitle;
     return words >= guideline.minWords && words <= guideline.maxWords;
   }
   
   if (type === 'body') {
+    const guideline = paragraphGuidelines.body;
     return words >= guideline.minWords && words <= guideline.maxWords;
   }
   
   // feature (no minWords, only maxWords)
+  const guideline = paragraphGuidelines.feature;
   return words <= guideline.maxWords;
 }
 
