@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { motion, colors } from '@/lib/design-tokens';
+import { motion } from '@/lib/design-tokens';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'waiting' | 'in-progress' | 'completed' | 'error' | 'default';

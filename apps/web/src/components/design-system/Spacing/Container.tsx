@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { containers, section } from '@/lib/design-tokens';
+import { containers } from '@/lib/design-tokens';
 
 export interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';

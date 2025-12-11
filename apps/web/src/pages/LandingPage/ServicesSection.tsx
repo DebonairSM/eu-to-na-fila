@@ -27,7 +27,7 @@ export function ServicesSection() {
 
       {/* Mobile: Single column */}
       <div className="lg:hidden space-y-4 sm:space-y-6">
-        {services.map((service, index) => (
+        {services.map((service) => (
           <Card key={service.name} hover className="text-center">
             <CardContent className="p-6 sm:p-8">
               <span className="material-symbols-outlined text-5xl sm:text-6xl text-[#D4AF37] mb-4 sm:mb-6 block">

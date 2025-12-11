@@ -114,7 +114,7 @@ export function validateParagraph(
     return words >= guideline.minWords && words <= guideline.maxWords;
   }
   
-  // feature
+  // feature (no minWords, only maxWords)
   return words <= guideline.maxWords;
 }
 

@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { section } from '@/lib/design-tokens';
 import { Container } from './Container';
 
 export interface SectionProps extends React.HTMLAttributes<HTMLElement> {

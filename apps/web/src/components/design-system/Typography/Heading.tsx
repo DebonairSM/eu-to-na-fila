@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { typography } from '@/lib/design-tokens';
 
 export interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
   as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
@@ -9,8 +8,8 @@ export interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
 
 const Heading = React.forwardRef<HTMLHeadingElement, HeadingProps>(
   ({ className, as, level, children, ...props }, ref) => {
-    const Tag = as || (`h${level || 1}` as keyof JSX.IntrinsicElements);
-    const headingLevel = level || parseInt((as || 'h1').substring(1));
+    const headingLevel = level || (as ? parseInt(as.substring(1)) : 1);
+    const tagName = (as || (`h${headingLevel}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6')) as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 
     const baseStyles = 'font-["Playfair_Display",serif] font-semibold text-white';
 
@@ -23,15 +22,25 @@ const Heading = React.forwardRef<HTMLHeadingElement, HeadingProps>(
       6: 'text-lg sm:text-xl',
     };
 
-    return (
-      <Tag
-        ref={ref}
-        className={cn(baseStyles, sizeClasses[headingLevel as keyof typeof sizeClasses], className)}
-        {...props}
-      >
-        {children}
-      </Tag>
-    );
+    const combinedClassName = cn(baseStyles, sizeClasses[headingLevel as keyof typeof sizeClasses], className);
+
+    // Use a switch to properly type each heading element
+    switch (tagName) {
+      case 'h1':
+        return <h1 ref={ref} className={combinedClassName} {...props}>{children}</h1>;
+      case 'h2':
+        return <h2 ref={ref} className={combinedClassName} {...props}>{children}</h2>;
+      case 'h3':
+        return <h3 ref={ref} className={combinedClassName} {...props}>{children}</h3>;
+      case 'h4':
+        return <h4 ref={ref} className={combinedClassName} {...props}>{children}</h4>;
+      case 'h5':
+        return <h5 ref={ref} className={combinedClassName} {...props}>{children}</h5>;
+      case 'h6':
+        return <h6 ref={ref} className={combinedClassName} {...props}>{children}</h6>;
+      default:
+        return <h1 ref={ref} className={combinedClassName} {...props}>{children}</h1>;
+    }
   }
 );
 Heading.displayName = 'Heading';
