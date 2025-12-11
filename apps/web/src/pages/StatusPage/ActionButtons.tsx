@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
+import { Button, Stack } from '@/components/design-system';
 
 interface ActionButtonsProps {
   status: 'waiting' | 'in_progress' | 'completed' | 'cancelled';
@@ -10,7 +11,13 @@ interface ActionButtonsProps {
   onShare?: () => void;
 }
 
-export function ActionButtons({ status, ticketId, onLeaveQueue, isLeaving, onShare }: ActionButtonsProps) {
+export function ActionButtons({
+  status,
+  ticketId,
+  onLeaveQueue,
+  isLeaving,
+  onShare,
+}: ActionButtonsProps) {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const isWaiting = status === 'waiting';
   const isCompleted = status === 'completed';
@@ -24,17 +31,16 @@ export function ActionButtons({ status, ticketId, onLeaveQueue, isLeaving, onSha
       await onLeaveQueue(ticketId);
       setShowLeaveConfirm(false);
     } catch (error) {
-      // Error handling is done in the hook
       setShowLeaveConfirm(false);
     }
   };
 
   return (
     <>
-      <div className="space-y-4 sm:space-y-5">
+      <Stack spacing="md">
         {isWaiting && (
           <>
-            {/* Mobile: FAB will be rendered separately */}
+            {/* Mobile: FAB */}
             <div className="lg:hidden fixed bottom-6 right-6 z-50">
               <button
                 className="w-14 h-14 rounded-full bg-[#ef4444] text-white shadow-lg hover:bg-[#dc2626] transition-all flex items-center justify-center min-h-[56px] min-w-[56px]"
@@ -43,7 +49,9 @@ export function ActionButtons({ status, ticketId, onLeaveQueue, isLeaving, onSha
                 aria-label="Sair da Fila"
               >
                 {isLeaving ? (
-                  <span className="material-symbols-outlined animate-spin text-2xl">hourglass_top</span>
+                  <span className="material-symbols-outlined animate-spin text-2xl">
+                    hourglass_top
+                  </span>
                 ) : (
                   <span className="material-symbols-outlined text-2xl">exit_to_app</span>
                 )}
@@ -52,14 +60,18 @@ export function ActionButtons({ status, ticketId, onLeaveQueue, isLeaving, onSha
 
             {/* Desktop: Inline button */}
             <div className="hidden lg:block">
-              <button
-                className="w-full px-6 py-4 bg-[#ef4444] text-white font-semibold rounded-lg flex items-center justify-center gap-3 hover:bg-[#dc2626] transition-all disabled:opacity-50 min-h-[52px]"
+              <Button
+                variant="destructive"
+                size="lg"
+                fullWidth
                 onClick={handleLeaveClick}
                 disabled={isLeaving}
               >
                 {isLeaving ? (
                   <>
-                    <span className="material-symbols-outlined animate-spin text-xl">hourglass_top</span>
+                    <span className="material-symbols-outlined animate-spin text-xl">
+                      hourglass_top
+                    </span>
                     Saindo...
                   </>
                 ) : (
@@ -68,37 +80,34 @@ export function ActionButtons({ status, ticketId, onLeaveQueue, isLeaving, onSha
                     Sair da Fila
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </>
         )}
 
         {isCompleted && (
           <Link to="/mineiro/home">
-            <button className="w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-3 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all min-h-[52px]">
+            <Button size="lg" fullWidth>
               <span className="material-symbols-outlined text-xl">home</span>
               Voltar ao Início
-            </button>
+            </Button>
           </Link>
         )}
 
         {/* Share button */}
         {onShare && (
-          <button
-            onClick={onShare}
-            className="w-full px-6 py-3 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all min-h-[52px] flex items-center justify-center gap-2"
-          >
+          <Button variant="outline" fullWidth onClick={onShare}>
             <span className="material-symbols-outlined text-xl">share</span>
             Compartilhar Link
-          </button>
+          </Button>
         )}
 
         <Link to="/mineiro/home">
-          <button className="w-full px-6 py-3 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all min-h-[52px] flex items-center justify-center">
+          <Button variant="ghost" fullWidth>
             Voltar
-          </button>
+          </Button>
         </Link>
-      </div>
+      </Stack>
 
       <ConfirmationDialog
         isOpen={showLeaveConfirm}

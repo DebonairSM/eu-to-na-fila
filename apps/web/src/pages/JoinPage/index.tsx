@@ -5,6 +5,7 @@ import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { WaitTimeBanner } from './WaitTimeBanner';
 import { JoinForm } from './JoinForm';
+import { Container, Heading, Text, Stack } from '@/components/design-system';
 
 const STORAGE_KEY = 'eutonafila_active_ticket_id';
 
@@ -50,9 +51,9 @@ export function JoinPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
         <Navigation />
-        <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12">
+        <Container className="relative z-10 pt-20 sm:pt-[100px] pb-12">
           <LoadingSpinner text="Verificando seu status..." />
-        </div>
+        </Container>
       </div>
     );
   }
@@ -61,35 +62,37 @@ export function JoinPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      
+
       {/* Mobile: Sticky wait time banner */}
       <div className="lg:hidden">
         <WaitTimeBanner sticky />
       </div>
 
-      <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-10 max-w-7xl">
-        {/* Desktop: Side-by-side layout (wait time left, form right) */}
+      <Container className="relative z-10 pt-16 sm:pt-20 lg:pt-24 pb-10">
+        {/* Desktop: Side-by-side layout */}
         <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-start">
           <div className="sticky top-24">
-            <div className="header text-center lg:text-left mb-8">
-              <div className="header-icon w-20 h-20 mx-auto lg:mx-0 mb-6 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
-                <span className="material-symbols-outlined text-4xl text-[#0a0a0a]">
-                  person_add
-                </span>
+            <Stack spacing="lg">
+              <div className="text-center lg:text-left">
+                <div className="w-20 h-20 mx-auto lg:mx-0 mb-6 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
+                  <span className="material-symbols-outlined text-4xl text-[#0a0a0a]">
+                    person_add
+                  </span>
+                </div>
+                <Heading level={1} className="mb-4 text-3xl xl:text-4xl">
+                  Entrar na Fila
+                </Heading>
+                <Text size="lg" variant="secondary">
+                  Preencha seus dados abaixo para entrar na fila virtual
+                </Text>
               </div>
-              <h1 className="font-['Playfair_Display',serif] text-3xl xl:text-4xl font-semibold text-white mb-4">
-                Entrar na Fila
-              </h1>
-              <p className="text-[rgba(255,255,255,0.7)] text-lg">
-                Preencha seus dados abaixo para entrar na fila virtual
-              </p>
-            </div>
-            <WaitTimeBanner />
+              <WaitTimeBanner />
+            </Stack>
           </div>
 
           <div>
             <JoinForm />
-            <p className="info-text text-center lg:text-left mt-6 text-sm text-[rgba(255,255,255,0.7)]">
+            <p className="text-center lg:text-left mt-6 text-sm text-[rgba(255,255,255,0.7)]">
               Já está na fila?{' '}
               <Link to="/mineiro/home" className="text-[#D4AF37] hover:underline">
                 Ver status
@@ -100,27 +103,25 @@ export function JoinPage() {
 
         {/* Mobile: Stacked layout */}
         <div className="lg:hidden space-y-6 sm:space-y-8">
-          <div className="header text-center">
-            <div className="header-icon w-18 h-18 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
-              <span className="material-symbols-outlined text-4xl text-[#0a0a0a]">
-                person_add
-              </span>
+          <div className="text-center">
+            <div className="w-18 h-18 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
+              <span className="material-symbols-outlined text-4xl text-[#0a0a0a]">person_add</span>
             </div>
-            <h1 className="font-['Playfair_Display',serif] text-2xl sm:text-3xl font-semibold text-white mb-3">
+            <Heading level={1} className="mb-3 text-2xl sm:text-3xl">
               Entrar na Fila
-            </h1>
+            </Heading>
           </div>
 
           <JoinForm />
 
-          <p className="info-text text-center text-sm text-[rgba(255,255,255,0.7)]">
+          <p className="text-center text-sm text-[rgba(255,255,255,0.7)]">
             Já está na fila?{' '}
             <Link to="/mineiro/home" className="text-[#D4AF37] hover:underline">
               Ver status
             </Link>
           </p>
         </div>
-      </div>
+      </Container>
     </div>
   );
 }

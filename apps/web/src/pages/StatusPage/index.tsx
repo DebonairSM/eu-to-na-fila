@@ -11,6 +11,7 @@ import { WaitingCard } from './WaitingCard';
 import { InProgressCard } from './InProgressCard';
 import { CompletedCard } from './CompletedCard';
 import { ActionButtons } from './ActionButtons';
+import { Container, Stack, SlideIn } from '@/components/design-system';
 
 export function StatusPage() {
   const { id } = useParams<{ id: string }>();
@@ -45,7 +46,7 @@ export function StatusPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
         <Navigation />
-        <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-12 max-w-7xl">
+        <Container className="relative z-10 pt-20 sm:pt-24 pb-12">
           <div className="text-center space-y-4">
             <p className="text-[rgba(255,255,255,0.7)]">Nenhum ticket ID fornecido</p>
             <Link to="/mineiro/home">
@@ -54,7 +55,7 @@ export function StatusPage() {
               </button>
             </Link>
           </div>
-        </div>
+        </Container>
       </div>
     );
   }
@@ -63,9 +64,9 @@ export function StatusPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
         <Navigation />
-        <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-12 max-w-7xl">
+        <Container className="relative z-10 pt-20 sm:pt-24 pb-12">
           <LoadingSpinner size="lg" text="Carregando status do ticket..." />
-        </div>
+        </Container>
       </div>
     );
   }
@@ -74,7 +75,7 @@ export function StatusPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
         <Navigation />
-        <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-12 max-w-7xl">
+        <Container className="relative z-10 pt-20 sm:pt-24 pb-12">
           <ErrorDisplay
             error={error || new Error('Ticket não encontrado')}
             onRetry={() => window.location.reload()}
@@ -86,7 +87,7 @@ export function StatusPage() {
               </button>
             </Link>
           </div>
-        </div>
+        </Container>
       </div>
     );
   }
@@ -100,12 +101,12 @@ export function StatusPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      
-      <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-20 lg:pb-24 max-w-7xl">
+
+      <Container className="relative z-10 pt-16 sm:pt-20 lg:pt-24 pb-20 lg:pb-24">
         {/* Mobile: Stacked layout */}
         <div className="lg:hidden space-y-6 sm:space-y-8">
           <StatusHeader customerName={ticket.customerName} status={ticket.status} />
-          
+
           {isWaiting && (
             <WaitingCard
               waitTime={waitTime}
@@ -114,9 +115,9 @@ export function StatusPage() {
               ahead={positionInfo?.ahead}
             />
           )}
-          
+
           {isInProgress && <InProgressCard barberName={barber?.name} />}
-          
+
           {isCompleted && <CompletedCard barberName={barber?.name} />}
 
           <ActionButtons
@@ -128,18 +129,20 @@ export function StatusPage() {
           />
 
           {shareSuccess && (
-            <div className="fixed bottom-24 left-4 right-4 bg-[#22c55e] text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-in slide-in-from-bottom-4">
-              <span className="material-symbols-outlined">check_circle</span>
-              <span>Link copiado para a área de transferência!</span>
-            </div>
+            <SlideIn direction="up">
+              <div className="fixed bottom-24 left-4 right-4 bg-[#22c55e] text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50">
+                <span className="material-symbols-outlined">check_circle</span>
+                <span>Link copiado para a área de transferência!</span>
+              </div>
+            </SlideIn>
           )}
         </div>
 
-        {/* Desktop: Side-by-side layout (status left, actions/info right) */}
+        {/* Desktop: Side-by-side layout */}
         <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-start">
-          <div className="space-y-8">
+          <Stack spacing="xl">
             <StatusHeader customerName={ticket.customerName} status={ticket.status} />
-            
+
             {isWaiting && (
               <WaitingCard
                 waitTime={waitTime}
@@ -148,11 +151,11 @@ export function StatusPage() {
                 ahead={positionInfo?.ahead}
               />
             )}
-            
+
             {isInProgress && <InProgressCard barberName={barber?.name} />}
-            
+
             {isCompleted && <CompletedCard barberName={barber?.name} />}
-          </div>
+          </Stack>
 
           <div className="sticky top-24">
             <ActionButtons
@@ -166,12 +169,14 @@ export function StatusPage() {
         </div>
 
         {shareSuccess && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#22c55e] text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-in slide-in-from-bottom-4">
-            <span className="material-symbols-outlined">check_circle</span>
-            <span>Link copiado para a área de transferência!</span>
-          </div>
+          <SlideIn direction="up">
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#22c55e] text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-2 z-50">
+              <span className="material-symbols-outlined">check_circle</span>
+              <span>Link copiado para a área de transferência!</span>
+            </div>
+          </SlideIn>
         )}
-      </div>
+      </Container>
     </div>
   );
 }

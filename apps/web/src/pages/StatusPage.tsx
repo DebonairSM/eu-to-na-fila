@@ -1,0 +1,333 @@
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { api } from '@/lib/api';
+import { useTicketStatus } from '@/hooks/useTicketStatus';
+import { useQueue } from '@/hooks/useQueue';
+import { ConfirmationDialog } from '@/components/ConfirmationDialog';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { ErrorDisplay } from '@/components/ErrorDisplay';
+import { Navigation } from '@/components/Navigation';
+import { cn, getErrorMessage } from '@/lib/utils';
+import type { Barber } from '@eutonafila/shared';
+import { config } from '@/lib/config';
+
+export function StatusPage() {
+  const { id } = useParams<{ id: string }>();
+  const ticketIdFromParams = id ? parseInt(id, 10) : null;
+  const navigate = useNavigate();
+  const { ticket, isLoading, error } = useTicketStatus(ticketIdFromParams);
+  const { data: queueData } = useQueue(3000); // Poll every 3s
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [barber, setBarber] = useState<Barber | null>(null);
+  const prevStatusRef = useRef<string | null>(null);
+  const hasStoredTicketRef = useRef(false);
+
+  // Fetch barber information when ticket has barberId
+  useEffect(() => {
+    const fetchBarber = async () => {
+      if (!ticket?.barberId) {
+        setBarber(null);
+        return;
+      }
+
+      try {
+        const barbers = await api.getBarbers(config.slug);
+        const assignedBarber = barbers.find(b => b.id === ticket.barberId);
+        setBarber(assignedBarber || null);
+      } catch (error) {
+        console.error('Failed to fetch barber:', error);
+        setBarber(null);
+      }
+    };
+
+    fetchBarber();
+  }, [ticket?.barberId]);
+
+  // Extract stable values for dependencies (must be before conditional returns)
+  const ticketId = ticket?.id ?? null;
+  const ticketStatus = ticket?.status ?? null;
+
+  // Handle localStorage updates based on ticket status (MUST be before conditional returns)
+  useEffect(() => {
+    if (!ticketStatus || ticketId === null) return;
+    
+    const prevStatus = prevStatusRef.current;
+    
+    // Only update if status actually changed
+    if (prevStatus === ticketStatus) {
+      return;
+    }
+    
+    // Update ref immediately to prevent re-running
+    prevStatusRef.current = ticketStatus;
+    
+    // Handle localStorage based on status
+    if (ticketStatus === 'completed' || ticketStatus === 'cancelled') {
+      // Clear if it was stored
+      const storedTicketId = localStorage.getItem('eutonafila_active_ticket_id');
+      if (storedTicketId === ticketId.toString()) {
+        localStorage.removeItem('eutonafila_active_ticket_id');
+        hasStoredTicketRef.current = false;
+      }
+    } else if ((ticketStatus === 'waiting' || ticketStatus === 'in_progress') && !hasStoredTicketRef.current) {
+      // Store only if we haven't stored it yet
+      localStorage.setItem('eutonafila_active_ticket_id', ticketId.toString());
+      hasStoredTicketRef.current = true;
+    }
+  }, [ticketStatus, ticketId]);
+
+  // Use API-provided estimatedWaitTime only
+  const waitTime = ticket?.estimatedWaitTime ?? null;
+
+  const handleLeaveQueue = async () => {
+    if (!ticketIdFromParams) return;
+
+    setIsLeaving(true);
+    try {
+      await api.cancelTicket(ticketIdFromParams);
+      // Clear stored ticket ID when leaving queue
+      localStorage.removeItem('eutonafila_active_ticket_id');
+      navigate('/mineiro/home');
+    } catch (error) {
+      // Show error to user - could be enhanced with toast notification
+      const errorMsg = getErrorMessage(error, 'Erro ao sair da fila. Tente novamente.');
+      // For now, we'll just log it since StatusPage doesn't have error state management
+      console.error('Error leaving queue:', errorMsg);
+    } finally {
+      setIsLeaving(false);
+      setShowLeaveConfirm(false);
+    }
+  };
+
+  if (!id) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
+        <Navigation />
+        <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12 max-w-[480px]">
+          <div className="text-center space-y-4">
+            <p className="text-[rgba(255,255,255,0.7)]">Nenhum ticket ID fornecido</p>
+            <Link to="/mineiro/home">
+              <button className="px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all">
+                Voltar ao Início
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
+        <Navigation />
+        <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12 max-w-[480px]">
+          <LoadingSpinner size="lg" text="Carregando status do ticket..." />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !ticket) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
+        <Navigation />
+        <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12 max-w-[480px]">
+          <ErrorDisplay
+            error={error || new Error('Ticket não encontrado')}
+            onRetry={() => window.location.reload()}
+          />
+          <div className="mt-4">
+            <Link to="/mineiro/home">
+              <button className="w-full px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all">
+                Voltar ao Início
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isWaiting = ticket.status === 'waiting';
+  const isInProgress = ticket.status === 'in_progress';
+  const isCompleted = ticket.status === 'completed';
+
+  // Calculate position info
+  const positionInfo = (() => {
+    if (!isWaiting || !queueData) return null;
+    const waitingTickets = queueData.tickets.filter((t) => t.status === 'waiting');
+    const aheadCount = waitingTickets.filter((t) => t.position < ticket.position).length;
+    return {
+      position: ticket.position,
+      ahead: aheadCount,
+      total: waitingTickets.length,
+    };
+  })();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
+      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
+      <Navigation />
+      <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-16 sm:pt-[96px] pb-10 max-w-[520px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-6 sm:space-y-7">
+          {/* Header */}
+          <div className="header text-center mb-6 sm:mb-8">
+            <h1 className="customer-name font-['Playfair_Display',serif] text-[1.6rem] sm:text-[1.75rem] font-semibold text-white mb-2 sm:mb-3">
+              {ticket.customerName}
+            </h1>
+            <div
+              className={cn(
+                'status-badge inline-flex items-center gap-3 px-4 py-2 rounded-full text-sm font-medium uppercase mb-4',
+                {
+                  'bg-[rgba(212,175,55,0.2)] border-2 border-[#D4AF37] text-[#D4AF37]': isWaiting,
+                  'bg-[rgba(34,197,94,0.2)] border-2 border-[#22c55e] text-[#22c55e]': isInProgress || isCompleted,
+                }
+              )}
+            >
+              <span className="material-symbols-outlined text-xl">
+                {isWaiting
+                  ? 'schedule'
+                  : isInProgress
+                  ? 'content_cut'
+                  : 'check_circle'}
+              </span>
+              <span>
+                {isWaiting
+                  ? 'Aguardando'
+                  : isInProgress
+                  ? 'Em Atendimento'
+                  : 'Concluído'}
+              </span>
+            </div>
+          </div>
+
+          {/* Waiting State */}
+          {isWaiting && (
+            <div className="main-card bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border-2 border-[rgba(212,175,55,0.3)] rounded-3xl p-6 sm:p-10 text-center mb-6">
+              <div className="wait-label flex items-center justify-center gap-3 mb-4 text-[rgba(255,255,255,0.7)] text-xs sm:text-sm uppercase tracking-wider">
+                <span className="material-symbols-outlined text-xl text-[#D4AF37]">schedule</span>
+                Tempo estimado
+              </div>
+            <div className="wait-value font-['Playfair_Display',serif] text-4xl sm:text-5xl font-semibold text-white mb-1 sm:mb-2 drop-shadow-[0_4px_20px_rgba(212,175,55,0.3)] leading-tight">
+                {waitTime !== null ? waitTime : '--'}
+              </div>
+              <div className="wait-unit text-base sm:text-lg text-[rgba(255,255,255,0.7)]">minutos</div>
+              
+              {positionInfo && (
+                <div className="mt-4 pt-4 border-t border-[rgba(212,175,55,0.2)]">
+                  <p className="text-sm text-[rgba(255,255,255,0.7)] mb-2">
+                    Posição na fila
+                  </p>
+                  <p className="text-2xl font-semibold text-[#D4AF37]">
+                    {positionInfo.position} de {positionInfo.total}
+                  </p>
+                  {positionInfo.ahead > 0 && (
+                    <p className="text-xs text-[rgba(255,255,255,0.5)] mt-2">
+                      {positionInfo.ahead} {positionInfo.ahead === 1 ? 'pessoa à frente' : 'pessoas à frente'}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* In Progress State */}
+          {isInProgress && (
+            <div className="progress-card bg-gradient-to-br from-[rgba(34,197,94,0.2)] to-[rgba(34,197,94,0.05)] border-2 border-[rgba(34,197,94,0.3)] rounded-3xl p-8 sm:p-12 text-center mb-6">
+              <span className="material-symbols-outlined text-5xl sm:text-6xl text-[#22c55e] mb-4 block">content_cut</span>
+              <div className="progress-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-white mb-2">
+                Em atendimento
+              </div>
+              {barber && (
+                <div className="mt-4 pt-4 border-t border-[rgba(34,197,94,0.2)]">
+                  <p className="text-sm text-[rgba(255,255,255,0.7)] mb-2">
+                    Seu barbeiro
+                  </p>
+                  <p className="text-xl sm:text-2xl font-semibold text-[#22c55e] flex items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-xl sm:text-2xl">content_cut</span>
+                    {barber.name}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Completed State */}
+          {isCompleted && (
+            <div className="completed-card bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-3xl p-8 sm:p-12 text-center mb-6">
+              <span className="material-symbols-outlined text-5xl sm:text-6xl text-white mb-4 block">check_circle</span>
+              <div className="progress-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-white mb-2">
+                Concluído
+              </div>
+              {barber && (
+                <div className="mt-4 pt-4 border-t border-white/20">
+                  <p className="text-sm text-white/80 mb-2">
+                    Atendido por
+                  </p>
+                  <p className="text-xl sm:text-2xl font-semibold text-white flex items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-xl sm:text-2xl">content_cut</span>
+                    {barber.name}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="space-y-6">
+            {isWaiting && (
+              <button
+                className="w-full px-6 py-4 bg-[#ef4444] text-white font-semibold rounded-lg flex items-center justify-center gap-3 hover:bg-[#dc2626] transition-all disabled:opacity-50 min-h-[52px]"
+                onClick={() => setShowLeaveConfirm(true)}
+                disabled={isLeaving}
+              >
+                {isLeaving ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin text-xl">hourglass_top</span>
+                    Saindo...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-xl">exit_to_app</span>
+                    Sair da Fila
+                  </>
+                )}
+              </button>
+            )}
+
+            {isCompleted && (
+              <Link to="/mineiro/home">
+                <button className="w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-3 hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all min-h-[52px]">
+                  <span className="material-symbols-outlined text-xl">home</span>
+                  Voltar ao Início
+                </button>
+              </Link>
+            )}
+
+            <Link to="/mineiro/home">
+              <button className="w-full px-6 py-4 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all min-h-[52px] flex items-center justify-center">
+                Voltar
+              </button>
+            </Link>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Leave Queue Confirmation */}
+      <ConfirmationDialog
+        isOpen={showLeaveConfirm}
+        onClose={() => setShowLeaveConfirm(false)}
+        onConfirm={handleLeaveQueue}
+        title="Sair da Fila?"
+        message={`Tem certeza que deseja sair da fila? Você perderá sua posição.`}
+        confirmText="Sair"
+        cancelText="Cancelar"
+        variant="destructive"
+        icon="exit_to_app"
+      />
+    </div>
+  );
+}

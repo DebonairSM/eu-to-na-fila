@@ -272,6 +272,28 @@
   }
 }
 
+@keyframes slide-in-from-left-4 {
+  from {
+    transform: translateX(-1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-right-4 {
+  from {
+    transform: translateX(1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 @keyframes bounce {
   0%, 100% {
     transform: translateX(-50%) translateY(0);
@@ -300,6 +322,26 @@
 
 .slide-in-from-bottom-4 {
   animation-name: slide-in-from-bottom-4;
+}
+
+.slide-in-from-left-4 {
+  animation-name: slide-in-from-left-4;
+}
+
+.slide-in-from-right-4 {
+  animation-name: slide-in-from-right-4;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .animate-bounce-slow {
