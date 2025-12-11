@@ -74,15 +74,10 @@ export function JoinPage() {
           <div className="sticky top-24">
             <Stack spacing="lg">
               <div className="text-center lg:text-left">
-                <div className="w-20 h-20 mx-auto lg:mx-0 mb-6 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
-                  <span className="material-symbols-outlined text-4xl text-[#0a0a0a]">
-                    person_add
-                  </span>
-                </div>
                 <Heading level={1} className="mb-4 text-3xl xl:text-4xl">
                   Entrar na Fila
                 </Heading>
-                <Text size="lg" variant="secondary">
+                <Text size="lg" variant="secondary" className="mb-6">
                   Preencha seus dados abaixo para entrar na fila virtual
                 </Text>
               </div>
@@ -104,9 +99,6 @@ export function JoinPage() {
         {/* Mobile: Stacked layout */}
         <div className="lg:hidden space-y-6 sm:space-y-8">
           <div className="text-center">
-            <div className="w-18 h-18 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
-              <span className="material-symbols-outlined text-4xl text-[#0a0a0a]">person_add</span>
-            </div>
             <Heading level={1} className="mb-3 text-2xl sm:text-3xl">
               Entrar na Fila
             </Heading>

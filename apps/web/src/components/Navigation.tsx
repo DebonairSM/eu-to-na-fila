@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { config } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { Button, SlideIn } from '@/components/design-system';
+import { Button } from '@/components/design-system';
 import { Container } from '@/components/design-system';
 
 export function Navigation() {
@@ -183,14 +183,17 @@ export function Navigation() {
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
-          <SlideIn direction="right" duration="normal">
-            <div
-              className="fixed top-0 left-0 w-64 max-w-[70vw] h-full bg-[#0a0a0a] z-[101] p-4 flex flex-col overflow-y-auto md:hidden shadow-2xl border-r border-[rgba(212,175,55,0.1)]"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Menu de navegação"
-              onClick={(e) => e.stopPropagation()}
-            >
+          <div
+            className="fixed top-0 left-0 w-64 max-w-[70vw] h-full bg-[#0a0a0a] z-[101] p-4 flex flex-col overflow-y-auto md:hidden shadow-2xl border-r border-[rgba(212,175,55,0.1)] animate-in slide-in-from-left-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu de navegação"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              animationDuration: '250ms',
+              animationFillMode: 'both',
+            }}
+          >
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-[rgba(255,255,255,0.1)]">
                 <h2 className="text-base font-semibold text-[#D4AF37]">Menu</h2>
                 <button
@@ -297,7 +300,6 @@ export function Navigation() {
                 )}
               </div>
             </div>
-          </SlideIn>
         </>
       )}
     </nav>
