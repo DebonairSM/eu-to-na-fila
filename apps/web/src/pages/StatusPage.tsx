@@ -170,7 +170,7 @@ export function StatusPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      <div className="container relative z-10 mx-auto px-4 sm:px-6 pt-28 sm:pt-32 pb-16 max-w-2xl">
+      <div className="container relative z-10 mx-auto px-4 sm:px-6 pt-32 sm:pt-24 pb-16 max-w-2xl">
         <div className="space-y-8 sm:space-y-12">
           {/* Hero Section - Customer Name */}
           <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -213,25 +213,25 @@ export function StatusPage() {
                 <div className="flex items-center justify-center gap-2 mb-6 text-[rgba(255,255,255,0.6)] text-xs uppercase tracking-[0.15em] font-medium">
                   <span className="material-symbols-outlined text-base text-[#D4AF37]">schedule</span>
                   <span>Tempo estimado</span>
-                </div>
+              </div>
                 
                 <div className="relative">
                   <div className="font-['Playfair_Display',serif] text-7xl sm:text-8xl md:text-9xl font-bold text-white mb-2 leading-none drop-shadow-[0_8px_32px_rgba(212,175,55,0.4)] animate-pulse">
-                    {waitTime !== null ? waitTime : '--'}
+                {waitTime !== null ? waitTime : '--'}
                   </div>
                   <div className="text-lg sm:text-xl text-[rgba(255,255,255,0.7)] font-light tracking-wide">
                     {waitTime !== null ? (waitTime === 1 ? 'minuto' : 'minutos') : ''}
                   </div>
                 </div>
               </div>
-
+              
               {/* Queue Position Card */}
               {positionInfo && (
                 <div className="bg-[rgba(255,255,255,0.03)] backdrop-blur-sm border border-[rgba(255,255,255,0.1)] rounded-2xl p-6 sm:p-8 shadow-lg hover:border-[rgba(212,175,55,0.3)] transition-all duration-300">
                   <div className="text-center space-y-3">
                     <p className="text-sm text-[rgba(255,255,255,0.6)] uppercase tracking-wider font-medium">
-                      Posição na fila
-                    </p>
+                    Posição na fila
+                  </p>
                     <div className="flex items-baseline justify-center gap-2">
                       <span className="font-['Playfair_Display',serif] text-4xl sm:text-5xl font-bold text-[#D4AF37]">
                         {positionInfo.position}
@@ -241,11 +241,11 @@ export function StatusPage() {
                         {positionInfo.total}
                       </span>
                     </div>
-                    {positionInfo.ahead > 0 && (
+                  {positionInfo.ahead > 0 && (
                       <p className="text-sm text-[rgba(255,255,255,0.5)] pt-2">
-                        {positionInfo.ahead} {positionInfo.ahead === 1 ? 'pessoa à frente' : 'pessoas à frente'}
-                      </p>
-                    )}
+                      {positionInfo.ahead} {positionInfo.ahead === 1 ? 'pessoa à frente' : 'pessoas à frente'}
+                    </p>
+                  )}
                   </div>
                 </div>
               )}
@@ -263,17 +263,17 @@ export function StatusPage() {
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-[#22c55e]/30 rounded-full animate-ping"></div>
                   </div>
-                </div>
+              </div>
                 
                 <h2 className="font-['Playfair_Display',serif] text-2xl sm:text-3xl font-bold text-white mb-8">
                   Em Atendimento
                 </h2>
 
-                {barber && (
+              {barber && (
                   <div className="mt-8 pt-8 border-t border-[rgba(34,197,94,0.2)]">
                     <p className="text-sm text-[rgba(255,255,255,0.6)] uppercase tracking-wider font-medium mb-3">
                       Seu Barbeiro
-                    </p>
+                  </p>
                     <div className="flex items-center justify-center gap-3">
                       <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[rgba(34,197,94,0.2)] border-2 border-[#22c55e]/50 flex items-center justify-center">
                         <span className="material-symbols-outlined text-2xl sm:text-3xl text-[#22c55e]">
@@ -281,11 +281,11 @@ export function StatusPage() {
                         </span>
                       </div>
                       <p className="text-xl sm:text-2xl font-bold text-[#22c55e]">
-                        {barber.name}
-                      </p>
+                    {barber.name}
+                  </p>
                     </div>
-                  </div>
-                )}
+                </div>
+              )}
               </div>
             </div>
           )}
@@ -306,14 +306,14 @@ export function StatusPage() {
                   </div>
                   
                   <h2 className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-bold text-white mb-8">
-                    Concluído
+                Concluído
                   </h2>
 
-                  {barber && (
+              {barber && (
                     <div className="mt-8 pt-8 border-t border-white/20">
                       <p className="text-sm text-white/90 uppercase tracking-wider font-medium mb-4">
-                        Atendido por
-                      </p>
+                    Atendido por
+                  </p>
                       <div className="flex items-center justify-center gap-3">
                         <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center">
                           <span className="material-symbols-outlined text-2xl sm:text-3xl text-white">
@@ -321,8 +321,8 @@ export function StatusPage() {
                           </span>
                         </div>
                         <p className="text-xl sm:text-2xl font-bold text-white">
-                          {barber.name}
-                        </p>
+                    {barber.name}
+                  </p>
                       </div>
                     </div>
                   )}
