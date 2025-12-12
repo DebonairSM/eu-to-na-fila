@@ -24,6 +24,10 @@ const fastify = Fastify({
   logger: {
     level: env.NODE_ENV === 'development' ? 'info' : 'warn',
   },
+  bodyLimit: 1048576, // 1MB request body size limit
+  disableRequestLogging: false,
+  requestIdLogLabel: 'reqId',
+  requestIdHeader: 'x-request-id',
 });
 
 // Security plugins
@@ -39,6 +43,16 @@ fastify.register(fastifyHelmet, {
       frameSrc: ["'self'", "https://www.google.com"], // Allow Google Maps iframe
     },
   },
+  hsts: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true,
+  },
+  xContentTypeOptions: true,
+  xFrameOptions: { action: 'deny' },
+  xXssProtection: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  hidePoweredBy: true, // Hide X-Powered-By header
 });
 
 // CORS: Allow multiple origins (localhost for dev, Render domains for prod)
@@ -73,9 +87,15 @@ fastify.register(fastifyCors, {
   credentials: true,
 });
 
+// Global rate limiting for public endpoints
 fastify.register(fastifyRateLimit, {
   max: 100,
   timeWindow: '1 minute',
+  addHeaders: {
+    'x-ratelimit-limit': true,
+    'x-ratelimit-remaining': true,
+    'x-ratelimit-reset': true,
+  },
 });
 
 // Static file serving - register BEFORE routes to ensure assets are served first

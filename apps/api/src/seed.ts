@@ -1,6 +1,7 @@
 import { db, schema } from './db/index.js';
 import { env } from './env.js';
 import { eq } from 'drizzle-orm';
+import { hashPin } from './lib/pin.js';
 
 async function seed() {
   console.log('Seeding database...');
@@ -13,23 +14,31 @@ async function seed() {
   if (shop) {
     console.log('Shop already exists:', shop);
     
-    // Update PINs if they're null (migration case)
-    if (!shop.ownerPin || !shop.staffPin) {
-      console.log('Updating shop PINs...');
+    // Update PIN hashes if they don't exist (migration case)
+    if (!shop.ownerPinHash || !shop.staffPinHash) {
+      console.log('Hashing shop PINs...');
+      const ownerPinHash = shop.ownerPinHash || await hashPin(shop.ownerPin || '1234');
+      const staffPinHash = shop.staffPinHash || await hashPin(shop.staffPin || '0000');
+      
       const [updated] = await db
         .update(schema.shops)
         .set({
-          ownerPin: shop.ownerPin || '1234',
-          staffPin: shop.staffPin || '0000',
+          ownerPinHash,
+          staffPinHash,
+          ownerPinResetRequired: !shop.ownerPinHash, // Require reset if migrating
+          staffPinResetRequired: !shop.staffPinHash, // Require reset if migrating
           updatedAt: new Date(),
         })
         .where(eq(schema.shops.id, shop.id))
         .returning();
       shop = updated;
-      console.log('Updated shop with PINs');
+      console.log('Updated shop with hashed PINs');
     }
   } else {
-    // Create mineiro shop
+    // Create mineiro shop with hashed PINs
+    const defaultOwnerPin = '1234';
+    const defaultStaffPin = '0000';
+    
     [shop] = await db
       .insert(schema.shops)
       .values({
@@ -42,8 +51,12 @@ async function seed() {
           primary: '#3E2723',
           accent: '#FFD54F',
         }),
-        ownerPin: '1234', // Default owner PIN - change in production!
-        staffPin: '0000', // Default staff PIN - change in production!
+        ownerPin: defaultOwnerPin, // Legacy: keep for migration support
+        staffPin: defaultStaffPin, // Legacy: keep for migration support
+        ownerPinHash: await hashPin(defaultOwnerPin),
+        staffPinHash: await hashPin(defaultStaffPin),
+        ownerPinResetRequired: true, // Require PIN reset on first login
+        staffPinResetRequired: true, // Require PIN reset on first login
       })
       .returning();
 

@@ -9,8 +9,12 @@ export const shops = pgTable('shops', {
   path: text('path'),
   apiBase: text('api_base'),
   theme: text('theme'), // JSON stored as text
-  ownerPin: text('owner_pin'), // PIN for owner access (full)
-  staffPin: text('staff_pin'), // PIN for staff access (queue only)
+  ownerPin: text('owner_pin'), // Legacy: plain text PIN (deprecated, use ownerPinHash)
+  staffPin: text('staff_pin'), // Legacy: plain text PIN (deprecated, use staffPinHash)
+  ownerPinHash: text('owner_pin_hash'), // Hashed owner PIN
+  staffPinHash: text('staff_pin_hash'), // Hashed staff PIN
+  ownerPinResetRequired: boolean('owner_pin_reset_required').notNull().default(true), // Require PIN reset on next login
+  staffPinResetRequired: boolean('staff_pin_reset_required').notNull().default(true), // Require PIN reset on next login
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
