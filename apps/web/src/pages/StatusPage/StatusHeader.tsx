@@ -30,7 +30,7 @@ export function StatusHeader({ customerName, status }: StatusHeaderProps) {
     : 'Concluído';
 
   return (
-    <div className="text-center mb-6 sm:mb-8 lg:mb-10">
+    <div className="text-center mt-8 sm:mt-0 mb-6 sm:mb-8 lg:mb-10">
       <Heading level={1} className="mb-3 sm:mb-4">
         {customerName}
       </Heading>
