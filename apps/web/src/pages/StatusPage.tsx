@@ -170,7 +170,7 @@ export function StatusPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
-      <div className="container relative z-10 mx-auto px-4 sm:px-6 pt-20 sm:pt-24 pb-16 max-w-2xl">
+      <div className="container relative z-10 mx-auto px-4 sm:px-6 pt-28 sm:pt-32 pb-16 max-w-2xl">
         <div className="space-y-8 sm:space-y-12">
           {/* Hero Section - Customer Name */}
           <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
