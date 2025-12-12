@@ -102,7 +102,7 @@ export function StatusPage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
 
-      <Container className="relative z-10 pt-16 sm:pt-20 lg:pt-24 pb-20 lg:pb-24">
+      <Container className="relative z-10 pt-24 sm:pt-20 lg:pt-24 pb-20 lg:pb-24">
         {/* Mobile: Stacked layout */}
         <div className="lg:hidden space-y-6 sm:space-y-8">
           <StatusHeader customerName={ticket.customerName} status={ticket.status} />
