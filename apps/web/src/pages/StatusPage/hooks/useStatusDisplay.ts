@@ -69,7 +69,7 @@ export function useStatusDisplay(ticket: Ticket | null) {
     try {
       await api.cancelTicket(ticketId);
       localStorage.removeItem(STORAGE_KEY);
-      navigate('/mineiro/home');
+      navigate('/home');
     } catch (error) {
       const errorMsg = getErrorMessage(error, 'Erro ao sair da fila. Tente novamente.');
       console.error('Error leaving queue:', errorMsg);

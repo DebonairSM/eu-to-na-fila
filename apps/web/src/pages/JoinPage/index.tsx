@@ -89,7 +89,7 @@ export function JoinPage() {
             <JoinForm />
             <p className="text-center lg:text-left mt-6 text-sm text-[rgba(255,255,255,0.7)]">
               Já está na fila?{' '}
-              <Link to="/mineiro/home" className="text-[#D4AF37] hover:underline">
+              <Link to="/home" className="text-[#D4AF37] hover:underline">
                 Ver status
               </Link>
             </p>
@@ -108,7 +108,7 @@ export function JoinPage() {
 
           <p className="text-center text-sm text-[rgba(255,255,255,0.7)]">
             Já está na fila?{' '}
-            <Link to="/mineiro/home" className="text-[#D4AF37] hover:underline">
+            <Link to="/home" className="text-[#D4AF37] hover:underline">
               Ver status
             </Link>
           </p>

@@ -160,7 +160,7 @@ export function LoginForm() {
       {/* Back Link */}
       <div className="text-center pt-2">
         <Link 
-          to="/mineiro/home" 
+          to="/home" 
           className="text-sm text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>

@@ -47,7 +47,7 @@ function App() {
     const preload = [
       import('./pages/JoinPage'),
       import('./pages/StatusPage'),
-      import('./pages/CompanyHomePage'),
+      import('./pages/LandingPage'),
     ];
     preload.forEach((p) => p.catch(() => null));
   }, []);
@@ -69,11 +69,11 @@ function App() {
       <Routes>
         {/* Public Routes */}
           <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home" element={<CompanyHomePage />} />
+          <Route path="/home" element={<LandingPage />} />
+          <Route path="/company" element={<CompanyHomePage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/network" element={<NetworkPage />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/mineiro/home" element={<LandingPage />} />
         <Route path="/join" element={<JoinPage />} />
         <Route path="/status/:id" element={<StatusPage />} />
         <Route path="/login" element={<LoginPage />} />

@@ -132,9 +132,14 @@ class ApiClient {
     const url = `${this.baseUrl}${path}`;
 
     // Prepare headers
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    const headers: Record<string, string> = {};
+
+    // Only set Content-Type for methods that typically have bodies
+    const method = options.method || 'GET';
+    const methodsWithBody = ['POST', 'PATCH', 'PUT'];
+    if (methodsWithBody.includes(method)) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     // Add auth token if available
     if (this.authToken) {

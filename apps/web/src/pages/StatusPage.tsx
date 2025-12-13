@@ -88,7 +88,7 @@ export function StatusPage() {
       await api.cancelTicket(ticketIdFromParams);
       // Clear stored ticket ID when leaving queue
       localStorage.removeItem('eutonafila_active_ticket_id');
-      navigate('/mineiro/home');
+      navigate('/home');
     } catch (error) {
       // Show error to user - could be enhanced with toast notification
       const errorMsg = getErrorMessage(error, 'Erro ao sair da fila. Tente novamente.');
@@ -107,7 +107,7 @@ export function StatusPage() {
         <div className="container relative z-10 mx-auto px-4 sm:px-5 pt-20 sm:pt-[100px] pb-12 max-w-[480px]">
           <div className="text-center space-y-4">
             <p className="text-[rgba(255,255,255,0.7)]">Nenhum ticket ID fornecido</p>
-            <Link to="/mineiro/home">
+            <Link to="/home">
               <button className="px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all">
                 Voltar ao Início
               </button>
@@ -139,7 +139,7 @@ export function StatusPage() {
             onRetry={() => window.location.reload()}
           />
           <div className="mt-4">
-            <Link to="/mineiro/home">
+            <Link to="/home">
               <button className="w-full px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all">
                 Voltar ao Início
               </button>
@@ -354,7 +354,7 @@ export function StatusPage() {
             )}
 
             {isCompleted && (
-              <Link to="/mineiro/home" className="block">
+              <Link to="/home" className="block">
                 <button className="w-full px-6 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-bold rounded-xl flex items-center justify-center gap-3 hover:shadow-xl hover:shadow-[#D4AF37]/30 hover:-translate-y-0.5 transition-all duration-300 min-h-[52px] text-base shadow-lg shadow-[#D4AF37]/20">
                   <span className="material-symbols-outlined text-xl">home</span>
                   <span>Voltar ao Início</span>
@@ -362,7 +362,7 @@ export function StatusPage() {
               </Link>
             )}
 
-            <Link to="/mineiro/home" className="block">
+            <Link to="/home" className="block">
               <button className="w-full px-6 py-3.5 bg-[rgba(255,255,255,0.05)] backdrop-blur-sm text-[rgba(255,255,255,0.9)] border border-[rgba(255,255,255,0.15)] rounded-xl flex items-center justify-center gap-2.5 hover:bg-[rgba(255,255,255,0.1)] hover:border-[#D4AF37]/50 hover:text-[#D4AF37] transition-all duration-300 min-h-[48px] text-sm font-medium">
                 <span className="material-symbols-outlined text-lg">arrow_back</span>
                 <span>Voltar</span>

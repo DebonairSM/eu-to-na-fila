@@ -86,7 +86,7 @@ export function ActionButtons({
         )}
 
         {isCompleted && (
-          <Link to="/mineiro/home">
+          <Link to="/home">
             <Button size="lg" fullWidth>
               <span className="material-symbols-outlined text-xl">home</span>
               Voltar ao Início
@@ -102,7 +102,7 @@ export function ActionButtons({
           </Button>
         )}
 
-        <Link to="/mineiro/home">
+        <Link to="/home">
           <Button variant="ghost" fullWidth>
             Voltar
           </Button>

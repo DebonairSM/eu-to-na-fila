@@ -8,7 +8,7 @@ export function StaffPage() {
 
   const handleLogout = () => {
     logout();
-    navigate('/mineiro/home');
+    navigate('/home');
   };
 
   return (

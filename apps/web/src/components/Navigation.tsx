@@ -34,7 +34,7 @@ export function Navigation() {
 
   const handleLogout = () => {
     logout();
-    navigate('/mineiro/home');
+    navigate('/home');
     setIsMobileMenuOpen(false);
   };
 
@@ -56,11 +56,14 @@ export function Navigation() {
     e.preventDefault();
     const targetId = hash.replace('#', '');
     
-    if (location.pathname === '/mineiro/home') {
+    // Check if we're on the home route (with or without basename)
+    const isHomeRoute = location.pathname === '/home' || location.pathname === '/mineiro/home' || location.pathname.endsWith('/home');
+    
+    if (isHomeRoute) {
       scrollToSection(targetId);
       setIsMobileMenuOpen(false);
     } else {
-      navigate(`/mineiro/home${hash}`);
+      navigate(`/home${hash}`);
       setIsMobileMenuOpen(false);
       setTimeout(() => {
         scrollToSection(targetId);
@@ -81,7 +84,7 @@ export function Navigation() {
       <Container className="flex items-center justify-between gap-3">
         {/* Logo */}
         <Link
-          to="/mineiro/home"
+          to="/home"
           className="font-['Playfair_Display',serif] text-base sm:text-2xl font-semibold text-[#D4AF37] flex items-center justify-center gap-1 sm:gap-3 min-h-[48px] min-w-[48px] px-1 sm:px-2 py-0 rounded transition-all hover:text-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
           aria-label={`${config.name} - Home`}
         >
@@ -95,7 +98,7 @@ export function Navigation() {
         <ul className="hidden md:flex items-center gap-6 lg:gap-8 list-none m-0 p-0">
           <li>
             <a
-              href="/mineiro/home#services"
+              href="/home#services"
               onClick={(e) => handleHashLink(e, '#services')}
               className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 cursor-pointer"
             >
@@ -104,7 +107,7 @@ export function Navigation() {
           </li>
           <li>
             <a
-              href="/mineiro/home#about"
+              href="/home#about"
               onClick={(e) => handleHashLink(e, '#about')}
               className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 cursor-pointer"
             >
@@ -113,7 +116,7 @@ export function Navigation() {
           </li>
           <li>
             <a
-              href="/mineiro/home#location"
+              href="/home#location"
               onClick={(e) => handleHashLink(e, '#location')}
               className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 cursor-pointer"
             >
@@ -216,7 +219,7 @@ export function Navigation() {
               <ul className="list-none m-0 p-0 flex flex-col gap-1 relative z-10">
                 <li>
                   <a
-                    href="/mineiro/home#services"
+                    href="/home#services"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleHashLink(e, '#services');
@@ -228,7 +231,7 @@ export function Navigation() {
                 </li>
                 <li>
                   <a
-                    href="/mineiro/home#about"
+                    href="/home#about"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleHashLink(e, '#about');
@@ -240,7 +243,7 @@ export function Navigation() {
                 </li>
                 <li>
                   <a
-                    href="/mineiro/home#location"
+                    href="/home#location"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleHashLink(e, '#location');

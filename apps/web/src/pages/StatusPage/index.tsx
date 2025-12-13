@@ -49,7 +49,7 @@ export function StatusPage() {
         <Container className="relative z-10 pt-20 sm:pt-24 pb-12">
           <div className="text-center space-y-4">
             <p className="text-[rgba(255,255,255,0.7)]">Nenhum ticket ID fornecido</p>
-            <Link to="/mineiro/home">
+            <Link to="/home">
               <button className="px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all min-h-[52px]">
                 Voltar ao Início
               </button>
@@ -81,7 +81,7 @@ export function StatusPage() {
             onRetry={() => window.location.reload()}
           />
           <div className="mt-4">
-            <Link to="/mineiro/home">
+            <Link to="/home">
               <button className="w-full px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all min-h-[52px]">
                 Voltar ao Início
               </button>

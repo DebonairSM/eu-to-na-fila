@@ -8,7 +8,7 @@ export function OwnerDashboard() {
 
   const handleLogout = () => {
     logout();
-    navigate('/mineiro/home');
+    navigate('/home');
   };
 
   return (
