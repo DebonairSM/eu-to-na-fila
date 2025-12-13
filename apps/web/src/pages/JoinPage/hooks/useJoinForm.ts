@@ -4,7 +4,7 @@ import { api } from '@/lib/api';
 import { config } from '@/lib/config';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useQueue } from '@/hooks/useQueue';
-import { getErrorMessage } from '@/lib/utils';
+import { getErrorMessage, formatName } from '@/lib/utils';
 
 const STORAGE_KEY = 'eutonafila_active_ticket_id';
 
@@ -40,6 +40,17 @@ export function useJoinForm() {
       setNameCollisionError(null);
     }
   }, [firstName, lastName, validateName, nameCollisionError]);
+
+  // Formatted change handlers that apply name formatting in real-time
+  const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatName(e.target.value);
+    setFirstName(formatted);
+  };
+
+  const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatName(e.target.value);
+    setLastName(formatted);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,9 +131,9 @@ export function useJoinForm() {
 
   return {
     firstName,
-    setFirstName,
     lastName,
-    setLastName,
+    handleFirstNameChange,
+    handleLastNameChange,
     validationError,
     isSubmitting,
     submitError,

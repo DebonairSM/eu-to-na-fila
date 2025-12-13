@@ -4,9 +4,9 @@ import { Card, CardContent, Input, InputLabel, InputError, Button, Stack } from 
 export function JoinForm() {
   const {
     firstName,
-    setFirstName,
     lastName,
-    setLastName,
+    handleFirstNameChange,
+    handleLastNameChange,
     validationError,
     isSubmitting,
     submitError,
@@ -31,7 +31,7 @@ export function JoinForm() {
                   id="firstName"
                   type="text"
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  onChange={handleFirstNameChange}
                   placeholder="Primeiro nome"
                   autoComplete="given-name"
                   required
@@ -47,7 +47,7 @@ export function JoinForm() {
                   id="lastName"
                   type="text"
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  onChange={handleLastNameChange}
                   placeholder="Opcional"
                   autoComplete="family-name"
                 />

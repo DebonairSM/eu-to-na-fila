@@ -174,7 +174,7 @@ export function StatusPage() {
         <div className="space-y-8 sm:space-y-12">
           {/* Hero Section - Customer Name */}
           <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h1 className="font-['Playfair_Display',serif] text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight">
+            <h1 className="font-['Playfair_Display',serif] text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight pt-3 sm:pt-4 md:pt-5">
               {ticket.customerName}
             </h1>
             

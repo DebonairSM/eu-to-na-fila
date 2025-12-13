@@ -38,20 +38,32 @@ declare module 'fastify' {
  */
 export function requireAuth(): preHandlerHookHandler {
   return async (request: FastifyRequest, reply: FastifyReply) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.ts:41',message:'requireAuth entry',data:{url:request.url,method:request.method,hasAuthHeader:!!request.headers.authorization,authHeaderValue:request.headers.authorization?.substring(0,30)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     // Extract token from Authorization header
     const authHeader = request.headers.authorization;
 
     if (!authHeader) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.ts:46',message:'Missing auth header',data:{url:request.url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       throw new UnauthorizedError('Missing authorization header');
     }
 
     if (!authHeader.startsWith('Bearer ')) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.ts:50',message:'Invalid auth format',data:{authHeaderPrefix:authHeader.substring(0,20)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       throw new UnauthorizedError('Invalid authorization format');
     }
 
     const token = authHeader.substring(7);
 
     if (!token) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.ts:55',message:'Missing token after Bearer',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       throw new UnauthorizedError('Missing token');
     }
 
@@ -63,7 +75,13 @@ export function requireAuth(): preHandlerHookHandler {
         shopId: decoded.shopId,
         role: decoded.role,
       };
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.ts:66',message:'Auth success',data:{userId:decoded.userId,role:decoded.role},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
     } catch (error) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.ts:69',message:'Token verification failed',data:{error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       const message = error instanceof Error ? error.message : 'Invalid or expired token';
       throw new UnauthorizedError(message);
     }
@@ -93,15 +111,27 @@ export function requireRole(
   allowedRoles: Array<'owner' | 'staff'>
 ): preHandlerHookHandler {
   return async (request: FastifyRequest, reply: FastifyReply) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.ts:96',message:'requireRole entry',data:{hasUser:!!request.user,userRole:request.user?.role,allowedRoles},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     if (!request.user) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.ts:99',message:'No user in request',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       throw new UnauthorizedError('User not authenticated');
     }
 
     if (!allowedRoles.includes(request.user.role)) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.ts:103',message:'Role not allowed',data:{userRole:request.user.role,allowedRoles},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       throw new ForbiddenError(
         `Requires one of: ${allowedRoles.join(', ')}`
       );
     }
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.ts:109',message:'Role check passed',data:{userRole:request.user.role},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
   };
 }
 
