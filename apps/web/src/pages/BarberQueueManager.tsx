@@ -201,8 +201,11 @@ export function BarberQueueManager() {
         </button>
 
         {/* QR Code - Top right */}
-        <div className="absolute top-6 right-6 z-50 bg-white p-2 rounded-xl shadow-2xl">
-          <QRCode url={joinUrl} size={100} />
+        <div className="absolute top-6 right-6 z-50 bg-white p-3 rounded-xl shadow-2xl border-4 border-[#D4AF37] border-double flex flex-col items-center gap-2">
+          <div className="border-2 border-black/10 rounded-lg p-1">
+            <QRCode url={joinUrl} size={100} />
+          </div>
+          <p className="text-sm font-semibold text-black tracking-wide">Entrar</p>
         </div>
 
         {/* Main Content */}
@@ -370,8 +373,11 @@ export function BarberQueueManager() {
               </p>
               <p className="text-xl text-white/50">Toque para voltar à fila</p>
             </div>
-            <div className="absolute bottom-8 right-8 bg-white p-3 rounded-xl">
-              <QRCode url={joinUrl} size={120} />
+            <div className="absolute bottom-8 right-8 bg-white p-4 rounded-xl shadow-2xl border-4 border-[#D4AF37] border-double flex flex-col items-center gap-3">
+              <div className="border-2 border-black/10 rounded-lg p-1">
+                <QRCode url={joinUrl} size={120} />
+              </div>
+              <p className="text-base font-semibold text-black tracking-wide">Para Anunciar</p>
             </div>
           </button>
         )}
