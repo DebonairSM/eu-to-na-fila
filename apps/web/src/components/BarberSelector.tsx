@@ -1,6 +1,7 @@
+import { useMemo } from 'react';
 import { Modal } from './Modal';
 import { BarberCard } from './BarberCard';
-import type { Barber } from '@eutonafila/shared';
+import type { Barber, Ticket } from '@eutonafila/shared';
 
 export interface BarberSelectorProps {
   isOpen: boolean;
@@ -9,6 +10,8 @@ export interface BarberSelectorProps {
   selectedBarberId?: number | null;
   onSelect: (barberId: number | null) => void;
   customerName?: string;
+  tickets?: Ticket[];
+  currentTicketId?: number | null;
 }
 
 export function BarberSelector({
@@ -18,11 +21,33 @@ export function BarberSelector({
   selectedBarberId,
   onSelect,
   customerName,
+  tickets = [],
+  currentTicketId,
 }: BarberSelectorProps) {
   // Only show present barbers
   const presentBarbers = barbers.filter((b) => b.isPresent);
 
+  // Calculate which barbers are busy (have an in_progress ticket)
+  // Exclude the current ticket being edited (reassignment to same barber is fine)
+  const busyBarberIds = useMemo(() => {
+    const busyIds = new Set<number>();
+    tickets.forEach((ticket) => {
+      if (
+        ticket.status === 'in_progress' &&
+        ticket.barberId &&
+        ticket.id !== currentTicketId
+      ) {
+        busyIds.add(ticket.barberId);
+      }
+    });
+    return busyIds;
+  }, [tickets, currentTicketId]);
+
   const handleSelect = (barberId: number | null) => {
+    // Prevent selecting busy barbers
+    if (barberId !== null && busyBarberIds.has(barberId)) {
+      return;
+    }
     onSelect(barberId);
     onClose();
   };
@@ -41,22 +66,29 @@ export function BarberSelector({
           </p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {presentBarbers.map((barber) => (
-              <BarberCard
-                key={barber.id}
-                barber={barber}
-                isSelected={selectedBarberId === barber.id}
-                size="kiosk"
-                onClick={() => {
-                  // If clicking the same barber, unassign
-                  if (selectedBarberId === barber.id) {
-                    handleSelect(null);
-                  } else {
-                    handleSelect(barber.id);
-                  }
-                }}
-              />
-            ))}
+            {presentBarbers.map((barber) => {
+              const isBusy = busyBarberIds.has(barber.id);
+              const isCurrentlyAssigned = selectedBarberId === barber.id;
+              
+              return (
+                <BarberCard
+                  key={barber.id}
+                  barber={barber}
+                  isSelected={isCurrentlyAssigned}
+                  disabled={isBusy && !isCurrentlyAssigned}
+                  disabledReason={isBusy && !isCurrentlyAssigned ? 'Atendendo outro cliente' : undefined}
+                  size="kiosk"
+                  onClick={() => {
+                    // If clicking the same barber, unassign
+                    if (isCurrentlyAssigned) {
+                      handleSelect(null);
+                    } else if (!isBusy) {
+                      handleSelect(barber.id);
+                    }
+                  }}
+                />
+              );
+            })}
           </div>
         )}
 

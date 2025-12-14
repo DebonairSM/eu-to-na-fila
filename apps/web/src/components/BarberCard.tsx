@@ -7,6 +7,8 @@ export interface BarberCardProps {
   isSelected?: boolean;
   onClick?: () => void;
   showPresence?: boolean;
+  disabled?: boolean;
+  disabledReason?: string;
   className?: string;
   size?: 'management' | 'kiosk'; // Size context: management = 40px, kiosk = 56px
 }
@@ -16,6 +18,8 @@ export function BarberCard({
   isSelected = false,
   onClick,
   showPresence = false,
+  disabled = false,
+  disabledReason,
   className,
   size = 'management',
 }: BarberCardProps) {
@@ -29,21 +33,29 @@ export function BarberCard({
 
   return (
     <button
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       className={cn(
         'flex flex-col items-center gap-2 p-4 rounded-md border-2 transition-all',
-        'hover:border-primary hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+        'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
         {
           'border-primary bg-primary/10': isSelected,
           'border-border': !isSelected,
-          'opacity-50': showPresence && !barber.isPresent,
+          'opacity-50 cursor-not-allowed': disabled || (showPresence && !barber.isPresent),
+          'hover:border-primary hover:bg-primary/5': !disabled && !(showPresence && !barber.isPresent),
         },
         className
       )}
-      aria-label={showPresence 
-        ? `${barber.name} - ${barber.isPresent ? 'Presente, clique para marcar ausente' : 'Ausente, clique para marcar presente'}` 
-        : `Selecionar barbeiro ${barber.name}`}
+      aria-label={
+        disabled && disabledReason
+          ? `${barber.name} - ${disabledReason}`
+          : showPresence 
+            ? `${barber.name} - ${barber.isPresent ? 'Presente, clique para marcar ausente' : 'Ausente, clique para marcar presente'}` 
+            : `Selecionar barbeiro ${barber.name}`
+      }
       aria-pressed={isSelected}
+      aria-disabled={disabled}
+      title={disabled ? disabledReason : undefined}
     >
       <div className="relative">
         {!avatarFailed && (
@@ -79,6 +91,9 @@ export function BarberCard({
       <span className="text-sm font-medium text-center">{barber.name}</span>
       {isSelected && (
         <span className="text-xs text-primary font-medium">Atual</span>
+      )}
+      {disabled && disabledReason && (
+        <span className="text-xs text-muted-foreground text-center mt-1">{disabledReason}</span>
       )}
     </button>
   );

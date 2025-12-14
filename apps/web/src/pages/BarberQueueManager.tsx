@@ -462,6 +462,20 @@ export function BarberQueueManager() {
         {barberSelectorModal.isOpen && selectedCustomerId && (() => {
           const selectedTicket = tickets.find((t) => t.id === selectedCustomerId);
           const currentBarberId = selectedTicket?.barberId || null;
+          
+          // Calculate which barbers are busy (have an in_progress ticket)
+          // Exclude the current ticket being edited
+          const busyBarberIds = new Set<number>();
+          tickets.forEach((ticket) => {
+            if (
+              ticket.status === 'in_progress' &&
+              ticket.barberId &&
+              ticket.id !== selectedCustomerId
+            ) {
+              busyBarberIds.add(ticket.barberId);
+            }
+          });
+          
           return (
             <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-8">
               <div className="bg-[#1a1a1a] border-2 border-[#D4AF37]/30 rounded-3xl p-10 max-w-3xl w-full">
@@ -472,27 +486,40 @@ export function BarberQueueManager() {
                   {selectedTicket?.customerName}
                 </p>
                 <div className="grid grid-cols-2 gap-4 mb-8">
-                  {barbers.filter(b => b.isPresent).map((barber) => (
-                    <button
-                      key={barber.id}
-                      onClick={() => {
-                        // If clicking the same barber, unassign
-                        if (currentBarberId === barber.id) {
-                          handleSelectBarber(null);
-                        } else {
-                          handleSelectBarber(barber.id);
-                        }
-                      }}
-                      className={cn(
-                        'p-6 rounded-2xl border-2 transition-all text-xl font-medium',
-                        currentBarberId === barber.id
-                          ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]'
-                          : 'bg-white/5 border-white/20 text-white hover:border-[#D4AF37]/50'
-                      )}
-                    >
-                      {barber.name}
-                    </button>
-                  ))}
+                  {barbers.filter(b => b.isPresent).map((barber) => {
+                    const isBusy = busyBarberIds.has(barber.id);
+                    const isCurrentlyAssigned = currentBarberId === barber.id;
+                    const isDisabled = isBusy && !isCurrentlyAssigned;
+                    
+                    return (
+                      <button
+                        key={barber.id}
+                        onClick={() => {
+                          // If clicking the same barber, unassign
+                          if (isCurrentlyAssigned) {
+                            handleSelectBarber(null);
+                          } else if (!isBusy) {
+                            handleSelectBarber(barber.id);
+                          }
+                        }}
+                        disabled={isDisabled}
+                        className={cn(
+                          'p-6 rounded-2xl border-2 transition-all text-xl font-medium',
+                          isCurrentlyAssigned
+                            ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]'
+                            : isDisabled
+                              ? 'bg-white/5 border-white/10 text-white/40 cursor-not-allowed opacity-50'
+                              : 'bg-white/5 border-white/20 text-white hover:border-[#D4AF37]/50'
+                        )}
+                        title={isDisabled ? 'Atendendo outro cliente' : undefined}
+                      >
+                        {barber.name}
+                        {isDisabled && (
+                          <span className="block text-sm text-white/40 mt-1">Atendendo outro cliente</span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
                 {currentBarberId && (
                   <div className="mb-4 pb-4 border-b border-white/10">
@@ -751,6 +778,8 @@ export function BarberQueueManager() {
             ? tickets.find((t) => t.id === selectedCustomerId)?.customerName
             : undefined
         }
+        tickets={tickets}
+        currentTicketId={selectedCustomerId}
       />
 
       {/* Remove Confirmation */}

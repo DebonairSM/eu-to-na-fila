@@ -1,5 +1,5 @@
 import { db, schema } from '../db/index.js';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, or, ne } from 'drizzle-orm';
 import type { CreateTicket, UpdateTicketStatus, Ticket } from '@eutonafila/shared';
 import { queueService } from './QueueService.js';
 import { ConflictError, NotFoundError } from '../lib/errors.js';
@@ -256,6 +256,23 @@ export class TicketService {
       // Verify barber belongs to same shop
       if (barber.shopId !== existingTicket.shopId) {
         throw new Error('Barber does not belong to this shop');
+      }
+
+      // Check if barber is already serving another client
+      // Only validate when assigning to in_progress status
+      if (data.status === 'in_progress') {
+        const existingInProgressTicket = await db.query.tickets.findFirst({
+          where: and(
+            eq(schema.tickets.barberId, data.barberId),
+            eq(schema.tickets.status, 'in_progress'),
+            // Exclude the current ticket if we're updating it (reassignment to same barber is fine)
+            ne(schema.tickets.id, id)
+          ),
+        });
+
+        if (existingInProgressTicket) {
+          throw new ConflictError('Barbeiro já está atendendo outro cliente');
+        }
       }
     }
 
