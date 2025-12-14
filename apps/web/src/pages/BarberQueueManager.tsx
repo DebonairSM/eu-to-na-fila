@@ -69,6 +69,11 @@ export function BarberQueueManager() {
     };
   }, [tickets]);
 
+  // Memoize sorted barbers by ID to maintain consistent order in kiosk display
+  const sortedBarbers = useMemo(() => {
+    return [...barbers].sort((a, b) => a.id - b.id);
+  }, [barbers]);
+
   const handleAddCustomer = async () => {
     const validation = validateName(checkInName.first, checkInName.last);
     if (!validation.isValid) {
@@ -324,7 +329,7 @@ export function BarberQueueManager() {
             <footer className="flex-shrink-0 py-6 px-8 border-t border-[rgba(212,175,55,0.15)] bg-[rgba(10,10,10,0.95)]">
               <div className="max-w-4xl mx-auto">
                 <div className="flex items-center justify-center gap-4 flex-wrap">
-                  {barbers.map((barber) => (
+                  {sortedBarbers.map((barber) => (
                     <button
                       key={barber.id}
                       onClick={async () => {
