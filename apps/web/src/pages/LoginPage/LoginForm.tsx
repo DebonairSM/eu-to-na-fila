@@ -26,7 +26,7 @@ export function LoginForm() {
             lock
           </span>
         </div>
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Entrar</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white"></h1>
         <p className="text-sm sm:text-base text-[rgba(255,255,255,0.7)]">
           Acesso para funcionários e proprietários
         </p>
@@ -116,7 +116,6 @@ export function LoginForm() {
           ) : (
             <>
               <span className="material-symbols-outlined text-xl">login</span>
-              Entrar
             </>
           )}
         </button>
