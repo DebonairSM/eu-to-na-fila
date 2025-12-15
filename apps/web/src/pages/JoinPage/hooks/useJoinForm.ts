@@ -65,6 +65,9 @@ export function useJoinForm() {
 
   // Real-time validation
   useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useJoinForm.ts:67',message:'useEffect state check',data:{firstName:firstName,lastName:lastName,firstNameLength:firstName.length,lastNameLength:lastName.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     if (firstName.trim().length === 0) {
       setValidationError(null);
       return;
@@ -85,13 +88,31 @@ export function useJoinForm() {
 
   // Formatted change handlers that apply name formatting in real-time
   const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useJoinForm.ts:87',message:'handleFirstNameChange entry',data:{rawValue:e.target.value,currentState:firstName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     const formatted = formatName(e.target.value);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useJoinForm.ts:89',message:'formatName result',data:{rawValue:e.target.value,formattedValue:formatted,isDifferent:formatted!==e.target.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     setFirstName(formatted);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useJoinForm.ts:91',message:'setFirstName called',data:{formattedValue:formatted},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
   };
 
   const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useJoinForm.ts:95',message:'handleLastNameChange entry',data:{rawValue:e.target.value,currentState:lastName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     const formatted = formatName(e.target.value);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useJoinForm.ts:97',message:'formatName result',data:{rawValue:e.target.value,formattedValue:formatted,isDifferent:formatted!==e.target.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     setLastName(formatted);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useJoinForm.ts:99',message:'setLastName called',data:{formattedValue:formatted},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

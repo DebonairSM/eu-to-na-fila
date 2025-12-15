@@ -29,13 +29,26 @@ export function BarberSelection({
   onSelect,
   isLoading = false,
 }: BarberSelectionProps) {
+  // Show barbers even if wait times aren't available - just use barbers list
+  const effectiveWaitTimes = useMemo(() => {
+    return waitTimes || {
+      standardWaitTime: null,
+      barberWaitTimes: barbers
+        .filter((b) => b.isActive)
+        .map((b) => ({
+          barberId: b.id,
+          barberName: b.name,
+          waitTime: null,
+          isPresent: b.isPresent ?? false,
+        })),
+    };
+  }, [waitTimes, barbers]);
+
   // Find the fastest option (lowest wait time)
   const fastestOption = useMemo(() => {
-    if (!waitTimes) return null;
-
     const options: Array<{ id: number | null; name: string; waitTime: number | null }> = [
-      { id: null, name: 'Fila Padrão', waitTime: waitTimes.standardWaitTime },
-      ...waitTimes.barberWaitTimes
+      { id: null, name: 'Fila Padrão', waitTime: effectiveWaitTimes.standardWaitTime },
+      ...effectiveWaitTimes.barberWaitTimes
         .filter((bt) => bt.isPresent)
         .map((bt) => ({ id: bt.barberId, name: bt.barberName, waitTime: bt.waitTime })),
     ];
@@ -48,7 +61,7 @@ export function BarberSelection({
       if (!fastest.waitTime) return current;
       return current.waitTime < fastest.waitTime ? current : fastest;
     }, validOptions[0] as typeof validOptions[0] | null);
-  }, [waitTimes]);
+  }, [effectiveWaitTimes]);
 
   const formatWaitTime = (waitTime: number | null): string => {
     if (waitTime === null) return '--';
@@ -64,10 +77,6 @@ export function BarberSelection({
         </CardContent>
       </Card>
     );
-  }
-
-  if (!waitTimes) {
-    return null;
   }
 
   return (
@@ -122,7 +131,7 @@ export function BarberSelection({
                 </div>
                 <div className="text-right">
                   <Text size="lg" className="font-bold text-[#D4AF37]">
-                    {formatWaitTime(waitTimes.standardWaitTime)}
+                    {formatWaitTime(effectiveWaitTimes.standardWaitTime)}
                   </Text>
                   {fastestOption?.id === null && selectedBarberId !== null && (
                     <Text size="xs" className="text-[#22c55e] mt-1">
@@ -134,7 +143,7 @@ export function BarberSelection({
             </button>
 
             {/* Barber Options */}
-            {waitTimes.barberWaitTimes
+            {effectiveWaitTimes.barberWaitTimes
               .filter((bt) => bt.isPresent)
               .map((barberWaitTime) => {
                 const barber = barbers.find((b) => b.id === barberWaitTime.barberId);
@@ -196,13 +205,13 @@ export function BarberSelection({
               })}
           </div>
 
-          {waitTimes.barberWaitTimes.filter((bt) => !bt.isPresent).length > 0 && (
+          {effectiveWaitTimes.barberWaitTimes.filter((bt) => !bt.isPresent).length > 0 && (
             <div className="pt-4 border-t border-[rgba(255,255,255,0.1)]">
               <Text size="sm" variant="secondary" className="mb-2">
                 Barbeiros indisponíveis:
               </Text>
               <div className="flex flex-wrap gap-2">
-                {waitTimes.barberWaitTimes
+                {effectiveWaitTimes.barberWaitTimes
                   .filter((bt) => !bt.isPresent)
                   .map((bt) => (
                     <span
