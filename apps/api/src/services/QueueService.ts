@@ -271,17 +271,13 @@ export class QueueService {
     preferredBarberId: number,
     createdAt: Date = new Date()
   ): Promise<number> {
-    // Get all waiting tickets that the preferred barber must serve:
-    // 1. General queue tickets (no preferredBarberId) - preferred barber cycles through these first
-    // 2. Tickets with same preferredBarberId
+    // Get waiting tickets with the same preferred barber only
+    // General queue tickets can be taken by any barber, so we don't count them for position
     const waitingTickets = await db.query.tickets.findMany({
       where: and(
         eq(schema.tickets.shopId, shopId),
         eq(schema.tickets.status, 'waiting'),
-        or(
-          isNull(schema.tickets.preferredBarberId), // General queue tickets
-          eq(schema.tickets.preferredBarberId, preferredBarberId) // Same preferred barber
-        )
+        eq(schema.tickets.preferredBarberId, preferredBarberId) // Only same preferred barber
       ),
       orderBy: [asc(schema.tickets.createdAt)],
     });
@@ -327,26 +323,26 @@ export class QueueService {
     // Use barberCount = 1 (only that one barber is available - customer doesn't benefit from pool)
     const barberCount = 1;
 
-    // Get all waiting tickets that the preferred barber must serve:
-    // 1. ALL general queue tickets (no preferredBarberId) - preferred barber cycles through these first
-    // 2. Tickets with same preferredBarberId
+    // Get waiting tickets that are ahead for this preferred barber
+    // Only count tickets with the same preferred barber (not general queue tickets)
+    // General queue tickets can be taken by any barber, so we don't count them for wait time
     const waitingTickets = await db.query.tickets.findMany({
       where: and(
         eq(schema.tickets.shopId, shopId),
         eq(schema.tickets.status, 'waiting'),
-        or(
-          isNull(schema.tickets.preferredBarberId), // General queue tickets
-          eq(schema.tickets.preferredBarberId, preferredBarberId) // Same preferred barber
-        )
+        eq(schema.tickets.preferredBarberId, preferredBarberId) // Only same preferred barber
       ),
       orderBy: [asc(schema.tickets.createdAt)],
     });
     
     // Filter tickets created BEFORE this ticket (tickets ahead in queue)
-    // This ensures we only count tickets that are actually ahead, not just slice by position
+    // This ensures we only count tickets that are actually ahead
     const ticketsAhead = waitingTickets.filter(
       ticket => new Date(ticket.createdAt) < createdAt
     );
+
+    // Count only tickets that are actually ahead for this preferred barber
+    const peopleAhead = ticketsAhead.length;
 
     // In-progress tickets for that specific barber only
     const inProgressTickets = await db.query.tickets.findMany({
@@ -366,7 +362,7 @@ export class QueueService {
     }, 0);
 
     // Formula: (peopleAhead * 20) / 1 + remainingInProgressForBarber
-    const peopleAhead = ticketsAhead.length;
+    // peopleAhead is already calculated above from ticketsAhead.length
     const parallelShare = peopleAhead > 0 ? (peopleAhead * 20) / barberCount : 0;
     const totalWorkMinutes = Math.max(0, parallelShare) + remainingInProgress;
     const estimatedTime = Math.ceil(totalWorkMinutes);
