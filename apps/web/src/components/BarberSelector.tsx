@@ -12,6 +12,8 @@ export interface BarberSelectorProps {
   customerName?: string;
   tickets?: Ticket[];
   currentTicketId?: number | null;
+  showAllBarbers?: boolean; // If true, show all barbers (not just present ones)
+  preferredBarberId?: number | null; // Preferred barber ID to highlight
 }
 
 export function BarberSelector({
@@ -23,9 +25,20 @@ export function BarberSelector({
   customerName,
   tickets = [],
   currentTicketId,
+  showAllBarbers = false,
+  preferredBarberId = null,
 }: BarberSelectorProps) {
-  // Only show present barbers
-  const presentBarbers = barbers.filter((b) => b.isPresent);
+  // Show all barbers if showAllBarbers is true, otherwise only present barbers
+  const displayedBarbers = showAllBarbers ? barbers : barbers.filter((b) => b.isPresent);
+  
+  // Sort barbers: preferred barber first, then others
+  const sortedDisplayedBarbers = [...displayedBarbers].sort((a, b) => {
+    const aIsPreferred = preferredBarberId !== null && a.id === preferredBarberId;
+    const bIsPreferred = preferredBarberId !== null && b.id === preferredBarberId;
+    if (aIsPreferred && !bIsPreferred) return -1;
+    if (!aIsPreferred && bIsPreferred) return 1;
+    return 0;
+  });
 
   // Calculate which barbers are busy (have an in_progress ticket)
   // Exclude the current ticket being edited (reassignment to same barber is fine)
@@ -60,33 +73,47 @@ export function BarberSelector({
       className="max-w-2xl"
     >
       <div className="space-y-4">
-        {presentBarbers.length === 0 ? (
+        {preferredBarberId && (
+          <div className="text-center py-2 px-4 bg-primary/10 border border-primary/30 rounded-lg">
+            <p className="text-sm text-primary flex items-center justify-center gap-2">
+              <span className="material-symbols-outlined text-base">star</span>
+              Preferência: {barbers.find(b => b.id === preferredBarberId)?.name}
+            </p>
+          </div>
+        )}
+        {sortedDisplayedBarbers.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">
-            Nenhum barbeiro presente no momento
+            {showAllBarbers ? 'Nenhum barbeiro disponível' : 'Nenhum barbeiro presente no momento'}
           </p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {presentBarbers.map((barber) => {
+            {sortedDisplayedBarbers.map((barber) => {
               const isBusy = busyBarberIds.has(barber.id);
               const isCurrentlyAssigned = selectedBarberId === barber.id;
+              const isAbsent = !barber.isPresent;
+              const isPreferred = preferredBarberId !== null && barber.id === preferredBarberId;
               
               return (
-                <BarberCard
-                  key={barber.id}
-                  barber={barber}
-                  isSelected={isCurrentlyAssigned}
-                  disabled={isBusy && !isCurrentlyAssigned}
-                  disabledReason={isBusy && !isCurrentlyAssigned ? 'Atendendo outro cliente' : undefined}
-                  size="kiosk"
-                  onClick={() => {
-                    // If clicking the same barber, unassign
-                    if (isCurrentlyAssigned) {
-                      handleSelect(null);
-                    } else if (!isBusy) {
-                      handleSelect(barber.id);
-                    }
-                  }}
-                />
+                <div key={barber.id} className="relative">
+                  {isPreferred && !isCurrentlyAssigned && (
+                    <span className="absolute -top-2 -right-2 z-10 material-symbols-outlined text-primary text-xl">star</span>
+                  )}
+                  <BarberCard
+                    barber={barber}
+                    isSelected={isCurrentlyAssigned}
+                    disabled={isBusy && !isCurrentlyAssigned}
+                    disabledReason={isBusy && !isCurrentlyAssigned ? 'Atendendo outro cliente' : isAbsent ? 'Indisponível' : undefined}
+                    size="kiosk"
+                    onClick={() => {
+                      // If clicking the same barber, unassign
+                      if (isCurrentlyAssigned) {
+                        handleSelect(null);
+                      } else if (!isBusy) {
+                        handleSelect(barber.id);
+                      }
+                    }}
+                  />
+                </div>
               );
             })}
           </div>

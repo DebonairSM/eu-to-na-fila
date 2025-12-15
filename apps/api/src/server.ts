@@ -121,14 +121,13 @@ if (!existsSync(mineiroPath)) {
 }
 
 // Register static file serving for /mineiro/ assets
-// Let fastifyStatic handle ALL routes under /mineiro/ including serving index.html
-// Do NOT register manual routes for /mineiro/ - it will cause duplicate route errors
+// fastifyStatic serves actual files, but we need to handle SPA routes separately
 fastify.register(fastifyStatic, {
   root: mineiroPath,
   prefix: '/mineiro/',
   decorateReply: false,
-  wildcard: true,
-  index: ['index.html'], // Serve index.html when /mineiro/ is requested
+  wildcard: false, // Don't use wildcard - we'll handle SPA routes in 404 handler
+  index: false, // Don't auto-serve index.html - handle in 404 handler
   setHeaders: (res, path) => {
     // Cache hashed assets (JS/CSS with hash in filename) for 1 year
     if (path.includes('/assets/') && /\.[a-f0-9]{8,}\.(js|css)$/i.test(path)) {
@@ -205,6 +204,16 @@ fastify.get('/mineiro', async (request, reply) => {
   return reply.redirect('/mineiro/');
 });
 
+// Serve index.html for /mineiro/ root
+fastify.get('/mineiro/', async (request, reply) => {
+  const indexPath = join(mineiroPath, 'index.html');
+  if (existsSync(indexPath)) {
+    const fileContent = readFileSync(indexPath, 'utf-8');
+    return reply.type('text/html').send(fileContent);
+  }
+  return reply.code(404).send({ error: 'Not found' });
+});
+
 // Register error handler
 fastify.setErrorHandler(errorHandler);
 
@@ -227,26 +236,10 @@ fastify.setNotFoundHandler(async (request, reply) => {
   }
   
   // SPA fallback: serve index.html for client routes
-  const spaPrefixes = [
-    '/home',
-    '/contact',
-    '/network',
-    '/about',
-    '/join',
-    '/status',
-    '/login',
-    '/owner',
-    '/staff',
-    '/manage',
-    '/analytics',
-    '/barbers',
-    '/mineiro/home',
-    '/mineiro/',
-    '/mineiro'
-  ];
-
+  // All routes under /mineiro/ should be handled by the SPA
   const isSpaRoute =
-    spaPrefixes.some((prefix) => urlPath === prefix || urlPath.startsWith(`${prefix}/`)) ||
+    urlPath.startsWith('/mineiro/') ||
+    urlPath === '/mineiro' ||
     urlPath === '/';
 
   if (isSpaRoute) {

@@ -5,6 +5,7 @@ import type { Ticket, Barber } from '@eutonafila/shared';
 export interface QueueCardProps {
   ticket: Ticket;
   assignedBarber?: Barber | null;
+  barbers?: Barber[]; // For displaying preferred barber
   onClick?: () => void;
   onRemove?: () => void;
   onComplete?: () => void;
@@ -14,6 +15,7 @@ export interface QueueCardProps {
 export function QueueCard({
   ticket,
   assignedBarber,
+  barbers = [],
   onClick,
   onRemove,
   onComplete,
@@ -94,6 +96,15 @@ export function QueueCard({
                 {assignedBarber.name}
               </p>
             )}
+            {(ticket as any).preferredBarberId && (!assignedBarber || assignedBarber.id !== (ticket as any).preferredBarberId) && (() => {
+              const preferredBarber = barbers.find((b) => b.id === (ticket as any).preferredBarberId);
+              return preferredBarber ? (
+                <p className="text-xs text-[#D4AF37]/80 truncate flex items-center gap-1 mt-0.5">
+                  <span className="material-symbols-outlined text-xs">star</span>
+                  Preferência: {preferredBarber.name}
+                </p>
+              ) : null;
+            })()}
           </div>
         </div>
 

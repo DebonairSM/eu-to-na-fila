@@ -47,6 +47,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       serviceId: z.number(),
       customerName: z.string().min(1).max(200),
       customerPhone: z.string().optional(),
+      preferredBarberId: z.number().optional(),
     });
     const data = validateRequest(bodySchema, request.body);
 

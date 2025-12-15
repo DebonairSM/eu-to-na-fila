@@ -176,10 +176,48 @@ export class TicketService {
       throw new ConflictError('Queue is full');
     }
 
+    // Validate preferred barber if provided
+    if (data.preferredBarberId) {
+      const preferredBarber = await db.query.barbers.findFirst({
+        where: eq(schema.barbers.id, data.preferredBarberId),
+      });
+
+      if (!preferredBarber) {
+        throw new NotFoundError('Preferred barber not found');
+      }
+
+      if (!preferredBarber.isActive) {
+        throw new ConflictError('Preferred barber is not active');
+      }
+
+      // Verify preferred barber belongs to same shop
+      if (preferredBarber.shopId !== shopId) {
+        throw new ConflictError('Preferred barber does not belong to this shop');
+      }
+    }
+
     // Calculate position and wait time
     const now = new Date();
-    const position = await queueService.calculatePosition(shopId, now);
-    const estimatedWaitTime = await queueService.calculateWaitTime(shopId, position);
+    let position: number;
+    let estimatedWaitTime: number | null;
+
+    if (data.preferredBarberId) {
+      // Use preferred barber calculation methods
+      position = await queueService.calculatePositionForPreferredBarber(
+        shopId,
+        data.preferredBarberId,
+        now
+      );
+      estimatedWaitTime = await queueService.calculateWaitTimeForPreferredBarber(
+        shopId,
+        data.preferredBarberId,
+        position
+      );
+    } else {
+      // Use standard calculation methods
+      position = await queueService.calculatePosition(shopId, now);
+      estimatedWaitTime = await queueService.calculateWaitTime(shopId, position);
+    }
 
     // Create ticket
     const [ticket] = await db
@@ -189,6 +227,7 @@ export class TicketService {
         serviceId: data.serviceId,
         customerName: data.customerName,
         customerPhone: data.customerPhone,
+        preferredBarberId: data.preferredBarberId,
         status: 'waiting',
         position,
         estimatedWaitTime,
@@ -320,6 +359,7 @@ export class TicketService {
   /**
    * Recalculate wait times for all waiting tickets in a shop.
    * Should be called after ticket creation or status change.
+   * Uses specialized calculation for tickets with preferred barbers.
    * 
    * @param shopId - Shop database ID
    */
@@ -327,15 +367,43 @@ export class TicketService {
     const waitingTickets = await this.getByShop(shopId, 'waiting');
 
     for (const ticket of waitingTickets) {
-      const waitTime = await queueService.calculateWaitTime(shopId, ticket.position);
-      
-      await db
-        .update(schema.tickets)
-        .set({ 
-          estimatedWaitTime: waitTime,
-          updatedAt: new Date(),
-        })
-        .where(eq(schema.tickets.id, ticket.id));
+      let waitTime: number | null;
+
+      if (ticket.preferredBarberId) {
+        // Use preferred barber calculation
+        // First recalculate position for preferred barber tickets
+        const position = await queueService.calculatePositionForPreferredBarber(
+          shopId,
+          ticket.preferredBarberId,
+          new Date(ticket.createdAt)
+        );
+        waitTime = await queueService.calculateWaitTimeForPreferredBarber(
+          shopId,
+          ticket.preferredBarberId,
+          position
+        );
+        
+        // Update position as well since it may have changed
+        await db
+          .update(schema.tickets)
+          .set({ 
+            position,
+            estimatedWaitTime: waitTime,
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.tickets.id, ticket.id));
+      } else {
+        // Use standard calculation
+        waitTime = await queueService.calculateWaitTime(shopId, ticket.position);
+        
+        await db
+          .update(schema.tickets)
+          .set({ 
+            estimatedWaitTime: waitTime,
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.tickets.id, ticket.id));
+      }
     }
   }
 

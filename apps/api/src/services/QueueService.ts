@@ -1,5 +1,5 @@
 import { db, schema } from '../db/index.js';
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, and, asc, or, isNull } from 'drizzle-orm';
 
 /**
  * Service for managing queue operations.
@@ -247,6 +247,124 @@ export class QueueService {
   ): Promise<boolean> {
     const { queueLength } = await this.getMetrics(shopId);
     return queueLength >= maxQueueSize;
+  }
+
+  /**
+   * Calculate queue position for a ticket with a preferred barber.
+   * Position is based on ALL tickets ahead that the preferred barber must serve:
+   * - ALL general queue tickets (no preferredBarberId) - preferred barber cycles through these first
+   * - Other tickets with the same preferredBarberId created before this ticket
+   * 
+   * @param shopId - Shop database ID
+   * @param preferredBarberId - Preferred barber ID
+   * @param createdAt - Ticket creation timestamp (for ordering)
+   * @returns The position in queue (1-based index)
+   * 
+   * @example
+   * ```typescript
+   * const position = await queueService.calculatePositionForPreferredBarber(1, 3, new Date());
+   * // Returns: 8 (eighth in that barber's queue)
+   * ```
+   */
+  async calculatePositionForPreferredBarber(
+    shopId: number,
+    preferredBarberId: number,
+    createdAt: Date = new Date()
+  ): Promise<number> {
+    // Get all waiting tickets that the preferred barber must serve:
+    // 1. General queue tickets (no preferredBarberId) - preferred barber cycles through these first
+    // 2. Tickets with same preferredBarberId
+    const waitingTickets = await db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.status, 'waiting'),
+        or(
+          isNull(schema.tickets.preferredBarberId), // General queue tickets
+          eq(schema.tickets.preferredBarberId, preferredBarberId) // Same preferred barber
+        )
+      ),
+      orderBy: [asc(schema.tickets.createdAt)],
+    });
+
+    // Filter tickets created before the given time
+    const ticketsAhead = waitingTickets.filter(
+      ticket => new Date(ticket.createdAt) < createdAt
+    );
+
+    // Position is number of tickets ahead + 1
+    return ticketsAhead.length + 1;
+  }
+
+  /**
+   * Calculate estimated wait time for a ticket with a preferred barber.
+   * Uses barberCount = 1 (only that one barber is available).
+   * Counts ALL tickets ahead that the preferred barber must serve:
+   * - ALL general queue tickets (no preference) - preferred barber serves these first
+   * - Other tickets with same preferredBarberId ahead in queue
+   * 
+   * @param shopId - Shop database ID
+   * @param preferredBarberId - Preferred barber ID
+   * @param position - Position in queue (1-based)
+   * @returns Estimated wait time in minutes (null if position is 0)
+   * 
+   * @example
+   * ```typescript
+   * const waitTime = await queueService.calculateWaitTimeForPreferredBarber(1, 3, 5);
+   * // Returns: 100 (approximately 100 minutes)
+   * ```
+   */
+  async calculateWaitTimeForPreferredBarber(
+    shopId: number,
+    preferredBarberId: number,
+    position: number
+  ): Promise<number | null> {
+    if (position === 0) return null;
+
+    const now = new Date();
+
+    // Use barberCount = 1 (only that one barber is available - customer doesn't benefit from pool)
+    const barberCount = 1;
+
+    // Get all waiting tickets that the preferred barber must serve:
+    // 1. ALL general queue tickets (no preferredBarberId) - preferred barber cycles through these first
+    // 2. Tickets with same preferredBarberId
+    const waitingTickets = await db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.status, 'waiting'),
+        or(
+          isNull(schema.tickets.preferredBarberId), // General queue tickets
+          eq(schema.tickets.preferredBarberId, preferredBarberId) // Same preferred barber
+        )
+      ),
+      orderBy: [asc(schema.tickets.createdAt)],
+    });
+    const ticketsAhead = waitingTickets.slice(0, Math.max(position - 1, 0));
+
+    // In-progress tickets for that specific barber only
+    const inProgressTickets = await db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.status, 'in_progress'),
+        eq(schema.tickets.barberId, preferredBarberId)
+      ),
+      orderBy: [asc(schema.tickets.updatedAt)],
+    });
+
+    const remainingInProgress = inProgressTickets.reduce((sum, t) => {
+      const updatedAt = t.updatedAt ? new Date(t.updatedAt) : now;
+      const elapsedMinutes = Math.max(0, (now.getTime() - updatedAt.getTime()) / 60000);
+      const remaining = Math.max(0, 20 - elapsedMinutes);
+      return sum + remaining;
+    }, 0);
+
+    // Formula: (peopleAhead * 20) / 1 + remainingInProgressForBarber
+    const peopleAhead = ticketsAhead.length;
+    const parallelShare = peopleAhead > 0 ? (peopleAhead * 20) / barberCount : 0;
+    const totalWorkMinutes = Math.max(0, parallelShare) + remainingInProgress;
+    const estimatedTime = Math.ceil(totalWorkMinutes);
+
+    return estimatedTime;
   }
 }
 

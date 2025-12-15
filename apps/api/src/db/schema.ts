@@ -49,6 +49,7 @@ export const tickets = pgTable('tickets', {
   shopId: integer('shop_id').notNull().references(() => shops.id),
   serviceId: integer('service_id').notNull().references(() => services.id),
   barberId: integer('barber_id').references(() => barbers.id),
+  preferredBarberId: integer('preferred_barber_id').references(() => barbers.id),
   customerName: text('customer_name').notNull(),
   customerPhone: text('customer_phone'),
   status: text('status').notNull().default('waiting'), // waiting, in_progress, completed, cancelled

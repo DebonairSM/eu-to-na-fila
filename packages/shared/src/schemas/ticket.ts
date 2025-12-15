@@ -8,6 +8,7 @@ export const ticketSchema = z.object({
   shopId: z.number(),
   serviceId: z.number(),
   barberId: z.number().optional(),
+  preferredBarberId: z.number().optional(),
   customerName: z.string().min(1).max(200),
   customerPhone: z.string().optional(),
   status: ticketStatusSchema,
@@ -24,6 +25,7 @@ export const createTicketSchema = z.object({
   serviceId: z.number(),
   customerName: z.string().min(1).max(200),
   customerPhone: z.string().optional(),
+  preferredBarberId: z.number().optional(),
 });
 export type CreateTicket = z.infer<typeof createTicketSchema>;
 
