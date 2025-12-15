@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { config } from '@/lib/config';
-import { getErrorMessage } from '@/lib/utils';
 import { logError } from '@/lib/logger';
 import type { Ticket, Barber } from '@eutonafila/shared';
 
