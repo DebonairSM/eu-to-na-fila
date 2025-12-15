@@ -1,0 +1,48 @@
+interface DayOfWeekChartProps {
+  data: Record<string, number>;
+}
+
+const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const dayLabels: Record<string, string> = {
+  Monday: 'Seg',
+  Tuesday: 'Ter',
+  Wednesday: 'Qua',
+  Thursday: 'Qui',
+  Friday: 'Sex',
+  Saturday: 'Sáb',
+  Sunday: 'Dom',
+};
+
+export function DayOfWeekChart({ data }: DayOfWeekChartProps) {
+  const maxValue = Math.max(...Object.values(data), 1);
+  const chartHeight = 200;
+
+  return (
+    <div className="day-of-week-chart flex items-end gap-2 sm:gap-3 h-[200px] sm:h-[220px] py-5 overflow-x-auto">
+      {dayOrder.map((day) => {
+        const value = data[day] || 0;
+        const height = maxValue > 0 ? (value / maxValue) * (chartHeight - 40) : 4;
+
+        return (
+          <div key={day} className="flex-1 flex flex-col items-center h-full min-w-[40px] sm:min-w-[50px] group">
+            <div
+              className="w-full bg-gradient-to-t from-[#D4AF37] to-[#E8C547] rounded-t-lg min-h-[4px] transition-all cursor-pointer relative"
+              style={{
+                height: `${height}px`,
+                animation: 'growUp 0.8s ease-out',
+              }}
+            >
+              <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-xs sm:text-sm font-semibold text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-[rgba(10,10,10,0.9)] px-1.5 py-0.5 rounded">
+                {value}
+              </div>
+            </div>
+            <div className="mt-3 text-[0.7rem] sm:text-xs text-[rgba(255,255,255,0.7)] text-center font-medium">
+              {dayLabels[day]}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+

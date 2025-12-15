@@ -8,6 +8,12 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { DailyChart } from '@/components/DailyChart';
 import { HourlyChart } from '@/components/HourlyChart';
+import { AIAnalyticsAdvisor } from '@/components/AIAnalyticsAdvisor';
+import { ServiceBreakdownChart } from '@/components/ServiceBreakdownChart';
+import { DayOfWeekChart } from '@/components/DayOfWeekChart';
+import { WaitTimeTrendChart } from '@/components/WaitTimeTrendChart';
+import { CancellationChart } from '@/components/CancellationChart';
+import { ServiceTimeDistributionChart } from '@/components/ServiceTimeDistributionChart';
 
 interface AnalyticsData {
   period: {
@@ -36,6 +42,25 @@ interface AnalyticsData {
   ticketsByDay: Record<string, number>;
   hourlyDistribution: Record<number, number>;
   peakHour: { hour: number; count: number } | null;
+  serviceBreakdown: Array<{ serviceId: number; serviceName: string; count: number; percentage: number }>;
+  dayOfWeekDistribution: Record<string, number>;
+  waitTimeTrends: Record<string, number>;
+  cancellationAnalysis: {
+    rateByDay: Record<string, number>;
+    rateByHour: Record<number, number>;
+    avgTimeBeforeCancellation: number;
+  };
+  serviceTimeDistribution: Record<string, number>;
+  barberEfficiency: Array<{
+    id: number;
+    name: string;
+    ticketsPerDay: number;
+    completionRate: number;
+  }>;
+  trends: {
+    weekOverWeek: number;
+    last7DaysComparison: Array<{ day: string; change: number }>;
+  };
 }
 
 export function AnalyticsPage() {
@@ -173,26 +198,89 @@ export function AnalyticsPage() {
         </div>
 
         <div className="space-y-8">
+          <AIAnalyticsAdvisor data={data} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+              <div className="mb-6 flex items-center gap-4">
+                <span className="material-symbols-outlined text-[#D4AF37] text-3xl">bar_chart</span>
+                <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                  Atendimentos por Dia
+                </h2>
+              </div>
+              <DailyChart data={data.ticketsByDay} />
+            </div>
+
+            <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+              <div className="mb-6 flex items-center gap-4">
+                <span className="material-symbols-outlined text-[#D4AF37] text-3xl">schedule</span>
+                <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                  Atendimentos por Hora
+                </h2>
+              </div>
+              <HourlyChart data={data.hourlyDistribution} peakHour={data.peakHour} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+              <div className="mb-6 flex items-center gap-4">
+                <span className="material-symbols-outlined text-[#D4AF37] text-3xl">calendar_month</span>
+                <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                  Padrão Semanal
+                </h2>
+              </div>
+              <DayOfWeekChart data={data.dayOfWeekDistribution} />
+            </div>
+
+            <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+              <div className="mb-6 flex items-center gap-4">
+                <span className="material-symbols-outlined text-[#D4AF37] text-3xl">pie_chart</span>
+                <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                  Serviços
+                </h2>
+              </div>
+              <ServiceBreakdownChart data={data.serviceBreakdown} />
+            </div>
+          </div>
+
+          {data.serviceBreakdown.length > 0 && (
+            <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+              <div className="mb-6 flex items-center gap-4">
+                <span className="material-symbols-outlined text-[#D4AF37] text-3xl">timer</span>
+                <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                  Distribuição de Tempo de Serviço
+                </h2>
+              </div>
+              <ServiceTimeDistributionChart data={data.serviceTimeDistribution} />
+            </div>
+          )}
+
           <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
             <div className="mb-6 flex items-center gap-4">
-              <span className="material-symbols-outlined text-[#D4AF37] text-3xl">bar_chart</span>
-              <h2 className="font-['Playfair_Display',serif] text-3xl text-white">
-                Atendimentos por Dia
+              <span className="material-symbols-outlined text-[#D4AF37] text-3xl">trending_up</span>
+              <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                Tendência de Tempo de Espera
               </h2>
             </div>
-            <DailyChart data={data.ticketsByDay} />
+            <WaitTimeTrendChart data={data.waitTimeTrends} />
           </div>
 
           <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
             <div className="mb-6 flex items-center gap-4">
-              <span className="material-symbols-outlined text-[#D4AF37] text-3xl">schedule</span>
-              <h2 className="font-['Playfair_Display',serif] text-3xl text-white">
-                Atendimentos por Hora
+              <span className="material-symbols-outlined text-[#D4AF37] text-3xl">cancel</span>
+              <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                Análise de Cancelamentos
               </h2>
             </div>
-            <HourlyChart data={data.hourlyDistribution} peakHour={data.peakHour} />
+            <CancellationChart data={data.cancellationAnalysis} />
           </div>
 
           {data.peakHour && (
@@ -209,12 +297,67 @@ export function AnalyticsPage() {
             </div>
           )}
 
+          {data.barberEfficiency.length > 0 && (
+            <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+              <div className="mb-6 flex items-center gap-4">
+                <span className="material-symbols-outlined text-[#D4AF37] text-3xl">speed</span>
+                <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                  Eficiência por Barbeiro
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {data.barberEfficiency.map((barber) => {
+                  const barberInfo = data.barbers.find(b => b.id === barber.id);
+                  return (
+                    <div
+                      key={barber.id}
+                      className="bg-[rgba(36,36,36,0.8)] border border-[rgba(255,255,255,0.05)] rounded-2xl p-6"
+                    >
+                      <h4 className="text-xl text-white mb-4 truncate">{barber.name}</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37]">
+                            {barber.ticketsPerDay.toFixed(1)}
+                          </div>
+                          <div className="text-xs text-white/50 uppercase mt-1">
+                            Tickets/Dia
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#22c55e]">
+                            {barber.completionRate}%
+                          </div>
+                          <div className="text-xs text-white/50 uppercase mt-1">
+                            Conclusão
+                          </div>
+                        </div>
+                      </div>
+                      {barberInfo && (
+                        <div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.05)]">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-white/70">Atendidos:</span>
+                            <span className="text-white font-semibold">{barberInfo.totalServed}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm mt-2">
+                            <span className="text-white/70">Tempo médio:</span>
+                            <span className="text-white font-semibold">{barberInfo.avgServiceTime}m</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {data.barbers.length > 0 && (
             <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
               <div className="mb-6 flex items-center gap-4">
                 <span className="material-symbols-outlined text-[#D4AF37] text-3xl">content_cut</span>
-                <h2 className="font-['Playfair_Display',serif] text-3xl text-white">
+                <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
                   Desempenho por Barbeiro
                 </h2>
               </div>
@@ -251,6 +394,22 @@ export function AnalyticsPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {data.trends.weekOverWeek !== 0 && (
+            <div className="bg-gradient-to-br from-[rgba(59,130,246,0.15)] to-[rgba(59,130,246,0.05)] border border-[rgba(59,130,246,0.3)] rounded-3xl p-8 text-center">
+              <p className="text-sm text-white/70 uppercase tracking-wider mb-3">
+                Tendência Semanal
+              </p>
+              <div className={`font-['Playfair_Display',serif] text-5xl font-semibold mb-3 ${
+                data.trends.weekOverWeek > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'
+              }`}>
+                {data.trends.weekOverWeek > 0 ? '+' : ''}{data.trends.weekOverWeek}%
+              </div>
+              <p className="text-base text-white/70">
+                {data.trends.weekOverWeek > 0 ? 'Aumento' : 'Queda'} em relação ao período anterior
+              </p>
             </div>
           )}
         </div>

@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db, schema } from '../db/index.js';
-import { eq, and, gte } from 'drizzle-orm';
+import { eq, and, gte, lt } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
@@ -45,6 +45,8 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const since = new Date();
     since.setDate(since.getDate() - days);
+    const previousPeriodStart = new Date();
+    previousPeriodStart.setDate(previousPeriodStart.getDate() - (days * 2));
 
     // Get all tickets in the period
     const tickets = await db.query.tickets.findMany({
@@ -53,6 +55,22 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         gte(schema.tickets.createdAt, since)
       ),
     });
+
+    // Get tickets from previous period for comparison
+    const previousPeriodTickets = await db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shop.id),
+        gte(schema.tickets.createdAt, previousPeriodStart),
+        lt(schema.tickets.createdAt, since),
+      ),
+    });
+    const previousPeriodCount = previousPeriodTickets.length;
+
+    // Get services for service breakdown
+    const services = await db.query.services.findMany({
+      where: eq(schema.services.shopId, shop.id),
+    });
+    const serviceMap = new Map(services.map(s => [s.id, s.name]));
 
     // Calculate statistics
     const total = tickets.length;
@@ -147,6 +165,179 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       hourlyDistribution[h] = hourCounts[h] || 0;
     }
 
+    // Service breakdown
+    const serviceCounts: Record<number, number> = {};
+    tickets.forEach(t => {
+      serviceCounts[t.serviceId] = (serviceCounts[t.serviceId] || 0) + 1;
+    });
+    const serviceBreakdown = Object.entries(serviceCounts)
+      .map(([serviceId, count]) => ({
+        serviceId: parseInt(serviceId),
+        serviceName: serviceMap.get(parseInt(serviceId)) || `Service ${serviceId}`,
+        count,
+        percentage: total > 0 ? Math.round((count / total) * 100) : 0,
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    // Day of week distribution
+    const dayOfWeekDistribution: Record<string, number> = {
+      'Monday': 0,
+      'Tuesday': 0,
+      'Wednesday': 0,
+      'Thursday': 0,
+      'Friday': 0,
+      'Saturday': 0,
+      'Sunday': 0,
+    };
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    tickets.forEach(t => {
+      const dayIndex = t.createdAt.getDay();
+      const dayName = dayNames[dayIndex];
+      dayOfWeekDistribution[dayName]++;
+    });
+
+    // Wait time trends (average wait time per day)
+    const waitTimeByDay: Record<string, { total: number; count: number }> = {};
+    tickets.forEach(t => {
+      if (t.estimatedWaitTime !== null && t.estimatedWaitTime !== undefined) {
+        const day = t.createdAt.toISOString().split('T')[0];
+        if (!waitTimeByDay[day]) {
+          waitTimeByDay[day] = { total: 0, count: 0 };
+        }
+        waitTimeByDay[day].total += t.estimatedWaitTime;
+        waitTimeByDay[day].count++;
+      }
+    });
+    const waitTimeTrends: Record<string, number> = {};
+    Object.entries(waitTimeByDay).forEach(([day, data]) => {
+      waitTimeTrends[day] = data.count > 0 ? Math.round(data.total / data.count) : 0;
+    });
+
+    // Cancellation analysis
+    const cancelledTickets = tickets.filter(t => t.status === 'cancelled');
+    const cancellationRateByDay: Record<string, { cancelled: number; total: number }> = {};
+    const cancellationRateByHour: Record<number, { cancelled: number; total: number }> = {};
+    let totalCancellationTime = 0;
+    let cancellationTimeCount = 0;
+
+    tickets.forEach(t => {
+      const dayName = dayNames[t.createdAt.getDay()];
+      const hour = t.createdAt.getHours();
+      
+      if (!cancellationRateByDay[dayName]) {
+        cancellationRateByDay[dayName] = { cancelled: 0, total: 0 };
+      }
+      if (!cancellationRateByHour[hour]) {
+        cancellationRateByHour[hour] = { cancelled: 0, total: 0 };
+      }
+      
+      cancellationRateByDay[dayName].total++;
+      cancellationRateByHour[hour].total++;
+      
+      if (t.status === 'cancelled') {
+        cancellationRateByDay[dayName].cancelled++;
+        cancellationRateByHour[hour].cancelled++;
+        
+        if (t.updatedAt && t.createdAt) {
+          const timeBeforeCancellation = (t.updatedAt.getTime() - t.createdAt.getTime()) / (1000 * 60);
+          if (timeBeforeCancellation > 0 && timeBeforeCancellation < 240) {
+            totalCancellationTime += timeBeforeCancellation;
+            cancellationTimeCount++;
+          }
+        }
+      }
+    });
+
+    const cancellationAnalysis = {
+      rateByDay: Object.fromEntries(
+        Object.entries(cancellationRateByDay).map(([day, data]) => [
+          day,
+          data.total > 0 ? Math.round((data.cancelled / data.total) * 100) : 0,
+        ])
+      ),
+      rateByHour: Object.fromEntries(
+        Object.entries(cancellationRateByHour).map(([hour, data]) => [
+          parseInt(hour),
+          data.total > 0 ? Math.round((data.cancelled / data.total) * 100) : 0,
+        ])
+      ),
+      avgTimeBeforeCancellation: cancellationTimeCount > 0 
+        ? Math.round(totalCancellationTime / cancellationTimeCount) 
+        : 0,
+    };
+
+    // Service time distribution (histogram)
+    const serviceTimeDistribution: Record<string, number> = {
+      '0-10': 0,
+      '10-20': 0,
+      '20-30': 0,
+      '30-45': 0,
+      '45-60': 0,
+      '60+': 0,
+    };
+    completedTickets.forEach(ticket => {
+      if (ticket.updatedAt && ticket.createdAt) {
+        const serviceTime = (ticket.updatedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60);
+        if (serviceTime > 0 && serviceTime < 120) {
+          if (serviceTime < 10) serviceTimeDistribution['0-10']++;
+          else if (serviceTime < 20) serviceTimeDistribution['10-20']++;
+          else if (serviceTime < 30) serviceTimeDistribution['20-30']++;
+          else if (serviceTime < 45) serviceTimeDistribution['30-45']++;
+          else if (serviceTime < 60) serviceTimeDistribution['45-60']++;
+          else serviceTimeDistribution['60+']++;
+        }
+      }
+    });
+
+    // Barber efficiency (tickets per day, completion rate)
+    const barberEfficiency = barbers.map(barber => {
+      const barberTickets = tickets.filter(t => t.barberId === barber.id);
+      const barberCompleted = barberTickets.filter(t => t.status === 'completed');
+      const ticketsPerDay = days > 0 ? Math.round(barberTickets.length / days * 10) / 10 : 0;
+      const barberCompletionRate = barberTickets.length > 0 
+        ? Math.round((barberCompleted.length / barberTickets.length) * 100) 
+        : 0;
+      
+      return {
+        id: barber.id,
+        name: barber.name,
+        ticketsPerDay,
+        completionRate: barberCompletionRate,
+      };
+    });
+
+    // Trends
+    const weekOverWeek = previousPeriodCount > 0 
+      ? Math.round(((total - previousPeriodCount) / previousPeriodCount) * 100) 
+      : 0;
+    
+    // Last 7 days comparison
+    const last7DaysComparison: Array<{ day: string; change: number }> = [];
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      return date.toISOString().split('T')[0];
+    });
+    
+    last7Days.forEach(day => {
+      const dayTickets = tickets.filter(t => t.createdAt.toISOString().split('T')[0] === day).length;
+      const previousDay = new Date(day);
+      previousDay.setDate(previousDay.getDate() - 7);
+      const previousDayStr = previousDay.toISOString().split('T')[0];
+      const previousDayTickets = previousPeriodTickets.filter(t => 
+        t.createdAt.toISOString().split('T')[0] === previousDayStr
+      ).length;
+      
+      const change = previousDayTickets > 0 
+        ? Math.round(((dayTickets - previousDayTickets) / previousDayTickets) * 100) 
+        : (dayTickets > 0 ? 100 : 0);
+      
+      last7DaysComparison.push({
+        day,
+        change,
+      });
+    });
+
     return {
       period: {
         days,
@@ -168,6 +359,16 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       ticketsByDay,
       hourlyDistribution,
       peakHour: peakHour ? { hour: parseInt(peakHour[0]), count: peakHour[1] } : null,
+      serviceBreakdown,
+      dayOfWeekDistribution,
+      waitTimeTrends,
+      cancellationAnalysis,
+      serviceTimeDistribution,
+      barberEfficiency,
+      trends: {
+        weekOverWeek,
+        last7DaysComparison,
+      },
     };
   });
 };
