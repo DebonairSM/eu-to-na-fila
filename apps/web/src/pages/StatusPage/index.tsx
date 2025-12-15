@@ -11,7 +11,7 @@ import { WaitingCard } from './WaitingCard';
 import { InProgressCard } from './InProgressCard';
 import { CompletedCard } from './CompletedCard';
 import { ActionButtons } from './ActionButtons';
-import { Container, Stack, SlideIn } from '@/components/design-system';
+import { Container, SlideIn } from '@/components/design-system';
 
 export function StatusPage() {
   const { id } = useParams<{ id: string }>();
