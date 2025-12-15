@@ -305,18 +305,20 @@ export class QueueService {
    * @param shopId - Shop database ID
    * @param preferredBarberId - Preferred barber ID
    * @param position - Position in queue (1-based)
+   * @param createdAt - Ticket creation timestamp (for filtering tickets ahead)
    * @returns Estimated wait time in minutes (null if position is 0)
    * 
    * @example
    * ```typescript
-   * const waitTime = await queueService.calculateWaitTimeForPreferredBarber(1, 3, 5);
+   * const waitTime = await queueService.calculateWaitTimeForPreferredBarber(1, 3, 5, new Date());
    * // Returns: 100 (approximately 100 minutes)
    * ```
    */
   async calculateWaitTimeForPreferredBarber(
     shopId: number,
     preferredBarberId: number,
-    position: number
+    position: number,
+    createdAt: Date = new Date()
   ): Promise<number | null> {
     if (position === 0) return null;
 
@@ -339,7 +341,12 @@ export class QueueService {
       ),
       orderBy: [asc(schema.tickets.createdAt)],
     });
-    const ticketsAhead = waitingTickets.slice(0, Math.max(position - 1, 0));
+    
+    // Filter tickets created BEFORE this ticket (tickets ahead in queue)
+    // This ensures we only count tickets that are actually ahead, not just slice by position
+    const ticketsAhead = waitingTickets.filter(
+      ticket => new Date(ticket.createdAt) < createdAt
+    );
 
     // In-progress tickets for that specific barber only
     const inProgressTickets = await db.query.tickets.findMany({

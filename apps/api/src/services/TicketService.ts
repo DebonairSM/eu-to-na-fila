@@ -211,7 +211,8 @@ export class TicketService {
       estimatedWaitTime = await queueService.calculateWaitTimeForPreferredBarber(
         shopId,
         data.preferredBarberId,
-        position
+        position,
+        now
       );
     } else {
       // Use standard calculation methods
@@ -366,44 +367,49 @@ export class TicketService {
   private async recalculateWaitTimes(shopId: number): Promise<void> {
     const waitingTickets = await this.getByShop(shopId, 'waiting');
 
+    // Recalculate all tickets - this ensures positions and wait times are accurate
+    // after any status changes (e.g., when someone ahead gets taken by a different barber)
     for (const ticket of waitingTickets) {
       let waitTime: number | null;
+      let position: number;
 
       if (ticket.preferredBarberId) {
         // Use preferred barber calculation
-        // First recalculate position for preferred barber tickets
-        const position = await queueService.calculatePositionForPreferredBarber(
+        // Recalculate position first - this will correctly exclude tickets that are no longer waiting
+        const ticketCreatedAt = new Date(ticket.createdAt);
+        position = await queueService.calculatePositionForPreferredBarber(
           shopId,
           ticket.preferredBarberId,
-          new Date(ticket.createdAt)
+          ticketCreatedAt
         );
+        // Then calculate wait time with the updated position and createdAt
+        // This ensures we only count tickets that were actually created before this ticket
         waitTime = await queueService.calculateWaitTimeForPreferredBarber(
           shopId,
           ticket.preferredBarberId,
-          position
+          position,
+          ticketCreatedAt
         );
-        
-        // Update position as well since it may have changed
-        await db
-          .update(schema.tickets)
-          .set({ 
-            position,
-            estimatedWaitTime: waitTime,
-            updatedAt: new Date(),
-          })
-          .where(eq(schema.tickets.id, ticket.id));
       } else {
         // Use standard calculation
-        waitTime = await queueService.calculateWaitTime(shopId, ticket.position);
-        
-        await db
-          .update(schema.tickets)
-          .set({ 
-            estimatedWaitTime: waitTime,
-            updatedAt: new Date(),
-          })
-          .where(eq(schema.tickets.id, ticket.id));
+        // Recalculate position first
+        position = await queueService.calculatePosition(
+          shopId,
+          new Date(ticket.createdAt)
+        );
+        // Then calculate wait time with the updated position
+        waitTime = await queueService.calculateWaitTime(shopId, position);
       }
+      
+      // Update both position and wait time
+      await db
+        .update(schema.tickets)
+        .set({ 
+          position,
+          estimatedWaitTime: waitTime,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.tickets.id, ticket.id));
     }
   }
 

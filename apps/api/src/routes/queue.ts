@@ -221,7 +221,8 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
         const waitTime = await queueService.calculateWaitTimeForPreferredBarber(
           shop.id,
           barber.id,
-          position
+          position,
+          now
         );
 
         return {

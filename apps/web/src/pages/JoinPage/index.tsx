@@ -63,11 +63,6 @@ export function JoinPage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
 
-      {/* Mobile: Sticky wait time banner */}
-      <div className="lg:hidden">
-        <WaitTimeBanner sticky />
-      </div>
-
       <Container className="relative z-10 pt-16 sm:pt-20 lg:pt-24 pb-10">
         {/* Desktop: Side-by-side layout */}
         <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-start">
@@ -81,7 +76,6 @@ export function JoinPage() {
                   Preencha seus dados abaixo para entrar na fila virtual
                 </Text>
               </div>
-              <WaitTimeBanner />
             </Stack>
           </div>
 
