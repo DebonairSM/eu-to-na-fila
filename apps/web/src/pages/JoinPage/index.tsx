@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { WaitTimeBanner } from './WaitTimeBanner';
 import { JoinForm } from './JoinForm';
 import { Container, Heading, Text, Stack } from '@/components/design-system';
 
