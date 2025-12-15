@@ -73,7 +73,7 @@ export class QueueService {
 
     const now = new Date();
 
-    // Count active & present barbers
+    // Get all active & present barbers
     const activeBarbers = await db.query.barbers.findMany({
       where: and(
         eq(schema.barbers.shopId, shopId),
@@ -81,7 +81,27 @@ export class QueueService {
         eq(schema.barbers.isPresent, true)
       ),
     });
-    const barberCount = Math.max(activeBarbers.length, 1);
+    const totalBarberCount = Math.max(activeBarbers.length, 1);
+
+    // Get all in-progress tickets to find which barbers are busy
+    const inProgressTickets = await db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.status, 'in_progress')
+      ),
+    });
+    
+    // Filter to only tickets with assigned barbers (barbers that are actually working)
+    const inProgressTicketsWithBarbers = inProgressTickets.filter(t => t.barberId !== null);
+
+    // Count how many unique barbers are currently working
+    const busyBarberIds = new Set(
+      inProgressTicketsWithBarbers
+        .map(t => t.barberId)
+        .filter((id): id is number => id !== null)
+    );
+    const busyBarberCount = busyBarberIds.size;
+    const availableBarberCount = Math.max(0, totalBarberCount - busyBarberCount);
 
     // Waiting tickets ahead of this position
     const waitingTickets = await db.query.tickets.findMany({
@@ -92,27 +112,50 @@ export class QueueService {
       orderBy: [asc(schema.tickets.createdAt)],
     });
     const ticketsAhead = waitingTickets.slice(0, Math.max(position - 1, 0));
+    const peopleAhead = ticketsAhead.length;
 
-    // In-progress tickets contribute remaining time (20 min minus elapsed)
-    const inProgressTickets = await db.query.tickets.findMany({
-      where: and(
-        eq(schema.tickets.shopId, shopId),
-        eq(schema.tickets.status, 'in_progress')
-      ),
-      orderBy: [asc(schema.tickets.updatedAt)],
-    });
-
-    const remainingInProgress = inProgressTickets.reduce((sum, t) => {
+    // Calculate remaining in-progress time (only for tickets with assigned barbers)
+    const remainingInProgress = inProgressTicketsWithBarbers.reduce((sum, t) => {
       const updatedAt = t.updatedAt ? new Date(t.updatedAt) : now;
       const elapsedMinutes = Math.max(0, (now.getTime() - updatedAt.getTime()) / 60000);
       const remaining = Math.max(0, 20 - elapsedMinutes);
       return sum + remaining;
     }, 0);
 
-    // Core rule: (peopleAhead * 20) / activePresentBarbers + remaining in-progress time
-    const peopleAhead = ticketsAhead.length;
-    const parallelShare = peopleAhead > 0 ? (peopleAhead * 20) / barberCount : 0;
-    const totalWorkMinutes = Math.max(0, parallelShare) + remainingInProgress;
+    // If no people ahead and barbers are available → immediate service (0 minutes)
+    if (peopleAhead === 0 && availableBarberCount > 0) {
+      return 0;
+    }
+
+    // If no people ahead but all barbers are busy → wait for first barber to finish
+    if (peopleAhead === 0 && availableBarberCount === 0) {
+      // Return minimum remaining time (time until first barber is free)
+      const remainingTimes = inProgressTicketsWithBarbers
+        .map(t => {
+          const updatedAt = t.updatedAt ? new Date(t.updatedAt) : now;
+          const elapsedMinutes = Math.max(0, (now.getTime() - updatedAt.getTime()) / 60000);
+          return Math.max(0, 20 - elapsedMinutes);
+        })
+        .filter(t => t > 0);
+      
+      if (remainingTimes.length === 0) {
+        return 0; // All services just finished
+      }
+      return Math.ceil(Math.min(...remainingTimes));
+    }
+
+    // If people ahead, calculate based on available barbers
+    // Use available barbers if any, otherwise use total barbers
+    const effectiveBarberCount = availableBarberCount > 0 ? availableBarberCount : totalBarberCount;
+    
+    // Distribute work across available barbers
+    const parallelShare = peopleAhead > 0 ? (peopleAhead * 20) / effectiveBarberCount : 0;
+    
+    // Only add remaining in-progress time if all barbers are busy
+    // If there are available barbers, they can start immediately on waiting customers
+    const additionalWaitTime = availableBarberCount === 0 ? remainingInProgress : 0;
+    
+    const totalWorkMinutes = Math.max(0, parallelShare) + additionalWaitTime;
     const estimatedTime = Math.ceil(totalWorkMinutes);
 
     return estimatedTime;
