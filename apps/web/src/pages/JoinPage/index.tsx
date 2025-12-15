@@ -4,7 +4,7 @@ import { api } from '@/lib/api';
 import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { JoinForm } from './JoinForm';
-import { Container, Heading, Text, Stack } from '@/components/design-system';
+import { Container, Heading } from '@/components/design-system';
 
 const STORAGE_KEY = 'eutonafila_active_ticket_id';
 
@@ -63,36 +63,9 @@ export function JoinPage() {
       <Navigation />
 
       <Container className="relative z-10 pt-16 sm:pt-20 lg:pt-24 pb-10">
-        {/* Desktop: Side-by-side layout */}
-        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-start">
-          <div className="sticky top-24">
-            <Stack spacing="lg">
-              <div className="text-center lg:text-left">
-                <Heading level={1} className="mb-4 text-3xl xl:text-4xl">
-                  Entrar na Fila
-                </Heading>
-                <Text size="lg" variant="secondary" className="mb-6">
-                  Preencha seus dados abaixo para entrar na fila virtual
-                </Text>
-              </div>
-            </Stack>
-          </div>
-
-          <div>
-            <JoinForm />
-            <p className="text-center lg:text-left mt-6 text-sm text-[rgba(255,255,255,0.7)]">
-              Já está na fila?{' '}
-              <Link to="/home" className="text-[#D4AF37] hover:underline">
-                Ver status
-              </Link>
-            </p>
-          </div>
-        </div>
-
-        {/* Mobile: Stacked layout */}
-        <div className="lg:hidden space-y-6 sm:space-y-8">
+        <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 lg:space-y-10">
           <div className="text-center">
-            <Heading level={1} className="mb-3 text-2xl sm:text-3xl">
+            <Heading level={1} className="mb-6 lg:mb-8 text-2xl sm:text-3xl lg:text-4xl">
               Entrar na Fila
             </Heading>
           </div>

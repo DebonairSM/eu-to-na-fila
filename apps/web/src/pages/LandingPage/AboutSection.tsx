@@ -32,10 +32,16 @@ export function AboutSection() {
             ))}
           </Grid>
         </div>
-        <div className="aspect-[4/5] bg-gradient-to-br from-[rgba(212,175,55,0.1)] to-[rgba(212,175,55,0.05)] rounded-xl border border-[rgba(212,175,55,0.2)] flex items-center justify-center">
-          <span className="material-symbols-outlined text-8xl text-[#D4AF37]/30">
-            storefront
-          </span>
+        <div className="aspect-[4/5] rounded-xl overflow-hidden border border-[rgba(212,175,55,0.2)] shadow-lg">
+          <img
+            src="/barbershop-image.jpg"
+            alt="Interior da barbearia"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80';
+            }}
+          />
         </div>
       </div>
 
@@ -61,10 +67,16 @@ export function AboutSection() {
             ))}
           </Grid>
         </div>
-        <div className="aspect-[4/5] bg-gradient-to-br from-[rgba(212,175,55,0.1)] to-[rgba(212,175,55,0.05)] rounded-2xl border border-[rgba(212,175,55,0.2)] flex items-center justify-center">
-          <span className="material-symbols-outlined text-[12rem] text-[#D4AF37]/30">
-            storefront
-          </span>
+        <div className="aspect-[4/5] rounded-2xl overflow-hidden border border-[rgba(212,175,55,0.2)] shadow-lg">
+          <img
+            src="/barbershop-image.jpg"
+            alt="Interior da barbearia"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80';
+            }}
+          />
         </div>
       </div>
     </Section>
