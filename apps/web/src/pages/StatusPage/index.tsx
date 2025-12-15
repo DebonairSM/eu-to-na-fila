@@ -152,9 +152,9 @@ export function StatusPage() {
           )}
         </div>
 
-        {/* Desktop: Side-by-side layout */}
-        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-start">
-          <Stack spacing="xl">
+        {/* Desktop: Centered layout */}
+        <div className="hidden lg:block">
+          <div className="max-w-2xl mx-auto space-y-8 xl:space-y-10">
             <StatusHeader customerName={ticket.customerName} status={ticket.status} />
 
             {isWaiting && (
@@ -169,9 +169,7 @@ export function StatusPage() {
             {isInProgress && <InProgressCard barberName={barber?.name} />}
 
             {isCompleted && <CompletedCard barberName={barber?.name} />}
-          </Stack>
 
-          <div className="sticky top-24">
             <ActionButtons
               status={ticket.status}
               ticketId={ticket.id}

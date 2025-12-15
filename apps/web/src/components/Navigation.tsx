@@ -125,12 +125,13 @@ export function Navigation() {
           </li>
           {user ? (
             <>
-              {user.role === 'owner' && (
+              {(user.role === 'owner' || user.role === 'barber' || user.role === 'staff') && (
                 <li>
                   <Link
-                    to="/owner"
-                    className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+                    to={user.role === 'owner' ? '/owner' : '/manage'}
+                    className="bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold text-[0.9rem] px-4 py-2.5 rounded-lg min-h-[48px] flex items-center gap-2 transition-all hover:from-[#E8C547] hover:to-[#F5D76E] hover:shadow-lg hover:shadow-[#D4AF37]/50 focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 focus:ring-offset-[#0a0a0a] shadow-md shadow-[#D4AF37]/20"
                   >
+                    <span className="material-symbols-outlined text-lg">dashboard</span>
                     Dashboard
                   </Link>
                 </li>
@@ -257,15 +258,16 @@ export function Navigation() {
               <div className="relative z-10 mt-4 space-y-2 pt-4 border-t border-[rgba(255,255,255,0.1)]">
                 {user ? (
                   <>
-                    {user.role === 'owner' && (
+                    {(user.role === 'owner' || user.role === 'barber' || user.role === 'staff') && (
                       <Link
-                        to="/owner"
-                        className="block text-sm font-medium text-[rgba(255,255,255,0.85)] px-3 py-3 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                        to={user.role === 'owner' ? '/owner' : '/manage'}
+                        className="block w-full bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold text-sm px-4 py-3 rounded-lg min-h-[48px] flex items-center gap-2 transition-all hover:from-[#E8C547] hover:to-[#F5D76E] hover:shadow-lg hover:shadow-[#D4AF37]/50 focus:outline-none focus:ring-2 focus:ring-[#E8C547] shadow-md shadow-[#D4AF37]/20"
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsMobileMenuOpen(false);
                         }}
                       >
+                        <span className="material-symbols-outlined text-lg">dashboard</span>
                         Dashboard
                       </Link>
                     )}

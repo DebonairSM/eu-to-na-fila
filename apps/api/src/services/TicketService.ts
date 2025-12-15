@@ -366,6 +366,9 @@ export class TicketService {
    */
   private async recalculateWaitTimes(shopId: number): Promise<void> {
     const waitingTickets = await this.getByShop(shopId, 'waiting');
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:368',message:'recalculateWaitTimes started',data:{shopId,waitingTicketCount:waitingTickets.length,waitingTicketIds:waitingTickets.map(t=>t.id)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
 
     // Recalculate all tickets - this ensures positions and wait times are accurate
     // after any status changes (e.g., when someone ahead gets taken by a different barber)
@@ -397,8 +400,14 @@ export class TicketService {
           shopId,
           new Date(ticket.createdAt)
         );
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:396',message:'Position calculated for ticket',data:{ticketId:ticket.id,calculatedPosition:position,oldPosition:ticket.position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         // Then calculate wait time with the updated position
         waitTime = await queueService.calculateWaitTime(shopId, position);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:401',message:'Wait time calculated for ticket',data:{ticketId:ticket.id,position,calculatedWaitTime:waitTime,oldWaitTime:ticket.estimatedWaitTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
       }
       
       // Update both position and wait time

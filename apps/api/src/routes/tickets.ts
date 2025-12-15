@@ -144,9 +144,15 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     // Recalculate wait times when barber is assigned/unassigned or status changes
     // This ensures wait times update for other customers with the same preferred barber
     if (updates.barberId !== undefined || updates.status !== undefined) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:146',message:'Barber assignment/status change detected',data:{ticketId:id,barberId:updates.barberId,status:updates.status,shopId:existingTicket.shopId,oldStatus:existingTicket.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       await queueService.recalculatePositions(existingTicket.shopId);
       // Use the public method to recalculate wait times
       await ticketService.recalculateShopQueue(existingTicket.shopId);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:149',message:'Recalculation completed',data:{ticketId:id,shopId:existingTicket.shopId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
     }
 
     return updatedTicket;

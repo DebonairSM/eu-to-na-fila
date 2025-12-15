@@ -113,6 +113,9 @@ export class QueueService {
     });
     const ticketsAhead = waitingTickets.slice(0, Math.max(position - 1, 0));
     const peopleAhead = ticketsAhead.length;
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'QueueService.ts:115',message:'calculateWaitTime inputs',data:{shopId,position,totalBarberCount,busyBarberCount,availableBarberCount,waitingTicketCount:waitingTickets.length,peopleAhead,sliceEnd:Math.max(position-1,0)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
 
     // Calculate remaining in-progress time (only for tickets with assigned barbers)
     const remainingInProgress = inProgressTicketsWithBarbers.reduce((sum, t) => {
@@ -157,6 +160,9 @@ export class QueueService {
     
     const totalWorkMinutes = Math.max(0, parallelShare) + additionalWaitTime;
     const estimatedTime = Math.ceil(totalWorkMinutes);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'QueueService.ts:159',message:'calculateWaitTime result',data:{shopId,position,peopleAhead,effectiveBarberCount,parallelShare,remainingInProgress,additionalWaitTime,totalWorkMinutes,estimatedTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
 
     return estimatedTime;
   }
@@ -183,6 +189,9 @@ export class QueueService {
       ),
       orderBy: [asc(schema.tickets.createdAt)],
     });
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'QueueService.ts:191',message:'recalculatePositions started',data:{shopId,waitingTicketCount:waitingTickets.length,waitingTicketIds:waitingTickets.map(t=>t.id),currentPositions:waitingTickets.map(t=>t.position)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
 
     // Update each ticket's position sequentially
     let updateCount = 0;
@@ -200,6 +209,9 @@ export class QueueService {
           .where(eq(schema.tickets.id, waitingTickets[i].id));
         
         updateCount++;
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'QueueService.ts:206',message:'Position updated',data:{ticketId:waitingTickets[i].id,oldPosition:waitingTickets[i].position,newPosition},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
       }
     }
 
@@ -213,6 +225,9 @@ export class QueueService {
           eq(schema.tickets.status, 'in_progress')
         )
       );
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'QueueService.ts:221',message:'recalculatePositions completed',data:{shopId,updateCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
 
     return updateCount;
   }

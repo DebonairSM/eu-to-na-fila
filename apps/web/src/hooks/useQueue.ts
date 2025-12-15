@@ -13,6 +13,9 @@ export function useQueue(pollInterval?: number) {
     try {
       setError(null);
       const queueData = await api.getQueue(config.slug);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useQueue.ts:15',message:'Queue data fetched',data:{waitingTicketsCount:queueData.tickets.filter(t=>t.status==='waiting').length,waitingTickets:queueData.tickets.filter(t=>t.status==='waiting').map(t=>({id:t.id,position:t.position,waitTime:t.estimatedWaitTime}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
 
       // Smart diffing: only update if data actually changed
       const dataString = JSON.stringify(queueData);
@@ -20,6 +23,9 @@ export function useQueue(pollInterval?: number) {
         previousDataRef.current = dataString;
         setData(queueData);
         setIsLoading(false);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useQueue.ts:23',message:'Queue data updated in state',data:{waitingTicketsCount:queueData.tickets.filter(t=>t.status==='waiting').length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
       }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch queue'));
