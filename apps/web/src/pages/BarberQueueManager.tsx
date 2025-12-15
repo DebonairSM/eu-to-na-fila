@@ -75,7 +75,7 @@ export function BarberQueueManager() {
     const waitingTickets = tickets.filter((t) => t.status === 'waiting');
     const inProgressTickets = tickets.filter((t) => t.status === 'in_progress');
     return {
-      sortedTickets: [...inProgressTickets, ...waitingTickets],
+      sortedTickets: [...waitingTickets, ...inProgressTickets],
       waitingCount: waitingTickets.length,
       servingCount: inProgressTickets.length,
     };
