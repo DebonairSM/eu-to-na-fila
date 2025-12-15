@@ -24,6 +24,9 @@ export function BarberManagementPage() {
   const [formData, setFormData] = useState({ name: '', avatarUrl: '' });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Auto-clear error messages after timeout
+  useErrorTimeout(errorMessage, () => setErrorMessage(null));
+
   // Redirect if not owner
   if (!isOwner) {
     navigate('/staff');

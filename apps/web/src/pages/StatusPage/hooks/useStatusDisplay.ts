@@ -72,7 +72,6 @@ export function useStatusDisplay(ticket: Ticket | null) {
       localStorage.removeItem(STORAGE_KEY);
       navigate('/home');
     } catch (error) {
-      const errorMsg = getErrorMessage(error, 'Erro ao sair da fila. Tente novamente.');
       logError('Error leaving queue', error);
       throw error;
     } finally {
