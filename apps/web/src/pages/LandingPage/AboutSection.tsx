@@ -10,15 +10,11 @@ const features = [
 export function AboutSection() {
   return (
     <Section id="about" variant="primary">
-      {/* Mobile: Single column */}
       <div className="lg:hidden space-y-8">
         <div>
-          <Heading level={2} className="mb-4">
+          <Heading level={2} className="mb-6">
             Sobre
           </Heading>
-          <Text size="base" variant="secondary" className="mb-8">
-            Barbearia em Sangão, SC.
-          </Text>
           <Grid cols={{ mobile: 2 }} gap="md" className="mb-8">
             {features.map((feature) => (
               <div key={feature.text} className="flex items-center gap-3">
@@ -45,15 +41,11 @@ export function AboutSection() {
         </div>
       </div>
 
-      {/* Desktop: 2-column layout */}
       <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-center">
         <div>
           <Heading level={2} className="mb-6">
             Sobre
           </Heading>
-          <Text size="lg" variant="secondary" className="mb-10 max-w-[500px]">
-            Barbearia em Sangão, SC.
-          </Text>
           <Grid cols={{ mobile: 2 }} gap="lg">
             {features.map((feature) => (
               <div key={feature.text} className="flex items-center gap-4">

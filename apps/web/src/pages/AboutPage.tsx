@@ -20,9 +20,6 @@ export function AboutPage() {
         <header className="space-y-3">
           <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37]">Sobre nós</p>
           <h1 className="text-3xl sm:text-4xl font-semibold">EuToNaFila</h1>
-          <p className="text-white/75 max-w-3xl">
-            Software de fila virtual baseado em Florianópolis.
-          </p>
         </header>
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">

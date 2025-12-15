@@ -22,17 +22,12 @@ export function StatusPage() {
   const [shareSuccess, setShareSuccess] = useState(false);
   const { barber, isLeaving, handleLeaveQueue, handleShareTicket } = useStatusDisplay(ticket);
 
-  // Calculate position info
   const positionInfo = (() => {
     if (!ticket || ticket.status !== 'waiting' || !queueData) return null;
     const waitingTickets = queueData.tickets.filter((t) => t.status === 'waiting');
-    // Sort waiting tickets by position to get the correct order
     const sortedWaitingTickets = [...waitingTickets].sort((a, b) => a.position - b.position);
-    // Find the index of the current ticket in the sorted list
     const ticketIndex = sortedWaitingTickets.findIndex((t) => t.id === ticket.id);
-    // Position is 1-based (index + 1)
     const calculatedPosition = ticketIndex >= 0 ? ticketIndex + 1 : ticket.position;
-    // Count tickets ahead (those with lower position values)
     const aheadCount = sortedWaitingTickets.filter((t) => t.position < ticket.position).length;
     return {
       position: calculatedPosition,
@@ -54,9 +49,9 @@ export function StatusPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
         <Navigation />
-        <Container className="relative z-10 pt-20 sm:pt-24 pb-12">
+        <Container className="relative z-10 pt-24 pb-12">
           <div className="text-center space-y-4">
-            <p className="text-[rgba(255,255,255,0.7)]">Nenhum ticket ID fornecido</p>
+            <p className="text-[rgba(255,255,255,0.7)]">Ticket não encontrado</p>
             <Link to="/home">
               <button className="px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all min-h-[52px]">
                 Voltar ao Início
@@ -72,8 +67,8 @@ export function StatusPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
         <Navigation />
-        <Container className="relative z-10 pt-20 sm:pt-24 pb-12">
-          <LoadingSpinner size="lg" text="Carregando status do ticket..." />
+        <Container className="relative z-10 pt-24 pb-12">
+          <LoadingSpinner size="lg" text="Carregando..." />
         </Container>
       </div>
     );
@@ -83,7 +78,7 @@ export function StatusPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
         <Navigation />
-        <Container className="relative z-10 pt-20 sm:pt-24 pb-12">
+        <Container className="relative z-10 pt-24 pb-12">
           <ErrorDisplay
             error={error || new Error('Ticket não encontrado')}
             onRetry={() => {
@@ -116,9 +111,8 @@ export function StatusPage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
 
-      <Container className="relative z-10 pt-24 sm:pt-20 lg:pt-24 pb-20 lg:pb-24">
-        {/* Mobile: Stacked layout */}
-        <div className="lg:hidden space-y-6 sm:space-y-8">
+      <Container className="relative z-10 pt-24 pb-20">
+        <div className="lg:hidden space-y-8">
           <StatusHeader customerName={ticket.customerName} status={ticket.status} />
 
           {isWaiting && (
@@ -146,15 +140,14 @@ export function StatusPage() {
             <SlideIn direction="up">
               <div className="fixed bottom-24 left-4 right-4 bg-[#22c55e] text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50">
                 <span className="material-symbols-outlined">check_circle</span>
-                <span>Link copiado para a área de transferência!</span>
+                <span>Link copiado</span>
               </div>
             </SlideIn>
           )}
         </div>
 
-        {/* Desktop: Centered layout */}
         <div className="hidden lg:block">
-          <div className="max-w-2xl mx-auto space-y-8 xl:space-y-10">
+          <div className="max-w-2xl mx-auto space-y-10">
             <StatusHeader customerName={ticket.customerName} status={ticket.status} />
 
             {isWaiting && (
@@ -184,7 +177,7 @@ export function StatusPage() {
           <SlideIn direction="up">
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#22c55e] text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-2 z-50">
               <span className="material-symbols-outlined">check_circle</span>
-              <span>Link copiado para a área de transferência!</span>
+              <span>Link copiado</span>
             </div>
           </SlideIn>
         )}

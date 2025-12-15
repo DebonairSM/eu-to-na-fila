@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Heading, Text, Section, Button, Stack } from '@/components/design-system';
+import { Heading, Text, Section, Stack } from '@/components/design-system';
 
 const locationInfo = [
   {
@@ -50,15 +49,12 @@ const locationInfo = [
 ];
 
 export function LocationSection() {
-  const [isMapExpanded, setIsMapExpanded] = useState(false);
-
   return (
     <Section id="location" variant="secondary">
-      <div className="text-center mb-12 sm:mb-16 lg:mb-20">
+      <div className="text-center mb-16">
         <Heading level={2}>Localização</Heading>
       </div>
 
-      {/* Mobile: Stacked layout */}
       <div className="lg:hidden space-y-6">
         <Stack spacing="lg">
           {locationInfo.map((item) => (
@@ -78,38 +74,21 @@ export function LocationSection() {
           ))}
         </Stack>
 
-        {/* Collapsible map on mobile */}
-        <div>
-          <Button
-            variant="outline"
-            fullWidth
-            onClick={() => setIsMapExpanded(!isMapExpanded)}
-            className="mb-4"
-          >
-            <span className="material-symbols-outlined">
-              {isMapExpanded ? 'expand_less' : 'expand_more'}
-            </span>
-            {isMapExpanded ? 'Ocultar Mapa' : 'Mostrar Mapa'}
-          </Button>
-          {isMapExpanded && (
-            <div className="rounded-xl overflow-hidden border border-[rgba(212,175,55,0.2)]">
-              <iframe
-                src="https://www.google.com/maps?q=R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000&output=embed"
-                width="100%"
-                height="300"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                className="grayscale hover:grayscale-0 transition-all"
-                title="Localização da Barbearia Mineiro"
-              />
-            </div>
-          )}
+        <div className="rounded-xl overflow-hidden border border-[rgba(212,175,55,0.2)]">
+          <iframe
+            src="https://www.google.com/maps?q=R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000&output=embed"
+            width="100%"
+            height="300"
+            style={{ border: 0 }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="grayscale hover:grayscale-0 transition-all"
+            title="Localização da Barbearia Mineiro"
+          />
         </div>
       </div>
 
-      {/* Desktop: 2-column layout */}
       <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-start">
         <Stack spacing="xl">
           {locationInfo.map((item) => (
@@ -137,7 +116,7 @@ export function LocationSection() {
             allowFullScreen
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            className="grayscale hover:grayscale-0 transition-all duration-300"
+            className="grayscale hover:grayscale-0 transition-all"
             title="Localização da Barbearia Mineiro"
           />
         </div>

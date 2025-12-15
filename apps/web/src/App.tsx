@@ -43,7 +43,6 @@ function ProtectedRoute({
 }
 
 function App() {
-  // Prefetch critical routes to improve perceived load for key flows
   useEffect(() => {
     const preload = [
       import('./pages/JoinPage'),
@@ -55,7 +54,6 @@ function App() {
 
   return (
     <ErrorBoundary>
-      {/* Skip to content link for accessibility */}
       <a href="#main-content" className="skip-link">
         Pular para o conteúdo principal
       </a>
@@ -68,18 +66,16 @@ function App() {
         }
       >
       <Routes>
-        {/* Public Routes */}
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<LandingPage />} />
           <Route path="/company" element={<CompanyHomePage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/network" element={<NetworkPage />} />
           <Route path="/about" element={<AboutPage />} />
-        <Route path="/join" element={<JoinPage />} />
-        <Route path="/status/:id" element={<StatusPage />} />
-        <Route path="/login" element={<LoginPage />} />
+          <Route path="/join" element={<JoinPage />} />
+          <Route path="/status/:id" element={<StatusPage />} />
+          <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected Routes */}
         <Route
           path="/staff"
           element={
@@ -121,7 +117,6 @@ function App() {
           }
         />
 
-        {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>

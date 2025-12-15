@@ -25,12 +25,10 @@ export function JoinForm() {
 
   return (
     <Card variant="default" className="shadow-lg">
-      <CardContent className="p-6 sm:p-8 lg:p-10">
+      <CardContent className="p-8">
         <form onSubmit={handleSubmit}>
           <Stack spacing="lg">
-            {/* Name Fields */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
-              {/* First Name */}
+            <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <InputLabel htmlFor="firstName">Nome *</InputLabel>
                 <Input
@@ -46,7 +44,6 @@ export function JoinForm() {
                 <InputError message={validationError || ''} />
               </div>
 
-              {/* Last Name */}
               <div className="sm:w-48">
                 <InputLabel htmlFor="lastName">Sobrenome</InputLabel>
                 <Input
@@ -60,9 +57,8 @@ export function JoinForm() {
               </div>
             </div>
 
-            {/* Name Collision Error */}
             {nameCollisionError && (
-              <div className="p-4 rounded-lg bg-[#ef4444]/20 border-2 border-[#ef4444] flex items-start gap-3 animate-in slide-in-from-top-4">
+              <div className="p-4 rounded-lg bg-[#ef4444]/20 border-2 border-[#ef4444] flex items-start gap-3">
                 <span className="material-symbols-outlined text-[#ef4444] text-xl flex-shrink-0 mt-0.5">
                   warning
                 </span>
@@ -73,7 +69,6 @@ export function JoinForm() {
               </div>
             )}
 
-            {/* Already in Queue Message */}
             {isAlreadyInQueue && existingTicketId && (
               <div className="p-5 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30">
                 <div className="flex items-start gap-3">
@@ -92,7 +87,6 @@ export function JoinForm() {
               </div>
             )}
 
-            {/* Submit Error */}
             {submitError && (
               <div className="p-4 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/20">
                 <p className="text-sm text-[#ef4444] flex items-center gap-2">
@@ -102,7 +96,6 @@ export function JoinForm() {
               </div>
             )}
 
-            {/* Barber Selection */}
             <BarberSelection
               barbers={barbers}
               waitTimes={waitTimes}
@@ -111,7 +104,6 @@ export function JoinForm() {
               isLoading={isLoadingWaitTimes}
             />
 
-            {/* Submit Button */}
             <Button
               type="submit"
               fullWidth

@@ -12,7 +12,6 @@ export function JoinPage() {
   const [isCheckingStoredTicket, setIsCheckingStoredTicket] = useState(true);
   const navigate = useNavigate();
 
-  // Check for stored ticket on mount
   useEffect(() => {
     const checkStoredTicket = async () => {
       const storedTicketId = localStorage.getItem(STORAGE_KEY);
@@ -62,10 +61,10 @@ export function JoinPage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
       <Navigation />
 
-      <Container className="relative z-10 pt-16 sm:pt-20 lg:pt-24 pb-10">
-        <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 lg:space-y-10">
+      <Container className="relative z-10 pt-20 pb-10">
+        <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center">
-            <Heading level={1} className="mb-6 lg:mb-8 text-2xl sm:text-3xl lg:text-4xl">
+            <Heading level={1} className="mb-8 text-3xl">
               Entrar na Fila
             </Heading>
           </div>
@@ -73,7 +72,6 @@ export function JoinPage() {
           <JoinForm />
 
           <p className="text-center text-sm text-[rgba(255,255,255,0.7)]">
-            Já está na fila?{' '}
             <Link to="/home" className="text-[#D4AF37] hover:underline">
               Ver status
             </Link>

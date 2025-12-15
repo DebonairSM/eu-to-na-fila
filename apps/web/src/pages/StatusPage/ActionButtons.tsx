@@ -40,7 +40,6 @@ export function ActionButtons({
       <Stack spacing="md">
         {isWaiting && (
           <>
-            {/* Mobile: FAB */}
             <div className="lg:hidden fixed bottom-6 right-6 z-50">
               <button
                 className="w-14 h-14 rounded-full bg-[#ef4444] text-white shadow-lg hover:bg-[#dc2626] transition-all flex items-center justify-center min-h-[56px] min-w-[56px]"
@@ -58,7 +57,6 @@ export function ActionButtons({
               </button>
             </div>
 
-            {/* Desktop: Inline button */}
             <div className="hidden lg:block">
               <Button
                 variant="destructive"
@@ -94,19 +92,12 @@ export function ActionButtons({
           </Link>
         )}
 
-        {/* Share button */}
         {onShare && (
           <Button variant="outline" fullWidth onClick={onShare}>
             <span className="material-symbols-outlined text-xl">share</span>
             Compartilhar Link
           </Button>
         )}
-
-        <Link to="/home">
-          <Button variant="ghost" fullWidth>
-            Voltar
-          </Button>
-        </Link>
       </Stack>
 
       <ConfirmationDialog

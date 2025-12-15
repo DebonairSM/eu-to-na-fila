@@ -122,25 +122,17 @@ export function BarberQueueManager() {
     if (!selectedCustomerId) return;
 
     try {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BarberQueueManager.tsx:125',message:'handleSelectBarber called',data:{selectedCustomerId,barberId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
       if (barberId === null) {
-        // Unassign
         await api.updateTicket(selectedCustomerId, {
           barberId: null,
           status: 'waiting',
         });
       } else {
-        // Assign barber
         await api.updateTicket(selectedCustomerId, {
           barberId,
           status: 'in_progress',
         });
       }
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BarberQueueManager.tsx:138',message:'Ticket updated, refetching queue',data:{selectedCustomerId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
       await refetchQueue();
       barberSelectorModal.close();
       setSelectedCustomerId(null);

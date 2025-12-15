@@ -120,17 +120,12 @@ export function BarberManagementPage() {
         </div>
       )}
       <main className="container max-w-[1200px] mx-auto px-4 sm:px-6 pt-24 pb-10 relative z-10">
-        {/* Header */}
-        <div className="header text-center mb-6 sm:mb-8">
-          <h1 className="font-['Playfair_Display',serif] text-2xl sm:text-[2rem] md:text-[2.5rem] text-[#D4AF37] mb-2 sm:mb-3">
+        <div className="text-center mb-8">
+          <h1 className="font-['Playfair_Display',serif] text-2xl text-[#D4AF37] mb-3">
             Gerenciar Barbeiros
           </h1>
-          <p className="text-[rgba(255,255,255,0.7)] text-base sm:text-lg">
-            Adicione, edite ou remova barbeiros
-          </p>
         </div>
 
-        {/* Add Barber Button */}
         <button
           onClick={addModal.open}
           className="add-barber-btn flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(212,175,55,0.4)] min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
@@ -256,7 +251,7 @@ export function BarberManagementPage() {
             >
               <div className="form-group mb-4 sm:mb-5">
                 <label htmlFor="addName" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
-                  Nome *
+                  Nome
                 </label>
                 <input
                   id="addName"
@@ -323,7 +318,7 @@ export function BarberManagementPage() {
             >
               <div className="form-group mb-4 sm:mb-5">
                 <label htmlFor="editName" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
-                  Nome *
+                  Nome
                 </label>
                 <input
                   id="editName"

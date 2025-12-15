@@ -102,16 +102,12 @@ export function AnalyticsPage() {
     <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
       <Navigation />
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 pt-32 pb-12">
-        {/* Header Section - Properly spaced from nav */}
         <div className="mb-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div>
               <h1 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl md:text-6xl text-white mb-3">
                 Analytics
               </h1>
-              <p className="text-lg sm:text-xl text-white/70">
-                Estatísticas e métricas de desempenho
-              </p>
             </div>
             <select
               value={days}
@@ -125,9 +121,8 @@ export function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 mb-10">
-          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center transition-all hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.2)]">
+          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
             <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#D4AF37] mb-2">
               {stats.total}
             </div>
@@ -135,7 +130,7 @@ export function AnalyticsPage() {
               Total
             </div>
           </div>
-          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center transition-all hover:-translate-y-1 hover:border-[#22c55e] hover:shadow-[0_8px_32px_rgba(34,197,94,0.2)]">
+          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
             <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#22c55e] mb-2">
               {stats.completed}
             </div>
@@ -143,7 +138,7 @@ export function AnalyticsPage() {
               Concluídos
             </div>
           </div>
-          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center transition-all hover:-translate-y-1 hover:border-[#ef4444] hover:shadow-[0_8px_32px_rgba(239,68,68,0.2)]">
+          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
             <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#ef4444] mb-2">
               {stats.cancelled}
             </div>
@@ -151,7 +146,7 @@ export function AnalyticsPage() {
               Cancelados
             </div>
           </div>
-          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center transition-all hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.2)]">
+          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
             <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#D4AF37] mb-2">
               {stats.completionRate}%
             </div>
@@ -159,7 +154,7 @@ export function AnalyticsPage() {
               Taxa Conclusão
             </div>
           </div>
-          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center transition-all hover:-translate-y-1 hover:border-[#3b82f6] hover:shadow-[0_8px_32px_rgba(59,130,246,0.2)]">
+          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
             <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#3b82f6] mb-2">
               {stats.avgPerDay}
             </div>
@@ -167,7 +162,7 @@ export function AnalyticsPage() {
               Média/Dia
             </div>
           </div>
-          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center transition-all hover:-translate-y-1 hover:border-[#3b82f6] hover:shadow-[0_8px_32px_rgba(59,130,246,0.2)]">
+          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
             <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#3b82f6] mb-2">
               {stats.avgServiceTime}m
             </div>
@@ -177,39 +172,35 @@ export function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Charts Section */}
         <div className="space-y-8">
-          {/* Daily Chart */}
-          <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+          <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
             <div className="mb-6 flex items-center gap-4">
               <span className="material-symbols-outlined text-[#D4AF37] text-3xl">bar_chart</span>
-              <h2 className="font-['Playfair_Display',serif] text-2xl sm:text-3xl text-white">
+              <h2 className="font-['Playfair_Display',serif] text-3xl text-white">
                 Atendimentos por Dia
               </h2>
             </div>
             <DailyChart data={data.ticketsByDay} />
           </div>
 
-          {/* Hourly Chart */}
-          <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+          <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
             <div className="mb-6 flex items-center gap-4">
               <span className="material-symbols-outlined text-[#D4AF37] text-3xl">schedule</span>
-              <h2 className="font-['Playfair_Display',serif] text-2xl sm:text-3xl text-white">
+              <h2 className="font-['Playfair_Display',serif] text-3xl text-white">
                 Atendimentos por Hora
               </h2>
             </div>
             <HourlyChart data={data.hourlyDistribution} peakHour={data.peakHour} />
           </div>
 
-          {/* Peak Hour Card */}
           {data.peakHour && (
-            <div className="bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border border-[rgba(212,175,55,0.3)] rounded-3xl p-8 sm:p-10 text-center">
+            <div className="bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border border-[rgba(212,175,55,0.3)] rounded-3xl p-10 text-center">
               <p className="text-sm text-white/70 uppercase tracking-wider mb-3">
                 Horário de Pico
               </p>
-              <div className="font-['Playfair_Display',serif] text-5xl sm:text-6xl font-semibold text-[#D4AF37] mb-3">
+              <div className="font-['Playfair_Display',serif] text-6xl font-semibold text-[#D4AF37] mb-3">
                 {data.peakHour.hour}:00
               </div>
               <p className="text-base text-white/70">
@@ -218,30 +209,29 @@ export function AnalyticsPage() {
             </div>
           )}
 
-          {/* Barber Stats */}
           {data.barbers.length > 0 && (
-            <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+            <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
               <div className="mb-6 flex items-center gap-4">
                 <span className="material-symbols-outlined text-[#D4AF37] text-3xl">content_cut</span>
-                <h2 className="font-['Playfair_Display',serif] text-2xl sm:text-3xl text-white">
+                <h2 className="font-['Playfair_Display',serif] text-3xl text-white">
                   Desempenho por Barbeiro
                 </h2>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {data.barbers.map((barber) => (
                   <div
                     key={barber.id}
-                    className="bg-[rgba(36,36,36,0.8)] border border-[rgba(255,255,255,0.05)] rounded-2xl p-5 sm:p-6 flex items-center gap-4 sm:gap-6 transition-all hover:border-[#D4AF37] hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(212,175,55,0.2)]"
+                    className="bg-[rgba(36,36,36,0.8)] border border-[rgba(255,255,255,0.05)] rounded-2xl p-6 flex items-center gap-6"
                   >
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#D4AF37] to-[#E8C547] rounded-full flex items-center justify-center text-xl sm:text-2xl font-semibold text-[#0a0a0a] flex-shrink-0">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#E8C547] rounded-full flex items-center justify-center text-2xl font-semibold text-[#0a0a0a] flex-shrink-0">
                       {barber.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-lg sm:text-xl text-white mb-3 truncate">{barber.name}</h4>
-                      <div className="flex gap-4 sm:gap-6">
+                      <h4 className="text-xl text-white mb-3 truncate">{barber.name}</h4>
+                      <div className="flex gap-6">
                         <div className="text-center">
-                          <div className="font-['Playfair_Display',serif] text-xl sm:text-2xl font-semibold text-[#D4AF37]">
+                          <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37]">
                             {barber.totalServed}
                           </div>
                           <div className="text-xs text-white/50 uppercase mt-1">
@@ -249,7 +239,7 @@ export function AnalyticsPage() {
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="font-['Playfair_Display',serif] text-xl sm:text-2xl font-semibold text-[#D4AF37]">
+                          <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37]">
                             {barber.avgServiceTime}m
                           </div>
                           <div className="text-xs text-white/50 uppercase mt-1">

@@ -15,62 +15,59 @@ export function OwnerDashboard() {
     <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
       <Navigation />
       <main className="container max-w-[800px] mx-auto relative z-10 pt-24 px-4 sm:px-6 lg:px-10 pb-12">
-        {/* Header */}
-        <div className="header text-center mb-8 sm:mb-10">
-          <h1 className="title font-['Playfair_Display',serif] text-xl sm:text-2xl font-semibold text-[#D4AF37]">
+        <div className="text-center mb-10">
+          <h1 className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37]">
             Dashboard
           </h1>
         </div>
 
-        {/* Options Grid */}
-        <div className="options-grid grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <Link
             to="/manage"
-            className="option-card bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-8 sm:p-10 flex flex-col items-center gap-4 transition-all hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.3)] hover:-translate-y-1"
+            className="bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-10 flex flex-col items-center gap-4 transition-all hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.3)] hover:-translate-y-1"
           >
-            <div className="option-icon text-[48px] sm:text-[56px] text-[#D4AF37]">
+            <div className="text-5xl text-[#D4AF37]">
               <span className="material-symbols-outlined">manage_accounts</span>
             </div>
-            <h2 className="option-title text-xl sm:text-2xl font-semibold text-white text-center">
+            <h2 className="text-2xl font-semibold text-white text-center">
               Gerenciar Fila
             </h2>
-            <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl">
+            <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
               arrow_forward
             </span>
           </Link>
 
           <Link
             to="/analytics"
-            className="option-card bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-8 sm:p-10 flex flex-col items-center gap-4 transition-all hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.3)] hover:-translate-y-1"
+            className="bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-10 flex flex-col items-center gap-4 transition-all hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.3)] hover:-translate-y-1"
           >
-            <div className="option-icon text-[48px] sm:text-[56px] text-[#D4AF37]">
+            <div className="text-5xl text-[#D4AF37]">
               <span className="material-symbols-outlined">analytics</span>
             </div>
-            <h2 className="option-title text-xl sm:text-2xl font-semibold text-white text-center">
+            <h2 className="text-2xl font-semibold text-white text-center">
               Analytics
             </h2>
-            <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl">
+            <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
               arrow_forward
             </span>
           </Link>
 
           <Link
             to="/barbers"
-            className="option-card bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-8 sm:p-10 flex flex-col items-center gap-4 transition-all hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.3)] hover:-translate-y-1 md:col-span-2 md:max-w-md md:mx-auto"
+            className="bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-10 flex flex-col items-center gap-4 transition-all hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.3)] hover:-translate-y-1 md:col-span-2 md:max-w-md md:mx-auto"
           >
-            <div className="option-icon text-[48px] sm:text-[56px] text-[#D4AF37]">
+            <div className="text-5xl text-[#D4AF37]">
               <span className="material-symbols-outlined">content_cut</span>
             </div>
-            <h2 className="option-title text-xl sm:text-2xl font-semibold text-white text-center">
+            <h2 className="text-2xl font-semibold text-white text-center">
               Gerenciar Barbeiros
             </h2>
-            <span className="material-symbols-outlined text-[#D4AF37] text-xl sm:text-2xl">
+            <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
               arrow_forward
             </span>
           </Link>
         </div>
 
-        {/* Logout */}
         <div className="text-center mt-8">
           <button
             onClick={handleLogout}

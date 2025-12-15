@@ -10,14 +10,12 @@ export function LandingPage() {
   const location = useLocation();
 
   useEffect(() => {
-    // Handle hash scrolling when page loads or hash changes
     if (location.hash) {
       const targetId = location.hash.replace('#', '');
-      // Small delay to ensure DOM is ready
       setTimeout(() => {
         const element = document.getElementById(targetId);
         if (element) {
-          const headerOffset = 100; // Account for fixed header
+          const headerOffset = 100;
           const elementPosition = element.getBoundingClientRect().top;
           const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
