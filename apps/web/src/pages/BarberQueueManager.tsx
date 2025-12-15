@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { config } from '@/lib/config';
@@ -16,6 +16,7 @@ import { QRCode } from '@/components/QRCode';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Button } from '@/components/ui/button';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
+import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { cn, getErrorMessage, formatName } from '@/lib/utils';
 
 const QUEUE_VIEW_DURATION = 15000; // 15 seconds
@@ -86,11 +87,10 @@ export function BarberQueueManager() {
     return [...barbers].sort((a, b) => a.id - b.id);
   }, [barbers]);
 
-  const handleAddCustomer = async () => {
+  const handleAddCustomer = useCallback(async () => {
     const validation = validateName(checkInName.first, checkInName.last);
     if (!validation.isValid) {
       setErrorMessage(validation.error || 'Nome inválido');
-      setTimeout(() => setErrorMessage(null), 5000);
       return;
     }
 
@@ -105,7 +105,7 @@ export function BarberQueueManager() {
         customerName: fullName,
         serviceId: 1,
         ...(preferredBarberId && { preferredBarberId }),
-      } as any);
+      });
       setCheckInName({ first: '', last: '' });
       setPreferredBarberId(null);
       checkInModal.close();
@@ -113,13 +113,12 @@ export function BarberQueueManager() {
     } catch (error) {
       const errorMsg = getErrorMessage(error, 'Erro ao adicionar cliente. Tente novamente.');
       setErrorMessage(errorMsg);
-      setTimeout(() => setErrorMessage(null), 5000);
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [checkInName, preferredBarberId, validateName, refetchQueue, checkInModal]);
 
-  const handleSelectBarber = async (barberId: number | null) => {
+  const handleSelectBarber = useCallback(async (barberId: number | null) => {
     if (!selectedCustomerId) return;
 
     try {
@@ -142,11 +141,10 @@ export function BarberQueueManager() {
     } catch (error) {
       const errorMsg = getErrorMessage(error, 'Erro ao atribuir barbeiro. Tente novamente.');
       setErrorMessage(errorMsg);
-      setTimeout(() => setErrorMessage(null), 5000);
     }
-  };
+  }, [selectedCustomerId, refetchQueue, barberSelectorModal]);
 
-  const handleRemoveCustomer = async () => {
+  const handleRemoveCustomer = useCallback(async () => {
     if (!customerToRemove) return;
 
     try {
@@ -157,12 +155,11 @@ export function BarberQueueManager() {
     } catch (error) {
       const errorMsg = getErrorMessage(error, 'Erro ao remover cliente. Tente novamente.');
       setErrorMessage(errorMsg);
-      setTimeout(() => setErrorMessage(null), 5000);
       removeConfirmModal.close();
     }
-  };
+  }, [customerToRemove, refetchQueue, removeConfirmModal]);
 
-  const handleCompleteService = async () => {
+  const handleCompleteService = useCallback(async () => {
     if (!customerToComplete) return;
 
     try {
@@ -175,15 +172,17 @@ export function BarberQueueManager() {
     } catch (error) {
       const errorMsg = getErrorMessage(error, 'Erro ao finalizar atendimento. Tente novamente.');
       setErrorMessage(errorMsg);
-      setTimeout(() => setErrorMessage(null), 5000);
       completeConfirmModal.close();
     }
-  };
+  }, [customerToComplete, refetchQueue, completeConfirmModal]);
 
-  const getAssignedBarber = (ticket: any) => {
+  const getAssignedBarber = useCallback((ticket: { barberId?: number | null }) => {
     if (!ticket.barberId) return null;
     return barbers.find((b) => b.id === ticket.barberId) || null;
-  };
+  }, [barbers]);
+
+  // Auto-clear error messages after timeout
+  useErrorTimeout(errorMessage, () => setErrorMessage(null));
 
   // Kiosk Mode View
   if (isKioskMode) {
@@ -324,14 +323,17 @@ export function BarberQueueManager() {
                                 {assignedBarber.name}
                               </p>
                             )}
-                            {(ticket as any).preferredBarberId && (!assignedBarber || assignedBarber.id !== (ticket as any).preferredBarberId) && (() => {
-                              const preferredBarber = barbers.find((b) => b.id === (ticket as any).preferredBarberId);
-                              return preferredBarber ? (
-                                <p className="text-base text-[#D4AF37]/80 mt-1 truncate flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-base">star</span>
-                                  Preferência: {preferredBarber.name}
-                                </p>
-                              ) : null;
+                            {(() => {
+                              const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
+                              return preferredBarberId && (!assignedBarber || assignedBarber.id !== preferredBarberId) ? (() => {
+                                const preferredBarber = barbers.find((b) => b.id === preferredBarberId);
+                                return preferredBarber ? (
+                                  <p className="text-base text-[#D4AF37]/80 mt-1 truncate flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-base">star</span>
+                                    Preferência: {preferredBarber.name}
+                                  </p>
+                                ) : null;
+                              })() : null;
                             })()}
                           </button>
                           {/* Status indicator */}
@@ -363,7 +365,6 @@ export function BarberQueueManager() {
                         } catch (error) {
                           const errorMsg = getErrorMessage(error, 'Erro ao alterar presença do barbeiro. Tente novamente.');
                           setErrorMessage(errorMsg);
-                          setTimeout(() => setErrorMessage(null), 5000);
                         }
                       }}
                       className={cn(
@@ -535,7 +536,9 @@ export function BarberQueueManager() {
         {barberSelectorModal.isOpen && selectedCustomerId && (() => {
           const selectedTicket = tickets.find((t) => t.id === selectedCustomerId);
           const currentBarberId = selectedTicket?.barberId || null;
-          const preferredBarberId = (selectedTicket as any)?.preferredBarberId || null;
+          const preferredBarberId = (selectedTicket && 'preferredBarberId' in selectedTicket) 
+            ? ((selectedTicket as { preferredBarberId?: number }).preferredBarberId ?? null)
+            : null;
           
           // Calculate which barbers are busy (have an in_progress ticket)
           // Exclude the current ticket being edited
@@ -798,7 +801,6 @@ export function BarberQueueManager() {
                           errorMsg = (error as { error: string }).error;
                         }
                         setErrorMessage(errorMsg);
-                        setTimeout(() => setErrorMessage(null), 5000);
                       }
                 }}
               />
@@ -905,7 +907,9 @@ export function BarberQueueManager() {
       {/* Barber Selector Modal */}
       {barberSelectorModal.isOpen && selectedCustomerId && (() => {
         const selectedTicket = tickets.find((t) => t.id === selectedCustomerId);
-        const preferredBarberId = (selectedTicket as any)?.preferredBarberId || null;
+        const preferredBarberId = (selectedTicket && 'preferredBarberId' in selectedTicket) 
+          ? ((selectedTicket as { preferredBarberId?: number }).preferredBarberId ?? null)
+          : null;
         
         return (
           <BarberSelector

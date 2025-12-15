@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { cn } from '@/lib/utils';
 import type { Barber } from '@eutonafila/shared';
 
@@ -13,7 +13,7 @@ export interface BarberCardProps {
   size?: 'management' | 'kiosk'; // Size context: management = 40px, kiosk = 56px
 }
 
-export function BarberCard({
+export const BarberCard = memo(function BarberCard({
   barber,
   isSelected = false,
   onClick,
@@ -97,4 +97,4 @@ export function BarberCard({
       )}
     </button>
   );
-}
+});

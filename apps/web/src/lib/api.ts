@@ -93,7 +93,7 @@ class ApiClient {
     } catch (error) {
       // sessionStorage might not be available during module initialization
       // Token will be set later by useAuth hook
-      console.warn('Failed to load auth token from sessionStorage:', error);
+      // Silently fail - auth token loading is optional
     }
   }
 
@@ -167,7 +167,9 @@ class ApiClient {
           error.error,
           error.statusCode,
           error.code,
-          'errors' in error ? (error as any).errors : undefined
+          'errors' in error && Array.isArray((error as { errors?: unknown }).errors) 
+            ? (error as { errors: Array<{ field: string; message: string }> }).errors 
+            : undefined
         );
       }
 
@@ -206,7 +208,7 @@ class ApiClient {
   /**
    * POST request helper.
    */
-  private async post<T>(path: string, body: any): Promise<T> {
+  private async post<T>(path: string, body: unknown): Promise<T> {
     return this.request<T>(path, {
       method: 'POST',
       body: JSON.stringify(body),
@@ -216,7 +218,7 @@ class ApiClient {
   /**
    * PATCH request helper.
    */
-  private async patch<T>(path: string, body: any): Promise<T> {
+  private async patch<T>(path: string, body: unknown): Promise<T> {
     return this.request<T>(path, {
       method: 'PATCH',
       body: JSON.stringify(body),

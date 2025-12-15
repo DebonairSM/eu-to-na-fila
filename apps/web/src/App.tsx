@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense, useEffect } from 'react';
 import { useAuthContext } from './contexts/AuthContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const LandingPage = lazy(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })));
 const CompanyHomePage = lazy(() => import('./pages/CompanyHomePage').then((m) => ({ default: m.CompanyHomePage })));
@@ -53,7 +54,7 @@ function App() {
   }, []);
 
   return (
-    <>
+    <ErrorBoundary>
       {/* Skip to content link for accessibility */}
       <a href="#main-content" className="skip-link">
         Pular para o conteúdo principal
@@ -124,7 +125,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>
-    </>
+    </ErrorBoundary>
   );
 }
 

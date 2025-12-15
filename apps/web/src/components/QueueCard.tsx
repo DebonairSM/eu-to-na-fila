@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { cn } from '@/lib/utils';
 import type { Ticket, Barber } from '@eutonafila/shared';
 
@@ -12,7 +12,7 @@ export interface QueueCardProps {
   className?: string;
 }
 
-export function QueueCard({
+export const QueueCard = memo(function QueueCard({
   ticket,
   assignedBarber,
   barbers = [],
@@ -96,14 +96,17 @@ export function QueueCard({
                 {assignedBarber.name}
               </p>
             )}
-            {(ticket as any).preferredBarberId && (!assignedBarber || assignedBarber.id !== (ticket as any).preferredBarberId) && (() => {
-              const preferredBarber = barbers.find((b) => b.id === (ticket as any).preferredBarberId);
-              return preferredBarber ? (
-                <p className="text-xs text-[#D4AF37]/80 truncate flex items-center gap-1 mt-0.5">
-                  <span className="material-symbols-outlined text-xs">star</span>
-                  Preferência: {preferredBarber.name}
-                </p>
-              ) : null;
+            {(() => {
+              const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
+              return preferredBarberId && (!assignedBarber || assignedBarber.id !== preferredBarberId) ? (() => {
+                const preferredBarber = barbers.find((b) => b.id === preferredBarberId);
+                return preferredBarber ? (
+                  <p className="text-xs text-[#D4AF37]/80 truncate flex items-center gap-1 mt-0.5">
+                    <span className="material-symbols-outlined text-xs">star</span>
+                    Preferência: {preferredBarber.name}
+                  </p>
+                ) : null;
+              })() : null;
             })()}
           </div>
         </div>
@@ -129,4 +132,4 @@ export function QueueCard({
       </div>
     </div>
   );
-}
+});

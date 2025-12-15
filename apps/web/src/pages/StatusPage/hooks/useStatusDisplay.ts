@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { config } from '@/lib/config';
 import { getErrorMessage } from '@/lib/utils';
+import { logError } from '@/lib/logger';
 import type { Ticket, Barber } from '@eutonafila/shared';
 
 const STORAGE_KEY = 'eutonafila_active_ticket_id';
@@ -27,7 +28,7 @@ export function useStatusDisplay(ticket: Ticket | null) {
         const assignedBarber = barbers.find(b => b.id === ticket.barberId);
         setBarber(assignedBarber || null);
       } catch (error) {
-        console.error('Failed to fetch barber:', error);
+        logError('Failed to fetch barber', error);
         setBarber(null);
       }
     };
@@ -72,7 +73,7 @@ export function useStatusDisplay(ticket: Ticket | null) {
       navigate('/home');
     } catch (error) {
       const errorMsg = getErrorMessage(error, 'Erro ao sair da fila. Tente novamente.');
-      console.error('Error leaving queue:', errorMsg);
+      logError('Error leaving queue', error);
       throw error;
     } finally {
       setIsLeaving(false);
@@ -85,7 +86,7 @@ export function useStatusDisplay(ticket: Ticket | null) {
       await navigator.clipboard.writeText(url);
       return true;
     } catch (error) {
-      console.error('Failed to copy link:', error);
+      logError('Failed to copy link', error);
       return false;
     }
   };

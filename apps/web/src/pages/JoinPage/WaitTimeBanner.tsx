@@ -14,28 +14,36 @@ export function WaitTimeBanner({ sticky = false }: WaitTimeBannerProps) {
   const [waitLoading, setWaitLoading] = useState(true);
   const [waitError, setWaitError] = useState<Error | null>(null);
 
+  const fetchWait = async () => {
+    try {
+      setWaitError(null);
+      setWaitLoading(true);
+      const debug = await api.getWaitDebug(config.slug);
+      const nextWait =
+        typeof debug.sampleEstimateForNext === 'number'
+          ? debug.sampleEstimateForNext
+          : null;
+      setWaitEstimate(nextWait);
+      setWaitLoading(false);
+    } catch (err) {
+      setWaitError(err instanceof Error ? err : new Error('Erro ao obter tempo de espera'));
+      setWaitLoading(false);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
-    const fetchWait = async () => {
-      try {
-        setWaitError(null);
-        const debug = await api.getWaitDebug(config.slug);
-        if (!mounted) return;
-        const nextWait =
-          typeof debug.sampleEstimateForNext === 'number'
-            ? debug.sampleEstimateForNext
-            : null;
-        setWaitEstimate(nextWait);
-        setWaitLoading(false);
-      } catch (err) {
-        if (!mounted) return;
-        setWaitError(err instanceof Error ? err : new Error('Erro ao obter tempo de espera'));
-        setWaitLoading(false);
-      }
+    const loadWait = async () => {
+      await fetchWait();
+      if (!mounted) return;
     };
 
-    fetchWait();
-    const interval = setInterval(fetchWait, 30000);
+    loadWait();
+    const interval = setInterval(() => {
+      if (mounted) {
+        fetchWait();
+      }
+    }, 30000);
     return () => {
       mounted = false;
       clearInterval(interval);
@@ -58,7 +66,7 @@ export function WaitTimeBanner({ sticky = false }: WaitTimeBannerProps) {
         <div className="container mx-auto px-4">
           <ErrorDisplay 
             error={waitError} 
-            onRetry={() => window.location.reload()} 
+            onRetry={fetchWait} 
           />
         </div>
       </div>

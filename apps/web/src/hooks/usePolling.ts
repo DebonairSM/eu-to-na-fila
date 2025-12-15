@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import type { Ticket } from '@eutonafila/shared';
 import { config } from '../lib/config';
+import { logError } from '../lib/logger';
+import { api } from '../lib/api';
 
 interface QueueData {
   shop: {
@@ -37,13 +39,7 @@ export function useQueuePolling(
 
   const fetchQueue = useCallback(async () => {
     try {
-      const response = await fetch(`${config.apiBase}/api/shops/${shopId}/queue`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch queue: ${response.statusText}`);
-      }
-
-      const queueData = await response.json();
+      const queueData = await api.getQueue(shopId);
       
       if (isMountedRef.current) {
         setData(queueData);
@@ -55,7 +51,7 @@ export function useQueuePolling(
         setError(err instanceof Error ? err : new Error('Unknown error'));
         setIsLoading(false);
       }
-      console.error('Error fetching queue:', err);
+      logError('Error fetching queue', err);
     }
   }, [shopId]);
 
@@ -109,13 +105,7 @@ export function useTicketPolling(
     }
 
     try {
-      const response = await fetch(`${config.apiBase}/api/tickets/${ticketId}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ticket: ${response.statusText}`);
-      }
-
-      const ticketData = await response.json();
+      const ticketData = await api.getTicket(ticketId);
       
       if (isMountedRef.current) {
         setTicket(ticketData);
@@ -127,7 +117,7 @@ export function useTicketPolling(
         setError(err instanceof Error ? err : new Error('Unknown error'));
         setIsLoading(false);
       }
-      console.error('Error fetching ticket:', err);
+      logError('Error fetching ticket', err);
     }
   }, [ticketId]);
 

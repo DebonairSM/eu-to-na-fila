@@ -47,14 +47,8 @@ export async function errorHandler(
     'Request error'
   );
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'errorHandler.ts:51',message:'Error handler entry',data:{errorName:error.name,errorMessage:error.message,isAppError:error instanceof AppError,isZodError:error instanceof ZodError,hasStatusCode:'statusCode' in error,statusCode:'statusCode' in error?error.statusCode:null,url:request.url,method:request.method},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-  // #endregion
   // Handle custom application errors
   if (error instanceof AppError) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'errorHandler.ts:54',message:'AppError handling',data:{statusCode:error.statusCode,code:error.code,message:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     reply.status(error.statusCode).send(error.toJSON());
     return;
   }
@@ -65,9 +59,6 @@ export async function errorHandler(
       field: err.path.join('.'),
       message: err.message,
     }));
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'errorHandler.ts:67',message:'ZodError handling',data:{errors:validationErrors,errorCount:error.errors.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
 
     reply.status(400).send({
       error: 'Validation failed',

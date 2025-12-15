@@ -64,9 +64,6 @@ export function BarberSelection({
   }, [effectiveWaitTimes]);
 
   const formatWaitTime = (waitTime: number | null): string => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BarberSelection.tsx:66',message:'formatWaitTime called',data:{waitTime,standardWaitTime:effectiveWaitTimes.standardWaitTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     if (waitTime === null) return '--';
     if (waitTime === 0) return 'Agora';
     return `${waitTime} ${waitTime === 1 ? 'minuto' : 'minutos'}`;

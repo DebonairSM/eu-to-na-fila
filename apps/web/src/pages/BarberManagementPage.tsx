@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { config } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useModal } from '@/hooks/useModal';
+import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
 import { getErrorMessage } from '@/lib/utils';
+import type { Barber } from '@eutonafila/shared';
 
 export function BarberManagementPage() {
   const { isOwner } = useAuthContext();
@@ -18,7 +20,7 @@ export function BarberManagementPage() {
   const editModal = useModal();
   const deleteConfirmModal = useModal();
   const [barberToDelete, setBarberToDelete] = useState<number | null>(null);
-  const [editingBarber, setEditingBarber] = useState<any>(null);
+  const [editingBarber, setEditingBarber] = useState<Barber | null>(null);
   const [formData, setFormData] = useState({ name: '', avatarUrl: '' });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -28,10 +30,9 @@ export function BarberManagementPage() {
     return null;
   }
 
-  const handleAdd = async () => {
+  const handleAdd = useCallback(async () => {
     if (!formData.name.trim()) {
       setErrorMessage('Nome é obrigatório');
-      setTimeout(() => setErrorMessage(null), 5000);
       return;
     }
 
@@ -46,14 +47,12 @@ export function BarberManagementPage() {
     } catch (error) {
       const errorMsg = getErrorMessage(error, 'Erro ao adicionar barbeiro. Tente novamente.');
       setErrorMessage(errorMsg);
-      setTimeout(() => setErrorMessage(null), 5000);
     }
-  };
+  }, [formData, refetch, addModal]);
 
-  const handleEdit = async () => {
+  const handleEdit = useCallback(async () => {
     if (!editingBarber || !formData.name.trim()) {
       setErrorMessage('Nome é obrigatório');
-      setTimeout(() => setErrorMessage(null), 5000);
       return;
     }
 
@@ -69,11 +68,10 @@ export function BarberManagementPage() {
     } catch (error) {
       const errorMsg = getErrorMessage(error, 'Erro ao atualizar barbeiro. Tente novamente.');
       setErrorMessage(errorMsg);
-      setTimeout(() => setErrorMessage(null), 5000);
     }
-  };
+  }, [editingBarber, formData, refetch, editModal]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!barberToDelete) return;
 
     try {
@@ -84,12 +82,11 @@ export function BarberManagementPage() {
     } catch (error) {
       const errorMsg = getErrorMessage(error, 'Erro ao remover barbeiro. Tente novamente.');
       setErrorMessage(errorMsg);
-      setTimeout(() => setErrorMessage(null), 5000);
       deleteConfirmModal.close();
     }
-  };
+  }, [barberToDelete, refetch, deleteConfirmModal]);
 
-  const openEditModal = (barber: any) => {
+  const openEditModal = (barber: Barber) => {
     setEditingBarber(barber);
     setFormData({
       name: barber.name,

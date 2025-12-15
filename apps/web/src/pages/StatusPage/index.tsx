@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useTicketStatus } from '@/hooks/useTicketStatus';
 import { useQueue } from '@/hooks/useQueue';
@@ -15,8 +15,9 @@ import { Container, Stack, SlideIn } from '@/components/design-system';
 
 export function StatusPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const ticketIdFromParams = id ? parseInt(id, 10) : null;
-  const { ticket, isLoading, error } = useTicketStatus(ticketIdFromParams);
+  const { ticket, isLoading, error, refetch } = useTicketStatus(ticketIdFromParams);
   const { data: queueData } = useQueue(3000);
   const [shareSuccess, setShareSuccess] = useState(false);
   const { barber, isLeaving, handleLeaveQueue, handleShareTicket } = useStatusDisplay(ticket);
@@ -85,7 +86,13 @@ export function StatusPage() {
         <Container className="relative z-10 pt-20 sm:pt-24 pb-12">
           <ErrorDisplay
             error={error || new Error('Ticket não encontrado')}
-            onRetry={() => window.location.reload()}
+            onRetry={() => {
+              if (ticketIdFromParams) {
+                refetch();
+              } else {
+                navigate('/home');
+              }
+            }}
           />
           <div className="mt-4">
             <Link to="/home">
