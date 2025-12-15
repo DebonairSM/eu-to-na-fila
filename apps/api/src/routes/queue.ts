@@ -174,6 +174,72 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
+   * Get wait times for standard queue and all barbers.
+   * 
+   * @route GET /api/shops/:slug/wait-times
+   * @param slug - Shop slug identifier
+   * @returns Wait times for standard queue and each barber
+   * @throws {404} If shop not found
+   */
+  fastify.get('/shops/:slug/wait-times', async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+
+    // Get shop
+    const shop = await db.query.shops.findFirst({
+      where: eq(schema.shops.slug, slug),
+    });
+
+    if (!shop) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    }
+
+    const now = new Date();
+
+    // Calculate standard queue wait time (for a hypothetical new ticket)
+    const standardPosition = await queueService.calculatePosition(shop.id, now);
+    const standardWaitTime = await queueService.calculateWaitTime(shop.id, standardPosition);
+
+    // Get all active barbers
+    const barbers = await db.query.barbers.findMany({
+      where: and(
+        eq(schema.barbers.shopId, shop.id),
+        eq(schema.barbers.isActive, true)
+      ),
+    });
+
+    // Calculate wait time for each barber
+    const barberWaitTimes = await Promise.all(
+      barbers.map(async (barber) => {
+        const position = await queueService.calculatePositionForPreferredBarber(
+          shop.id,
+          barber.id,
+          now
+        );
+        const waitTime = await queueService.calculateWaitTimeForPreferredBarber(
+          shop.id,
+          barber.id,
+          position
+        );
+
+        return {
+          barberId: barber.id,
+          barberName: barber.name,
+          waitTime,
+          isPresent: barber.isPresent,
+        };
+      })
+    );
+
+    return {
+      standardWaitTime,
+      barberWaitTimes,
+    };
+  });
+
+  /**
    * Recalculate positions and wait times for a shop (owner only).
    *
    * @route POST /api/shops/:slug/recalculate

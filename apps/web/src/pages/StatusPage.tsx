@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
 import { useTicketStatus } from '@/hooks/useTicketStatus';
 import { useQueue } from '@/hooks/useQueue';
+import { useBarbers } from '@/hooks/useBarbers';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
@@ -17,6 +18,7 @@ export function StatusPage() {
   const navigate = useNavigate();
   const { ticket, isLoading, error } = useTicketStatus(ticketIdFromParams);
   const { data: queueData } = useQueue(3000); // Poll every 3s
+  const { barbers } = useBarbers();
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const [barber, setBarber] = useState<Barber | null>(null);
@@ -249,6 +251,48 @@ export function StatusPage() {
                   </div>
                 </div>
               )}
+
+              {/* Barber Preference Info */}
+              {(() => {
+                const preferredBarberId = (ticket as any).preferredBarberId;
+                if (preferredBarberId) {
+                  const preferredBarber = barbers.find((b) => b.id === preferredBarberId);
+                  return (
+                    <div className="bg-[rgba(212,175,55,0.08)] backdrop-blur-sm border border-[rgba(212,175,55,0.3)] rounded-2xl p-6 sm:p-8 shadow-lg">
+                      <div className="text-center space-y-2">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <span className="material-symbols-outlined text-[#D4AF37] text-xl">star</span>
+                          <p className="text-sm text-[rgba(255,255,255,0.7)] uppercase tracking-wider font-medium">
+                            Barbeiro Preferido
+                          </p>
+                        </div>
+                        <p className="text-lg sm:text-xl font-semibold text-[#D4AF37]">
+                          {preferredBarber?.name || `Barbeiro #${preferredBarberId}`}
+                        </p>
+                        <p className="text-xs text-[rgba(255,255,255,0.5)] pt-1">
+                          Você selecionou um barbeiro específico
+                        </p>
+                      </div>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className="bg-[rgba(255,255,255,0.03)] backdrop-blur-sm border border-[rgba(255,255,255,0.1)] rounded-2xl p-6 sm:p-8 shadow-lg">
+                      <div className="text-center space-y-2">
+                        <p className="text-sm text-[rgba(255,255,255,0.7)] uppercase tracking-wider font-medium">
+                          Tipo de Fila
+                        </p>
+                        <p className="text-lg sm:text-xl font-semibold text-white">
+                          Fila Padrão
+                        </p>
+                        <p className="text-xs text-[rgba(255,255,255,0.5)] pt-1">
+                          Qualquer barbeiro disponível
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+              })()}
             </div>
           )}
 

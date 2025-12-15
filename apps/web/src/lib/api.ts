@@ -281,6 +281,24 @@ class ApiClient {
   }
 
   /**
+   * Get wait times for standard queue and all barbers.
+   * 
+   * @param shopSlug - Shop identifier
+   * @returns Wait times for standard queue and each barber
+   */
+  async getWaitTimes(shopSlug: string): Promise<{
+    standardWaitTime: number | null;
+    barberWaitTimes: Array<{
+      barberId: number;
+      barberName: string;
+      waitTime: number | null;
+      isPresent: boolean;
+    }>;
+  }> {
+    return this.get(`/shops/${shopSlug}/wait-times`);
+  }
+
+  /**
    * Get statistics for a shop.
    * 
    * @param shopSlug - Shop identifier
