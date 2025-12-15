@@ -25,9 +25,16 @@ export function StatusPage() {
   const positionInfo = (() => {
     if (!ticket || ticket.status !== 'waiting' || !queueData) return null;
     const waitingTickets = queueData.tickets.filter((t) => t.status === 'waiting');
-    const aheadCount = waitingTickets.filter((t) => t.position < ticket.position).length;
+    // Sort waiting tickets by position to get the correct order
+    const sortedWaitingTickets = [...waitingTickets].sort((a, b) => a.position - b.position);
+    // Find the index of the current ticket in the sorted list
+    const ticketIndex = sortedWaitingTickets.findIndex((t) => t.id === ticket.id);
+    // Position is 1-based (index + 1)
+    const calculatedPosition = ticketIndex >= 0 ? ticketIndex + 1 : ticket.position;
+    // Count tickets ahead (those with lower position values)
+    const aheadCount = sortedWaitingTickets.filter((t) => t.position < ticket.position).length;
     return {
-      position: ticket.position,
+      position: calculatedPosition,
       ahead: aheadCount,
       total: waitingTickets.length,
     };
