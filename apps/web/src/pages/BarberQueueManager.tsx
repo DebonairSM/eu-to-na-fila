@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { config } from '@/lib/config';
@@ -49,6 +49,7 @@ export function BarberQueueManager() {
   const [preferredBarberId, setPreferredBarberId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const firstNameInputRef = useRef<HTMLInputElement>(null);
 
   // Enter kiosk mode if ?kiosk=true in URL
   useEffect(() => {
@@ -56,6 +57,16 @@ export function BarberQueueManager() {
       enterKioskMode();
     }
   }, [searchParams, isKioskMode, enterKioskMode]);
+
+  // Auto-focus first name input when check-in modal opens
+  useEffect(() => {
+    if (checkInModal.isOpen && firstNameInputRef.current) {
+      // Small delay to ensure modal is fully rendered
+      setTimeout(() => {
+        firstNameInputRef.current?.focus();
+      }, 100);
+    }
+  }, [checkInModal.isOpen]);
 
   const tickets = queueData?.tickets || [];
   
@@ -432,6 +443,7 @@ export function BarberQueueManager() {
                     Nome *
                   </label>
                   <input
+                    ref={firstNameInputRef}
                     id="kioskCheckInFirst"
                     type="text"
                     value={checkInName.first}
