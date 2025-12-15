@@ -198,10 +198,6 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
 
     const now = new Date();
 
-    // Calculate standard queue wait time (for a hypothetical new ticket)
-    const standardPosition = await queueService.calculatePosition(shop.id, now);
-    const standardWaitTime = await queueService.calculateWaitTime(shop.id, standardPosition);
-
     // Get all active barbers
     const barbers = await db.query.barbers.findMany({
       where: and(
@@ -234,10 +230,62 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
       })
     );
 
-    return {
+    // Standard queue wait time should be the minimum of all present barbers' wait times
+    // because the standard queue can assign to any available barber (the fastest one)
+    const presentBarberWaitTimes = barberWaitTimes
+      .filter((bt) => bt.isPresent && bt.waitTime !== null)
+      .map((bt) => bt.waitTime as number);
+    
+    // #region agent log
+    const logData = {
+      location: 'queue.ts:237',
+      message: 'standardWaitTime calculation',
+      data: {
+        presentBarberWaitTimes,
+        barberWaitTimes: barberWaitTimes.map(bt => ({ id: bt.barberId, name: bt.barberName, waitTime: bt.waitTime, isPresent: bt.isPresent })),
+        calculatedStandardWaitTime: presentBarberWaitTimes.length > 0 ? Math.min(...presentBarberWaitTimes) : null,
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'A',
+    };
+    try {
+      await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(logData),
+      }).catch(() => {});
+    } catch {}
+    // #endregion
+    
+    const standardWaitTime = presentBarberWaitTimes.length > 0
+      ? Math.min(...presentBarberWaitTimes)
+      : null;
+
+    // #region agent log
+    const responseData = {
       standardWaitTime,
       barberWaitTimes,
     };
+    try {
+      await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: 'queue.ts:245',
+          message: 'wait-times response being sent',
+          data: responseData,
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'A',
+        }),
+      }).catch(() => {});
+    } catch {}
+    // #endregion
+
+    return responseData;
   });
 
   /**

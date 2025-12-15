@@ -42,8 +42,14 @@ export function useJoinForm() {
       try {
         setIsLoadingWaitTimes(true);
         const times = await api.getWaitTimes(config.slug);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useJoinForm.ts:44',message:'getWaitTimes response received',data:{standardWaitTime:times.standardWaitTime,barberWaitTimes:times.barberWaitTimes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         if (mounted) {
           setWaitTimes(times);
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useJoinForm.ts:47',message:'setWaitTimes called',data:{standardWaitTime:times.standardWaitTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
           setIsLoadingWaitTimes(false);
         }
       } catch (error) {
