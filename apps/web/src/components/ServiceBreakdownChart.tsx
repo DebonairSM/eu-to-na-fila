@@ -65,7 +65,7 @@ export function ServiceBreakdownChart({ data }: ServiceBreakdownChartProps) {
     <div className="flex flex-col lg:flex-row items-center gap-8">
       <div className="flex-shrink-0">
         <svg width="200" height="200" viewBox="0 0 200 200" className="w-full max-w-[200px]">
-          {segments.map((segment, index) => (
+          {segments.map((segment) => (
             <path
               key={segment.serviceId}
               d={segment.pathData}
