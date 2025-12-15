@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { ticketService } from '../services/TicketService.js';
+import { queueService } from '../services/QueueService.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
@@ -139,6 +140,14 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       .set(updateData)
       .where(eq(schema.tickets.id, id))
       .returning();
+
+    // Recalculate wait times when barber is assigned/unassigned or status changes
+    // This ensures wait times update for other customers with the same preferred barber
+    if (updates.barberId !== undefined || updates.status !== undefined) {
+      await queueService.recalculatePositions(existingTicket.shopId);
+      // Use the public method to recalculate wait times
+      await ticketService.recalculateShopQueue(existingTicket.shopId);
+    }
 
     return updatedTicket;
   });
