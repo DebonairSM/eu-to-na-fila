@@ -5,7 +5,7 @@ interface Ad2VideoProps {
   showTimer?: boolean;
 }
 
-export function Ad2Video({ onClose, showTimer = true }: Ad2VideoProps) {
+export function Ad2Video({ onClose: _onClose, showTimer = true }: Ad2VideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
