@@ -5,7 +5,7 @@ interface Ad3VideoProps {
   showTimer?: boolean;
 }
 
-export function Ad3Video({ onClose: _onClose, showTimer = true }: Ad3VideoProps) {
+export function Ad3Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad3VideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {

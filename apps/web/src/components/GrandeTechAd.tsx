@@ -57,6 +57,11 @@ export function GrandeTechAd({ onClose, showTimer = true }: GrandeTechAdProps) {
         onLoadedData={() => console.log('Video loaded successfully')}
         className="w-full h-full object-cover"
       />
+      {showTimer && timeRemaining > 0 && (
+        <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-lg text-lg font-semibold">
+          {timeRemaining}s
+        </div>
+      )}
     </div>
   );
 }

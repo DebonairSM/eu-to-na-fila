@@ -224,17 +224,15 @@ export function BarberQueueManager() {
         {/* Exit Button - Subtle in corner */}
         <button
           onClick={exitKioskMode}
-          className="absolute top-6 left-6 z-50 w-12 h-12 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all"
+          className="absolute top-6 left-6 z-50 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all"
           aria-label="Exit kiosk mode"
         >
-          <span className="material-symbols-outlined text-white/50 text-2xl">settings</span>
+          <span className="material-symbols-outlined text-white/50 text-base">settings</span>
         </button>
 
         {/* QR Code - Top right */}
-        <div className="absolute top-6 right-6 z-50 bg-white p-2 rounded-xl shadow-2xl border-4 border-[#D4AF37] border-double flex flex-col items-center gap-1">
-          <div className="border-2 border-black/10 rounded-lg p-0.5">
-            <QRCode url={joinUrl} size={60} />
-          </div>
+        <div className="absolute top-6 right-6 z-50 bg-white p-0.5 rounded-lg shadow-2xl border-2 border-[#D4AF37] flex items-center justify-center">
+          <QRCode url={joinUrl} size={60} />
         </div>
 
         {/* Main Content */}
