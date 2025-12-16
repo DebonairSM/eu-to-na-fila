@@ -350,28 +350,11 @@ export function BarberQueueManager() {
                               })() : null;
                             })()}
                           </button>
-                          {/* Status indicator / Remove button */}
-                          {isServing ? (
+                          {/* Status indicator */}
+                          {isServing && (
                             <div className="flex-shrink-0 px-4 py-2 bg-[#10B981]/20 rounded-xl">
                               <span className="text-[#10B981] text-sm font-medium uppercase tracking-wider">Atendendo</span>
                             </div>
-                          ) : (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCustomerToRemove(ticket.id);
-                                removeConfirmModal.open();
-                                showQueueView();
-                              }}
-                              className={cn(
-                                'flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all cursor-pointer',
-                                'bg-white/5 border border-white/20 text-white/60 hover:bg-[#ef4444]/20 hover:border-[#ef4444] hover:text-[#ef4444]',
-                                'hover:scale-110 active:scale-95'
-                              )}
-                              aria-label={`Remover ${ticket.customerName} da fila`}
-                            >
-                              <span className="material-symbols-outlined text-2xl">close</span>
-                            </button>
                           )}
                         </div>
                       </div>
@@ -686,6 +669,20 @@ export function BarberQueueManager() {
                     </button>
                   </div>
                 )}
+                <div className="mb-4 pb-4 border-b border-white/10">
+                  <button
+                    onClick={() => {
+                      setCustomerToRemove(selectedCustomerId);
+                      barberSelectorModal.close();
+                      removeConfirmModal.open();
+                      showQueueView();
+                    }}
+                    className="w-full px-8 py-5 text-xl rounded-2xl bg-[#ef4444]/20 border-2 border-[#ef4444]/50 text-[#ef4444] hover:bg-[#ef4444]/30 hover:border-[#ef4444] transition-all flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined">delete</span>
+                    Remover da Fila
+                  </button>
+                </div>
                 <button
                   onClick={barberSelectorModal.close}
                   className="w-full px-8 py-5 text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all"
