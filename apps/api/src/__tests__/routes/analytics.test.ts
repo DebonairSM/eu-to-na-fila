@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { getTestDb, resetTestDb, closeTestDb } from '../helpers/db-setup.js';
 import { createShop, createService, createBarber, createTicket } from '../helpers/factories.js';
 import { db, schema } from '../../db/index.js';

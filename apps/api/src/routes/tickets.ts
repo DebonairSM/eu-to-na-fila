@@ -185,38 +185,10 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.delete('/tickets/:id', {
     preHandler: [requireAuth(), requireRole(['owner', 'staff'])],
   }, async (request, reply) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:189',message:'DELETE handler entry',data:{url:request.url,method:request.method,params:request.params,hasAuthHeader:!!request.headers.authorization,authHeaderPrefix:request.headers.authorization?.substring(0,20)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
-    // Ensure params exist
-    if (!request.params || typeof request.params !== 'object') {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:193',message:'Params validation failed',data:{params:request.params,paramsType:typeof request.params},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-      throw new ValidationError('Missing route parameters', [
-        { field: 'params', message: 'Route parameters are required' }
-      ]);
-    }
-
-    // #region agent log
-    const paramsForLog = request.params as Record<string, unknown>;
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:203',message:'Before validation',data:{params:request.params,paramsId:paramsForLog?.id,paramsIdType:typeof paramsForLog?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     const paramsSchema = z.object({
       id: z.coerce.number().int().positive(),
     });
-    let id: number;
-    try {
-      id = validateRequest(paramsSchema, request.params).id;
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:211',message:'Validation success',data:{id,idType:typeof id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-    } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:214',message:'Validation error caught',data:{error:error instanceof Error?error.message:String(error),errorName:error instanceof Error?error.name:'unknown',isZodError:error instanceof z.ZodError,params:request.params},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-      throw error;
-    }
+    const { id } = validateRequest(paramsSchema, request.params);
 
     // Get ticket before cancelling (for shop slug)
     const existingTicket = await ticketService.getById(id);

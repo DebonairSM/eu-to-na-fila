@@ -236,56 +236,14 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
       .filter((bt) => bt.isPresent && bt.waitTime !== null)
       .map((bt) => bt.waitTime as number);
     
-    // #region agent log
-    const logData = {
-      location: 'queue.ts:237',
-      message: 'standardWaitTime calculation',
-      data: {
-        presentBarberWaitTimes,
-        barberWaitTimes: barberWaitTimes.map(bt => ({ id: bt.barberId, name: bt.barberName, waitTime: bt.waitTime, isPresent: bt.isPresent })),
-        calculatedStandardWaitTime: presentBarberWaitTimes.length > 0 ? Math.min(...presentBarberWaitTimes) : null,
-      },
-      timestamp: Date.now(),
-      sessionId: 'debug-session',
-      runId: 'run1',
-      hypothesisId: 'A',
-    };
-    try {
-      await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(logData),
-      }).catch(() => {});
-    } catch {}
-    // #endregion
-    
     const standardWaitTime = presentBarberWaitTimes.length > 0
       ? Math.min(...presentBarberWaitTimes)
       : null;
 
-    // #region agent log
-    const responseData = {
+    return {
       standardWaitTime,
       barberWaitTimes,
     };
-    try {
-      await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          location: 'queue.ts:245',
-          message: 'wait-times response being sent',
-          data: responseData,
-          timestamp: Date.now(),
-          sessionId: 'debug-session',
-          runId: 'run1',
-          hypothesisId: 'A',
-        }),
-      }).catch(() => {});
-    } catch {}
-    // #endregion
-
-    return responseData;
   });
 
   /**

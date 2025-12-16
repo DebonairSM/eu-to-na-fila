@@ -51,3 +51,10 @@ tmp/
 temp/
 .cache/
 
+# Backups
+backups/
+*.backup
+*.bak
+*.sql.gz
+*.sqlite.gz
+

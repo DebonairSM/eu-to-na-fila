@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import Fastify from 'fastify';
 import { analyticsRoutes } from '../../routes/analytics.js';
 import { getTestDb, resetTestDb } from '../helpers/db-setup.js';
