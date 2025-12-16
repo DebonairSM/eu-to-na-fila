@@ -57,10 +57,13 @@ interface CreateTicketData {
  * Create a test shop
  */
 export async function createShop(data: CreateShopData = {}): Promise<Shop> {
+  // Generate unique slug if not provided
+  const uniqueSlug = data.slug || `test-shop-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+  
   const [shop] = await db
     .insert(schema.shops)
     .values({
-      slug: data.slug || `test-shop-${Date.now()}`,
+      slug: uniqueSlug,
       name: data.name || 'Test Shop',
       domain: data.domain || 'test.com',
       path: data.path || '/test',

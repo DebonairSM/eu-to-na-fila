@@ -45,8 +45,10 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const since = new Date();
     since.setDate(since.getDate() - days);
+    since.setHours(0, 0, 0, 0); // Normalize to start of day for consistent boundaries
     const previousPeriodStart = new Date();
     previousPeriodStart.setDate(previousPeriodStart.getDate() - (days * 2));
+    previousPeriodStart.setHours(0, 0, 0, 0); // Normalize to start of day
 
     // Get all tickets in the period
     const tickets = await db.query.tickets.findMany({

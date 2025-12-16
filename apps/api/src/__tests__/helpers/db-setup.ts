@@ -1,52 +1,60 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { db, pool } from '../../db/index.js';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import pg from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import * as schema from '../../db/schema.js';
-
-const { Pool } = pg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-let testPool: pg.Pool | null = null;
-let testDb: ReturnType<typeof drizzle> | null = null;
+let migrationsRun = false;
 
 /**
- * Get or create test database connection
+ * Initialize test database and run migrations if needed
  */
 export async function getTestDb() {
-  if (testDb) {
-    return testDb;
+  // Run migrations once
+  if (!migrationsRun) {
+    const migrationsFolder = join(__dirname, '../../../drizzle');
+    const migrationDb = drizzle(pool);
+    try {
+      await migrate(migrationDb, { migrationsFolder });
+      migrationsRun = true;
+    } catch (error) {
+      console.warn('Migration warning:', error instanceof Error ? error.message : String(error));
+    }
   }
-
-  // Use test database URL from env, or default to a test database
-  const testDbUrl = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL?.replace(/\/[^/]+$/, '/eutonafila_test') || 'postgresql://localhost:5432/eutonafila_test';
-
-  testPool = new Pool({
-    connectionString: testDbUrl,
-  });
-
-  testDb = drizzle(testPool, { schema });
-
-  // Run migrations
-  const migrationsFolder = join(__dirname, '../../../drizzle');
-  await migrate(testDb, { migrationsFolder });
-
-  return testDb;
+  return db;
 }
 
 /**
  * Clean up test database
  */
 export async function cleanupTestDb() {
-  if (testDb) {
-    // Truncate all tables in reverse order of dependencies
-    await testDb.execute(`
-      TRUNCATE TABLE audit_log, tickets, barbers, services, shops RESTART IDENTITY CASCADE;
+  try {
+    // Use TRUNCATE CASCADE to handle foreign keys and reset sequences
+    // This is more efficient and handles all dependencies
+    await pool.query(`
+      TRUNCATE TABLE 
+        audit_log, 
+        tickets, 
+        barbers, 
+        services, 
+        shops 
+      RESTART IDENTITY CASCADE;
     `);
+  } catch (error) {
+    // If TRUNCATE fails, try DELETE as fallback
+    try {
+      await pool.query('DELETE FROM audit_log');
+      await pool.query('DELETE FROM tickets');
+      await pool.query('DELETE FROM barbers');
+      await pool.query('DELETE FROM services');
+      await pool.query('DELETE FROM shops');
+    } catch (deleteError) {
+      // Ignore - tables might not exist
+    }
   }
 }
 
@@ -54,11 +62,7 @@ export async function cleanupTestDb() {
  * Close test database connection
  */
 export async function closeTestDb() {
-  if (testPool) {
-    await testPool.end();
-    testPool = null;
-    testDb = null;
-  }
+  // Connection is managed by the main db module, no need to close here
 }
 
 /**
