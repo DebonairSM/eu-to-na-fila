@@ -489,7 +489,7 @@ export class TicketService {
         auditService.logPositionUpdated(ticket.id, shopId, ticket.position, position);
       }
       if (ticket.estimatedWaitTime !== waitTime) {
-        auditService.logWaitTimeUpdated(ticket.id, shopId, ticket.estimatedWaitTime, waitTime);
+        auditService.logWaitTimeUpdated(ticket.id, shopId, ticket.estimatedWaitTime ?? null, waitTime);
       }
 
       // Update both position and wait time
