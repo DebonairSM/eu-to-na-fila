@@ -25,10 +25,19 @@ export function StatusPage() {
   const positionInfo = (() => {
     if (!ticket || ticket.status !== 'waiting' || !queueData) return null;
     const waitingTickets = queueData.tickets.filter((t) => t.status === 'waiting');
-    const sortedWaitingTickets = [...waitingTickets].sort((a, b) => a.position - b.position);
+    // Sort waiting tickets by position (or createdAt as fallback) to ensure correct order
+    const sortedWaitingTickets = [...waitingTickets].sort((a, b) => {
+      // First try to sort by position
+      if (a.position !== b.position) {
+        return a.position - b.position;
+      }
+      // If positions are equal or invalid, sort by creation time
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
     const ticketIndex = sortedWaitingTickets.findIndex((t) => t.id === ticket.id);
     const calculatedPosition = ticketIndex >= 0 ? ticketIndex + 1 : ticket.position;
-    const aheadCount = sortedWaitingTickets.filter((t) => t.position < ticket.position).length;
+    // Calculate ahead count based on sorted order, not position comparison
+    const aheadCount = ticketIndex >= 0 ? ticketIndex : sortedWaitingTickets.filter((t) => new Date(t.createdAt).getTime() < new Date(ticket.createdAt).getTime()).length;
     return {
       position: calculatedPosition,
       ahead: aheadCount,

@@ -30,14 +30,14 @@ export function JoinForm() {
           <Stack spacing="lg">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <InputLabel htmlFor="firstName">Nome *</InputLabel>
+                <InputLabel htmlFor="customerName">Nome *</InputLabel>
                 <Input
-                  id="firstName"
+                  id="customerName"
                   type="text"
                   value={firstName}
                   onChange={handleFirstNameChange}
                   placeholder="Primeiro nome"
-                  autoComplete="off"
+                  autoComplete="new-password"
                   autoCapitalize="words"
                   autoCorrect="off"
                   spellCheck="false"
@@ -48,14 +48,14 @@ export function JoinForm() {
               </div>
 
               <div className="sm:w-48">
-                <InputLabel htmlFor="lastName">Sobrenome</InputLabel>
+                <InputLabel htmlFor="customerLastName">Sobrenome</InputLabel>
                 <Input
-                  id="lastName"
+                  id="customerLastName"
                   type="text"
                   value={lastName}
                   onChange={handleLastNameChange}
                   placeholder="Opcional"
-                  autoComplete="off"
+                  autoComplete="new-password"
                   autoCapitalize="words"
                   autoCorrect="off"
                   spellCheck="false"

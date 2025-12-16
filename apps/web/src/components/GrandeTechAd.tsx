@@ -58,14 +58,9 @@ export function GrandeTechAd({ onClose, showTimer = true }: GrandeTechAdProps) {
               SISTEMAS DE IA
             </div>
             <div className="pt-4">
-              <a
-                href="https://grandetech.com.br"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block bg-[#D4AF37] hover:bg-[#E8C547] text-black font-bold py-3 px-6 rounded-xl text-base sm:text-lg transition-all hover:scale-105 hover:shadow-[0_8px_24px_rgba(212,175,55,0.6)]"
-              >
+              <div className="inline-block bg-[#D4AF37] text-black font-bold py-3 px-6 rounded-xl text-base sm:text-lg">
                 VISITE GRANDETECH.COM.BR
-              </a>
+              </div>
             </div>
             {showTimer && (
               <div className="pt-4 text-white/90 text-sm">

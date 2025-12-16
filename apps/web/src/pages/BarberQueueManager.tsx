@@ -78,8 +78,19 @@ export function BarberQueueManager() {
   const { sortedTickets, waitingCount, servingCount } = useMemo(() => {
     const waitingTickets = tickets.filter((t) => t.status === 'waiting');
     const inProgressTickets = tickets.filter((t) => t.status === 'in_progress');
+    
+    // Sort waiting tickets by position (or createdAt as fallback) to ensure correct order
+    const sortedWaitingTickets = [...waitingTickets].sort((a, b) => {
+      // First try to sort by position
+      if (a.position !== b.position) {
+        return a.position - b.position;
+      }
+      // If positions are equal or invalid, sort by creation time
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
+    
     return {
-      sortedTickets: [...waitingTickets, ...inProgressTickets],
+      sortedTickets: [...sortedWaitingTickets, ...inProgressTickets],
       waitingCount: waitingTickets.length,
       servingCount: inProgressTickets.length,
     };
@@ -254,9 +265,11 @@ export function BarberQueueManager() {
                     <p className="text-lg text-white/30 mt-2">Toque no botão acima para adicionar</p>
                   </div>
                 ) : (
-                  sortedTickets.map((ticket) => {
+                  sortedTickets.map((ticket, index) => {
                     const assignedBarber = getAssignedBarber(ticket);
                     const isServing = ticket.status === 'in_progress';
+                    // Calculate display position based on index in sorted waiting tickets
+                    const displayPosition = isServing ? null : index + 1;
 
                     return (
                       <div
@@ -304,7 +317,7 @@ export function BarberQueueManager() {
                               )}
                               aria-label={`Atribuir barbeiro para ${ticket.customerName}`}
                             >
-                              {ticket.position}
+                              {displayPosition}
                             </button>
                           )}
                           {/* Customer Info - Clickable to assign barber */}
@@ -387,17 +400,26 @@ export function BarberQueueManager() {
 
         {/* Ad Views */}
         {currentView === 'ad1' && (
-          <div className="flex-1 flex items-center justify-center relative">
+          <div 
+            className="flex-1 flex items-center justify-center relative cursor-pointer"
+            onClick={showQueueView}
+          >
             <GrandeTechAd showTimer={false} />
           </div>
         )}
         {currentView === 'ad2' && (
-          <div className="flex-1 flex items-center justify-center relative">
+          <div 
+            className="flex-1 flex items-center justify-center relative cursor-pointer"
+            onClick={showQueueView}
+          >
             <Ad2Video showTimer={false} />
           </div>
         )}
         {currentView === 'ad3' && (
-          <div className="flex-1 flex items-center justify-center relative">
+          <div 
+            className="flex-1 flex items-center justify-center relative cursor-pointer"
+            onClick={showQueueView}
+          >
             <Ad3Video showTimer={false} />
           </div>
         )}
@@ -431,30 +453,35 @@ export function BarberQueueManager() {
                 className="space-y-6"
               >
                 <div>
-                  <label htmlFor="kioskCheckInFirst" className="block text-xl font-medium mb-3 text-white">
+                  <label htmlFor="kioskGuestName" className="block text-xl font-medium mb-3 text-white">
                     Nome *
                   </label>
                   <input
                     ref={firstNameInputRef}
-                    id="kioskCheckInFirst"
+                    id="kioskGuestName"
                     type="text"
                     value={checkInName.first}
                     onChange={(e) => setCheckInName({ ...checkInName, first: formatName(e.target.value) })}
                     placeholder="Primeiro nome"
+                    autoComplete="new-password"
+                    autoCapitalize="words"
+                    autoCorrect="off"
+                    spellCheck="false"
                     required
                     className="w-full px-6 py-5 text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
                 <div>
-                  <label htmlFor="kioskCheckInLast" className="block text-xl font-medium mb-3 text-white">
+                  <label htmlFor="kioskGuestLastName" className="block text-xl font-medium mb-3 text-white">
                     Sobrenome (opcional)
                   </label>
                   <input
-                    id="kioskCheckInLast"
+                    id="kioskGuestLastName"
                     type="text"
                     value={checkInName.last}
                     onChange={(e) => setCheckInName({ ...checkInName, last: formatName(e.target.value) })}
                     placeholder="Sobrenome"
+                    autoComplete="new-password"
                     className="w-full px-6 py-5 text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
@@ -742,14 +769,18 @@ export function BarberQueueManager() {
                   Nenhum cliente na fila
                 </div>
               ) : (
-                sortedTickets.map((ticket) => {
+                sortedTickets.map((ticket, index) => {
                   const assignedBarber = getAssignedBarber(ticket);
+                  const isServing = ticket.status === 'in_progress';
+                  // Calculate display position based on index in sorted waiting tickets
+                  const displayPosition = isServing ? null : index + 1;
                   return (
                     <QueueCard
                       key={ticket.id}
                       ticket={ticket}
                       assignedBarber={assignedBarber}
                       barbers={barbers}
+                      displayPosition={displayPosition}
                       onClick={() => {
                         setSelectedCustomerId(ticket.id);
                         barberSelectorModal.open();
@@ -815,16 +846,16 @@ export function BarberQueueManager() {
           autoComplete="off"
         >
           <div>
-            <label htmlFor="checkInFirst" className="block text-sm font-medium mb-2">
+            <label htmlFor="guestName" className="block text-sm font-medium mb-2">
               Nome *
             </label>
             <input
-              id="checkInFirst"
+              id="guestName"
               type="text"
               value={checkInName.first}
               onChange={(e) => setCheckInName({ ...checkInName, first: formatName(e.target.value) })}
               placeholder="Primeiro nome"
-              autoComplete="off"
+              autoComplete="new-password"
               autoCapitalize="words"
               autoCorrect="off"
               spellCheck="false"
@@ -833,16 +864,16 @@ export function BarberQueueManager() {
             />
           </div>
           <div>
-            <label htmlFor="checkInLast" className="block text-sm font-medium mb-2">
+            <label htmlFor="guestLastName" className="block text-sm font-medium mb-2">
               Sobrenome (opcional)
             </label>
             <input
-              id="checkInLast"
+              id="guestLastName"
               type="text"
               value={checkInName.last}
               onChange={(e) => setCheckInName({ ...checkInName, last: formatName(e.target.value) })}
               placeholder="Sobrenome"
-              autoComplete="off"
+              autoComplete="new-password"
               className="w-full px-4 py-3 rounded-lg bg-muted/50 border border-border focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>

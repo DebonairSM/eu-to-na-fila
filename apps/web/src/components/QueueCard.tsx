@@ -6,6 +6,7 @@ export interface QueueCardProps {
   ticket: Ticket;
   assignedBarber?: Barber | null;
   barbers?: Barber[]; // For displaying preferred barber
+  displayPosition?: number | null; // Display position (calculated from sorted order)
   onClick?: () => void;
   onRemove?: () => void;
   onComplete?: () => void;
@@ -16,6 +17,7 @@ export const QueueCard = memo(function QueueCard({
   ticket,
   assignedBarber,
   barbers = [],
+  displayPosition,
   onClick,
   onRemove,
   onComplete,
@@ -53,7 +55,7 @@ export const QueueCard = memo(function QueueCard({
           onClick();
         }
       } : undefined}
-      aria-label={onClick ? `Cliente ${ticket.customerName}, posição ${ticket.position}${assignedBarber ? `, atendido por ${assignedBarber.name}` : ''}` : undefined}
+      aria-label={onClick ? `Cliente ${ticket.customerName}, posição ${displayPosition !== null && displayPosition !== undefined ? displayPosition : ticket.position}${assignedBarber ? `, atendido por ${assignedBarber.name}` : ''}` : undefined}
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -84,7 +86,7 @@ export const QueueCard = memo(function QueueCard({
             {isServing ? (
               <span className="material-symbols-outlined text-2xl" aria-hidden="true">check</span>
             ) : (
-              <span aria-hidden="true">{ticket.position}</span>
+              <span aria-hidden="true">{displayPosition !== null && displayPosition !== undefined ? displayPosition : ticket.position}</span>
             )}
           </button>
 

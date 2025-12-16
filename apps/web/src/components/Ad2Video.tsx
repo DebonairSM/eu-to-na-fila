@@ -43,14 +43,9 @@ export function Ad2Video({ onClose: _onClose, showTimer = true }: Ad2VideoProps)
               </div>
             </div>
             <div className="pt-4">
-              <a
-                href="https://grandetech.com.br"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block bg-[#0f3d2e] hover:bg-[#165042] border-2 border-[#8ad6b0] text-white font-bold py-3 px-8 rounded-xl text-base sm:text-lg transition-all hover:scale-105 hover:shadow-[0_8px_24px_rgba(138,214,176,0.5)]"
-              >
+              <div className="inline-block bg-[#0f3d2e] border-2 border-[#8ad6b0] text-white font-bold py-3 px-8 rounded-xl text-base sm:text-lg">
                 CONHEÇA NOSSAS SOLUÇÕES
-              </a>
+              </div>
             </div>
             {showTimer && (
               <div className="pt-4 text-[#8ad6b0] text-sm font-medium">

@@ -43,14 +43,9 @@ export function Ad3Video({ onClose: _onClose, showTimer = true }: Ad3VideoProps)
               </div>
             </div>
             <div className="pt-6">
-              <a
-                href="https://grandetech.com.br"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-extrabold py-4 px-10 rounded-2xl text-lg sm:text-xl transition-all hover:scale-110 hover:shadow-[0_12px_32px_rgba(168,85,247,0.7)] border-2 border-white/20"
-              >
+              <div className="inline-block bg-gradient-to-r from-purple-600 to-blue-600 text-white font-extrabold py-4 px-10 rounded-2xl text-lg sm:text-xl border-2 border-white/20">
                 ACESSE GRANDETECH.COM.BR
-              </a>
+              </div>
             </div>
             {showTimer && (
               <div className="pt-6 text-white text-base font-semibold">
