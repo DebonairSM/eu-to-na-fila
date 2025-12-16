@@ -460,23 +460,12 @@ export function BarberQueueManager() {
                     value={checkInName.first}
                     onChange={(e) => setCheckInName({ ...checkInName, first: formatName(e.target.value) })}
                     placeholder="Primeiro nome"
-                    autoComplete="one-time-code"
                     autoCapitalize="words"
                     autoCorrect="off"
                     spellCheck="false"
                     inputMode="text"
-                    data-lpignore="true"
-                    data-form-type="other"
                     required
                     className="w-full px-6 py-5 text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
-                    onFocus={(e) => {
-                      // Prevent autofill UI by temporarily making readOnly
-                      const input = e.target as HTMLInputElement;
-                      input.setAttribute('readonly', 'readonly');
-                      setTimeout(() => {
-                        input.removeAttribute('readonly');
-                      }, 100);
-                    }}
                   />
                 </div>
                 <div>
@@ -489,19 +478,8 @@ export function BarberQueueManager() {
                     value={checkInName.last}
                     onChange={(e) => setCheckInName({ ...checkInName, last: formatName(e.target.value) })}
                     placeholder="Sobrenome"
-                    autoComplete="one-time-code"
                     inputMode="text"
-                    data-lpignore="true"
-                    data-form-type="other"
                     className="w-full px-6 py-5 text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
-                    onFocus={(e) => {
-                      // Prevent autofill UI by temporarily making readOnly
-                      const input = e.target as HTMLInputElement;
-                      input.setAttribute('readonly', 'readonly');
-                      setTimeout(() => {
-                        input.removeAttribute('readonly');
-                      }, 100);
-                    }}
                   />
                 </div>
                 <div>
