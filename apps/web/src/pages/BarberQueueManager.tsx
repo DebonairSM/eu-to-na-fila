@@ -15,12 +15,15 @@ import { QueueCard } from '@/components/QueueCard';
 import { QRCode } from '@/components/QRCode';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Button } from '@/components/ui/button';
+import { GrandeTechAd } from '@/components/GrandeTechAd';
+import { Ad2Video } from '@/components/Ad2Video';
+import { Ad3Video } from '@/components/Ad3Video';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { cn, getErrorMessage, formatName } from '@/lib/utils';
 
 const QUEUE_VIEW_DURATION = 15000; // 15 seconds
-const AD_VIEW_DURATION = 10000; // 10 seconds
+const AD_VIEW_DURATION = 15000; // 15 seconds
 
 export function BarberQueueManager() {
   const [searchParams] = useSearchParams();
@@ -383,30 +386,20 @@ export function BarberQueueManager() {
         )}
 
         {/* Ad Views */}
-        {(currentView === 'ad1' || currentView === 'ad2' || currentView === 'ad3') && (
-          <button
-            type="button"
-            className="flex-1 flex items-center justify-center p-8 cursor-pointer relative"
-            onClick={showQueueView}
-            aria-label="Voltar para visualização da fila"
-          >
-            <div className="text-center space-y-8 max-w-4xl">
-              <h2 className="text-6xl font-bold">Anúncio {currentView.slice(-1)}</h2>
-              <p className="text-2xl text-white/70">
-                {currentView === 'ad1' && 'Promoções especiais'}
-                {currentView === 'ad2' && 'Horários de funcionamento'}
-                {currentView === 'ad3' && 'Produtos disponíveis'}
-              </p>
-              <p className="text-xl text-white/50">Toque para voltar à fila</p>
-            </div>
-            {/* Advertisement QR Code - Temporarily hidden */}
-            {/* <div className="absolute bottom-8 right-8 bg-white p-4 rounded-xl shadow-2xl border-4 border-[#D4AF37] border-double flex flex-col items-center gap-3">
-              <div className="border-2 border-black/10 rounded-lg p-1">
-                <QRCode url={joinUrl} size={120} />
-              </div>
-              <p className="text-base font-semibold text-black tracking-wide">Para Anunciar</p>
-            </div> */}
-          </button>
+        {currentView === 'ad1' && (
+          <div className="flex-1 flex items-center justify-center relative">
+            <GrandeTechAd showTimer={false} />
+          </div>
+        )}
+        {currentView === 'ad2' && (
+          <div className="flex-1 flex items-center justify-center relative">
+            <Ad2Video showTimer={false} />
+          </div>
+        )}
+        {currentView === 'ad3' && (
+          <div className="flex-1 flex items-center justify-center relative">
+            <Ad3Video showTimer={false} />
+          </div>
         )}
 
         {/* Progress Bar */}

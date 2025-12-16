@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 const QUEUE_VIEW_DURATION = 15000; // 15 seconds per US-013
-const AD_VIEW_DURATION = 10000; // 10 seconds per US-013
+const AD_VIEW_DURATION = 15000; // 15 seconds per US-013
 const IDLE_TIMEOUT = 10000; // 10 seconds per US-014
 
 export type KioskView = 'queue' | 'ad1' | 'ad2' | 'ad3';
