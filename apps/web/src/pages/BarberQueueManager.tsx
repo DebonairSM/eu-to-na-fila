@@ -812,6 +812,7 @@ export function BarberQueueManager() {
             handleAddCustomer();
           }}
           className="space-y-4"
+          autoComplete="off"
         >
           <div>
             <label htmlFor="checkInFirst" className="block text-sm font-medium mb-2">
@@ -823,6 +824,10 @@ export function BarberQueueManager() {
               value={checkInName.first}
               onChange={(e) => setCheckInName({ ...checkInName, first: formatName(e.target.value) })}
               placeholder="Primeiro nome"
+              autoComplete="off"
+              autoCapitalize="words"
+              autoCorrect="off"
+              spellCheck="false"
               required
               className="w-full px-4 py-3 rounded-lg bg-muted/50 border border-border focus:outline-none focus:ring-2 focus:ring-ring"
             />
@@ -837,6 +842,7 @@ export function BarberQueueManager() {
               value={checkInName.last}
               onChange={(e) => setCheckInName({ ...checkInName, last: formatName(e.target.value) })}
               placeholder="Sobrenome"
+              autoComplete="off"
               className="w-full px-4 py-3 rounded-lg bg-muted/50 border border-border focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>

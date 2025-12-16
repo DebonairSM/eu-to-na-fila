@@ -26,7 +26,7 @@ export function JoinForm() {
   return (
     <Card variant="default" className="shadow-lg">
       <CardContent className="p-8">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
           <Stack spacing="lg">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
@@ -37,7 +37,10 @@ export function JoinForm() {
                   value={firstName}
                   onChange={handleFirstNameChange}
                   placeholder="Primeiro nome"
-                  autoComplete="given-name"
+                  autoComplete="off"
+                  autoCapitalize="words"
+                  autoCorrect="off"
+                  spellCheck="false"
                   required
                   error={!!validationError}
                 />
@@ -52,7 +55,10 @@ export function JoinForm() {
                   value={lastName}
                   onChange={handleLastNameChange}
                   placeholder="Opcional"
-                  autoComplete="family-name"
+                  autoComplete="off"
+                  autoCapitalize="words"
+                  autoCorrect="off"
+                  spellCheck="false"
                 />
               </div>
             </div>
