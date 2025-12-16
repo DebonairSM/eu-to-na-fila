@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 interface Ad3VideoProps {
   onClose?: () => void;
@@ -7,6 +7,7 @@ interface Ad3VideoProps {
 
 export function Ad3Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad3VideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -27,8 +28,35 @@ export function Ad3Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad
     });
   };
 
+  const logDimensions = useCallback(() => {
+    if (containerRef.current && videoRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const videoRect = videoRef.current.getBoundingClientRect();
+      const video = videoRef.current;
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Ad3Video.tsx:33',message:'Ad3 dimensions check',data:{containerWidth:containerRect.width,containerHeight:containerRect.height,containerScrollWidth:containerRef.current.scrollWidth,containerScrollHeight:containerRef.current.scrollHeight,videoWidth:video.videoWidth,videoHeight:video.videoHeight,videoDisplayWidth:videoRect.width,videoDisplayHeight:videoRect.height,videoClientWidth:video.clientWidth,videoClientHeight:video.clientHeight,viewportWidth:window.innerWidth,viewportHeight:window.innerHeight,hasOverflow:containerRef.current.scrollWidth>containerRect.width||containerRef.current.scrollHeight>containerRect.height},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    }
+  }, []);
+
+  useEffect(() => {
+    logDimensions();
+    const timeout = setTimeout(logDimensions, 100);
+    const resizeObserver = new ResizeObserver(logDimensions);
+    if (containerRef.current) resizeObserver.observe(containerRef.current);
+    if (videoRef.current) resizeObserver.observe(videoRef.current);
+    return () => {
+      clearTimeout(timeout);
+      resizeObserver.disconnect();
+    };
+  }, [logDimensions]);
+
   return (
-    <div className="w-full h-full relative overflow-hidden bg-black">
+    <div 
+      ref={containerRef}
+      className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center"
+    >
+      {/* #region agent log */}
+      {(() => { fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Ad3Video.tsx:50',message:'Ad3 component rendering',data:{containerClass:'w-full h-full'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{}); return null; })()}
+      {/* #endregion */}
       <video
         ref={videoRef}
         src="/mineiro/gt-ad-001.mp4"
@@ -37,8 +65,18 @@ export function Ad3Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad
         muted
         playsInline
         onError={handleVideoError}
-        onLoadedData={() => console.log('Ad3 Video loaded successfully')}
-        className="w-full h-full object-cover"
+        onLoadedData={() => {
+          console.log('Ad3 Video loaded successfully');
+          // #region agent log
+          logDimensions();
+          // #endregion
+        }}
+        onResize={() => {
+          // #region agent log
+          logDimensions();
+          // #endregion
+        }}
+        className="w-full h-full object-contain"
       />
     </div>
   );

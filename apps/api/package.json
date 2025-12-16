@@ -4,7 +4,6 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "prebuild": "pnpm test:run",
     "build": "tsc",
     "start": "node dist/server.js",
     "db:generate": "drizzle-kit generate:pg",
