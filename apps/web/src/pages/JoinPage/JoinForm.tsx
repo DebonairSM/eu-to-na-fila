@@ -37,12 +37,23 @@ export function JoinForm() {
                   value={firstName}
                   onChange={handleFirstNameChange}
                   placeholder="Primeiro nome"
-                  autoComplete="new-password"
+                  autoComplete="one-time-code"
                   autoCapitalize="words"
                   autoCorrect="off"
                   spellCheck="false"
+                  inputMode="text"
+                  data-lpignore="true"
+                  data-form-type="other"
                   required
                   error={!!validationError}
+                  onFocus={(e) => {
+                    // Prevent autofill UI by temporarily making readOnly
+                    const input = e.target as HTMLInputElement;
+                    input.setAttribute('readonly', 'readonly');
+                    setTimeout(() => {
+                      input.removeAttribute('readonly');
+                    }, 100);
+                  }}
                 />
                 <InputError message={validationError || ''} />
               </div>
@@ -55,10 +66,21 @@ export function JoinForm() {
                   value={lastName}
                   onChange={handleLastNameChange}
                   placeholder="Opcional"
-                  autoComplete="new-password"
+                  autoComplete="one-time-code"
                   autoCapitalize="words"
                   autoCorrect="off"
                   spellCheck="false"
+                  inputMode="text"
+                  data-lpignore="true"
+                  data-form-type="other"
+                  onFocus={(e) => {
+                    // Prevent autofill UI by temporarily making readOnly
+                    const input = e.target as HTMLInputElement;
+                    input.setAttribute('readonly', 'readonly');
+                    setTimeout(() => {
+                      input.removeAttribute('readonly');
+                    }, 100);
+                  }}
                 />
               </div>
             </div>

@@ -350,11 +350,28 @@ export function BarberQueueManager() {
                               })() : null;
                             })()}
                           </button>
-                          {/* Status indicator */}
-                          {isServing && (
+                          {/* Status indicator / Remove button */}
+                          {isServing ? (
                             <div className="flex-shrink-0 px-4 py-2 bg-[#10B981]/20 rounded-xl">
                               <span className="text-[#10B981] text-sm font-medium uppercase tracking-wider">Atendendo</span>
                             </div>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCustomerToRemove(ticket.id);
+                                removeConfirmModal.open();
+                                showQueueView();
+                              }}
+                              className={cn(
+                                'flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all cursor-pointer',
+                                'bg-white/5 border border-white/20 text-white/60 hover:bg-[#ef4444]/20 hover:border-[#ef4444] hover:text-[#ef4444]',
+                                'hover:scale-110 active:scale-95'
+                              )}
+                              aria-label={`Remover ${ticket.customerName} da fila`}
+                            >
+                              <span className="material-symbols-outlined text-2xl">close</span>
+                            </button>
                           )}
                         </div>
                       </div>
@@ -463,12 +480,23 @@ export function BarberQueueManager() {
                     value={checkInName.first}
                     onChange={(e) => setCheckInName({ ...checkInName, first: formatName(e.target.value) })}
                     placeholder="Primeiro nome"
-                    autoComplete="new-password"
+                    autoComplete="one-time-code"
                     autoCapitalize="words"
                     autoCorrect="off"
                     spellCheck="false"
+                    inputMode="text"
+                    data-lpignore="true"
+                    data-form-type="other"
                     required
                     className="w-full px-6 py-5 text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
+                    onFocus={(e) => {
+                      // Prevent autofill UI by temporarily making readOnly
+                      const input = e.target as HTMLInputElement;
+                      input.setAttribute('readonly', 'readonly');
+                      setTimeout(() => {
+                        input.removeAttribute('readonly');
+                      }, 100);
+                    }}
                   />
                 </div>
                 <div>
@@ -481,8 +509,19 @@ export function BarberQueueManager() {
                     value={checkInName.last}
                     onChange={(e) => setCheckInName({ ...checkInName, last: formatName(e.target.value) })}
                     placeholder="Sobrenome"
-                    autoComplete="new-password"
+                    autoComplete="one-time-code"
+                    inputMode="text"
+                    data-lpignore="true"
+                    data-form-type="other"
                     className="w-full px-6 py-5 text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
+                    onFocus={(e) => {
+                      // Prevent autofill UI by temporarily making readOnly
+                      const input = e.target as HTMLInputElement;
+                      input.setAttribute('readonly', 'readonly');
+                      setTimeout(() => {
+                        input.removeAttribute('readonly');
+                      }, 100);
+                    }}
                   />
                 </div>
                 <div>
@@ -694,6 +733,44 @@ export function BarberQueueManager() {
             </div>
           </div>
         )}
+
+        {/* Remove Confirmation Modal */}
+        {removeConfirmModal.isOpen && customerToRemove && (
+          <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-8">
+            <div className="bg-[#1a1a1a] border-2 border-[#ef4444]/30 rounded-3xl p-10 max-w-2xl w-full">
+              <h2 className="text-4xl font-['Playfair_Display',serif] text-[#ef4444] mb-4 text-center">
+                Remover da Fila
+              </h2>
+              <p className="text-2xl text-white/70 mb-8 text-center">
+                Tem certeza que deseja remover{' '}
+                <span className="font-semibold text-white">
+                  {tickets.find((t) => t.id === customerToRemove)?.customerName}
+                </span>{' '}
+                da fila?
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    removeConfirmModal.close();
+                    setCustomerToRemove(null);
+                  }}
+                  className="flex-1 px-8 py-5 text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={async () => {
+                    await handleRemoveCustomer();
+                    showQueueView();
+                  }}
+                  className="flex-1 px-8 py-5 text-xl rounded-2xl bg-[#ef4444] text-white font-semibold hover:bg-[#ef4444]/80 transition-all"
+                >
+                  Remover
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -855,12 +932,23 @@ export function BarberQueueManager() {
               value={checkInName.first}
               onChange={(e) => setCheckInName({ ...checkInName, first: formatName(e.target.value) })}
               placeholder="Primeiro nome"
-              autoComplete="new-password"
+              autoComplete="one-time-code"
               autoCapitalize="words"
               autoCorrect="off"
               spellCheck="false"
+              inputMode="text"
+              data-lpignore="true"
+              data-form-type="other"
               required
               className="w-full px-4 py-3 rounded-lg bg-muted/50 border border-border focus:outline-none focus:ring-2 focus:ring-ring"
+              onFocus={(e) => {
+                // Prevent autofill UI by temporarily making readOnly
+                const input = e.target as HTMLInputElement;
+                input.setAttribute('readonly', 'readonly');
+                setTimeout(() => {
+                  input.removeAttribute('readonly');
+                }, 100);
+              }}
             />
           </div>
           <div>
@@ -873,8 +961,19 @@ export function BarberQueueManager() {
               value={checkInName.last}
               onChange={(e) => setCheckInName({ ...checkInName, last: formatName(e.target.value) })}
               placeholder="Sobrenome"
-              autoComplete="new-password"
+              autoComplete="one-time-code"
+              inputMode="text"
+              data-lpignore="true"
+              data-form-type="other"
               className="w-full px-4 py-3 rounded-lg bg-muted/50 border border-border focus:outline-none focus:ring-2 focus:ring-ring"
+              onFocus={(e) => {
+                // Prevent autofill UI by temporarily making readOnly
+                const input = e.target as HTMLInputElement;
+                input.setAttribute('readonly', 'readonly');
+                setTimeout(() => {
+                  input.removeAttribute('readonly');
+                }, 100);
+              }}
             />
           </div>
           <div>
