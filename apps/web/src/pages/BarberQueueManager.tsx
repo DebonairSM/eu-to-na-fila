@@ -231,7 +231,7 @@ export function BarberQueueManager() {
         </button>
 
         {/* QR Code - Top right */}
-        <div className="absolute top-6 right-6 z-50 bg-white p-0.5 rounded-lg shadow-2xl border-2 border-[#D4AF37] flex items-center justify-center">
+        <div className="absolute top-6 right-6 z-50 bg-white p-0.5 shadow-2xl border-2 border-[#D4AF37] flex items-center justify-center">
           <QRCode url={joinUrl} size={60} />
         </div>
 
