@@ -1,8 +1,24 @@
--- Add timestamp columns to tickets table
-ALTER TABLE "tickets" ADD COLUMN "started_at" timestamp;--> statement-breakpoint
-ALTER TABLE "tickets" ADD COLUMN "completed_at" timestamp;--> statement-breakpoint
-ALTER TABLE "tickets" ADD COLUMN "cancelled_at" timestamp;--> statement-breakpoint
-ALTER TABLE "tickets" ADD COLUMN "barber_assigned_at" timestamp;--> statement-breakpoint
+-- Add timestamp columns to tickets table (idempotent)
+DO $$ BEGIN
+  ALTER TABLE "tickets" ADD COLUMN "started_at" timestamp;
+EXCEPTION
+  WHEN duplicate_column THEN null;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  ALTER TABLE "tickets" ADD COLUMN "completed_at" timestamp;
+EXCEPTION
+  WHEN duplicate_column THEN null;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  ALTER TABLE "tickets" ADD COLUMN "cancelled_at" timestamp;
+EXCEPTION
+  WHEN duplicate_column THEN null;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  ALTER TABLE "tickets" ADD COLUMN "barber_assigned_at" timestamp;
+EXCEPTION
+  WHEN duplicate_column THEN null;
+END $$;--> statement-breakpoint
 
 -- Create audit_log table
 CREATE TABLE IF NOT EXISTS "audit_log" (

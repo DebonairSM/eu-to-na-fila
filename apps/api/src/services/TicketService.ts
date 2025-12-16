@@ -62,6 +62,9 @@ export class TicketService {
     shopId: number,
     status?: 'waiting' | 'in_progress' | 'completed' | 'cancelled'
   ): Promise<Ticket[]> {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:65',message:'getByShop entry',data:{shopId,status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     const whereClause = status
       ? and(
           eq(schema.tickets.shopId, shopId),
@@ -69,16 +72,28 @@ export class TicketService {
         )
       : eq(schema.tickets.shopId, shopId);
 
-    const tickets = await db.query.tickets.findMany({
-      where: whereClause,
-      with: {
-        service: true,
-        barber: true,
-      },
-      orderBy: (tickets, { asc }) => [asc(tickets.createdAt)],
-    });
-
-    return tickets as Ticket[];
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:75',message:'Before query execution',data:{shopId,status,whereClauseType:typeof whereClause},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    try {
+      const tickets = await db.query.tickets.findMany({
+        where: whereClause,
+        with: {
+          service: true,
+          barber: true,
+        },
+        orderBy: (tickets, { asc }) => [asc(tickets.createdAt)],
+      });
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:87',message:'Query success',data:{shopId,status,ticketCount:tickets.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      return tickets as Ticket[];
+    } catch (error) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:91',message:'Query error',data:{shopId,status,errorMessage:error instanceof Error?error.message:String(error),errorName:error instanceof Error?error.name:'unknown',errorCode:(error as any)?.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      throw error;
+    }
   }
 
   /**
