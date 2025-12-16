@@ -4,8 +4,8 @@ services:
     env: node
     plan: starter
     region: oregon
-    buildCommand: pnpm install --frozen-lockfile && pnpm build:fast
-    startCommand: node apps/api/dist/server.js
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm db:migrate && node apps/api/dist/server.js
     envVars:
       - key: NODE_ENV
         value: production

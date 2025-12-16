@@ -58,7 +58,7 @@ export function Ad2Video({ onClose: _onClose, showTimer = true }: Ad2VideoProps)
 
       {/* Bottom Half - Video */}
       <div className="h-1/2 w-full relative overflow-hidden flex items-center justify-center bg-black p-4 sm:p-6 md:p-8">
-        <div className="relative w-full max-w-5xl aspect-video">
+        <div className="relative w-full max-w-7xl aspect-video scale-110">
           <video
             ref={videoRef}
             src="/mineiro/gt-ad-001.mp4"

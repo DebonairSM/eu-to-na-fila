@@ -16,6 +16,10 @@ export const ticketSchema = z.object({
   estimatedWaitTime: z.number().int().nonnegative().optional(),
   createdAt: z.date().or(z.string()),
   updatedAt: z.date().or(z.string()),
+  startedAt: z.date().or(z.string()).optional(),
+  completedAt: z.date().or(z.string()).optional(),
+  cancelledAt: z.date().or(z.string()).optional(),
+  barberAssignedAt: z.date().or(z.string()).optional(),
 });
 
 export type Ticket = z.infer<typeof ticketSchema>;

@@ -94,17 +94,23 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     const avgPerDay = days > 0 ? Math.round(total / days) : 0;
 
     // Calculate average service time (for completed tickets)
+    // Use actual timestamps: completedAt - startedAt
     const completedTickets = tickets.filter(t => t.status === 'completed');
     let totalServiceTime = 0;
     let serviceTimeCount = 0;
     
     completedTickets.forEach(ticket => {
-      // Calculate time from in_progress to completed
-      // If updatedAt is after createdAt, use the difference
-      // Otherwise estimate based on createdAt to updatedAt
-      if (ticket.updatedAt && ticket.createdAt) {
-        const serviceTime = (ticket.updatedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60); // minutes
+      // Use actual service duration: completedAt - startedAt
+      if (ticket.completedAt && ticket.startedAt) {
+        const serviceTime = (new Date(ticket.completedAt).getTime() - new Date(ticket.startedAt).getTime()) / (1000 * 60); // minutes
         if (serviceTime > 0 && serviceTime < 120) { // Reasonable range: 0-120 minutes
+          totalServiceTime += serviceTime;
+          serviceTimeCount++;
+        }
+      } else if (ticket.updatedAt && ticket.createdAt) {
+        // Fallback to old calculation if new timestamps not available
+        const serviceTime = (ticket.updatedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60); // minutes
+        if (serviceTime > 0 && serviceTime < 120) {
           totalServiceTime += serviceTime;
           serviceTimeCount++;
         }
@@ -123,11 +129,19 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       const barberCompleted = barberTickets.filter(t => t.status === 'completed');
       
       // Calculate average service time for this barber
+      // Use actual timestamps: completedAt - startedAt
       let barberTotalServiceTime = 0;
       let barberServiceTimeCount = 0;
       
       barberCompleted.forEach(ticket => {
-        if (ticket.updatedAt && ticket.createdAt) {
+        if (ticket.completedAt && ticket.startedAt) {
+          const serviceTime = (new Date(ticket.completedAt).getTime() - new Date(ticket.startedAt).getTime()) / (1000 * 60); // minutes
+          if (serviceTime > 0 && serviceTime < 120) {
+            barberTotalServiceTime += serviceTime;
+            barberServiceTimeCount++;
+          }
+        } else if (ticket.updatedAt && ticket.createdAt) {
+          // Fallback to old calculation if new timestamps not available
           const serviceTime = (ticket.updatedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60); // minutes
           if (serviceTime > 0 && serviceTime < 120) {
             barberTotalServiceTime += serviceTime;
@@ -196,15 +210,31 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       dayOfWeekDistribution[dayName]++;
     });
 
-    // Wait time trends (average wait time per day)
+    // Wait time trends (average actual wait time per day)
+    // Use actual wait time: startedAt - createdAt (for completed/in_progress tickets)
     const waitTimeByDay: Record<string, { total: number; count: number }> = {};
     tickets.forEach(t => {
-      if (t.estimatedWaitTime !== null && t.estimatedWaitTime !== undefined) {
+      let actualWaitTime: number | null = null;
+      
+      // Use actual wait time if available (startedAt - createdAt)
+      if (t.startedAt && t.createdAt) {
+        actualWaitTime = (new Date(t.startedAt).getTime() - new Date(t.createdAt).getTime()) / (1000 * 60); // minutes
+        if (actualWaitTime < 0 || actualWaitTime > 480) { // Reasonable range: 0-8 hours
+          actualWaitTime = null;
+        }
+      }
+      
+      // Fallback to estimated wait time if actual not available
+      if (actualWaitTime === null && t.estimatedWaitTime !== null && t.estimatedWaitTime !== undefined) {
+        actualWaitTime = t.estimatedWaitTime;
+      }
+      
+      if (actualWaitTime !== null) {
         const day = t.createdAt.toISOString().split('T')[0];
         if (!waitTimeByDay[day]) {
           waitTimeByDay[day] = { total: 0, count: 0 };
         }
-        waitTimeByDay[day].total += t.estimatedWaitTime;
+        waitTimeByDay[day].total += actualWaitTime;
         waitTimeByDay[day].count++;
       }
     });
@@ -234,11 +264,19 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       cancellationRateByDay[dayName].total++;
       cancellationRateByHour[hour].total++;
       
-      if (t.status === 'cancelled') {
+        if (t.status === 'cancelled') {
         cancellationRateByDay[dayName].cancelled++;
         cancellationRateByHour[hour].cancelled++;
         
-        if (t.updatedAt && t.createdAt) {
+        // Use actual cancellation time: cancelledAt - createdAt
+        if (t.cancelledAt && t.createdAt) {
+          const timeBeforeCancellation = (new Date(t.cancelledAt).getTime() - new Date(t.createdAt).getTime()) / (1000 * 60);
+          if (timeBeforeCancellation > 0 && timeBeforeCancellation < 240) {
+            totalCancellationTime += timeBeforeCancellation;
+            cancellationTimeCount++;
+          }
+        } else if (t.updatedAt && t.createdAt) {
+          // Fallback to old calculation if new timestamps not available
           const timeBeforeCancellation = (t.updatedAt.getTime() - t.createdAt.getTime()) / (1000 * 60);
           if (timeBeforeCancellation > 0 && timeBeforeCancellation < 240) {
             totalCancellationTime += timeBeforeCancellation;
@@ -267,6 +305,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     };
 
     // Service time distribution (histogram)
+    // Use actual timestamps: completedAt - startedAt
     const serviceTimeDistribution: Record<string, number> = {
       '0-10': 0,
       '10-20': 0,
@@ -276,16 +315,21 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       '60+': 0,
     };
     completedTickets.forEach(ticket => {
-      if (ticket.updatedAt && ticket.createdAt) {
-        const serviceTime = (ticket.updatedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60);
-        if (serviceTime > 0 && serviceTime < 120) {
-          if (serviceTime < 10) serviceTimeDistribution['0-10']++;
-          else if (serviceTime < 20) serviceTimeDistribution['10-20']++;
-          else if (serviceTime < 30) serviceTimeDistribution['20-30']++;
-          else if (serviceTime < 45) serviceTimeDistribution['30-45']++;
-          else if (serviceTime < 60) serviceTimeDistribution['45-60']++;
-          else serviceTimeDistribution['60+']++;
-        }
+      let serviceTime: number | null = null;
+      if (ticket.completedAt && ticket.startedAt) {
+        serviceTime = (new Date(ticket.completedAt).getTime() - new Date(ticket.startedAt).getTime()) / (1000 * 60);
+      } else if (ticket.updatedAt && ticket.createdAt) {
+        // Fallback to old calculation if new timestamps not available
+        serviceTime = (ticket.updatedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60);
+      }
+      
+      if (serviceTime !== null && serviceTime > 0 && serviceTime < 120) {
+        if (serviceTime < 10) serviceTimeDistribution['0-10']++;
+        else if (serviceTime < 20) serviceTimeDistribution['10-20']++;
+        else if (serviceTime < 30) serviceTimeDistribution['20-30']++;
+        else if (serviceTime < 45) serviceTimeDistribution['30-45']++;
+        else if (serviceTime < 60) serviceTimeDistribution['45-60']++;
+        else serviceTimeDistribution['60+']++;
       }
     });
 

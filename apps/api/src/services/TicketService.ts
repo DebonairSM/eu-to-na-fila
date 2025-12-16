@@ -2,6 +2,7 @@ import { db, schema } from '../db/index.js';
 import { eq, and, or, ne } from 'drizzle-orm';
 import type { CreateTicket, UpdateTicketStatus, Ticket } from '@eutonafila/shared';
 import { queueService } from './QueueService.js';
+import { auditService } from './AuditService.js';
 import { ConflictError, NotFoundError } from '../lib/errors.js';
 
 /**
@@ -235,6 +236,19 @@ export class TicketService {
       })
       .returning();
 
+    // Log ticket creation
+    auditService.logTicketCreated(ticket.id, shopId, {
+      customerName: data.customerName,
+      serviceId: data.serviceId,
+      preferredBarberId: data.preferredBarberId,
+      actorType: 'customer',
+    });
+
+    // Log barber preference if set
+    if (data.preferredBarberId) {
+      auditService.logBarberPreferenceSet(ticket.id, shopId, data.preferredBarberId);
+    }
+
     // Recalculate wait times for other tickets
     await this.recalculateWaitTimes(shopId);
 
@@ -317,10 +331,22 @@ export class TicketService {
     }
 
     // Update ticket
+    const now = new Date();
     const updateData: any = {
       status: data.status,
-      updatedAt: new Date(),
+      updatedAt: now,
     };
+
+    // Set timestamps based on status changes
+    if (data.status === 'in_progress' && existingTicket.status !== 'in_progress') {
+      updateData.startedAt = now;
+    }
+    if (data.status === 'completed' && existingTicket.status !== 'completed') {
+      updateData.completedAt = now;
+    }
+    if (data.status === 'cancelled' && existingTicket.status !== 'cancelled') {
+      updateData.cancelledAt = now;
+    }
 
     // Set position based on status
     if (data.status === 'in_progress' || data.status === 'completed' || data.status === 'cancelled') {
@@ -330,7 +356,11 @@ export class TicketService {
 
     // Set barber if provided
     if (data.barberId !== undefined) {
+      const isNewAssignment = existingTicket.barberId !== data.barberId && data.barberId !== null;
       updateData.barberId = data.barberId;
+      if (isNewAssignment) {
+        updateData.barberAssignedAt = now;
+      }
     }
 
     const [ticket] = await db
@@ -338,6 +368,38 @@ export class TicketService {
       .set(updateData)
       .where(eq(schema.tickets.id, id))
       .returning();
+
+    // Log actions based on changes
+    if (data.barberId !== undefined && existingTicket.barberId !== data.barberId && data.barberId !== null) {
+      auditService.logBarberAssigned(id, existingTicket.shopId, data.barberId, {
+        actorType: 'staff',
+      });
+    }
+
+    if (data.status === 'in_progress' && existingTicket.status !== 'in_progress') {
+      const barberIdForLog = data.barberId || existingTicket.barberId;
+      if (barberIdForLog) {
+        auditService.logServiceStarted(id, existingTicket.shopId, barberIdForLog, {
+          actorType: 'staff',
+        });
+      }
+    }
+
+    if (data.status === 'completed' && existingTicket.status !== 'completed') {
+      const barberIdForLog = data.barberId || existingTicket.barberId || ticket.barberId;
+      if (barberIdForLog) {
+        auditService.logServiceCompleted(id, existingTicket.shopId, barberIdForLog, {
+          actorType: 'staff',
+        });
+      }
+    }
+
+    if (data.status === 'cancelled' && existingTicket.status !== 'cancelled') {
+      auditService.logTicketCancelled(id, existingTicket.shopId, {
+        reason: 'Status updated to cancelled',
+        actorType: 'staff',
+      });
+    }
 
     // Recalculate positions and wait times for remaining queue
     await queueService.recalculatePositions(existingTicket.shopId);
@@ -351,10 +413,22 @@ export class TicketService {
    * Convenience method for updating status to cancelled.
    * 
    * @param id - Ticket ID
+   * @param reason - Optional reason for cancellation
+   * @param actorType - Type of actor cancelling (default: 'customer')
    * @returns The cancelled ticket
    */
-  async cancel(id: number): Promise<Ticket> {
-    return this.updateStatus(id, { status: 'cancelled' });
+  async cancel(id: number, reason?: string, actorType: 'customer' | 'staff' | 'owner' = 'customer'): Promise<Ticket> {
+    const ticket = await this.updateStatus(id, { status: 'cancelled' });
+    
+    // Log cancellation (updateStatus already logs, but we add reason here if provided)
+    if (reason) {
+      auditService.logTicketCancelled(id, ticket.shopId, {
+        reason,
+        actorType,
+      });
+    }
+    
+    return ticket;
   }
 
   /**
@@ -410,6 +484,14 @@ export class TicketService {
         // #endregion
       }
       
+      // Log changes if they occurred
+      if (ticket.position !== position) {
+        auditService.logPositionUpdated(ticket.id, shopId, ticket.position, position);
+      }
+      if (ticket.estimatedWaitTime !== waitTime) {
+        auditService.logWaitTimeUpdated(ticket.id, shopId, ticket.estimatedWaitTime, waitTime);
+      }
+
       // Update both position and wait time
       await db
         .update(schema.tickets)

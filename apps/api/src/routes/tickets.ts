@@ -123,37 +123,18 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Ticket with ID ${id} not found`);
     }
 
-    // Build update object
-    const updateData: Record<string, unknown> = {
-      updatedAt: new Date(),
-    };
-
-    if (updates.barberId !== undefined) {
-      updateData.barberId = updates.barberId;
-    }
+    // Use TicketService.updateStatus to ensure timestamps and audit logging are handled
+    const updateData: { status?: string; barberId?: number | null } = {};
+    
     if (updates.status !== undefined) {
       updateData.status = updates.status;
     }
-
-    const [updatedTicket] = await db
-      .update(schema.tickets)
-      .set(updateData)
-      .where(eq(schema.tickets.id, id))
-      .returning();
-
-    // Recalculate wait times when barber is assigned/unassigned or status changes
-    // This ensures wait times update for other customers with the same preferred barber
-    if (updates.barberId !== undefined || updates.status !== undefined) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:146',message:'Barber assignment/status change detected',data:{ticketId:id,barberId:updates.barberId,status:updates.status,shopId:existingTicket.shopId,oldStatus:existingTicket.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-      await queueService.recalculatePositions(existingTicket.shopId);
-      // Use the public method to recalculate wait times
-      await ticketService.recalculateShopQueue(existingTicket.shopId);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:149',message:'Recalculation completed',data:{ticketId:id,shopId:existingTicket.shopId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
+    if (updates.barberId !== undefined) {
+      updateData.barberId = updates.barberId;
     }
+
+    // Update via service to get proper timestamp handling and audit logging
+    const updatedTicket = await ticketService.updateStatus(id, updateData);
 
     return updatedTicket;
   });
@@ -184,8 +165,8 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       throw new Error('Only waiting tickets can be cancelled by customers');
     }
 
-    // Cancel ticket
-    const ticket = await ticketService.cancel(id);
+    // Cancel ticket (customer cancellation)
+    const ticket = await ticketService.cancel(id, 'Customer cancelled', 'customer');
 
     return ticket;
   });
@@ -242,8 +223,8 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Ticket with ID ${id} not found`);
     }
 
-    // Cancel ticket
-    const ticket = await ticketService.cancel(id);
+    // Cancel ticket (staff/owner cancellation)
+    const ticket = await ticketService.cancel(id, 'Cancelled by staff/owner', 'staff');
 
     return ticket;
   });

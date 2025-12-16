@@ -278,8 +278,7 @@ export function BarberQueueManager() {
                           'w-full px-8 py-6 rounded-2xl border transition-all',
                           'hover:scale-[1.01] hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
                           {
-                            'bg-[#10B981]/15 border-[#10B981]/50': isServing,
-                            'bg-[rgba(20,20,20,0.8)] border-[rgba(212,175,55,0.2)] hover:border-[rgba(212,175,55,0.4)]': !isServing,
+                            'bg-[rgba(20,20,20,0.8)] border-[rgba(212,175,55,0.2)] hover:border-[rgba(212,175,55,0.4)]': true,
                           }
                         )}
                       >

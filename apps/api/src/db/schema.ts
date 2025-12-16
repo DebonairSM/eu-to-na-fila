@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, serial } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, timestamp, serial, jsonb, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const shops = pgTable('shops', {
@@ -57,6 +57,10 @@ export const tickets = pgTable('tickets', {
   estimatedWaitTime: integer('estimated_wait_time'), // in minutes
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  startedAt: timestamp('started_at'), // when service started (status → in_progress)
+  completedAt: timestamp('completed_at'), // when service completed (status → completed)
+  cancelledAt: timestamp('cancelled_at'), // when ticket cancelled (status → cancelled)
+  barberAssignedAt: timestamp('barber_assigned_at'), // when barber was assigned
 });
 
 // Relations
@@ -80,4 +84,20 @@ export const ticketsRelations = relations(tickets, ({ one }) => ({
   shop: one(shops, { fields: [tickets.shopId], references: [shops.id] }),
   service: one(services, { fields: [tickets.serviceId], references: [services.id] }),
   barber: one(barbers, { fields: [tickets.barberId], references: [barbers.id] }),
+}));
+
+export const auditLog = pgTable('audit_log', {
+  id: serial('id').primaryKey(),
+  shopId: integer('shop_id').notNull().references(() => shops.id),
+  ticketId: integer('ticket_id').references(() => tickets.id),
+  action: text('action').notNull(), // ticket_created, barber_assigned, service_started, etc.
+  actorType: text('actor_type').notNull(), // customer, staff, owner, system
+  actorId: integer('actor_id'), // user/barber ID (nullable)
+  metadata: jsonb('metadata'), // additional context
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => ({
+  shopIdIdx: index('audit_log_shop_id_idx').on(table.shopId),
+  ticketIdIdx: index('audit_log_ticket_id_idx').on(table.ticketId),
+  actionIdx: index('audit_log_action_idx').on(table.action),
+  createdAtIdx: index('audit_log_created_at_idx').on(table.createdAt),
 }));

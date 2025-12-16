@@ -1,5 +1,6 @@
 import { db, schema } from '../db/index.js';
 import { eq, and, asc, or, isNull } from 'drizzle-orm';
+import { auditService } from './AuditService.js';
 
 /**
  * Service for managing queue operations.
@@ -200,6 +201,8 @@ export class QueueService {
       
       // Only update if position changed
       if (waitingTickets[i].position !== newPosition) {
+        const oldPosition = waitingTickets[i].position;
+        
         await db
           .update(schema.tickets)
           .set({ 
@@ -207,6 +210,9 @@ export class QueueService {
             updatedAt: new Date(),
           })
           .where(eq(schema.tickets.id, waitingTickets[i].id));
+        
+        // Log position update
+        auditService.logPositionUpdated(waitingTickets[i].id, shopId, oldPosition, newPosition);
         
         updateCount++;
         // #region agent log
