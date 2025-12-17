@@ -23,6 +23,25 @@
     <!-- Description -->
     <meta name="description" content="Sistema de gerenciamento de fila para barbearia" />
     
+    <!-- Preload critical resources with fetchpriority for faster loading -->
+    <link rel="preload" href="/mineiro/fonts/MaterialSymbolsOutlined.ttf" as="font" type="font/ttf" crossorigin="anonymous" fetchpriority="high" />
+    <link rel="preload" href="/mineiro/favicon.svg" as="image" type="image/svg+xml" fetchpriority="high" />
+    <link rel="preload" href="/mineiro/favicon.png" as="image" type="image/png" fetchpriority="high" />
+    <link rel="preload" href="/mineiro/icon-192.png" as="image" type="image/png" fetchpriority="high" />
+    <script>
+      // #region agent log - Track DOM ready state
+      (function() {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:DOMContentLoaded',message:'DOMContentLoaded fired',data:{readyState:document.readyState},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'G'})}).catch(()=>{});
+          });
+        } else {
+          fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:DOMContentLoaded',message:'DOM already loaded',data:{readyState:document.readyState},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'G'})}).catch(()=>{});
+        }
+      })();
+      // #endregion
+    </script>
+    
     <!-- Critical CSS to prevent black/white screens -->
     <style>
       html, body, #root {
@@ -35,6 +54,29 @@
         font-family: 'Roboto', sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+      }
+      
+      /* Critical: Inline Material Symbols font-face for immediate discovery */
+      @font-face {
+        font-family: 'Material Symbols Outlined';
+        font-style: normal;
+        font-weight: 400;
+        src: url('/mineiro/fonts/MaterialSymbolsOutlined.ttf') format('truetype');
+        font-display: swap;
+      }
+      
+      .material-symbols-outlined {
+        font-family: 'Material Symbols Outlined';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
       }
     </style>
     

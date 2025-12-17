@@ -28,85 +28,45 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {409} If queue is full
    */
   fastify.post('/shops/:slug/tickets', async (request, reply) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:30',message:'POST /shops/:slug/tickets entry',data:{params:request.params,body:request.body},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    try {
-      // Validate params
-      const paramsSchema = z.object({
-        slug: z.string().min(1),
-      });
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:36',message:'Before params validation',data:{params:request.params},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      const { slug } = validateRequest(paramsSchema, request.params);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:39',message:'Params validated',data:{slug},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+    // Validate params
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
 
-      // Get shop
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:42',message:'Before shop lookup',data:{slug},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-      const shop = await db.query.shops.findFirst({
-        where: eq(schema.shops.slug, slug),
-      });
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:47',message:'Shop lookup result',data:{slug,shopFound:!!shop,shopId:shop?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
+    // Get shop
+    const shop = await db.query.shops.findFirst({
+      where: eq(schema.shops.slug, slug),
+    });
 
-      if (!shop) {
-        throw new NotFoundError(`Shop with slug "${slug}" not found`);
-      }
-
-      // Validate body - remove shopId from external request
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:54',message:'Before body validation',data:{body:request.body},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
-      const bodySchema = z.object({
-        serviceId: z.number(),
-        customerName: z.string().min(1).max(200),
-        customerPhone: z.string().optional(),
-        preferredBarberId: z.number().optional(),
-      });
-      const data = validateRequest(bodySchema, request.body);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:62',message:'Body validated',data:{serviceId:data.serviceId,customerName:data.customerName,hasPreferredBarber:!!data.preferredBarberId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
-
-      // Check if customer already has an active ticket
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:65',message:'Before existing ticket check',data:{shopId:shop.id,customerName:data.customerName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      const existingTicket = await ticketService.findActiveTicketByCustomer(shop.id, data.customerName);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:68',message:'Existing ticket check result',data:{shopId:shop.id,customerName:data.customerName,hasExistingTicket:!!existingTicket,existingTicketId:existingTicket?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      
-      if (existingTicket) {
-        // Return existing ticket with 200 status (not a new resource)
-        return reply.status(200).send(existingTicket);
-      }
-
-      // Create new ticket using service (includes position calculation and wait time)
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:75',message:'Before ticketService.create',data:{shopId:shop.id,serviceId:data.serviceId,customerName:data.customerName,preferredBarberId:data.preferredBarberId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-      const ticket = await ticketService.create(shop.id, {
-        ...data,
-        shopId: shop.id,
-      });
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:81',message:'Ticket created successfully',data:{ticketId:ticket.id,position:ticket.position,estimatedWaitTime:ticket.estimatedWaitTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-
-      return reply.status(201).send(ticket);
-    } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.ts:86',message:'Error caught in route handler',data:{errorMessage:error instanceof Error?error.message:String(error),errorName:error instanceof Error?error.name:'unknown',errorStack:error instanceof Error?error.stack:undefined,errorCode:(error as any)?.code,statusCode:(error as any)?.statusCode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      throw error;
+    if (!shop) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
     }
+
+    // Validate body - remove shopId from external request
+    const bodySchema = z.object({
+      serviceId: z.number(),
+      customerName: z.string().min(1).max(200),
+      customerPhone: z.string().optional(),
+      preferredBarberId: z.number().optional(),
+    });
+    const data = validateRequest(bodySchema, request.body);
+
+    // Check if customer already has an active ticket
+    const existingTicket = await ticketService.findActiveTicketByCustomer(shop.id, data.customerName);
+    
+    if (existingTicket) {
+      // Return existing ticket with 200 status (not a new resource)
+      return reply.status(200).send(existingTicket);
+    }
+
+    // Create new ticket using service (includes position calculation and wait time)
+    const ticket = await ticketService.create(shop.id, {
+      ...data,
+      shopId: shop.id,
+    });
+
+    return reply.status(201).send(ticket);
   });
 
   /**

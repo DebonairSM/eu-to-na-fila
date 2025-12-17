@@ -7,6 +7,7 @@
   font-style: normal;
   font-weight: 400;
   src: url('/mineiro/fonts/MaterialSymbolsOutlined.ttf') format('truetype');
+  font-display: swap; /* Shows fallback immediately, swaps when font loads */
 }
 
 .material-symbols-outlined {
@@ -579,9 +580,12 @@
   }
   
         /* Ensure proper spacing for fixed navigation on mobile */
-        @media (max-width: 768px) {
-          main, .container {
-            padding-top: 44px !important;
+        /* Note: Owner pages use pt-28 (112px) on mobile via Tailwind classes */
+        /* This rule only applies to pages that don't have explicit padding-top */
+        @media (max-width: 640px) {
+          main:not([class*="pt-"]), 
+          .container:not([class*="pt-"]) {
+            padding-top: 72px;
           }
         }
 }

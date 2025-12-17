@@ -62,9 +62,6 @@ export class TicketService {
     shopId: number,
     status?: 'waiting' | 'in_progress' | 'completed' | 'cancelled'
   ): Promise<Ticket[]> {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:65',message:'getByShop entry',data:{shopId,status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     const whereClause = status
       ? and(
           eq(schema.tickets.shopId, shopId),
@@ -72,9 +69,6 @@ export class TicketService {
         )
       : eq(schema.tickets.shopId, shopId);
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:75',message:'Before query execution',data:{shopId,status,whereClauseType:typeof whereClause},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     try {
       const tickets = await db.query.tickets.findMany({
         where: whereClause,
@@ -84,14 +78,8 @@ export class TicketService {
         },
         orderBy: (tickets, { asc }) => [asc(tickets.createdAt)],
       });
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:87',message:'Query success',data:{shopId,status,ticketCount:tickets.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
       return tickets as Ticket[];
     } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:91',message:'Query error',data:{shopId,status,errorMessage:error instanceof Error?error.message:String(error),errorName:error instanceof Error?error.name:'unknown',errorCode:(error as any)?.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
       throw error;
     }
   }
@@ -154,37 +142,22 @@ export class TicketService {
    * ```
    */
   async create(shopId: number, data: CreateTicket): Promise<Ticket> {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:156',message:'TicketService.create entry',data:{shopId,serviceId:data.serviceId,customerName:data.customerName,preferredBarberId:data.preferredBarberId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     // Verify shop exists
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:159',message:'Before shop verification',data:{shopId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     const shop = await db.query.shops.findFirst({
       where: eq(schema.shops.id, shopId),
     });
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:163',message:'Shop verification result',data:{shopId,shopFound:!!shop},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
 
     if (!shop) {
       throw new NotFoundError('Shop not found');
     }
 
     // Verify service exists and belongs to shop
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:170',message:'Before service verification',data:{shopId,serviceId:data.serviceId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     const service = await db.query.services.findFirst({
       where: and(
         eq(schema.services.id, data.serviceId),
         eq(schema.services.shopId, shopId)
       ),
     });
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:177',message:'Service verification result',data:{shopId,serviceId:data.serviceId,serviceFound:!!service,isActive:service?.isActive},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
 
     if (!service) {
       throw new NotFoundError('Service not found');
@@ -202,28 +175,16 @@ export class TicketService {
     }
 
     // Check if queue is full
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:194',message:'Before queue full check',data:{shopId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     const isQueueFull = await queueService.isQueueFull(shopId);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:197',message:'Queue full check result',data:{shopId,isQueueFull},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     if (isQueueFull) {
       throw new ConflictError('Queue is full');
     }
 
     // Validate preferred barber if provided
     if (data.preferredBarberId) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:202',message:'Before preferred barber validation',data:{shopId,preferredBarberId:data.preferredBarberId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       const preferredBarber = await db.query.barbers.findFirst({
         where: eq(schema.barbers.id, data.preferredBarberId),
       });
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:207',message:'Preferred barber validation result',data:{shopId,preferredBarberId:data.preferredBarberId,barberFound:!!preferredBarber,isActive:preferredBarber?.isActive,barberShopId:preferredBarber?.shopId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
 
       if (!preferredBarber) {
         throw new NotFoundError('Preferred barber not found');
@@ -244,56 +205,26 @@ export class TicketService {
     let position: number;
     let estimatedWaitTime: number | null;
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:233',message:'Before position/wait time calculation',data:{shopId,hasPreferredBarber:!!data.preferredBarberId,preferredBarberId:data.preferredBarberId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     if (data.preferredBarberId) {
       // Use preferred barber calculation methods
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:237',message:'Before calculatePositionForPreferredBarber',data:{shopId,preferredBarberId:data.preferredBarberId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       position = await queueService.calculatePositionForPreferredBarber(
         shopId,
         data.preferredBarberId,
         now
       );
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:244',message:'Position calculated for preferred barber',data:{shopId,preferredBarberId:data.preferredBarberId,position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:246',message:'Before calculateWaitTimeForPreferredBarber',data:{shopId,preferredBarberId:data.preferredBarberId,position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       estimatedWaitTime = await queueService.calculateWaitTimeForPreferredBarber(
         shopId,
         data.preferredBarberId,
         position,
         now
       );
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:253',message:'Wait time calculated for preferred barber',data:{shopId,preferredBarberId:data.preferredBarberId,position,estimatedWaitTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
     } else {
       // Use standard calculation methods
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:258',message:'Before calculatePosition (standard)',data:{shopId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       position = await queueService.calculatePosition(shopId, now);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:261',message:'Position calculated (standard)',data:{shopId,position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:263',message:'Before calculateWaitTime (standard)',data:{shopId,position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       estimatedWaitTime = await queueService.calculateWaitTime(shopId, position);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:266',message:'Wait time calculated (standard)',data:{shopId,position,estimatedWaitTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
     }
 
     // Create ticket
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:272',message:'Before database insert',data:{shopId,serviceId:data.serviceId,customerName:data.customerName,position,estimatedWaitTime,preferredBarberId:data.preferredBarberId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     const [ticket] = await db
       .insert(schema.tickets)
       .values({
@@ -307,9 +238,6 @@ export class TicketService {
         estimatedWaitTime,
       })
       .returning();
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:287',message:'Database insert success',data:{ticketId:ticket.id,shopId,serviceId:data.serviceId,position,estimatedWaitTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
 
     // Log ticket creation
     auditService.logTicketCreated(ticket.id, shopId, {
@@ -325,13 +253,7 @@ export class TicketService {
     }
 
     // Recalculate wait times for other tickets
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:302',message:'Before recalculateWaitTimes',data:{shopId,ticketId:ticket.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     await this.recalculateWaitTimes(shopId);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:305',message:'recalculateWaitTimes completed',data:{shopId,ticketId:ticket.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
 
     return ticket as Ticket;
   }
@@ -371,8 +293,11 @@ export class TicketService {
       throw new Error('Ticket not found');
     }
 
-    // Validate status transition
-    this.validateStatusTransition(existingTicket.status, data.status);
+    // Validate status transition only if status is actually changing
+    // Allow same-status updates (e.g., changing barber while staying in_progress)
+    if (existingTicket.status !== data.status) {
+      this.validateStatusTransition(existingTicket.status, data.status);
+    }
 
     // If assigning a barber, verify they exist and are active
     if (data.barberId) {
@@ -521,9 +446,6 @@ export class TicketService {
    */
   private async recalculateWaitTimes(shopId: number): Promise<void> {
     const waitingTickets = await this.getByShop(shopId, 'waiting');
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:368',message:'recalculateWaitTimes started',data:{shopId,waitingTicketCount:waitingTickets.length,waitingTicketIds:waitingTickets.map(t=>t.id)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
 
     // Recalculate all tickets - this ensures positions and wait times are accurate
     // after any status changes (e.g., when someone ahead gets taken by a different barber)
@@ -555,14 +477,8 @@ export class TicketService {
           shopId,
           new Date(ticket.createdAt)
         );
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:396',message:'Position calculated for ticket',data:{ticketId:ticket.id,calculatedPosition:position,oldPosition:ticket.position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         // Then calculate wait time with the updated position
         waitTime = await queueService.calculateWaitTime(shopId, position);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TicketService.ts:401',message:'Wait time calculated for ticket',data:{ticketId:ticket.id,position,calculatedWaitTime:waitTime,oldWaitTime:ticket.estimatedWaitTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
       }
       
       // Log changes if they occurred

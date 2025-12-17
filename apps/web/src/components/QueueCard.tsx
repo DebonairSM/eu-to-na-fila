@@ -24,6 +24,7 @@ export const QueueCard = memo(function QueueCard({
   className,
 }: QueueCardProps) {
   const [barberAvatarFailed, setBarberAvatarFailed] = useState(false);
+  const [barberImageLoaded, setBarberImageLoaded] = useState(false);
   const isServing = ticket.status === 'in_progress';
   const isWaiting = ticket.status === 'waiting';
 
@@ -115,19 +116,30 @@ export const QueueCard = memo(function QueueCard({
 
         {/* Barber Avatar - 40px × 40px for management mode */}
         {(barberAvatarUrl || assignedBarber) && (
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 w-10 h-10 relative">
+            {/* Always show placeholder immediately for better perceived performance */}
+            <div className={cn(
+              'rounded-md bg-gradient-to-br from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold flex items-center justify-center absolute inset-0 transition-opacity duration-200',
+              barberImageLoaded && 'opacity-0 pointer-events-none'
+            )} aria-hidden="true">
+              {barberInitials}
+            </div>
             {showAvatarImage && (
-            <img
+              <img
                 src={barberAvatarUrl || undefined}
-              alt={assignedBarber?.name || 'Barber'}
-              className="w-10 h-10 rounded-md object-cover border-2 border-primary/30"
-                onError={() => setBarberAvatarFailed(true)}
+                alt={assignedBarber?.name || 'Barber'}
+                className="w-10 h-10 rounded-md object-cover relative z-10"
+                loading="lazy"
+                decoding="async"
+                width={40}
+                height={40}
+                onLoad={() => {
+                  setBarberImageLoaded(true);
+                }}
+                onError={() => {
+                  setBarberAvatarFailed(true);
+                }}
               />
-            )}
-            {!showAvatarImage && assignedBarber && (
-              <div className="w-10 h-10 rounded-md border-2 border-primary/30 bg-gradient-to-br from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold flex items-center justify-center">
-                {barberInitials}
-              </div>
             )}
           </div>
         )}

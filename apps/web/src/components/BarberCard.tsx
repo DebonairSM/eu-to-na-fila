@@ -24,6 +24,7 @@ export const BarberCard = memo(function BarberCard({
   size = 'management',
 }: BarberCardProps) {
   const [avatarFailed, setAvatarFailed] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const avatarUrl =
     barber.avatarUrl ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128`;
@@ -57,31 +58,39 @@ export const BarberCard = memo(function BarberCard({
       aria-disabled={disabled}
       title={disabled ? disabledReason : undefined}
     >
-      <div className="relative">
-        {!avatarFailed && (
-        <img
-          src={avatarUrl}
-          alt=""
+      <div className={cn(avatarSize, 'relative')}>
+        {/* Always show placeholder immediately for better perceived performance */}
+        <div
+          className={cn(
+            'rounded-md flex items-center justify-center bg-gradient-to-br from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold absolute inset-0 transition-opacity duration-200',
+            imageLoaded && 'opacity-0 pointer-events-none'
+          )}
           aria-hidden="true"
-          className={cn(avatarSize, 'rounded-md object-cover')}
-            onError={() => setAvatarFailed(true)}
-          />
-        )}
-        {avatarFailed && (
-          <div
+        >
+          {initials}
+        </div>
+        {!avatarFailed && (
+          <img
+            src={avatarUrl}
+            alt=""
             aria-hidden="true"
-            className={cn(
-              avatarSize,
-              'rounded-md flex items-center justify-center bg-gradient-to-br from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold'
-            )}
-          >
-            {initials}
-          </div>
+            className={cn(avatarSize, 'rounded-md object-cover relative z-10')}
+            loading="lazy"
+            decoding="async"
+            width={size === 'kiosk' ? 56 : 40}
+            height={size === 'kiosk' ? 56 : 40}
+            onLoad={() => {
+              setImageLoaded(true);
+            }}
+            onError={() => {
+              setAvatarFailed(true);
+            }}
+          />
         )}
         {showPresence && (
           <div
             className={cn(
-              'absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-background',
+              'absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-background z-20',
               barber.isPresent ? 'bg-[#10B981]' : 'bg-gray-400'
             )}
             aria-hidden="true"

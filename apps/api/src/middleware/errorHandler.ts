@@ -21,9 +21,6 @@ export async function errorHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'errorHandler.ts:19',message:'Global error handler entry',data:{errorMessage:error.message,errorName:error.name,errorStack:error.stack,url:request.url,method:request.method,isAppError:error instanceof AppError,isZodError:error instanceof Error&&error.constructor.name==='ZodError',hasStatusCode:!!(error as any).statusCode,statusCode:(error as any).statusCode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   // For static asset requests that error, return proper 404 instead of JSON
   // This prevents CSS/JS files from getting application/json MIME type
   const url = request.url || '';
@@ -52,18 +49,12 @@ export async function errorHandler(
 
   // Handle custom application errors
   if (error instanceof AppError) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'errorHandler.ts:51',message:'Handling AppError',data:{statusCode:error.statusCode,code:error.code,message:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     reply.status(error.statusCode).send(error.toJSON());
     return;
   }
 
   // Handle Zod validation errors
   if (error instanceof ZodError) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'errorHandler.ts:57',message:'Handling ZodError',data:{errorCount:error.errors.length,errors:error.errors.map(e=>({path:e.path.join('.'),message:e.message}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     const validationErrors = error.errors.map(err => ({
       field: err.path.join('.'),
       message: err.message,
@@ -80,9 +71,6 @@ export async function errorHandler(
 
   // Handle Fastify validation errors
   if ('validation' in error && error.validation) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'errorHandler.ts:73',message:'Handling Fastify validation error',data:{message:error.message,validation:error.validation},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     reply.status(400).send({
       error: error.message || 'Validation failed',
       code: 'VALIDATION_ERROR',
@@ -94,9 +82,6 @@ export async function errorHandler(
 
   // Handle Fastify errors with status code
   if ('statusCode' in error && error.statusCode) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'errorHandler.ts:84',message:'Handling Fastify error with statusCode',data:{statusCode:error.statusCode,message:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     reply.status(error.statusCode).send({
       error: error.message,
       code: getErrorCode(error.statusCode),
@@ -108,9 +93,6 @@ export async function errorHandler(
   // Handle generic errors (500)
   // Don't expose internal error details in production
   const isDevelopment = process.env.NODE_ENV === 'development';
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'errorHandler.ts:93',message:'Handling generic 500 error',data:{isDevelopment,errorMessage:error.message,errorName:error.name,errorStack:error.stack,url:request.url,method:request.method},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   
   reply.status(500).send({
     error: isDevelopment ? error.message : 'Internal server error',

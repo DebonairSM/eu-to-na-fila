@@ -176,6 +176,10 @@ export function BarberManagementPage() {
                         alt=""
                         aria-hidden="true"
                         className="w-full h-full rounded-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        width={64}
+                        height={64}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';

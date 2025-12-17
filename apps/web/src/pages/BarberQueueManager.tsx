@@ -40,6 +40,22 @@ export function BarberQueueManager() {
   // Use longer polling interval in kiosk mode to improve performance
   const pollInterval = isKioskMode ? 10000 : 5000; // 10s for kiosk, 5s for management
   const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval);
+  
+  // Preload barber avatars for faster rendering
+  useEffect(() => {
+    const avatarUrls = barbers.map(b => b.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&background=D4AF37&color=000&size=128`).filter(Boolean);
+    
+    avatarUrls.forEach((url, index) => {
+      if (url && !url.includes('ui-avatars.com')) {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = url;
+        if (index < 4) link.setAttribute('fetchpriority', 'high'); // Prioritize first 4
+        document.head.appendChild(link);
+      }
+    });
+  }, [barbers]);
   const checkInModal = useModal();
   const barberSelectorModal = useModal();
   const removeConfirmModal = useModal();

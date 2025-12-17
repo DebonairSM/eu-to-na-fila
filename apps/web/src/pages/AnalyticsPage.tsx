@@ -106,7 +106,7 @@ export function AnalyticsPage() {
     return (
       <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
         <Navigation />
-        <div className="flex items-center justify-center min-h-screen pt-24">
+        <div className="flex items-center justify-center min-h-screen pt-20 sm:pt-24">
           <LoadingSpinner size="lg" text="Carregando analytics..." />
         </div>
       </div>
@@ -117,7 +117,7 @@ export function AnalyticsPage() {
     return (
       <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
         <Navigation />
-        <div className="flex items-center justify-center min-h-screen pt-24">
+        <div className="flex items-center justify-center min-h-screen pt-20 sm:pt-24">
           <ErrorDisplay error={error || new Error('Failed to load analytics')} />
         </div>
       </div>
@@ -129,7 +129,7 @@ export function AnalyticsPage() {
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
       <Navigation />
-      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 pt-32 pb-12">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 pt-24 sm:pt-32 pb-12">
         <div className="mb-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div>

@@ -260,49 +260,28 @@ fastify.setNotFoundHandler(async (request, reply) => {
 
 // Add hook to catch all request errors before they reach error handler
 fastify.addHook('onRequest', async (request, reply) => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server.ts:261',message:'Request received',data:{url:request.url,method:request.method,headers:Object.keys(request.headers)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
 });
 
 fastify.addHook('onError', async (request, reply, error) => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server.ts:266',message:'onError hook triggered',data:{url:request.url,method:request.method,errorMessage:error.message,errorName:error.name,errorStack:error.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
 });
 
 // Test database connection on startup
 fastify.addHook('onReady', async () => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server.ts:272',message:'Server ready, testing database',data:{databaseUrl:env.DATABASE_URL?env.DATABASE_URL.substring(0,20)+'...':'not set'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   try {
     await db.query.shops.findFirst();
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server.ts:276',message:'Database connection test success',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
   } catch (error) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server.ts:280',message:'Database connection test failed',data:{errorMessage:error instanceof Error?error.message:String(error),errorName:error instanceof Error?error.name:'unknown',errorStack:error instanceof Error?error.stack:undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     fastify.log.error({ err: error }, 'Database connection test failed on startup');
   }
 });
 
 // Start server
 fastify.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server.ts:288',message:'Server started successfully',data:{port:env.PORT},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   console.log(`✅ Server running at http://localhost:${env.PORT}`);
   console.log(`📱 SPA available at http://localhost:${env.PORT}/mineiro`);
   console.log(`🔌 API available at http://localhost:${env.PORT}/api`);
   console.log('\n📋 Registered routes:');
   fastify.printRoutes();
 }).catch((err) => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server.ts:296',message:'Server startup failed',data:{errorMessage:err.message,errorName:err.name,errorStack:err.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   console.error('❌ Failed to start server:', err);
   process.exit(1);
 });
