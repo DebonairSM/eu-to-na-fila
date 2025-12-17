@@ -88,7 +88,7 @@ export function GrandeTechAd({ onClose, showTimer = true }: GrandeTechAdProps) {
           preload="none"
           onError={handleVideoError}
           onLoadedData={() => {
-            console.log('Video loaded successfully');
+            // Video loaded successfully
           }}
           className="w-full h-full object-contain"
         />

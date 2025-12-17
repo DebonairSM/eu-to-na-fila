@@ -73,7 +73,7 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad
           preload="none"
           onError={handleVideoError}
           onLoadedData={() => {
-            console.log('Ad2 Video loaded successfully');
+            // Video loaded successfully
           }}
           className="w-full h-full object-contain"
         />

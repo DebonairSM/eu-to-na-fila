@@ -10,12 +10,14 @@ export function useQueue(pollInterval?: number) {
   const previousDataRef = useRef<string>('');
 
   const fetchQueue = useCallback(async () => {
+    // Skip if page is hidden (Page Visibility API)
+    if (document.hidden) {
+      return;
+    }
+
     try {
       setError(null);
       const queueData = await api.getQueue(config.slug);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useQueue.ts:15',message:'Queue data fetched',data:{waitingTicketsCount:queueData.tickets.filter(t=>t.status==='waiting').length,waitingTickets:queueData.tickets.filter(t=>t.status==='waiting').map(t=>({id:t.id,position:t.position,waitTime:t.estimatedWaitTime}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
 
       // Smart diffing: only update if data actually changed
       const dataString = JSON.stringify(queueData);
@@ -23,9 +25,6 @@ export function useQueue(pollInterval?: number) {
         previousDataRef.current = dataString;
         setData(queueData);
         setIsLoading(false);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useQueue.ts:23',message:'Queue data updated in state',data:{waitingTicketsCount:queueData.tickets.filter(t=>t.status==='waiting').length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
       }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch queue'));
@@ -36,10 +35,41 @@ export function useQueue(pollInterval?: number) {
   useEffect(() => {
     fetchQueue();
 
-    if (pollInterval && pollInterval > 0) {
-      const interval = setInterval(fetchQueue, pollInterval);
-      return () => clearInterval(interval);
+    if (!pollInterval || pollInterval <= 0) {
+      return;
     }
+
+    let intervalId: number | null = null;
+
+    // Handle Page Visibility API - pause when hidden, resume when visible
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Page is hidden, clear interval
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+      } else {
+        // Page is visible, resume polling
+        if (!intervalId) {
+          fetchQueue();
+          intervalId = window.setInterval(fetchQueue, pollInterval);
+        }
+      }
+    };
+
+    // Start polling
+    intervalId = window.setInterval(fetchQueue, pollInterval);
+
+    // Listen for visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [fetchQueue, pollInterval]);
 
   const waitingTickets = data?.tickets.filter((t) => t.status === 'waiting') || [];

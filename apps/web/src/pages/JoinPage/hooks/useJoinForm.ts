@@ -35,11 +35,17 @@ export function useJoinForm() {
   const { data } = useQueue(30000);
   const { barbers } = useBarbers();
 
-  // Fetch wait times on mount and periodically
+  // Fetch wait times on mount and periodically (with Page Visibility API support)
   useEffect(() => {
     let mounted = true;
+    let intervalId: number | null = null;
 
     const fetchWaitTimes = async () => {
+      // Skip if page is hidden
+      if (document.hidden) {
+        return;
+      }
+
       try {
         setIsLoadingWaitTimes(true);
         const times = await api.getWaitTimes(config.slug);
@@ -55,12 +61,40 @@ export function useJoinForm() {
       }
     };
 
+    // Initial fetch
     fetchWaitTimes();
-    const interval = setInterval(fetchWaitTimes, 30000); // Refresh every 30 seconds
+
+    // Set up polling
+    const startPolling = () => {
+      if (intervalId) return; // Already polling
+      intervalId = window.setInterval(fetchWaitTimes, 30000); // Refresh every 30 seconds
+    };
+
+    const stopPolling = () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
+
+    startPolling();
+
+    // Handle Page Visibility API - pause when hidden, resume when visible
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        fetchWaitTimes(); // Fetch immediately when visible
+        startPolling();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       mounted = false;
-      clearInterval(interval);
+      stopPolling();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
