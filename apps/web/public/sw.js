@@ -5,8 +5,14 @@
  * Auto-updates when new version is deployed.
  */
 
-const CACHE_NAME = 'eutonafila-v4';
-const API_CACHE_NAME = 'eutonafila-api-v4';
+const CACHE_NAME = 'eutonafila-v5';
+const API_CACHE_NAME = 'eutonafila-api-v5';
+const VIDEO_CACHE_NAME = 'eutonafila-video-v5';
+
+// Cache size limits (in bytes)
+const MAX_CACHE_SIZE = 50 * 1024 * 1024; // 50MB total
+const MAX_VIDEO_CACHE_SIZE = 10 * 1024 * 1024; // 10MB for videos
+const MAX_API_CACHE_SIZE = 5 * 1024 * 1024; // 5MB for API responses
 
 // Assets to cache on install
 const STATIC_ASSETS = [
@@ -52,7 +58,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME && name !== API_CACHE_NAME)
+          .filter((name) => name !== CACHE_NAME && name !== API_CACHE_NAME && name !== VIDEO_CACHE_NAME)
           .map((name) => {
             console.log('[SW] Deleting old cache:', name);
             return caches.delete(name);
@@ -107,6 +113,12 @@ self.addEventListener('fetch', (event) => {
     // Handle API requests (network first, fallback to cache)
     if (url.pathname.startsWith('/api/')) {
       event.respondWith(networkFirstStrategy(request));
+      return;
+    }
+
+    // Handle video files with separate cache
+    if (url.pathname.endsWith('.mp4') || url.pathname.endsWith('.webm') || url.pathname.endsWith('.ogg')) {
+      event.respondWith(videoCacheStrategy(request));
       return;
     }
 
@@ -199,6 +211,8 @@ async function networkFirstStrategy(request) {
     
     // Cache successful API responses (short TTL)
     if (response.status === 200) {
+      // Check cache size before adding
+      await enforceCacheSizeLimit(API_CACHE_NAME, MAX_API_CACHE_SIZE);
       cache.put(request, response.clone());
     }
     
@@ -221,6 +235,73 @@ async function networkFirstStrategy(request) {
     }
     
     throw error;
+  }
+}
+
+/**
+ * Video cache strategy - cache first for videos, with size limits
+ */
+async function videoCacheStrategy(request) {
+  const cache = await caches.open(VIDEO_CACHE_NAME);
+  const cached = await cache.match(request);
+
+  // If cached, return immediately (videos are large, don't revalidate aggressively)
+  if (cached) {
+    console.log('[SW] Video cache hit:', request.url);
+    return cached;
+  }
+
+  // Not cached, fetch from network
+  try {
+    console.log('[SW] Fetching video from network:', request.url);
+    const response = await fetch(request);
+    
+    if (response.status === 200) {
+      // Check cache size before adding video
+      await enforceCacheSizeLimit(VIDEO_CACHE_NAME, MAX_VIDEO_CACHE_SIZE);
+      cache.put(request, response.clone());
+    }
+    
+    return response;
+  } catch (error) {
+    console.error('[SW] Video fetch failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Enforce cache size limits by removing oldest entries
+ */
+async function enforceCacheSizeLimit(cacheName, maxSize) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  
+  // Calculate total cache size
+  let totalSize = 0;
+  const entries = [];
+  
+  for (const key of keys) {
+    const response = await cache.match(key);
+    if (response) {
+      const blob = await response.blob();
+      const size = blob.size;
+      totalSize += size;
+      entries.push({ key, size, response });
+    }
+  }
+  
+  // If over limit, remove oldest entries (FIFO)
+  if (totalSize > maxSize) {
+    // Sort by key (which includes timestamp in some cases) or just remove oldest
+    entries.sort((a, b) => a.size - b.size); // Remove smallest first to maximize space freed
+    
+    let freedSize = 0;
+    for (const entry of entries) {
+      if (totalSize - freedSize <= maxSize) break;
+      await cache.delete(entry.key);
+      freedSize += entry.size;
+      console.log('[SW] Removed cache entry to free space:', entry.key.url);
+    }
   }
 }
 

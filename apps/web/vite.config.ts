@@ -43,5 +43,57 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    // Enable minification
+    minify: 'esbuild',
+    // Target modern browsers for smaller bundles
+    target: 'es2015',
+    // Optimize chunk splitting
+    rollupOptions: {
+      output: {
+        // Manual chunk splitting for better caching
+        manualChunks: {
+          // Vendor libraries
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // UI libraries
+          'ui-vendor': ['clsx', 'tailwind-merge'],
+          // Shared utilities
+          'shared': ['@eutonafila/shared'],
+        },
+        // Optimize chunk file names
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name?.split('.') || [];
+          const ext = info[info.length - 1];
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
+            return `assets/images/[name]-[hash][extname]`;
+          }
+          if (/woff2?|eot|ttf|otf/i.test(ext)) {
+            return `assets/fonts/[name]-[hash][extname]`;
+          }
+          return `assets/[name]-[hash][extname]`;
+        },
+      },
+    },
+    // Optimize asset handling
+    assetsInlineLimit: 4096, // Inline assets smaller than 4kb
+    // Enable source maps for production debugging (optional, can be disabled)
+    sourcemap: false,
+    // Optimize CSS
+    cssCodeSplit: true,
+    cssMinify: true,
+    // Chunk size warnings threshold
+    chunkSizeWarningLimit: 1000,
+    // Enable tree-shaking
+    treeshake: {
+      moduleSideEffects: false,
+    },
+  },
+  // Optimize dependencies
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom'],
+    exclude: [],
+  },
 });
 

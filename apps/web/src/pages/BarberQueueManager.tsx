@@ -416,14 +416,6 @@ export function BarberQueueManager() {
           <div 
             className="flex-1 flex items-center justify-center relative cursor-pointer min-h-0 max-h-screen overflow-hidden"
             onClick={showQueueView}
-            ref={(el) => {
-              // #region agent log
-              if (el) {
-                const rect = el.getBoundingClientRect();
-                fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BarberQueueManager.tsx:400',message:'Ad1 container dimensions',data:{width:rect.width,height:rect.height,top:rect.top,left:rect.left,viewportHeight:window.innerHeight,viewportWidth:window.innerWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-              }
-              // #endregion
-            }}
           >
             <GrandeTechAd showTimer={false} />
           </div>

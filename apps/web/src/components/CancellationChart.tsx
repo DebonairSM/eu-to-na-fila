@@ -36,9 +36,6 @@ export function CancellationChart({ data }: CancellationChartProps) {
 
             return (
               <div key={day} className="flex-1 flex flex-col items-center h-full min-w-[40px] group">
-                {/* #region agent log */}
-                {(() => { fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CancellationChart.tsx:37',message:'Day chart bar rendering',data:{day,rate,height,dayChartHeight,dayLabelSpace},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{}); return null; })()}
-                {/* #endregion */}
                 <div className="mb-3 text-[0.7rem] text-[rgba(255,255,255,0.7)] text-center font-medium">
                   {dayLabels[day]}
                 </div>
@@ -70,9 +67,6 @@ export function CancellationChart({ data }: CancellationChartProps) {
 
             return (
               <div key={hour} className="flex flex-col items-center relative h-full group">
-                {/* #region agent log */}
-                {(() => { fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CancellationChart.tsx:62',message:'Hour chart bar rendering',data:{hour,rate,height,hourChartHeight,hourLabelSpace},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{}); return null; })()}
-                {/* #endregion */}
                 <div className="mb-2 text-[0.6rem] text-[rgba(255,255,255,0.5)] text-center font-medium">
                   {hour}h
                 </div>
