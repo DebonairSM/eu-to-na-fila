@@ -36,6 +36,13 @@
       "when": 1765805883993,
       "tag": "0004_premium_punisher",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1765930000000,
+      "tag": "0005_add_audit_tracking",
+      "breakpoints": true
     }
   ]
 }
