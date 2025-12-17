@@ -20,7 +20,7 @@ import { Ad2Video } from '@/components/Ad2Video';
 import { Ad3Video } from '@/components/Ad3Video';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
-import { cn, getErrorMessage, formatName } from '@/lib/utils';
+import { cn, getErrorMessage, formatName, formatNameForDisplay } from '@/lib/utils';
 
 const QUEUE_VIEW_DURATION = 15000; // 15 seconds
 const AD_VIEW_DURATION = 15000; // 15 seconds
@@ -327,7 +327,7 @@ export function BarberQueueManager() {
                             className="flex-1 min-w-0 text-left"
                             aria-label={`Atribuir barbeiro para ${ticket.customerName}`}
                           >
-                            <p className="font-semibold text-2xl text-white truncate">{ticket.customerName}</p>
+                            <p className="font-semibold text-2xl text-white truncate">{formatNameForDisplay(ticket.customerName)}</p>
                             {assignedBarber && (
                               <p className="text-lg text-white/60 mt-1 truncate flex items-center gap-2">
                                 <span className="material-symbols-outlined text-lg">content_cut</span>

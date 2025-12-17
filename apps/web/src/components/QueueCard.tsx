@@ -1,5 +1,5 @@
 import { useState, memo } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, formatNameForDisplay } from '@/lib/utils';
 import type { Ticket, Barber } from '@eutonafila/shared';
 
 export interface QueueCardProps {
@@ -92,7 +92,7 @@ export const QueueCard = memo(function QueueCard({
 
           {/* Customer Name */}
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-white truncate">{ticket.customerName}</p>
+            <p className="font-semibold text-white truncate">{formatNameForDisplay(ticket.customerName)}</p>
             {assignedBarber && (
               <p className="text-sm text-[rgba(255,255,255,0.7)] truncate">
                 {assignedBarber.name}
