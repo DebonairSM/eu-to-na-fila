@@ -533,6 +533,29 @@ class ApiClient {
     const params = days ? `?days=${days}` : '';
     return this.get(`/shops/${shopSlug}/analytics${params}`);
   }
+
+  // ==================== Shop Endpoints ====================
+
+  /**
+   * Get all shops.
+   * 
+   * @returns Array of shops (public fields only)
+   * 
+   * @example
+   * ```typescript
+   * const shops = await api.getAllShops();
+   * console.log(`Found ${shops.length} shops`);
+   * ```
+   */
+  async getAllShops(): Promise<Array<{
+    id: number;
+    slug: string;
+    name: string;
+    domain: string | null;
+    createdAt: Date;
+  }>> {
+    return this.get('/shops');
+  }
 }
 
 /**
