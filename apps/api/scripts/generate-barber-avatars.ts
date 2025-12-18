@@ -2,7 +2,7 @@
 
 /**
  * Generate barber avatars using DiceBear
- * Creates 4 random avatar images and saves them to apps/web/public/avatars/
+ * Creates 16 unique male-only avatar images and saves them to apps/web/public/avatars/
  */
 
 import { createAvatar } from '@dicebear/core';
@@ -27,7 +27,7 @@ async function generateAvatars() {
     console.log(`✅ Created directory: ${avatarsDir}`);
   }
 
-  // Generate 4 unique avatars with random seeds
+  // Generate 16 unique avatars with random seeds
   // Using only male hairstyles to ensure all barbers are male
   const maleHairstyles = [
     'shavedSides',
@@ -53,11 +53,13 @@ async function generateAvatars() {
     'winterHat04',
   ];
   
-  const seeds = ['barber-1', 'barber-2', 'barber-3', 'barber-4'];
+  // Generate 16 avatars to have good variety
+  const avatarCount = 16;
+  const seeds = Array.from({ length: avatarCount }, (_, i) => `barber-${i + 1}`);
   
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < avatarCount; i++) {
     const seed = seeds[i];
-    // Use a different male hairstyle for each avatar
+    // Use a different male hairstyle for each avatar, cycling through all available styles
     const topStyle = maleHairstyles[i % maleHairstyles.length];
     
     const avatar = createAvatar({ create, schema }, {
@@ -78,7 +80,7 @@ async function generateAvatars() {
   }
 
   console.log('🎉 Avatar generation complete!');
-  console.log(`📁 Avatars saved to: ${avatarsDir}`);
+  console.log(`📁 ${avatarCount} avatars saved to: ${avatarsDir}`);
 }
 
 generateAvatars()

@@ -2,7 +2,7 @@
 
 /**
  * Assign avatars to existing barbers
- * Assigns barber-1.png through barber-4.png to existing barbers in rotation
+ * Assigns barber-1.png through barber-16.png to existing barbers in rotation
  */
 
 import { db, schema } from '../src/db/index.js';
@@ -31,13 +31,11 @@ async function assignAvatars() {
   console.log(`   - Active: ${activeBarbers.length}`);
   console.log(`   - Inactive: ${inactiveBarbers.length}`);
 
-  // Assign avatars in rotation (barber-1.png through barber-4.png)
-  const avatarUrls = [
-    '/mineiro/avatars/barber-1.png',
-    '/mineiro/avatars/barber-2.png',
-    '/mineiro/avatars/barber-3.png',
-    '/mineiro/avatars/barber-4.png',
-  ];
+  // Assign avatars in rotation (barber-1.png through barber-16.png)
+  const avatarCount = 16;
+  const avatarUrls = Array.from({ length: avatarCount }, (_, i) => 
+    `/mineiro/avatars/barber-${i + 1}.png`
+  );
 
   let assignedCount = 0;
   let overwrittenCount = 0;

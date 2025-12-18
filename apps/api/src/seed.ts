@@ -99,10 +99,12 @@ async function seed() {
   if (existingBarbers.length > 0) {
     console.log('Barbers already exist:', existingBarbers.length);
     // Update existing barbers with avatars if they don't have them
-    for (let i = 0; i < Math.min(existingBarbers.length, 4); i++) {
+    const avatarCount = 16;
+    for (let i = 0; i < existingBarbers.length; i++) {
       const barber = existingBarbers[i];
       if (!barber.avatarUrl) {
-        const avatarUrl = `/mineiro/avatars/barber-${i + 1}.png`;
+        const avatarIndex = (i % avatarCount) + 1;
+        const avatarUrl = `/mineiro/avatars/barber-${avatarIndex}.png`;
         await db
           .update(schema.barbers)
           .set({ avatarUrl, updatedAt: new Date() })
