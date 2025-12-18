@@ -405,8 +405,8 @@ export function BarberQueueManager() {
                       className={cn(
                         'px-6 py-3 rounded-xl border-2 font-medium transition-all text-lg',
                         barber.isPresent
-                          ? 'bg-white/20 border-white text-white'
-                          : 'bg-white/5 border-white/20 text-white/40'
+                          ? 'bg-[#D4AF37] border-[#D4AF37] text-black'
+                          : 'bg-black/50 border-[rgba(212,175,55,0.3)] text-[#D4AF37]/60'
                       )}
                       aria-label={`${barber.isPresent ? 'Marcar ausente' : 'Marcar presente'}: ${barber.name}`}
                     >
