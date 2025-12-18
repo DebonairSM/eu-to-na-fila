@@ -3,7 +3,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { useAuthContext } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
-const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
+const LandingPage = lazy(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })));
 const CompanyHomePage = lazy(() => import('./pages/CompanyHomePage').then((m) => ({ default: m.CompanyHomePage })));
 const ContactPage = lazy(() => import('./pages/ContactPage').then((m) => ({ default: m.ContactPage })));
 const NetworkPage = lazy(() => import('./pages/NetworkPage').then((m) => ({ default: m.NetworkPage })));
@@ -47,6 +47,7 @@ function App() {
     const preload = [
       import('./pages/JoinPage'),
       import('./pages/StatusPage'),
+      import('./pages/LandingPage'),
     ];
     preload.forEach((p) => p.catch(() => null));
   }, []);
@@ -66,7 +67,7 @@ function App() {
       >
       <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home" element={<HomePage />} />
+          <Route path="/home" element={<LandingPage />} />
           <Route path="/company" element={<CompanyHomePage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/network" element={<NetworkPage />} />
