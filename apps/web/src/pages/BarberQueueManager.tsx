@@ -27,7 +27,7 @@ const AD_VIEW_DURATION = 15000; // 15 seconds
 
 export function BarberQueueManager() {
   const [searchParams] = useSearchParams();
-  const { barbers, togglePresence, refetch: refetchBarbers } = useBarbers();
+  const { barbers, togglePresence } = useBarbers();
   const {
     isKioskMode,
     currentView,
