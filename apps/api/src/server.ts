@@ -107,6 +107,7 @@ fastify.register(fastifyRateLimit, {
 // Static file serving - register BEFORE routes to ensure assets are served first
 const publicPath = join(__dirname, '..', 'public');
 const mineiroPath = join(publicPath, 'mineiro');
+const rootPath = join(publicPath, 'root');
 
 // Log static file directory status
 if (!existsSync(mineiroPath)) {
@@ -149,6 +150,31 @@ fastify.register(fastifyStatic, {
     }
   },
 });
+
+// Register static file serving for root assets (if root build exists)
+if (existsSync(rootPath)) {
+  fastify.register(fastifyStatic, {
+    root: rootPath,
+    prefix: '/',
+    decorateReply: false,
+    wildcard: false,
+    index: false,
+    setHeaders: (res, path) => {
+      // Cache hashed assets (JS/CSS with hash in filename) for 1 year
+      if (path.includes('/assets/') && /\.[a-f0-9]{8,}\.(js|css)$/i.test(path)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+      // Cache other static assets (fonts, images) for 1 week
+      else if (/\.(woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|ico)$/i.test(path)) {
+        res.setHeader('Cache-Control', 'public, max-age=604800');
+      }
+      // Don't cache HTML - always revalidate
+      else if (/\.(html|js|json)$/i.test(path) && !path.includes('/assets/')) {
+        res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+      }
+    },
+  });
+}
 
 // Health check with database and WebSocket status
 fastify.get('/health', async () => {
@@ -201,9 +227,15 @@ fastify.register(
   { prefix: '/api' }
 );
 
-// Redirect root to /mineiro/
+// Serve root homepage (shops listing)
 fastify.get('/', async (request, reply) => {
-  return reply.redirect('/home');
+  const rootIndexPath = join(rootPath, 'root.html');
+  if (existsSync(rootIndexPath)) {
+    const fileContent = readFileSync(rootIndexPath, 'utf-8');
+    return reply.type('text/html').send(fileContent);
+  }
+  // Fallback: redirect to /mineiro/ if root build doesn't exist
+  return reply.redirect('/mineiro/');
 });
 
 // Redirect /mineiro to /mineiro/ for proper base path

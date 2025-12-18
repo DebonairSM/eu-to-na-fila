@@ -50,6 +50,7 @@ export default defineConfig({
     target: 'es2015',
     // Optimize chunk splitting
     rollupOptions: {
+      input: path.resolve(__dirname, 'index.html'),
       output: {
         // Manual chunk splitting for better caching
         manualChunks: {
@@ -62,7 +63,13 @@ export default defineConfig({
         },
         // Optimize chunk file names
         chunkFileNames: 'assets/js/[name]-[hash].js',
-        entryFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: (chunkInfo) => {
+          // Root build uses root- prefix, mineiro uses default
+          if (chunkInfo.name === 'root') {
+            return 'assets/js/root-[hash].js';
+          }
+          return 'assets/js/[name]-[hash].js';
+        },
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name?.split('.') || [];
           const ext = info[info.length - 1];

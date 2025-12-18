@@ -17,7 +17,9 @@ const __dirname = dirname(__filename);
 
 const rootDir = join(__dirname, '..');
 const webDistDir = join(rootDir, 'apps/web/dist');
+const webDistRootDir = join(webDistDir, 'root');
 const apiPublicDir = join(rootDir, 'apps/api/public/mineiro');
+const apiPublicRootDir = join(rootDir, 'apps/api/public/root');
 
 async function integrate() {
   console.log('🔄 Integrating web app into API...');
@@ -52,6 +54,29 @@ async function integrate() {
   } catch (error) {
     console.error('❌ Error copying files:', error);
     process.exit(1);
+  }
+
+  // Copy root build if it exists
+  if (existsSync(webDistRootDir)) {
+    // Remove old root files if they exist
+    if (existsSync(apiPublicRootDir)) {
+      try {
+        await rm(apiPublicRootDir, { recursive: true, force: true });
+        console.log('🧹 Cleaned old files from apps/api/public/root');
+      } catch (error) {
+        console.warn('⚠️  Warning: Could not clean old root files:', error);
+      }
+    }
+
+    try {
+      await cp(webDistRootDir, apiPublicRootDir, { recursive: true, force: true });
+      console.log('✅ Copied root homepage from apps/web/dist/root to apps/api/public/root');
+    } catch (error) {
+      console.error('❌ Error copying root files:', error);
+      process.exit(1);
+    }
+  } else {
+    console.log('⚠️  Warning: Root build not found. Run "pnpm build:root" to build root homepage.');
   }
 
   console.log('🎉 Integration complete!');
