@@ -29,25 +29,28 @@ async function generateIcons() {
     // Read SVG
     const svgBuffer = readFileSync(svgPath);
     
-    // Generate favicon.png (32x32)
+    // Generate favicon.png (32x32) with transparent background
     const favicon32 = await sharp(svgBuffer)
       .resize(32, 32)
+      .ensureAlpha()
       .png()
       .toBuffer();
     writeFileSync(join(publicDir, 'favicon.png'), favicon32);
     console.log('✅ Generated favicon.png (32x32)');
     
-    // Generate icon-192.png
+    // Generate icon-192.png with transparent background
     const icon192 = await sharp(svgBuffer)
       .resize(192, 192)
+      .ensureAlpha()
       .png()
       .toBuffer();
     writeFileSync(join(publicDir, 'icon-192.png'), icon192);
     console.log('✅ Generated icon-192.png (192x192)');
     
-    // Generate icon-512.png
+    // Generate icon-512.png with transparent background
     const icon512 = await sharp(svgBuffer)
       .resize(512, 512)
+      .ensureAlpha()
       .png()
       .toBuffer();
     writeFileSync(join(publicDir, 'icon-512.png'), icon512);
