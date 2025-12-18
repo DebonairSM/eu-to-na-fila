@@ -963,7 +963,7 @@ export function BarberQueueManager() {
                 maxLength={1}
                 data-lpignore="true"
                 data-form-type="other"
-                className="w-12 flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-16 flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
                 onFocus={(e) => {
                   // Prevent autofill UI by temporarily making readOnly
                   const input = e.target as HTMLInputElement;

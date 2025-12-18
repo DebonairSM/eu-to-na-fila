@@ -58,7 +58,7 @@ export function JoinForm() {
                 <InputError message={validationError || ''} />
               </div>
 
-              <div className="sm:w-12 sm:flex-shrink-0">
+              <div className="sm:w-16 sm:flex-shrink-0">
                 <InputLabel htmlFor="customerLastName">Inicial</InputLabel>
                 <Input
                   id="customerLastName"
@@ -72,7 +72,7 @@ export function JoinForm() {
                   spellCheck="false"
                   inputMode="text"
                   maxLength={1}
-                  className="w-12"
+                  className="w-16"
                   data-lpignore="true"
                   data-form-type="other"
                   onFocus={(e) => {
