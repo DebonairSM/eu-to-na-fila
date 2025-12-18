@@ -38,8 +38,7 @@ export function useBarbers() {
         // Call API - backend handles unassigning customers automatically
         await api.toggleBarberPresence(barberId, isPresent);
 
-        // Refresh to get updated state
-        await fetchBarbers();
+        // Optimistic update already maintains order, no need to refetch
       } catch (err) {
         // Revert on error
         await fetchBarbers();

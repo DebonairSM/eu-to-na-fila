@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db, schema } from '../db/index.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
@@ -34,9 +34,10 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Shop with slug "${slug}" not found`);
     }
 
-    // Get barbers for this shop
+    // Get barbers for this shop, sorted by ID for consistent ordering
     const barbers = await db.query.barbers.findMany({
       where: eq(schema.barbers.shopId, shop.id),
+      orderBy: (barbers, { asc }) => [asc(barbers.id)],
     });
 
     return barbers;

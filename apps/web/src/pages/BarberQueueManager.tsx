@@ -403,7 +403,6 @@ export function BarberQueueManager() {
                       onClick={async () => {
                         try {
                           await togglePresence(barber.id, !barber.isPresent);
-                          await refetchBarbers();
                           await refetchQueue();
                         } catch (error) {
                           const errorMsg = getErrorMessage(error, 'Erro ao alterar presença do barbeiro. Tente novamente.');
@@ -893,7 +892,6 @@ export function BarberQueueManager() {
                 onClick={async () => {
                   try {
                     await togglePresence(barber.id, !barber.isPresent);
-                    await refetchBarbers();
                     await refetchQueue();
                       } catch (error) {
                         let errorMsg = 'Erro ao alterar presença do barbeiro. Tente novamente.';
