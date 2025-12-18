@@ -1,5 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" fill="#3E2723"/>
-  <text x="50" y="70" font-size="60" font-family="Arial" fill="#FFD54F" text-anchor="middle">Q</text>
+  <!-- Background -->
+  <rect width="100" height="100" fill="#000000"/>
+  
+  <!-- Scissors - minimalist flat icon -->
+  <g transform="translate(50, 50)">
+    <!-- Left finger hole -->
+    <circle cx="-22" cy="0" r="7" fill="none" stroke="#C9A961" stroke-width="2"/>
+    
+    <!-- Right finger hole -->
+    <circle cx="22" cy="0" r="7" fill="none" stroke="#C9A961" stroke-width="2"/>
+    
+    <!-- Left blade (top, extending right) -->
+    <path d="M -15 0 L 0 -18 L 25 0" 
+          fill="#C9A961" 
+          stroke="none"/>
+    
+    <!-- Right blade (bottom, extending right) -->
+    <path d="M -15 0 L 0 18 L 25 0" 
+          fill="#C9A961" 
+          stroke="none"/>
+    
+    <!-- Center pivot dot -->
+    <circle cx="0" cy="0" r="3" fill="#000000"/>
+  </g>
 </svg>
-

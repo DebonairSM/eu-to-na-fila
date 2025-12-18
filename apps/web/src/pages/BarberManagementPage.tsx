@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { config } from '@/lib/config';
