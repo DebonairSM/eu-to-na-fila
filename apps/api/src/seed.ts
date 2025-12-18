@@ -98,11 +98,25 @@ async function seed() {
 
   if (existingBarbers.length > 0) {
     console.log('Barbers already exist:', existingBarbers.length);
+    // Update existing barbers with avatars if they don't have them
+    for (let i = 0; i < Math.min(existingBarbers.length, 4); i++) {
+      const barber = existingBarbers[i];
+      if (!barber.avatarUrl) {
+        const avatarUrl = `/mineiro/avatars/barber-${i + 1}.png`;
+        await db
+          .update(schema.barbers)
+          .set({ avatarUrl, updatedAt: new Date() })
+          .where(eq(schema.barbers.id, barber.id));
+        console.log(`Updated ${barber.name} with avatar: ${avatarUrl}`);
+      }
+    }
   } else {
-    // Create barbers
+    // Create barbers with avatars
     const barberData = [
-      { name: 'João Silva', email: 'joao@mineiro.com', phone: '+5511999999999', avatarUrl: null, isPresent: true },
-      { name: 'Pedro Santos', email: 'pedro@mineiro.com', phone: '+5511988888888', avatarUrl: null, isPresent: true },
+      { name: 'João Silva', email: 'joao@mineiro.com', phone: '+5511999999999', avatarUrl: '/mineiro/avatars/barber-1.png', isPresent: true },
+      { name: 'Pedro Santos', email: 'pedro@mineiro.com', phone: '+5511988888888', avatarUrl: '/mineiro/avatars/barber-2.png', isPresent: true },
+      { name: 'Carlos Oliveira', email: 'carlos@mineiro.com', phone: '+5511977777777', avatarUrl: '/mineiro/avatars/barber-3.png', isPresent: true },
+      { name: 'Miguel Costa', email: 'miguel@mineiro.com', phone: '+5511966666666', avatarUrl: '/mineiro/avatars/barber-4.png', isPresent: true },
     ];
 
     const barbers = await db

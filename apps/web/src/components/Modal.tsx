@@ -120,7 +120,9 @@ export function Modal({
         ref={modalRef}
         className={cn(
           'relative z-10 w-full max-w-md mx-4 bg-card border-2 border-primary rounded-2xl shadow-elevation-4',
-          'max-h-[90vh] overflow-y-auto p-10',
+          'max-h-[90vh] overflow-y-auto',
+          'p-4 sm:p-6 md:p-10', // Responsive padding
+          'min-w-[320px]', // Minimum width for small screens
           className
         )}
       >

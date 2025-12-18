@@ -213,7 +213,7 @@ export function AnalyticsPage() {
             </div>
           </div>
           <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
-            <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#22c55e] mb-2">
+            <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-white mb-2">
               {stats.completed}
             </div>
             <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
@@ -265,7 +265,7 @@ export function AnalyticsPage() {
                     Tendência Semanal
                   </p>
                   <div className={`font-['Playfair_Display',serif] text-5xl font-semibold mb-3 ${
-                    data.trends.weekOverWeek > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'
+                    data.trends.weekOverWeek > 0 ? 'text-white' : 'text-[#ef4444]'
                   }`}>
                     {data.trends.weekOverWeek > 0 ? '+' : ''}{data.trends.weekOverWeek}%
                   </div>
@@ -402,7 +402,7 @@ export function AnalyticsPage() {
                               </div>
                             </div>
                             <div className="text-center">
-                              <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#22c55e]">
+                              <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-white">
                                 {barber.completionRate}%
                               </div>
                               <div className="text-xs text-white/50 uppercase mt-1">

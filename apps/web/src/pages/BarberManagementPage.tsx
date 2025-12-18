@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { config } from '@/lib/config';
@@ -19,6 +20,7 @@ export function BarberManagementPage() {
   const addModal = useModal();
   const editModal = useModal();
   const deleteConfirmModal = useModal();
+  
   const [barberToDelete, setBarberToDelete] = useState<number | null>(null);
   const [editingBarber, setEditingBarber] = useState<Barber | null>(null);
   const [formData, setFormData] = useState({ name: '', avatarUrl: '' });
@@ -99,7 +101,9 @@ export function BarberManagementPage() {
   };
 
   return (
-    <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
+    <div 
+      className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]"
+    >
       <Navigation />
       {/* Error Message Toast */}
       {errorMessage && (
@@ -119,7 +123,9 @@ export function BarberManagementPage() {
           </button>
         </div>
       )}
-      <main className="container max-w-[1200px] mx-auto px-4 sm:px-6 pt-24 pb-10 relative z-10">
+      <main 
+        className="container max-w-[1200px] mx-auto px-4 sm:px-6 pt-24 pb-10 relative z-10"
+      >
         <div className="text-center mb-8">
           <h1 className="font-['Playfair_Display',serif] text-2xl text-[#D4AF37] mb-3">
             Gerenciar Barbeiros
@@ -176,7 +182,7 @@ export function BarberManagementPage() {
                         alt=""
                         aria-hidden="true"
                         className="w-full h-full rounded-full object-cover"
-                        loading="lazy"
+                        loading="eager"
                         decoding="async"
                         width={64}
                         height={64}
@@ -196,7 +202,7 @@ export function BarberManagementPage() {
                     <div
                       className={`barber-status inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-xl text-[10px] sm:text-xs font-medium ${
                         barber.isPresent
-                          ? 'bg-[rgba(34,197,94,0.2)] text-[#22c55e]'
+                          ? 'bg-[rgba(255,255,255,0.2)] text-white'
                           : 'bg-[rgba(255,255,255,0.1)] text-[rgba(255,255,255,0.5)]'
                       }`}
                       aria-label={barber.isPresent ? 'Status: Presente' : 'Status: Ausente'}
@@ -238,12 +244,13 @@ export function BarberManagementPage() {
       {/* Add Barber Modal */}
       {addModal.isOpen && (
         <div 
-          className="modal fixed inset-0 bg-[rgba(0,0,0,0.8)] backdrop-blur-sm z-[1000] flex items-center justify-center p-4 sm:p-5"
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-5"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(4px)' }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="add-modal-title"
         >
-          <div className="modal-content bg-[#242424] border border-[rgba(212,175,55,0.3)] rounded-xl sm:rounded-2xl p-5 sm:p-8 max-w-[500px] w-full animate-in slide-in-from-bottom-4">
+          <div className="modal-content bg-[#242424] border border-[rgba(212,175,55,0.3)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
             <h2 id="add-modal-title" className="modal-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-[#D4AF37] mb-5 sm:mb-6">
               Adicionar Barbeiro
             </h2>
@@ -263,7 +270,7 @@ export function BarberManagementPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm sm:text-base focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
@@ -276,7 +283,7 @@ export function BarberManagementPage() {
                   value={formData.avatarUrl}
                   onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
                   placeholder="https://example.com/avatar.jpg"
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm sm:text-base focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
                 />
               </div>
               <div className="modal-actions flex gap-2 sm:gap-3 mt-5 sm:mt-6">
@@ -305,12 +312,13 @@ export function BarberManagementPage() {
       {/* Edit Barber Modal */}
       {editModal.isOpen && (
         <div 
-          className="modal fixed inset-0 bg-[rgba(0,0,0,0.8)] backdrop-blur-sm z-[1000] flex items-center justify-center p-4 sm:p-5"
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-5"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(4px)' }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="edit-modal-title"
         >
-          <div className="modal-content bg-[#242424] border border-[rgba(212,175,55,0.3)] rounded-xl sm:rounded-2xl p-5 sm:p-8 max-w-[500px] w-full animate-in slide-in-from-bottom-4">
+          <div className="modal-content bg-[#242424] border border-[rgba(212,175,55,0.3)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
             <h2 id="edit-modal-title" className="modal-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-[#D4AF37] mb-5 sm:mb-6">
               Editar Barbeiro
             </h2>
@@ -330,7 +338,7 @@ export function BarberManagementPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm sm:text-base focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
@@ -343,7 +351,7 @@ export function BarberManagementPage() {
                   value={formData.avatarUrl}
                   onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
                   placeholder="https://example.com/avatar.jpg"
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm sm:text-base focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
                 />
               </div>
               <div className="modal-actions flex gap-2 sm:gap-3 mt-5 sm:mt-6">

@@ -85,11 +85,11 @@ export const colors = {
   // Status colors
   status: {
     waiting: '#D4AF37',
-    'in-progress': '#22c55e',
-    completed: '#22c55e',
+    'in-progress': '#FFFFFF',
+    completed: '#FFFFFF',
     error: '#ef4444',
     warning: '#F59E0B',
-    success: '#10B981',
+    success: '#FFFFFF',
   },
   // Border colors
   border: {

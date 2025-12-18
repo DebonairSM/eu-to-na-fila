@@ -8,7 +8,6 @@ interface Ad2VideoProps {
 export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad2VideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(false);
 
   // Intersection Observer to detect when component is visible
@@ -19,7 +18,6 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setIsVisible(true);
             setShouldLoad(true);
             observer.disconnect();
           }

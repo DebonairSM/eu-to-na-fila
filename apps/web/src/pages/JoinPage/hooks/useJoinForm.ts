@@ -125,8 +125,8 @@ export function useJoinForm() {
   };
 
   const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatName(e.target.value);
-    setLastName(formatted);
+    const firstChar = e.target.value.slice(0, 1).toUpperCase();
+    setLastName(firstChar);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -143,8 +143,8 @@ export function useJoinForm() {
     }
 
     const fullName = lastName.trim()
-      ? `${firstName.trim()} ${lastName.trim()}`
-      : firstName.trim();
+      ? `${formatName(firstName.trim())} ${formatName(lastName.trim())}`
+      : formatName(firstName.trim());
 
     // Check if there's a stored ticket on this device
     const storedTicketId = localStorage.getItem(STORAGE_KEY);

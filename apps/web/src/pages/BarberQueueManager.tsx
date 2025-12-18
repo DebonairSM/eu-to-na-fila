@@ -41,21 +41,6 @@ export function BarberQueueManager() {
   const pollInterval = isKioskMode ? 10000 : 5000; // 10s for kiosk, 5s for management
   const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval);
   
-  // Preload barber avatars for faster rendering
-  useEffect(() => {
-    const avatarUrls = barbers.map(b => b.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&background=D4AF37&color=000&size=128`).filter(Boolean);
-    
-    avatarUrls.forEach((url, index) => {
-      if (url && !url.includes('ui-avatars.com')) {
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = 'image';
-        link.href = url;
-        if (index < 4) link.setAttribute('fetchpriority', 'high'); // Prioritize first 4
-        document.head.appendChild(link);
-      }
-    });
-  }, [barbers]);
   const checkInModal = useModal();
   const barberSelectorModal = useModal();
   const removeConfirmModal = useModal();
@@ -87,6 +72,28 @@ export function BarberQueueManager() {
       }, 100);
     }
   }, [checkInModal.isOpen]);
+
+  // Preload barber avatar images when barbers data is available
+  useEffect(() => {
+    if (barbers.length === 0) return;
+
+    barbers.forEach((barber) => {
+      // Preload custom avatar URL if available
+      if (barber.avatarUrl) {
+        const img = new Image();
+        img.src = barber.avatarUrl;
+        // Handle errors silently - component will handle fallback
+        img.onerror = () => {};
+      }
+
+      // Preload fallback avatar URL (ui-avatars.com)
+      const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128`;
+      const fallbackImg = new Image();
+      fallbackImg.src = fallbackUrl;
+      // Handle errors silently
+      fallbackImg.onerror = () => {};
+    });
+  }, [barbers]);
 
   const tickets = queueData?.tickets || [];
   
@@ -125,8 +132,8 @@ export function BarberQueueManager() {
     }
 
     const fullName = checkInName.last.trim()
-      ? `${checkInName.first.trim()} ${checkInName.last.trim()}`
-      : checkInName.first.trim();
+      ? `${formatName(checkInName.first.trim())} ${formatName(checkInName.last.trim())}`
+      : formatName(checkInName.first.trim());
 
     setIsSubmitting(true);
     setErrorMessage(null);
@@ -292,7 +299,8 @@ export function BarberQueueManager() {
                           'w-full px-8 py-6 rounded-2xl border transition-all',
                           'hover:scale-[1.01] hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
                           {
-                            'bg-[rgba(20,20,20,0.8)] border-[rgba(212,175,55,0.2)] hover:border-[rgba(212,175,55,0.4)]': true,
+                            'bg-black border-[rgba(212,175,55,0.4)] hover:border-[rgba(212,175,55,0.6)]': isServing,
+                            'bg-[rgba(20,20,20,0.8)] border-[rgba(212,175,55,0.2)] hover:border-[rgba(212,175,55,0.4)]': !isServing,
                           }
                         )}
                       >
@@ -308,7 +316,7 @@ export function BarberQueueManager() {
                               }}
                               className={cn(
                                 'w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl flex-shrink-0',
-                                'bg-[#10B981] text-white hover:bg-[#10B981]/80 transition-all cursor-pointer',
+                                'bg-black text-[#D4AF37] hover:bg-black/90 hover:text-[#E8C547] transition-all cursor-pointer',
                                 'hover:scale-110 active:scale-95'
                               )}
                               aria-label={`Finalizar atendimento de ${ticket.customerName}`}
@@ -365,8 +373,8 @@ export function BarberQueueManager() {
                           </button>
                           {/* Status indicator */}
                           {isServing && (
-                            <div className="flex-shrink-0 px-4 py-2 bg-[#10B981]/20 rounded-xl">
-                              <span className="text-[#10B981] text-sm font-medium uppercase tracking-wider">Atendendo</span>
+                            <div className="flex-shrink-0 px-4 py-2 bg-[rgba(212,175,55,0.2)] border border-[rgba(212,175,55,0.4)] rounded-xl">
+                              <span className="text-[#D4AF37] text-sm font-medium uppercase tracking-wider">Atendendo</span>
                             </div>
                           )}
                         </div>
@@ -397,7 +405,7 @@ export function BarberQueueManager() {
                       className={cn(
                         'px-6 py-3 rounded-xl border-2 font-medium transition-all text-lg',
                         barber.isPresent
-                          ? 'bg-[#10B981]/20 border-[#10B981] text-[#10B981]'
+                          ? 'bg-white/20 border-white text-white'
                           : 'bg-white/5 border-white/20 text-white/40'
                       )}
                       aria-label={`${barber.isPresent ? 'Marcar ausente' : 'Marcar presente'}: ${barber.name}`}
@@ -424,14 +432,6 @@ export function BarberQueueManager() {
           <div 
             className="flex-1 flex items-center justify-center relative cursor-pointer min-h-0 max-h-screen overflow-hidden"
             onClick={showQueueView}
-            ref={(el) => {
-              // #region agent log
-              if (el) {
-                const rect = el.getBoundingClientRect();
-                fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BarberQueueManager.tsx:408',message:'Ad2 container dimensions',data:{width:rect.width,height:rect.height,top:rect.top,left:rect.left,viewportHeight:window.innerHeight,viewportWidth:window.innerWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-              }
-              // #endregion
-            }}
           >
             <Ad2Video showTimer={false} />
           </div>
@@ -440,14 +440,6 @@ export function BarberQueueManager() {
           <div 
             className="flex-1 flex items-center justify-center relative cursor-pointer min-h-0 max-h-screen overflow-hidden"
             onClick={showQueueView}
-            ref={(el) => {
-              // #region agent log
-              if (el) {
-                const rect = el.getBoundingClientRect();
-                fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BarberQueueManager.tsx:416',message:'Ad3 container dimensions',data:{width:rect.width,height:rect.height,top:rect.top,left:rect.left,viewportHeight:window.innerHeight,viewportWidth:window.innerWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-              }
-              // #endregion
-            }}
           >
             <Ad3Video showTimer={false} />
           </div>
@@ -469,9 +461,9 @@ export function BarberQueueManager() {
         {/* Kiosk Modals - Styled for fullscreen display */}
         {/* Check-in Modal */}
         {checkInModal.isOpen && (
-          <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-8">
-            <div className="bg-[#1a1a1a] border-2 border-[#D4AF37]/30 rounded-3xl p-10 max-w-2xl w-full">
-              <h2 className="text-4xl font-['Playfair_Display',serif] text-[#D4AF37] mb-8 text-center">
+          <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-8">
+            <div className="bg-[#1a1a1a] border-2 border-[#D4AF37]/30 rounded-3xl p-6 sm:p-8 lg:p-10 max-w-2xl w-full min-w-[320px]">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-['Playfair_Display',serif] text-[#D4AF37] mb-6 sm:mb-8 text-center">
                 Entrar na Fila
               </h2>
               <form
@@ -479,10 +471,10 @@ export function BarberQueueManager() {
                   e.preventDefault();
                   handleAddCustomer();
                 }}
-                className="space-y-6"
+                className="space-y-4 sm:space-y-6"
               >
                 <div>
-                  <label htmlFor="kioskGuestName" className="block text-xl font-medium mb-3 text-white">
+                  <label htmlFor="kioskGuestName" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
                     Nome *
                   </label>
                   <input
@@ -497,21 +489,22 @@ export function BarberQueueManager() {
                     spellCheck="false"
                     inputMode="text"
                     required
-                    className="w-full px-6 py-5 text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
                 <div>
-                  <label htmlFor="kioskGuestLastName" className="block text-xl font-medium mb-3 text-white">
-                    Sobrenome (opcional)
+                  <label htmlFor="kioskGuestLastName" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
+                    Inicial do sobrenome
                   </label>
                   <input
                     id="kioskGuestLastName"
                     type="text"
                     value={checkInName.last}
-                    onChange={(e) => setCheckInName({ ...checkInName, last: formatName(e.target.value) })}
-                    placeholder="Sobrenome"
+                    onChange={(e) => setCheckInName({ ...checkInName, last: e.target.value.slice(0, 1).toUpperCase() })}
+                    placeholder="Inicial"
                     inputMode="text"
-                    className="w-full px-6 py-5 text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
+                    maxLength={1}
+                    className="w-12 px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
                 <div>
@@ -558,18 +551,18 @@ export function BarberQueueManager() {
                     })}
                   </div>
                 </div>
-                <div className="flex gap-4 mt-8">
+                <div className="flex gap-3 sm:gap-4 mt-6 sm:mt-8">
                   <button
                     type="button"
                     onClick={checkInModal.close}
-                    className="flex-1 px-8 py-5 text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all"
+                    className="flex-1 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all min-h-[44px]"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 px-8 py-5 text-xl rounded-2xl bg-[#D4AF37] text-black font-semibold hover:bg-[#E8C547] transition-all disabled:opacity-50"
+                    className="flex-1 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl rounded-2xl bg-[#D4AF37] text-black font-semibold hover:bg-[#E8C547] transition-all disabled:opacity-50 min-h-[44px]"
                   >
                     {isSubmitting ? 'Adicionando...' : 'Adicionar'}
                   </button>
@@ -729,7 +722,7 @@ export function BarberQueueManager() {
                     await handleCompleteService();
                     showQueueView();
                   }}
-                  className="flex-1 px-8 py-5 text-xl rounded-2xl bg-[#10B981] text-white font-semibold hover:bg-[#10B981]/80 transition-all"
+                  className="flex-1 px-8 py-5 text-xl rounded-2xl bg-white text-black font-semibold hover:bg-white/80 transition-all"
                 >
                   Finalizar
                 </button>
@@ -811,7 +804,7 @@ export function BarberQueueManager() {
               <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">Aguardando</div>
             </div>
             <div className="stat-item flex-1 text-center">
-              <div className="stat-value text-2xl sm:text-3xl font-semibold text-[#22c55e]">{servingCount}</div>
+              <div className="stat-value text-2xl sm:text-3xl font-semibold text-white">{servingCount}</div>
               <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">Atendendo</div>
             </div>
           </div>
@@ -944,7 +937,7 @@ export function BarberQueueManager() {
               data-lpignore="true"
               data-form-type="other"
               required
-              className="w-full px-4 py-3 rounded-lg bg-muted/50 border border-border focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
               onFocus={(e) => {
                 // Prevent autofill UI by temporarily making readOnly
                 const input = e.target as HTMLInputElement;
@@ -957,19 +950,20 @@ export function BarberQueueManager() {
           </div>
           <div>
             <label htmlFor="guestLastName" className="block text-sm font-medium mb-2">
-              Sobrenome (opcional)
+              Inicial do sobrenome
             </label>
             <input
               id="guestLastName"
               type="text"
               value={checkInName.last}
-              onChange={(e) => setCheckInName({ ...checkInName, last: formatName(e.target.value) })}
-              placeholder="Sobrenome"
+              onChange={(e) => setCheckInName({ ...checkInName, last: e.target.value.slice(0, 1).toUpperCase() })}
+              placeholder="Inicial"
               autoComplete="one-time-code"
               inputMode="text"
+              maxLength={1}
               data-lpignore="true"
               data-form-type="other"
-              className="w-full px-4 py-3 rounded-lg bg-muted/50 border border-border focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-12 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
               onFocus={(e) => {
                 // Prevent autofill UI by temporarily making readOnly
                 const input = e.target as HTMLInputElement;

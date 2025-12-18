@@ -9,7 +9,7 @@ export function CompletedCard({ barberName }: CompletedCardProps) {
     <StatusTransition status="completed">
       <Card
         variant="outlined"
-        className="bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-center"
+        className="bg-white text-center"
       >
         <CardContent className="p-8 sm:p-10 lg:p-12">
           <span className="material-symbols-outlined text-5xl sm:text-6xl lg:text-7xl text-white mb-4 sm:mb-6 block">

@@ -28,17 +28,20 @@ export function BarberSelector({
   showAllBarbers = false,
   preferredBarberId = null,
 }: BarberSelectorProps) {
-  // Show all barbers if showAllBarbers is true, otherwise only present barbers
-  const displayedBarbers = showAllBarbers ? barbers : barbers.filter((b) => b.isPresent);
-  
-  // Sort barbers: preferred barber first, then others
-  const sortedDisplayedBarbers = [...displayedBarbers].sort((a, b) => {
-    const aIsPreferred = preferredBarberId !== null && a.id === preferredBarberId;
-    const bIsPreferred = preferredBarberId !== null && b.id === preferredBarberId;
-    if (aIsPreferred && !bIsPreferred) return -1;
-    if (!aIsPreferred && bIsPreferred) return 1;
-    return 0;
-  });
+  // Memoize displayed and sorted barbers to avoid recalculation on every render
+  const sortedDisplayedBarbers = useMemo(() => {
+    // Show all barbers if showAllBarbers is true, otherwise only present barbers
+    const displayedBarbers = showAllBarbers ? barbers : barbers.filter((b) => b.isPresent);
+    
+    // Sort barbers: preferred barber first, then others
+    return [...displayedBarbers].sort((a, b) => {
+      const aIsPreferred = preferredBarberId !== null && a.id === preferredBarberId;
+      const bIsPreferred = preferredBarberId !== null && b.id === preferredBarberId;
+      if (aIsPreferred && !bIsPreferred) return -1;
+      if (!aIsPreferred && bIsPreferred) return 1;
+      return 0;
+    });
+  }, [barbers, showAllBarbers, preferredBarberId]);
 
   // Calculate which barbers are busy (have an in_progress ticket)
   // Exclude the current ticket being edited (reassignment to same barber is fine)
@@ -86,7 +89,7 @@ export function BarberSelector({
             {showAllBarbers ? 'Nenhum barbeiro disponível' : 'Nenhum barbeiro presente no momento'}
           </p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
             {sortedDisplayedBarbers.map((barber) => {
               const isBusy = busyBarberIds.has(barber.id);
               const isCurrentlyAssigned = selectedBarberId === barber.id;

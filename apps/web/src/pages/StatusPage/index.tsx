@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTicketStatus } from '@/hooks/useTicketStatus';
 import { useQueue } from '@/hooks/useQueue';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -22,7 +22,8 @@ export function StatusPage() {
   const [shareSuccess, setShareSuccess] = useState(false);
   const { barber, isLeaving, handleLeaveQueue, handleShareTicket } = useStatusDisplay(ticket);
 
-  const positionInfo = (() => {
+  // Memoize position calculation to avoid expensive recalculation on every render
+  const positionInfo = useMemo(() => {
     if (!ticket || ticket.status !== 'waiting' || !queueData) return null;
     const waitingTickets = queueData.tickets.filter((t) => t.status === 'waiting');
     // Sort waiting tickets by position (or createdAt as fallback) to ensure correct order
@@ -43,7 +44,7 @@ export function StatusPage() {
       ahead: aheadCount,
       total: waitingTickets.length,
     };
-  })();
+  }, [ticket, queueData]);
 
   const handleShare = async () => {
     if (!ticketIdFromParams) return;
@@ -147,7 +148,7 @@ export function StatusPage() {
 
           {shareSuccess && (
             <SlideIn direction="up">
-              <div className="fixed bottom-24 left-4 right-4 bg-[#22c55e] text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50">
+              <div className="fixed bottom-24 left-4 right-4 bg-white text-black px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50">
                 <span className="material-symbols-outlined">check_circle</span>
                 <span>Link copiado</span>
               </div>
@@ -184,7 +185,7 @@ export function StatusPage() {
 
         {shareSuccess && (
           <SlideIn direction="up">
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#22c55e] text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-2 z-50">
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white text-black px-6 py-4 rounded-lg shadow-lg flex items-center gap-2 z-50">
               <span className="material-symbols-outlined">check_circle</span>
               <span>Link copiado</span>
             </div>

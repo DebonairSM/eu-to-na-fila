@@ -51,6 +51,11 @@ tmp/
 temp/
 .cache/
 
+# Build tool caches
+.vite/
+.turbo/
+.vercel/
+
 # Backups
 backups/
 *.backup

@@ -23,7 +23,7 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
           {
             'bg-[rgba(212,175,55,0.2)] border-[#D4AF37] text-[#D4AF37]':
               variant === 'waiting',
-            'bg-[rgba(34,197,94,0.2)] border-[#22c55e] text-[#22c55e]':
+            'bg-[rgba(255,255,255,0.2)] border-white text-white':
               variant === 'in-progress' || variant === 'completed',
             'bg-[rgba(239,68,68,0.2)] border-[#ef4444] text-[#ef4444]':
               variant === 'error',

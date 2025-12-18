@@ -30,11 +30,9 @@
     <!-- Google Fonts - Non-blocking link tags instead of @import -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&family=Inter:wght@300;400;500;600&display=swap" />
     
-    <!-- Preload critical resources with fetchpriority for faster loading -->
-    <link rel="preload" href="/mineiro/fonts/MaterialSymbolsOutlined.ttf" as="font" type="font/ttf" crossorigin="anonymous" fetchpriority="high" />
-    <link rel="preload" href="/mineiro/favicon.svg" as="image" type="image/svg+xml" fetchpriority="high" />
-    <link rel="preload" href="/mineiro/favicon.png" as="image" type="image/png" fetchpriority="high" />
-    <link rel="preload" href="/mineiro/icon-192.png" as="image" type="image/png" fetchpriority="high" />
+    <!-- Preload critical font resource -->
+    <!-- Note: Favicons and icons don't need explicit preloading as browsers handle them efficiently -->
+    <link rel="preload" href="/mineiro/fonts/MaterialSymbolsOutlined.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
     
     <!-- Critical CSS to prevent black/white screens -->
     <style>
@@ -120,13 +118,10 @@
           });
         });
       } else if ('serviceWorker' in navigator && !isProduction) {
-        console.log('[DEV] Service Worker disabled in development mode (localhost)');
-        
         // Unregister any existing service workers in development
         navigator.serviceWorker.getRegistrations().then(registrations => {
           registrations.forEach(registration => {
             registration.unregister();
-            console.log('[DEV] Unregistered service worker:', registration.scope);
           });
         });
       }

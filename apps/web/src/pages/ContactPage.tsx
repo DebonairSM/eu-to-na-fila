@@ -13,34 +13,34 @@ export function ContactPage() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2 bg-white/5 border-white/10">
-            <CardContent className="p-6 space-y-4">
+          <Card className="lg:col-span-2 bg-white/5 border-white/10 min-w-[320px]">
+            <CardContent className="p-4 sm:p-6 space-y-4">
               <h2 className="text-xl font-semibold">Mensagem</h2>
               <form className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <input
                     id="name"
                     type="text"
-                    className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/60"
+                    className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-base text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/60"
                     placeholder="Nome"
                   />
                   <input
                     id="email"
                     type="email"
-                    className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/60"
+                    className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-base text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/60"
                     placeholder="Email"
                   />
                 </div>
                 <input
                   id="company"
                   type="text"
-                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/60"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-base text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/60"
                   placeholder="Empresa"
                 />
                 <textarea
                   id="message"
                   rows={4}
-                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/60"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-base text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/60"
                   placeholder="Mensagem"
                 />
                 <Button type="button" className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#e2c25a]">

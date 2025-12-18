@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { api } from '@/lib/api';
+import { useState, useEffect, useRef } from 'react';
 import type { Ticket } from '@eutonafila/shared';
 import { useTicketPolling } from './usePolling';
 

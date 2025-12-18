@@ -24,11 +24,11 @@ export function JoinForm() {
   } = useJoinForm();
 
   return (
-    <Card variant="default" className="shadow-lg">
-      <CardContent className="p-8">
+    <Card variant="default" className="shadow-lg min-w-[320px]">
+      <CardContent className="p-6 sm:p-8">
         <form onSubmit={handleSubmit} autoComplete="off">
           <Stack spacing="lg">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
               <div className="flex-1">
                 <InputLabel htmlFor="customerName">Nome *</InputLabel>
                 <Input
@@ -58,19 +58,21 @@ export function JoinForm() {
                 <InputError message={validationError || ''} />
               </div>
 
-              <div className="sm:w-48">
-                <InputLabel htmlFor="customerLastName">Sobrenome</InputLabel>
+              <div className="sm:w-12">
+                <InputLabel htmlFor="customerLastName">Inicial</InputLabel>
                 <Input
                   id="customerLastName"
                   type="text"
                   value={lastName}
                   onChange={handleLastNameChange}
-                  placeholder="Opcional"
+                  placeholder="Inicial"
                   autoComplete="one-time-code"
                   autoCapitalize="words"
                   autoCorrect="off"
                   spellCheck="false"
                   inputMode="text"
+                  maxLength={1}
+                  className="w-12"
                   data-lpignore="true"
                   data-form-type="other"
                   onFocus={(e) => {

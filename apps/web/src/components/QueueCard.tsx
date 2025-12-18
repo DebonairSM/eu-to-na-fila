@@ -40,10 +40,9 @@ export const QueueCard = memo(function QueueCard({
     <div
       className={cn(
         'queue-item p-6 rounded-md border-2 transition-all cursor-pointer',
-        'hover:border-primary hover:bg-primary/5',
         {
-          'border-[#10B981] bg-[#10B981]/10': isServing,
-          'border-primary/30 bg-card': isWaiting,
+          'border-[#D4AF37] bg-black hover:border-[#D4AF37] hover:bg-black/90': isServing,
+          'border-primary/30 bg-card hover:border-primary hover:bg-primary/5': isWaiting,
         },
         className
       )}
@@ -67,7 +66,7 @@ export const QueueCard = memo(function QueueCard({
               'flex-shrink-0 w-[52px] h-[52px] rounded-md flex items-center justify-center font-bold text-lg cursor-pointer transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2',
               {
                 'bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary': isWaiting,
-                'bg-[#10B981] text-white hover:bg-[#10B981]/90 focus:ring-[#10B981]': isServing,
+                'bg-black text-[#D4AF37] hover:bg-black/90 hover:text-[#E8C547] focus:ring-[#D4AF37]': isServing,
               }
             )}
             onClick={(e) => {
@@ -129,7 +128,7 @@ export const QueueCard = memo(function QueueCard({
                 src={barberAvatarUrl || undefined}
                 alt={assignedBarber?.name || 'Barber'}
                 className="w-10 h-10 rounded-md object-cover relative z-10"
-                loading="lazy"
+                loading="eager"
                 decoding="async"
                 width={40}
                 height={40}

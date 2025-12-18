@@ -75,7 +75,7 @@ export const BarberCard = memo(function BarberCard({
             alt=""
             aria-hidden="true"
             className={cn(avatarSize, 'rounded-md object-cover relative z-10')}
-            loading="lazy"
+            loading="eager"
             decoding="async"
             width={size === 'kiosk' ? 56 : 40}
             height={size === 'kiosk' ? 56 : 40}
@@ -91,7 +91,7 @@ export const BarberCard = memo(function BarberCard({
           <div
             className={cn(
               'absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-background z-20',
-              barber.isPresent ? 'bg-[#10B981]' : 'bg-gray-400'
+              barber.isPresent ? 'bg-white' : 'bg-gray-400'
             )}
             aria-hidden="true"
           />

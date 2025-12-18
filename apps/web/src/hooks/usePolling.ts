@@ -52,7 +52,6 @@ export function useQueuePolling(
   const [data, setData] = useState<QueueData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const intervalRef = useRef<number | null>(null);
   const isMountedRef = useRef(true);
   const errorCountRef = useRef(0);
   const backoffTimeoutRef = useRef<number | null>(null);

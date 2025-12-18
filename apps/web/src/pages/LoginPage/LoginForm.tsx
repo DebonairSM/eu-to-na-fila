@@ -40,7 +40,7 @@ export function LoginForm() {
             placeholder=" "
             autoComplete="username"
             required
-            className="w-full px-4 py-4 pt-6 rounded-lg border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)] text-white placeholder:text-[rgba(255,255,255,0.5)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37]"
+            className="w-full px-4 py-4 pt-6 rounded-lg border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)] text-white text-base placeholder:text-[rgba(255,255,255,0.5)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37]"
           />
           <label
             htmlFor="username"
@@ -61,7 +61,7 @@ export function LoginForm() {
             placeholder=" "
             autoComplete="current-password"
             required
-            className="w-full px-4 py-4 pt-6 pr-12 rounded-lg border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)] text-white placeholder:text-[rgba(255,255,255,0.5)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37]"
+            className="w-full px-4 py-4 pt-6 pr-12 rounded-lg border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)] text-white text-base placeholder:text-[rgba(255,255,255,0.5)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37]"
           />
           <label
             htmlFor="password"

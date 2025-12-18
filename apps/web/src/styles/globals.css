@@ -46,7 +46,7 @@
     --on-primary: #FFFFFF;
     
     /* Status Colors */
-    --success: #10B981;
+    --success: #FFFFFF;
     --error: #EF4444;
     --warning: #F59E0B;
     
@@ -136,6 +136,18 @@
   button, a, input {
     -webkit-tap-highlight-color: rgba(212, 175, 55, 0.2);
     touch-action: manipulation;
+  }
+  
+  /* Performance optimizations for animations */
+  .queue-item,
+  .barber-card,
+  .modal {
+    will-change: transform, opacity;
+  }
+  
+  /* Optimize scrolling performance */
+  * {
+    -webkit-overflow-scrolling: touch;
   }
   
   /* Skip to content link for accessibility */

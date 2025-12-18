@@ -102,22 +102,22 @@ export function BarberSelection({
                 'focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]',
                 selectedBarberId === null
                   ? 'bg-[rgba(212,175,55,0.15)] border-[#D4AF37] shadow-lg shadow-[rgba(212,175,55,0.2)]'
-                  : 'bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.2)] hover:border-[rgba(212,175,55,0.4)] hover:bg-[rgba(212,175,55,0.05)]',
-                fastestOption?.id === null && selectedBarberId !== null && 'ring-2 ring-[#22c55e]/50'
+                  : 'bg-[rgba(255,255,255,0.03)] border-[rgba(212,175,55,0.3)] hover:border-[rgba(212,175,55,0.4)] hover:bg-[rgba(212,175,55,0.05)]',
+                fastestOption?.id === null && selectedBarberId !== null && 'ring-2 ring-white/50'
               )}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
                     className={cn(
-                      'w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all',
+                      'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
                       selectedBarberId === null
                         ? 'border-[#D4AF37] bg-[#D4AF37]'
-                        : 'border-[rgba(255,255,255,0.3)] bg-transparent'
+                        : 'border-[#D4AF37] bg-transparent'
                     )}
                   >
                     {selectedBarberId === null && (
-                      <span className="w-2 h-2 rounded-full bg-[#0a0a0a]" />
+                      <span className="material-symbols-outlined text-sm text-[#0a0a0a]">check</span>
                     )}
                   </div>
                   <div>
@@ -134,7 +134,7 @@ export function BarberSelection({
                     {formatWaitTime(effectiveWaitTimes.standardWaitTime)}
                   </Text>
                   {fastestOption?.id === null && selectedBarberId !== null && (
-                    <Text size="xs" className="text-[#22c55e] mt-1">
+                    <Text size="xs" className="text-white mt-1">
                       Mais rápido
                     </Text>
                   )}
@@ -162,22 +162,22 @@ export function BarberSelection({
                       'focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]',
                       isSelected
                         ? 'bg-[rgba(212,175,55,0.15)] border-[#D4AF37] shadow-lg shadow-[rgba(212,175,55,0.2)]'
-                        : 'bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.2)] hover:border-[rgba(212,175,55,0.4)] hover:bg-[rgba(212,175,55,0.05)]',
-                      isFastest && 'ring-2 ring-[#22c55e]/50'
+                        : 'bg-[rgba(255,255,255,0.03)] border-[rgba(212,175,55,0.3)] hover:border-[rgba(212,175,55,0.4)] hover:bg-[rgba(212,175,55,0.05)]',
+                      isFastest && 'ring-2 ring-white/50'
                     )}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div
                           className={cn(
-                            'w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all',
+                            'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
                             isSelected
                               ? 'border-[#D4AF37] bg-[#D4AF37]'
-                              : 'border-[rgba(255,255,255,0.3)] bg-transparent'
+                              : 'border-[#D4AF37] bg-transparent'
                           )}
                         >
                           {isSelected && (
-                            <span className="w-2 h-2 rounded-full bg-[#0a0a0a]" />
+                            <span className="material-symbols-outlined text-sm text-[#0a0a0a]">check</span>
                           )}
                         </div>
                         <div>
@@ -194,7 +194,7 @@ export function BarberSelection({
                           {formatWaitTime(barberWaitTime.waitTime)}
                         </Text>
                         {isFastest && (
-                          <Text size="xs" className="text-[#22c55e] mt-1">
+                          <Text size="xs" className="text-white mt-1">
                             Mais rápido
                           </Text>
                         )}
