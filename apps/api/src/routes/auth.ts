@@ -14,9 +14,14 @@ import { logAuthFailure, logAuthSuccess, getClientIp } from '../middleware/secur
  * PIN-based authentication that issues JWT tokens.
  */
 export const authRoutes: FastifyPluginAsync = async (fastify) => {
-  // Brute force protection: 5 attempts per 15 minutes per IP
+  // Brute force protection: more lenient in development
+  // In development: 20 attempts per 15 minutes (allows for testing)
+  // In production: 5 attempts per 15 minutes (strict security)
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const maxAttempts = isDevelopment ? 20 : 5;
+  
   const authRateLimit = createRateLimit({
-    max: 5,
+    max: maxAttempts,
     timeWindow: '15 minutes',
     keyGenerator: (request) => {
       const ip = getClientIp(request);

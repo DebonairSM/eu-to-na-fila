@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { config } from '@/lib/config';
@@ -20,11 +20,22 @@ export function useLoginForm() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { login } = useAuthContext();
+  
+  // Use ref to track if request is in flight to prevent double submissions
+  // This is more reliable than just isLoading state, especially with React StrictMode
+  const isSubmittingRef = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (isSubmittingRef.current || isLoading) {
+      return;
+    }
+    
     setError(null);
     setIsLoading(true);
+    isSubmittingRef.current = true;
 
     try {
       // Check credentials and get corresponding PIN
@@ -49,6 +60,7 @@ export function useLoginForm() {
       } else {
         setError('Credenciais inválidas. Verifique usuário e senha.');
         setIsLoading(false);
+        isSubmittingRef.current = false;
         return;
       }
 
@@ -72,6 +84,7 @@ export function useLoginForm() {
       setError(getErrorMessage(err, 'Erro ao fazer login. Tente novamente.'));
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 

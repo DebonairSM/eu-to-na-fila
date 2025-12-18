@@ -22,7 +22,14 @@ async function assignAvatars() {
     process.exit(0);
   }
 
-  console.log(`Found ${barbers.length} barber(s)`);
+  // Show statistics
+  const activeBarbers = barbers.filter(b => b.isActive);
+  const inactiveBarbers = barbers.filter(b => !b.isActive);
+  
+  console.log(`\n📊 Barber Statistics:`);
+  console.log(`   - Total barbers: ${barbers.length}`);
+  console.log(`   - Active: ${activeBarbers.length}`);
+  console.log(`   - Inactive: ${inactiveBarbers.length}`);
 
   // Assign avatars in rotation (barber-1.png through barber-4.png)
   const avatarUrls = [
@@ -33,33 +40,37 @@ async function assignAvatars() {
   ];
 
   let assignedCount = 0;
-  let skippedCount = 0;
+  let overwrittenCount = 0;
+
+  console.log(`\n🔄 Assigning avatars to all ${barbers.length} barber(s)...\n`);
 
   for (let i = 0; i < barbers.length; i++) {
     const barber = barbers[i];
     const avatarUrl = avatarUrls[i % avatarUrls.length];
+    const hadAvatar = !!barber.avatarUrl;
 
-    // Only update if barber doesn't already have an avatar
-    if (!barber.avatarUrl) {
-      await db
-        .update(schema.barbers)
-        .set({ 
-          avatarUrl,
-          updatedAt: new Date(),
-        })
-        .where(eq(schema.barbers.id, barber.id));
+    // Update all barbers, overwriting existing avatars
+    await db
+      .update(schema.barbers)
+      .set({ 
+        avatarUrl,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.barbers.id, barber.id));
 
+    if (hadAvatar) {
+      console.log(`🔄 Overwrote avatar for ${barber.name} (ID: ${barber.id}) - was: ${barber.avatarUrl}`);
+      overwrittenCount++;
+    } else {
       console.log(`✅ Assigned ${avatarUrl} to ${barber.name} (ID: ${barber.id})`);
       assignedCount++;
-    } else {
-      console.log(`⏭️  Skipped ${barber.name} (ID: ${barber.id}) - already has avatar: ${barber.avatarUrl}`);
-      skippedCount++;
     }
   }
 
   console.log('\n🎉 Avatar assignment complete!');
-  console.log(`   - Assigned: ${assignedCount} barber(s)`);
-  console.log(`   - Skipped: ${skippedCount} barber(s) (already had avatars)`);
+  console.log(`   - Newly assigned: ${assignedCount} barber(s)`);
+  console.log(`   - Overwritten: ${overwrittenCount} barber(s)`);
+  console.log(`   - Total updated: ${assignedCount + overwrittenCount} barber(s)`);
 }
 
 assignAvatars()

@@ -88,6 +88,7 @@ fastify.register(fastifyCors, {
 });
 
 // Global rate limiting for public endpoints
+// Exclude auth routes - they have their own stricter rate limiting
 fastify.register(fastifyRateLimit, {
   max: 100,
   timeWindow: '1 minute',
@@ -95,6 +96,10 @@ fastify.register(fastifyRateLimit, {
     'x-ratelimit-limit': true,
     'x-ratelimit-remaining': true,
     'x-ratelimit-reset': true,
+  },
+  skip: (request) => {
+    // Skip global rate limit for auth routes - they have their own rate limiting
+    return request.url.startsWith('/api/shops/') && request.url.includes('/auth');
   },
 });
 

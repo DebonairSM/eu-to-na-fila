@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import type { preHandlerHookHandler } from 'fastify';
+import { logRateLimit } from './security.js';
 
 interface RateLimitConfig {
   max: number;
@@ -103,12 +104,21 @@ export function createRateLimit(config: RateLimitConfig): preHandlerHookHandler 
 
     // Check if limit exceeded
     if (clientRecord.count > config.max) {
+      // Log rate limit hit for security tracking
+      logRateLimit(request, config.max, config.timeWindow);
+      
+      // Calculate time until reset (in seconds)
+      const secondsUntilReset = Math.ceil((clientRecord.resetTime - now) / 1000);
+      const minutesUntilReset = Math.ceil(secondsUntilReset / 60);
+      
       reply.code(429);
+      reply.header('Retry-After', secondsUntilReset.toString());
+      
       return {
         error: 'Too many requests',
         code: 'RATE_LIMIT_EXCEEDED',
         statusCode: 429,
-        message: `Rate limit exceeded. Maximum ${config.max} requests per ${config.timeWindow}.`,
+        message: `Rate limit exceeded. Maximum ${config.max} requests per ${config.timeWindow}. Retry in ${minutesUntilReset} minute${minutesUntilReset !== 1 ? 's' : ''}.`,
       };
     }
   };
