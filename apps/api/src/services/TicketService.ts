@@ -347,6 +347,10 @@ export class TicketService {
     if (data.status === 'in_progress' && existingTicket.status !== 'in_progress') {
       updateData.startedAt = now;
     }
+    // Clear startedAt when returning to waiting (service never actually started)
+    if (data.status === 'waiting' && existingTicket.status === 'in_progress') {
+      updateData.startedAt = null;
+    }
     if (data.status === 'completed' && existingTicket.status !== 'completed') {
       updateData.completedAt = now;
     }
@@ -514,7 +518,7 @@ export class TicketService {
   ): void {
     const validTransitions: Record<string, string[]> = {
       waiting: ['in_progress', 'cancelled'],
-      in_progress: ['completed', 'cancelled'],
+      in_progress: ['completed', 'cancelled', 'waiting'],
       completed: [], // Cannot transition from completed
       cancelled: [], // Cannot transition from cancelled
     };

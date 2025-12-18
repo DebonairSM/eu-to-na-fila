@@ -28,8 +28,8 @@ export function JoinForm() {
       <CardContent className="p-6 sm:p-8">
         <form onSubmit={handleSubmit} autoComplete="off">
           <Stack spacing="lg">
-            <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
-              <div className="flex-1">
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-start sm:flex-nowrap">
+              <div className="max-w-[180px] min-w-0">
                 <InputLabel htmlFor="customerName">Nome *</InputLabel>
                 <Input
                   id="customerName"
@@ -58,7 +58,7 @@ export function JoinForm() {
                 <InputError message={validationError || ''} />
               </div>
 
-              <div className="sm:w-12">
+              <div className="sm:w-12 sm:flex-shrink-0">
                 <InputLabel htmlFor="customerLastName">Inicial</InputLabel>
                 <Input
                   id="customerLastName"

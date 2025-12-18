@@ -211,6 +211,19 @@ export function BarberQueueManager() {
     }
   }, [customerToComplete, refetchQueue, completeConfirmModal]);
 
+  const handleReturnToQueue = useCallback(async (ticketId: number) => {
+    try {
+      await api.updateTicket(ticketId, {
+        barberId: null,
+        status: 'waiting',
+      });
+      await refetchQueue();
+    } catch (error) {
+      const errorMsg = getErrorMessage(error, 'Erro ao retornar cliente para a fila. Tente novamente.');
+      setErrorMessage(errorMsg);
+    }
+  }, [refetchQueue]);
+
   const getAssignedBarber = useCallback((ticket: { barberId?: number | null }) => {
     if (!ticket.barberId) return null;
     return barbers.find((b) => b.id === ticket.barberId) || null;
@@ -333,7 +346,7 @@ export function BarberQueueManager() {
                               }}
                               className={cn(
                                 'w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl flex-shrink-0',
-                                'bg-black text-[#D4AF37] hover:text-[#E8C547] transition-all cursor-pointer',
+                                'bg-black text-[#D4AF37] border border-[#D4AF37] hover:text-[#E8C547] hover:border-[#E8C547] transition-all cursor-pointer',
                                 'hover:scale-110 active:scale-95'
                               )}
                               aria-label={`Atribuir barbeiro para ${ticket.customerName}`}
@@ -867,6 +880,7 @@ export function BarberQueueManager() {
                         setCustomerToComplete(ticket.id);
                         completeConfirmModal.open();
                       }}
+                      onReturnToQueue={() => handleReturnToQueue(ticket.id)}
                     />
                   );
                 })
@@ -923,56 +937,53 @@ export function BarberQueueManager() {
             <label htmlFor="guestName" className="block text-sm font-medium mb-2">
               Nome *
             </label>
-            <input
-              id="guestName"
-              type="text"
-              value={checkInName.first}
-              onChange={(e) => setCheckInName({ ...checkInName, first: formatName(e.target.value) })}
-              placeholder="Primeiro nome"
-              autoComplete="one-time-code"
-              autoCapitalize="words"
-              autoCorrect="off"
-              spellCheck="false"
-              inputMode="text"
-              data-lpignore="true"
-              data-form-type="other"
-              required
-              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
-              onFocus={(e) => {
-                // Prevent autofill UI by temporarily making readOnly
-                const input = e.target as HTMLInputElement;
-                input.setAttribute('readonly', 'readonly');
-                setTimeout(() => {
-                  input.removeAttribute('readonly');
-                }, 100);
-              }}
-            />
-          </div>
-          <div>
-            <label htmlFor="guestLastName" className="block text-sm font-medium mb-2">
-              Inicial do sobrenome
-            </label>
-            <input
-              id="guestLastName"
-              type="text"
-              value={checkInName.last}
-              onChange={(e) => setCheckInName({ ...checkInName, last: e.target.value.slice(0, 1).toUpperCase() })}
-              placeholder="Inicial"
-              autoComplete="one-time-code"
-              inputMode="text"
-              maxLength={1}
-              data-lpignore="true"
-              data-form-type="other"
-              className="w-12 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
-              onFocus={(e) => {
-                // Prevent autofill UI by temporarily making readOnly
-                const input = e.target as HTMLInputElement;
-                input.setAttribute('readonly', 'readonly');
-                setTimeout(() => {
-                  input.removeAttribute('readonly');
-                }, 100);
-              }}
-            />
+            <div className="flex gap-2 flex-nowrap">
+              <input
+                id="guestName"
+                type="text"
+                value={checkInName.first}
+                onChange={(e) => setCheckInName({ ...checkInName, first: formatName(e.target.value) })}
+                placeholder="Primeiro nome"
+                autoComplete="one-time-code"
+                autoCapitalize="words"
+                autoCorrect="off"
+                spellCheck="false"
+                inputMode="text"
+                data-lpignore="true"
+                data-form-type="other"
+                required
+                className="max-w-[180px] min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
+                onFocus={(e) => {
+                  // Prevent autofill UI by temporarily making readOnly
+                  const input = e.target as HTMLInputElement;
+                  input.setAttribute('readonly', 'readonly');
+                  setTimeout(() => {
+                    input.removeAttribute('readonly');
+                  }, 100);
+                }}
+              />
+              <input
+                id="guestLastName"
+                type="text"
+                value={checkInName.last}
+                onChange={(e) => setCheckInName({ ...checkInName, last: e.target.value.slice(0, 1).toUpperCase() })}
+                placeholder="Inicial"
+                autoComplete="one-time-code"
+                inputMode="text"
+                maxLength={1}
+                data-lpignore="true"
+                data-form-type="other"
+                className="w-12 flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
+                onFocus={(e) => {
+                  // Prevent autofill UI by temporarily making readOnly
+                  const input = e.target as HTMLInputElement;
+                  input.setAttribute('readonly', 'readonly');
+                  setTimeout(() => {
+                    input.removeAttribute('readonly');
+                  }, 100);
+                }}
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">

@@ -10,6 +10,7 @@ export interface QueueCardProps {
   onClick?: () => void;
   onRemove?: () => void;
   onComplete?: () => void;
+  onReturnToQueue?: () => void;
   className?: string;
 }
 
@@ -21,6 +22,7 @@ export const QueueCard = memo(function QueueCard({
   onClick,
   onRemove,
   onComplete,
+  onReturnToQueue,
   className,
 }: QueueCardProps) {
   const [barberAvatarFailed, setBarberAvatarFailed] = useState(false);
@@ -59,36 +61,55 @@ export const QueueCard = memo(function QueueCard({
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          {/* Position Badge - 52px × 52px for management mode */}
-          <button
-            type="button"
-            className={cn(
-              'flex-shrink-0 w-[52px] h-[52px] rounded-md flex items-center justify-center font-bold text-lg cursor-pointer transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-0',
-              {
-                'bg-black text-primary hover:text-[#E8C547] focus:ring-primary': isWaiting,
-                'bg-black text-[#D4AF37] border border-[#D4AF37] hover:bg-black hover:text-[#E8C547] hover:border-[#E8C547] focus:ring-[#D4AF37]': isServing,
+          {/* Position Badge / Action Buttons */}
+          <div className="flex items-center gap-2">
+            {/* Position Badge - 52px × 52px for management mode */}
+            <button
+              type="button"
+              className={cn(
+                'flex-shrink-0 w-[52px] h-[52px] rounded-md flex items-center justify-center font-bold text-lg cursor-pointer transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-0',
+                {
+                  'bg-black text-primary border border-[#D4AF37] hover:text-[#E8C547] hover:border-[#E8C547] focus:ring-primary': isWaiting,
+                  'bg-black text-[#D4AF37] border border-[#D4AF37] hover:bg-black hover:text-[#E8C547] hover:border-[#E8C547] focus:ring-[#D4AF37]': isServing,
+                }
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isServing && onComplete) {
+                  onComplete();
+                } else if (isWaiting && onRemove) {
+                  onRemove();
+                }
+              }}
+              aria-label={
+                isServing 
+                  ? `Finalizar atendimento de ${ticket.customerName}` 
+                  : `Remover ${ticket.customerName} da fila`
               }
+            >
+              {isServing ? (
+                <span className="material-symbols-outlined text-2xl" aria-hidden="true">check</span>
+              ) : (
+                <span aria-hidden="true">{displayPosition !== null && displayPosition !== undefined ? displayPosition : ticket.position}</span>
+              )}
+            </button>
+
+            {/* Return to Queue Button - Only shown when serving */}
+            {isServing && onReturnToQueue && (
+              <button
+                type="button"
+                className="flex-shrink-0 w-[52px] h-[52px] rounded-md flex items-center justify-center cursor-pointer transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0 bg-black/50 text-white border border-white/20 hover:bg-black/70 hover:border-white/40"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReturnToQueue();
+                }}
+                aria-label={`Retornar ${ticket.customerName} para a fila`}
+                title="Retornar para a fila"
+              >
+                <span className="material-symbols-outlined text-xl" aria-hidden="true">undo</span>
+              </button>
             )}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isServing && onComplete) {
-                onComplete();
-              } else if (isWaiting && onRemove) {
-                onRemove();
-              }
-            }}
-            aria-label={
-              isServing 
-                ? `Finalizar atendimento de ${ticket.customerName}` 
-                : `Remover ${ticket.customerName} da fila`
-            }
-          >
-            {isServing ? (
-              <span className="material-symbols-outlined text-2xl" aria-hidden="true">check</span>
-            ) : (
-              <span aria-hidden="true">{displayPosition !== null && displayPosition !== undefined ? displayPosition : ticket.position}</span>
-            )}
-          </button>
+          </div>
 
           {/* Customer Name */}
           <div className="flex-1 min-w-0">
