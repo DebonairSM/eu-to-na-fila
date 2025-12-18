@@ -28,13 +28,43 @@ async function generateAvatars() {
   }
 
   // Generate 4 unique avatars with random seeds
+  // Using only male hairstyles to ensure all barbers are male
+  const maleHairstyles = [
+    'shavedSides',
+    'shortCurly',
+    'shortFlat',
+    'shortRound',
+    'shortWaved',
+    'sides',
+    'theCaesar',
+    'theCaesarAndSidePart',
+    'dreads',
+    'dreads01',
+    'dreads02',
+    'fro',
+    'froBand',
+    'shaggy',
+    'shaggyMullet',
+    'hat',
+    'turban',
+    'winterHat1',
+    'winterHat02',
+    'winterHat03',
+    'winterHat04',
+  ];
+  
   const seeds = ['barber-1', 'barber-2', 'barber-3', 'barber-4'];
   
   for (let i = 0; i < 4; i++) {
     const seed = seeds[i];
+    // Use a different male hairstyle for each avatar
+    const topStyle = maleHairstyles[i % maleHairstyles.length];
+    
     const avatar = createAvatar({ create, schema }, {
       seed,
       size: 256,
+      // Restrict to male hairstyles only
+      top: [topStyle],
     });
 
     const png = avatar.png();

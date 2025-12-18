@@ -316,8 +316,8 @@ export function BarberQueueManager() {
                               }}
                               className={cn(
                                 'w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl flex-shrink-0',
-                                'bg-black text-[#D4AF37] hover:bg-black/90 hover:text-[#E8C547] transition-all cursor-pointer',
-                                'hover:scale-110 active:scale-95'
+                                'bg-black text-[#D4AF37] border border-[#D4AF37] hover:bg-black hover:text-[#E8C547] hover:border-[#E8C547] transition-all cursor-pointer',
+                                'hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-0'
                               )}
                               aria-label={`Finalizar atendimento de ${ticket.customerName}`}
                             >
