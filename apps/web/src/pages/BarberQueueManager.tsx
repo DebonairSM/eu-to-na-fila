@@ -365,6 +365,18 @@ export function BarberQueueManager() {
                             aria-label={`Atribuir barbeiro para ${ticket.customerName}`}
                           >
                             <p className="font-semibold text-2xl text-white truncate">{formatNameForDisplay(ticket.customerName)}</p>
+                            {!assignedBarber && (() => {
+                              const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
+                              const preferredBarber = preferredBarberId ? barbers.find(b => b.id === preferredBarberId) : null;
+                              if (preferredBarber) {
+                                return (
+                                  <p className="text-base text-white/40 mt-1 truncate">
+                                    Preferência: {preferredBarber.name}
+                                  </p>
+                                );
+                              }
+                              return null;
+                            })()}
                             {assignedBarber && (() => {
                               const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
                               const isPreferredBarber = preferredBarberId && assignedBarber.id === preferredBarberId;

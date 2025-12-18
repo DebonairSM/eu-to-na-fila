@@ -29,7 +29,7 @@ export function JoinForm() {
         <form onSubmit={handleSubmit} autoComplete="off">
           <Stack spacing="lg">
             <div className="flex flex-row gap-4 items-start flex-nowrap">
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-[200px]">
                 <InputLabel htmlFor="customerName">Nome *</InputLabel>
                 <Input
                   id="customerName"
@@ -58,7 +58,7 @@ export function JoinForm() {
                 <InputError message={validationError || ''} />
               </div>
 
-              <div className="w-16 flex-shrink-0">
+              <div className="w-32 flex-shrink-0">
                 <InputLabel htmlFor="customerLastName">Inicial</InputLabel>
                 <Input
                   id="customerLastName"
@@ -72,7 +72,7 @@ export function JoinForm() {
                   spellCheck="false"
                   inputMode="text"
                   maxLength={1}
-                  className="w-16"
+                  className="w-32"
                   data-lpignore="true"
                   data-form-type="other"
                   onFocus={(e) => {
