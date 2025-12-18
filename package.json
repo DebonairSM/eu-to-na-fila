@@ -9,7 +9,7 @@
     "build:shared": "pnpm --filter shared build",
     "build:web": "pnpm --filter web build",
     "build:web:fast": "pnpm --filter web build:fast",
-    "generate:avatars": "pnpm --filter api exec tsx apps/api/scripts/generate-barber-avatars.ts",
+    "generate:avatars": "pnpm --filter api exec tsx scripts/generate-barber-avatars.ts",
     "integrate:web": "node scripts/integrate-web.js",
     "build:api": "pnpm --filter api build",
     "build": "pnpm build:shared && pnpm generate:avatars && pnpm build:web && pnpm integrate:web && pnpm build:api",
