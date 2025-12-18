@@ -35,7 +35,7 @@ export type CreateTicket = z.infer<typeof createTicketSchema>;
 
 export const updateTicketStatusSchema = z.object({
   status: ticketStatusSchema,
-  barberId: z.number().optional(),
+  barberId: z.number().nullable().optional(),
 });
 export type UpdateTicketStatus = z.infer<typeof updateTicketStatusSchema>;
 

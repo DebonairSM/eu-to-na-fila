@@ -365,23 +365,18 @@ export function BarberQueueManager() {
                             aria-label={`Atribuir barbeiro para ${ticket.customerName}`}
                           >
                             <p className="font-semibold text-2xl text-white truncate">{formatNameForDisplay(ticket.customerName)}</p>
-                            {assignedBarber && (
-                              <p className="text-lg text-white/60 mt-1 truncate flex items-center gap-2">
-                                <span className="material-symbols-outlined text-lg">content_cut</span>
-                                {assignedBarber.name}
-                              </p>
-                            )}
-                            {(() => {
+                            {assignedBarber && (() => {
                               const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
-                              return preferredBarberId && (!assignedBarber || assignedBarber.id !== preferredBarberId) ? (() => {
-                                const preferredBarber = barbers.find((b) => b.id === preferredBarberId);
-                                return preferredBarber ? (
-                                  <p className="text-base text-[#D4AF37]/80 mt-1 truncate flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-base">star</span>
-                                    Preferência: {preferredBarber.name}
-                                  </p>
-                                ) : null;
-                              })() : null;
+                              const isPreferredBarber = preferredBarberId && assignedBarber.id === preferredBarberId;
+                              return (
+                                <p className="text-lg text-white/60 mt-1 truncate flex items-center gap-2">
+                                  <span className="material-symbols-outlined text-lg">content_cut</span>
+                                  {isPreferredBarber && (
+                                    <span className="material-symbols-outlined text-base text-[#D4AF37]">star</span>
+                                  )}
+                                  {assignedBarber.name}
+                                </p>
+                              );
                             })()}
                           </button>
                           {/* Status indicator */}
@@ -490,35 +485,32 @@ export function BarberQueueManager() {
                   <label htmlFor="kioskGuestName" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
                     Nome *
                   </label>
-                  <input
-                    ref={firstNameInputRef}
-                    id="kioskGuestName"
-                    type="text"
-                    value={checkInName.first}
-                    onChange={(e) => setCheckInName({ ...checkInName, first: formatName(e.target.value) })}
-                    placeholder="Primeiro nome"
-                    autoCapitalize="words"
-                    autoCorrect="off"
-                    spellCheck="false"
-                    inputMode="text"
-                    required
-                    className="w-full px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="kioskGuestLastName" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
-                    Inicial do sobrenome
-                  </label>
-                  <input
-                    id="kioskGuestLastName"
-                    type="text"
-                    value={checkInName.last}
-                    onChange={(e) => setCheckInName({ ...checkInName, last: e.target.value.slice(0, 1).toUpperCase() })}
-                    placeholder="Inicial"
-                    inputMode="text"
-                    maxLength={1}
-                    className="w-12 px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
-                  />
+                  <div className="flex gap-2 flex-nowrap">
+                    <input
+                      ref={firstNameInputRef}
+                      id="kioskGuestName"
+                      type="text"
+                      value={checkInName.first}
+                      onChange={(e) => setCheckInName({ ...checkInName, first: formatName(e.target.value) })}
+                      placeholder="Primeiro nome"
+                      autoCapitalize="words"
+                      autoCorrect="off"
+                      spellCheck="false"
+                      inputMode="text"
+                      required
+                      className="max-w-[180px] min-w-0 px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
+                    />
+                    <input
+                      id="kioskGuestLastName"
+                      type="text"
+                      value={checkInName.last}
+                      onChange={(e) => setCheckInName({ ...checkInName, last: e.target.value.slice(0, 1).toUpperCase() })}
+                      placeholder="Inicial"
+                      inputMode="text"
+                      maxLength={1}
+                      className="w-12 flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xl font-medium mb-3 text-white">

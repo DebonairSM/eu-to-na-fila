@@ -125,13 +125,13 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Use TicketService.updateStatus to ensure timestamps and audit logging are handled
     // If status is not provided, use existing status (allows updating just barberId)
-    const updateData: { status: 'waiting' | 'in_progress' | 'completed' | 'cancelled'; barberId?: number } = {
+    const updateData: { status: 'waiting' | 'in_progress' | 'completed' | 'cancelled'; barberId?: number | null } = {
       status: updates.status ?? existingTicket.status,
     };
     
     if (updates.barberId !== undefined) {
-      // Convert null to undefined for the type system
-      updateData.barberId = updates.barberId ?? undefined;
+      // Pass null directly to unassign barber (don't convert to undefined)
+      updateData.barberId = updates.barberId;
     }
 
     // Update via service to get proper timestamp handling and audit logging

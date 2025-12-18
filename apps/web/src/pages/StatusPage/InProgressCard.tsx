@@ -2,9 +2,10 @@ import { Card, CardContent, Heading, Text, StatusTransition } from '@/components
 
 interface InProgressCardProps {
   barberName?: string;
+  isPreferredBarber?: boolean;
 }
 
-export function InProgressCard({ barberName }: InProgressCardProps) {
+export function InProgressCard({ barberName, isPreferredBarber }: InProgressCardProps) {
   return (
     <StatusTransition status="in-progress">
       <Card
@@ -30,6 +31,9 @@ export function InProgressCard({ barberName }: InProgressCardProps) {
                 <span className="material-symbols-outlined text-xl sm:text-2xl lg:text-3xl">
                   content_cut
                 </span>
+                {isPreferredBarber && (
+                  <span className="material-symbols-outlined text-xl sm:text-2xl lg:text-3xl text-[#D4AF37]">star</span>
+                )}
                 {barberName}
               </Text>
             </div>

@@ -367,9 +367,13 @@ export class TicketService {
     // Set barber if provided
     if (data.barberId !== undefined) {
       const isNewAssignment = existingTicket.barberId !== data.barberId && data.barberId !== null;
+      const isUnassignment = data.barberId === null && existingTicket.barberId !== null;
       updateData.barberId = data.barberId;
       if (isNewAssignment) {
         updateData.barberAssignedAt = now;
+      } else if (isUnassignment) {
+        // Clear barberAssignedAt when unassigning
+        updateData.barberAssignedAt = null;
       }
     }
 

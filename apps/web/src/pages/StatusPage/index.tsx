@@ -134,9 +134,17 @@ export function StatusPage() {
             />
           )}
 
-          {isInProgress && <InProgressCard barberName={barber?.name} />}
+          {isInProgress && (() => {
+            const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
+            const isPreferredBarber = preferredBarberId && barber?.id === preferredBarberId;
+            return <InProgressCard barberName={barber?.name} isPreferredBarber={isPreferredBarber} />;
+          })()}
 
-          {isCompleted && <CompletedCard barberName={barber?.name} />}
+          {isCompleted && (() => {
+            const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
+            const isPreferredBarber = preferredBarberId && barber?.id === preferredBarberId;
+            return <CompletedCard barberName={barber?.name} isPreferredBarber={isPreferredBarber} />;
+          })()}
 
           <ActionButtons
             status={ticket.status}
@@ -169,9 +177,17 @@ export function StatusPage() {
               />
             )}
 
-            {isInProgress && <InProgressCard barberName={barber?.name} />}
+            {isInProgress && (() => {
+              const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
+              const isPreferredBarber = preferredBarberId && barber?.id === preferredBarberId;
+              return <InProgressCard barberName={barber?.name} isPreferredBarber={isPreferredBarber} />;
+            })()}
 
-            {isCompleted && <CompletedCard barberName={barber?.name} />}
+            {isCompleted && (() => {
+              const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
+              const isPreferredBarber = preferredBarberId && barber?.id === preferredBarberId;
+              return <CompletedCard barberName={barber?.name} isPreferredBarber={isPreferredBarber} />;
+            })()}
 
             <ActionButtons
               status={ticket.status}

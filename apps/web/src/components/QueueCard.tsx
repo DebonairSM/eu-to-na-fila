@@ -114,22 +114,17 @@ export const QueueCard = memo(function QueueCard({
           {/* Customer Name */}
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-white truncate">{formatNameForDisplay(ticket.customerName)}</p>
-            {assignedBarber && (
-              <p className="text-sm text-[rgba(255,255,255,0.7)] truncate">
-                {assignedBarber.name}
-              </p>
-            )}
-            {(() => {
+            {assignedBarber && (() => {
               const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
-              return preferredBarberId && (!assignedBarber || assignedBarber.id !== preferredBarberId) ? (() => {
-                const preferredBarber = barbers.find((b) => b.id === preferredBarberId);
-                return preferredBarber ? (
-                  <p className="text-xs text-[#D4AF37]/80 truncate flex items-center gap-1 mt-0.5">
-                    <span className="material-symbols-outlined text-xs">star</span>
-                    Preferência: {preferredBarber.name}
-                  </p>
-                ) : null;
-              })() : null;
+              const isPreferredBarber = preferredBarberId && assignedBarber.id === preferredBarberId;
+              return (
+                <p className="text-sm text-[rgba(255,255,255,0.7)] truncate flex items-center gap-1">
+                  {isPreferredBarber && (
+                    <span className="material-symbols-outlined text-xs text-[#D4AF37]">star</span>
+                  )}
+                  {assignedBarber.name}
+                </p>
+              );
             })()}
           </div>
         </div>
