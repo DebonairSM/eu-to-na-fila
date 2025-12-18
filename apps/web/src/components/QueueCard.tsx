@@ -65,7 +65,7 @@ export const QueueCard = memo(function QueueCard({
             className={cn(
               'flex-shrink-0 w-[52px] h-[52px] rounded-md flex items-center justify-center font-bold text-lg cursor-pointer transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-0',
               {
-                'bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary': isWaiting,
+                'bg-black text-primary hover:text-[#E8C547] focus:ring-primary': isWaiting,
                 'bg-black text-[#D4AF37] border border-[#D4AF37] hover:bg-black hover:text-[#E8C547] hover:border-[#E8C547] focus:ring-[#D4AF37]': isServing,
               }
             )}

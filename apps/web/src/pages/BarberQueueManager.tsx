@@ -333,7 +333,7 @@ export function BarberQueueManager() {
                               }}
                               className={cn(
                                 'w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl flex-shrink-0',
-                                'bg-[#D4AF37] text-black hover:bg-[#E8C547] transition-all cursor-pointer',
+                                'bg-black text-[#D4AF37] hover:text-[#E8C547] transition-all cursor-pointer',
                                 'hover:scale-110 active:scale-95'
                               )}
                               aria-label={`Atribuir barbeiro para ${ticket.customerName}`}
