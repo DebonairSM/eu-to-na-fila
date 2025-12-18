@@ -3,7 +3,6 @@ import { lazy, Suspense, useEffect } from 'react';
 import { useAuthContext } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
-const LandingPage = lazy(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })));
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
 const CompanyHomePage = lazy(() => import('./pages/CompanyHomePage').then((m) => ({ default: m.CompanyHomePage })));
 const ContactPage = lazy(() => import('./pages/ContactPage').then((m) => ({ default: m.ContactPage })));
@@ -48,7 +47,6 @@ function App() {
     const preload = [
       import('./pages/JoinPage'),
       import('./pages/StatusPage'),
-      import('./pages/LandingPage'),
     ];
     preload.forEach((p) => p.catch(() => null));
   }, []);

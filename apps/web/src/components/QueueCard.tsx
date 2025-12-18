@@ -17,7 +17,6 @@ export interface QueueCardProps {
 export const QueueCard = memo(function QueueCard({
   ticket,
   assignedBarber,
-  barbers = [],
   displayPosition,
   onClick,
   onRemove,

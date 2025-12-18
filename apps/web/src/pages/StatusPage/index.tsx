@@ -136,13 +136,13 @@ export function StatusPage() {
 
           {isInProgress && (() => {
             const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
-            const isPreferredBarber = preferredBarberId && barber?.id === preferredBarberId;
+            const isPreferredBarber = Boolean(preferredBarberId && barber?.id === preferredBarberId);
             return <InProgressCard barberName={barber?.name} isPreferredBarber={isPreferredBarber} />;
           })()}
 
           {isCompleted && (() => {
             const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
-            const isPreferredBarber = preferredBarberId && barber?.id === preferredBarberId;
+            const isPreferredBarber = Boolean(preferredBarberId && barber?.id === preferredBarberId);
             return <CompletedCard barberName={barber?.name} isPreferredBarber={isPreferredBarber} />;
           })()}
 
@@ -179,13 +179,13 @@ export function StatusPage() {
 
             {isInProgress && (() => {
               const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
-              const isPreferredBarber = preferredBarberId && barber?.id === preferredBarberId;
+              const isPreferredBarber = Boolean(preferredBarberId && barber?.id === preferredBarberId);
               return <InProgressCard barberName={barber?.name} isPreferredBarber={isPreferredBarber} />;
             })()}
 
             {isCompleted && (() => {
               const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
-              const isPreferredBarber = preferredBarberId && barber?.id === preferredBarberId;
+              const isPreferredBarber = Boolean(preferredBarberId && barber?.id === preferredBarberId);
               return <CompletedCard barberName={barber?.name} isPreferredBarber={isPreferredBarber} />;
             })()}
 
