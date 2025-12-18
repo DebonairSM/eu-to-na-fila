@@ -1,4 +1,4 @@
-import Fastify from 'fastify';
+import Fastify, { type FastifyRequest } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCors from '@fastify/cors';
@@ -97,11 +97,11 @@ fastify.register(fastifyRateLimit, {
     'x-ratelimit-remaining': true,
     'x-ratelimit-reset': true,
   },
-  skip: (request) => {
+  skip: (request: FastifyRequest, key: string) => {
     // Skip global rate limit for auth routes - they have their own rate limiting
     return request.url.startsWith('/api/shops/') && request.url.includes('/auth');
   },
-});
+} as any);
 
 // Static file serving - register BEFORE routes to ensure assets are served first
 const publicPath = join(__dirname, '..', 'public');
