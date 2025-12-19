@@ -8,7 +8,6 @@ interface Ad2VideoProps {
 export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad2VideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
   // Intersection Observer to detect when component is visible
@@ -49,7 +48,6 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad
             src="/mineiro/gt-ad2.png"
             alt="Grande Tech"
             onLoad={() => {
-              setImageLoaded(true);
               setImageError(false);
             }}
             onError={(e) => {

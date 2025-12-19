@@ -9,7 +9,6 @@ export function GrandeTechAd({ onClose, showTimer = true }: GrandeTechAdProps) {
   const [timeRemaining, setTimeRemaining] = useState(15);
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
 
   // Intersection Observer to detect when component is visible
   useEffect(() => {
@@ -59,7 +58,7 @@ export function GrandeTechAd({ onClose, showTimer = true }: GrandeTechAdProps) {
         <img
           src="/mineiro/gt-ad.png"
           alt="Grande Tech"
-          onLoad={() => setImageLoaded(true)}
+          onLoad={() => {}}
           onError={(e) => {
             console.error('Image load error:', e);
           }}
