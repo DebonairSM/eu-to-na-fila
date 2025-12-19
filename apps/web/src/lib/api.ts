@@ -216,6 +216,41 @@ class ApiClient {
   }
 
   /**
+   * POST request helper for multipart/form-data.
+   */
+  private async postFormData<T>(path: string, formData: FormData): Promise<T> {
+    const url = `${this.baseUrl}${path}`;
+    const headers: Record<string, string> = {};
+
+    // Add auth token if available
+    if (this.authToken) {
+      headers['Authorization'] = `Bearer ${this.authToken}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const error = data as ApiErrorResponse;
+      throw new ApiError(
+        error.error,
+        error.statusCode,
+        error.code,
+        'errors' in error && Array.isArray((error as { errors?: unknown }).errors) 
+          ? (error as { errors: Array<{ field: string; message: string }> }).errors 
+          : undefined
+      );
+    }
+
+    return data as T;
+  }
+
+  /**
    * PATCH request helper.
    */
   private async patch<T>(path: string, body: unknown): Promise<T> {
@@ -555,6 +590,53 @@ class ApiClient {
     createdAt: Date;
   }>> {
     return this.get('/shops');
+  }
+
+  // ==================== Ad Management Endpoints ====================
+
+  /**
+   * Upload an ad image.
+   * 
+   * @param file - Image file to upload
+   * @param adType - Type of ad: 'ad1' or 'ad2'
+   * @returns Upload result with file path
+   * @throws {ApiError} If upload fails
+   * 
+   * @example
+   * ```typescript
+   * const file = event.target.files[0];
+   * const result = await api.uploadAdImage(file, 'ad1');
+   * console.log(`Uploaded to ${result.path}`);
+   * ```
+   */
+  async uploadAdImage(file: File, adType: 'ad1' | 'ad2'): Promise<{
+    message: string;
+    filename: string;
+    path: string;
+  }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('adType', adType);
+    return this.postFormData('/ads/upload', formData);
+  }
+
+  /**
+   * Get ad images status.
+   * 
+   * @returns Status of ad images
+   * @throws {ApiError} If request fails
+   * 
+   * @example
+   * ```typescript
+   * const status = await api.getAdStatus();
+   * console.log(`Ad1 exists: ${status.ad1.exists}`);
+   * ```
+   */
+  async getAdStatus(): Promise<{
+    ad1: { exists: boolean; path: string | null };
+    ad2: { exists: boolean; path: string | null };
+  }> {
+    return this.get('/ads/status');
   }
 }
 

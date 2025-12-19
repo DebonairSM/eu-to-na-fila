@@ -80,6 +80,40 @@ export function Navigation() {
     }
   };
 
+  // #region agent log
+  useEffect(() => {
+    const logNavDimensions = () => {
+      const nav = document.querySelector('nav[role="navigation"]') as HTMLElement;
+      const container = nav?.querySelector('.mx-auto') as HTMLElement;
+      const logo = nav?.querySelector('a[aria-label*="Home"]') as HTMLElement;
+      const desktopNav = nav?.querySelector('ul.hidden.md\\:flex') as HTMLElement;
+      const mobileButton = nav?.querySelector('button.md\\:hidden') as HTMLElement;
+      
+      if (nav) {
+        const navStyle = window.getComputedStyle(nav);
+        const containerStyle = container ? window.getComputedStyle(container) : null;
+        const logoStyle = logo ? window.getComputedStyle(logo) : null;
+        const desktopNavStyle = desktopNav ? window.getComputedStyle(desktopNav) : null;
+        
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Navigation.tsx:83',message:'Nav dimensions check',data:{windowWidth:window.innerWidth,viewportWidth:document.documentElement.clientWidth,navWidth:nav.offsetWidth,navScrollWidth:nav.scrollWidth,navOverflowX:navStyle.overflowX,containerWidth:container?.offsetWidth,containerPadding:containerStyle?.paddingLeft,logoWidth:logo?.offsetWidth,logoDisplay:logoStyle?.display,desktopNavDisplay:desktopNavStyle?.display,desktopNavWidth:desktopNav?.offsetWidth,mobileButtonWidth:mobileButton?.offsetWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Navigation.tsx:83',message:'Desktop nav visibility check',data:{windowWidth:window.innerWidth,desktopNavDisplay:desktopNavStyle?.display,desktopNavVisibility:desktopNavStyle?.visibility,desktopNavWidth:desktopNav?.offsetWidth,desktopNavScrollWidth:desktopNav?.scrollWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Navigation.tsx:83',message:'Logo dimensions check',data:{windowWidth:window.innerWidth,logoWidth:logo?.offsetWidth,logoText:logo?.textContent,logoDisplay:logoStyle?.display,logoVisibility:logoStyle?.visibility,configName:config.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Navigation.tsx:83',message:'Overflow check',data:{windowWidth:window.innerWidth,navOverflowX:navStyle.overflowX,navOverflowY:navStyle.overflowY,bodyOverflowX:window.getComputedStyle(document.body).overflowX,htmlOverflowX:window.getComputedStyle(document.documentElement).overflowX,hasHorizontalScroll:document.documentElement.scrollWidth > document.documentElement.clientWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Navigation.tsx:83',message:'Flex layout check',data:{windowWidth:window.innerWidth,containerDisplay:containerStyle?.display,containerFlexDirection:containerStyle?.flexDirection,containerJustifyContent:containerStyle?.justifyContent,containerGap:containerStyle?.gap,containerWidth:container?.offsetWidth,containerScrollWidth:container?.scrollWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      }
+    };
+    
+    logNavDimensions();
+    window.addEventListener('resize', logNavDimensions);
+    const timeout = setTimeout(logNavDimensions, 100);
+    
+    return () => {
+      window.removeEventListener('resize', logNavDimensions);
+      clearTimeout(timeout);
+    };
+  }, []);
+  // #endregion agent log
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all ${

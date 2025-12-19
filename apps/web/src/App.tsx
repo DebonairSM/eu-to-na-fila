@@ -16,6 +16,7 @@ const StaffPage = lazy(() => import('./pages/StaffPage').then((m) => ({ default:
 const BarberQueueManager = lazy(() => import('./pages/BarberQueueManager').then((m) => ({ default: m.BarberQueueManager })));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
 const BarberManagementPage = lazy(() => import('./pages/BarberManagementPage').then((m) => ({ default: m.BarberManagementPage })));
+const AdManagementPage = lazy(() => import('./pages/AdManagementPage').then((m) => ({ default: m.AdManagementPage })));
 
 // Protected Route Component
 function ProtectedRoute({
@@ -113,6 +114,14 @@ function App() {
           element={
             <ProtectedRoute requireOwner>
               <BarberManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ads"
+          element={
+            <ProtectedRoute requireOwner>
+              <AdManagementPage />
             </ProtectedRoute>
           }
         />

@@ -21,6 +21,33 @@ export async function errorHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
+  // #region agent log
+  try {
+    const fs = await import('fs/promises');
+    const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
+    const logEntry = JSON.stringify({
+      location: 'errorHandler.ts:error',
+      message: 'Error handler called',
+      data: {
+        errorMessage: error.message,
+        errorName: error.name,
+        url: request.url,
+        method: request.method,
+        contentType: request.headers['content-type'],
+        hasBody: !!request.body,
+        statusCode: 'statusCode' in error ? error.statusCode : null,
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'B',
+    }) + '\n';
+    await fs.appendFile(logPath, logEntry).catch(() => {});
+  } catch (e) {
+    // Ignore logging errors
+  }
+  // #endregion
+
   // For static asset requests that error, return proper 404 instead of JSON
   // This prevents CSS/JS files from getting application/json MIME type
   const url = request.url || '';

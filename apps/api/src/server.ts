@@ -16,6 +16,7 @@ import { serviceRoutes } from './routes/services.js';
 import { authRoutes } from './routes/auth.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { shopsRoutes } from './routes/shops.js';
+import { adsRoutes } from './routes/ads.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -223,6 +224,7 @@ fastify.register(
     instance.register(authRoutes);
     instance.register(analyticsRoutes);
     instance.register(shopsRoutes);
+    instance.register(adsRoutes);
   },
   { prefix: '/api' }
 );

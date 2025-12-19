@@ -54,13 +54,28 @@ export function OwnerDashboard() {
 
           <Link
             to="/barbers"
-            className="bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-10 flex flex-col items-center gap-4 transition-all hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.3)] hover:-translate-y-1 md:col-span-2 md:max-w-md md:mx-auto"
+            className="bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-10 flex flex-col items-center gap-4 transition-all hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.3)] hover:-translate-y-1"
           >
             <div className="text-5xl text-[#D4AF37]">
               <span className="material-symbols-outlined">content_cut</span>
             </div>
             <h2 className="text-2xl font-semibold text-white text-center">
               Gerenciar Barbeiros
+            </h2>
+            <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
+              arrow_forward
+            </span>
+          </Link>
+
+          <Link
+            to="/ads"
+            className="bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-10 flex flex-col items-center gap-4 transition-all hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.3)] hover:-translate-y-1"
+          >
+            <div className="text-5xl text-[#D4AF37]">
+              <span className="material-symbols-outlined">campaign</span>
+            </div>
+            <h2 className="text-2xl font-semibold text-white text-center">
+              Gerenciar Anúncios
             </h2>
             <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
               arrow_forward

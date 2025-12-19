@@ -28,7 +28,25 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad
 
     observer.observe(containerRef.current);
 
+    // Check if element is already visible (IntersectionObserver may not fire immediately)
+    const checkImmediateIntersection = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const isVisible = rect.width > 0 && rect.height > 0 && 
+          rect.top < window.innerHeight + 50 && 
+          rect.bottom > -50;
+        if (isVisible) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      }
+    };
+    
+    // Check after a brief delay to ensure layout is complete
+    const timeoutId = setTimeout(checkImmediateIntersection, 100);
+
     return () => {
+      clearTimeout(timeoutId);
       observer.disconnect();
     };
   }, []);
