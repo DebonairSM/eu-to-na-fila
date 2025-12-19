@@ -846,7 +846,7 @@ export function BarberQueueManager() {
 
   // Management Mode View
   return (
-    <div className="min-h-screen bg-black p-3 sm:p-4 pb-20">
+    <div className="min-h-screen bg-black p-3 sm:p-4 pb-20 overflow-x-hidden max-w-full">
       <Navigation />
       {/* Error Message Toast */}
       {errorMessage && (

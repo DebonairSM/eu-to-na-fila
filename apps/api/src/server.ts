@@ -215,6 +215,10 @@ fastify.get('/test', async () => {
 // API routes under /api prefix
 fastify.register(
   async (instance) => {
+    // #region agent log
+    const fs = await import('fs/promises');
+    await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'server.ts:217',message:'Registering API routes under /api prefix',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n').catch(()=>{});
+    // #endregion
     // Register route modules
     instance.register(queueRoutes);
     instance.register(ticketRoutes);
@@ -225,6 +229,9 @@ fastify.register(
     instance.register(analyticsRoutes);
     instance.register(shopsRoutes);
     instance.register(adsRoutes);
+    // #region agent log
+    await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'server.ts:227',message:'adsRoutes registered',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n').catch(()=>{});
+    // #endregion
   },
   { prefix: '/api' }
 );

@@ -80,43 +80,9 @@ export function Navigation() {
     }
   };
 
-  // #region agent log
-  useEffect(() => {
-    const logNavDimensions = () => {
-      const nav = document.querySelector('nav[role="navigation"]') as HTMLElement;
-      const container = nav?.querySelector('.mx-auto') as HTMLElement;
-      const logo = nav?.querySelector('a[aria-label*="Home"]') as HTMLElement;
-      const desktopNav = nav?.querySelector('ul.hidden.md\\:flex') as HTMLElement;
-      const mobileButton = nav?.querySelector('button.md\\:hidden') as HTMLElement;
-      
-      if (nav) {
-        const navStyle = window.getComputedStyle(nav);
-        const containerStyle = container ? window.getComputedStyle(container) : null;
-        const logoStyle = logo ? window.getComputedStyle(logo) : null;
-        const desktopNavStyle = desktopNav ? window.getComputedStyle(desktopNav) : null;
-        
-        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Navigation.tsx:83',message:'Nav dimensions check',data:{windowWidth:window.innerWidth,viewportWidth:document.documentElement.clientWidth,navWidth:nav.offsetWidth,navScrollWidth:nav.scrollWidth,navOverflowX:navStyle.overflowX,containerWidth:container?.offsetWidth,containerPadding:containerStyle?.paddingLeft,logoWidth:logo?.offsetWidth,logoDisplay:logoStyle?.display,desktopNavDisplay:desktopNavStyle?.display,desktopNavWidth:desktopNav?.offsetWidth,mobileButtonWidth:mobileButton?.offsetWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Navigation.tsx:83',message:'Desktop nav visibility check',data:{windowWidth:window.innerWidth,desktopNavDisplay:desktopNavStyle?.display,desktopNavVisibility:desktopNavStyle?.visibility,desktopNavWidth:desktopNav?.offsetWidth,desktopNavScrollWidth:desktopNav?.scrollWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Navigation.tsx:83',message:'Logo dimensions check',data:{windowWidth:window.innerWidth,logoWidth:logo?.offsetWidth,logoText:logo?.textContent,logoDisplay:logoStyle?.display,logoVisibility:logoStyle?.visibility,configName:config.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Navigation.tsx:83',message:'Overflow check',data:{windowWidth:window.innerWidth,navOverflowX:navStyle.overflowX,navOverflowY:navStyle.overflowY,bodyOverflowX:window.getComputedStyle(document.body).overflowX,htmlOverflowX:window.getComputedStyle(document.documentElement).overflowX,hasHorizontalScroll:document.documentElement.scrollWidth > document.documentElement.clientWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Navigation.tsx:83',message:'Flex layout check',data:{windowWidth:window.innerWidth,containerDisplay:containerStyle?.display,containerFlexDirection:containerStyle?.flexDirection,containerJustifyContent:containerStyle?.justifyContent,containerGap:containerStyle?.gap,containerWidth:container?.offsetWidth,containerScrollWidth:container?.scrollWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      }
-    };
-    
-    logNavDimensions();
-    window.addEventListener('resize', logNavDimensions);
-    const timeout = setTimeout(logNavDimensions, 100);
-    
-    return () => {
-      window.removeEventListener('resize', logNavDimensions);
-      clearTimeout(timeout);
-    };
-  }, []);
-  // #endregion agent log
-
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all overflow-x-hidden ${
         isScrolled
           ? 'bg-[#0a0a0a] py-0.5 sm:py-1.5 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
           : 'bg-[#0a0a0a] py-0.5 sm:py-2'
@@ -124,21 +90,21 @@ export function Navigation() {
       role="navigation"
       aria-label="Main navigation"
     >
-      <Container className="flex items-center justify-between gap-3">
+      <Container className="flex items-center justify-between gap-2 sm:gap-3 w-full max-w-full">
         {/* Logo */}
         <Link
           to="/home"
-          className="font-['Playfair_Display',serif] text-base sm:text-2xl font-semibold text-[#D4AF37] flex items-center justify-center gap-1 sm:gap-3 min-h-[48px] min-w-[48px] px-1 sm:px-2 py-0 rounded transition-all hover:text-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+          className="font-['Playfair_Display',serif] text-base sm:text-2xl font-semibold text-[#D4AF37] flex items-center justify-center gap-1 sm:gap-3 min-h-[48px] min-w-[48px] px-1 sm:px-2 py-0 rounded transition-all hover:text-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 flex-shrink-0"
           aria-label={`${config.name} - Home`}
         >
-          <span className="material-symbols-outlined text-xl sm:text-2xl leading-none flex items-center justify-center">
+          <span className="material-symbols-outlined text-xl sm:text-2xl leading-none flex items-center justify-center flex-shrink-0">
             content_cut
           </span>
-          <span className="hidden sm:inline">{config.name}</span>
+          <span className="hidden sm:inline truncate">{config.name}</span>
         </Link>
 
         {/* Desktop Navigation */}
-        <ul className="hidden md:flex items-center gap-6 lg:gap-8 list-none m-0 p-0">
+        <ul className="hidden lg:flex items-center gap-4 xl:gap-6 list-none m-0 p-0 flex-shrink-0">
           <li>
             <a
               href="/home#services"
@@ -211,7 +177,7 @@ export function Navigation() {
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden bg-transparent border-0 text-white cursor-pointer p-0 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+          className="lg:hidden bg-transparent border-0 text-white cursor-pointer p-0 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 flex-shrink-0"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label="Toggle menu"
           aria-expanded={isMobileMenuOpen}
@@ -226,12 +192,12 @@ export function Navigation() {
       {isMobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] md:hidden"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] lg:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
           <div
-            className="fixed top-0 left-0 w-64 max-w-[70vw] h-full bg-[#0a0a0a] z-[101] p-4 flex flex-col overflow-y-auto md:hidden shadow-2xl border-r border-[rgba(212,175,55,0.1)] animate-in slide-in-from-left-4"
+            className="fixed top-0 left-0 w-64 max-w-[70vw] h-full bg-[#0a0a0a] z-[101] p-4 flex flex-col overflow-y-auto lg:hidden shadow-2xl border-r border-[rgba(212,175,55,0.1)] animate-in slide-in-from-left-4"
             role="dialog"
             aria-modal="true"
             aria-label="Menu de navegação"

@@ -41,27 +41,6 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/shops/:slug/auth', {
     preHandler: [authRateLimit],
   }, async (request, reply) => {
-    // #region agent log
-    const fs = await import('fs/promises');
-    const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
-    const logEntry = JSON.stringify({
-      location: 'auth.ts:login-request',
-      message: 'Login request received',
-      data: {
-        method: request.method,
-        url: request.url,
-        contentType: request.headers['content-type'],
-        hasBody: !!request.body,
-        bodyType: typeof request.body,
-      },
-      timestamp: Date.now(),
-      sessionId: 'debug-session',
-      runId: 'run1',
-      hypothesisId: 'A',
-    }) + '\n';
-    await fs.appendFile(logPath, logEntry).catch(() => {});
-    // #endregion
-
     const paramsSchema = z.object({
       slug: z.string().min(1).max(100),
     });
@@ -69,46 +48,8 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       pin: z.string().min(1).max(20),
     });
 
-    // #region agent log
-    try {
-      const logEntry2 = JSON.stringify({
-        location: 'auth.ts:login-request',
-        message: 'Before validation',
-        data: {
-          params: request.params,
-          body: request.body,
-          bodyStringified: JSON.stringify(request.body),
-        },
-        timestamp: Date.now(),
-        sessionId: 'debug-session',
-        runId: 'run1',
-        hypothesisId: 'A',
-      }) + '\n';
-      await fs.appendFile(logPath, logEntry2).catch(() => {});
-    } catch (e) {
-      // Ignore logging errors
-    }
-    // #endregion
-
     const { slug } = validateRequest(paramsSchema, request.params);
     const { pin } = validateRequest(bodySchema, request.body);
-
-    // #region agent log
-    try {
-      const logEntry3 = JSON.stringify({
-        location: 'auth.ts:login-request',
-        message: 'After validation',
-        data: { slug, pin: pin ? '***' : null },
-        timestamp: Date.now(),
-        sessionId: 'debug-session',
-        runId: 'run1',
-        hypothesisId: 'A',
-      }) + '\n';
-      await fs.appendFile(logPath, logEntry3).catch(() => {});
-    } catch (e) {
-      // Ignore logging errors
-    }
-    // #endregion
 
     // Validate PIN format
     const pinValidation = validatePin(pin);
