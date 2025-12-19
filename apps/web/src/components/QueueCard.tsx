@@ -39,6 +39,7 @@ export const QueueCard = memo(function QueueCard({
     <div
       className={cn(
         'queue-item p-6 rounded-md border-2 transition-all cursor-pointer',
+        'focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2',
         {
           'border-[#D4AF37] bg-black hover:border-[#D4AF37] hover:bg-black/90': isServing,
           'border-primary/30 bg-card hover:border-primary hover:bg-primary/5': isWaiting,

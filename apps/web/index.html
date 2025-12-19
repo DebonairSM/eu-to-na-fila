@@ -30,9 +30,9 @@
     <!-- Google Fonts - Non-blocking link tags instead of @import -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&family=Inter:wght@300;400;500;600&display=swap" />
     
-    <!-- Preload critical font resource -->
+    <!-- Prefetch font resource (changed from preload to avoid warnings) -->
     <!-- Note: Favicons and icons don't need explicit preloading as browsers handle them efficiently -->
-    <link rel="preload" href="/mineiro/fonts/MaterialSymbolsOutlined.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
+    <link rel="prefetch" href="/mineiro/fonts/MaterialSymbolsOutlined.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
     
     <!-- Critical CSS to prevent black/white screens -->
     <style>

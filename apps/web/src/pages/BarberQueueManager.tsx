@@ -64,6 +64,31 @@ export function BarberQueueManager() {
     }
   }, [searchParams, isKioskMode, enterKioskMode]);
 
+  // Request fullscreen on first user interaction in kiosk mode
+  useEffect(() => {
+    if (!isKioskMode || document.fullscreenElement) return;
+
+    const requestFullscreenOnInteraction = () => {
+      if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {
+          // Ignore fullscreen errors (user may have denied permission)
+        });
+      }
+      // Remove listeners after first interaction
+      document.removeEventListener('click', requestFullscreenOnInteraction);
+      document.removeEventListener('touchstart', requestFullscreenOnInteraction);
+    };
+
+    // Listen for first user interaction
+    document.addEventListener('click', requestFullscreenOnInteraction, { once: true });
+    document.addEventListener('touchstart', requestFullscreenOnInteraction, { once: true });
+
+    return () => {
+      document.removeEventListener('click', requestFullscreenOnInteraction);
+      document.removeEventListener('touchstart', requestFullscreenOnInteraction);
+    };
+  }, [isKioskMode]);
+
   // Auto-focus first name input when check-in modal opens
   useEffect(() => {
     if (checkInModal.isOpen && firstNameInputRef.current) {

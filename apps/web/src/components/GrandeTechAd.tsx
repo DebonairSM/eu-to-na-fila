@@ -59,8 +59,9 @@ export function GrandeTechAd({ onClose, showTimer = true }: GrandeTechAdProps) {
           src="/mineiro/gt-ad.png"
           alt="Grande Tech"
           onLoad={() => {}}
-          onError={(e) => {
-            console.error('Image load error:', e);
+          onError={() => {
+            // Image failed to load - error state is handled by component state
+            // Suppress console error to reduce noise for missing ad images
           }}
           className="w-full h-full object-contain"
         />

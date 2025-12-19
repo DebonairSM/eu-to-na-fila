@@ -50,8 +50,9 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad
             onLoad={() => {
               setImageError(false);
             }}
-            onError={(e) => {
-              console.error('Image load error:', e);
+            onError={() => {
+              // Image failed to load - error state is handled by component state
+              // Suppress console error to reduce noise for missing ad images
               setImageError(true);
             }}
             className="w-full h-full object-contain"

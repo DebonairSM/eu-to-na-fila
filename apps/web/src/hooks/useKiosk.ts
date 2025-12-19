@@ -20,12 +20,8 @@ export function useKiosk() {
     setCurrentView('queue');
     setNextAdIndex(1); // Start with ad1
     
-    // Request fullscreen
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(() => {
-        // Ignore fullscreen errors
-      });
-    }
+    // Note: Fullscreen must be requested on user gesture, not automatically
+    // We'll request it on first user interaction instead
   }, []);
 
   const exitKioskMode = useCallback(() => {
