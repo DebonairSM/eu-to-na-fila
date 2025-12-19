@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import type { UpdateTicketStatus } from '@eutonafila/shared';
 import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { ticketService } from '../services/TicketService.js';
@@ -125,7 +126,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Use TicketService.updateStatus to ensure timestamps and audit logging are handled
     // If status is not provided, use existing status (allows updating just barberId)
-    const updateData: { status: 'waiting' | 'in_progress' | 'completed' | 'cancelled'; barberId?: number | null } = {
+    const updateData: UpdateTicketStatus = {
       status: updates.status ?? existingTicket.status,
     };
     

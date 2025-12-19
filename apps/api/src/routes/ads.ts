@@ -70,10 +70,21 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:54',message:'POST /ads/upload handler called',data:{url:request.url,method:request.method,route:request.routerPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n').catch(()=>{});
       // #endregion
       try {
-        const data = await request.file();
+        let data: any = null;
+        let adType: string | null = null;
+
+        // Iterate through all parts to get both file and fields
+        const parts = request.parts();
+        for await (const part of parts) {
+          if (part.type === 'file') {
+            data = part;
+          } else if (part.fieldname === 'adType') {
+            adType = part.value as string;
+          }
+        }
         
         // #region agent log
-        await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:56',message:'File received',data:{hasData:!!data,mimetype:data?.mimetype,filename:data?.filename},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n').catch(()=>{});
+        await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:56',message:'File received',data:{hasData:!!data,mimetype:data?.mimetype,filename:data?.filename,adType},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n').catch(()=>{});
         // #endregion
 
       if (!data) {
@@ -84,7 +95,6 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         });
       }
 
-      const adType = data.fields.adType?.value as string;
       if (!adType || !['ad1', 'ad2'].includes(adType)) {
         return reply.status(400).send({
           error: 'Invalid adType. Must be "ad1" or "ad2"',
