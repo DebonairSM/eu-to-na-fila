@@ -218,6 +218,51 @@ pnpm start
 
 ## Testing
 
+### E2E Testing with Playwright
+
+The project includes Playwright end-to-end tests for the kiosk mode ads system.
+
+**Prerequisites:**
+```bash
+# Install Playwright browsers (first time only)
+pnpm exec playwright install
+```
+
+**Run Tests:**
+```bash
+# Run all E2E tests
+pnpm test:e2e
+
+# Run with UI mode (interactive)
+pnpm test:e2e:ui
+
+# Run in headed mode (see browser)
+pnpm test:e2e:headed
+
+# Debug mode
+pnpm test:e2e:debug
+```
+
+**Test Coverage:**
+- Kiosk mode ad rotation (sequence, timing, progress bar)
+- Ad display (images, video, loading states, error handling)
+- User interactions (click to skip, idle timer, rotation pause/resume)
+- API endpoints (upload, status, authentication, validation)
+
+**Test Structure:**
+```
+tests/
+├── helpers/          # Test utilities (auth, kiosk, API helpers)
+├── kiosk/           # Kiosk mode tests
+│   ├── ads-rotation.spec.ts
+│   ├── ads-display.spec.ts
+│   └── ads-interaction.spec.ts
+└── api/             # API endpoint tests
+    └── ads-endpoints.spec.ts
+```
+
+**Note:** Tests require the dev server to be running. The Playwright config will automatically start it if not already running.
+
 ### Manual Testing
 
 **Customer Flow:**

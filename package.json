@@ -16,9 +16,14 @@
     "build:fast": "pnpm build:shared && pnpm build:web:fast && pnpm integrate:web && pnpm build:api",
     "start": "pnpm db:migrate && pnpm db:seed && pnpm --filter api start",
     "db:migrate": "pnpm --filter api db:migrate",
-    "db:seed": "pnpm --filter api db:seed"
+    "db:seed": "pnpm --filter api db:seed",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug"
   },
   "devDependencies": {
+    "@playwright/test": "^1.40.0",
     "concurrently": "^8.2.2"
   },
   "engines": {

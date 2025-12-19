@@ -8,7 +8,7 @@ build/
 *.apk
 *.aab
 *.tsbuildinfo
-packages/**/tsconfig.tsbuildinfo
+**/tsconfig.tsbuildinfo
 apps/api/public/
 
 # Environment
@@ -45,6 +45,11 @@ pnpm-debug.log*
 
 # Testing
 coverage/
+test-results/
+playwright-report/
+.playwright/
+playwright/.cache/
+*.spec.ts.snap
 
 # Temp
 tmp/
@@ -62,4 +67,7 @@ backups/
 *.bak
 *.sql.gz
 *.sqlite.gz
+
+# Misc
+*.local
 
