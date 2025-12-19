@@ -128,7 +128,7 @@ export function BarberSelector({
               onClick={() => handleSelect(null)}
               className="text-sm text-muted-foreground hover:text-foreground"
             >
-              Remover atribuição
+              Retornar para a Fila
             </button>
           </div>
         )}

@@ -509,7 +509,7 @@ export function BarberQueueManager() {
                       spellCheck="false"
                       inputMode="text"
                       required
-                      className="max-w-[180px] min-w-0 px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
+                      className="flex-1 min-w-[120px] sm:min-w-[200px] px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
                     />
                     <input
                       id="kioskGuestLastName"
@@ -519,7 +519,7 @@ export function BarberQueueManager() {
                       placeholder="Inicial"
                       inputMode="text"
                       maxLength={1}
-                      className="w-12 flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
+                      className="w-14 sm:w-24 flex-shrink-0 px-2 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
                     />
                   </div>
                 </div>
@@ -681,7 +681,7 @@ export function BarberQueueManager() {
                       onClick={() => handleSelectBarber(null)}
                       className="w-full px-8 py-5 text-xl rounded-2xl bg-white/5 border-2 border-white/20 text-white/70 hover:bg-white/10 hover:text-white hover:border-white/30 transition-all"
                     >
-                      Remover Atribuição
+                      Retornar para a Fila
                     </button>
                   </div>
                 )}
@@ -883,7 +883,6 @@ export function BarberQueueManager() {
                         setCustomerToComplete(ticket.id);
                         completeConfirmModal.open();
                       }}
-                      onReturnToQueue={() => handleReturnToQueue(ticket.id)}
                     />
                   );
                 })
@@ -954,7 +953,7 @@ export function BarberQueueManager() {
                 data-lpignore="true"
                 data-form-type="other"
                 required
-                className="max-w-[180px] min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
+                className="flex-1 min-w-[120px] sm:max-w-[180px] sm:min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
                 onFocus={(e) => {
                   // Prevent autofill UI by temporarily making readOnly
                   const input = e.target as HTMLInputElement;
@@ -975,7 +974,7 @@ export function BarberQueueManager() {
                 maxLength={1}
                 data-lpignore="true"
                 data-form-type="other"
-                className="w-16 flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-12 sm:w-16 flex-shrink-0 px-2 sm:px-3 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
                 onFocus={(e) => {
                   // Prevent autofill UI by temporarily making readOnly
                   const input = e.target as HTMLInputElement;

@@ -10,7 +10,6 @@ export interface QueueCardProps {
   onClick?: () => void;
   onRemove?: () => void;
   onComplete?: () => void;
-  onReturnToQueue?: () => void;
   className?: string;
 }
 
@@ -21,7 +20,6 @@ export const QueueCard = memo(function QueueCard({
   onClick,
   onRemove,
   onComplete,
-  onReturnToQueue,
   className,
 }: QueueCardProps) {
   const [barberAvatarFailed, setBarberAvatarFailed] = useState(false);
@@ -92,22 +90,6 @@ export const QueueCard = memo(function QueueCard({
                 <span aria-hidden="true">{displayPosition !== null && displayPosition !== undefined ? displayPosition : ticket.position}</span>
               )}
             </button>
-
-            {/* Return to Queue Button - Only shown when serving */}
-            {isServing && onReturnToQueue && (
-              <button
-                type="button"
-                className="flex-shrink-0 w-[52px] h-[52px] rounded-md flex items-center justify-center cursor-pointer transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0 bg-black/50 text-white border border-white/20 hover:bg-black/70 hover:border-white/40"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onReturnToQueue();
-                }}
-                aria-label={`Retornar ${ticket.customerName} para a fila`}
-                title="Retornar para a fila"
-              >
-                <span className="material-symbols-outlined text-xl" aria-hidden="true">undo</span>
-              </button>
-            )}
           </div>
 
           {/* Customer Name */}
