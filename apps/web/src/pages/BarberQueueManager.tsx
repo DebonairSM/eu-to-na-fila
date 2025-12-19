@@ -51,6 +51,7 @@ export function BarberQueueManager() {
   const [customerToRemove, setCustomerToRemove] = useState<number | null>(null);
   const [customerToComplete, setCustomerToComplete] = useState<number | null>(null);
   const [checkInName, setCheckInName] = useState({ first: '', last: '' });
+  const [combinedCheckInName, setCombinedCheckInName] = useState('');
   const [preferredBarberId, setPreferredBarberId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -70,6 +71,11 @@ export function BarberQueueManager() {
       setTimeout(() => {
         firstNameInputRef.current?.focus();
       }, 100);
+    } else if (!checkInModal.isOpen) {
+      // Reset form when modal closes
+      setCheckInName({ first: '', last: '' });
+      setCombinedCheckInName('');
+      setPreferredBarberId(null);
     }
   }, [checkInModal.isOpen]);
 
@@ -124,6 +130,54 @@ export function BarberQueueManager() {
     return [...barbers].sort((a, b) => a.id - b.id);
   }, [barbers]);
 
+  // Combined name handler for check-in forms
+  const handleCombinedCheckInNameChange = useCallback((value: string) => {
+    // Check if there's already a space and last initial
+    const spaceIndex = value.indexOf(' ');
+    const hasSpace = spaceIndex !== -1;
+    
+    let processedValue = value;
+    
+    if (!hasSpace) {
+      // No space yet - user is typing first name
+      // Auto-capitalize first letter, lowercase the rest
+      if (value.length > 0) {
+        processedValue = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+      }
+    } else {
+      // Space detected - split into first name and potential last initial
+      const beforeSpace = value.substring(0, spaceIndex);
+      const afterSpace = value.substring(spaceIndex + 1);
+      
+      // Format first name: capitalize first letter, lowercase rest
+      const formattedFirstName = beforeSpace.length > 0
+        ? beforeSpace.charAt(0).toUpperCase() + beforeSpace.slice(1).toLowerCase()
+        : '';
+      
+      // Limit to one character after space and capitalize it
+      const limitedAfterSpace = afterSpace.slice(0, 1).toUpperCase();
+      
+      // Always preserve the space, even if no character after it yet
+      processedValue = formattedFirstName + ' ' + limitedAfterSpace;
+    }
+    
+    setCombinedCheckInName(processedValue);
+    
+    // Parse to extract firstName and lastName for validation
+    const spaceIdx = processedValue.indexOf(' ');
+    if (spaceIdx !== -1) {
+      setCheckInName({
+        first: processedValue.substring(0, spaceIdx).trim(),
+        last: processedValue.substring(spaceIdx + 1).trim(),
+      });
+    } else {
+      setCheckInName({
+        first: processedValue.trim(),
+        last: '',
+      });
+    }
+  }, []);
+
   const handleAddCustomer = useCallback(async () => {
     const validation = validateName(checkInName.first, checkInName.last);
     if (!validation.isValid) {
@@ -144,6 +198,7 @@ export function BarberQueueManager() {
         ...(preferredBarberId && { preferredBarberId }),
       });
       setCheckInName({ first: '', last: '' });
+      setCombinedCheckInName('');
       setPreferredBarberId(null);
       checkInModal.close();
       await refetchQueue();
@@ -210,19 +265,6 @@ export function BarberQueueManager() {
       completeConfirmModal.close();
     }
   }, [customerToComplete, refetchQueue, completeConfirmModal]);
-
-  const handleReturnToQueue = useCallback(async (ticketId: number) => {
-    try {
-      await api.updateTicket(ticketId, {
-        barberId: null,
-        status: 'waiting',
-      });
-      await refetchQueue();
-    } catch (error) {
-      const errorMsg = getErrorMessage(error, 'Erro ao retornar cliente para a fila. Tente novamente.');
-      setErrorMessage(errorMsg);
-    }
-  }, [refetchQueue]);
 
   const getAssignedBarber = useCallback((ticket: { barberId?: number | null }) => {
     if (!ticket.barberId) return null;
@@ -468,6 +510,7 @@ export function BarberQueueManager() {
         {isInRotation && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
             <div
+              key={currentView}
               className="h-full bg-[#D4AF37]"
               style={{
                 width: '100%',
@@ -496,32 +539,20 @@ export function BarberQueueManager() {
                   <label htmlFor="kioskGuestName" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
                     Nome *
                   </label>
-                  <div className="flex gap-2 flex-nowrap">
-                    <input
-                      ref={firstNameInputRef}
-                      id="kioskGuestName"
-                      type="text"
-                      value={checkInName.first}
-                      onChange={(e) => setCheckInName({ ...checkInName, first: formatName(e.target.value) })}
-                      placeholder="Primeiro nome"
-                      autoCapitalize="words"
-                      autoCorrect="off"
-                      spellCheck="false"
-                      inputMode="text"
-                      required
-                      className="flex-1 min-w-[120px] sm:min-w-[200px] px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
-                    />
-                    <input
-                      id="kioskGuestLastName"
-                      type="text"
-                      value={checkInName.last}
-                      onChange={(e) => setCheckInName({ ...checkInName, last: e.target.value.slice(0, 1).toUpperCase() })}
-                      placeholder="Inicial"
-                      inputMode="text"
-                      maxLength={1}
-                      className="w-14 sm:w-24 flex-shrink-0 px-2 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
-                    />
-                  </div>
+                  <input
+                    ref={firstNameInputRef}
+                    id="kioskGuestName"
+                    type="text"
+                    value={combinedCheckInName}
+                    onChange={(e) => handleCombinedCheckInNameChange(e.target.value)}
+                    placeholder="Nome e inicial"
+                    autoCapitalize="words"
+                    autoCorrect="off"
+                    spellCheck="false"
+                    inputMode="text"
+                    required
+                    className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
+                  />
                 </div>
                 <div>
                   <label className="block text-xl font-medium mb-3 text-white">
@@ -938,53 +969,30 @@ export function BarberQueueManager() {
             <label htmlFor="guestName" className="block text-sm font-medium mb-2">
               Nome *
             </label>
-            <div className="flex gap-2 flex-nowrap">
-              <input
-                id="guestName"
-                type="text"
-                value={checkInName.first}
-                onChange={(e) => setCheckInName({ ...checkInName, first: formatName(e.target.value) })}
-                placeholder="Primeiro nome"
-                autoComplete="one-time-code"
-                autoCapitalize="words"
-                autoCorrect="off"
-                spellCheck="false"
-                inputMode="text"
-                data-lpignore="true"
-                data-form-type="other"
-                required
-                className="flex-1 min-w-[120px] sm:max-w-[180px] sm:min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
-                onFocus={(e) => {
-                  // Prevent autofill UI by temporarily making readOnly
-                  const input = e.target as HTMLInputElement;
-                  input.setAttribute('readonly', 'readonly');
-                  setTimeout(() => {
-                    input.removeAttribute('readonly');
-                  }, 100);
-                }}
-              />
-              <input
-                id="guestLastName"
-                type="text"
-                value={checkInName.last}
-                onChange={(e) => setCheckInName({ ...checkInName, last: e.target.value.slice(0, 1).toUpperCase() })}
-                placeholder="Inicial"
-                autoComplete="one-time-code"
-                inputMode="text"
-                maxLength={1}
-                data-lpignore="true"
-                data-form-type="other"
-                className="w-12 sm:w-16 flex-shrink-0 px-2 sm:px-3 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
-                onFocus={(e) => {
-                  // Prevent autofill UI by temporarily making readOnly
-                  const input = e.target as HTMLInputElement;
-                  input.setAttribute('readonly', 'readonly');
-                  setTimeout(() => {
-                    input.removeAttribute('readonly');
-                  }, 100);
-                }}
-              />
-            </div>
+            <input
+              id="guestName"
+              type="text"
+              value={combinedCheckInName}
+              onChange={(e) => handleCombinedCheckInNameChange(e.target.value)}
+              placeholder="Nome e inicial"
+              autoComplete="one-time-code"
+              autoCapitalize="words"
+              autoCorrect="off"
+              spellCheck="false"
+              inputMode="text"
+              data-lpignore="true"
+              data-form-type="other"
+              required
+              className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
+              onFocus={(e) => {
+                // Prevent autofill UI by temporarily making readOnly
+                const input = e.target as HTMLInputElement;
+                input.setAttribute('readonly', 'readonly');
+                setTimeout(() => {
+                  input.removeAttribute('readonly');
+                }, 100);
+              }}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">

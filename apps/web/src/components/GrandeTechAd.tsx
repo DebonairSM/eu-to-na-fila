@@ -7,9 +7,9 @@ interface GrandeTechAdProps {
 
 export function GrandeTechAd({ onClose, showTimer = true }: GrandeTechAdProps) {
   const [timeRemaining, setTimeRemaining] = useState(15);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   // Intersection Observer to detect when component is visible
   useEffect(() => {
@@ -50,45 +50,18 @@ export function GrandeTechAd({ onClose, showTimer = true }: GrandeTechAdProps) {
     return () => clearInterval(interval);
   }, [showTimer, onClose]);
 
-  // Load and play video when visible
-  useEffect(() => {
-    if (shouldLoad && videoRef.current) {
-      const video = videoRef.current;
-      video.load(); // Load the video source
-      video.play().catch((error) => {
-        console.error('Video play failed:', error);
-      });
-    }
-  }, [shouldLoad]);
-
-  const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
-    console.error('Video load error:', e);
-    const video = e.currentTarget;
-    console.error('Video error details:', {
-      error: video.error,
-      networkState: video.networkState,
-      readyState: video.readyState,
-      src: video.src
-    });
-  };
-
   return (
     <div 
       ref={containerRef}
       className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center"
     >
       {shouldLoad ? (
-        <video
-          ref={videoRef}
-          src="/mineiro/gt-ad-001.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="none"
-          onError={handleVideoError}
-          onLoadedData={() => {
-            // Video loaded successfully
+        <img
+          src="/mineiro/gt-ad.png"
+          alt="Grande Tech"
+          onLoad={() => setImageLoaded(true)}
+          onError={(e) => {
+            console.error('Image load error:', e);
           }}
           className="w-full h-full object-contain"
         />

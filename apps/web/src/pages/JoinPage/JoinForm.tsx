@@ -4,10 +4,8 @@ import { Card, CardContent, Input, InputLabel, InputError, Button, Stack } from 
 
 export function JoinForm() {
   const {
-    firstName,
-    lastName,
-    handleFirstNameChange,
-    handleLastNameChange,
+    combinedName,
+    handleCombinedNameChange,
     validationError,
     isSubmitting,
     submitError,
@@ -28,63 +26,34 @@ export function JoinForm() {
       <CardContent className="p-6 sm:p-8">
         <form onSubmit={handleSubmit} autoComplete="off">
           <Stack spacing="lg">
-            <div className="flex flex-row gap-4 items-start flex-nowrap">
-              <div className="flex-1 min-w-[120px] sm:min-w-[200px]">
-                <InputLabel htmlFor="customerName">Nome *</InputLabel>
-                <Input
-                  id="customerName"
-                  type="text"
-                  value={firstName}
-                  onChange={handleFirstNameChange}
-                  placeholder="Primeiro nome"
-                  autoComplete="one-time-code"
-                  autoCapitalize="words"
-                  autoCorrect="off"
-                  spellCheck="false"
-                  inputMode="text"
-                  data-lpignore="true"
-                  data-form-type="other"
-                  required
-                  error={!!validationError}
-                  onFocus={(e) => {
-                    // Prevent autofill UI by temporarily making readOnly
-                    const input = e.target as HTMLInputElement;
-                    input.setAttribute('readonly', 'readonly');
-                    setTimeout(() => {
-                      input.removeAttribute('readonly');
-                    }, 100);
-                  }}
-                />
-                <InputError message={validationError || ''} />
-              </div>
-
-              <div className="w-14 sm:w-32 flex-shrink-0">
-                <InputLabel htmlFor="customerLastName">Inicial</InputLabel>
-                <Input
-                  id="customerLastName"
-                  type="text"
-                  value={lastName}
-                  onChange={handleLastNameChange}
-                  placeholder="Inicial"
-                  autoComplete="one-time-code"
-                  autoCapitalize="words"
-                  autoCorrect="off"
-                  spellCheck="false"
-                  inputMode="text"
-                  maxLength={1}
-                  className="w-32"
-                  data-lpignore="true"
-                  data-form-type="other"
-                  onFocus={(e) => {
-                    // Prevent autofill UI by temporarily making readOnly
-                    const input = e.target as HTMLInputElement;
-                    input.setAttribute('readonly', 'readonly');
-                    setTimeout(() => {
-                      input.removeAttribute('readonly');
-                    }, 100);
-                  }}
-                />
-              </div>
+            <div>
+              <InputLabel htmlFor="customerName">Nome *</InputLabel>
+              <Input
+                id="customerName"
+                type="text"
+                value={combinedName}
+                onChange={handleCombinedNameChange}
+                placeholder="Nome e inicial"
+                autoComplete="one-time-code"
+                autoCapitalize="words"
+                autoCorrect="off"
+                spellCheck="false"
+                inputMode="text"
+                data-lpignore="true"
+                data-form-type="other"
+                required
+                error={!!validationError}
+                className="min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                onFocus={(e) => {
+                  // Prevent autofill UI by temporarily making readOnly
+                  const input = e.target as HTMLInputElement;
+                  input.setAttribute('readonly', 'readonly');
+                  setTimeout(() => {
+                    input.removeAttribute('readonly');
+                  }, 100);
+                }}
+              />
+              <InputError message={validationError || ''} />
             </div>
 
             {nameCollisionError && (

@@ -11,6 +11,7 @@ import { logError } from '@/lib/logger';
 const STORAGE_KEY = 'eutonafila_active_ticket_id';
 
 export function useJoinForm() {
+  const [combinedName, setCombinedName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -118,15 +119,65 @@ export function useJoinForm() {
     }
   }, [firstName, lastName, validateName, nameCollisionError]);
 
-  // Formatted change handlers that apply name formatting in real-time
+  // Combined name handler that handles auto-capitalization and spacebar detection
+  const handleCombinedNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    
+    // Check if there's already a space and last initial
+    const spaceIndex = input.indexOf(' ');
+    const hasSpace = spaceIndex !== -1;
+    
+    let processedValue = input;
+    
+    if (!hasSpace) {
+      // No space yet - user is typing first name
+      // Auto-capitalize first letter, lowercase the rest
+      if (input.length > 0) {
+        processedValue = input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
+      }
+    } else {
+      // Space detected - split into first name and potential last initial
+      const beforeSpace = input.substring(0, spaceIndex);
+      const afterSpace = input.substring(spaceIndex + 1);
+      
+      // Format first name: capitalize first letter, lowercase rest
+      const formattedFirstName = beforeSpace.length > 0
+        ? beforeSpace.charAt(0).toUpperCase() + beforeSpace.slice(1).toLowerCase()
+        : '';
+      
+      // Limit to one character after space and capitalize it
+      const limitedAfterSpace = afterSpace.slice(0, 1).toUpperCase();
+      
+      // Always preserve the space, even if no character after it yet
+      processedValue = formattedFirstName + ' ' + limitedAfterSpace;
+    }
+    
+    setCombinedName(processedValue);
+    
+    // Parse to extract firstName and lastName for validation
+    const spaceIdx = processedValue.indexOf(' ');
+    if (spaceIdx !== -1) {
+      setFirstName(processedValue.substring(0, spaceIdx).trim());
+      setLastName(processedValue.substring(spaceIdx + 1).trim());
+    } else {
+      setFirstName(processedValue.trim());
+      setLastName('');
+    }
+  };
+
+  // Legacy handlers kept for backward compatibility (not used but maintained for type safety)
   const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatName(e.target.value);
     setFirstName(formatted);
+    // Update combinedName to reflect change
+    setCombinedName(formatted + (lastName ? ' ' + lastName : ''));
   };
 
   const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const firstChar = e.target.value.slice(0, 1).toUpperCase();
     setLastName(firstChar);
+    // Update combinedName to reflect change
+    setCombinedName(firstName + (firstChar ? ' ' + firstChar : ''));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -208,6 +259,8 @@ export function useJoinForm() {
   };
 
   return {
+    combinedName,
+    handleCombinedNameChange,
     firstName,
     lastName,
     handleFirstNameChange,
