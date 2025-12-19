@@ -17,38 +17,38 @@ export const KIOSK_TIMINGS = {
 export async function enterKioskMode(page: Page) {
   await page.goto('/mineiro/manage?kiosk=true');
   
-  // Wait for kiosk mode to be active
-  // The kiosk mode should show the queue view or an ad view
+  // Wait for kiosk mode to be active - look for exit button or queue/ad content
+  // The exit button with aria-label="Exit kiosk mode" is a reliable indicator
   await expect(
-    page.locator('[data-kiosk-mode="true"], [class*="kiosk"], [class*="queue-view"]').first()
-  ).toBeVisible({ timeout: 5000 });
+    page.locator('button[aria-label="Exit kiosk mode"], img[src*="gt-ad"], video[src*="gt-ad"], button:has-text("Entrar na Fila")').first()
+  ).toBeVisible({ timeout: 10000 });
 }
 
 /**
  * Exits kiosk mode by clicking the exit button or pressing Escape
  */
 export async function exitKioskMode(page: Page) {
-  // Try to find exit button (gear icon or exit button)
-  const exitButton = page.locator('button[aria-label*="exit"], button[aria-label*="sair"], [class*="exit"], [data-testid="exit-kiosk"]').first();
+  // Find exit button with specific aria-label
+  const exitButton = page.locator('button[aria-label="Exit kiosk mode"]');
   
-  if (await exitButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+  if (await exitButton.isVisible({ timeout: 2000 }).catch(() => false)) {
     await exitButton.click();
   } else {
     // Fallback: press Escape key
     await page.keyboard.press('Escape');
   }
   
-  // Wait for kiosk mode to be inactive
-  await page.waitForTimeout(500);
+  // Wait for kiosk mode to be inactive (exit button should disappear or page should change)
+  await page.waitForTimeout(1000);
 }
 
 /**
  * Waits for the queue view to be displayed
  */
 export async function waitForQueueView(page: Page, timeout = 20000) {
-  // Look for queue-related elements
+  // Look for queue-related elements - button with "Entrar na Fila" or queue cards
   await expect(
-    page.locator('[class*="queue"], [data-view="queue"], h2:has-text("Fila"), h1:has-text("Fila")').first()
+    page.locator('button:has-text("Entrar na Fila"), [class*="grid"]:has([class*="bg-\\[rgba\\(212,175,55"]), button[aria-label*="Atribuir barbeiro"]').first()
   ).toBeVisible({ timeout });
 }
 
@@ -85,7 +85,9 @@ export async function clickAdToSkip(page: Page) {
  * Checks if rotation is active by looking for progress bar
  */
 export async function isRotationActive(page: Page): Promise<boolean> {
-  const progressBar = page.locator('[class*="progress"], [class*="bg-\\[\\#D4AF37\\]"]').first();
+  // Progress bar is at the bottom - look for div with absolute bottom-0 containing a div with gold background
+  // Use a more flexible selector that matches the structure
+  const progressBar = page.locator('div.absolute.bottom-0.left-0.right-0').locator('div.h-full').first();
   return await progressBar.isVisible({ timeout: 1000 }).catch(() => false);
 }
 
@@ -93,8 +95,9 @@ export async function isRotationActive(page: Page): Promise<boolean> {
  * Waits for rotation to start (progress bar appears)
  */
 export async function waitForRotationToStart(page: Page, timeout = 5000) {
+  // Progress bar is at bottom - look for the container div
   await expect(
-    page.locator('[class*="progress"], [class*="bg-\\[\\#D4AF37\\]"]').first()
+    page.locator('div.absolute.bottom-0.left-0.right-0').locator('div.h-full').first()
   ).toBeVisible({ timeout });
 }
 
@@ -102,8 +105,9 @@ export async function waitForRotationToStart(page: Page, timeout = 5000) {
  * Waits for rotation to stop (progress bar disappears)
  */
 export async function waitForRotationToStop(page: Page, timeout = 5000) {
+  // Progress bar should not be visible when rotation is paused
   await expect(
-    page.locator('[class*="progress"], [class*="bg-\\[\\#D4AF37\\]"]').first()
+    page.locator('div.absolute.bottom-0.left-0.right-0').locator('div.h-full').first()
   ).not.toBeVisible({ timeout });
 }
 
@@ -112,23 +116,23 @@ export async function waitForRotationToStop(page: Page, timeout = 5000) {
  * Returns null if cannot determine
  */
 export async function getCurrentView(page: Page): Promise<'queue' | 'ad1' | 'ad2' | 'ad3' | null> {
-  // Check for queue view
-  const queueVisible = await page.locator('[class*="queue-view"], h2:has-text("Fila")').first()
+  // Check for queue view - look for "Entrar na Fila" button or queue cards
+  const queueVisible = await page.locator('button:has-text("Entrar na Fila"), button[aria-label*="Atribuir barbeiro"]').first()
     .isVisible({ timeout: 1000 }).catch(() => false);
   if (queueVisible) return 'queue';
   
-  // Check for ad1 (gt-ad.png)
-  const ad1Visible = await page.locator('img[src*="gt-ad.png"]:not([src*="gt-ad2"])').first()
+  // Check for ad1 (gt-ad.png) - exclude gt-ad2
+  const ad1Visible = await page.locator('img[src*="/mineiro/gt-ad.png"], img[src*="gt-ad.png"]:not([src*="gt-ad2"])').first()
     .isVisible({ timeout: 1000 }).catch(() => false);
   if (ad1Visible) return 'ad1';
   
   // Check for ad2 (gt-ad2.png)
-  const ad2Visible = await page.locator('img[src*="gt-ad2.png"]').first()
+  const ad2Visible = await page.locator('img[src*="/mineiro/gt-ad2.png"], img[src*="gt-ad2.png"]').first()
     .isVisible({ timeout: 1000 }).catch(() => false);
   if (ad2Visible) return 'ad2';
   
   // Check for ad3 (video)
-  const ad3Visible = await page.locator('video[src*="gt-ad-001.mp4"]').first()
+  const ad3Visible = await page.locator('video[src*="/mineiro/gt-ad-001.mp4"], video[src*="gt-ad-001.mp4"]').first()
     .isVisible({ timeout: 1000 }).catch(() => false);
   if (ad3Visible) return 'ad3';
   
