@@ -9,6 +9,7 @@ import { getErrorMessage, formatName } from '@/lib/utils';
 import { logError } from '@/lib/logger';
 
 const STORAGE_KEY = 'eutonafila_active_ticket_id';
+const CUSTOMER_NAME_STORAGE_KEY = 'eutonafila_customer_name';
 
 export function useJoinForm() {
   const [combinedName, setCombinedName] = useState('');
@@ -97,6 +98,35 @@ export function useJoinForm() {
       stopPolling();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
+  }, []);
+
+  // Load stored customer name on mount
+  useEffect(() => {
+    try {
+      const storedName = localStorage.getItem(CUSTOMER_NAME_STORAGE_KEY);
+      if (storedName) {
+        const parsed = JSON.parse(storedName);
+        if (parsed && typeof parsed.firstName === 'string' && typeof parsed.lastName === 'string') {
+          const storedFirstName = parsed.firstName.trim();
+          const storedLastName = parsed.lastName.trim();
+          
+          if (storedFirstName) {
+            // Reconstruct combinedName from stored firstName and lastName
+            const combined = storedLastName
+              ? `${storedFirstName} ${storedLastName}`
+              : storedFirstName;
+            
+            setFirstName(storedFirstName);
+            setLastName(storedLastName);
+            setCombinedName(combined);
+          }
+        }
+      }
+    } catch (error) {
+      // Gracefully handle JSON parse errors or invalid data
+      // Form will start empty if stored data is invalid
+      logError('Failed to load stored customer name', error);
+    }
   }, []);
 
   // Real-time validation
@@ -248,6 +278,15 @@ export function useJoinForm() {
 
       // Store ticket ID in localStorage for persistence
       localStorage.setItem(STORAGE_KEY, ticket.id.toString());
+
+      // Store customer name in localStorage for future visits
+      localStorage.setItem(
+        CUSTOMER_NAME_STORAGE_KEY,
+        JSON.stringify({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+        })
+      );
 
       // Navigate to status page
       navigate(`/status/${ticket.id}`);
