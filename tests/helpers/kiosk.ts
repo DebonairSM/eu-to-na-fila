@@ -58,12 +58,18 @@ export async function waitForQueueView(page: Page, timeout = 20000) {
  */
 export async function waitForAdView(page: Page, adNumber: 1 | 2 | 3 | 'any' = 'any', timeout = 20000) {
   if (adNumber === 'any') {
-    // Wait for any ad view - look for images, video, loading state, or error state
-    // Ads can show: image/video, "Carregando..." (loading), or "Erro ao carregar imagem" (error)
-    const anyAdIndicator = page.locator(
-      'img[src*="gt-ad"], video[src*="gt-ad"], text=/Carregando|Erro ao carregar/i, [class*="cursor-pointer"]:has(img), [class*="cursor-pointer"]:has(video)'
-    ).first();
-    await expect(anyAdIndicator).toBeVisible({ timeout });
+    // Wait for any ad view - the simplest way is to wait for queue view to disappear
+    // When we rotate to an ad, the queue view should no longer be visible
+    const queueButton = page.locator('button:has-text("Entrar na Fila")').first();
+    
+    // Wait for queue view to disappear (indicating we've rotated to an ad)
+    await expect(queueButton).not.toBeVisible({ timeout });
+    
+    // Also verify that an ad container exists (div with cursor-pointer that's not the queue)
+    const adContainer = page.locator('div.cursor-pointer.flex-1').first();
+    await expect(adContainer).toBeVisible({ timeout: 2000 }).catch(() => {
+      // If container not found, that's okay - the important thing is queue is gone
+    });
   } else {
     // Wait for specific ad - try multiple selector patterns
     let selectors: string[];

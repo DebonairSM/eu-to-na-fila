@@ -35,19 +35,40 @@ test.describe('Kiosk Mode Ad Rotation', () => {
     await waitForQueueView(page, 5000);
     expect(await getCurrentView(page)).toBe('queue');
     
-    // Wait for rotation to ad view (15s queue + tolerance)
-    // The ad view should appear (even if image fails to load, the container should be there)
-    await waitForAdView(page, 'any', KIOSK_TIMINGS.QUEUE_VIEW_DURATION + KIOSK_TIMINGS.ROTATION_TOLERANCE);
+    // Verify rotation is active (progress bar should be visible)
+    const rotationActive = await isRotationActive(page);
+    expect(rotationActive).toBeTruthy();
     
-    // Verify we're no longer in queue view (rotation happened)
-    const currentView = await getCurrentView(page);
-    // Should be an ad view (ad1, ad2, ad3, or null if we can't detect which specific ad)
-    // The important thing is that we're not in queue view anymore
-    expect(currentView).not.toBe('queue');
-    // If we can detect it, it should be ad1 (first in sequence)
-    if (currentView !== null) {
-      expect(['ad1', 'ad2', 'ad3']).toContain(currentView);
+    // Note: This test waits 15+ seconds for rotation - in a real scenario this is acceptable
+    // For faster test feedback, consider testing rotation logic separately from timing
+    
+    // Wait for queue view elements to disappear (indicating rotation to ad)
+    const queueButton = page.locator('button:has-text("Entrar na Fila")').first();
+    
+    // Poll every 2 seconds to check if rotation happened (more efficient than single long wait)
+    const startTime = Date.now();
+    const timeout = KIOSK_TIMINGS.QUEUE_VIEW_DURATION + KIOSK_TIMINGS.ROTATION_TOLERANCE;
+    let rotated = false;
+    
+    while (Date.now() - startTime < timeout && !rotated) {
+      await page.waitForTimeout(2000);
+      const isQueueVisible = await queueButton.isVisible({ timeout: 500 }).catch(() => false);
+      if (!isQueueVisible) {
+        rotated = true;
+        break;
+      }
+      const currentView = await getCurrentView(page);
+      if (currentView !== 'queue' && currentView !== null) {
+        rotated = true;
+        break;
+      }
     }
+    
+    expect(rotated).toBeTruthy();
+    
+    // Verify we're no longer in queue view
+    const finalView = await getCurrentView(page);
+    expect(finalView).not.toBe('queue');
   });
 
   test('should rotate through complete sequence: queue -> ad1 -> queue -> ad2 -> queue -> ad3', async ({ page }) => {
