@@ -63,6 +63,10 @@ export function useKiosk() {
 
   // Handle rotation - optimized to reduce re-renders
   useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:65',message:'Rotation effect running',data:{isKioskMode,isInRotation,currentView,nextAdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    
     if (!isKioskMode || !isInRotation) {
       if (rotationTimerRef.current) {
         clearTimeout(rotationTimerRef.current);
@@ -79,18 +83,36 @@ export function useKiosk() {
     const currentDuration =
       currentView === 'queue' ? QUEUE_VIEW_DURATION : AD_VIEW_DURATION;
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:79',message:'Setting rotation timer',data:{currentView,currentDuration,nextAdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+
     rotationTimerRef.current = setTimeout(() => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:82',message:'Rotation timer fired',data:{currentView,nextAdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+      
       // Rotate: queue -> ad1 -> queue -> ad2 -> queue -> ad3 -> queue (repeat)
       if (currentView === 'queue') {
         // Show next ad in sequence
         const nextAd = `ad${nextAdIndex}` as KioskView;
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:87',message:'Rotating to ad view',data:{fromView:currentView,toView:nextAd,nextAdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         setCurrentView(nextAd);
       } else {
         // After ad, go back to queue and advance to next ad
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:92',message:'Rotating from ad back to queue',data:{fromView:currentView,nextAdIndexBefore:nextAdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         setCurrentView('queue');
         setNextAdIndex((prev) => {
+          const newIndex = prev >= 3 ? 1 : prev + 1;
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:97',message:'nextAdIndex updated',data:{prev,newIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
           // Cycle: 1 -> 2 -> 3 -> 1
-          return prev >= 3 ? 1 : prev + 1;
+          return newIndex;
         });
       }
     }, currentDuration);

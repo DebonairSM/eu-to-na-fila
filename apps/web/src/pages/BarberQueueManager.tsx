@@ -64,6 +64,15 @@ export function BarberQueueManager() {
     }
   }, [searchParams, isKioskMode, enterKioskMode]);
 
+  // Track currentView changes for debugging
+  useEffect(() => {
+    if (isKioskMode && currentView) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BarberQueueManager.tsx:66',message:'currentView changed in kiosk mode',data:{currentView,isKioskMode,isInRotation},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+    }
+  }, [currentView, isKioskMode, isInRotation]);
+
   // Request fullscreen on first user interaction in kiosk mode
   useEffect(() => {
     if (!isKioskMode || document.fullscreenElement) return;
@@ -538,7 +547,6 @@ export function BarberQueueManager() {
               key={currentView}
               className="h-full bg-[#D4AF37]"
               style={{
-                width: '100%',
                 animation: `progress ${currentView === 'queue' ? QUEUE_VIEW_DURATION : AD_VIEW_DURATION}ms linear`,
               }}
             />
