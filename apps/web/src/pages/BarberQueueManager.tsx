@@ -22,7 +22,6 @@ import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { cn, getErrorMessage, formatName, formatNameForDisplay } from '@/lib/utils';
 
-const QUEUE_VIEW_DURATION = 15000; // 15 seconds
 const AD_VIEW_DURATION = 15000; // 15 seconds
 
 export function BarberQueueManager() {
@@ -540,14 +539,14 @@ export function BarberQueueManager() {
           </div>
         )}
 
-        {/* Progress Bar */}
-        {isInRotation && (
+        {/* Progress Bar - Only show during ad views, not queue */}
+        {isInRotation && currentView !== 'queue' && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
             <div
               key={currentView}
               className="h-full bg-[#D4AF37]"
               style={{
-                animation: `progress ${currentView === 'queue' ? QUEUE_VIEW_DURATION : AD_VIEW_DURATION}ms linear`,
+                animation: `progress ${AD_VIEW_DURATION}ms linear`,
               }}
             />
           </div>
