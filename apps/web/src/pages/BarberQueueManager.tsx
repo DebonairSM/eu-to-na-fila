@@ -31,9 +31,11 @@ export function BarberQueueManager() {
     isKioskMode,
     currentView,
     isInRotation,
+    isFullscreen,
     enterKioskMode,
     exitKioskMode,
     showQueueView,
+    toggleFullscreen,
   } = useKiosk();
   
   // Use longer polling interval in kiosk mode to improve performance
@@ -62,31 +64,6 @@ export function BarberQueueManager() {
       enterKioskMode();
     }
   }, [searchParams, isKioskMode, enterKioskMode]);
-
-  // Request fullscreen on first user interaction in kiosk mode
-  useEffect(() => {
-    if (!isKioskMode || document.fullscreenElement) return;
-
-    const requestFullscreenOnInteraction = () => {
-      if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {
-          // Ignore fullscreen errors (user may have denied permission)
-        });
-      }
-      // Remove listeners after first interaction
-      document.removeEventListener('click', requestFullscreenOnInteraction);
-      document.removeEventListener('touchstart', requestFullscreenOnInteraction);
-    };
-
-    // Listen for first user interaction
-    document.addEventListener('click', requestFullscreenOnInteraction, { once: true });
-    document.addEventListener('touchstart', requestFullscreenOnInteraction, { once: true });
-
-    return () => {
-      document.removeEventListener('click', requestFullscreenOnInteraction);
-      document.removeEventListener('touchstart', requestFullscreenOnInteraction);
-    };
-  }, [isKioskMode]);
 
   // Auto-focus first name input when check-in modal opens
   useEffect(() => {
@@ -323,14 +300,26 @@ export function BarberQueueManager() {
           </div>
         )}
 
-        {/* Exit Button - Subtle in corner */}
-        <button
-          onClick={exitKioskMode}
-          className="absolute top-6 left-6 z-50 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all"
-          aria-label="Exit kiosk mode"
-        >
-          <span className="material-symbols-outlined text-white/50 text-base">settings</span>
-        </button>
+        <div className="absolute top-6 left-6 z-50 flex flex-col gap-2">
+          <button
+            onClick={() => void toggleFullscreen()}
+            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all"
+            aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+          >
+            <span className="material-symbols-outlined text-white/50 text-base">
+              {isFullscreen ? 'close_fullscreen' : 'open_in_full'}
+            </span>
+          </button>
+
+          {/* Exit Button - Subtle in corner */}
+          <button
+            onClick={exitKioskMode}
+            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all"
+            aria-label="Exit kiosk mode"
+          >
+            <span className="material-symbols-outlined text-white/50 text-base">settings</span>
+          </button>
+        </div>
 
         {/* QR Code - Top right */}
         <div className="absolute top-6 right-6 z-50 bg-white p-0.5 shadow-2xl border-2 border-[#D4AF37] flex items-center justify-center">
@@ -792,7 +781,7 @@ export function BarberQueueManager() {
                     await handleCompleteService();
                     showQueueView();
                   }}
-                  className="flex-1 px-8 py-5 text-xl rounded-2xl bg-white text-black font-semibold hover:bg-white/80 transition-all"
+                  className="flex-1 px-8 py-5 text-xl rounded-2xl bg-[#D4AF37] text-black font-semibold hover:bg-[#E8C547] transition-all"
                 >
                   Finalizar
                 </button>

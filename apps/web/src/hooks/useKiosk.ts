@@ -10,6 +10,7 @@ export function useKiosk() {
   const [isKioskMode, setIsKioskMode] = useState(false);
   const [currentView, setCurrentView] = useState<KioskView>('queue');
   const [isInRotation, setIsInRotation] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [nextAdIndex, setNextAdIndex] = useState(1); // Track which ad to show next
   const [adAvailability, setAdAvailability] = useState<Record<1 | 2 | 3, boolean>>({
     1: true,
@@ -18,6 +19,85 @@ export function useKiosk() {
   });
   const rotationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const fullscreenRequestInFlightRef = useRef(false);
+
+  const getFullscreenElement = useCallback((): Element | null => {
+    const docAny = document as unknown as {
+      fullscreenElement?: Element | null;
+      webkitFullscreenElement?: Element | null;
+      mozFullScreenElement?: Element | null;
+      msFullscreenElement?: Element | null;
+    };
+    return (
+      docAny.fullscreenElement ??
+      docAny.webkitFullscreenElement ??
+      docAny.mozFullScreenElement ??
+      docAny.msFullscreenElement ??
+      null
+    );
+  }, []);
+
+  const requestFullscreen = useCallback(async () => {
+    if (fullscreenRequestInFlightRef.current) return;
+    if (getFullscreenElement()) return;
+
+    const elAny = document.documentElement as unknown as {
+      requestFullscreen?: () => Promise<void>;
+      webkitRequestFullscreen?: () => Promise<void>;
+      mozRequestFullScreen?: () => Promise<void>;
+      msRequestFullscreen?: () => Promise<void>;
+    };
+
+    const request =
+      elAny.requestFullscreen ??
+      elAny.webkitRequestFullscreen ??
+      elAny.mozRequestFullScreen ??
+      elAny.msRequestFullscreen;
+
+    if (!request) return;
+
+    fullscreenRequestInFlightRef.current = true;
+    try {
+      await request.call(document.documentElement);
+    } catch {
+      // Browser may block fullscreen (NotAllowedError) or device may not support it.
+    } finally {
+      fullscreenRequestInFlightRef.current = false;
+    }
+  }, [getFullscreenElement]);
+
+  const exitFullscreen = useCallback(async () => {
+    if (!getFullscreenElement()) return;
+
+    const docAny = document as unknown as {
+      exitFullscreen?: () => Promise<void>;
+      webkitExitFullscreen?: () => Promise<void>;
+      mozCancelFullScreen?: () => Promise<void>;
+      msExitFullscreen?: () => Promise<void>;
+    };
+
+    const exit =
+      docAny.exitFullscreen ??
+      docAny.webkitExitFullscreen ??
+      docAny.mozCancelFullScreen ??
+      docAny.msExitFullscreen;
+
+    if (!exit) return;
+
+    try {
+      await exit.call(document);
+    } catch {
+      // Ignore fullscreen errors
+    }
+  }, [getFullscreenElement]);
+
+  const toggleFullscreen = useCallback(async () => {
+    if (getFullscreenElement()) {
+      await exitFullscreen();
+    } else {
+      await requestFullscreen();
+    }
+  }, [exitFullscreen, getFullscreenElement, requestFullscreen]);
 
   const checkAssetExists = useCallback(async (url: string): Promise<boolean> => {
     try {
@@ -40,6 +120,38 @@ export function useKiosk() {
     // Note: Fullscreen must be requested on user gesture, not automatically
     // We'll request it on first user interaction instead
   }, []);
+
+  // Track fullscreen state (standard + webkit events)
+  useEffect(() => {
+    const sync = () => setIsFullscreen(Boolean(getFullscreenElement()));
+    sync();
+
+    document.addEventListener('fullscreenchange', sync);
+    document.addEventListener('webkitfullscreenchange', sync as EventListener);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', sync);
+      document.removeEventListener('webkitfullscreenchange', sync as EventListener);
+    };
+  }, [getFullscreenElement]);
+
+  // Request fullscreen on first user interaction in kiosk mode.
+  // Use capture so this still fires even if inner handlers call stopPropagation().
+  useEffect(() => {
+    if (!isKioskMode || isFullscreen) return;
+
+    const onFirstInteraction = () => {
+      void requestFullscreen();
+    };
+
+    document.addEventListener('pointerdown', onFirstInteraction, { capture: true, passive: true });
+    document.addEventListener('click', onFirstInteraction, { capture: true, passive: true });
+
+    return () => {
+      document.removeEventListener('pointerdown', onFirstInteraction, { capture: true } as AddEventListenerOptions);
+      document.removeEventListener('click', onFirstInteraction, { capture: true } as AddEventListenerOptions);
+    };
+  }, [isKioskMode, isFullscreen, requestFullscreen]);
 
   // Detect which ad assets are actually available so we can skip missing ones.
   useEffect(() => {
@@ -65,12 +177,8 @@ export function useKiosk() {
     setIsKioskMode(false);
     setIsInRotation(false);
     
-    // Exit fullscreen
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {
-        // Ignore fullscreen errors
-      });
-    }
+    // Exit fullscreen (best-effort)
+    void exitFullscreen();
 
     // Clear timers
     if (rotationTimerRef.current) {
@@ -81,7 +189,7 @@ export function useKiosk() {
       clearTimeout(idleTimerRef.current);
       idleTimerRef.current = null;
     }
-  }, []);
+  }, [exitFullscreen]);
 
   const showQueueView = useCallback(() => {
     setCurrentView('queue');
@@ -179,8 +287,12 @@ export function useKiosk() {
     isKioskMode,
     currentView,
     isInRotation,
+    isFullscreen,
     enterKioskMode,
     exitKioskMode,
     showQueueView,
+    requestFullscreen,
+    exitFullscreen,
+    toggleFullscreen,
   };
 }
