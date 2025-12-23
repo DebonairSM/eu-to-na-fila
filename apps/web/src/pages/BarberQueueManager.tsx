@@ -33,7 +33,6 @@ export function BarberQueueManager() {
     isInRotation,
     isFullscreen,
     enterKioskMode,
-    exitKioskMode,
     showQueueView,
     toggleFullscreen,
   } = useKiosk();
