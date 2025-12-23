@@ -67,8 +67,8 @@ export const QueueCard = memo(function QueueCard({
               className={cn(
                 'flex-shrink-0 w-[52px] h-[52px] rounded-md flex items-center justify-center font-bold text-lg cursor-pointer transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-0',
                 {
-                  'bg-black text-primary border border-[#D4AF37] hover:text-[#E8C547] hover:border-[#E8C547] focus:ring-primary': isWaiting,
-                  'bg-black text-[#D4AF37] border border-[#D4AF37] hover:bg-black hover:text-[#E8C547] hover:border-[#E8C547] focus:ring-[#D4AF37]': isServing,
+                  'bg-black text-primary border-2 border-[#D4AF37] hover:text-[#E8C547] hover:border-[#E8C547] focus:ring-primary': isWaiting,
+                  'bg-black text-[#D4AF37] border-2 border-[#D4AF37] hover:bg-black hover:text-[#E8C547] hover:border-[#E8C547] focus:ring-[#D4AF37]': isServing,
                 }
               )}
               onClick={(e) => {
