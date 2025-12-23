@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Modal } from './Modal';
 import { BarberCard } from './BarberCard';
+import { Button } from './ui/button';
 import type { Barber, Ticket } from '@eutonafila/shared';
 
 export interface BarberSelectorProps {
@@ -132,6 +133,12 @@ export function BarberSelector({
             </button>
           </div>
         )}
+
+        <div className="pt-4 border-t border-border">
+          <Button variant="outline" onClick={onClose} className="w-full">
+            Cancelar
+          </Button>
+        </div>
       </div>
     </Modal>
   );

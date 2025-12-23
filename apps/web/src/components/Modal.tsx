@@ -17,7 +17,7 @@ export function Modal({
   children,
   className,
   title,
-  showCloseButton = true,
+  showCloseButton = false,
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
