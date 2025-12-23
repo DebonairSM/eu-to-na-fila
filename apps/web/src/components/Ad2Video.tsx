@@ -18,9 +18,6 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Ad2Video.tsx:20',message:'Ad2 IntersectionObserver triggered',data:{isIntersecting:entry.isIntersecting,intersectionRatio:entry.intersectionRatio},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-            // #endregion
             setShouldLoad(true);
             observer.disconnect();
           }
@@ -39,9 +36,6 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad
           rect.top < window.innerHeight + 50 && 
           rect.bottom > -50;
         if (isVisible) {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Ad2Video.tsx:38',message:'Ad2 immediate intersection check passed',data:{rectWidth:rect.width,rectHeight:rect.height},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-          // #endregion
           setShouldLoad(true);
           observer.disconnect();
         }
@@ -72,15 +66,9 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad
             src="/mineiro/gt-ad2.png"
             alt="Grande Tech"
             onLoad={() => {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Ad2Video.tsx:68',message:'Ad2 image loaded successfully',data:{src:'/mineiro/gt-ad2.png'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-              // #endregion
               setImageError(false);
             }}
             onError={() => {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Ad2Video.tsx:71',message:'Ad2 image failed to load',data:{src:'/mineiro/gt-ad2.png'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-              // #endregion
               // Image failed to load - error state is handled by component state
               // Suppress console error to reduce noise for missing ad images
               setImageError(true);

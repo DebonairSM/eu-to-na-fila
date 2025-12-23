@@ -14,10 +14,6 @@ const __dirname = dirname(__filename);
  * Handles ad image uploads for kiosk display.
  */
 export const adsRoutes: FastifyPluginAsync = async (fastify) => {
-  // #region agent log
-  const fs = await import('fs/promises');
-  await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:16',message:'adsRoutes plugin registered',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n').catch(()=>{});
-  // #endregion
   /**
    * Upload an ad image.
    * Requires owner authentication.
@@ -31,34 +27,18 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {403} If not owner
    */
   fastify.register(async function (instance) {
-    // #region agent log
-    await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:29',message:'nested register called for multipart',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n').catch(()=>{});
-    // #endregion
     // Register multipart plugin ONLY for this nested scope (upload route)
     // This isolates it from other routes to prevent interference with JSON parsing
     try {
-      // #region agent log
-      await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:39',message:'About to register multipart plugin',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n').catch(()=>{});
-      // #endregion
       await instance.register(fastifyMultipart, {
         attachFieldsToBody: false, // Don't attach to body, use request.file() instead
         limits: {
           fileSize: 10 * 1024 * 1024, // 10MB max file size
         },
       });
-      // #region agent log
-      await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:47',message:'Multipart plugin registered successfully',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n').catch(()=>{});
-      // #endregion
     } catch (error) {
-      // #region agent log
-      await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:50',message:'Error registering multipart plugin',data:{errorMessage:error instanceof Error ? error.message : String(error),errorStack:error instanceof Error ? error.stack : undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n').catch(()=>{});
-      // #endregion
       throw error;
     }
-
-    // #region agent log
-    await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:46',message:'About to register POST /ads/upload route',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n').catch(()=>{});
-    // #endregion
     
     instance.post(
       '/ads/upload',
@@ -66,9 +46,6 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         preHandler: [requireAuth(), requireRole(['owner'])],
       },
       async (request, reply) => {
-      // #region agent log
-      await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:54',message:'POST /ads/upload handler called',data:{url:request.url,method:request.method,route:request.routerPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n').catch(()=>{});
-      // #endregion
       try {
         let data: any = null;
         let adType: string | null = null;
@@ -83,10 +60,6 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           }
         }
         
-        // #region agent log
-        await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:56',message:'File received',data:{hasData:!!data,mimetype:data?.mimetype,filename:data?.filename,adType},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n').catch(()=>{});
-        // #endregion
-
       if (!data) {
         return reply.status(400).send({
           error: 'No file provided',
@@ -127,16 +100,8 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Write file
         const buffer = await data.toBuffer();
-        
-        // #region agent log
-        await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:97',message:'Buffer created, writing file',data:{bufferSize:buffer.length,webPublicPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n').catch(()=>{});
-        // #endregion
-        
+
         await writeFile(webPublicPath, buffer);
-        
-        // #region agent log
-        await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:101',message:'File written successfully',data:{filename,path:`/mineiro/${filename}`},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n').catch(()=>{});
-        // #endregion
 
         return reply.status(200).send({
           message: 'Ad image uploaded successfully',
@@ -144,9 +109,6 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           path: `/mineiro/${filename}`,
         });
       } catch (error) {
-        // #region agent log
-        await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'ads.ts:110',message:'Error in upload handler',data:{errorMessage:error instanceof Error ? error.message : String(error),errorStack:error instanceof Error ? error.stack : undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n').catch(()=>{});
-        // #endregion
         request.log.error({ err: error }, 'Error uploading ad image');
         return reply.status(500).send({
           error: error instanceof Error ? error.message : 'Internal server error',

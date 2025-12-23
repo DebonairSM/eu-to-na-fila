@@ -63,25 +63,6 @@ export function BarberQueueManager() {
     }
   }, [searchParams, isKioskMode, enterKioskMode]);
 
-  // Track currentView changes for debugging
-  useEffect(() => {
-    if (isKioskMode && currentView) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BarberQueueManager.tsx:66',message:'currentView changed in kiosk mode',data:{currentView,isKioskMode,isInRotation},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      // #region agent log
-      fetch('/api/debug/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BarberQueueManager.tsx:66',message:'currentView changed in kiosk mode',data:{currentView,isKioskMode,isInRotation},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-    }
-  }, [currentView, isKioskMode, isInRotation]);
-
-  // #region agent log
-  useEffect(() => {
-    if (!isKioskMode) return;
-    fetch('/api/debug/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BarberQueueManager.tsx:buildId',message:'BarberQueueManager loaded (kiosk mode)',data:{buildId:'kiosk-skip-missing-ads-2025-12-23b'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  }, [isKioskMode]);
-  // #endregion
-
   // Request fullscreen on first user interaction in kiosk mode
   useEffect(() => {
     if (!isKioskMode || document.fullscreenElement) return;

@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 const QUEUE_VIEW_DURATION = 15000; // 15 seconds per US-013
 const AD_VIEW_DURATION = 15000; // 15 seconds per US-013
 const IDLE_TIMEOUT = 10000; // 10 seconds per US-014
-const KIOSK_DEBUG_BUILD_ID = 'kiosk-skip-missing-ads-2025-12-23b';
 
 export type KioskView = 'queue' | 'ad1' | 'ad2' | 'ad3';
 
@@ -48,9 +47,6 @@ export function useKiosk() {
     let cancelled = false;
 
     (async () => {
-      // #region agent log
-      fetch('/api/debug/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:buildId',message:'useKiosk loaded',data:{buildId:KIOSK_DEBUG_BUILD_ID},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
       const [ad1, ad2, ad3] = await Promise.all([
         checkAssetExists('/mineiro/gt-ad.png'),
         checkAssetExists('/mineiro/gt-ad2.png'),
@@ -58,10 +54,6 @@ export function useKiosk() {
       ]);
       if (cancelled) return;
       setAdAvailability({ 1: ad1, 2: ad2, 3: ad3 });
-
-      // #region agent log
-      fetch('/api/debug/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:adAvailability',message:'Ad asset availability checked',data:{ad1,ad2,ad3},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
     })();
 
     return () => {
@@ -108,13 +100,6 @@ export function useKiosk() {
 
   // Handle rotation - optimized to reduce re-renders
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:65',message:'Rotation effect running',data:{isKioskMode,isInRotation,currentView,nextAdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
-    // #region agent log
-    fetch('/api/debug/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:65',message:'Rotation effect running',data:{isKioskMode,isInRotation,currentView,nextAdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
-    
     if (!isKioskMode || !isInRotation) {
       if (rotationTimerRef.current) {
         clearTimeout(rotationTimerRef.current);
@@ -131,18 +116,7 @@ export function useKiosk() {
     const currentDuration =
       currentView === 'queue' ? QUEUE_VIEW_DURATION : AD_VIEW_DURATION;
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:79',message:'Setting rotation timer',data:{currentView,currentDuration,nextAdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
-
     rotationTimerRef.current = setTimeout(() => {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:82',message:'Rotation timer fired',data:{currentView,nextAdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-      // #region agent log
-      fetch('/api/debug/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:82',message:'Rotation timer fired',data:{currentView,nextAdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-      
       // Rotate: queue -> ad1 -> queue -> ad2 -> queue -> ad3 -> queue (repeat)
       if (currentView === 'queue') {
         // Show next available ad in sequence (skip missing assets)
@@ -155,38 +129,17 @@ export function useKiosk() {
         const chosenIndex = candidates.find((i) => adAvailability[i]) ?? null;
         if (!chosenIndex) {
           // No ads available; stay on queue.
-          // #region agent log
-          fetch('/api/debug/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:queueSelect',message:'No ad assets available; staying on queue',data:{preferred,nextAdIndex,adAvailability},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-          // #endregion
           setCurrentView('queue');
           return;
         }
 
         const nextAd = `ad${chosenIndex}` as KioskView;
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:87',message:'Rotating to ad view',data:{fromView:currentView,toView:nextAd,nextAdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-        // #region agent log
-        fetch('/api/debug/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:queueSelect',message:'Selected ad for rotation',data:{preferred,nextAdIndex,chosenIndex,nextAd,adAvailability},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         setCurrentView(nextAd);
       } else {
         // After ad, go back to queue and advance to next ad
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:92',message:'Rotating from ad back to queue',data:{fromView:currentView,nextAdIndexBefore:nextAdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-        // #region agent log
-        fetch('/api/debug/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:92',message:'Rotating from ad back to queue',data:{fromView:currentView,nextAdIndexBefore:nextAdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         setCurrentView('queue');
         setNextAdIndex((prev) => {
           const newIndex = prev >= 3 ? 1 : prev + 1;
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:97',message:'nextAdIndex updated',data:{prev,newIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-          // #endregion
-          // #region agent log
-          fetch('/api/debug/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useKiosk.ts:97',message:'nextAdIndex updated',data:{prev,newIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-          // #endregion
           // Cycle: 1 -> 2 -> 3 -> 1
           return newIndex;
         });

@@ -227,26 +227,14 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.authToken}`;
     }
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:245',message:'postFormData called',data:{baseUrl:this.baseUrl,path,constructedUrl:url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
-
     const response = await fetch(url, {
       method: 'POST',
       headers,
       body: formData,
     });
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:258',message:'postFormData response',data:{url,status:response.status,statusText:response.statusText,ok:response.ok,contentType:response.headers.get('content-type')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
-
     // Capture response text before parsing
     const responseText = await response.text();
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:262',message:'postFormData response text',data:{url,status:response.status,textLength:responseText.length,textPreview:responseText.substring(0,200),isEmpty:responseText.trim()==='',isJSON:responseText.trim().startsWith('{')||responseText.trim().startsWith('[')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
 
     let data;
     if (responseText.trim() === '') {
@@ -648,9 +636,6 @@ class ApiClient {
     filename: string;
     path: string;
   }> {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:635',message:'uploadAdImage called',data:{adType,fileName:file.name,fileSize:file.size,fileType:file.type},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     const formData = new FormData();
     formData.append('file', file);
     formData.append('adType', adType);

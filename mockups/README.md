@@ -30,7 +30,7 @@ Static HTML mockups for all pages and components of the queue management system.
    - Central navigation hub
    - Three main options:
      - "Entrar na Fila" - Customer registration
-     - "Entrar (Staff)" - Staff login page
+     - "Barbeiros" - Staff login page
      - "Gerenciar Fila" - Direct access to queue manager (bypass login)
    - Clean, simple design with animated cards
 
@@ -129,7 +129,7 @@ Open any HTML file directly in a browser to view the mockup. Each file is self-c
 
 1. **index.html**: Home page with three options:
    - "Entrar na Fila" - Customer registration
-   - "Entrar (Staff)" - Staff login
+   - "Barbeiros" - Staff login
    - "Gerenciar Fila" - Direct access to queue manager (bypass login)
 2. **queue-join.html**: Try entering names with profanity to test the filter
 3. **customer-status.html**: Watch the estimated wait time updates (updates every 30s, only when data changes). Large, prominent wait time display.

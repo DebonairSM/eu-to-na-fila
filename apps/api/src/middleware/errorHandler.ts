@@ -142,10 +142,6 @@ export async function notFoundHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
-  // #region agent log
-  const fs = await import('fs/promises');
-  await fs.appendFile('/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log', JSON.stringify({location:'errorHandler.ts:141',message:'notFoundHandler called',data:{method:request.method,url:request.url,routerPath:request.routerPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})+'\n').catch(()=>{});
-  // #endregion
   const url = request.url || '';
   const urlPath = url.split('?')[0];
   const assetExtensions = ['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.map'];

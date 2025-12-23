@@ -168,7 +168,7 @@ export function Navigation() {
                   to="/login"
                   className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
                 >
-                  Entrar (Staff)
+                  Barbeiros
                 </Link>
               </li>
             </>
@@ -308,7 +308,7 @@ export function Navigation() {
                         setIsMobileMenuOpen(false);
                       }}
                     >
-                      Entrar (Staff)
+                      Barbeiros
                     </Link>
                   </>
                 )}
