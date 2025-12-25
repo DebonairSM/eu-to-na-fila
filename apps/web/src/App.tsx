@@ -1,7 +1,8 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { lazy, Suspense, useEffect } from 'react';
 import { useAuthContext } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { api } from './lib/api';
 
 const LandingPage = lazy(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })));
 const CompanyHomePage = lazy(() => import('./pages/CompanyHomePage').then((m) => ({ default: m.CompanyHomePage })));
@@ -43,6 +44,84 @@ function ProtectedRoute({
   return <>{children}</>;
 }
 
+function AppContent() {
+  const { logout } = useAuthContext();
+  const navigate = useNavigate();
+
+  // Set up global auth error handler
+  useEffect(() => {
+    api.setOnAuthError(() => {
+      logout();
+      navigate('/login', { replace: true });
+    });
+  }, [logout, navigate]);
+
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/home" replace />} />
+      <Route path="/home" element={<LandingPage />} />
+      <Route path="/company" element={<CompanyHomePage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/network" element={<NetworkPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/join" element={<JoinPage />} />
+      <Route path="/status/:id" element={<StatusPage />} />
+      <Route path="/login" element={<LoginPage />} />
+
+      <Route
+        path="/staff"
+        element={
+          <ProtectedRoute>
+            <StaffPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/owner"
+        element={
+          <ProtectedRoute requireOwner>
+            <OwnerDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manage"
+        element={
+          <ProtectedRoute>
+            <BarberQueueManager />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/analytics"
+        element={
+          <ProtectedRoute requireOwner>
+            <AnalyticsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/barbers"
+        element={
+          <ProtectedRoute requireOwner>
+            <BarberManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ads"
+        element={
+          <ProtectedRoute requireOwner>
+            <AdManagementPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
 function App() {
   useEffect(() => {
     const preload = [
@@ -66,68 +145,7 @@ function App() {
           </div>
         }
       >
-      <Routes>
-          <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home" element={<LandingPage />} />
-          <Route path="/company" element={<CompanyHomePage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/network" element={<NetworkPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/join" element={<JoinPage />} />
-          <Route path="/status/:id" element={<StatusPage />} />
-          <Route path="/login" element={<LoginPage />} />
-
-        <Route
-          path="/staff"
-          element={
-            <ProtectedRoute>
-              <StaffPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/owner"
-          element={
-            <ProtectedRoute requireOwner>
-              <OwnerDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/manage"
-          element={
-            <ProtectedRoute>
-              <BarberQueueManager />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/analytics"
-          element={
-            <ProtectedRoute requireOwner>
-              <AnalyticsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/barbers"
-          element={
-            <ProtectedRoute requireOwner>
-              <BarberManagementPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/ads"
-          element={
-            <ProtectedRoute requireOwner>
-              <AdManagementPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        <AppContent />
       </Suspense>
     </ErrorBoundary>
   );

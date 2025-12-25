@@ -41,6 +41,13 @@ export class ApiError extends Error {
   }
 
   /**
+   * Check if error is an authentication error (401 Unauthorized).
+   */
+  isAuthError(): boolean {
+    return this.statusCode === 401 || this.code === 'UNAUTHORIZED';
+  }
+
+  /**
    * Get field-specific errors for form display.
    */
   getFieldErrors(): Record<string, string> {
@@ -81,6 +88,7 @@ class ApiClient {
   private baseUrl: string;
   private authToken?: string;
   private readonly TOKEN_STORAGE_KEY = 'eutonafila_auth_token';
+  private onAuthError?: () => void;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
@@ -95,6 +103,15 @@ class ApiClient {
       // Token will be set later by useAuth hook
       // Silently fail - auth token loading is optional
     }
+  }
+
+  /**
+   * Set callback to be called when authentication errors occur.
+   * 
+   * @param callback - Function to call when 401 errors are detected
+   */
+  setOnAuthError(callback: () => void): void {
+    this.onAuthError = callback;
   }
 
   /**
@@ -163,7 +180,7 @@ class ApiClient {
       // Check if response is an error
       if (!response.ok) {
         const error = data as ApiErrorResponse;
-        throw new ApiError(
+        const apiError = new ApiError(
           error.error,
           error.statusCode,
           error.code,
@@ -171,12 +188,23 @@ class ApiClient {
             ? (error as { errors: Array<{ field: string; message: string }> }).errors 
             : undefined
         );
+
+        // If it's an auth error, trigger the callback before throwing
+        if (apiError.isAuthError() && this.onAuthError) {
+          this.onAuthError();
+        }
+
+        throw apiError;
       }
 
       return data as T;
     } catch (error) {
       // Re-throw ApiError as is
       if (error instanceof ApiError) {
+        // If it's an auth error, trigger the callback before throwing
+        if (error.isAuthError() && this.onAuthError) {
+          this.onAuthError();
+        }
         throw error;
       }
 
@@ -259,7 +287,7 @@ class ApiClient {
 
     if (!response.ok) {
       const error = data as ApiErrorResponse;
-      throw new ApiError(
+      const apiError = new ApiError(
         error.error,
         error.statusCode,
         error.code,
@@ -267,6 +295,13 @@ class ApiClient {
           ? (error as { errors: Array<{ field: string; message: string }> }).errors 
           : undefined
       );
+
+      // If it's an auth error, trigger the callback before throwing
+      if (apiError.isAuthError() && this.onAuthError) {
+        this.onAuthError();
+      }
+
+      throw apiError;
     }
 
     return data as T;
