@@ -22,7 +22,7 @@ export function AdManagementPage() {
   // Redirect if not company admin
   useEffect(() => {
     if (!isCompanyAdmin) {
-      navigate('/company/login');
+      navigate('/login');
     }
   }, [isCompanyAdmin, navigate]);
 

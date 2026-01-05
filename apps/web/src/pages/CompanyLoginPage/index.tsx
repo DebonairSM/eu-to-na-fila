@@ -26,3 +26,5 @@ export function CompanyLoginPage() {
   );
 }
 
+export default CompanyLoginPage;
+

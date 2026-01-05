@@ -39,9 +39,9 @@ function ProtectedRoute({
 
   if (!isAuthenticated) {
     if (requireCompanyAdmin) {
-      return <Navigate to="/company/login" replace />;
+      return <Navigate to="/login" replace />;
     }
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/shop/login" replace />;
   }
 
   if (requireOwner && !isOwner) {
@@ -49,7 +49,7 @@ function ProtectedRoute({
   }
 
   if (requireCompanyAdmin && !isCompanyAdmin) {
-    return <Navigate to="/company/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
@@ -77,8 +77,8 @@ function AppContent() {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/join" element={<JoinPage />} />
       <Route path="/status/:id" element={<StatusPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/company/login" element={<CompanyLoginPage />} />
+      <Route path="/login" element={<CompanyLoginPage />} />
+      <Route path="/shop/login" element={<LoginPage />} />
 
       <Route
         path="/staff"

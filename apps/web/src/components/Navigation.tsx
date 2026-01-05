@@ -176,7 +176,7 @@ export function Navigation() {
               </li>
               <li>
                 <Link
-                  to="/login"
+                  to="/shop/login"
                   className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
                 >
                   Barbeiros
@@ -325,7 +325,7 @@ export function Navigation() {
                       Entrar na Fila
                     </Link>
                     <Link
-                      to="/login"
+                      to="/shop/login"
                       className="block text-sm font-medium text-[rgba(255,255,255,0.85)] px-3 py-3 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
                       onClick={(e) => {
                         e.stopPropagation();
