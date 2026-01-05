@@ -2,32 +2,32 @@ import { Link } from 'react-router-dom';
 
 export function RootHomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
-      <nav className="border-b border-white/10 bg-[#050c18]/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <nav className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg">
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm group-hover:from-blue-400 group-hover:to-indigo-500 transition-all">
                 E
               </div>
-              <span className="text-xl font-semibold">EuToNaFila</span>
+              <span className="text-lg font-medium tracking-tight">EuToNaFila</span>
             </Link>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-8">
               <Link
                 to="/projects"
-                className="text-white/70 hover:text-[#D4AF37] transition-colors text-sm font-medium"
+                className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
               >
                 Projects
               </Link>
               <Link
                 to="/about"
-                className="text-white/70 hover:text-[#D4AF37] transition-colors text-sm font-medium"
+                className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
               >
                 About
               </Link>
               <Link
                 to="/contact"
-                className="text-white/70 hover:text-[#D4AF37] transition-colors text-sm font-medium"
+                className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
               >
                 Contact
               </Link>
@@ -37,28 +37,30 @@ export function RootHomePage() {
       </nav>
 
       <main className="w-full">
-        <section className="relative min-h-[90vh] flex items-center justify-center px-4 sm:px-6 py-20 sm:py-32">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#D4AF37]/5 via-transparent to-transparent" />
-          <div className="relative max-w-6xl mx-auto text-center space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/8 border border-white/12 text-[#8ad6b0] text-xs font-semibold uppercase tracking-[0.28em]">
-              AI Software • Enterprise Solutions
+        <section className="relative min-h-[92vh] flex items-center justify-center px-6 py-24">
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-transparent" />
+          <div className="relative max-w-4xl mx-auto text-center space-y-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-400 text-xs font-medium uppercase tracking-wider">
+              AI Software Solutions
             </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-tight max-w-5xl mx-auto drop-shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
-              AI Software for Companies
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-light leading-[1.1] tracking-tight">
+              Intelligent Software
+              <br />
+              <span className="text-blue-400">for Modern Companies</span>
             </h1>
-            <p className="text-lg sm:text-xl text-white/80 max-w-3xl mx-auto leading-relaxed">
-              Empowering businesses with intelligent software solutions to improve effectiveness, streamline operations, and drive growth.
+            <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
+              We build sophisticated software solutions that help businesses improve effectiveness, optimize operations, and achieve their goals.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
               <Link
                 to="/projects"
-                className="px-8 py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-xl hover:shadow-[0_10px_30px_rgba(212,175,55,0.4)] transition-all hover:-translate-y-0.5"
+                className="px-8 py-3.5 bg-white text-[#0a0a0a] font-medium rounded-lg hover:bg-gray-100 transition-all text-sm"
               >
-                View Projects
+                View Our Work
               </Link>
               <Link
                 to="/contact"
-                className="px-8 py-4 border-2 border-white/20 text-white font-semibold rounded-xl hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all"
+                className="px-8 py-3.5 border border-white/20 text-white font-medium rounded-lg hover:border-white/40 hover:bg-white/5 transition-all text-sm"
               >
                 Get in Touch
               </Link>
@@ -67,49 +69,46 @@ export function RootHomePage() {
         </section>
       </main>
 
-      <footer className="border-t border-white/10 bg-[#050c18] py-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div>
+      <footer className="border-t border-white/5 bg-[#0a0a0a] py-16">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
                   E
                 </div>
-                <div>
-                  <p className="text-sm text-white/70">EuToNaFila</p>
-                  <p className="text-lg font-semibold">AI Software Solutions</p>
-                </div>
+                <span className="text-lg font-medium">EuToNaFila</span>
               </div>
-              <p className="text-white/60 text-sm">
-                Building intelligent software for companies.
+              <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
+                Building intelligent software solutions for companies seeking to improve effectiveness and drive growth.
               </p>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Links</h3>
-              <nav className="space-y-2">
-                <Link to="/" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
+              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Navigation</h3>
+              <nav className="space-y-3">
+                <Link to="/" className="block text-gray-500 hover:text-white text-sm transition-colors">
                   Home
                 </Link>
-                <Link to="/projects" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
+                <Link to="/projects" className="block text-gray-500 hover:text-white text-sm transition-colors">
                   Projects
                 </Link>
-                <Link to="/about" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
+                <Link to="/about" className="block text-gray-500 hover:text-white text-sm transition-colors">
                   About
                 </Link>
-                <Link to="/contact" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
+                <Link to="/contact" className="block text-gray-500 hover:text-white text-sm transition-colors">
                   Contact
                 </Link>
               </nav>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Contact</h3>
-              <p className="text-white/70 text-sm mb-2">Software Development</p>
-              <p className="text-white/60 text-sm">
-                Building solutions for businesses
+              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Company</h3>
+              <p className="text-gray-500 text-sm mb-2">AI Software Development</p>
+              <p className="text-gray-600 text-sm">
+                Focused on building effective solutions
               </p>
             </div>
           </div>
-          <div className="pt-8 border-t border-white/10 text-center text-white/50 text-sm">
+          <div className="pt-8 border-t border-white/5 text-center text-gray-600 text-sm">
             <p>&copy; {new Date().getFullYear()} EuToNaFila. All rights reserved.</p>
           </div>
         </div>

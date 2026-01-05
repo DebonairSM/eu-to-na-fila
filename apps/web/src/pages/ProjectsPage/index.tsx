@@ -13,32 +13,32 @@ export function ProjectsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
-      <nav className="border-b border-white/10 bg-[#050c18]/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <nav className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg">
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm group-hover:from-blue-400 group-hover:to-indigo-500 transition-all">
                 E
               </div>
-              <span className="text-xl font-semibold">EuToNaFila</span>
+              <span className="text-lg font-medium tracking-tight">EuToNaFila</span>
             </Link>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-8">
               <Link
                 to="/projects"
-                className="text-[#D4AF37] border-b-2 border-[#D4AF37] pb-1 text-sm font-medium"
+                className="text-sm text-white border-b border-white/20 pb-1 font-medium"
               >
                 Projects
               </Link>
               <Link
                 to="/about"
-                className="text-white/70 hover:text-[#D4AF37] transition-colors text-sm font-medium"
+                className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
               >
                 About
               </Link>
               <Link
                 to="/contact"
-                className="text-white/70 hover:text-[#D4AF37] transition-colors text-sm font-medium"
+                className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
               >
                 Contact
               </Link>
@@ -47,10 +47,10 @@ export function ProjectsPage() {
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
-        <header className="mb-12">
-          <h1 className="text-4xl sm:text-5xl font-semibold mb-4">Projects</h1>
-          <p className="text-lg text-white/70 max-w-2xl">
+      <main className="max-w-6xl mx-auto px-6 py-20">
+        <header className="mb-16">
+          <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Projects</h1>
+          <p className="text-xl text-gray-400 max-w-2xl leading-relaxed font-light">
             Explore our portfolio of software solutions and applications.
           </p>
         </header>
@@ -59,24 +59,24 @@ export function ProjectsPage() {
           {projects.map((project) => (
             <div
               key={project.id}
-              className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 hover:bg-white/8 transition-all hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
+              className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-10 hover:border-white/20 hover:bg-white/10 transition-all"
             >
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <h2 className="text-2xl sm:text-3xl font-semibold">{project.title}</h2>
-                    <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-semibold uppercase">
+                  <div className="flex items-center gap-4 mb-4">
+                    <h2 className="text-3xl font-light">{project.title}</h2>
+                    <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium uppercase tracking-wider border border-blue-500/30">
                       {project.status}
                     </span>
                   </div>
-                  <p className="text-white/80 text-lg mb-4 leading-relaxed">
+                  <p className="text-gray-300 text-lg mb-6 leading-relaxed">
                     {project.description}
                   </p>
-                  <div className="flex flex-wrap gap-2 mb-6">
+                  <div className="flex flex-wrap gap-2 mb-8">
                     {project.technologies.map((tech) => (
                       <span
                         key={tech}
-                        className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-sm"
+                        className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-400 text-sm"
                       >
                         {tech}
                       </span>
@@ -84,10 +84,10 @@ export function ProjectsPage() {
                   </div>
                   <a
                     href={project.link}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-xl hover:shadow-[0_10px_30px_rgba(212,175,55,0.4)] transition-all hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#0a0a0a] font-medium rounded-lg hover:bg-gray-100 transition-all text-sm"
                   >
                     View Project
-                    <span className="material-symbols-outlined text-[#0a0a0a] text-xl">
+                    <span className="material-symbols-outlined text-[#0a0a0a] text-lg">
                       arrow_forward
                     </span>
                   </a>
@@ -100,57 +100,54 @@ export function ProjectsPage() {
         <div className="mt-16 text-center">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 px-6 py-3 border-2 border-white/20 text-white font-semibold rounded-xl hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all"
+            className="inline-flex items-center gap-2 px-6 py-3 border border-white/20 text-white font-medium rounded-lg hover:border-white/40 hover:bg-white/5 transition-all text-sm"
           >
-            <span className="material-symbols-outlined text-xl">arrow_back</span>
+            <span className="material-symbols-outlined text-lg">arrow_back</span>
             Back to Home
           </Link>
         </div>
       </main>
 
-      <footer className="border-t border-white/10 bg-[#050c18] py-12 mt-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div>
+      <footer className="border-t border-white/5 bg-[#0a0a0a] py-16 mt-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
                   E
                 </div>
-                <div>
-                  <p className="text-sm text-white/70">EuToNaFila</p>
-                  <p className="text-lg font-semibold">AI Software Solutions</p>
-                </div>
+                <span className="text-lg font-medium">EuToNaFila</span>
               </div>
-              <p className="text-white/60 text-sm">
-                Building intelligent software for companies.
+              <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
+                Building intelligent software solutions for companies seeking to improve effectiveness and drive growth.
               </p>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Links</h3>
-              <nav className="space-y-2">
-                <Link to="/" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
+              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Navigation</h3>
+              <nav className="space-y-3">
+                <Link to="/" className="block text-gray-500 hover:text-white text-sm transition-colors">
                   Home
                 </Link>
-                <Link to="/projects" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
+                <Link to="/projects" className="block text-gray-500 hover:text-white text-sm transition-colors">
                   Projects
                 </Link>
-                <Link to="/about" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
+                <Link to="/about" className="block text-gray-500 hover:text-white text-sm transition-colors">
                   About
                 </Link>
-                <Link to="/contact" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
+                <Link to="/contact" className="block text-gray-500 hover:text-white text-sm transition-colors">
                   Contact
                 </Link>
               </nav>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Contact</h3>
-              <p className="text-white/70 text-sm mb-2">Software Development</p>
-              <p className="text-white/60 text-sm">
-                Building solutions for businesses
+              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Company</h3>
+              <p className="text-gray-500 text-sm mb-2">AI Software Development</p>
+              <p className="text-gray-600 text-sm">
+                Focused on building effective solutions
               </p>
             </div>
           </div>
-          <div className="pt-8 border-t border-white/10 text-center text-white/50 text-sm">
+          <div className="pt-8 border-t border-white/5 text-center text-gray-600 text-sm">
             <p>&copy; {new Date().getFullYear()} EuToNaFila. All rights reserved.</p>
           </div>
         </div>
@@ -158,4 +155,3 @@ export function ProjectsPage() {
     </div>
   );
 }
-
