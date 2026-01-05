@@ -2,6 +2,9 @@ import { Link } from 'react-router-dom';
 import { CompanyNav } from '@/components/CompanyNav';
 
 export function CompanyHomePage() {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CompanyHomePage.tsx:4',message:'CompanyHomePage component rendering',data:{component:'CompanyHomePage'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
       <CompanyNav />
@@ -175,6 +178,9 @@ export function CompanyHomePage() {
       </main>
 
       <footer className="border-t border-white/10 bg-[#050c18] py-12">
+        {/* #region agent log */}
+        {(() => { fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CompanyHomePage.tsx:177',message:'Footer rendering',data:{hasFooter:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{}); return null; })()}
+        {/* #endregion */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
@@ -217,11 +223,15 @@ export function CompanyHomePage() {
             </div>
           </div>
           <div className="pt-8 border-t border-white/10 text-center text-white/50 text-sm">
+            {/* #region agent log */}
+            {(() => { fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CompanyHomePage.tsx:219',message:'Footer copyright section rendering',data:{hasLoginLink:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{}); return null; })()}
+            {/* #endregion */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
               <Link
                 to="/login"
                 className="text-white/40 hover:text-white/60 transition-colors text-xs flex items-center gap-1"
+                data-testid="footer-login-link"
               >
                 <span className="material-symbols-outlined text-sm">lock</span>
                 Admin
