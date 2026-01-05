@@ -17,19 +17,19 @@ export function RootAboutPage() {
                 to="/projects"
                 className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
               >
-                Projects
+                Projetos
               </Link>
               <Link
                 to="/about"
                 className="text-sm text-white border-b border-white/20 pb-1 font-medium"
               >
-                About
+                Sobre
               </Link>
               <Link
                 to="/contact"
                 className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
               >
-                Contact
+                Contato
               </Link>
             </div>
           </div>
@@ -38,53 +38,53 @@ export function RootAboutPage() {
 
       <main className="max-w-6xl mx-auto px-6 py-20">
         <header className="mb-16">
-          <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">About EuToNaFila</h1>
+          <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Sobre EuToNaFila</h1>
           <p className="text-xl text-gray-400 max-w-2xl leading-relaxed font-light">
-            We build sophisticated software solutions that help companies improve effectiveness and achieve their goals.
+            Construímos soluções de software sofisticadas que ajudam empresas a melhorar a eficácia e alcançar seus objetivos.
           </p>
         </header>
 
         <section className="mb-20">
           <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-12">
-            <h2 className="text-3xl font-light mb-6">Our Mission</h2>
+            <h2 className="text-3xl font-light mb-6">Nossa Missão</h2>
             <div className="space-y-4 text-gray-300 leading-relaxed">
               <p className="text-lg">
-                EuToNaFila is a software development company focused on creating intelligent solutions that help businesses improve their effectiveness. We combine advanced technology with practical business insights to deliver software that makes a meaningful difference.
+                EuToNaFila é uma empresa de desenvolvimento de software focada em criar soluções inteligentes que ajudam empresas a melhorar sua eficácia. Combinamos tecnologia avançada com insights práticos de negócios para entregar software que faz uma diferença significativa.
               </p>
               <p className="text-lg">
-                Our approach is centered on understanding business needs and building solutions that are both technically excellent and genuinely useful. We aim to empower companies with tools that streamline operations, optimize workflows, and drive sustainable growth.
+                Nossa abordagem está centrada em entender as necessidades do negócio e construir soluções que são tecnicamente excelentes e genuinamente úteis. Buscamos capacitar empresas com ferramentas que agilizam operações, otimizam fluxos de trabalho e impulsionam o crescimento sustentável.
               </p>
             </div>
           </div>
         </section>
 
         <section className="mb-20">
-          <h2 className="text-3xl font-light mb-12">What We Do</h2>
+          <h2 className="text-3xl font-light mb-12">O Que Fazemos</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
-                title: 'AI-Powered Solutions',
-                description: 'Leverage artificial intelligence to automate processes, gain insights, and make data-driven decisions.',
+                title: 'Soluções com IA',
+                description: 'Aproveite a inteligência artificial para automatizar processos, obter insights e tomar decisões baseadas em dados.',
               },
               {
-                title: 'Improve Effectiveness',
-                description: 'Optimize workflows and operations to increase productivity and reduce operational costs.',
+                title: 'Melhorar Eficácia',
+                description: 'Otimize fluxos de trabalho e operações para aumentar a produtividade e reduzir custos operacionais.',
               },
               {
-                title: 'Custom Development',
-                description: 'Tailored software solutions designed to fit your specific business needs and requirements.',
+                title: 'Desenvolvimento Personalizado',
+                description: 'Soluções de software sob medida projetadas para atender às necessidades e requisitos específicos do seu negócio.',
               },
               {
-                title: 'Data Analytics',
-                description: 'Transform raw data into actionable insights that drive business growth and optimization.',
+                title: 'Análise de Dados',
+                description: 'Transforme dados brutos em insights acionáveis que impulsionam o crescimento e a otimização do negócio.',
               },
               {
-                title: 'Performance Focus',
-                description: 'High-performance applications built for scale, reliability, and optimal user experience.',
+                title: 'Foco em Performance',
+                description: 'Aplicações de alto desempenho construídas para escala, confiabilidade e experiência do usuário otimizada.',
               },
               {
-                title: 'Enterprise Ready',
-                description: 'Secure, scalable solutions that meet enterprise standards and compliance requirements.',
+                title: 'Pronto para Empresas',
+                description: 'Soluções seguras e escaláveis que atendem aos padrões empresariais e requisitos de conformidade.',
               },
             ].map((feature, idx) => (
               <div
@@ -103,7 +103,7 @@ export function RootAboutPage() {
             to="/contact"
             className="inline-block px-8 py-3.5 bg-white text-[#0a0a0a] font-medium rounded-lg hover:bg-gray-100 transition-all text-sm"
           >
-            Get in Touch
+            Entre em Contato
           </Link>
         </section>
       </main>
@@ -119,36 +119,36 @@ export function RootAboutPage() {
                 <span className="text-lg font-medium">EuToNaFila</span>
               </div>
               <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                Building intelligent software solutions for companies seeking to improve effectiveness and drive growth.
+                Construindo soluções de software inteligentes para empresas que buscam melhorar a eficácia e impulsionar o crescimento.
               </p>
             </div>
             <div>
-              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Navigation</h3>
+              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Navegação</h3>
               <nav className="space-y-3">
                 <Link to="/" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  Home
+                  Início
                 </Link>
                 <Link to="/projects" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  Projects
+                  Projetos
                 </Link>
                 <Link to="/about" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  About
+                  Sobre
                 </Link>
                 <Link to="/contact" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  Contact
+                  Contato
                 </Link>
               </nav>
             </div>
             <div>
-              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Company</h3>
-              <p className="text-gray-500 text-sm mb-2">AI Software Development</p>
+              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Empresa</h3>
+              <p className="text-gray-500 text-sm mb-2">Desenvolvimento de Software com IA</p>
               <p className="text-gray-600 text-sm">
-                Focused on building effective solutions
+                Focados em construir soluções eficazes
               </p>
             </div>
           </div>
           <div className="pt-8 border-t border-white/5 text-center text-gray-600 text-sm">
-            <p>&copy; {new Date().getFullYear()} EuToNaFila. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>

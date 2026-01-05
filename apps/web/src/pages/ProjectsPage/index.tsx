@@ -4,11 +4,11 @@ export function ProjectsPage() {
   const projects = [
     {
       id: 'eu-to-na-fila',
-      title: 'EuToNaFila Queue Management',
-      description: 'A comprehensive queue management system for barbershops and service businesses. Features real-time queue tracking, staff management, analytics, and PWA support for tablet kiosks.',
+      title: 'EuToNaFila Gerenciamento de Fila',
+      description: 'Sistema completo de gerenciamento de filas para barbearias e empresas de serviços. Inclui rastreamento de fila em tempo real, gerenciamento de equipe, analytics e suporte PWA para totens em tablets.',
       technologies: ['React', 'TypeScript', 'Fastify', 'PostgreSQL', 'WebSockets', 'PWA'],
       link: '/mineiro/',
-      status: 'Active',
+      status: 'Ativo',
     },
   ];
 
@@ -28,19 +28,19 @@ export function ProjectsPage() {
                 to="/projects"
                 className="text-sm text-white border-b border-white/20 pb-1 font-medium"
               >
-                Projects
+                Projetos
               </Link>
               <Link
                 to="/about"
                 className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
               >
-                About
+                Sobre
               </Link>
               <Link
                 to="/contact"
                 className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
               >
-                Contact
+                Contato
               </Link>
             </div>
           </div>
@@ -49,9 +49,9 @@ export function ProjectsPage() {
 
       <main className="max-w-6xl mx-auto px-6 py-20">
         <header className="mb-16">
-          <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Projects</h1>
+          <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Projetos</h1>
           <p className="text-xl text-gray-400 max-w-2xl leading-relaxed font-light">
-            Explore our portfolio of software solutions and applications.
+            Explore nosso portfólio de soluções de software e aplicações.
           </p>
         </header>
 
@@ -86,7 +86,7 @@ export function ProjectsPage() {
                     href={project.link}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#0a0a0a] font-medium rounded-lg hover:bg-gray-100 transition-all text-sm"
                   >
-                    View Project
+                    Ver Projeto
                     <span className="material-symbols-outlined text-[#0a0a0a] text-lg">
                       arrow_forward
                     </span>
@@ -103,7 +103,7 @@ export function ProjectsPage() {
             className="inline-flex items-center gap-2 px-6 py-3 border border-white/20 text-white font-medium rounded-lg hover:border-white/40 hover:bg-white/5 transition-all text-sm"
           >
             <span className="material-symbols-outlined text-lg">arrow_back</span>
-            Back to Home
+            Voltar ao Início
           </Link>
         </div>
       </main>
@@ -119,36 +119,36 @@ export function ProjectsPage() {
                 <span className="text-lg font-medium">EuToNaFila</span>
               </div>
               <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                Building intelligent software solutions for companies seeking to improve effectiveness and drive growth.
+                Construindo soluções de software inteligentes para empresas que buscam melhorar a eficácia e impulsionar o crescimento.
               </p>
             </div>
             <div>
-              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Navigation</h3>
+              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Navegação</h3>
               <nav className="space-y-3">
                 <Link to="/" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  Home
+                  Início
                 </Link>
                 <Link to="/projects" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  Projects
+                  Projetos
                 </Link>
                 <Link to="/about" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  About
+                  Sobre
                 </Link>
                 <Link to="/contact" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  Contact
+                  Contato
                 </Link>
               </nav>
             </div>
             <div>
-              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Company</h3>
-              <p className="text-gray-500 text-sm mb-2">AI Software Development</p>
+              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Empresa</h3>
+              <p className="text-gray-500 text-sm mb-2">Desenvolvimento de Software com IA</p>
               <p className="text-gray-600 text-sm">
-                Focused on building effective solutions
+                Focados em construir soluções eficazes
               </p>
             </div>
           </div>
           <div className="pt-8 border-t border-white/5 text-center text-gray-600 text-sm">
-            <p>&copy; {new Date().getFullYear()} EuToNaFila. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>

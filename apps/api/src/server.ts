@@ -101,7 +101,16 @@ fastify.register(fastifyRateLimit, {
   },
   skip: (request: FastifyRequest, key: string) => {
     // Skip global rate limit for auth routes - they have their own rate limiting
-    return request.url.startsWith('/api/shops/') && request.url.includes('/auth');
+    if (request.url.startsWith('/api/shops/') && request.url.includes('/auth')) {
+      return true;
+    }
+    // Skip global rate limit for authenticated requests (staff/owner operations)
+    // These are already protected by authentication and don't need strict rate limiting
+    const authHeader = request.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      return true;
+    }
+    return false;
   },
 } as any);
 

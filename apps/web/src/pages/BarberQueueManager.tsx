@@ -691,7 +691,7 @@ export function BarberQueueManager() {
                             : isDisabled
                               ? 'bg-white/5 border-white/10 text-white/40 cursor-not-allowed opacity-50'
                               : isPreferred
-                                ? 'bg-[#D4AF37]/10 border-[#D4AF37]/50 text-white hover:border-[#D4AF37]'
+                                ? 'bg-[#D4AF37]/10 border-transparent text-white hover:border-[#D4AF37]/20'
                                 : 'bg-white/5 border-white/20 text-white hover:border-[#D4AF37]/50'
                         )}
                         title={isDisabled ? 'Atendendo outro cliente' : isPreferred ? 'Barbeiro preferido' : undefined}
