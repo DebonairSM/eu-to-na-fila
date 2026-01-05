@@ -15,10 +15,10 @@ import { logAuthFailure, logAuthSuccess, getClientIp } from '../middleware/secur
  */
 export const authRoutes: FastifyPluginAsync = async (fastify) => {
   // Brute force protection: more lenient in development
-  // In development: 20 attempts per 15 minutes (allows for testing)
-  // In production: 5 attempts per 15 minutes (strict security)
+  // In development: 100 attempts per 15 minutes (allows for testing)
+  // In production: 30 attempts per 15 minutes (balanced security and usability)
   const isDevelopment = process.env.NODE_ENV === 'development';
-  const maxAttempts = isDevelopment ? 20 : 5;
+  const maxAttempts = isDevelopment ? 100 : 30;
   
   const authRateLimit = createRateLimit({
     max: maxAttempts,
