@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { Navigation } from '@/components/Navigation';
+import { CompanyNav } from '@/components/CompanyNav';
 import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/utils';
 
@@ -83,7 +83,7 @@ export function AdManagementPage() {
 
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
-      <Navigation />
+      <CompanyNav />
       <main className="container max-w-[800px] mx-auto relative z-10 pt-24 px-4 sm:px-6 lg:px-10 pb-12">
         <div className="text-center mb-10">
           <h1 className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37]">
