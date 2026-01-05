@@ -277,13 +277,13 @@ fastify.setNotFoundHandler(async (request, reply) => {
   }
   
   // SPA fallback: serve index.html for client routes
-  // All routes under /mineiro/ should be handled by the SPA
-  const isSpaRoute =
+  // Only routes under /mineiro/ should be handled by the barbershop SPA
+  // Root routes (/) are handled by the root route handler above
+  const isMineiroSpaRoute =
     urlPath.startsWith('/mineiro/') ||
-    urlPath === '/mineiro' ||
-    urlPath === '/';
+    urlPath === '/mineiro';
 
-  if (isSpaRoute) {
+  if (isMineiroSpaRoute) {
     const indexPath = join(mineiroPath, 'index.html');
     if (existsSync(indexPath)) {
       try {
@@ -291,6 +291,20 @@ fastify.setNotFoundHandler(async (request, reply) => {
         return reply.type('text/html').send(fileContent);
       } catch (error) {
         fastify.log.error({ err: error, path: indexPath }, 'Error reading index.html for SPA fallback');
+      }
+    }
+  }
+  
+  // Handle root SPA routes (company homepage routes like /projects, /about, /contact)
+  // These should serve the root.html file
+  if (!urlPath.startsWith('/mineiro') && !urlPath.startsWith('/api')) {
+    const rootIndexPath = join(rootPath, 'root.html');
+    if (existsSync(rootIndexPath)) {
+      try {
+        const fileContent = readFileSync(rootIndexPath, 'utf-8');
+        return reply.type('text/html').send(fileContent);
+      } catch (error) {
+        fastify.log.error({ err: error, path: rootIndexPath }, 'Error reading root.html for SPA fallback');
       }
     }
   }
