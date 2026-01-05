@@ -217,7 +217,16 @@ export function CompanyHomePage() {
             </div>
           </div>
           <div className="pt-8 border-t border-white/10 text-center text-white/50 text-sm">
-            <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
+              <Link
+                to="/login"
+                className="text-white/40 hover:text-white/60 transition-colors text-xs flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">lock</span>
+                Admin
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
