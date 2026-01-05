@@ -229,7 +229,7 @@ fastify.register(
   { prefix: '/api' }
 );
 
-// Serve root homepage (shops listing)
+// Serve root homepage (company homepage)
 fastify.get('/', async (request, reply) => {
   const rootIndexPath = join(rootPath, 'root.html');
   if (existsSync(rootIndexPath)) {
