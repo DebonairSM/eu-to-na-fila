@@ -115,7 +115,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       userId: shop.id,
       shopId: shop.id,
       role,
-    });
+    } as { userId: number; shopId: number; role: 'owner' | 'staff' });
 
     return {
       valid: true,

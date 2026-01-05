@@ -612,6 +612,55 @@ class ApiClient {
     return result;
   }
 
+  /**
+   * Authenticate as company admin.
+   * 
+   * @param username - Company admin username
+   * @param password - Company admin password
+   * @returns Authentication result with role, token, and company ID
+   */
+  async companyAuthenticate(username: string, password: string): Promise<{ valid: boolean; role: 'company_admin' | null; token?: string; companyId?: number; userId?: number }> {
+    const result = await this.post<{ valid: boolean; role: 'company_admin' | null; token?: string; companyId?: number; userId?: number }>('/company/auth', { username, password });
+    
+    // Store token if authentication was successful
+    if (result.valid && result.token) {
+      this.setAuthToken(result.token);
+    }
+    
+    return result;
+  }
+
+  /**
+   * Get company dashboard data.
+   * 
+   * @param companyId - Company ID
+   * @returns Dashboard statistics
+   */
+  async getCompanyDashboard(companyId: number): Promise<{
+    totalShops: number;
+    activeAds: number;
+    totalAds: number;
+  }> {
+    return this.get(`/companies/${companyId}/dashboard`);
+  }
+
+  /**
+   * Get company shops.
+   * 
+   * @param companyId - Company ID
+   * @returns List of shops
+   */
+  async getCompanyShops(companyId: number): Promise<Array<{
+    id: number;
+    slug: string;
+    name: string;
+    companyId: number | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }>> {
+    return this.get(`/companies/${companyId}/shops`);
+  }
+
   // ==================== Analytics Endpoints ====================
 
   /**

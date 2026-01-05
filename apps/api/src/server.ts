@@ -14,6 +14,8 @@ import { statusRoutes } from './routes/status.js';
 import { barberRoutes } from './routes/barbers.js';
 import { serviceRoutes } from './routes/services.js';
 import { authRoutes } from './routes/auth.js';
+import { companyAuthRoutes } from './routes/company-auth.js';
+import { companiesRoutes } from './routes/companies.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { shopsRoutes } from './routes/shops.js';
 import { adsRoutes } from './routes/ads.js';
@@ -231,6 +233,8 @@ fastify.register(
     instance.register(barberRoutes);
     instance.register(serviceRoutes);
     instance.register(authRoutes);
+    instance.register(companyAuthRoutes);
+    instance.register(companiesRoutes);
     instance.register(analyticsRoutes);
     instance.register(shopsRoutes);
     instance.register(adsRoutes);

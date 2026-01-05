@@ -1,8 +1,32 @@
 import { pgTable, text, integer, boolean, timestamp, serial, jsonb, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
+export const companies = pgTable('companies', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const companyAdmins = pgTable('company_admins', {
+  id: serial('id').primaryKey(),
+  companyId: integer('company_id').notNull().references(() => companies.id),
+  username: text('username').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  name: text('name').notNull(),
+  email: text('email'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  companyIdIdx: index('company_admins_company_id_idx').on(table.companyId),
+  usernameIdx: index('company_admins_username_idx').on(table.username),
+}));
+
 export const shops = pgTable('shops', {
   id: serial('id').primaryKey(),
+  companyId: integer('company_id').references(() => companies.id),
   slug: text('slug').notNull().unique(),
   name: text('name').notNull(),
   domain: text('domain'),
@@ -17,7 +41,9 @@ export const shops = pgTable('shops', {
   staffPinResetRequired: boolean('staff_pin_reset_required').notNull().default(true), // Require PIN reset on next login
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+}, (table) => ({
+  companyIdIdx: index('shops_company_id_idx').on(table.companyId),
+}));
 
 export const services = pgTable('services', {
   id: serial('id').primaryKey(),
@@ -64,7 +90,17 @@ export const tickets = pgTable('tickets', {
 });
 
 // Relations
-export const shopsRelations = relations(shops, ({ many }) => ({
+export const companiesRelations = relations(companies, ({ many }) => ({
+  admins: many(companyAdmins),
+  shops: many(shops),
+}));
+
+export const companyAdminsRelations = relations(companyAdmins, ({ one }) => ({
+  company: one(companies, { fields: [companyAdmins.companyId], references: [companies.id] }),
+}));
+
+export const shopsRelations = relations(shops, ({ one, many }) => ({
+  company: one(companies, { fields: [shops.companyId], references: [companies.id] }),
   services: many(services),
   barbers: many(barbers),
   tickets: many(tickets),

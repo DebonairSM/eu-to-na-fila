@@ -43,6 +43,13 @@
       "when": 1765930000000,
       "tag": "0005_add_audit_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1767653251590,
+      "tag": "0006_friendly_wendell_vaughn",
+      "breakpoints": true
     }
   ]
 }

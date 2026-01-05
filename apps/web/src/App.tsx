@@ -18,27 +18,38 @@ const BarberQueueManager = lazy(() => import('./pages/BarberQueueManager').then(
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
 const BarberManagementPage = lazy(() => import('./pages/BarberManagementPage').then((m) => ({ default: m.BarberManagementPage })));
 const AdManagementPage = lazy(() => import('./pages/AdManagementPage').then((m) => ({ default: m.AdManagementPage })));
+const CompanyLoginPage = lazy(() => import('./pages/CompanyLoginPage').then((m) => ({ default: m.CompanyLoginPage })));
+const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard').then((m) => ({ default: m.CompanyDashboard })));
 
 // Protected Route Component
 function ProtectedRoute({
   children,
   requireOwner = false,
+  requireCompanyAdmin = false,
 }: {
   children: React.ReactNode;
   requireOwner?: boolean;
+  requireCompanyAdmin?: boolean;
 }) {
-  const { isAuthenticated, isOwner, isLoading } = useAuthContext();
+  const { isAuthenticated, isOwner, isCompanyAdmin, isLoading } = useAuthContext();
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
   if (!isAuthenticated) {
+    if (requireCompanyAdmin) {
+      return <Navigate to="/company/login" replace />;
+    }
     return <Navigate to="/login" replace />;
   }
 
   if (requireOwner && !isOwner) {
     return <Navigate to="/staff" replace />;
+  }
+
+  if (requireCompanyAdmin && !isCompanyAdmin) {
+    return <Navigate to="/company/login" replace />;
   }
 
   return <>{children}</>;
@@ -67,6 +78,7 @@ function AppContent() {
       <Route path="/join" element={<JoinPage />} />
       <Route path="/status/:id" element={<StatusPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/company/login" element={<CompanyLoginPage />} />
 
       <Route
         path="/staff"
@@ -109,9 +121,17 @@ function AppContent() {
         }
       />
       <Route
-        path="/ads"
+        path="/company/dashboard"
         element={
-          <ProtectedRoute requireOwner>
+          <ProtectedRoute requireCompanyAdmin>
+            <CompanyDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/company/ads"
+        element={
+          <ProtectedRoute requireCompanyAdmin>
             <AdManagementPage />
           </ProtectedRoute>
         }

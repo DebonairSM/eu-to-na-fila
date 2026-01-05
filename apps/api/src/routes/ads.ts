@@ -4,7 +4,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -16,7 +16,7 @@ const __dirname = dirname(__filename);
 export const adsRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * Upload an ad image.
-   * Requires owner authentication.
+   * Requires company admin authentication.
    * 
    * @route POST /api/ads/upload
    * @body file - Image file (multipart/form-data)
@@ -24,7 +24,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
    * @returns Success message with file path
    * @throws {400} If validation fails
    * @throws {401} If not authenticated
-   * @throws {403} If not owner
+   * @throws {403} If not company admin
    */
   fastify.register(async function (instance) {
     // Register multipart plugin ONLY for this nested scope (upload route)
@@ -43,10 +43,18 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
     instance.post(
       '/ads/upload',
       {
-        preHandler: [requireAuth(), requireRole(['owner'])],
+        preHandler: [requireAuth(), requireCompanyAdmin()],
       },
       async (request, reply) => {
       try {
+        if (!request.user || !request.user.companyId) {
+          return reply.status(403).send({
+            error: 'Company admin access required',
+            statusCode: 403,
+            code: 'FORBIDDEN',
+          });
+        }
+
         let data: any = null;
         let adType: string | null = null;
 
@@ -89,13 +97,14 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       // Determine filename based on ad type
       const filename = adType === 'ad1' ? 'gt-ad.png' : 'gt-ad2.png';
 
-      // Save to web public directory (for Vite dev server)
-      const webPublicPath = join(__dirname, '..', '..', '..', 'web', 'public', filename);
-      const webPublicDir = dirname(webPublicPath);
+      // Save to company-specific directory
+      const companyId = request.user.companyId;
+      const companyAdsDir = join(__dirname, '..', '..', '..', 'web', 'public', 'companies', String(companyId));
+      const webPublicPath = join(companyAdsDir, filename);
 
       // Ensure directory exists
-      if (!existsSync(webPublicDir)) {
-        await mkdir(webPublicDir, { recursive: true });
+      if (!existsSync(companyAdsDir)) {
+        await mkdir(companyAdsDir, { recursive: true });
       }
 
         // Write file
@@ -106,7 +115,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(200).send({
           message: 'Ad image uploaded successfully',
           filename,
-          path: `/mineiro/${filename}`,
+          path: `/companies/${companyId}/${filename}`,
         });
       } catch (error) {
         request.log.error({ err: error }, 'Error uploading ad image');
@@ -121,33 +130,44 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Get current ad images status.
-   * Requires owner authentication.
+   * Requires company admin authentication.
    * 
    * @route GET /api/ads/status
    * @returns Status of ad images
    * @throws {401} If not authenticated
-   * @throws {403} If not owner
+   * @throws {403} If not company admin
    */
   fastify.get(
     '/ads/status',
     {
-      preHandler: [requireAuth(), requireRole(['owner'])],
+      preHandler: [requireAuth(), requireCompanyAdmin()],
     },
     async (request, reply) => {
+      if (!request.user || !request.user.companyId) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
 
-      const webPublicPath = join(__dirname, '..', '..', '..', 'web', 'public');
+      const companyId = request.user.companyId;
+      const companyAdsDir = join(__dirname, '..', '..', '..', 'web', 'public', 'companies', String(companyId));
       
-      const ad1Exists = existsSync(join(webPublicPath, 'gt-ad.png'));
-      const ad2Exists = existsSync(join(webPublicPath, 'gt-ad2.png'));
+      const ad1Path = join(companyAdsDir, 'gt-ad.png');
+      const ad2Path = join(companyAdsDir, 'gt-ad2.png');
+      
+      const ad1Exists = existsSync(ad1Path);
+      const ad2Exists = existsSync(ad2Path);
 
       return {
         ad1: {
           exists: ad1Exists,
-          path: ad1Exists ? '/mineiro/gt-ad.png' : null,
+          path: ad1Exists ? `/companies/${companyId}/gt-ad.png` : null,
         },
         ad2: {
           exists: ad2Exists,
-          path: ad2Exists ? '/mineiro/gt-ad2.png' : null,
+          path: ad2Exists ? `/companies/${companyId}/gt-ad2.png` : null,
         },
       };
     }

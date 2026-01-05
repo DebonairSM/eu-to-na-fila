@@ -7,8 +7,9 @@ import type { AuthUser } from '../middleware/auth.js';
  */
 export interface JWTPayload {
   userId: number;
-  shopId: number;
-  role: 'owner' | 'staff';
+  shopId?: number;
+  companyId?: number;
+  role: 'owner' | 'staff' | 'company_admin';
   iat?: number;
   exp?: number;
 }
@@ -19,10 +20,11 @@ export interface JWTPayload {
  * @param user - User information to encode in token
  * @returns Signed JWT token
  */
-export function signToken(user: Omit<AuthUser, 'id'> & { userId: number }): string {
+export function signToken(user: { userId: number; shopId?: number; companyId?: number; role: 'owner' | 'staff' | 'company_admin' }): string {
   const payload: JWTPayload = {
     userId: user.userId,
     shopId: user.shopId,
+    companyId: user.companyId,
     role: user.role,
   };
 

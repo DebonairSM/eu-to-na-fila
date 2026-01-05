@@ -11,7 +11,7 @@ interface AdStatus {
 }
 
 export function AdManagementPage() {
-  const { isOwner } = useAuthContext();
+  const { isCompanyAdmin } = useAuthContext();
   const navigate = useNavigate();
   const [adStatus, setAdStatus] = useState<AdStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,12 +19,12 @@ export function AdManagementPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Redirect if not owner
+  // Redirect if not company admin
   useEffect(() => {
-    if (!isOwner) {
-      navigate('/owner');
+    if (!isCompanyAdmin) {
+      navigate('/company/login');
     }
-  }, [isOwner, navigate]);
+  }, [isCompanyAdmin, navigate]);
 
   // Load ad status on mount
   useEffect(() => {
@@ -77,7 +77,7 @@ export function AdManagementPage() {
     }
   };
 
-  if (!isOwner) {
+  if (!isCompanyAdmin) {
     return null;
   }
 
@@ -253,7 +253,7 @@ export function AdManagementPage() {
 
             <div className="mt-8 text-center">
               <button
-                onClick={() => navigate('/owner')}
+                onClick={() => navigate('/company/dashboard')}
                 className="px-6 py-2.5 bg-transparent text-[rgba(255,255,255,0.6)] border border-[rgba(255,255,255,0.2)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all flex items-center gap-3 mx-auto text-sm"
               >
                 <span className="material-symbols-outlined text-lg">arrow_back</span>

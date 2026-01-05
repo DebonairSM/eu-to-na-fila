@@ -7,8 +7,9 @@ import { verifyToken } from '../lib/jwt.js';
  */
 export interface AuthUser {
   id: number;
-  shopId: number;
-  role: 'owner' | 'staff';
+  shopId?: number;
+  companyId?: number;
+  role: 'owner' | 'staff' | 'company_admin';
 }
 
 /**
@@ -61,6 +62,7 @@ export function requireAuth(): preHandlerHookHandler {
       request.user = {
         id: decoded.userId,
         shopId: decoded.shopId,
+        companyId: decoded.companyId,
         role: decoded.role,
       };
     } catch (error) {
@@ -90,7 +92,7 @@ export function requireAuth(): preHandlerHookHandler {
  * ```
  */
 export function requireRole(
-  allowedRoles: Array<'owner' | 'staff'>
+  allowedRoles: Array<'owner' | 'staff' | 'company_admin'>
 ): preHandlerHookHandler {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     if (!request.user) {
@@ -103,6 +105,16 @@ export function requireRole(
       );
     }
   };
+}
+
+/**
+ * Require company admin role.
+ * Must be used after requireAuth().
+ * 
+ * @returns Fastify pre-handler hook
+ */
+export function requireCompanyAdmin(): preHandlerHookHandler {
+  return requireRole(['company_admin']);
 }
 
 /**
@@ -186,6 +198,7 @@ export function optionalAuth(): preHandlerHookHandler {
       request.user = {
         id: decoded.userId,
         shopId: decoded.shopId,
+        companyId: decoded.companyId,
         role: decoded.role,
       };
     } catch (error) {

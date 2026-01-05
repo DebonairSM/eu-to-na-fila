@@ -9,6 +9,7 @@ interface AuthContextType {
   logout: () => void;
   isOwner: boolean;
   isBarber: boolean;
+  isCompanyAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

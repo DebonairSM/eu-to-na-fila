@@ -2,9 +2,52 @@ import { db, schema } from './db/index.js';
 import { env } from './env.js';
 import { eq } from 'drizzle-orm';
 import { hashPin } from './lib/pin.js';
+import { hashPassword } from './lib/password.js';
 
 async function seed() {
   console.log('Seeding database...');
+
+  // Check if company already exists, create if not
+  let company = await db.query.companies.findFirst({
+    where: eq(schema.companies.slug, 'eutonafila'),
+  });
+
+  if (!company) {
+    [company] = await db
+      .insert(schema.companies)
+      .values({
+        name: 'EuToNaFila',
+        slug: 'eutonafila',
+      })
+      .returning();
+    console.log('Created company:', company);
+  } else {
+    console.log('Company already exists:', company);
+  }
+
+  // Check if company admin already exists, create if not
+  let companyAdmin = await db.query.companyAdmins.findFirst({
+    where: eq(schema.companyAdmins.username, 'admin'),
+  });
+
+  if (!companyAdmin) {
+    const defaultPassword = 'admin123';
+    [companyAdmin] = await db
+      .insert(schema.companyAdmins)
+      .values({
+        companyId: company.id,
+        username: 'admin',
+        passwordHash: await hashPassword(defaultPassword),
+        name: 'Administrador',
+        email: 'admin@eutonafila.com',
+        isActive: true,
+      })
+      .returning();
+    console.log('Created company admin:', companyAdmin.username);
+    console.log('Default credentials: admin / admin123');
+  } else {
+    console.log('Company admin already exists:', companyAdmin.username);
+  }
 
   // Check if shop already exists
   let shop = await db.query.shops.findFirst({
@@ -42,6 +85,7 @@ async function seed() {
     [shop] = await db
       .insert(schema.shops)
       .values({
+        companyId: company.id,
         slug: 'mineiro',
         name: 'Barbearia Mineiro',
         domain: 'eutonafila.com',
@@ -61,6 +105,18 @@ async function seed() {
       .returning();
 
     console.log('Created shop:', shop);
+  }
+
+  // Update existing shop to assign to company if not already assigned
+  if (shop && !shop.companyId) {
+    await db
+      .update(schema.shops)
+      .set({
+        companyId: company.id,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.shops.id, shop.id));
+    console.log('Assigned shop to company');
   }
 
   // Check if services already exist
