@@ -7,9 +7,6 @@ import { AboutSection } from './AboutSection';
 import { LocationSection } from './LocationSection';
 
 export function LandingPage() {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPage/index.tsx:9',message:'LandingPage component rendering',data:{component:'LandingPage',pathname:window.location.pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   const location = useLocation();
 
   useEffect(() => {
