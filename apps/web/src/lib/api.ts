@@ -699,10 +699,82 @@ class ApiClient {
     slug: string;
     name: string;
     companyId: number | null;
+    domain: string | null;
+    path: string | null;
+    apiBase: string | null;
     createdAt: Date;
     updatedAt: Date;
   }>> {
     return this.get(`/companies/${companyId}/shops`);
+  }
+
+  /**
+   * Create a new shop for a company.
+   * 
+   * @param companyId - Company ID
+   * @param data - Shop data
+   * @returns Created shop
+   */
+  async createCompanyShop(companyId: number, data: {
+    name: string;
+    slug?: string;
+    domain?: string;
+    path?: string;
+    apiBase?: string;
+  }): Promise<{
+    id: number;
+    slug: string;
+    name: string;
+    companyId: number | null;
+    domain: string | null;
+    path: string | null;
+    apiBase: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }> {
+    return this.post(`/companies/${companyId}/shops`, data);
+  }
+
+  /**
+   * Update a shop.
+   * 
+   * @param companyId - Company ID
+   * @param shopId - Shop ID
+   * @param data - Update data
+   * @returns Updated shop
+   */
+  async updateCompanyShop(companyId: number, shopId: number, data: {
+    name?: string;
+    slug?: string;
+    domain?: string | null;
+    path?: string | null;
+    apiBase?: string | null;
+  }): Promise<{
+    id: number;
+    slug: string;
+    name: string;
+    companyId: number | null;
+    domain: string | null;
+    path: string | null;
+    apiBase: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }> {
+    return this.patch(`/companies/${companyId}/shops/${shopId}`, data);
+  }
+
+  /**
+   * Delete a shop.
+   * 
+   * @param companyId - Company ID
+   * @param shopId - Shop ID
+   * @returns Success message
+   */
+  async deleteCompanyShop(companyId: number, shopId: number): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    return this.delete(`/companies/${companyId}/shops/${shopId}`);
   }
 
   // ==================== Analytics Endpoints ====================

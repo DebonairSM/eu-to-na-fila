@@ -14,6 +14,14 @@ const __dirname = dirname(__filename);
  * Handles ad image uploads for kiosk display.
  */
 export const adsRoutes: FastifyPluginAsync = async (fastify) => {
+  // Register multipart plugin scoped to this plugin only
+  await fastify.register(fastifyMultipart, {
+    attachFieldsToBody: false,
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB max file size
+    },
+  });
+
   /**
    * Upload an ad image.
    * Requires company admin authentication.
@@ -26,26 +34,12 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {401} If not authenticated
    * @throws {403} If not company admin
    */
-  fastify.register(async function (instance) {
-    // Register multipart plugin ONLY for this nested scope (upload route)
-    // This isolates it from other routes to prevent interference with JSON parsing
-    try {
-      await instance.register(fastifyMultipart, {
-        attachFieldsToBody: false, // Don't attach to body, use request.file() instead
-        limits: {
-          fileSize: 10 * 1024 * 1024, // 10MB max file size
-        },
-      });
-    } catch (error) {
-      throw error;
-    }
-    
-    instance.post(
-      '/ads/upload',
-      {
-        preHandler: [requireAuth(), requireCompanyAdmin()],
-      },
-      async (request, reply) => {
+  fastify.post(
+    '/ads/upload',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
       try {
         if (!request.user || !request.user.companyId) {
           return reply.status(403).send({
@@ -126,8 +120,8 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           code: 'INTERNAL_ERROR',
         });
       }
-    });
-  });
+    }
+  );
 
   /**
    * Get current ad images status.
