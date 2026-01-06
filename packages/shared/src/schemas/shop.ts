@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const shopSchema = z.object({
   id: z.number(),
+  companyId: z.number().nullable().optional(),
   slug: z.string().min(1).max(50),
   name: z.string().min(1).max(200),
   domain: z.string().optional(),

@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 interface Ad2VideoProps {
   onClose?: () => void;
   showTimer?: boolean;
+  companyId?: number | null;
 }
 
-export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad2VideoProps) {
+export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true, companyId }: Ad2VideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -63,7 +64,7 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad
           </div>
         ) : (
           <img
-            src="/mineiro/gt-ad2.png"
+            src={companyId ? `/companies/${companyId}/gt-ad2.png` : '/mineiro/gt-ad2.png'}
             alt="Grande Tech"
             onLoad={() => {
               setImageError(false);

@@ -488,7 +488,7 @@ export function BarberQueueManager() {
             className="flex-1 flex items-center justify-center relative cursor-pointer min-h-0 max-h-screen overflow-hidden"
             onClick={showQueueView}
           >
-            <GrandeTechAd showTimer={false} />
+            <GrandeTechAd showTimer={false} companyId={queueData?.shop?.companyId ?? null} />
           </div>
         )}
         {currentView === 'ad2' && (
@@ -496,7 +496,7 @@ export function BarberQueueManager() {
             className="flex-1 flex items-center justify-center relative cursor-pointer min-h-0 max-h-screen overflow-hidden"
             onClick={showQueueView}
           >
-            <Ad2Video showTimer={false} />
+            <Ad2Video showTimer={false} companyId={queueData?.shop?.companyId ?? null} />
           </div>
         )}
         {currentView === 'ad3' && (

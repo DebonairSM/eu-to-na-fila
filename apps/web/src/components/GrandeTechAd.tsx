@@ -3,9 +3,10 @@ import { useState, useEffect, useRef } from 'react';
 interface GrandeTechAdProps {
   onClose?: () => void;
   showTimer?: boolean;
+  companyId?: number | null;
 }
 
-export function GrandeTechAd({ onClose, showTimer = true }: GrandeTechAdProps) {
+export function GrandeTechAd({ onClose, showTimer = true, companyId }: GrandeTechAdProps) {
   const [timeRemaining, setTimeRemaining] = useState(15);
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
@@ -80,7 +81,7 @@ export function GrandeTechAd({ onClose, showTimer = true }: GrandeTechAdProps) {
           </div>
         ) : (
           <img
-            src="/mineiro/gt-ad.png"
+            src={companyId ? `/companies/${companyId}/gt-ad.png` : '/mineiro/gt-ad.png'}
             alt="Grande Tech"
             onLoad={() => {
               setImageError(false);
