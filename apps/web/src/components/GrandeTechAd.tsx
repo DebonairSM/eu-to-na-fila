@@ -81,7 +81,7 @@ export function GrandeTechAd({ onClose, showTimer = true, companyId }: GrandeTec
           </div>
         ) : (
           <img
-            src={companyId ? `/companies/${companyId}/gt-ad.png` : '/mineiro/gt-ad.png'}
+            src={companyId ? `/api/ads/${companyId}/gt-ad.png` : '/mineiro/gt-ad.png'}
             alt="Grande Tech"
             onLoad={() => {
               setImageError(false);

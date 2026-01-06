@@ -282,26 +282,14 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.authToken}`;
     }
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:258',message:'postFormData fetch starting',data:{url,hasAuth:!!this.authToken},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-
     const response = await fetch(url, {
       method: 'POST',
       headers,
       body: formData,
     });
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:265',message:'postFormData fetch completed',data:{url,status:response.status,statusText:response.statusText,ok:response.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-
     // Capture response text before parsing
     const responseText = await response.text();
-
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:268',message:'postFormData response text captured',data:{url,status:response.status,responseTextLength:responseText.length,responseTextPreview:responseText.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
 
     let data;
     if (responseText.trim() === '') {
@@ -776,29 +764,15 @@ class ApiClient {
     filename: string;
     path: string;
   }> {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:718',message:'uploadAdImage called',data:{adType,fileName:file.name,fileSize:file.size,fileType:file.type},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-
     const formData = new FormData();
     formData.append('file', file);
     formData.append('adType', adType);
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:724',message:'FormData created, calling postFormData',data:{adType,hasFile:true,hasAdType:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
-
-    const result = await this.postFormData<{
+    return this.postFormData<{
       message: string;
       filename: string;
       path: string;
     }>('/ads/upload', formData);
-
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:727',message:'postFormData completed',data:{adType,result},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-
-    return result;
   }
 
   /**

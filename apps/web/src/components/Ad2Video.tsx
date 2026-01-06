@@ -64,7 +64,7 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true, comp
           </div>
         ) : (
           <img
-            src={companyId ? `/companies/${companyId}/gt-ad2.png` : '/mineiro/gt-ad2.png'}
+            src={companyId ? `/api/ads/${companyId}/gt-ad2.png` : '/mineiro/gt-ad2.png'}
             alt="Grande Tech"
             onLoad={() => {
               setImageError(false);

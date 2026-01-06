@@ -1,9 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
 import fastifyMultipart from '@fastify/multipart';
 import { writeFile, mkdir } from 'fs/promises';
-import { join, dirname } from 'path';
+import { join, dirname, extname } from 'path';
 import { fileURLToPath } from 'url';
-import { existsSync } from 'fs';
+import { existsSync, createReadStream } from 'fs';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -47,10 +47,6 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       },
       async (request, reply) => {
       try {
-        // #region agent log
-        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:48',message:'Upload endpoint called',data:{hasUser:!!request.user,companyId:request.user?.companyId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-
         if (!request.user || !request.user.companyId) {
           return reply.status(403).send({
             error: 'Company admin access required',
@@ -62,23 +58,13 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         let data: any = null;
         let adType: string | null = null;
 
-        // #region agent log
-        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:62',message:'Starting to parse multipart parts',data:{companyId:request.user.companyId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
-
         // Iterate through all parts to get both file and fields
         const parts = request.parts();
         for await (const part of parts) {
           if (part.type === 'file') {
             data = part;
-            // #region agent log
-            await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:65',message:'File part found',data:{mimetype:data.mimetype,filename:data.filename},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-            // #endregion
           } else if (part.fieldname === 'adType') {
             adType = part.value as string;
-            // #region agent log
-            await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:67',message:'adType field found',data:{adType},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-            // #endregion
           }
         }
         
@@ -111,52 +97,28 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       // Determine filename based on ad type
       const filename = adType === 'ad1' ? 'gt-ad.png' : 'gt-ad2.png';
 
-      // Save to company-specific directory
+      // Save to company-specific directory in API's public folder
       const companyId = request.user.companyId;
-      const companyAdsDir = join(__dirname, '..', '..', '..', 'web', 'public', 'companies', String(companyId));
-      const webPublicPath = join(companyAdsDir, filename);
-
-      // #region agent log
-      await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:100',message:'Preparing to save file',data:{companyId,filename,companyAdsDir,webPublicPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
+      const companyAdsDir = join(__dirname, '..', '..', 'public', 'companies', String(companyId));
+      const filePath = join(companyAdsDir, filename);
 
       // Ensure directory exists
       if (!existsSync(companyAdsDir)) {
         await mkdir(companyAdsDir, { recursive: true });
-        // #region agent log
-        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:107',message:'Directory created',data:{companyAdsDir},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
       }
 
-        // Write file
-        const buffer = await data.toBuffer();
+      // Write file
+      const buffer = await data.toBuffer();
+      await writeFile(filePath, buffer);
 
-        // #region agent log
-        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:112',message:'Buffer created, writing file',data:{bufferSize:buffer.length,webPublicPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
+      const response = {
+        message: 'Ad image uploaded successfully',
+        filename,
+        path: `/api/ads/${companyId}/${filename}`,
+      };
 
-        await writeFile(webPublicPath, buffer);
-
-        // #region agent log
-        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:115',message:'File written successfully',data:{webPublicPath,path:`/companies/${companyId}/${filename}`},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
-
-        const response = {
-          message: 'Ad image uploaded successfully',
-          filename,
-          path: `/companies/${companyId}/${filename}`,
-        };
-
-        // #region agent log
-        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:123',message:'Sending success response',data:{response},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-
-        return reply.status(200).send(response);
+      return reply.status(200).send(response);
       } catch (error) {
-        // #region agent log
-        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:120',message:'Upload error caught',data:{error:error instanceof Error ? error.message : String(error),stack:error instanceof Error ? error.stack : undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-
         request.log.error({ err: error }, 'Error uploading ad image');
         return reply.status(500).send({
           error: error instanceof Error ? error.message : 'Internal server error',
@@ -191,7 +153,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const companyId = request.user.companyId;
-      const companyAdsDir = join(__dirname, '..', '..', '..', 'web', 'public', 'companies', String(companyId));
+      const companyAdsDir = join(__dirname, '..', '..', 'public', 'companies', String(companyId));
       
       const ad1Path = join(companyAdsDir, 'gt-ad.png');
       const ad2Path = join(companyAdsDir, 'gt-ad2.png');
@@ -202,13 +164,66 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       return {
         ad1: {
           exists: ad1Exists,
-          path: ad1Exists ? `/companies/${companyId}/gt-ad.png` : null,
+          path: ad1Exists ? `/api/ads/${companyId}/gt-ad.png` : null,
         },
         ad2: {
           exists: ad2Exists,
-          path: ad2Exists ? `/companies/${companyId}/gt-ad2.png` : null,
+          path: ad2Exists ? `/api/ads/${companyId}/gt-ad2.png` : null,
         },
       };
+    }
+  );
+
+  /**
+   * Serve ad image files.
+   * Public endpoint for kiosk display (no authentication required).
+   * 
+   * @route GET /api/ads/:companyId/:filename
+   * @param companyId - Company ID
+   * @param filename - Image filename (gt-ad.png or gt-ad2.png)
+   * @returns Image file stream
+   * @throws {404} If file not found
+   */
+  fastify.get(
+    '/ads/:companyId/:filename',
+    async (request, reply) => {
+      const params = request.params as { companyId: string; filename: string };
+      const { companyId, filename } = params;
+
+      // Validate filename to prevent directory traversal
+      if (!['gt-ad.png', 'gt-ad2.png'].includes(filename)) {
+        return reply.status(400).send({
+          error: 'Invalid filename',
+          statusCode: 400,
+          code: 'VALIDATION_ERROR',
+        });
+      }
+
+      const companyAdsDir = join(__dirname, '..', '..', 'public', 'companies', companyId);
+      const filePath = join(companyAdsDir, filename);
+
+      // Check if file exists
+      if (!existsSync(filePath)) {
+        return reply.status(404).send({
+          error: 'Ad image not found',
+          statusCode: 404,
+          code: 'NOT_FOUND',
+        });
+      }
+
+      // Determine MIME type from file extension
+      const ext = extname(filename).toLowerCase();
+      const mimeTypes: Record<string, string> = {
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.webp': 'image/webp',
+      };
+      const contentType = mimeTypes[ext] || 'application/octet-stream';
+
+      // Stream the file
+      const stream = createReadStream(filePath);
+      return reply.type(contentType).send(stream);
     }
   );
 };
