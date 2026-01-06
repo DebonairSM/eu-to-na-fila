@@ -47,6 +47,10 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       },
       async (request, reply) => {
       try {
+        // #region agent log
+        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:48',message:'Upload endpoint called',data:{hasUser:!!request.user,companyId:request.user?.companyId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+
         if (!request.user || !request.user.companyId) {
           return reply.status(403).send({
             error: 'Company admin access required',
@@ -58,13 +62,23 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         let data: any = null;
         let adType: string | null = null;
 
+        // #region agent log
+        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:62',message:'Starting to parse multipart parts',data:{companyId:request.user.companyId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+
         // Iterate through all parts to get both file and fields
         const parts = request.parts();
         for await (const part of parts) {
           if (part.type === 'file') {
             data = part;
+            // #region agent log
+            await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:65',message:'File part found',data:{mimetype:data.mimetype,filename:data.filename},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
           } else if (part.fieldname === 'adType') {
             adType = part.value as string;
+            // #region agent log
+            await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:67',message:'adType field found',data:{adType},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
           }
         }
         
@@ -102,22 +116,47 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       const companyAdsDir = join(__dirname, '..', '..', '..', 'web', 'public', 'companies', String(companyId));
       const webPublicPath = join(companyAdsDir, filename);
 
+      // #region agent log
+      await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:100',message:'Preparing to save file',data:{companyId,filename,companyAdsDir,webPublicPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+
       // Ensure directory exists
       if (!existsSync(companyAdsDir)) {
         await mkdir(companyAdsDir, { recursive: true });
+        // #region agent log
+        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:107',message:'Directory created',data:{companyAdsDir},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
       }
 
         // Write file
         const buffer = await data.toBuffer();
 
+        // #region agent log
+        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:112',message:'Buffer created, writing file',data:{bufferSize:buffer.length,webPublicPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
+
         await writeFile(webPublicPath, buffer);
 
-        return reply.status(200).send({
+        // #region agent log
+        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:115',message:'File written successfully',data:{webPublicPath,path:`/companies/${companyId}/${filename}`},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
+
+        const response = {
           message: 'Ad image uploaded successfully',
           filename,
           path: `/companies/${companyId}/${filename}`,
-        });
+        };
+
+        // #region agent log
+        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:123',message:'Sending success response',data:{response},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+
+        return reply.status(200).send(response);
       } catch (error) {
+        // #region agent log
+        await fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ads.ts:120',message:'Upload error caught',data:{error:error instanceof Error ? error.message : String(error),stack:error instanceof Error ? error.stack : undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+
         request.log.error({ err: error }, 'Error uploading ad image');
         return reply.status(500).send({
           error: error instanceof Error ? error.message : 'Internal server error',
