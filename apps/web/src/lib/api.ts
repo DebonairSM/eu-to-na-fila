@@ -174,8 +174,35 @@ class ApiClient {
         headers,
       });
 
-      // Parse response
-      const data = await response.json();
+      // Read response as text first (can only read body once)
+      const responseText = await response.text();
+
+      // Parse response - handle non-JSON responses (like 502 HTML error pages)
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        // If response is not JSON (e.g., HTML error page from proxy)
+        if (response.status === 502) {
+          data = {
+            error: 'API server is not reachable. Please ensure the API server is running on port 4041.',
+            statusCode: 502,
+            code: 'BAD_GATEWAY',
+          };
+        } else if (response.status >= 500 && response.status < 600) {
+          data = {
+            error: `Server error (${response.status} ${response.statusText}). The API server may be down or experiencing issues.`,
+            statusCode: response.status,
+            code: 'SERVER_ERROR',
+          };
+        } else {
+          data = {
+            error: `Server returned invalid response (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`,
+            statusCode: response.status,
+            code: 'INVALID_RESPONSE',
+          };
+        }
+      }
 
       // Check if response is an error
       if (!response.ok) {
@@ -289,11 +316,28 @@ class ApiClient {
         data = JSON.parse(responseText);
       } catch (parseError) {
         // Invalid JSON - create error object
-        data = {
-          error: `Server returned invalid JSON (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`,
-          statusCode: response.status,
-          code: 'INVALID_JSON',
-        };
+        // Special handling for 502 Bad Gateway (server not reachable)
+        if (response.status === 502) {
+          data = {
+            error: 'API server is not reachable. Please ensure the API server is running on port 4041.',
+            statusCode: 502,
+            code: 'BAD_GATEWAY',
+          };
+        } else if (response.status >= 500 && response.status < 600) {
+          // Other 5xx errors
+          data = {
+            error: `Server error (${response.status} ${response.statusText}). The API server may be down or experiencing issues.`,
+            statusCode: response.status,
+            code: 'SERVER_ERROR',
+          };
+        } else {
+          // Other invalid JSON responses
+          data = {
+            error: `Server returned invalid JSON (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`,
+            statusCode: response.status,
+            code: 'INVALID_JSON',
+          };
+        }
       }
     }
 
