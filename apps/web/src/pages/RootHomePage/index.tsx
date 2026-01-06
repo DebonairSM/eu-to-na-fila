@@ -112,7 +112,7 @@ export function RootHomePage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
               <Link
-                to="/login"
+                to="/company/login"
                 className="text-gray-500/60 hover:text-gray-400 transition-colors text-xs flex items-center gap-1"
               >
                 <span className="material-symbols-outlined text-sm">lock</span>

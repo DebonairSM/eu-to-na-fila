@@ -39,7 +39,7 @@ function ProtectedRoute({
 
   if (!isAuthenticated) {
     if (requireCompanyAdmin) {
-      return <Navigate to="/login" replace />;
+      return <Navigate to="/company/login" replace />;
     }
     return <Navigate to="/shop/login" replace />;
   }
@@ -49,23 +49,24 @@ function ProtectedRoute({
   }
 
   if (requireCompanyAdmin && !isCompanyAdmin) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/company/login" replace />;
   }
 
   return <>{children}</>;
 }
 
 function AppContent() {
-  const { logout } = useAuthContext();
+  const { logout, user } = useAuthContext();
   const navigate = useNavigate();
 
   // Set up global auth error handler
   useEffect(() => {
     api.setOnAuthError(() => {
+      const isCompanyAdmin = user?.role === 'company_admin';
       logout();
-      navigate('/login', { replace: true });
+      navigate(isCompanyAdmin ? '/company/login' : '/shop/login', { replace: true });
     });
-  }, [logout, navigate]);
+  }, [logout, navigate, user]);
 
   return (
     <Routes>
@@ -77,7 +78,7 @@ function AppContent() {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/join" element={<JoinPage />} />
       <Route path="/status/:id" element={<StatusPage />} />
-      <Route path="/login" element={<CompanyLoginPage />} />
+      <Route path="/company/login" element={<CompanyLoginPage />} />
       <Route path="/shop/login" element={<LoginPage />} />
 
       <Route

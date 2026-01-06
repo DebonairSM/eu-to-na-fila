@@ -24,11 +24,11 @@ function ProtectedRoute({ children, requireCompanyAdmin = false }: { children: R
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/company/login" replace />;
   }
 
   if (requireCompanyAdmin && !isCompanyAdmin) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/company/login" replace />;
   }
 
   return <>{children}</>;
@@ -43,7 +43,7 @@ function App() {
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/about" element={<RootAboutPage />} />
           <Route path="/contact" element={<RootContactPage />} />
-          <Route path="/login" element={<CompanyLoginPage />} />
+          <Route path="/company/login" element={<CompanyLoginPage />} />
           <Route path="/company/dashboard" element={<ProtectedRoute requireCompanyAdmin><CompanyDashboard /></ProtectedRoute>} />
           <Route path="/company/ads" element={<ProtectedRoute requireCompanyAdmin><AdManagementPage /></ProtectedRoute>} />
         </Routes>
