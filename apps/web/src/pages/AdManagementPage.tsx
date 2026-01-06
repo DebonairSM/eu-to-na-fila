@@ -31,13 +31,15 @@ export function AdManagementPage() {
     loadAdStatus();
   }, []);
 
-  const loadAdStatus = async () => {
+  const loadAdStatus = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
       setError(null);
 
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdManagementPage.tsx:34',message:'loadAdStatus called',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdManagementPage.tsx:34',message:'loadAdStatus called',data:{showLoading},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
       // #endregion
 
       const status = await api.getAdStatus();
@@ -55,7 +57,9 @@ export function AdManagementPage() {
 
       setError(getErrorMessage(err, 'Erro ao carregar status dos anúncios'));
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   };
 
@@ -100,8 +104,8 @@ export function AdManagementPage() {
       fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdManagementPage.tsx:75',message:'Success message set, reloading status',data:{adType,successMessage:`Anúncio ${adType === 'ad1' ? '1' : '2'} atualizado com sucesso!`},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
       // #endregion
 
-      // Reload status
-      const newStatus = await loadAdStatus();
+      // Reload status without showing loading spinner (to preserve success message visibility)
+      const newStatus = await loadAdStatus(false);
 
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdManagementPage.tsx:81',message:'Status reloaded after upload',data:{adType,newStatus},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
