@@ -744,7 +744,11 @@ class ApiClient {
     fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:724',message:'FormData created, calling postFormData',data:{adType,hasFile:true,hasAdType:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
     // #endregion
 
-    const result = await this.postFormData('/ads/upload', formData);
+    const result = await this.postFormData<{
+      message: string;
+      filename: string;
+      path: string;
+    }>('/ads/upload', formData);
 
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:727',message:'postFormData completed',data:{adType,result},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
