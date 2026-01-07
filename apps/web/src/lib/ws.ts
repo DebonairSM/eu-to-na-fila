@@ -65,9 +65,15 @@ export class WebSocketClient {
         this.reconnectAttempts = 0;
         console.log('[WS] Connected to WebSocket server');
         
-        // Resubscribe to all active subscriptions
+        // Resubscribe to all active subscriptions by sending subscribe messages
         for (const companyId of this.subscribers.keys()) {
-          this.subscribe(companyId);
+          if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            const message: SubscribeMessage = {
+              type: 'subscribe',
+              companyId,
+            };
+            this.ws.send(JSON.stringify(message));
+          }
         }
       };
 
