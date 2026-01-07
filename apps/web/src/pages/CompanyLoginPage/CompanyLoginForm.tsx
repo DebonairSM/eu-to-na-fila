@@ -142,16 +142,6 @@ export function CompanyLoginForm() {
         </button>
       </form>
 
-      <div className="border-t border-[rgba(255,255,255,0.1)] pt-4">
-        <Link
-          to="/shop/login"
-          className="w-full px-4 py-3 min-h-[48px] bg-transparent border-2 border-[rgba(212,175,55,0.3)] text-[#D4AF37] font-medium rounded-lg flex items-center justify-center gap-2 hover:border-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)] transition-all"
-        >
-          <span className="material-symbols-outlined text-lg">content_cut</span>
-          Login Barbeiros
-        </Link>
-      </div>
-
       <div className="text-center pt-2">
         <Link 
           to="/home" 

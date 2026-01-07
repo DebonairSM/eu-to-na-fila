@@ -49,12 +49,19 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           });
         }
 
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:/ads/upload',message:'upload handler start',data:{hasUser:!!request.user,companyId:request.user?.companyId,contentType:(request.headers?.['content-type']||'').toString().slice(0,80)},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+
         let data: any = null;
         let adType: string | null = null;
 
         // Iterate through all parts to get both file and fields
         const parts = request.parts();
         for await (const part of parts) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:/ads/upload parts',message:'multipart part received',data:{partType:(part as any)?.type,fieldname:(part as any)?.fieldname,mimetype:(part as any)?.mimetype,filename:(part as any)?.filename},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
           if (part.type === 'file') {
             data = part;
           } else if (part.fieldname === 'adType') {
@@ -62,6 +69,10 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           }
         }
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:/ads/upload',message:'multipart parts loop completed',data:{hasFile:!!data,adType},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+
       if (!data) {
         return reply.status(400).send({
           error: 'No file provided',

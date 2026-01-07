@@ -282,6 +282,10 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.authToken}`;
     }
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/web/src/lib/api.ts:postFormData',message:'postFormData start',data:{path,url,hasAuthToken:!!this.authToken},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+
     const response = await fetch(url, {
       method: 'POST',
       headers,
@@ -290,6 +294,10 @@ class ApiClient {
 
     // Capture response text before parsing
     const responseText = await response.text();
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/web/src/lib/api.ts:postFormData',message:'postFormData response received',data:{path,status:response.status,ok:response.ok,textLen:responseText?.length},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
 
     let data;
     if (responseText.trim() === '') {
@@ -839,6 +847,10 @@ class ApiClient {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('adType', adType);
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/web/src/lib/api.ts:uploadAdImage',message:'uploadAdImage called',data:{adType,fileType:file?.type,fileSize:file?.size,fileName:file?.name},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
 
     return this.postFormData<{
       message: string;
