@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import type { SocketStream } from 'fastify-websocket';
+import type { SocketStream, FastifyWebsocketRouteOptions } from 'fastify-websocket';
 
 /**
  * WebSocket message types
@@ -127,7 +127,7 @@ export async function registerWebSocket(fastify: FastifyInstance): Promise<void>
   (fastify as any).wsManager = wsManager;
 
   // Register WebSocket route at /ws
-  fastify.get('/ws', { websocket: true }, (connection: SocketStream, req: FastifyRequest) => {
+  fastify.get('/ws', { websocket: true } as FastifyWebsocketRouteOptions, (connection: SocketStream, req: FastifyRequest) => {
     wsManager.addConnection(connection);
   });
 
