@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import type { WebSocket } from '@fastify/websocket';
+import type { SocketStream } from 'fastify-websocket';
 
 /**
  * WebSocket message types
@@ -35,7 +35,8 @@ export class WebSocketManager {
   /**
    * Register a new WebSocket connection
    */
-  addConnection(socket: WebSocket): WSConnection {
+  addConnection(stream: SocketStream): WSConnection {
+    const socket = stream.socket;
     const conn: WSConnection = {
       socket,
       companyId: null,
@@ -126,7 +127,7 @@ export async function registerWebSocket(fastify: FastifyInstance): Promise<void>
   (fastify as any).wsManager = wsManager;
 
   // Register WebSocket route at /ws
-  fastify.get('/ws', { websocket: true }, (connection: WebSocket, req: FastifyRequest) => {
+  fastify.get('/ws', { websocket: true }, (connection: SocketStream, req: FastifyRequest) => {
     wsManager.addConnection(connection);
   });
 

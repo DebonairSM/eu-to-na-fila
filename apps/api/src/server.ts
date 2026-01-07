@@ -3,7 +3,7 @@ import fastifyStatic from '@fastify/static';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
-import fastifyWebSocket from '@fastify/websocket';
+import fastifyWebSocket from 'fastify-websocket';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync, readFileSync, readdirSync } from 'fs';
