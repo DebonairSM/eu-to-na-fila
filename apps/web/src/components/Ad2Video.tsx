@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { wsClient } from '@/lib/ws';
 
 interface Ad2VideoProps {
   onClose?: () => void;
@@ -10,6 +11,7 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true, comp
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [adVersion, setAdVersion] = useState<number>(0);
 
   // Intersection Observer to detect when component is visible
   useEffect(() => {
@@ -52,6 +54,21 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true, comp
     };
   }, []);
 
+  // Subscribe to ad updates via WebSocket
+  useEffect(() => {
+    if (!companyId) return;
+
+    const unsubscribe = wsClient.subscribe(companyId, (adType, version) => {
+      // Only update if this is ad2 (gt-ad2.png)
+      if (adType === 'ad2') {
+        setAdVersion(version);
+        setImageError(false); // Reset error state on update
+      }
+    });
+
+    return unsubscribe;
+  }, [companyId]);
+
   return (
     <div 
       ref={containerRef}
@@ -64,8 +81,13 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true, comp
           </div>
         ) : (
           <img
-            src={companyId ? `/api/ads/${companyId}/gt-ad2.png` : '/mineiro/gt-ad2.png'}
+            src={
+              companyId
+                ? `/api/ads/${companyId}/gt-ad2.png${adVersion > 0 ? `?v=${adVersion}` : ''}`
+                : '/mineiro/gt-ad2.png'
+            }
             alt="Grande Tech"
+            key={adVersion} // Force re-render on version change
             onLoad={() => {
               setImageError(false);
             }}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { wsClient } from '@/lib/ws';
 
 interface GrandeTechAdProps {
   onClose?: () => void;
@@ -11,6 +12,7 @@ export function GrandeTechAd({ onClose, showTimer = true, companyId }: GrandeTec
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [adVersion, setAdVersion] = useState<number>(0);
 
   // Intersection Observer to detect when component is visible
   useEffect(() => {
@@ -69,6 +71,21 @@ export function GrandeTechAd({ onClose, showTimer = true, companyId }: GrandeTec
     return () => clearInterval(interval);
   }, [showTimer, onClose]);
 
+  // Subscribe to ad updates via WebSocket
+  useEffect(() => {
+    if (!companyId) return;
+
+    const unsubscribe = wsClient.subscribe(companyId, (adType, version) => {
+      // Only update if this is ad1 (gt-ad.png)
+      if (adType === 'ad1') {
+        setAdVersion(version);
+        setImageError(false); // Reset error state on update
+      }
+    });
+
+    return unsubscribe;
+  }, [companyId]);
+
   return (
     <div 
       ref={containerRef}
@@ -81,8 +98,13 @@ export function GrandeTechAd({ onClose, showTimer = true, companyId }: GrandeTec
           </div>
         ) : (
           <img
-            src={companyId ? `/api/ads/${companyId}/gt-ad.png` : '/mineiro/gt-ad.png'}
+            src={
+              companyId
+                ? `/api/ads/${companyId}/gt-ad.png${adVersion > 0 ? `?v=${adVersion}` : ''}`
+                : '/mineiro/gt-ad.png'
+            }
             alt="Grande Tech"
+            key={adVersion} // Force re-render on version change
             onLoad={() => {
               setImageError(false);
             }}

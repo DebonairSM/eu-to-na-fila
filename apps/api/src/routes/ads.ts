@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import fastifyMultipart from '@fastify/multipart';
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, readFile } from 'fs/promises';
 import { join, dirname, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync, createReadStream } from 'fs';
@@ -8,6 +8,49 @@ import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+/**
+ * Ad version storage interface.
+ * Tracks version numbers for each ad type per company.
+ */
+interface AdVersions {
+  ad1: number;
+  ad2: number;
+}
+
+/**
+ * Get current ad versions for a company.
+ * Creates version file if it doesn't exist.
+ */
+async function getAdVersions(companyAdsDir: string): Promise<AdVersions> {
+  const versionsPath = join(companyAdsDir, '.versions.json');
+  
+  if (existsSync(versionsPath)) {
+    try {
+      const content = await readFile(versionsPath, 'utf-8');
+      return JSON.parse(content) as AdVersions;
+    } catch {
+      // If file is corrupted, start fresh
+    }
+  }
+  
+  // Default versions
+  return { ad1: 0, ad2: 0 };
+}
+
+/**
+ * Update version for a specific ad type.
+ */
+async function updateAdVersion(companyAdsDir: string, adType: 'ad1' | 'ad2'): Promise<number> {
+  const versions = await getAdVersions(companyAdsDir);
+  const newVersion = Date.now();
+  versions[adType] = newVersion;
+  
+  const versionsPath = join(companyAdsDir, '.versions.json');
+  await writeFile(versionsPath, JSON.stringify(versions, null, 2), 'utf-8');
+  
+  return newVersion;
+}
 
 /**
  * Ad management routes.
@@ -25,11 +68,12 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * Upload an ad image.
    * Requires company admin authentication.
+   * Uses stream-safe multipart handling to prevent hangs.
    * 
    * @route POST /api/ads/upload
    * @body file - Image file (multipart/form-data)
    * @body adType - Type of ad: 'ad1' | 'ad2'
-   * @returns Success message with file path
+   * @returns Success message with file path and version
    * @throws {400} If validation fails
    * @throws {401} If not authenticated
    * @throws {403} If not company admin
@@ -49,86 +93,81 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           });
         }
 
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:/ads/upload',message:'upload handler start',data:{hasUser:!!request.user,companyId:request.user?.companyId,contentType:(request.headers?.['content-type']||'').toString().slice(0,80)},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-
-        let data: any = null;
+        // Stream-safe multipart handling: iterate parts() once and collect both file and fields
+        // This ensures the stream is consumed properly without hanging
+        let filePart: any = null;
         let adType: string | null = null;
-
-        // Iterate through all parts to get both file and fields
+        
         const parts = request.parts();
         for await (const part of parts) {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:/ads/upload parts',message:'multipart part received',data:{partType:(part as any)?.type,fieldname:(part as any)?.fieldname,mimetype:(part as any)?.mimetype,filename:(part as any)?.filename},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
           if (part.type === 'file') {
-            data = part;
-          } else if (part.fieldname === 'adType') {
+            filePart = part;
+          } else if (part.type === 'field' && part.fieldname === 'adType') {
             adType = part.value as string;
           }
         }
         
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:/ads/upload',message:'multipart parts loop completed',data:{hasFile:!!data,adType},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
+        if (!filePart) {
+          return reply.status(400).send({
+            error: 'No file provided',
+            statusCode: 400,
+            code: 'VALIDATION_ERROR',
+          });
+        }
+        
+        if (!adType || !['ad1', 'ad2'].includes(adType)) {
+          return reply.status(400).send({
+            error: 'Invalid adType. Must be "ad1" or "ad2"',
+            statusCode: 400,
+            code: 'VALIDATION_ERROR',
+          });
+        }
 
-      if (!data) {
-        return reply.status(400).send({
-          error: 'No file provided',
-          statusCode: 400,
-          code: 'VALIDATION_ERROR',
-        });
-      }
+        // Validate file type
+        const allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+        if (!allowedMimeTypes.includes(filePart.mimetype)) {
+          return reply.status(400).send({
+            error: `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`,
+            statusCode: 400,
+            code: 'VALIDATION_ERROR',
+          });
+        }
 
-      if (!adType || !['ad1', 'ad2'].includes(adType)) {
-        return reply.status(400).send({
-          error: 'Invalid adType. Must be "ad1" or "ad2"',
-          statusCode: 400,
-          code: 'VALIDATION_ERROR',
-        });
-      }
+        // Determine filename based on ad type
+        const filename = adType === 'ad1' ? 'gt-ad.png' : 'gt-ad2.png';
 
-      // Validate file type
-      const allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-      if (!allowedMimeTypes.includes(data.mimetype)) {
-        return reply.status(400).send({
-          error: `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`,
-          statusCode: 400,
-          code: 'VALIDATION_ERROR',
-        });
-      }
+        // Save to company-specific directory in API's public folder
+        const companyId = request.user.companyId;
+        const companyAdsDir = join(__dirname, '..', '..', 'public', 'companies', String(companyId));
+        const filePath = join(companyAdsDir, filename);
 
-      // Determine filename based on ad type
-      const filename = adType === 'ad1' ? 'gt-ad.png' : 'gt-ad2.png';
+        // Ensure directory exists
+        if (!existsSync(companyAdsDir)) {
+          await mkdir(companyAdsDir, { recursive: true });
+        }
 
-      // Save to company-specific directory in API's public folder
-      const companyId = request.user.companyId;
-      const companyAdsDir = join(__dirname, '..', '..', 'public', 'companies', String(companyId));
-      const filePath = join(companyAdsDir, filename);
+        // Consume file stream to buffer and write
+        // This properly consumes the stream, preventing hangs
+        const buffer = await filePart.toBuffer();
+        await writeFile(filePath, buffer);
+        
+        // Update version and get new version number
+        const version = await updateAdVersion(companyAdsDir, adType);
 
-      // Ensure directory exists
-      if (!existsSync(companyAdsDir)) {
-        await mkdir(companyAdsDir, { recursive: true });
-      }
+        const response = {
+          message: 'Ad image uploaded successfully',
+          filename,
+          path: `/api/ads/${companyId}/${filename}`,
+          version,
+        };
 
-      // Write file
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:/ads/upload',message:'about to read file to buffer',data:{adType,filename,mimetype:data?.mimetype},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-      const buffer = await data.toBuffer();
-      await writeFile(filePath, buffer);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:/ads/upload',message:'file written',data:{filename,bufferLen:buffer?.length,filePath},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
+        // Broadcast websocket event if websocket is available
+        const wsManager = (fastify as any).wsManager;
+        if (wsManager) {
+          wsManager.broadcastAdUpdate(companyId, adType, version);
+        }
 
-      const response = {
-        message: 'Ad image uploaded successfully',
-        filename,
-        path: `/api/ads/${companyId}/${filename}`,
-      };
-
-      return reply.status(200).send(response);
+        return reply.status(200).send(response);
       } catch (error) {
         request.log.error({ err: error }, 'Error uploading ad image');
         return reply.status(500).send({
@@ -188,17 +227,20 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * Serve ad image files.
    * Public endpoint for kiosk display (no authentication required).
+   * Supports version query parameter for cache-busting.
    * 
    * @route GET /api/ads/:companyId/:filename
    * @param companyId - Company ID
    * @param filename - Image filename (gt-ad.png or gt-ad2.png)
-   * @returns Image file stream
+   * @query v - Optional version number for cache-busting
+   * @returns Image file stream with appropriate cache headers
    * @throws {404} If file not found
    */
   fastify.get(
     '/ads/:companyId/:filename',
     async (request, reply) => {
       const params = request.params as { companyId: string; filename: string };
+      const query = request.query as { v?: string };
       const { companyId, filename } = params;
 
       // Validate filename to prevent directory traversal
@@ -231,6 +273,15 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         '.webp': 'image/webp',
       };
       const contentType = mimeTypes[ext] || 'application/octet-stream';
+
+      // Set cache headers based on version parameter
+      if (query.v) {
+        // Versioned requests can be cached aggressively (immutable)
+        reply.header('Cache-Control', 'public, max-age=31536000, immutable');
+      } else {
+        // Unversioned requests should not be cached to avoid stale content
+        reply.header('Cache-Control', 'no-cache, must-revalidate');
+      }
 
       // Stream the file
       const stream = createReadStream(filePath);

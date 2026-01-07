@@ -65,18 +65,39 @@ export function AdManagementPage() {
       return;
     }
 
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeout = 30000; // 30 seconds timeout
+
     try {
       setUploading((prev) => ({ ...prev, [adType]: true }));
       setError(null);
       setSuccess(null);
 
-      await api.uploadAdImage(file, adType);
-      setSuccess(`Anúncio ${adType === 'ad1' ? '1' : '2'} atualizado com sucesso!`);
+      const result = await api.uploadAdImage(file, adType, {
+        timeout,
+        signal: controller.signal,
+      });
+      
+      setSuccess(`Anúncio ${adType === 'ad1' ? '1' : '2'} atualizado com sucesso! (versão ${result.version})`);
       
       // Reload status without showing loading spinner (to preserve success message visibility)
       await loadAdStatus(false);
     } catch (err) {
-      setError(getErrorMessage(err, `Erro ao fazer upload do anúncio ${adType === 'ad1' ? '1' : '2'}`));
+      // Provide more specific error messages
+      let errorMessage = getErrorMessage(err, `Erro ao fazer upload do anúncio ${adType === 'ad1' ? '1' : '2'}`);
+      
+      if (err instanceof Error) {
+        if (err.message.includes('timeout') || err.message.includes('TIMEOUT')) {
+          errorMessage = `Upload expirou após ${timeout / 1000} segundos. O arquivo pode ser muito grande ou o servidor não está respondendo. Tente novamente.`;
+        } else if (err.message.includes('Network') || err.message.includes('fetch')) {
+          errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+        } else if (err.message.includes('aborted') || err.message.includes('AbortError')) {
+          errorMessage = 'Upload cancelado.';
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setUploading((prev) => ({ ...prev, [adType]: false }));
     }

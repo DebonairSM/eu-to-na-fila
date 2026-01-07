@@ -272,8 +272,13 @@ class ApiClient {
 
   /**
    * POST request helper for multipart/form-data.
+   * Supports timeout and abort signal.
    */
-  private async postFormData<T>(path: string, formData: FormData): Promise<T> {
+  private async postFormData<T>(
+    path: string,
+    formData: FormData,
+    options?: { timeout?: number; signal?: AbortSignal }
+  ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     const headers: Record<string, string> = {};
 
@@ -282,9 +287,17 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.authToken}`;
     }
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/web/src/lib/api.ts:postFormData',message:'postFormData start',data:{path,url,hasAuthToken:!!this.authToken},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
+    // Create abort controller if timeout is specified and no signal provided
+    const controller = options?.signal ? null : new AbortController();
+    const signal = options?.signal || controller?.signal;
+
+    // Set up timeout if specified
+    let timeoutId: NodeJS.Timeout | null = null;
+    if (options?.timeout && controller) {
+      timeoutId = setTimeout(() => {
+        controller.abort();
+      }, options.timeout);
+    }
 
     let response: Response;
     try {
@@ -292,11 +305,37 @@ class ApiClient {
         method: 'POST',
         headers,
         body: formData,
+        signal,
       });
+
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     } catch (err) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/web/src/lib/api.ts:postFormData',message:'postFormData fetch threw',data:{path,url,error:err instanceof Error ? err.message : String(err)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
+      // Handle abort/timeout
+      if (err instanceof Error && err.name === 'AbortError') {
+        throw new ApiError(
+          options?.timeout
+            ? `Upload timeout after ${options.timeout}ms. The file may be too large or the server is not responding.`
+            : 'Upload was aborted',
+          0,
+          'TIMEOUT'
+        );
+      }
+
+      // Handle network errors
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        throw new ApiError(
+          'Network error - please check your connection',
+          0,
+          'NETWORK_ERROR'
+        );
+      }
+
       throw err;
     }
 
@@ -847,24 +886,26 @@ class ApiClient {
    * console.log(`Uploaded to ${result.path}`);
    * ```
    */
-  async uploadAdImage(file: File, adType: 'ad1' | 'ad2'): Promise<{
+  async uploadAdImage(
+    file: File,
+    adType: 'ad1' | 'ad2',
+    options?: { timeout?: number; signal?: AbortSignal }
+  ): Promise<{
     message: string;
     filename: string;
     path: string;
+    version: number;
   }> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('adType', adType);
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/web/src/lib/api.ts:uploadAdImage',message:'uploadAdImage called',data:{adType,fileType:file?.type,fileSize:file?.size,fileName:file?.name},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-
     return this.postFormData<{
       message: string;
       filename: string;
       path: string;
-    }>('/ads/upload', formData);
+      version: number;
+    }>('/ads/upload', formData, options);
   }
 
   /**
