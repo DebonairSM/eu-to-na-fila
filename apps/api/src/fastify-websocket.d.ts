@@ -1,9 +1,9 @@
 declare module 'fastify-websocket' {
   import { FastifyPluginCallback, RouteShorthandOptions } from 'fastify';
-  import { WebSocket } from 'ws';
+  import { WebSocket as WSWebSocket } from 'ws';
 
   export interface SocketStream {
-    socket: WebSocket;
+    socket: WSWebSocket;
     isServer: boolean;
   }
 
@@ -22,6 +22,6 @@ declare module 'fastify-websocket' {
   const fastifyWebsocket: FastifyPluginCallback<FastifyWebsocketOptions>;
 
   export default fastifyWebsocket;
-  export type { WebSocket };
+  export type { WSWebSocket as WebSocket };
 }
 
