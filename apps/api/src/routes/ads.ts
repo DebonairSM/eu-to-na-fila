@@ -113,8 +113,14 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       // Write file
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:/ads/upload',message:'about to read file to buffer',data:{adType,filename,mimetype:data?.mimetype},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       const buffer = await data.toBuffer();
       await writeFile(filePath, buffer);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:/ads/upload',message:'file written',data:{filename,bufferLen:buffer?.length,filePath},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
 
       const response = {
         message: 'Ad image uploaded successfully',
