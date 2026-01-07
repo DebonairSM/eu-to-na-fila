@@ -123,6 +123,9 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           });
         }
 
+        // TypeScript type narrowing: adType is now guaranteed to be 'ad1' | 'ad2'
+        const validatedAdType = adType as 'ad1' | 'ad2';
+
         // Validate file type
         const allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
         if (!allowedMimeTypes.includes(filePart.mimetype)) {
@@ -134,7 +137,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         // Determine filename based on ad type
-        const filename = adType === 'ad1' ? 'gt-ad.png' : 'gt-ad2.png';
+        const filename = validatedAdType === 'ad1' ? 'gt-ad.png' : 'gt-ad2.png';
 
         // Save to company-specific directory in API's public folder
         const companyId = request.user.companyId;
@@ -152,7 +155,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         await writeFile(filePath, buffer);
         
         // Update version and get new version number
-        const version = await updateAdVersion(companyAdsDir, adType);
+        const version = await updateAdVersion(companyAdsDir, validatedAdType);
 
         const response = {
           message: 'Ad image uploaded successfully',
