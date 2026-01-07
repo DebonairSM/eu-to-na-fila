@@ -328,6 +328,11 @@ fastify.setNotFoundHandler(async (request, reply) => {
 
 // Add hook to catch all request errors before they reach error handler
 fastify.addHook('onRequest', async (request, reply) => {
+  // #region agent log
+  if (request.method === 'POST' && request.url?.startsWith('/api/ads/upload')) {
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'apps/api/src/server.ts:onRequest',message:'incoming POST /api/ads/upload',data:{url:request.url,hasAuthHeader:!!request.headers?.authorization,contentType:(request.headers?.['content-type']||'').toString().slice(0,80),contentLength:(request.headers?.['content-length']||'').toString()},timestamp:Date.now()})}).catch(()=>{});
+  }
+  // #endregion
 });
 
 fastify.addHook('onError', async (request, reply, error) => {
