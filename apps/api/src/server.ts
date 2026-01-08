@@ -30,7 +30,7 @@ const fastify = Fastify({
   logger: {
     level: env.NODE_ENV === 'development' ? 'info' : 'warn',
   },
-  bodyLimit: 1048576, // 1MB request body size limit
+  bodyLimit: 10 * 1024 * 1024, // 10MB request body size limit (matches multipart file size limit)
   disableRequestLogging: false,
   requestIdLogLabel: 'reqId',
   requestIdHeader: 'x-request-id',

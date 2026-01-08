@@ -83,6 +83,16 @@ export async function errorHandler(
 
   // Handle Fastify errors with status code
   if ('statusCode' in error && error.statusCode) {
+    // Special handling for payload too large (413)
+    if (error.statusCode === 413) {
+      reply.status(413).send({
+        error: 'File too large. Maximum size is 10MB.',
+        code: 'PAYLOAD_TOO_LARGE',
+        statusCode: 413,
+      });
+      return;
+    }
+    
     reply.status(error.statusCode).send({
       error: error.message,
       code: getErrorCode(error.statusCode),

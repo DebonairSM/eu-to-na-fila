@@ -36,6 +36,9 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:4041',
         changeOrigin: true,
+        // Increase timeout and body size for file uploads
+        timeout: 120000, // 2 minutes
+        // Note: Vite proxy doesn't have a body size limit, but we ensure it's configured properly
       },
       '/ws': {
         target: 'ws://localhost:4041',

@@ -87,6 +87,18 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       let filePart: any = null;
       
       try {
+        // Log request details for debugging
+        request.log.info({
+          method: request.method,
+          url: request.url,
+          headers: {
+            'content-type': request.headers['content-type'],
+            'content-length': request.headers['content-length'],
+          },
+          hasUser: !!request.user,
+          companyId: request.user?.companyId,
+        }, 'Ad upload request received');
+
         if (!request.user || !request.user.companyId) {
           return reply.status(403).send({
             error: 'Company admin access required',
