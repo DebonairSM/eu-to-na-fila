@@ -128,7 +128,10 @@ export async function registerWebSocket(fastify: FastifyInstance): Promise<void>
   (fastify as any).wsManager = wsManager;
 
   // Register WebSocket route at /ws
-  fastify.get('/ws', { websocket: true }, (connection: SocketStream, req: FastifyRequest) => {
+  // Important: disable implicit HEAD route creation for this GET route.
+  // Fastify (v4) creates a sibling HEAD route for every GET route by default, and
+  // @fastify/websocket throws if a websocket handler is declared on a non-GET method.
+  fastify.get('/ws', { websocket: true, exposeHeadRoute: false }, (connection: SocketStream, req: FastifyRequest) => {
     wsManager.addConnection(connection);
   });
 
