@@ -37,6 +37,9 @@ importers:
       '@fastify/static':
         specifier: ^7.0.1
         version: 7.0.4
+      '@fastify/websocket':
+        specifier: 5.0.1
+        version: 5.0.1
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -49,9 +52,6 @@ importers:
       fastify:
         specifier: ^4.25.2
         version: 4.29.1
-      fastify-websocket:
-        specifier: ^4.3.0
-        version: 4.3.0
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
@@ -912,6 +912,9 @@ packages:
 
   '@fastify/swagger@8.15.0':
     resolution: {integrity: sha512-zy+HEEKFqPMS2sFUsQU5X0MHplhKJvWeohBwTCkBAJA/GDYGLGUWQaETEhptiqxK7Hs0fQB9B4MDb3pbwIiCwA==}
+
+  '@fastify/websocket@5.0.1':
+    resolution: {integrity: sha512-voOrfqhj9TIEnviQ9lzGBXdCIpIJpK69HLgvPPv7m9JNQ7GfSJAbG2y6YRuoYk8u6zpDuleHoLCmaJBDl5Chtw==}
 
   '@hono/node-server@1.19.6':
     resolution: {integrity: sha512-Shz/KjlIeAhfiuE93NDKVdZ7HdBVLQAfdbaXEaoAVO3ic9ibRSLGIQGkcBbFyuLr+7/1D5ZCINM8B+6IvXeMtw==}
@@ -1966,13 +1969,6 @@ packages:
   fastify-plugin@4.5.1:
     resolution: {integrity: sha512-stRHYGeuqpEZTL1Ef0Ovr2ltazUT9g844X5z/zEBFLG8RYlpDiOCIG+ATvYEp+/zmc7sN29mcIMp8gvYplYPIQ==}
 
-  fastify-websocket@4.2.2:
-    resolution: {integrity: sha512-Cx4CZwercvoPq4fc6f09VAoa3wqp9qOQUDHp8wMkCHau4zw7wGa+C3Oi2QNUvhvNqw6N4mH8WWYLEnGXUlnumg==}
-
-  fastify-websocket@4.3.0:
-    resolution: {integrity: sha512-PLoXjlKHaWOEIJ7tHStM2i8aL4kdYVB8d1Umf7TdpQ93kG7OopO7eV4IAyO545kRiE8pyL1AbjlJeZ7irDA1aA==}
-    deprecated: Please use @fastify/websocket@5.0.0 instead
-
   fastify@4.29.1:
     resolution: {integrity: sha512-m2kMNHIG92tSNWv+Z3UeTR9AWLLuo7KctC7mlFPtMEVrfjIhmQhkQnT9v15qA/BfVq3vvj134Y0jl9SBje3jXQ==}
 
@@ -2637,9 +2633,6 @@ packages:
   pretty-format@29.7.0:
     resolution: {integrity: sha512-Pdlw/oPxN+aXdmM9R00JVC9WVFoCLTKJvDVLgmJ+qAffBMxsV85l/Lu7sNx4zSzPyoL2euImuEwHhOXdEgNFZQ==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-
-  process-warning@1.0.0:
-    resolution: {integrity: sha512-du4wfLyj4yCZq1VupnVSZmRsPJsNuxoDQFdCFHLaYiEbFBD7QE0a+I4D7hOxrVnh78QE/YipFAj9lXHiXocV+Q==}
 
   process-warning@3.0.0:
     resolution: {integrity: sha512-mqn0kFRl0EoqhnL0GQ0veqFHyIN1yig9RHh/InzORTUiZHFRAur+aMtRkELNwGs9aNwKS6tg/An4NYBPGwvtzQ==}
@@ -3694,6 +3687,14 @@ snapshots:
       yaml: 2.8.2
     transitivePeerDependencies:
       - supports-color
+
+  '@fastify/websocket@5.0.1':
+    dependencies:
+      fastify-plugin: 3.0.1
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@hono/node-server@1.19.6(hono@4.10.4)':
     dependencies:
@@ -4760,22 +4761,6 @@ snapshots:
 
   fastify-plugin@4.5.1: {}
 
-  fastify-websocket@4.2.2:
-    dependencies:
-      fastify-plugin: 3.0.1
-      ws: 8.18.3
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  fastify-websocket@4.3.0:
-    dependencies:
-      fastify-websocket-deprecated: fastify-websocket@4.2.2
-      process-warning: 1.0.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
   fastify@4.29.1:
     dependencies:
       '@fastify/ajv-compiler': 3.6.0
@@ -5443,8 +5428,6 @@ snapshots:
       '@jest/schemas': 29.6.3
       ansi-styles: 5.2.0
       react-is: 18.3.1
-
-  process-warning@1.0.0: {}
 
   process-warning@3.0.0: {}
 

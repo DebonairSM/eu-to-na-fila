@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import type { SocketStream, FastifyWebsocketRouteOptions } from 'fastify-websocket';
+import type { SocketStream } from '@fastify/websocket';
 import type { WebSocket as WSWebSocket } from 'ws';
 
 /**
@@ -128,10 +128,9 @@ export async function registerWebSocket(fastify: FastifyInstance): Promise<void>
   (fastify as any).wsManager = wsManager;
 
   // Register WebSocket route at /ws
-  // Note: fastify-websocket uses a different handler signature than standard Fastify routes
-  fastify.get('/ws', { websocket: true } as any, ((connection: SocketStream, req: FastifyRequest) => {
+  fastify.get('/ws', { websocket: true }, (connection: SocketStream, req: FastifyRequest) => {
     wsManager.addConnection(connection);
-  }) as any);
+  });
 
   console.log('[WS] WebSocket server registered at /ws');
 }
