@@ -67,31 +67,42 @@ export function AdManagementPage() {
 
     // Create abort controller for timeout
     const controller = new AbortController();
-    const timeout = 30000; // 30 seconds timeout
+    const timeout = 60000; // 60 seconds timeout (increased from 30s, but should fail faster if server unreachable)
+    const startTime = Date.now();
 
     try {
       setUploading((prev) => ({ ...prev, [adType]: true }));
       setError(null);
       setSuccess(null);
 
+      console.log('[AdManagement] Starting upload for', adType, 'file size:', file.size, 'bytes');
+
       const result = await api.uploadAdImage(file, adType, {
         timeout,
         signal: controller.signal,
       });
+
+      const elapsed = Date.now() - startTime;
+      console.log('[AdManagement] Upload completed in', elapsed, 'ms');
       
       setSuccess(`Anúncio ${adType === 'ad1' ? '1' : '2'} atualizado com sucesso! (versão ${result.version})`);
       
       // Reload status without showing loading spinner (to preserve success message visibility)
       await loadAdStatus(false);
     } catch (err) {
+      const elapsed = Date.now() - startTime;
+      console.error('[AdManagement] Upload failed after', elapsed, 'ms:', err);
+      
       // Provide more specific error messages
       let errorMessage = getErrorMessage(err, `Erro ao fazer upload do anúncio ${adType === 'ad1' ? '1' : '2'}`);
       
       if (err instanceof Error) {
         if (err.message.includes('timeout') || err.message.includes('TIMEOUT')) {
-          errorMessage = `Upload expirou após ${timeout / 1000} segundos. O arquivo pode ser muito grande ou o servidor não está respondendo. Tente novamente.`;
+          errorMessage = `Upload expirou após ${timeout / 1000} segundos. O servidor pode não estar acessível ou o arquivo é muito grande. Verifique se o servidor está rodando.`;
+        } else if (err.message.includes('Cannot connect') || err.message.includes('not reachable') || err.message.includes('NetworkError')) {
+          errorMessage = 'Não foi possível conectar ao servidor. Verifique se o servidor da API está rodando e acessível.';
         } else if (err.message.includes('Network') || err.message.includes('fetch')) {
-          errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+          errorMessage = 'Erro de conexão. Verifique sua internet e se o servidor está rodando.';
         } else if (err.message.includes('aborted') || err.message.includes('AbortError')) {
           errorMessage = 'Upload cancelado.';
         }

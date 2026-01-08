@@ -287,26 +287,55 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.authToken}`;
     }
 
-    // Create abort controller if timeout is specified and no signal provided
-    const controller = options?.signal ? null : new AbortController();
-    const signal = options?.signal || controller?.signal;
-
-    // Set up timeout if specified
+    // Create abort controller for timeout handling
+    // If a signal is provided, we'll create a composite abort controller
+    // that aborts when either the provided signal or our timeout fires
+    const timeoutController = new AbortController();
     let timeoutId: NodeJS.Timeout | null = null;
-    if (options?.timeout && controller) {
+    
+    // Set up timeout if specified
+    if (options?.timeout) {
       timeoutId = setTimeout(() => {
-        controller.abort();
+        timeoutController.abort();
       }, options.timeout);
+    }
+
+    // Combine signals: abort if either the provided signal or timeout fires
+    let signal: AbortSignal;
+    if (options?.signal) {
+      // Create a composite signal that aborts when either signal fires
+      const compositeController = new AbortController();
+      
+      // Abort composite when timeout fires
+      timeoutController.signal.addEventListener('abort', () => {
+        compositeController.abort();
+      });
+      
+      // Abort composite when provided signal fires
+      options.signal.addEventListener('abort', () => {
+        compositeController.abort();
+      });
+      
+      signal = compositeController.signal;
+    } else {
+      signal = timeoutController.signal;
     }
 
     let response: Response;
     try {
+      // Log the request attempt
+      console.log('[API] Starting upload request to:', url);
+      const startTime = Date.now();
+      
       response = await fetch(url, {
         method: 'POST',
         headers,
         body: formData,
         signal,
       });
+
+      const elapsed = Date.now() - startTime;
+      console.log('[API] Upload request completed in', elapsed, 'ms, status:', response.status);
 
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -316,27 +345,42 @@ class ApiClient {
         clearTimeout(timeoutId);
       }
 
+      // Log the error
+      console.error('[API] Upload request failed:', err);
+
       // Handle abort/timeout
-      if (err instanceof Error && err.name === 'AbortError') {
+      if (err instanceof Error && (err.name === 'AbortError' || err.message.includes('aborted'))) {
+        const isTimeout = options?.timeout && !options?.signal;
         throw new ApiError(
-          options?.timeout
-            ? `Upload timeout after ${options.timeout}ms. The file may be too large or the server is not responding.`
+          isTimeout
+            ? `Upload timeout after ${options.timeout}ms. The server may not be reachable or the file is too large.`
             : 'Upload was aborted',
           0,
           'TIMEOUT'
         );
       }
 
-      // Handle network errors
-      if (err instanceof TypeError && err.message.includes('fetch')) {
-        throw new ApiError(
-          'Network error - please check your connection',
-          0,
-          'NETWORK_ERROR'
-        );
+      // Handle network errors - connection refused, DNS errors, etc.
+      if (err instanceof TypeError) {
+        if (err.message.includes('fetch') || err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+          throw new ApiError(
+            'Cannot connect to server. Please check that the API server is running and accessible.',
+            0,
+            'NETWORK_ERROR'
+          );
+        }
       }
 
-      throw err;
+      // Re-throw as ApiError if it's not already
+      if (err instanceof ApiError) {
+        throw err;
+      }
+
+      throw new ApiError(
+        err instanceof Error ? err.message : 'Unknown error during upload',
+        0,
+        'UPLOAD_ERROR'
+      );
     }
 
     // Capture response text before parsing

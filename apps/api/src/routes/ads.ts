@@ -84,6 +84,8 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: [requireAuth(), requireCompanyAdmin()],
     },
     async (request, reply) => {
+      let filePart: any = null;
+      
       try {
         if (!request.user || !request.user.companyId) {
           return reply.status(403).send({
@@ -95,16 +97,32 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Stream-safe multipart handling: iterate parts() once and collect both file and fields
         // This ensures the stream is consumed properly without hanging
-        let filePart: any = null;
         let adType: string | null = null;
         
-        const parts = request.parts();
-        for await (const part of parts) {
-          if (part.type === 'file') {
-            filePart = part;
-          } else if (part.type === 'field' && part.fieldname === 'adType') {
-            adType = part.value as string;
+        try {
+          const parts = request.parts();
+          for await (const part of parts) {
+            if (part.type === 'file') {
+              filePart = part;
+            } else if (part.type === 'field' && part.fieldname === 'adType') {
+              adType = part.value as string;
+            }
           }
+        } catch (parseError) {
+          request.log.error({ err: parseError }, 'Error parsing multipart data');
+          // Clean up file stream if it exists
+          if (filePart?.file) {
+            try {
+              filePart.file.destroy();
+            } catch (destroyError) {
+              request.log.warn({ err: destroyError }, 'Error destroying file stream');
+            }
+          }
+          return reply.status(400).send({
+            error: 'Error parsing multipart form data',
+            statusCode: 400,
+            code: 'VALIDATION_ERROR',
+          });
         }
         
         if (!filePart) {
@@ -116,6 +134,14 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         }
         
         if (!adType || !['ad1', 'ad2'].includes(adType)) {
+          // Clean up file stream before returning error
+          if (filePart?.file) {
+            try {
+              filePart.file.destroy();
+            } catch (destroyError) {
+              request.log.warn({ err: destroyError }, 'Error destroying file stream');
+            }
+          }
           return reply.status(400).send({
             error: 'Invalid adType. Must be "ad1" or "ad2"',
             statusCode: 400,
@@ -129,6 +155,14 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         // Validate file type
         const allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
         if (!allowedMimeTypes.includes(filePart.mimetype)) {
+          // Clean up file stream before returning error
+          if (filePart?.file) {
+            try {
+              filePart.file.destroy();
+            } catch (destroyError) {
+              request.log.warn({ err: destroyError }, 'Error destroying file stream');
+            }
+          }
           return reply.status(400).send({
             error: `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`,
             statusCode: 400,
@@ -151,8 +185,40 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Consume file stream to buffer and write
         // This properly consumes the stream, preventing hangs
-        const buffer = await filePart.toBuffer();
-        await writeFile(filePath, buffer);
+        let buffer: Buffer;
+        try {
+          request.log.debug('Converting file stream to buffer');
+          buffer = await filePart.toBuffer();
+          request.log.debug({ bufferSize: buffer.length }, 'File stream converted to buffer');
+        } catch (bufferError) {
+          request.log.error({ err: bufferError }, 'Error converting file stream to buffer');
+          // Clean up file stream on error
+          if (filePart?.file) {
+            try {
+              filePart.file.destroy();
+            } catch (destroyError) {
+              request.log.warn({ err: destroyError }, 'Error destroying file stream');
+            }
+          }
+          return reply.status(500).send({
+            error: 'Error processing file stream',
+            statusCode: 500,
+            code: 'INTERNAL_ERROR',
+          });
+        }
+
+        // Write file to disk
+        try {
+          await writeFile(filePath, buffer);
+          request.log.debug({ filePath }, 'File written to disk');
+        } catch (writeError) {
+          request.log.error({ err: writeError, filePath }, 'Error writing file to disk');
+          return reply.status(500).send({
+            error: 'Error saving file',
+            statusCode: 500,
+            code: 'INTERNAL_ERROR',
+          });
+        }
         
         // Update version and get new version number
         const version = await updateAdVersion(companyAdsDir, validatedAdType);
@@ -167,12 +233,28 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         // Broadcast websocket event if websocket is available
         const wsManager = (fastify as any).wsManager;
         if (wsManager) {
-          wsManager.broadcastAdUpdate(companyId, adType, version);
+          try {
+            wsManager.broadcastAdUpdate(companyId, adType, version);
+          } catch (wsError) {
+            // Don't fail the request if websocket broadcast fails
+            request.log.warn({ err: wsError }, 'Error broadcasting websocket update');
+          }
         }
 
+        request.log.info({ companyId, adType, filename, version }, 'Ad image uploaded successfully');
         return reply.status(200).send(response);
       } catch (error) {
         request.log.error({ err: error }, 'Error uploading ad image');
+        
+        // Ensure file stream is cleaned up on any error
+        if (filePart?.file) {
+          try {
+            filePart.file.destroy();
+          } catch (destroyError) {
+            request.log.warn({ err: destroyError }, 'Error destroying file stream in error handler');
+          }
+        }
+        
         return reply.status(500).send({
           error: error instanceof Error ? error.message : 'Internal server error',
           statusCode: 500,
