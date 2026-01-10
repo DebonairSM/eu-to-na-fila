@@ -121,6 +121,47 @@ export class TicketService {
   }
 
   /**
+   * Find an active ticket for a device (waiting or in_progress status).
+   * Used to prevent multiple active tickets from the same device.
+   * 
+   * @param shopId - Shop database ID
+   * @param deviceId - Device identifier
+   * @returns The active ticket if found, null otherwise
+   * 
+   * @example
+   * ```typescript
+   * const existingTicket = await ticketService.findActiveTicketByDevice(1, 'device-uuid-123');
+   * if (existingTicket) {
+   *   // Device already has an active ticket
+   * }
+   * ```
+   */
+  async findActiveTicketByDevice(shopId: number, deviceId: string): Promise<Ticket | null> {
+    if (!deviceId || deviceId.trim().length === 0) {
+      return null;
+    }
+
+    const ticket = await db.query.tickets.findFirst({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.deviceId, deviceId),
+        or(
+          eq(schema.tickets.status, 'waiting'),
+          eq(schema.tickets.status, 'in_progress')
+        )
+      ),
+      with: {
+        shop: true,
+        service: true,
+        barber: true,
+      },
+      orderBy: (tickets, { desc }) => [desc(tickets.createdAt)], // Get most recent
+    });
+
+    return ticket as Ticket | null;
+  }
+
+  /**
    * Create a new ticket and add it to the queue.
    * If customer already has an active ticket, returns the existing ticket instead.
    * 
@@ -167,7 +208,18 @@ export class TicketService {
       throw new ConflictError('Service is not active');
     }
 
-    // Check if customer already has an active ticket
+    // Check if device already has an active ticket (if deviceId provided)
+    // This prevents multiple active tickets from the same device
+    if (data.deviceId && data.deviceId.trim().length > 0) {
+      const existingTicketByDevice = await this.findActiveTicketByDevice(shopId, data.deviceId);
+      if (existingTicketByDevice) {
+        // Device already has an active ticket - return it instead of creating a new one
+        return existingTicketByDevice;
+      }
+    }
+
+    // Fallback: Check if customer already has an active ticket (by name)
+    // This provides backward compatibility and catches edge cases
     const existingTicket = await this.findActiveTicketByCustomer(shopId, data.customerName);
     if (existingTicket) {
       // Return existing ticket instead of creating a new one
@@ -232,6 +284,7 @@ export class TicketService {
         serviceId: data.serviceId,
         customerName: data.customerName,
         customerPhone: data.customerPhone,
+        deviceId: data.deviceId || null,
         preferredBarberId: data.preferredBarberId,
         status: 'waiting',
         position,

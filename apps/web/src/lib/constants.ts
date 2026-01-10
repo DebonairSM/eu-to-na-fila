@@ -52,6 +52,8 @@ export const KIOSK_VIEW_DURATIONS = {
 export const STORAGE_KEYS = {
   /** Active ticket ID storage key */
   ACTIVE_TICKET_ID: 'eutonafila_active_ticket_id',
+  /** Device ID storage key - persistent identifier for device-based ticket blocking */
+  DEVICE_ID: 'eutonafila_device_id',
 } as const;
 
 /**

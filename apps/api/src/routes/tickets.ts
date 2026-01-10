@@ -50,24 +50,83 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       customerName: z.string().min(1).max(200),
       customerPhone: z.string().optional(),
       preferredBarberId: z.number().optional(),
+      deviceId: z.string().optional(), // Device identifier for preventing multiple active tickets per device
     });
     const data = validateRequest(bodySchema, request.body);
 
-    // Check if customer already has an active ticket
-    const existingTicket = await ticketService.findActiveTicketByCustomer(shop.id, data.customerName);
-    
-    if (existingTicket) {
-      // Return existing ticket with 200 status (not a new resource)
-      return reply.status(200).send(existingTicket);
+    // Check for existing active ticket by device FIRST (before creating)
+    // Device-based check takes priority to prevent multiple tickets from same device
+    if (data.deviceId && data.deviceId.trim().length > 0) {
+      const existingTicketByDevice = await ticketService.findActiveTicketByDevice(shop.id, data.deviceId);
+      if (existingTicketByDevice) {
+        // Device already has an active ticket - return it with 200 status (existing resource)
+        return reply.status(200).send(existingTicketByDevice);
+      }
     }
 
-    // Create new ticket using service (includes position calculation and wait time)
+    // Create ticket using service (service.create() also checks internally for safety)
+    // It will check by deviceId first, then by customerName as fallback
+    const beforeCreate = Date.now();
     const ticket = await ticketService.create(shop.id, {
       ...data,
       shopId: shop.id,
     });
 
+    // Determine if this is a new ticket or existing ticket returned by service
+    // Check if ticket was created just now (within last 2 seconds) or if it's older (existing)
+    const ticketCreatedAt = ticket.createdAt ? new Date(ticket.createdAt).getTime() : 0;
+    const ticketAge = beforeCreate - ticketCreatedAt;
+    
+    // If ticket age is > 2 seconds, it's an existing ticket (service returned existing due to race condition)
+    // Otherwise, it's a newly created ticket
+    if (ticketAge > 2000 || ticketAge < -1000) {
+      // Existing ticket (either old ticket or race condition) - return 200
+      return reply.status(200).send(ticket);
+    }
+
+    // New ticket created - return 201
     return reply.status(201).send(ticket);
+  });
+
+  /**
+   * Get active ticket for a device.
+   * Used to check if device already has an active ticket before attempting to create one.
+   * 
+   * @route GET /api/shops/:slug/tickets/active
+   * @param slug - Shop slug identifier
+   * @query deviceId - Device identifier (required)
+   * @returns Active ticket if found (status 200), or 404 if not found
+   * @throws {400} If deviceId is missing
+   * @throws {404} If shop not found or no active ticket for device
+   */
+  fastify.get('/shops/:slug/tickets/active', async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+
+    const querySchema = z.object({
+      deviceId: z.string().min(1),
+    });
+    const { deviceId } = validateRequest(querySchema, request.query);
+
+    // Get shop
+    const shop = await db.query.shops.findFirst({
+      where: eq(schema.shops.slug, slug),
+    });
+
+    if (!shop) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    }
+
+    // Find active ticket for device
+    const ticket = await ticketService.findActiveTicketByDevice(shop.id, deviceId);
+
+    if (!ticket) {
+      throw new NotFoundError('No active ticket found for this device');
+    }
+
+    return ticket;
   });
 
   /**

@@ -78,6 +78,7 @@ export const tickets = pgTable('tickets', {
   preferredBarberId: integer('preferred_barber_id').references(() => barbers.id),
   customerName: text('customer_name').notNull(),
   customerPhone: text('customer_phone'),
+  deviceId: text('device_id'), // Device identifier for preventing multiple active tickets per device
   status: text('status').notNull().default('waiting'), // waiting, in_progress, completed, cancelled
   position: integer('position').notNull().default(0),
   estimatedWaitTime: integer('estimated_wait_time'), // in minutes
@@ -87,7 +88,9 @@ export const tickets = pgTable('tickets', {
   completedAt: timestamp('completed_at'), // when service completed (status → completed)
   cancelledAt: timestamp('cancelled_at'), // when ticket cancelled (status → cancelled)
   barberAssignedAt: timestamp('barber_assigned_at'), // when barber was assigned
-});
+}, (table) => ({
+  shopDeviceIdx: index('tickets_shop_device_idx').on(table.shopId, table.deviceId),
+}));
 
 // Relations
 export const companiesRelations = relations(companies, ({ many }) => ({

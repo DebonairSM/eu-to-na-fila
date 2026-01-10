@@ -11,6 +11,7 @@ export const ticketSchema = z.object({
   preferredBarberId: z.number().optional(),
   customerName: z.string().min(1).max(200),
   customerPhone: z.string().optional(),
+  deviceId: z.string().optional(), // Device identifier for preventing multiple active tickets per device
   status: ticketStatusSchema,
   position: z.number().int().nonnegative(),
   estimatedWaitTime: z.number().int().nonnegative().optional(),
@@ -30,6 +31,7 @@ export const createTicketSchema = z.object({
   customerName: z.string().min(1).max(200),
   customerPhone: z.string().optional(),
   preferredBarberId: z.number().optional(),
+  deviceId: z.string().optional(), // Device identifier for preventing multiple active tickets per device
 });
 export type CreateTicket = z.infer<typeof createTicketSchema>;
 

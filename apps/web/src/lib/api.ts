@@ -580,6 +580,35 @@ class ApiClient {
    * }
    * ```
    */
+  /**
+   * Get active ticket for a device.
+   * 
+   * @param shopSlug - Shop slug identifier
+   * @param deviceId - Device identifier
+   * @returns Active ticket if found
+   * @throws {ApiError} If ticket not found or request fails
+   * 
+   * @example
+   * ```typescript
+   * const deviceId = getOrCreateDeviceId();
+   * const activeTicket = await api.getActiveTicketByDevice('mineiro', deviceId);
+   * if (activeTicket) {
+   *   // Device already has an active ticket
+   * }
+   * ```
+   */
+  async getActiveTicketByDevice(shopSlug: string, deviceId: string): Promise<Ticket | null> {
+    try {
+      return await this.get(`/shops/${shopSlug}/tickets/active?deviceId=${encodeURIComponent(deviceId)}`);
+    } catch (error) {
+      // 404 means no active ticket - return null instead of throwing
+      if (error instanceof ApiError && error.statusCode === 404) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
   async createTicket(
     shopSlug: string,
     data: Omit<CreateTicket, 'shopId'>

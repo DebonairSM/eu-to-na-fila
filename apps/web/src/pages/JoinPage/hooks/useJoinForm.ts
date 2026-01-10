@@ -5,10 +5,11 @@ import { config } from '@/lib/config';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useQueue } from '@/hooks/useQueue';
 import { useBarbers } from '@/hooks/useBarbers';
-import { getErrorMessage, formatName } from '@/lib/utils';
+import { getErrorMessage, formatName, getOrCreateDeviceId } from '@/lib/utils';
 import { logError } from '@/lib/logger';
+import { STORAGE_KEYS } from '@/lib/constants';
 
-const STORAGE_KEY = 'eutonafila_active_ticket_id';
+const STORAGE_KEY = STORAGE_KEYS.ACTIVE_TICKET_ID;
 const CUSTOMER_NAME_STORAGE_KEY = 'eutonafila_customer_name';
 
 export function useJoinForm() {
@@ -103,31 +104,45 @@ export function useJoinForm() {
   // Check for stored ticket on mount - secondary check in case page-level check missed it
   useEffect(() => {
     const checkStoredTicket = async () => {
+      // Check localStorage first
       const storedTicketId = localStorage.getItem(STORAGE_KEY);
-      if (!storedTicketId) {
-        return;
-      }
-
-      const ticketId = parseInt(storedTicketId, 10);
-      if (isNaN(ticketId)) {
-        localStorage.removeItem(STORAGE_KEY);
-        return;
-      }
-
-      try {
-        const ticket = await api.getTicket(ticketId);
-        if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
-          // Found active ticket - redirect immediately
-          console.log('[useJoinForm] Found active ticket in localStorage, redirecting to status:', ticketId);
-          navigate(`/status/${ticketId}`, { replace: true });
+      if (storedTicketId) {
+        const ticketId = parseInt(storedTicketId, 10);
+        if (!isNaN(ticketId)) {
+          try {
+            const ticket = await api.getTicket(ticketId);
+            if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
+              // Found active ticket - redirect immediately
+              console.log('[useJoinForm] Found active ticket in localStorage, redirecting to status:', ticketId);
+              navigate(`/status/${ticketId}`, { replace: true });
+              return;
+            } else {
+              // Ticket is no longer active - clear it
+              localStorage.removeItem(STORAGE_KEY);
+            }
+          } catch (error) {
+            // Error verifying ticket - clear invalid storage
+            console.warn('[useJoinForm] Error verifying stored ticket, clearing:', error);
+            localStorage.removeItem(STORAGE_KEY);
+          }
         } else {
-          // Ticket is no longer active - clear it
           localStorage.removeItem(STORAGE_KEY);
         }
+      }
+
+      // Check by deviceId as fallback
+      try {
+        const deviceId = getOrCreateDeviceId();
+        const activeTicket = await api.getActiveTicketByDevice(config.slug, deviceId);
+        if (activeTicket && (activeTicket.status === 'waiting' || activeTicket.status === 'in_progress')) {
+          // Device has an active ticket - store it and redirect
+          console.log('[useJoinForm] Found active ticket by deviceId, redirecting to status:', activeTicket.id);
+          localStorage.setItem(STORAGE_KEY, activeTicket.id.toString());
+          navigate(`/status/${activeTicket.id}`, { replace: true });
+        }
       } catch (error) {
-        // Error verifying ticket - clear invalid storage
-        console.warn('[useJoinForm] Error verifying stored ticket, clearing:', error);
-        localStorage.removeItem(STORAGE_KEY);
+        // Error checking by deviceId - continue (will show form)
+        console.warn('[useJoinForm] Error checking active ticket by deviceId:', error);
       }
     };
 
@@ -261,8 +276,26 @@ export function useJoinForm() {
       ? `${formatName(firstName.trim())} ${formatName(lastName.trim())}`
       : formatName(firstName.trim());
 
-    // Synchronous check: Check if there's a stored ticket on this device FIRST
-    // This doesn't depend on queue data loading
+    // Get or create deviceId for this device
+    const deviceId = getOrCreateDeviceId();
+
+    // Step 1: Check by deviceId FIRST (server-side check - most reliable)
+    // This prevents multiple active tickets from the same device
+    try {
+      const activeTicketByDevice = await api.getActiveTicketByDevice(config.slug, deviceId);
+      if (activeTicketByDevice && (activeTicketByDevice.status === 'waiting' || activeTicketByDevice.status === 'in_progress')) {
+        // Device already has an active ticket - store it and redirect immediately
+        console.log('[useJoinForm] Found active ticket by deviceId during form submission, redirecting:', activeTicketByDevice.id);
+        localStorage.setItem(STORAGE_KEY, activeTicketByDevice.id.toString());
+        navigate(`/status/${activeTicketByDevice.id}`, { replace: true });
+        return; // Exit early, don't submit form
+      }
+    } catch (error) {
+      // Error checking by deviceId - continue (might be 404 which is fine)
+      console.warn('[useJoinForm] Error checking active ticket by deviceId:', error);
+    }
+
+    // Step 2: Check localStorage as secondary check
     const storedTicketId = localStorage.getItem(STORAGE_KEY);
     let deviceTicketId: number | null = null;
     if (storedTicketId) {
@@ -275,7 +308,7 @@ export function useJoinForm() {
           const ticket = await api.getTicket(parsed);
           if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
             // This device has an active ticket - redirect immediately
-            console.log('[useJoinForm] Found active ticket during form submission, redirecting:', parsed);
+            console.log('[useJoinForm] Found active ticket in localStorage during form submission, redirecting:', parsed);
             navigate(`/status/${parsed}`, { replace: true });
             return; // Exit early, don't submit form
           } else {
@@ -324,9 +357,12 @@ export function useJoinForm() {
     setIsSubmitting(true);
 
     try {
+      // Create ticket with deviceId included
+      // Backend will check if device already has an active ticket and return existing if found
       const ticket = await api.createTicket(config.slug, {
         customerName: fullName,
         serviceId: 1, // Default service
+        deviceId, // Include deviceId to prevent multiple active tickets per device
         ...(selectedBarberId && { preferredBarberId: selectedBarberId }),
       });
 

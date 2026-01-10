@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { ApiError } from './api';
+import { STORAGE_KEYS } from './constants';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -130,3 +131,41 @@ export function formatNameForDisplay(fullName: string): string {
   return `${firstName} ${lastInitial}.`;
 }
 
+/**
+ * Get or generate a persistent device ID for ticket creation.
+ * Device ID is stored in localStorage and persists across sessions.
+ * Used to prevent multiple active tickets from the same device.
+ * 
+ * @returns Device ID string (UUID v4 format)
+ * 
+ * @example
+ * ```typescript
+ * const deviceId = getOrCreateDeviceId();
+ * await api.createTicket(slug, { ...data, deviceId });
+ * ```
+ */
+export function getOrCreateDeviceId(): string {
+  // Try to get existing device ID from localStorage
+  const existing = localStorage.getItem(STORAGE_KEYS.DEVICE_ID);
+  if (existing && existing.trim().length > 0) {
+    return existing;
+  }
+
+  // Generate new device ID using crypto.randomUUID() if available, otherwise fallback
+  let deviceId: string;
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    deviceId = crypto.randomUUID();
+  } else {
+    // Fallback for browsers that don't support randomUUID
+    // Generate a UUID v4-like string
+    deviceId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  // Store in localStorage for persistence
+  localStorage.setItem(STORAGE_KEYS.DEVICE_ID, deviceId);
+  return deviceId;
+}

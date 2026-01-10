@@ -5,8 +5,11 @@ import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { JoinForm } from './JoinForm';
 import { Container, Heading } from '@/components/design-system';
+import { STORAGE_KEYS } from '@/lib/constants';
+import { getOrCreateDeviceId } from '@/lib/utils';
+import { config } from '@/lib/config';
 
-const STORAGE_KEY = 'eutonafila_active_ticket_id';
+const STORAGE_KEY = STORAGE_KEYS.ACTIVE_TICKET_ID;
 
 export function JoinPage() {
   const [isCheckingStoredTicket, setIsCheckingStoredTicket] = useState(true);
@@ -14,42 +17,55 @@ export function JoinPage() {
 
   useEffect(() => {
     const checkStoredTicket = async () => {
-      // Synchronous check first - if no ticket in localStorage, show form immediately
+      // Step 1: Synchronous check first - if no ticket in localStorage, check by deviceId
       const storedTicketId = localStorage.getItem(STORAGE_KEY);
-      if (!storedTicketId) {
-        setIsCheckingStoredTicket(false);
-        return;
-      }
-
-      const ticketId = parseInt(storedTicketId, 10);
-      if (isNaN(ticketId)) {
-        localStorage.removeItem(STORAGE_KEY);
-        setIsCheckingStoredTicket(false);
-        return;
-      }
-
-      // Verify ticket exists and is active via API
-      try {
-        const ticket = await api.getTicket(ticketId);
-        if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
-          // Ticket exists and is active - redirect immediately
-          // Don't set isCheckingStoredTicket to false - let navigation handle it
-          // This prevents the form from rendering briefly
-          console.log('[JoinPage] Found active ticket in localStorage, redirecting to status:', ticketId);
-          navigate(`/status/${ticketId}`, { replace: true });
-          return; // Exit early, don't update state
+      if (storedTicketId) {
+        const ticketId = parseInt(storedTicketId, 10);
+        if (!isNaN(ticketId)) {
+          // Verify ticket exists and is active via API
+          try {
+            const ticket = await api.getTicket(ticketId);
+            if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
+              // Ticket exists and is active - redirect immediately
+              // Don't set isCheckingStoredTicket to false - let navigation handle it
+              // This prevents the form from rendering briefly
+              console.log('[JoinPage] Found active ticket in localStorage, redirecting to status:', ticketId);
+              navigate(`/status/${ticketId}`, { replace: true });
+              return; // Exit early, don't update state
+            } else {
+              // Ticket exists but is not active - clear it
+              console.log('[JoinPage] Stored ticket is no longer active, clearing:', ticketId);
+              localStorage.removeItem(STORAGE_KEY);
+            }
+          } catch (error) {
+            // Ticket not found or error - clear invalid storage
+            console.warn('[JoinPage] Error verifying stored ticket, clearing:', error);
+            localStorage.removeItem(STORAGE_KEY);
+          }
         } else {
-          // Ticket exists but is not active - clear it
-          console.log('[JoinPage] Stored ticket is no longer active, clearing:', ticketId);
           localStorage.removeItem(STORAGE_KEY);
-          setIsCheckingStoredTicket(false);
+        }
+      }
+
+      // Step 2: Check for active ticket by deviceId (secondary check)
+      // This catches cases where localStorage was cleared but deviceId persists
+      try {
+        const deviceId = getOrCreateDeviceId();
+        const activeTicket = await api.getActiveTicketByDevice(config.slug, deviceId);
+        if (activeTicket && (activeTicket.status === 'waiting' || activeTicket.status === 'in_progress')) {
+          // Device has an active ticket - store it and redirect
+          console.log('[JoinPage] Found active ticket by deviceId, redirecting to status:', activeTicket.id);
+          localStorage.setItem(STORAGE_KEY, activeTicket.id.toString());
+          navigate(`/status/${activeTicket.id}`, { replace: true });
+          return; // Exit early, don't update state
         }
       } catch (error) {
-        // Ticket not found or error - clear invalid storage
-        console.warn('[JoinPage] Error verifying stored ticket, clearing:', error);
-        localStorage.removeItem(STORAGE_KEY);
-        setIsCheckingStoredTicket(false);
+        // Error checking by deviceId - continue to show form
+        console.warn('[JoinPage] Error checking active ticket by deviceId:', error);
       }
+
+      // No active ticket found - show form
+      setIsCheckingStoredTicket(false);
     };
 
     checkStoredTicket();
