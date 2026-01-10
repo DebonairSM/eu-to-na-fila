@@ -509,13 +509,14 @@ export function BarberQueueManager() {
         )}
 
         {/* Progress Bar - Only show during ad views, not queue */}
-        {isInRotation && currentView !== 'queue' && (
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
+        {isKioskMode && isInRotation && currentView !== 'queue' && (
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-50">
             <div
-              key={currentView}
+              key={`progress-${currentView}`}
               className="h-full bg-[#D4AF37]"
               style={{
-                animation: `progress ${AD_VIEW_DURATION}ms linear`,
+                width: '0%',
+                animation: `progress ${AD_VIEW_DURATION}ms linear forwards`,
               }}
             />
           </div>
