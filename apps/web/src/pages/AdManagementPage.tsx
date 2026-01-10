@@ -78,7 +78,7 @@ export function AdManagementPage() {
 
       console.log('[AdManagement] Starting upload for', adType, 'file size:', file.size, 'bytes');
 
-      const result = await api.uploadAdImage(file, adType, {
+      await api.uploadAdImage(file, adType, {
         timeout,
         signal: controller.signal,
       });
