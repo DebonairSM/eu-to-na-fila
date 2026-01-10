@@ -40,10 +40,13 @@ async function getAdVersions(companyAdsDir: string): Promise<AdVersions> {
 
 /**
  * Update version for a specific ad type.
+ * Returns an incrementing version number starting from 1.
  */
 async function updateAdVersion(companyAdsDir: string, adType: 'ad1' | 'ad2'): Promise<number> {
   const versions = await getAdVersions(companyAdsDir);
-  const newVersion = Date.now();
+  // Increment version number (start from 1 if it doesn't exist or is 0)
+  const currentVersion = versions[adType] || 0;
+  const newVersion = currentVersion + 1;
   versions[adType] = newVersion;
   
   const versionsPath = join(companyAdsDir, '.versions.json');

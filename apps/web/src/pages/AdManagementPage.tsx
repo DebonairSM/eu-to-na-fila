@@ -18,6 +18,7 @@ export function AdManagementPage() {
   const [uploading, setUploading] = useState<{ ad1: boolean; ad2: boolean }>({ ad1: false, ad2: false });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [imageKey, setImageKey] = useState(0); // Force image refresh after upload
 
   // Redirect if not company admin
   useEffect(() => {
@@ -85,10 +86,12 @@ export function AdManagementPage() {
       const elapsed = Date.now() - startTime;
       console.log('[AdManagement] Upload completed in', elapsed, 'ms');
       
-      setSuccess(`Anúncio ${adType === 'ad1' ? '1' : '2'} atualizado com sucesso! (versão ${result.version})`);
+      setSuccess(`Anúncio ${adType === 'ad1' ? '1' : '2'} atualizado com sucesso!`);
       
       // Reload status without showing loading spinner (to preserve success message visibility)
       await loadAdStatus(false);
+      // Force image refresh by updating the key
+      setImageKey(prev => prev + 1);
     } catch (err) {
       const elapsed = Date.now() - startTime;
       console.error('[AdManagement] Upload failed after', elapsed, 'ms:', err);
@@ -167,9 +170,10 @@ export function AdManagementPage() {
                 </div>
                 {adStatus?.ad1.exists && adStatus.ad1.path && (
                   <img
-                    src={adStatus.ad1.path}
+                    src={`${adStatus.ad1.path}?v=${imageKey}`}
                     alt="Anúncio 1"
                     className="w-24 h-24 object-contain bg-black rounded-lg border border-[rgba(212,175,55,0.3)]"
+                    key={`ad1-${imageKey}`}
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
@@ -235,9 +239,10 @@ export function AdManagementPage() {
                 </div>
                 {adStatus?.ad2.exists && adStatus.ad2.path && (
                   <img
-                    src={adStatus.ad2.path}
+                    src={`${adStatus.ad2.path}?v=${imageKey}`}
                     alt="Anúncio 2"
                     className="w-24 h-24 object-contain bg-black rounded-lg border border-[rgba(212,175,55,0.3)]"
+                    key={`ad2-${imageKey}`}
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
