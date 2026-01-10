@@ -14,6 +14,7 @@ export function JoinPage() {
 
   useEffect(() => {
     const checkStoredTicket = async () => {
+      // Synchronous check first - if no ticket in localStorage, show form immediately
       const storedTicketId = localStorage.getItem(STORAGE_KEY);
       if (!storedTicketId) {
         setIsCheckingStoredTicket(false);
@@ -27,17 +28,26 @@ export function JoinPage() {
         return;
       }
 
+      // Verify ticket exists and is active via API
       try {
         const ticket = await api.getTicket(ticketId);
         if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
+          // Ticket exists and is active - redirect immediately
+          // Don't set isCheckingStoredTicket to false - let navigation handle it
+          // This prevents the form from rendering briefly
+          console.log('[JoinPage] Found active ticket in localStorage, redirecting to status:', ticketId);
           navigate(`/status/${ticketId}`, { replace: true });
-          return;
+          return; // Exit early, don't update state
         } else {
+          // Ticket exists but is not active - clear it
+          console.log('[JoinPage] Stored ticket is no longer active, clearing:', ticketId);
           localStorage.removeItem(STORAGE_KEY);
+          setIsCheckingStoredTicket(false);
         }
       } catch (error) {
+        // Ticket not found or error - clear invalid storage
+        console.warn('[JoinPage] Error verifying stored ticket, clearing:', error);
         localStorage.removeItem(STORAGE_KEY);
-      } finally {
         setIsCheckingStoredTicket(false);
       }
     };

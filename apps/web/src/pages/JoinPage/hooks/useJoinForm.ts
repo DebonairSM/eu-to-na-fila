@@ -100,6 +100,40 @@ export function useJoinForm() {
     };
   }, []);
 
+  // Check for stored ticket on mount - secondary check in case page-level check missed it
+  useEffect(() => {
+    const checkStoredTicket = async () => {
+      const storedTicketId = localStorage.getItem(STORAGE_KEY);
+      if (!storedTicketId) {
+        return;
+      }
+
+      const ticketId = parseInt(storedTicketId, 10);
+      if (isNaN(ticketId)) {
+        localStorage.removeItem(STORAGE_KEY);
+        return;
+      }
+
+      try {
+        const ticket = await api.getTicket(ticketId);
+        if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
+          // Found active ticket - redirect immediately
+          console.log('[useJoinForm] Found active ticket in localStorage, redirecting to status:', ticketId);
+          navigate(`/status/${ticketId}`, { replace: true });
+        } else {
+          // Ticket is no longer active - clear it
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      } catch (error) {
+        // Error verifying ticket - clear invalid storage
+        console.warn('[useJoinForm] Error verifying stored ticket, clearing:', error);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    };
+
+    checkStoredTicket();
+  }, [navigate]);
+
   // Load stored customer name on mount
   useEffect(() => {
     try {
@@ -227,34 +261,54 @@ export function useJoinForm() {
       ? `${formatName(firstName.trim())} ${formatName(lastName.trim())}`
       : formatName(firstName.trim());
 
-    // Check if there's a stored ticket on this device
+    // Synchronous check: Check if there's a stored ticket on this device FIRST
+    // This doesn't depend on queue data loading
     const storedTicketId = localStorage.getItem(STORAGE_KEY);
     let deviceTicketId: number | null = null;
     if (storedTicketId) {
       const parsed = parseInt(storedTicketId, 10);
       if (!isNaN(parsed)) {
         deviceTicketId = parsed;
+        
+        // Verify the stored ticket is still active via API (don't wait for queue data)
+        try {
+          const ticket = await api.getTicket(parsed);
+          if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
+            // This device has an active ticket - redirect immediately
+            console.log('[useJoinForm] Found active ticket during form submission, redirecting:', parsed);
+            navigate(`/status/${parsed}`, { replace: true });
+            return; // Exit early, don't submit form
+          } else {
+            // Stored ticket is no longer active, clear it
+            console.log('[useJoinForm] Stored ticket is no longer active, clearing:', parsed);
+            localStorage.removeItem(STORAGE_KEY);
+            deviceTicketId = null;
+          }
+        } catch (error) {
+          // Error verifying ticket - clear invalid storage and continue
+          console.warn('[useJoinForm] Error verifying stored ticket, clearing:', error);
+          localStorage.removeItem(STORAGE_KEY);
+          deviceTicketId = null;
+        }
       }
     }
 
-    // Only treat as same person if there's a stored ticket on this device
-    if (deviceTicketId && data) {
-      const deviceTicket = data.tickets.find(
-        (t) => t.id === deviceTicketId && (t.status === 'waiting' || t.status === 'in_progress')
-      );
-      if (deviceTicket) {
-        // This device has an active ticket - redirect to status
-        setIsAlreadyInQueue(true);
-        setExistingTicketId(deviceTicketId);
-        return;
-      } else {
-        // Stored ticket is no longer active, clear it
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    }
-
-    // Check if name matches an existing ticket in queue
+    // Check if name matches an existing ticket in queue (only if queue data is loaded)
     if (data) {
+      // First check: if we have a device ticket that's still in queue, redirect
+      if (deviceTicketId) {
+        const deviceTicket = data.tickets.find(
+          (t) => t.id === deviceTicketId && (t.status === 'waiting' || t.status === 'in_progress')
+        );
+        if (deviceTicket) {
+          // This device has an active ticket in queue - redirect to status
+          console.log('[useJoinForm] Found active ticket in queue, redirecting:', deviceTicketId);
+          navigate(`/status/${deviceTicketId}`, { replace: true });
+          return; // Exit early
+        }
+      }
+      
+      // Second check: if name matches another ticket (not this device's ticket)
       const nameMatchTicket = data.tickets.find(
         (t) =>
           t.customerName === fullName &&
