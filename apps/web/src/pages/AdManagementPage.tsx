@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { CompanyNav } from '@/components/CompanyNav';
+import { RootSiteNav } from '@/components/RootSiteNav';
 import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/utils';
+import { isRootBuild } from '@/lib/build';
 
 interface AdStatus {
   ad1: { exists: boolean; path: string | null };
@@ -121,6 +123,196 @@ export function AdManagementPage() {
     return null;
   }
 
+  const useRootTheme = isRootBuild();
+
+  if (useRootTheme) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white">
+        <RootSiteNav />
+        <main className="max-w-6xl mx-auto px-6 py-20">
+          <div className="text-center mb-16">
+            <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Gerenciar Anúncios</h1>
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
+              Faça upload das imagens dos anúncios exibidos no modo kiosk
+            </p>
+          </div>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-6 p-4 bg-green-500/20 border border-green-500/50 rounded-lg text-green-200 text-sm">
+              {success}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="text-center text-gray-400 py-12">
+              <div className="inline-block animate-spin text-blue-400 text-4xl mb-4">
+                <span className="material-symbols-outlined">refresh</span>
+              </div>
+              <p>Carregando...</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Ad 1 */}
+              <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-white mb-1">Anúncio 1</h2>
+                  <p className="text-sm text-white/60">
+                    {adStatus?.ad1.exists ? (
+                      <span className="text-green-400">✓ Imagem carregada</span>
+                    ) : (
+                      <span className="text-yellow-400">⚠ Nenhuma imagem</span>
+                    )}
+                  </p>
+                </div>
+                {adStatus?.ad1.exists && adStatus.ad1.path && (
+                  <img
+                    src={`${adStatus.ad1.path}?v=${imageKey}`}
+                    alt="Anúncio 1"
+                    className="w-24 h-24 object-contain bg-black rounded-lg border border-white/10"
+                    key={`ad1-${imageKey}`}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                )}
+              </div>
+              <label className="block">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleFileUpload('ad1', file);
+                    }
+                  }}
+                  disabled={uploading.ad1}
+                  className="hidden"
+                  id="ad1-upload"
+                />
+                <div className="flex items-center gap-3">
+                  <label
+                    htmlFor="ad1-upload"
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
+                      uploading.ad1
+                        ? 'border-blue-500/50 bg-blue-500/10 cursor-wait'
+                        : 'border-white/20 hover:border-blue-400 hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2 text-blue-400">
+                      {uploading.ad1 ? (
+                        <>
+                          <span className="material-symbols-outlined animate-spin">refresh</span>
+                          <span>Enviando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined">upload</span>
+                          <span>Escolher arquivo</span>
+                        </>
+                      )}
+                    </div>
+                  </label>
+                </div>
+              </label>
+              <p className="text-xs text-white/40 mt-2">
+                PNG, JPEG ou WebP. Máximo 10MB
+              </p>
+            </div>
+
+            {/* Ad 2 */}
+            <div className="bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-white mb-1">Anúncio 2</h2>
+                  <p className="text-sm text-white/60">
+                    {adStatus?.ad2.exists ? (
+                      <span className="text-green-400">✓ Imagem carregada</span>
+                    ) : (
+                      <span className="text-yellow-400">⚠ Nenhuma imagem</span>
+                    )}
+                  </p>
+                </div>
+                {adStatus?.ad2.exists && adStatus.ad2.path && (
+                  <img
+                    src={`${adStatus.ad2.path}?v=${imageKey}`}
+                    alt="Anúncio 2"
+                    className="w-24 h-24 object-contain bg-black rounded-lg border border-white/10"
+                    key={`ad2-${imageKey}`}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                )}
+              </div>
+              <label className="block">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleFileUpload('ad2', file);
+                    }
+                  }}
+                  disabled={uploading.ad2}
+                  className="hidden"
+                  id="ad2-upload"
+                />
+                <div className="flex items-center gap-3">
+                  <label
+                    htmlFor="ad2-upload"
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
+                      uploading.ad2
+                        ? 'border-blue-500/50 bg-blue-500/10 cursor-wait'
+                        : 'border-white/20 hover:border-blue-400 hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2 text-blue-400">
+                      {uploading.ad2 ? (
+                        <>
+                          <span className="material-symbols-outlined animate-spin">refresh</span>
+                          <span>Enviando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined">upload</span>
+                          <span>Escolher arquivo</span>
+                        </>
+                      )}
+                    </div>
+                  </label>
+                </div>
+              </label>
+              <p className="text-xs text-white/40 mt-2">
+                PNG, JPEG ou WebP. Máximo 10MB
+              </p>
+            </div>
+
+              <div className="mt-8 text-center">
+                <button
+                  onClick={() => navigate('/company/dashboard')}
+                  className="px-6 py-2.5 bg-transparent text-gray-400 border border-white/20 rounded-lg hover:border-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center gap-3 mx-auto text-sm"
+                >
+                  <span className="material-symbols-outlined text-lg">arrow_back</span>
+                  Voltar ao Dashboard
+                </button>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  }
+
+  // Mineiro build - keep existing styling
   return (
     <div className="min-h-screen h-full bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
       <CompanyNav />

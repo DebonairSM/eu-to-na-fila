@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { getErrorMessage } from '@/lib/utils';
+import { isRootBuild } from '@/lib/build';
 
 export function CompanyLoginForm() {
   const [username, setUsername] = useState('');
@@ -12,6 +13,7 @@ export function CompanyLoginForm() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { login } = useAuthContext();
+  const useRootTheme = isRootBuild();
   
   const isSubmittingRef = useRef(false);
 
@@ -50,11 +52,28 @@ export function CompanyLoginForm() {
     }
   };
 
+  const iconBgClass = useRootTheme
+    ? 'bg-gradient-to-br from-blue-500 to-indigo-600'
+    : 'bg-gradient-to-br from-[#D4AF37] to-[#E8C547]';
+  const iconTextClass = useRootTheme ? 'text-white' : 'text-[#0a0a0a]';
+  const focusRingClass = useRootTheme
+    ? 'focus:ring-blue-500 focus:border-blue-500'
+    : 'focus:ring-[#D4AF37] focus:border-[#D4AF37]';
+  const labelActiveClass = useRootTheme
+    ? 'text-blue-400'
+    : 'text-[#D4AF37]';
+  const submitButtonClass = useRootTheme
+    ? 'bg-white text-[#0a0a0a] hover:bg-gray-100'
+    : 'bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#E8C547] hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)]';
+  const backLinkClass = useRootTheme
+    ? 'text-gray-400 hover:text-white'
+    : 'text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37]';
+
   return (
     <div className="space-y-6">
       <div className="text-center space-y-4">
-        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center shadow-lg">
-          <span className="material-symbols-outlined text-4xl text-[#0a0a0a]">
+        <div className={`w-20 h-20 mx-auto mb-6 rounded-full ${iconBgClass} flex items-center justify-center shadow-lg`}>
+          <span className={`material-symbols-outlined text-4xl ${iconTextClass}`}>
             business
           </span>
         </div>
@@ -74,12 +93,12 @@ export function CompanyLoginForm() {
             placeholder=" "
             autoComplete="username"
             required
-            className="w-full px-4 py-4 pt-6 rounded-lg border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)] text-white text-base placeholder:text-[rgba(255,255,255,0.5)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37]"
+            className={`w-full px-4 py-4 pt-6 rounded-lg border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)] text-white text-base placeholder:text-[rgba(255,255,255,0.5)] transition-all min-h-[52px] focus:outline-none focus:ring-2 ${focusRingClass}`}
           />
           <label
             htmlFor="username"
             className={`absolute left-4 text-sm text-[rgba(255,255,255,0.7)] pointer-events-none transition-all ${
-              username ? 'top-2 text-xs text-[#D4AF37]' : 'top-4'
+              username ? `top-2 text-xs ${labelActiveClass}` : 'top-4'
             }`}
           >
             Usuário
@@ -95,12 +114,12 @@ export function CompanyLoginForm() {
             placeholder=" "
             autoComplete="current-password"
             required
-            className="w-full px-4 py-4 pt-6 pr-12 rounded-lg border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)] text-white text-base placeholder:text-[rgba(255,255,255,0.5)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37]"
+            className={`w-full px-4 py-4 pt-6 pr-12 rounded-lg border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)] text-white text-base placeholder:text-[rgba(255,255,255,0.5)] transition-all min-h-[52px] focus:outline-none focus:ring-2 ${focusRingClass}`}
           />
           <label
             htmlFor="password"
             className={`absolute left-4 text-sm text-[rgba(255,255,255,0.7)] pointer-events-none transition-all ${
-              password ? 'top-2 text-xs text-[#D4AF37]' : 'top-4'
+              password ? `top-2 text-xs ${labelActiveClass}` : 'top-4'
             }`}
           >
             Senha
@@ -128,7 +147,7 @@ export function CompanyLoginForm() {
 
         <button
           type="submit"
-          className="w-full px-6 py-4 min-h-[52px] bg-[#D4AF37] text-[#0a0a0a] font-semibold rounded-lg flex items-center justify-center gap-3 hover:bg-[#E8C547] hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all disabled:opacity-50"
+          className={`w-full px-6 py-4 min-h-[52px] font-semibold rounded-lg flex items-center justify-center gap-3 transition-all disabled:opacity-50 ${submitButtonClass}`}
           disabled={isLoading}
         >
           {isLoading ? (
@@ -144,8 +163,8 @@ export function CompanyLoginForm() {
 
       <div className="text-center pt-2">
         <Link 
-          to="/home" 
-          className="text-sm text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors"
+          to={useRootTheme ? "/" : "/home"} 
+          className={`text-sm ${backLinkClass} inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors`}
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
           Voltar

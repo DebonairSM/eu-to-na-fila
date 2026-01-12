@@ -7,7 +7,9 @@ import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { CompanyNav } from '@/components/CompanyNav';
+import { RootSiteNav } from '@/components/RootSiteNav';
 import { getErrorMessage } from '@/lib/utils';
+import { isRootBuild } from '@/lib/build';
 
 type Shop = {
   id: number;
@@ -151,6 +153,122 @@ export function ShopManagementPage() {
     return null;
   }
 
+  const useRootTheme = isRootBuild();
+
+  if (useRootTheme) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white">
+        <RootSiteNav />
+        {/* Error Message Toast */}
+        {errorMessage && (
+          <div 
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#ef4444] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-[calc(100%-2rem)] sm:max-w-md"
+            role="alert"
+            aria-live="assertive"
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">error</span>
+            <p className="flex-1 text-sm sm:text-base">{errorMessage}</p>
+            <button
+              onClick={() => setErrorMessage(null)}
+              className="text-white/80 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Fechar mensagem de erro"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        )}
+        <main className="max-w-6xl mx-auto px-6 py-20">
+          <div className="text-center mb-16">
+            <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Gerenciar Barbearias</h1>
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
+              Adicione, edite ou remova barbearias da sua empresa
+            </p>
+          </div>
+
+          <button
+            onClick={addModal.open}
+            className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-white text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-medium transition-all hover:bg-gray-100 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-white/30"
+            aria-label="Adicionar nova barbearia"
+          >
+            <span className="material-symbols-outlined text-lg sm:text-xl" aria-hidden="true">add</span>
+            Adicionar Barbearia
+          </button>
+
+        {/* Shops Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10" aria-busy="true" aria-live="polite">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="h-[200px] rounded-xl bg-white/5 border border-white/10 animate-pulse"
+                aria-hidden="true"
+              />
+            ))}
+          </div>
+        ) : error ? (
+          <ErrorDisplay error={error} onRetry={loadShops} />
+        ) : shops.length === 0 ? (
+          <div className="empty-state text-center py-12 sm:py-[60px] px-4 sm:px-5 text-[rgba(255,255,255,0.7)]">
+            <span className="material-symbols-outlined text-[3rem] sm:text-[4rem] text-[rgba(255,255,255,0.5)] mb-3 sm:mb-4 block" aria-hidden="true">
+              store
+            </span>
+            <p className="text-sm sm:text-base">Nenhuma barbearia cadastrada</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 sm:mb-10">
+            {shops.map((shop) => (
+              <article
+                key={shop.id}
+                className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all hover:border-white/20 hover:bg-white/10 relative overflow-hidden"
+                aria-labelledby={`shop-name-${shop.id}`}
+              >
+                <div className="shop-header mb-4 sm:mb-5">
+                  <div className="text-3xl text-blue-400 mb-2">
+                    <span className="material-symbols-outlined">store</span>
+                  </div>
+                  <h3 id={`shop-name-${shop.id}`} className="text-lg sm:text-xl font-light text-white mb-2">
+                    {shop.name}
+                  </h3>
+                  <div className="text-xs sm:text-sm text-gray-400 mb-1">
+                    <span className="font-medium">Slug:</span> {shop.slug}
+                  </div>
+                  {shop.domain && (
+                    <div className="text-xs sm:text-sm text-gray-400 mb-1">
+                      <span className="font-medium">Domínio:</span> {shop.domain}
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 sm:gap-3">
+                  <button
+                    onClick={() => openEditModal(shop)}
+                    className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-white/20 rounded-lg text-xs sm:text-sm font-medium cursor-pointer transition-all min-h-[44px] bg-white/5 text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30"
+                    aria-label={`Editar barbearia ${shop.name}`}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShopToDelete(shop.id);
+                      deleteConfirmModal.open();
+                    }}
+                    className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-[rgba(239,68,68,0.3)] rounded-lg text-xs sm:text-sm font-medium cursor-pointer transition-all min-h-[44px] bg-[rgba(239,68,68,0.2)] text-[#ef4444] hover:bg-[rgba(239,68,68,0.3)] focus:outline-none focus:ring-2 focus:ring-[#ef4444] focus:ring-offset-2 focus:ring-offset-[#242424]"
+                    aria-label={`Remover barbearia ${shop.name}`}
+                  >
+                    Remover
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+        </main>
+      </div>
+    );
+  }
+
+  // Mineiro build - keep existing styling
   return (
     <div className="min-h-screen h-full bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
       <CompanyNav />
