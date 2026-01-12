@@ -5,9 +5,14 @@
  * Auto-updates when new version is deployed.
  */
 
-const CACHE_NAME = 'eutonafila-v5';
-const API_CACHE_NAME = 'eutonafila-api-v5';
-const VIDEO_CACHE_NAME = 'eutonafila-video-v5';
+// Bump this when deploying changes that affect built asset graphs.
+// A stale cached HTML/JS combo is the most common cause of "blank black screen" after deploy.
+const CACHE_VERSION = 'v6';
+
+const STATIC_CACHE_NAME = `eutonafila-static-${CACHE_VERSION}`;
+const PAGE_CACHE_NAME = `eutonafila-pages-${CACHE_VERSION}`;
+const API_CACHE_NAME = `eutonafila-api-${CACHE_VERSION}`;
+const VIDEO_CACHE_NAME = `eutonafila-video-${CACHE_VERSION}`;
 
 // Cache size limits (in bytes)
 const MAX_CACHE_SIZE = 50 * 1024 * 1024; // 50MB total
@@ -38,7 +43,7 @@ self.addEventListener('install', (event) => {
   console.log('[SW] Installing service worker...');
   
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
+    caches.open(PAGE_CACHE_NAME).then((cache) => {
       console.log('[SW] Caching static assets');
       return cache.addAll(STATIC_ASSETS);
     }).then(() => {
@@ -58,7 +63,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME && name !== API_CACHE_NAME && name !== VIDEO_CACHE_NAME)
+          .filter((name) => name !== STATIC_CACHE_NAME && name !== PAGE_CACHE_NAME && name !== API_CACHE_NAME && name !== VIDEO_CACHE_NAME)
           .map((name) => {
             console.log('[SW] Deleting old cache:', name);
             return caches.delete(name);
@@ -71,7 +76,7 @@ self.addEventListener('activate', (event) => {
       // Notify all clients that new service worker is active
       return self.clients.matchAll().then((clients) => {
         clients.forEach((client) => {
-          client.postMessage({ type: 'SW_ACTIVATED', cacheVersion: CACHE_NAME });
+          client.postMessage({ type: 'SW_ACTIVATED', cacheVersion: CACHE_VERSION });
         });
       });
     })
@@ -112,7 +117,7 @@ self.addEventListener('fetch', (event) => {
 
     // Handle API requests (network first, fallback to cache)
     if (url.pathname.startsWith('/api/')) {
-      event.respondWith(networkFirstStrategy(request));
+      event.respondWith(apiNetworkFirstStrategy(request));
       return;
     }
 
@@ -122,14 +127,15 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
-    // Don't cache HTML files aggressively - always check network first for HTML
-    if (request.mode === 'navigate' || (url.pathname.endsWith('.html') && !url.pathname.includes('index.html'))) {
-      event.respondWith(networkFirstStrategy(request));
+    // HTML navigation: network-first, cache in PAGE cache.
+    // This prevents stale HTML pointing at missing hashed bundles (blank screen after deploy).
+    if (request.mode === 'navigate' || url.pathname.endsWith('.html')) {
+      event.respondWith(pageNetworkFirstStrategy(request));
       return;
     }
     
     // Handle static assets (stale-while-revalidate)
-    event.respondWith(cacheFirstStrategy(request));
+    event.respondWith(staticCacheFirstStrategy(request));
   } catch (error) {
     // Skip requests that can't be parsed as URLs
     console.warn('[SW] Skipping invalid URL:', request.url);
@@ -142,8 +148,8 @@ self.addEventListener('fetch', (event) => {
  * Serves from cache immediately, then updates cache in background
  * Prevents stale CSS/JS from causing black/white screens
  */
-async function cacheFirstStrategy(request) {
-  const cache = await caches.open(CACHE_NAME);
+async function staticCacheFirstStrategy(request) {
+  const cache = await caches.open(STATIC_CACHE_NAME);
   const cached = await cache.match(request);
 
   // Always try to fetch fresh version in background
@@ -188,7 +194,8 @@ async function cacheFirstStrategy(request) {
     
     // Return offline page for navigation requests
     if (request.mode === 'navigate') {
-      const offlinePage = await cache.match('/mineiro/index.html');
+      const pageCache = await caches.open(PAGE_CACHE_NAME);
+      const offlinePage = await pageCache.match('/mineiro/index.html');
       if (offlinePage) {
         return offlinePage;
       }
@@ -199,20 +206,17 @@ async function cacheFirstStrategy(request) {
 }
 
 /**
- * Network-first strategy for API requests
- * Always try network first, fallback to cache if offline
+ * Network-first strategy for HTML navigation (cache in PAGE cache)
  */
-async function networkFirstStrategy(request) {
-  const cache = await caches.open(API_CACHE_NAME);
+async function pageNetworkFirstStrategy(request) {
+  const cache = await caches.open(PAGE_CACHE_NAME);
 
   try {
-    console.log('[SW] Fetching API from network:', request.url);
+    console.log('[SW] Fetching page from network:', request.url);
     const response = await fetch(request);
     
-    // Cache successful API responses (short TTL)
+    // Cache successful page responses
     if (response.status === 200) {
-      // Check cache size before adding
-      await enforceCacheSizeLimit(API_CACHE_NAME, MAX_API_CACHE_SIZE);
       cache.put(request, response.clone());
     }
     
@@ -234,6 +238,45 @@ async function networkFirstStrategy(request) {
       });
     }
     
+    throw error;
+  }
+}
+
+/**
+ * Network-first strategy for API requests
+ * Always try network first, fallback to cache if offline
+ */
+async function apiNetworkFirstStrategy(request) {
+  const cache = await caches.open(API_CACHE_NAME);
+
+  try {
+    console.log('[SW] Fetching API from network:', request.url);
+    const response = await fetch(request);
+
+    // Cache successful API responses (short TTL)
+    if (response.status === 200) {
+      // Check cache size before adding
+      await enforceCacheSizeLimit(API_CACHE_NAME, MAX_API_CACHE_SIZE);
+      cache.put(request, response.clone());
+    }
+
+    return response;
+  } catch (error) {
+    console.log('[SW] Network failed, trying cache:', request.url);
+    const cached = await cache.match(request);
+
+    if (cached) {
+      const cachedResponse = cached.clone();
+      return new Response(cachedResponse.body, {
+        status: cached.status,
+        statusText: cached.statusText,
+        headers: {
+          ...Object.fromEntries(cached.headers.entries()),
+          'X-From-Cache': 'true',
+        },
+      });
+    }
+
     throw error;
   }
 }
