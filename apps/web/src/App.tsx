@@ -9,7 +9,7 @@ const CompanyHomePage = lazy(() => import('./pages/CompanyHomePage').then((m) =>
 const ContactPage = lazy(() => import('./pages/ContactPage').then((m) => ({ default: m.ContactPage })));
 const NetworkPage = lazy(() => import('./pages/NetworkPage').then((m) => ({ default: m.NetworkPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
-const JoinPage = lazy(() => import('./pages/JoinPage').then((m) => ({ default: m.JoinPage })));
+const JoinPageGuard = lazy(() => import('./pages/JoinPage/JoinPageGuard').then((m) => ({ default: m.JoinPageGuard })));
 const StatusPage = lazy(() => import('./pages/StatusPage').then((m) => ({ default: m.StatusPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
 const OwnerDashboard = lazy(() => import('./pages/OwnerDashboard').then((m) => ({ default: m.OwnerDashboard })));
@@ -76,7 +76,7 @@ function AppContent() {
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/network" element={<NetworkPage />} />
       <Route path="/about" element={<AboutPage />} />
-      <Route path="/join" element={<JoinPage />} />
+      <Route path="/join" element={<JoinPageGuard />} />
       <Route path="/status/:id" element={<StatusPage />} />
       <Route path="/company/login" element={<CompanyLoginPage />} />
       <Route path="/shop/login" element={<LoginPage />} />
@@ -146,7 +146,7 @@ function AppContent() {
 function App() {
   useEffect(() => {
     const preload = [
-      import('./pages/JoinPage'),
+      import('./pages/JoinPage/JoinPageGuard'),
       import('./pages/StatusPage'),
       import('./pages/LandingPage'),
     ];

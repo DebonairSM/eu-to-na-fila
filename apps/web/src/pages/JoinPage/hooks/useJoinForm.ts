@@ -101,54 +101,6 @@ export function useJoinForm() {
     };
   }, []);
 
-  // Check for stored ticket on mount - secondary check in case page-level check missed it
-  useEffect(() => {
-    const checkStoredTicket = async () => {
-      // Check localStorage first
-      const storedTicketId = localStorage.getItem(STORAGE_KEY);
-      if (storedTicketId) {
-        const ticketId = parseInt(storedTicketId, 10);
-        if (!isNaN(ticketId)) {
-          try {
-            const ticket = await api.getTicket(ticketId);
-            if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
-              // Found active ticket - redirect immediately
-              console.log('[useJoinForm] Found active ticket in localStorage, redirecting to status:', ticketId);
-              navigate(`/status/${ticketId}`, { replace: true });
-              return;
-            } else {
-              // Ticket is no longer active - clear it
-              localStorage.removeItem(STORAGE_KEY);
-            }
-          } catch (error) {
-            // Error verifying ticket - clear invalid storage
-            console.warn('[useJoinForm] Error verifying stored ticket, clearing:', error);
-            localStorage.removeItem(STORAGE_KEY);
-          }
-        } else {
-          localStorage.removeItem(STORAGE_KEY);
-        }
-      }
-
-      // Check by deviceId as fallback
-      try {
-        const deviceId = getOrCreateDeviceId();
-        const activeTicket = await api.getActiveTicketByDevice(config.slug, deviceId);
-        if (activeTicket && (activeTicket.status === 'waiting' || activeTicket.status === 'in_progress')) {
-          // Device has an active ticket - store it and redirect
-          console.log('[useJoinForm] Found active ticket by deviceId, redirecting to status:', activeTicket.id);
-          localStorage.setItem(STORAGE_KEY, activeTicket.id.toString());
-          navigate(`/status/${activeTicket.id}`, { replace: true });
-        }
-      } catch (error) {
-        // Error checking by deviceId - continue (will show form)
-        console.warn('[useJoinForm] Error checking active ticket by deviceId:', error);
-      }
-    };
-
-    checkStoredTicket();
-  }, [navigate]);
-
   // Load stored customer name on mount
   useEffect(() => {
     try {
