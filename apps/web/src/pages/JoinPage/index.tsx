@@ -13,6 +13,7 @@ export function JoinPage() {
   // #region agent log
   fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'JoinPage/index.tsx:12',message:'JoinPage RENDERED - This means guard allowed it',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
   // #endregion
+  console.warn('[JoinPage] ⚠️ RENDERED - This should NOT happen if user has active ticket!');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">

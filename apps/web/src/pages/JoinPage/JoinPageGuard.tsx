@@ -27,36 +27,47 @@ export function JoinPageGuard() {
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'JoinPageGuard.tsx:26',message:'Guard mounted, check starting',data:{isChecking,shouldRenderJoinPage},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
     // #endregion
+    console.log('[JoinPageGuard] Mounted, starting check');
     const checkActiveTicket = async () => {
       // Step 1: Check by deviceId FIRST (most reliable server-side check)
       // This is the primary method and should always be tried first
       try {
         const deviceId = getOrCreateDeviceId();
+        console.log('[JoinPageGuard] Checking by deviceId:', deviceId, 'shop:', config.slug);
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'JoinPageGuard.tsx:32',message:'DeviceId check starting',data:{deviceId,shopSlug:config.slug},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
         // #endregion
+        const startTime = Date.now();
         const activeTicket = await api.getActiveTicketByDevice(config.slug, deviceId);
+        const elapsed = Date.now() - startTime;
+        console.log('[JoinPageGuard] DeviceId check completed in', elapsed, 'ms. Result:', activeTicket ? {id: activeTicket.id, status: activeTicket.status} : 'null');
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'JoinPageGuard.tsx:34',message:'DeviceId check result',data:{activeTicket:activeTicket?{id:activeTicket.id,status:activeTicket.status}:null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'JoinPageGuard.tsx:34',message:'DeviceId check result',data:{activeTicket:activeTicket?{id:activeTicket.id,status:activeTicket.status}:null,elapsed},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
         // #endregion
         
         if (activeTicket && (activeTicket.status === 'waiting' || activeTicket.status === 'in_progress')) {
           // Device has an active ticket - store it and redirect immediately
-          console.log('[JoinPageGuard] Found active ticket by deviceId, redirecting to status:', activeTicket.id);
+          console.log('[JoinPageGuard] ✓ Found active ticket by deviceId, redirecting to status:', activeTicket.id);
           localStorage.setItem(STORAGE_KEY, activeTicket.id.toString());
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'JoinPageGuard.tsx:38',message:'Calling navigate for deviceId ticket',data:{ticketId:activeTicket.id,path:`/status/${activeTicket.id}`},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
           // #endregion
           navigate(`/status/${activeTicket.id}`, { replace: true });
+          console.log('[JoinPageGuard] Navigate called, returning early');
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'JoinPageGuard.tsx:40',message:'Returning early after deviceId navigate',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
           // #endregion
           // Don't update state - let navigation handle it
           return;
+        } else {
+          console.log('[JoinPageGuard] ✗ No active ticket found by deviceId. activeTicket:', activeTicket);
         }
       } catch (error) {
         // Network error - retry once before falling back
-        console.warn('[JoinPageGuard] Error checking by deviceId, retrying once:', error);
+        console.warn('[JoinPageGuard] ✗ Error checking by deviceId:', error);
+        if (error instanceof Error) {
+          console.warn('[JoinPageGuard] Error details:', error.message, error.stack);
+        }
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'JoinPageGuard.tsx:44',message:'DeviceId check error, retrying',data:{error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
         // #endregion
@@ -86,6 +97,7 @@ export function JoinPageGuard() {
 
       // Step 2: Fallback to localStorage check (if deviceId check didn't find anything)
       const storedTicketId = localStorage.getItem(STORAGE_KEY);
+      console.log('[JoinPageGuard] Checking localStorage for ticketId:', storedTicketId);
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'JoinPageGuard.tsx:65',message:'Checking localStorage',data:{storedTicketId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
       // #endregion
@@ -132,6 +144,7 @@ export function JoinPageGuard() {
       }
 
       // No active ticket found - safe to render JoinPage
+      console.log('[JoinPageGuard] ✗ No active ticket found anywhere. Allowing JoinPage to render.');
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'JoinPageGuard.tsx:93',message:'No active ticket found, setting state to render JoinPage',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
       // #endregion
