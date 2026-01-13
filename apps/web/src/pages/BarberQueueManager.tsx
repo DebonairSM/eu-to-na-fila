@@ -695,19 +695,15 @@ export function BarberQueueManager() {
                         disabled={isDisabled}
                         className={cn(
                           'p-6 rounded-2xl border-2 transition-all text-xl font-medium relative',
+                          'focus:outline-none',
                           isCurrentlyAssigned
                             ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]'
                             : isDisabled
                               ? 'bg-white/5 border-white/10 text-white/40 cursor-not-allowed opacity-50'
-                              : isPreferred
-                                ? 'bg-[#D4AF37]/10 border-transparent text-white hover:border-[#D4AF37]/20'
-                                : 'bg-white/5 border-white/20 text-white hover:border-[#D4AF37]/50'
+                              : 'bg-white/5 border-white/20 text-white hover:border-[#D4AF37]/50'
                         )}
-                        title={isDisabled ? 'Atendendo outro cliente' : isPreferred ? 'Barbeiro preferido' : undefined}
+                        title={isDisabled ? 'Atendendo outro cliente' : undefined}
                       >
-                        {isPreferred && !isCurrentlyAssigned && (
-                          <span className="absolute top-2 right-2 material-symbols-outlined text-[#D4AF37] text-lg">star</span>
-                        )}
                         {barber.name}
                         {isDisabled && (
                           <span className="block text-sm text-white/40 mt-1">Atendendo outro cliente</span>
