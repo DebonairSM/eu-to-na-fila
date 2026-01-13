@@ -114,16 +114,40 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         // This ensures the stream is consumed properly without hanging
         let adType: string | null = null;
         
+        // #region agent log
+        const fs = await import('fs');
+        const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
+        fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Before request.parts()',data:{timestamp:Date.now()},timestamp:Date.now()})+'\n');
+        // #endregion
+        
         try {
           const parts = request.parts();
+          // #region agent log
+          fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Got parts iterator, starting loop',data:{timestamp:Date.now()},timestamp:Date.now()})+'\n');
+          // #endregion
           for await (const part of parts) {
+            // #region agent log
+            fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Processing part',data:{partType:part.type,fieldname:part.type==='field'?(part as any).fieldname:undefined},timestamp:Date.now()})+'\n');
+            // #endregion
             if (part.type === 'file') {
               filePart = part;
+              // #region agent log
+              fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'File part found',data:{filename:(part as any).filename,mimetype:(part as any).mimetype},timestamp:Date.now()})+'\n');
+              // #endregion
             } else if (part.type === 'field' && part.fieldname === 'adType') {
               adType = part.value as string;
+              // #region agent log
+              fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'adType field found',data:{adType},timestamp:Date.now()})+'\n');
+              // #endregion
             }
           }
+          // #region agent log
+          fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Parts loop completed',data:{hasFilePart:!!filePart,adType},timestamp:Date.now()})+'\n');
+          // #endregion
         } catch (parseError) {
+          // #region agent log
+          fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Parse error',data:{errorMessage:parseError instanceof Error?parseError.message:String(parseError)},timestamp:Date.now()})+'\n');
+          // #endregion
           request.log.error({ err: parseError }, 'Error parsing multipart data');
           // Clean up file stream if it exists
           if (filePart?.file) {
@@ -213,9 +237,22 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         let buffer: Buffer;
         try {
           request.log.debug('Converting file stream to buffer');
+          // #region agent log
+          const fs = await import('fs');
+          const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
+          fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'apps/api/src/routes/ads.ts:upload',message:'Before filePart.toBuffer()',data:{timestamp:Date.now()},timestamp:Date.now()})+'\n');
+          // #endregion
           buffer = await filePart.toBuffer();
+          // #region agent log
+          fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'apps/api/src/routes/ads.ts:upload',message:'After filePart.toBuffer()',data:{bufferSize:buffer.length},timestamp:Date.now()})+'\n');
+          // #endregion
           request.log.debug({ bufferSize: buffer.length }, 'File stream converted to buffer');
         } catch (bufferError) {
+          // #region agent log
+          const fs = await import('fs');
+          const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
+          fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'apps/api/src/routes/ads.ts:upload',message:'Buffer error',data:{errorMessage:bufferError instanceof Error?bufferError.message:String(bufferError)},timestamp:Date.now()})+'\n');
+          // #endregion
           request.log.error({ err: bufferError }, 'Error converting file stream to buffer');
           // Clean up file stream on error
           if (filePart?.file) {
@@ -267,9 +304,19 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         request.log.info({ companyId, adType, filename, version }, 'Ad image uploaded successfully');
+        // #region agent log
+        const fs = await import('fs');
+        const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
+        fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:upload',message:'Sending success response',data:{companyId,adType,filename,version},timestamp:Date.now()})+'\n');
+        // #endregion
         return reply.status(200).send(response);
       } catch (error) {
         request.log.error({ err: error }, 'Error uploading ad image');
+        // #region agent log
+        const fs = await import('fs');
+        const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
+        fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H5',location:'apps/api/src/routes/ads.ts:upload',message:'Top-level error caught',data:{errorMessage:error instanceof Error?error.message:String(error),errorName:error instanceof Error?error.name:'unknown'},timestamp:Date.now()})+'\n');
+        // #endregion
         
         // Ensure file stream is cleaned up on any error
         if (filePart?.file) {

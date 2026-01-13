@@ -333,6 +333,9 @@ class ApiClient {
       // Log the request attempt
       console.log('[API] Starting upload request to:', url);
       const startTime = Date.now();
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/web/src/lib/api.ts:postFormData',message:'Before fetch call',data:{url,hasAuth:!!headers.Authorization,timeout:options?.timeout},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       
       response = await fetch(url, {
         method: 'POST',
@@ -340,6 +343,10 @@ class ApiClient {
         body: formData,
         signal,
       });
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/web/src/lib/api.ts:postFormData',message:'After fetch call',data:{status:response.status,ok:response.ok,statusText:response.statusText},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
 
       const elapsed = Date.now() - startTime;
       console.log('[API] Upload request completed in', elapsed, 'ms, status:', response.status);
@@ -354,6 +361,9 @@ class ApiClient {
 
       // Log the error
       console.error('[API] Upload request failed:', err);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/web/src/lib/api.ts:postFormData',message:'Fetch error caught',data:{errorName:err instanceof Error?err.name:'unknown',errorMessage:err instanceof Error?err.message:String(err),isAbortError:err instanceof Error&&err.name==='AbortError'},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
 
       // Handle abort/timeout
       if (err instanceof Error && (err.name === 'AbortError' || err.message.includes('aborted'))) {
@@ -391,7 +401,13 @@ class ApiClient {
     }
 
     // Capture response text before parsing
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H4',location:'apps/web/src/lib/api.ts:postFormData',message:'Before response.text()',data:{timestamp:Date.now()},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     const responseText = await response.text();
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H4',location:'apps/web/src/lib/api.ts:postFormData',message:'After response.text()',data:{textLength:responseText.length,textPreview:responseText.substring(0,100)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
 
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/web/src/lib/api.ts:postFormData',message:'postFormData response received',data:{path,status:response.status,ok:response.ok,textLen:responseText?.length},timestamp:Date.now()})}).catch(()=>{});
