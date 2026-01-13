@@ -160,10 +160,12 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
       
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = dirname(__filename);
-      const companyAdsDir = join(__dirname, '..', '..', '..', 'web', 'public', 'companies', String(id));
+      const companyAdsDir = join(__dirname, '..', '..', 'public', 'companies', String(id));
       
-      const ad1Exists = existsSync(join(companyAdsDir, 'gt-ad.png'));
-      const ad2Exists = existsSync(join(companyAdsDir, 'gt-ad2.png'));
+      // Check for ad files with any supported extension
+      const adExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
+      const ad1Exists = adExtensions.some(ext => existsSync(join(companyAdsDir, `gt-ad${ext}`)));
+      const ad2Exists = adExtensions.some(ext => existsSync(join(companyAdsDir, `gt-ad2${ext}`)));
       const activeAdsCount = (ad1Exists ? 1 : 0) + (ad2Exists ? 1 : 0);
 
       return {

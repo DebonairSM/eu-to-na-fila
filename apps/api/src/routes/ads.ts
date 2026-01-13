@@ -185,8 +185,18 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           });
         }
 
-        // Determine filename based on ad type
-        const filename = validatedAdType === 'ad1' ? 'gt-ad.png' : 'gt-ad2.png';
+        // Determine file extension from MIME type
+        const mimeToExt: Record<string, string> = {
+          'image/png': '.png',
+          'image/jpeg': '.jpg',
+          'image/jpg': '.jpg',
+          'image/webp': '.webp',
+        };
+        const fileExt = mimeToExt[filePart.mimetype] || '.png';
+        
+        // Determine filename based on ad type, preserving original extension
+        const baseFilename = validatedAdType === 'ad1' ? 'gt-ad' : 'gt-ad2';
+        const filename = `${baseFilename}${fileExt}`;
 
         // Save to company-specific directory in API's public folder
         const companyId = request.user.companyId;
@@ -305,20 +315,37 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       const companyId = request.user.companyId;
       const companyAdsDir = join(__dirname, '..', '..', 'public', 'companies', String(companyId));
       
-      const ad1Path = join(companyAdsDir, 'gt-ad.png');
-      const ad2Path = join(companyAdsDir, 'gt-ad2.png');
+      // Check for ad files with any supported extension
+      const adExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
       
-      const ad1Exists = existsSync(ad1Path);
-      const ad2Exists = existsSync(ad2Path);
+      // Find existing ad1 file
+      let ad1Filename: string | null = null;
+      for (const ext of adExtensions) {
+        const path = join(companyAdsDir, `gt-ad${ext}`);
+        if (existsSync(path)) {
+          ad1Filename = `gt-ad${ext}`;
+          break;
+        }
+      }
+      
+      // Find existing ad2 file
+      let ad2Filename: string | null = null;
+      for (const ext of adExtensions) {
+        const path = join(companyAdsDir, `gt-ad2${ext}`);
+        if (existsSync(path)) {
+          ad2Filename = `gt-ad2${ext}`;
+          break;
+        }
+      }
 
       return {
         ad1: {
-          exists: ad1Exists,
-          path: ad1Exists ? `/api/ads/${companyId}/gt-ad.png` : null,
+          exists: ad1Filename !== null,
+          path: ad1Filename ? `/api/ads/${companyId}/${ad1Filename}` : null,
         },
         ad2: {
-          exists: ad2Exists,
-          path: ad2Exists ? `/api/ads/${companyId}/gt-ad2.png` : null,
+          exists: ad2Filename !== null,
+          path: ad2Filename ? `/api/ads/${companyId}/${ad2Filename}` : null,
         },
       };
     }
@@ -344,18 +371,45 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       const { companyId, filename } = params;
 
       // Validate filename to prevent directory traversal
-      if (!['gt-ad.png', 'gt-ad2.png'].includes(filename)) {
+      // Allow various extensions: .png, .jpg, .jpeg, .webp
+      const validFilenames = [
+        'gt-ad.png', 'gt-ad.jpg', 'gt-ad.jpeg', 'gt-ad.webp',
+        'gt-ad2.png', 'gt-ad2.jpg', 'gt-ad2.jpeg', 'gt-ad2.webp',
+      ];
+      
+      // Extract base name and requested extension
+      const baseNameMatch = filename.match(/^(gt-ad2?)(\.\w+)?$/);
+      if (!baseNameMatch) {
         return reply.status(400).send({
           error: 'Invalid filename',
           statusCode: 400,
           code: 'VALIDATION_ERROR',
         });
       }
-
+      
+      const baseName = baseNameMatch[1]; // 'gt-ad' or 'gt-ad2'
+      const requestedExt = baseNameMatch[2] || '.png'; // Use requested extension or default to .png
+      
       const companyAdsDir = join(__dirname, '..', '..', 'public', 'companies', companyId);
-      const filePath = join(companyAdsDir, filename);
-
-      // Check if file exists
+      
+      // First, try the exact filename requested
+      let filePath = join(companyAdsDir, filename);
+      let actualFilename = filename;
+      
+      // If exact file doesn't exist, try to find file with same base name but different extension
+      if (!existsSync(filePath)) {
+        const adExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
+        for (const ext of adExtensions) {
+          const candidatePath = join(companyAdsDir, `${baseName}${ext}`);
+          if (existsSync(candidatePath)) {
+            filePath = candidatePath;
+            actualFilename = `${baseName}${ext}`;
+            break;
+          }
+        }
+      }
+      
+      // Check if file exists (after trying alternatives)
       if (!existsSync(filePath)) {
         return reply.status(404).send({
           error: 'Ad image not found',
@@ -364,8 +418,8 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         });
       }
 
-      // Determine MIME type from file extension
-      const ext = extname(filename).toLowerCase();
+      // Determine MIME type from actual file extension
+      const ext = extname(actualFilename).toLowerCase();
       const mimeTypes: Record<string, string> = {
         '.png': 'image/png',
         '.jpg': 'image/jpeg',
