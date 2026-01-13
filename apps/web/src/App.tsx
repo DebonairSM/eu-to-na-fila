@@ -1,25 +1,26 @@
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { lazy, Suspense, useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useAuthContext } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { api } from './lib/api';
+import { lazyWithRetry } from './lib/lazyWithRetry';
 
-const LandingPage = lazy(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })));
-const CompanyHomePage = lazy(() => import('./pages/CompanyHomePage').then((m) => ({ default: m.CompanyHomePage })));
-const ContactPage = lazy(() => import('./pages/ContactPage').then((m) => ({ default: m.ContactPage })));
-const NetworkPage = lazy(() => import('./pages/NetworkPage').then((m) => ({ default: m.NetworkPage })));
-const AboutPage = lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
-const JoinPageGuard = lazy(() => import('./pages/JoinPage/JoinPageGuard').then((m) => ({ default: m.JoinPageGuard })));
-const StatusPage = lazy(() => import('./pages/StatusPage').then((m) => ({ default: m.StatusPage })));
-const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
-const OwnerDashboard = lazy(() => import('./pages/OwnerDashboard').then((m) => ({ default: m.OwnerDashboard })));
-const StaffPage = lazy(() => import('./pages/StaffPage').then((m) => ({ default: m.StaffPage })));
-const BarberQueueManager = lazy(() => import('./pages/BarberQueueManager').then((m) => ({ default: m.BarberQueueManager })));
-const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
-const BarberManagementPage = lazy(() => import('./pages/BarberManagementPage').then((m) => ({ default: m.BarberManagementPage })));
-const AdManagementPage = lazy(() => import('./pages/AdManagementPage').then((m) => ({ default: m.AdManagementPage })));
-const CompanyLoginPage = lazy(() => import('./pages/CompanyLoginPage').then((m) => ({ default: m.CompanyLoginPage })));
-const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard').then((m) => ({ default: m.CompanyDashboard })));
+const LandingPage = lazyWithRetry(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })));
+const CompanyHomePage = lazyWithRetry(() => import('./pages/CompanyHomePage').then((m) => ({ default: m.CompanyHomePage })));
+const ContactPage = lazyWithRetry(() => import('./pages/ContactPage').then((m) => ({ default: m.ContactPage })));
+const NetworkPage = lazyWithRetry(() => import('./pages/NetworkPage').then((m) => ({ default: m.NetworkPage })));
+const AboutPage = lazyWithRetry(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
+const JoinPageGuard = lazyWithRetry(() => import('./pages/JoinPage/JoinPageGuard').then((m) => ({ default: m.JoinPageGuard })));
+const StatusPage = lazyWithRetry(() => import('./pages/StatusPage').then((m) => ({ default: m.StatusPage })));
+const LoginPage = lazyWithRetry(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
+const OwnerDashboard = lazyWithRetry(() => import('./pages/OwnerDashboard').then((m) => ({ default: m.OwnerDashboard })));
+const StaffPage = lazyWithRetry(() => import('./pages/StaffPage').then((m) => ({ default: m.StaffPage })));
+const BarberQueueManager = lazyWithRetry(() => import('./pages/BarberQueueManager').then((m) => ({ default: m.BarberQueueManager })));
+const AnalyticsPage = lazyWithRetry(() => import('./pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
+const BarberManagementPage = lazyWithRetry(() => import('./pages/BarberManagementPage').then((m) => ({ default: m.BarberManagementPage })));
+const AdManagementPage = lazyWithRetry(() => import('./pages/AdManagementPage').then((m) => ({ default: m.AdManagementPage })));
+const CompanyLoginPage = lazyWithRetry(() => import('./pages/CompanyLoginPage').then((m) => ({ default: m.CompanyLoginPage })));
+const CompanyDashboard = lazyWithRetry(() => import('./pages/CompanyDashboard').then((m) => ({ default: m.CompanyDashboard })));
 
 // Protected Route Component
 function ProtectedRoute({
@@ -150,7 +151,14 @@ function App() {
       import('./pages/StatusPage'),
       import('./pages/LandingPage'),
     ];
-    preload.forEach((p) => p.catch(() => null));
+    preload.forEach((p) => 
+      p.catch((error) => {
+        // Silently handle preload failures - they'll retry when actually needed
+        if (import.meta.env.DEV) {
+          console.warn('Preload failed:', error);
+        }
+      })
+    );
   }, []);
 
   return (
