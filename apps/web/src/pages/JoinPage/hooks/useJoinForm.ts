@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { config } from '@/lib/config';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useQueue } from '@/hooks/useQueue';
@@ -333,7 +333,18 @@ export function useJoinForm() {
       // Navigate to status page
       navigate(`/status/${ticket.id}`);
     } catch (error) {
-      setSubmitError(getErrorMessage(error, 'Erro ao entrar na fila. Tente novamente.'));
+      // Check if this is a name collision error (409 Conflict)
+      if (error instanceof ApiError && error.isConflictError()) {
+        const errorMessage = getErrorMessage(error, '');
+        // Check if error message indicates name is in use (Portuguese)
+        if (errorMessage.includes('nome') && (errorMessage.includes('uso') || errorMessage.includes('já está'))) {
+          setNameCollisionError(errorMessage);
+        } else {
+          setSubmitError(errorMessage || 'Erro ao entrar na fila. Tente novamente.');
+        }
+      } else {
+        setSubmitError(getErrorMessage(error, 'Erro ao entrar na fila. Tente novamente.'));
+      }
     } finally {
       setIsSubmitting(false);
     }

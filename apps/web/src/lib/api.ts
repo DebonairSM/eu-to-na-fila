@@ -48,6 +48,13 @@ export class ApiError extends Error {
   }
 
   /**
+   * Check if error is a conflict error (409 Conflict).
+   */
+  isConflictError(): boolean {
+    return this.statusCode === 409 || this.code === 'CONFLICT';
+  }
+
+  /**
    * Get field-specific errors for form display.
    */
   getFieldErrors(): Record<string, string> {

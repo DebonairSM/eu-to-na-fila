@@ -1,5 +1,6 @@
 import { useState, memo } from 'react';
 import { cn } from '@/lib/utils';
+import { getBarberAvatarUrl } from '@/lib/avatar';
 import type { Barber } from '@eutonafila/shared';
 
 export interface BarberCardProps {
@@ -25,9 +26,7 @@ export const BarberCard = memo(function BarberCard({
 }: BarberCardProps) {
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const avatarUrl =
-    barber.avatarUrl ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128`;
+  const avatarUrl = getBarberAvatarUrl(barber, 128);
 
   const avatarSize = size === 'kiosk' ? 'w-14 h-14' : 'w-10 h-10'; // 56px for kiosk, 40px for management
   const initials = barber.name?.charAt(0)?.toUpperCase() || '?';
@@ -69,21 +68,25 @@ export const BarberCard = memo(function BarberCard({
         >
           {initials}
         </div>
-        {!avatarFailed && (
+        {!avatarFailed && avatarUrl && (
           <img
             src={avatarUrl}
             alt=""
             aria-hidden="true"
             className={cn(avatarSize, 'rounded-md object-cover relative z-10')}
-            loading="eager"
+            loading="lazy"
             decoding="async"
             width={size === 'kiosk' ? 56 : 40}
             height={size === 'kiosk' ? 56 : 40}
             onLoad={() => {
               setImageLoaded(true);
             }}
-            onError={() => {
+            onError={(e) => {
+              // Silently fall back to initials on any error (CSP violation, rate limit, network error, etc.)
               setAvatarFailed(true);
+              // Prevent error from bubbling
+              e.preventDefault();
+              e.stopPropagation();
             }}
           />
         )}

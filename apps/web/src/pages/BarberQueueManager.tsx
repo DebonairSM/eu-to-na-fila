@@ -92,12 +92,20 @@ export function BarberQueueManager() {
         img.onerror = () => {};
       }
 
-      // Preload fallback avatar URL (ui-avatars.com)
-      const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128`;
-      const fallbackImg = new Image();
-      fallbackImg.src = fallbackUrl;
-      // Handle errors silently
-      fallbackImg.onerror = () => {};
+      // Preload fallback avatar URL (ui-avatars.com) if available
+      // Note: This may fail due to CSP or rate limits, which is fine - component will show initials
+      if (!barber.avatarUrl) {
+        const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(barber.name)}&background=D4AF37&color=000&size=128`;
+        const fallbackImg = new Image();
+        fallbackImg.src = fallbackUrl;
+        // Handle errors silently - component will show initials as fallback
+        fallbackImg.onerror = () => {};
+        // Set timeout to avoid hanging on rate-limited requests
+        setTimeout(() => {
+          fallbackImg.onerror = null;
+          fallbackImg.onload = null;
+        }, 5000);
+      }
     });
   }, [barbers]);
 

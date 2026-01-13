@@ -222,8 +222,8 @@ export class TicketService {
     // This provides backward compatibility and catches edge cases
     const existingTicket = await this.findActiveTicketByCustomer(shopId, data.customerName);
     if (existingTicket) {
-      // Return existing ticket instead of creating a new one
-      return existingTicket;
+      // Customer name is already in use - throw error
+      throw new ConflictError('Este nome já está em uso. Por favor, escolha outro nome.');
     }
 
     // Check if queue is full

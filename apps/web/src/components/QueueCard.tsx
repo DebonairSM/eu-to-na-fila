@@ -1,5 +1,6 @@
 import { useState, memo } from 'react';
 import { cn, formatNameForDisplay } from '@/lib/utils';
+import { getBarberAvatarUrl } from '@/lib/avatar';
 import type { Ticket, Barber } from '@eutonafila/shared';
 
 export interface QueueCardProps {
@@ -27,11 +28,7 @@ export const QueueCard = memo(function QueueCard({
   const isServing = ticket.status === 'in_progress';
   const isWaiting = ticket.status === 'waiting';
 
-  const barberAvatarUrl =
-    assignedBarber?.avatarUrl ||
-    (assignedBarber
-      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(assignedBarber.name)}&background=D4AF37&color=000&size=64`
-      : null);
+  const barberAvatarUrl = assignedBarber ? getBarberAvatarUrl(assignedBarber, 64) : null;
   const barberInitials = assignedBarber?.name?.charAt(0)?.toUpperCase() || '';
   const showAvatarImage = barberAvatarUrl && !barberAvatarFailed;
 
@@ -121,20 +118,24 @@ export const QueueCard = memo(function QueueCard({
             )} aria-hidden="true">
               {barberInitials}
             </div>
-            {showAvatarImage && (
+            {showAvatarImage && barberAvatarUrl && (
               <img
-                src={barberAvatarUrl || undefined}
+                src={barberAvatarUrl}
                 alt={assignedBarber?.name || 'Barber'}
                 className="w-10 h-10 rounded-md object-cover relative z-10"
-                loading="eager"
+                loading="lazy"
                 decoding="async"
                 width={40}
                 height={40}
                 onLoad={() => {
                   setBarberImageLoaded(true);
                 }}
-                onError={() => {
+                onError={(e) => {
+                  // Silently fall back to initials on any error (CSP violation, rate limit, network error, etc.)
                   setBarberAvatarFailed(true);
+                  // Prevent error from bubbling
+                  e.preventDefault();
+                  e.stopPropagation();
                 }}
               />
             )}
