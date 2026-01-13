@@ -678,7 +678,6 @@ export function BarberQueueManager() {
                   {sortedBarbersForSelection.map((barber) => {
                     const isBusy = busyBarberIds.has(barber.id);
                     const isCurrentlyAssigned = currentBarberId === barber.id;
-                    const isPreferred = barber.id === preferredBarberId;
                     const isDisabled = isBusy && !isCurrentlyAssigned;
                     
                     return (
