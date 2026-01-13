@@ -88,6 +88,10 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       let filePart: any = null;
+      // #region agent log - declare once for reuse
+      const fs = await import('fs');
+      const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
+      // #endregion
       
       try {
         // Log request details for debugging
@@ -115,8 +119,6 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         let adType: string | null = null;
         
         // #region agent log
-        const fs = await import('fs');
-        const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
         fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Before request.parts()',data:{timestamp:Date.now()},timestamp:Date.now()})+'\n');
         // #endregion
         
@@ -238,8 +240,6 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         try {
           request.log.debug('Converting file stream to buffer');
           // #region agent log
-          const fs = await import('fs');
-          const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
           fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'apps/api/src/routes/ads.ts:upload',message:'Before filePart.toBuffer()',data:{timestamp:Date.now()},timestamp:Date.now()})+'\n');
           // #endregion
           buffer = await filePart.toBuffer();
@@ -249,8 +249,6 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           request.log.debug({ bufferSize: buffer.length }, 'File stream converted to buffer');
         } catch (bufferError) {
           // #region agent log
-          const fs = await import('fs');
-          const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
           fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'apps/api/src/routes/ads.ts:upload',message:'Buffer error',data:{errorMessage:bufferError instanceof Error?bufferError.message:String(bufferError)},timestamp:Date.now()})+'\n');
           // #endregion
           request.log.error({ err: bufferError }, 'Error converting file stream to buffer');
@@ -305,16 +303,12 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
 
         request.log.info({ companyId, adType, filename, version }, 'Ad image uploaded successfully');
         // #region agent log
-        const fs = await import('fs');
-        const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
         fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:upload',message:'Sending success response',data:{companyId,adType,filename,version},timestamp:Date.now()})+'\n');
         // #endregion
         return reply.status(200).send(response);
       } catch (error) {
         request.log.error({ err: error }, 'Error uploading ad image');
         // #region agent log
-        const fs = await import('fs');
-        const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
         fs.appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H5',location:'apps/api/src/routes/ads.ts:upload',message:'Top-level error caught',data:{errorMessage:error instanceof Error?error.message:String(error),errorName:error instanceof Error?error.name:'unknown'},timestamp:Date.now()})+'\n');
         // #endregion
         
