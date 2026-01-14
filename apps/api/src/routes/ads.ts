@@ -116,7 +116,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       }).returning();
 
       // Generate storage key
-      const storageKey = storage.generateAdKey(companyId, body.shopId, ad.id, extension);
+      const storageKey = storage.generateAdKey(companyId, body.shopId ?? null, ad.id, extension);
 
       // Generate presigned URL
       const { uploadUrl, requiredHeaders } = await storage.generatePresignedPutUrl(
