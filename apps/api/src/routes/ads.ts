@@ -62,7 +62,7 @@ async function updateAdVersion(companyAdsDir: string, adType: 'ad1' | 'ad2'): Pr
 export const adsRoutes: FastifyPluginAsync = async (fastify) => {
   // Register multipart plugin scoped to this plugin only
   await fastify.register(fastifyMultipart, {
-    attachFieldsToBody: false,
+    attachFieldsToBody: true, // Enable to get fields in request.body
     limits: {
       fileSize: 10 * 1024 * 1024, // 10MB max file size
     },
@@ -129,45 +129,51 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           });
         }
 
-        // Stream-safe multipart handling: iterate parts() once and collect both file and fields
-        // This ensures the stream is consumed properly without hanging
-        let adType: string | null = null;
-        
-        // #region agent log
-        safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Before request.parts()',data:{timestamp:Date.now()},timestamp:Date.now()});
-        // #endregion
+        // Use request.file() for simpler single-file upload handling
+        // With attachFieldsToBody: true, fields are available in request.body
+        request.log.info('=== CALLING request.file() ===');
+        safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Before request.file()',data:{timestamp:Date.now()},timestamp:Date.now()});
         
         try {
-          request.log.info('=== CALLING request.parts() ===');
-          safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Before request.parts() call',data:{timestamp:Date.now()},timestamp:Date.now()});
-          const parts = request.parts();
-          request.log.info('=== GOT PARTS ITERATOR ===');
-          // #region agent log
-          safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Got parts iterator, starting loop',data:{timestamp:Date.now()},timestamp:Date.now()});
-          // #endregion
-          for await (const part of parts) {
-            // #region agent log
-            safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Processing part',data:{partType:part.type,fieldname:part.type==='field'?(part as any).fieldname:undefined},timestamp:Date.now()});
-            // #endregion
-            if (part.type === 'file') {
-              filePart = part;
-              // #region agent log
-              safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'File part found',data:{filename:(part as any).filename,mimetype:(part as any).mimetype},timestamp:Date.now()});
-              // #endregion
-            } else if (part.type === 'field' && part.fieldname === 'adType') {
-              adType = part.value as string;
-              // #region agent log
-              safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'adType field found',data:{adType},timestamp:Date.now()});
-              // #endregion
-            }
+          // Get the file using request.file() - simpler API for single file uploads
+          const data = await request.file();
+          request.log.info('=== GOT FILE DATA ===');
+          safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Got file data',data:{hasFile:!!data,filename:data?.filename,mimetype:data?.mimetype},timestamp:Date.now()});
+          
+          if (!data) {
+            return reply.status(400).send({
+              error: 'No file provided',
+              statusCode: 400,
+              code: 'VALIDATION_ERROR',
+            });
           }
-          // #region agent log
-          safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Parts loop completed',data:{hasFilePart:!!filePart,adType},timestamp:Date.now()});
-          // #endregion
+          
+          filePart = data;
+          
+          // Get adType from request.body (since attachFieldsToBody is true)
+          const adType = (request.body as any)?.adType;
+          
+          request.log.info('=== AD TYPE:', adType, '===');
+          request.log.info('=== REQUEST BODY:', JSON.stringify(request.body), '===');
+          safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Got adType',data:{adType,body:request.body},timestamp:Date.now()});
+          
+          if (!adType || !['ad1', 'ad2'].includes(adType)) {
+            // Clean up file stream before returning error
+            if (filePart?.file) {
+              try {
+                filePart.file.destroy();
+              } catch (destroyError) {
+                request.log.warn({ err: destroyError }, 'Error destroying file stream');
+              }
+            }
+            return reply.status(400).send({
+              error: 'Invalid adType. Must be "ad1" or "ad2"',
+              statusCode: 400,
+              code: 'VALIDATION_ERROR',
+            });
+          }
         } catch (parseError) {
-          // #region agent log
           safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Parse error',data:{errorMessage:parseError instanceof Error?parseError.message:String(parseError)},timestamp:Date.now()});
-          // #endregion
           request.log.error({ err: parseError }, 'Error parsing multipart data');
           // Clean up file stream if it exists
           if (filePart?.file) {
@@ -183,33 +189,9 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
             code: 'VALIDATION_ERROR',
           });
         }
-        
-        if (!filePart) {
-          return reply.status(400).send({
-            error: 'No file provided',
-            statusCode: 400,
-            code: 'VALIDATION_ERROR',
-          });
-        }
-        
-        if (!adType || !['ad1', 'ad2'].includes(adType)) {
-          // Clean up file stream before returning error
-          if (filePart?.file) {
-            try {
-              filePart.file.destroy();
-            } catch (destroyError) {
-              request.log.warn({ err: destroyError }, 'Error destroying file stream');
-            }
-          }
-          return reply.status(400).send({
-            error: 'Invalid adType. Must be "ad1" or "ad2"',
-            statusCode: 400,
-            code: 'VALIDATION_ERROR',
-          });
-        }
 
         // TypeScript type narrowing: adType is now guaranteed to be 'ad1' | 'ad2'
-        const validatedAdType = adType as 'ad1' | 'ad2';
+        const validatedAdType = (adType || 'ad1') as 'ad1' | 'ad2';
 
         // Validate file type
         const allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
