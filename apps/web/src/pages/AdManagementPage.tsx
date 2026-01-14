@@ -79,12 +79,8 @@ export function AdManagementPage() {
       setSuccess(null);
 
       console.log('[AdManagement] Starting upload for', adType, 'file size:', file.size, 'bytes');
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/web/src/pages/AdManagementPage.tsx:handleFileUpload',message:'Upload started',data:{adType,fileSize:file.size,fileType:file.type,timeout},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/web/src/pages/AdManagementPage.tsx:handleFileUpload',message:'Before api.uploadAdImage call',data:{timestamp:Date.now()},timestamp:Date.now()})}).catch(()=>{});
+      // #region agent log - disabled due to CSP, backend logging active
+      // Frontend logging disabled to avoid CSP errors, backend logging still active
       // #endregion
 
       await api.uploadAdImage(file, adType, {
@@ -92,15 +88,12 @@ export function AdManagementPage() {
         signal: controller.signal,
       });
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/web/src/pages/AdManagementPage.tsx:handleFileUpload',message:'After api.uploadAdImage call',data:{timestamp:Date.now()},timestamp:Date.now()})}).catch(()=>{});
+      // #region agent log - disabled due to CSP, backend logging active
+      // Frontend logging disabled to avoid CSP errors, backend logging still active
       // #endregion
 
       const elapsed = Date.now() - startTime;
       console.log('[AdManagement] Upload completed in', elapsed, 'ms');
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/web/src/pages/AdManagementPage.tsx:handleFileUpload',message:'Upload completed successfully',data:{elapsed},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       
       setSuccess(`Anúncio ${adType === 'ad1' ? '1' : '2'} atualizado com sucesso!`);
       
@@ -111,8 +104,8 @@ export function AdManagementPage() {
     } catch (err) {
       const elapsed = Date.now() - startTime;
       console.error('[AdManagement] Upload failed after', elapsed, 'ms:', err);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H5',location:'apps/web/src/pages/AdManagementPage.tsx:handleFileUpload',message:'Upload error caught',data:{elapsed,errorName:err instanceof Error?err.name:'unknown',errorMessage:err instanceof Error?err.message:String(err)},timestamp:Date.now()})}).catch(()=>{});
+      // #region agent log - disabled due to CSP, backend logging active
+      // Frontend logging disabled to avoid CSP errors, backend logging still active
       // #endregion
       
       // Provide more specific error messages
