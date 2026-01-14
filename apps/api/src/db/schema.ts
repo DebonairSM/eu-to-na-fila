@@ -92,10 +92,33 @@ export const tickets = pgTable('tickets', {
   shopDeviceIdx: index('tickets_shop_device_idx').on(table.shopId, table.deviceId),
 }));
 
+export const companyAds = pgTable('company_ads', {
+  id: serial('id').primaryKey(),
+  companyId: integer('company_id').notNull().references(() => companies.id),
+  shopId: integer('shop_id').references(() => shops.id), // Optional: shop-specific ads
+  position: integer('position').notNull().default(0), // Ordering within company/shop
+  enabled: boolean('enabled').notNull().default(false), // Only enabled ads appear in manifest
+  mediaType: text('media_type').notNull(), // 'image' or 'video'
+  mimeType: text('mime_type').notNull(), // e.g., 'image/png', 'video/mp4'
+  bytes: integer('bytes').notNull(), // File size in bytes
+  storageKey: text('storage_key').notNull(), // Object storage key/path
+  publicUrl: text('public_url').notNull(), // Public URL for the media
+  etag: text('etag'), // ETag from storage for validation
+  version: integer('version').notNull().default(1), // Increments on update for cache busting
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  companyIdIdx: index('company_ads_company_id_idx').on(table.companyId),
+  shopIdIdx: index('company_ads_shop_id_idx').on(table.shopId),
+  enabledIdx: index('company_ads_enabled_idx').on(table.enabled),
+  positionIdx: index('company_ads_position_idx').on(table.companyId, table.shopId, table.position),
+}));
+
 // Relations
 export const companiesRelations = relations(companies, ({ many }) => ({
   admins: many(companyAdmins),
   shops: many(shops),
+  ads: many(companyAds),
 }));
 
 export const companyAdminsRelations = relations(companyAdmins, ({ one }) => ({
@@ -107,6 +130,7 @@ export const shopsRelations = relations(shops, ({ one, many }) => ({
   services: many(services),
   barbers: many(barbers),
   tickets: many(tickets),
+  ads: many(companyAds),
 }));
 
 export const servicesRelations = relations(services, ({ one, many }) => ({
@@ -139,4 +163,9 @@ export const auditLog = pgTable('audit_log', {
   ticketIdIdx: index('audit_log_ticket_id_idx').on(table.ticketId),
   actionIdx: index('audit_log_action_idx').on(table.action),
   createdAtIdx: index('audit_log_created_at_idx').on(table.createdAt),
+}));
+
+export const companyAdsRelations = relations(companyAds, ({ one }) => ({
+  company: one(companies, { fields: [companyAds.companyId], references: [companies.id] }),
+  shop: one(shops, { fields: [companyAds.shopId], references: [shops.id] }),
 }));

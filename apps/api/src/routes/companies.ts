@@ -152,26 +152,18 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         where: eq(schema.shops.companyId, id),
       });
 
-      // Check for active ads
-      const { existsSync } = await import('fs');
-      const { join } = await import('path');
-      const { fileURLToPath } = await import('url');
-      const { dirname } = await import('path');
-      
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = dirname(__filename);
-      const companyAdsDir = join(__dirname, '..', '..', 'public', 'companies', String(id));
-      
-      // Check for ad files with any supported extension
-      const adExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
-      const ad1Exists = adExtensions.some(ext => existsSync(join(companyAdsDir, `gt-ad${ext}`)));
-      const ad2Exists = adExtensions.some(ext => existsSync(join(companyAdsDir, `gt-ad2${ext}`)));
-      const activeAdsCount = (ad1Exists ? 1 : 0) + (ad2Exists ? 1 : 0);
+      // Count enabled ads from database
+      const enabledAds = await db.query.companyAds.findMany({
+        where: and(
+          eq(schema.companyAds.companyId, id),
+          eq(schema.companyAds.enabled, true)
+        ),
+      });
 
       return {
         totalShops: shops.length,
-        activeAds: activeAdsCount,
-        totalAds: 2,
+        activeAds: enabledAds.length,
+        totalAds: enabledAds.length,
       };
     }
   );

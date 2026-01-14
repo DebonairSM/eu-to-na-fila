@@ -965,59 +965,161 @@ class ApiClient {
   // ==================== Ad Management Endpoints ====================
 
   /**
-   * Upload an ad image.
+   * Request presigned URL for uploading an ad.
    * 
-   * @param file - Image file to upload
-   * @param adType - Type of ad: 'ad1' or 'ad2'
-   * @returns Upload result with file path
-   * @throws {ApiError} If upload fails
-   * 
-   * @example
-   * ```typescript
-   * const file = event.target.files[0];
-   * const result = await api.uploadAdImage(file, 'ad1');
-   * console.log(`Uploaded to ${result.path}`);
-   * ```
+   * @param data - Upload request data
+   * @returns Presigned upload URL and ad ID
+   * @throws {ApiError} If request fails
    */
-  async uploadAdImage(
-    file: File,
-    adType: 'ad1' | 'ad2',
-    options?: { timeout?: number; signal?: AbortSignal }
-  ): Promise<{
-    message: string;
-    filename: string;
-    path: string;
-    version: number;
+  async requestAdUpload(data: {
+    shopId?: number | null;
+    mediaType: 'image' | 'video';
+    mimeType: string;
+    bytes: number;
+    position?: number;
+  }): Promise<{
+    adId: number;
+    uploadUrl: string;
+    requiredHeaders: Record<string, string>;
+    storageKey: string;
   }> {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('adType', adType);
-
-    return this.postFormData<{
-      message: string;
-      filename: string;
-      path: string;
-      version: number;
-    }>('/ads/upload', formData, options);
+    return this.post('/ads/uploads', data);
   }
 
   /**
-   * Get ad images status.
+   * Complete an ad upload by verifying the file.
    * 
-   * @returns Status of ad images
-   * @throws {ApiError} If request fails
-   * 
-   * @example
-   * ```typescript
-   * const status = await api.getAdStatus();
-   * console.log(`Ad1 exists: ${status.ad1.exists}`);
-   * ```
+   * @param adId - Ad ID from presign response
+   * @returns Upload completion result
+   * @throws {ApiError} If verification fails
    */
-  async getAdStatus(): Promise<{
-    ad1: { exists: boolean; path: string | null };
-    ad2: { exists: boolean; path: string | null };
+  async completeAdUpload(adId: number): Promise<{
+    message: string;
+    ad: {
+      id: number;
+      position: number;
+      enabled: boolean;
+      mediaType: string;
+      mimeType: string;
+      publicUrl: string;
+      version: number;
+    };
   }> {
-    return this.get('/ads/status');
+    return this.post('/ads/uploads/complete', { adId });
+  }
+
+  /**
+   * Get public manifest of enabled ads for a shop.
+   * 
+   * @param shopSlug - Shop slug identifier
+   * @returns Manifest with ordered list of enabled ads
+   * @throws {ApiError} If request fails
+   */
+  async getAdsManifest(shopSlug: string): Promise<{
+    manifestVersion: number;
+    ads: Array<{
+      id: number;
+      position: number;
+      mediaType: string;
+      url: string;
+      version: number;
+    }>;
+  }> {
+    return this.get(`/ads/public/manifest?shopSlug=${encodeURIComponent(shopSlug)}`);
+  }
+
+  /**
+   * Get all ads for the current company (admin view).
+   * 
+   * @param shopId - Optional shop ID to filter by
+   * @returns List of all ads (enabled and disabled)
+   * @throws {ApiError} If request fails
+   */
+  async getAds(shopId?: number): Promise<Array<{
+    id: number;
+    companyId: number;
+    shopId: number | null;
+    position: number;
+    enabled: boolean;
+    mediaType: string;
+    mimeType: string;
+    bytes: number;
+    storageKey: string;
+    publicUrl: string;
+    etag: string | null;
+    version: number;
+    createdAt: Date;
+    updatedAt: Date;
+  }>> {
+    const query = shopId ? `?shopId=${shopId}` : '';
+    return this.get(`/ads${query}`);
+  }
+
+  /**
+   * Update an ad (enable/disable, reorder).
+   * 
+   * @param adId - Ad ID
+   * @param data - Update data
+   * @returns Updated ad
+   * @throws {ApiError} If update fails
+   */
+  async updateAd(adId: number, data: {
+    enabled?: boolean;
+    position?: number;
+  }): Promise<{
+    id: number;
+    companyId: number;
+    shopId: number | null;
+    position: number;
+    enabled: boolean;
+    mediaType: string;
+    mimeType: string;
+    bytes: number;
+    storageKey: string;
+    publicUrl: string;
+    etag: string | null;
+    version: number;
+    createdAt: Date;
+    updatedAt: Date;
+  }> {
+    return this.patch(`/ads/${adId}`, data);
+  }
+
+  /**
+   * Delete an ad.
+   * 
+   * @param adId - Ad ID
+   * @returns Success message
+   * @throws {ApiError} If deletion fails
+   */
+  async deleteAd(adId: number): Promise<{ message: string }> {
+    return this.delete(`/ads/${adId}`);
+  }
+
+  /**
+   * Get WebSocket URL for real-time updates.
+   * 
+   * @returns WebSocket URL or null if not available
+   */
+  getWebSocketUrl(): string | null {
+    const baseUrl = this.baseUrl;
+    if (!baseUrl) return null;
+    
+    // Convert HTTP/HTTPS to WS/WSS
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    
+    // If baseUrl is a full URL, extract host; otherwise use current host
+    if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
+      try {
+        const url = new URL(baseUrl);
+        return `${wsProtocol}//${url.host}/ws`;
+      } catch {
+        return `${wsProtocol}//${host}/ws`;
+      }
+    }
+    
+    return `${wsProtocol}//${host}/ws`;
   }
 }
 

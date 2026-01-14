@@ -7,20 +7,32 @@ import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
 
-interface AdStatus {
-  ad1: { exists: boolean; path: string | null };
-  ad2: { exists: boolean; path: string | null };
+interface Ad {
+  id: number;
+  companyId: number;
+  shopId: number | null;
+  position: number;
+  enabled: boolean;
+  mediaType: string;
+  mimeType: string;
+  bytes: number;
+  storageKey: string;
+  publicUrl: string;
+  etag: string | null;
+  version: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export function AdManagementPage() {
   const { isCompanyAdmin } = useAuthContext();
   const navigate = useNavigate();
-  const [adStatus, setAdStatus] = useState<AdStatus | null>(null);
+  const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState<{ ad1: boolean; ad2: boolean }>({ ad1: false, ad2: false });
+  const [uploading, setUploading] = useState<number | null>(null); // Ad ID being uploaded
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [imageKey, setImageKey] = useState(0); // Force image refresh after upload
 
   // Redirect if not company admin
   useEffect(() => {
@@ -29,104 +41,133 @@ export function AdManagementPage() {
     }
   }, [isCompanyAdmin, navigate]);
 
-  // Load ad status on mount
+  // Load ads on mount
   useEffect(() => {
-    loadAdStatus();
+    loadAds();
   }, []);
 
-  const loadAdStatus = async (showLoading = true) => {
+  const loadAds = async () => {
     try {
-      if (showLoading) {
         setLoading(true);
-      }
       setError(null);
-      const status = await api.getAdStatus();
-      setAdStatus(status);
-      return status;
+      const loadedAds = await api.getAds();
+      setAds(loadedAds);
     } catch (err) {
-      setError(getErrorMessage(err, 'Erro ao carregar status dos anúncios'));
+      setError(getErrorMessage(err, 'Erro ao carregar anúncios'));
     } finally {
-      if (showLoading) {
         setLoading(false);
-      }
     }
   };
 
-  const handleFileUpload = async (adType: 'ad1' | 'ad2', file: File | null) => {
+  const handleFileUpload = async (file: File | null) => {
     if (!file) return;
 
-    // Validate file type
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    // Determine media type from MIME type
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    
+    if (!isImage && !isVideo) {
+      setError('Tipo de arquivo inválido. Use imagens (PNG, JPEG, WebP) ou vídeos (MP4).');
+      return;
+    }
+
+    const mediaType = isImage ? 'image' : 'video';
+    const allowedImageTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    const allowedVideoTypes = ['video/mp4'];
+    const allowedTypes = [...allowedImageTypes, ...allowedVideoTypes];
+
     if (!allowedTypes.includes(file.type)) {
-      setError('Tipo de arquivo inválido. Use PNG, JPEG ou WebP.');
+      setError(`Tipo de arquivo inválido. Use ${allowedTypes.join(', ')}.`);
       return;
     }
 
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Arquivo muito grande. Tamanho máximo: 10MB.');
+    // Validate file size (50MB max)
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setError('Arquivo muito grande. Tamanho máximo: 50MB.');
       return;
     }
-
-    // Create abort controller for timeout
-    const controller = new AbortController();
-    const timeout = 60000; // 60 seconds timeout (increased from 30s, but should fail faster if server unreachable)
-    const startTime = Date.now();
 
     try {
-      setUploading((prev) => ({ ...prev, [adType]: true }));
+      setUploading(-1); // Use -1 to indicate new upload (no ad ID yet)
+      setUploadProgress(0);
       setError(null);
       setSuccess(null);
 
-      console.log('[AdManagement] Starting upload for', adType, 'file size:', file.size, 'bytes');
-      // #region agent log - disabled due to CSP, backend logging active
-      // Frontend logging disabled to avoid CSP errors, backend logging still active
-      // #endregion
-
-      await api.uploadAdImage(file, adType, {
-        timeout,
-        signal: controller.signal,
+      // Step 1: Request presigned URL
+      const presignResponse = await api.requestAdUpload({
+        mediaType,
+        mimeType: file.type,
+        bytes: file.size,
       });
 
-      // #region agent log - disabled due to CSP, backend logging active
-      // Frontend logging disabled to avoid CSP errors, backend logging still active
-      // #endregion
+      // Step 2: Upload file to storage using presigned URL
+      setUploadProgress(25);
+      
+      const uploadResponse = await fetch(presignResponse.uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: presignResponse.requiredHeaders,
+      });
 
-      const elapsed = Date.now() - startTime;
-      console.log('[AdManagement] Upload completed in', elapsed, 'ms');
-      
-      setSuccess(`Anúncio ${adType === 'ad1' ? '1' : '2'} atualizado com sucesso!`);
-      
-      // Reload status without showing loading spinner (to preserve success message visibility)
-      await loadAdStatus(false);
-      // Force image refresh by updating the key
-      setImageKey(prev => prev + 1);
-    } catch (err) {
-      const elapsed = Date.now() - startTime;
-      console.error('[AdManagement] Upload failed after', elapsed, 'ms:', err);
-      // #region agent log - disabled due to CSP, backend logging active
-      // Frontend logging disabled to avoid CSP errors, backend logging still active
-      // #endregion
-      
-      // Provide more specific error messages
-      let errorMessage = getErrorMessage(err, `Erro ao fazer upload do anúncio ${adType === 'ad1' ? '1' : '2'}`);
-      
-      if (err instanceof Error) {
-        if (err.message.includes('timeout') || err.message.includes('TIMEOUT')) {
-          errorMessage = `Upload expirou após ${timeout / 1000} segundos. O servidor pode não estar acessível ou o arquivo é muito grande. Verifique se o servidor está rodando.`;
-        } else if (err.message.includes('Cannot connect') || err.message.includes('not reachable') || err.message.includes('NetworkError')) {
-          errorMessage = 'Não foi possível conectar ao servidor. Verifique se o servidor da API está rodando e acessível.';
-        } else if (err.message.includes('Network') || err.message.includes('fetch')) {
-          errorMessage = 'Erro de conexão. Verifique sua internet e se o servidor está rodando.';
-        } else if (err.message.includes('aborted') || err.message.includes('AbortError')) {
-          errorMessage = 'Upload cancelado.';
-        }
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed: ${uploadResponse.statusText}`);
       }
+
+      setUploadProgress(75);
+
+      // Step 3: Complete upload (verify file)
+      const completeResponse = await api.completeAdUpload(presignResponse.adId);
       
-      setError(errorMessage);
-    } finally {
-      setUploading((prev) => ({ ...prev, [adType]: false }));
+      setUploadProgress(100);
+      setSuccess('Anúncio enviado e verificado com sucesso!');
+      
+      // Reload ads
+      await loadAds();
+      
+      // Reset progress after a delay
+      setTimeout(() => {
+        setUploadProgress(0);
+        setUploading(null);
+      }, 1000);
+    } catch (err) {
+      console.error('[AdManagement] Upload failed:', err);
+      setError(getErrorMessage(err, 'Erro ao fazer upload do anúncio'));
+      setUploadProgress(0);
+      setUploading(null);
     }
+  };
+
+  const handleToggleEnabled = async (adId: number, currentEnabled: boolean) => {
+    try {
+      setError(null);
+      await api.updateAd(adId, { enabled: !currentEnabled });
+      setSuccess(`Anúncio ${!currentEnabled ? 'ativado' : 'desativado'} com sucesso!`);
+      await loadAds();
+    } catch (err) {
+      setError(getErrorMessage(err, 'Erro ao atualizar anúncio'));
+    }
+  };
+
+  const handleDelete = async (adId: number) => {
+    if (!confirm('Tem certeza que deseja excluir este anúncio?')) {
+      return;
+    }
+
+    try {
+      setError(null);
+      await api.deleteAd(adId);
+      setSuccess('Anúncio excluído com sucesso!');
+      await loadAds();
+    } catch (err) {
+      setError(getErrorMessage(err, 'Erro ao excluir anúncio'));
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   if (!isCompanyAdmin) {
@@ -143,7 +184,7 @@ export function AdManagementPage() {
           <div className="text-center mb-16">
             <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Gerenciar Anúncios</h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-              Faça upload das imagens dos anúncios exibidos no modo kiosk
+              Faça upload e gerencie os anúncios exibidos no modo kiosk
             </p>
           </div>
 
@@ -159,6 +200,63 @@ export function AdManagementPage() {
             </div>
           )}
 
+          {/* Upload Section */}
+          <div className="mb-8 border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-6">
+            <h2 className="text-xl font-semibold mb-4">Adicionar Novo Anúncio</h2>
+              <label className="block">
+                <input
+                  type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp,video/mp4"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                    handleFileUpload(file);
+                    }
+                  }}
+                disabled={uploading !== null}
+                  className="hidden"
+                id="ad-upload"
+                />
+                <div className="flex items-center gap-3">
+                  <label
+                  htmlFor="ad-upload"
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
+                    uploading !== null
+                        ? 'border-blue-500/50 bg-blue-500/10 cursor-wait'
+                        : 'border-white/20 hover:border-blue-400 hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2 text-blue-400">
+                    {uploading !== null ? (
+                        <>
+                          <span className="material-symbols-outlined animate-spin">refresh</span>
+                        <span>Enviando... {uploadProgress}%</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined">upload</span>
+                          <span>Escolher arquivo</span>
+                        </>
+                      )}
+                    </div>
+                  </label>
+                </div>
+              </label>
+            {uploading !== null && uploadProgress > 0 && (
+              <div className="mt-4">
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <div
+                    className="bg-blue-400 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+              <p className="text-xs text-white/40 mt-2">
+              PNG, JPEG, WebP ou MP4. Máximo 50MB
+              </p>
+            </div>
+
           {loading ? (
             <div className="text-center text-gray-400 py-12">
               <div className="inline-block animate-spin text-blue-400 text-4xl mb-4">
@@ -167,144 +265,83 @@ export function AdManagementPage() {
               <p>Carregando...</p>
             </div>
           ) : (
-            <div className="space-y-6">
-              {/* Ad 1 */}
-              <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-xl font-semibold text-white mb-1">Anúncio 1</h2>
-                  <p className="text-sm text-white/60">
-                    {adStatus?.ad1.exists ? (
-                      <span className="text-green-400">✓ Imagem carregada</span>
-                    ) : (
-                      <span className="text-yellow-400">⚠ Nenhuma imagem</span>
-                    )}
-                  </p>
+            <div className="space-y-4">
+              {ads.length === 0 ? (
+                <div className="text-center text-gray-400 py-12 border border-white/10 rounded-2xl">
+                  <p>Nenhum anúncio cadastrado ainda.</p>
+                  <p className="text-sm mt-2">Faça upload de um arquivo acima para começar.</p>
                 </div>
-                {adStatus?.ad1.exists && adStatus.ad1.path && (
-                  <img
-                    src={`${adStatus.ad1.path}?v=${imageKey}`}
-                    alt="Anúncio 1"
-                    className="w-24 h-24 object-contain bg-black rounded-lg border border-white/10"
-                    key={`ad1-${imageKey}`}
+              ) : (
+                ads.map((ad) => (
+                  <div
+                    key={ad.id}
+                    className={`border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-6 ${
+                      !ad.enabled ? 'opacity-60' : ''
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0">
+                        {ad.mediaType === 'image' ? (
+                          <img
+                            src={`${ad.publicUrl}?v=${ad.version}`}
+                            alt={`Anúncio ${ad.position}`}
+                            className="w-32 h-32 object-contain bg-black rounded-lg border border-white/10"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
+                        ) : (
+                          <video
+                            src={`${ad.publicUrl}?v=${ad.version}`}
+                            className="w-32 h-32 object-contain bg-black rounded-lg border border-white/10"
+                            controls={false}
+                            muted
+                          />
                 )}
               </div>
-              <label className="block">
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/webp"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleFileUpload('ad1', file);
-                    }
-                  }}
-                  disabled={uploading.ad1}
-                  className="hidden"
-                  id="ad1-upload"
-                />
-                <div className="flex items-center gap-3">
-                  <label
-                    htmlFor="ad1-upload"
-                    className={`flex-1 px-4 py-3 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
-                      uploading.ad1
-                        ? 'border-blue-500/50 bg-blue-500/10 cursor-wait'
-                        : 'border-white/20 hover:border-blue-400 hover:bg-white/5'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2 text-blue-400">
-                      {uploading.ad1 ? (
-                        <>
-                          <span className="material-symbols-outlined animate-spin">refresh</span>
-                          <span>Enviando...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="material-symbols-outlined">upload</span>
-                          <span>Escolher arquivo</span>
-                        </>
-                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <h3 className="text-lg font-semibold">
+                              Anúncio #{ad.position} ({ad.mediaType === 'image' ? 'Imagem' : 'Vídeo'})
+                            </h3>
+                            <p className="text-sm text-white/60">
+                              {ad.mimeType} • {formatFileSize(ad.bytes)}
+                            </p>
+                            <p className="text-xs text-white/40 mt-1">
+                              {ad.enabled ? (
+                                <span className="text-green-400">✓ Ativo</span>
+                              ) : (
+                                <span className="text-yellow-400">⚠ Inativo</span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-4">
+                          <button
+                            onClick={() => handleToggleEnabled(ad.id, ad.enabled)}
+                            className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                              ad.enabled
+                                ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 hover:bg-yellow-500/30'
+                                : 'bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30'
+                            }`}
+                          >
+                            {ad.enabled ? 'Desativar' : 'Ativar'}
+                          </button>
+                          <button
+                            onClick={() => handleDelete(ad.id)}
+                            className="px-3 py-1.5 rounded-lg text-sm bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 transition-all"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </label>
                 </div>
-              </label>
-              <p className="text-xs text-white/40 mt-2">
-                PNG, JPEG ou WebP. Máximo 10MB
-              </p>
+                ))
+              )}
             </div>
-
-            {/* Ad 2 */}
-            <div className="bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-xl font-semibold text-white mb-1">Anúncio 2</h2>
-                  <p className="text-sm text-white/60">
-                    {adStatus?.ad2.exists ? (
-                      <span className="text-green-400">✓ Imagem carregada</span>
-                    ) : (
-                      <span className="text-yellow-400">⚠ Nenhuma imagem</span>
-                    )}
-                  </p>
-                </div>
-                {adStatus?.ad2.exists && adStatus.ad2.path && (
-                  <img
-                    src={`${adStatus.ad2.path}?v=${imageKey}`}
-                    alt="Anúncio 2"
-                    className="w-24 h-24 object-contain bg-black rounded-lg border border-white/10"
-                    key={`ad2-${imageKey}`}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                )}
-              </div>
-              <label className="block">
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/webp"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleFileUpload('ad2', file);
-                    }
-                  }}
-                  disabled={uploading.ad2}
-                  className="hidden"
-                  id="ad2-upload"
-                />
-                <div className="flex items-center gap-3">
-                  <label
-                    htmlFor="ad2-upload"
-                    className={`flex-1 px-4 py-3 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
-                      uploading.ad2
-                        ? 'border-blue-500/50 bg-blue-500/10 cursor-wait'
-                        : 'border-white/20 hover:border-blue-400 hover:bg-white/5'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2 text-blue-400">
-                      {uploading.ad2 ? (
-                        <>
-                          <span className="material-symbols-outlined animate-spin">refresh</span>
-                          <span>Enviando...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="material-symbols-outlined">upload</span>
-                          <span>Escolher arquivo</span>
-                        </>
-                      )}
-                    </div>
-                  </label>
-                </div>
-              </label>
-              <p className="text-xs text-white/40 mt-2">
-                PNG, JPEG ou WebP. Máximo 10MB
-              </p>
-            </div>
+          )}
 
               <div className="mt-8 text-center">
                 <button
@@ -315,8 +352,6 @@ export function AdManagementPage() {
                   Voltar ao Dashboard
                 </button>
               </div>
-            </div>
-          )}
         </main>
       </div>
     );
@@ -332,7 +367,7 @@ export function AdManagementPage() {
             Gerenciar Anúncios
           </h1>
           <p className="text-white/60 mt-2 text-sm">
-            Faça upload das imagens dos anúncios exibidos no modo kiosk
+            Faça upload e gerencie os anúncios exibidos no modo kiosk
           </p>
         </div>
 
@@ -348,6 +383,63 @@ export function AdManagementPage() {
           </div>
         )}
 
+        {/* Upload Section */}
+        <div className="mb-8 bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-6">
+          <h2 className="text-xl font-semibold mb-4">Adicionar Novo Anúncio</h2>
+              <label className="block">
+                <input
+                  type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp,video/mp4"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                  handleFileUpload(file);
+                    }
+                  }}
+              disabled={uploading !== null}
+                  className="hidden"
+              id="ad-upload"
+                />
+                <div className="flex items-center gap-3">
+                  <label
+                htmlFor="ad-upload"
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
+                  uploading !== null
+                        ? 'border-[rgba(212,175,55,0.5)] bg-[rgba(212,175,55,0.1)] cursor-wait'
+                        : 'border-[rgba(212,175,55,0.3)] hover:border-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2 text-[#D4AF37]">
+                  {uploading !== null ? (
+                        <>
+                          <span className="material-symbols-outlined animate-spin">refresh</span>
+                      <span>Enviando... {uploadProgress}%</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined">upload</span>
+                          <span>Escolher arquivo</span>
+                        </>
+                      )}
+                    </div>
+                  </label>
+                </div>
+              </label>
+          {uploading !== null && uploadProgress > 0 && (
+            <div className="mt-4">
+              <div className="w-full bg-white/10 rounded-full h-2">
+                <div
+                  className="bg-[#D4AF37] h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+              <p className="text-xs text-white/40 mt-2">
+            PNG, JPEG, WebP ou MP4. Máximo 50MB
+              </p>
+            </div>
+
         {loading ? (
           <div className="text-center text-white/60 py-12">
             <div className="inline-block animate-spin text-[#D4AF37] text-4xl mb-4">
@@ -356,144 +448,83 @@ export function AdManagementPage() {
             <p>Carregando...</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* Ad 1 */}
-            <div className="bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-xl font-semibold text-white mb-1">Anúncio 1</h2>
-                  <p className="text-sm text-white/60">
-                    {adStatus?.ad1.exists ? (
-                      <span className="text-green-400">✓ Imagem carregada</span>
-                    ) : (
-                      <span className="text-yellow-400">⚠ Nenhuma imagem</span>
-                    )}
-                  </p>
+          <div className="space-y-4">
+            {ads.length === 0 ? (
+              <div className="text-center text-white/60 py-12 border border-[rgba(212,175,55,0.3)] rounded-2xl">
+                <p>Nenhum anúncio cadastrado ainda.</p>
+                <p className="text-sm mt-2">Faça upload de um arquivo acima para começar.</p>
                 </div>
-                {adStatus?.ad1.exists && adStatus.ad1.path && (
-                  <img
-                    src={`${adStatus.ad1.path}?v=${imageKey}`}
-                    alt="Anúncio 1"
-                    className="w-24 h-24 object-contain bg-black rounded-lg border border-[rgba(212,175,55,0.3)]"
-                    key={`ad1-${imageKey}`}
+            ) : (
+              ads.map((ad) => (
+                <div
+                  key={ad.id}
+                  className={`bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-6 ${
+                    !ad.enabled ? 'opacity-60' : ''
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                      {ad.mediaType === 'image' ? (
+                        <img
+                          src={`${ad.publicUrl}?v=${ad.version}`}
+                          alt={`Anúncio ${ad.position}`}
+                          className="w-32 h-32 object-contain bg-black rounded-lg border border-[rgba(212,175,55,0.3)]"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
-                )}
-              </div>
-              <label className="block">
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/webp"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleFileUpload('ad1', file);
-                    }
-                  }}
-                  disabled={uploading.ad1}
-                  className="hidden"
-                  id="ad1-upload"
-                />
-                <div className="flex items-center gap-3">
-                  <label
-                    htmlFor="ad1-upload"
-                    className={`flex-1 px-4 py-3 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
-                      uploading.ad1
-                        ? 'border-[rgba(212,175,55,0.5)] bg-[rgba(212,175,55,0.1)] cursor-wait'
-                        : 'border-[rgba(212,175,55,0.3)] hover:border-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2 text-[#D4AF37]">
-                      {uploading.ad1 ? (
-                        <>
-                          <span className="material-symbols-outlined animate-spin">refresh</span>
-                          <span>Enviando...</span>
-                        </>
                       ) : (
-                        <>
-                          <span className="material-symbols-outlined">upload</span>
-                          <span>Escolher arquivo</span>
-                        </>
+                        <video
+                          src={`${ad.publicUrl}?v=${ad.version}`}
+                          className="w-32 h-32 object-contain bg-black rounded-lg border border-[rgba(212,175,55,0.3)]"
+                          controls={false}
+                          muted
+                        />
                       )}
                     </div>
-                  </label>
-                </div>
-              </label>
-              <p className="text-xs text-white/40 mt-2">
-                PNG, JPEG ou WebP. Máximo 10MB
-              </p>
-            </div>
-
-            {/* Ad 2 */}
-            <div className="bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-xl font-semibold text-white mb-1">Anúncio 2</h2>
-                  <p className="text-sm text-white/60">
-                    {adStatus?.ad2.exists ? (
-                      <span className="text-green-400">✓ Imagem carregada</span>
-                    ) : (
-                      <span className="text-yellow-400">⚠ Nenhuma imagem</span>
-                    )}
-                  </p>
-                </div>
-                {adStatus?.ad2.exists && adStatus.ad2.path && (
-                  <img
-                    src={`${adStatus.ad2.path}?v=${imageKey}`}
-                    alt="Anúncio 2"
-                    className="w-24 h-24 object-contain bg-black rounded-lg border border-[rgba(212,175,55,0.3)]"
-                    key={`ad2-${imageKey}`}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                )}
-              </div>
-              <label className="block">
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/webp"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleFileUpload('ad2', file);
-                    }
-                  }}
-                  disabled={uploading.ad2}
-                  className="hidden"
-                  id="ad2-upload"
-                />
-                <div className="flex items-center gap-3">
-                  <label
-                    htmlFor="ad2-upload"
-                    className={`flex-1 px-4 py-3 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
-                      uploading.ad2
-                        ? 'border-[rgba(212,175,55,0.5)] bg-[rgba(212,175,55,0.1)] cursor-wait'
-                        : 'border-[rgba(212,175,55,0.3)] hover:border-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2 text-[#D4AF37]">
-                      {uploading.ad2 ? (
-                        <>
-                          <span className="material-symbols-outlined animate-spin">refresh</span>
-                          <span>Enviando...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="material-symbols-outlined">upload</span>
-                          <span>Escolher arquivo</span>
-                        </>
-                      )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <h3 className="text-lg font-semibold">
+                            Anúncio #{ad.position} ({ad.mediaType === 'image' ? 'Imagem' : 'Vídeo'})
+                          </h3>
+                          <p className="text-sm text-white/60">
+                            {ad.mimeType} • {formatFileSize(ad.bytes)}
+                          </p>
+                          <p className="text-xs text-white/40 mt-1">
+                            {ad.enabled ? (
+                              <span className="text-green-400">✓ Ativo</span>
+                            ) : (
+                              <span className="text-yellow-400">⚠ Inativo</span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 mt-4">
+                        <button
+                          onClick={() => handleToggleEnabled(ad.id, ad.enabled)}
+                          className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                            ad.enabled
+                              ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 hover:bg-yellow-500/30'
+                              : 'bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30'
+                          }`}
+                        >
+                          {ad.enabled ? 'Desativar' : 'Ativar'}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(ad.id)}
+                          className="px-3 py-1.5 rounded-lg text-sm bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 transition-all"
+                        >
+                          Excluir
+                        </button>
+                      </div>
                     </div>
-                  </label>
+                  </div>
                 </div>
-              </label>
-              <p className="text-xs text-white/40 mt-2">
-                PNG, JPEG ou WebP. Máximo 10MB
-              </p>
+              ))
+            )}
             </div>
+        )}
 
             <div className="mt-8 text-center">
               <button
@@ -504,10 +535,7 @@ export function AdManagementPage() {
                 Voltar ao Dashboard
               </button>
             </div>
-          </div>
-        )}
       </main>
     </div>
   );
 }
-

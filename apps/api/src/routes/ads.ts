@@ -1,126 +1,44 @@
 import type { FastifyPluginAsync } from 'fastify';
-import fastifyMultipart from '@fastify/multipart';
-import { writeFile, mkdir, readFile } from 'fs/promises';
-import { join, dirname, extname } from 'path';
-import { fileURLToPath } from 'url';
-import { existsSync, createReadStream, appendFileSync, mkdirSync } from 'fs';
+import { z } from 'zod';
+import { db, schema } from '../db/index.js';
+import { eq, and, or, isNull, asc } from 'drizzle-orm';
+import { validateRequest } from '../lib/validation.js';
+import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-/**
- * Ad version storage interface.
- * Tracks version numbers for each ad type per company.
- */
-interface AdVersions {
-  ad1: number;
-  ad2: number;
-}
-
-/**
- * Get current ad versions for a company.
- * Creates version file if it doesn't exist.
- */
-async function getAdVersions(companyAdsDir: string): Promise<AdVersions> {
-  const versionsPath = join(companyAdsDir, '.versions.json');
-  
-  if (existsSync(versionsPath)) {
-    try {
-      const content = await readFile(versionsPath, 'utf-8');
-      return JSON.parse(content) as AdVersions;
-    } catch {
-      // If file is corrupted, start fresh
-    }
-  }
-  
-  // Default versions
-  return { ad1: 0, ad2: 0 };
-}
-
-/**
- * Update version for a specific ad type.
- * Returns an incrementing version number starting from 1.
- */
-async function updateAdVersion(companyAdsDir: string, adType: 'ad1' | 'ad2'): Promise<number> {
-  const versions = await getAdVersions(companyAdsDir);
-  // Increment version number (start from 1 if it doesn't exist or is 0)
-  const currentVersion = versions[adType] || 0;
-  const newVersion = currentVersion + 1;
-  versions[adType] = newVersion;
-  
-  const versionsPath = join(companyAdsDir, '.versions.json');
-  await writeFile(versionsPath, JSON.stringify(versions, null, 2), 'utf-8');
-  
-  return newVersion;
-}
+import { storage } from '../lib/storage.js';
 
 /**
  * Ad management routes.
- * Handles ad image uploads for kiosk display.
+ * Handles ad uploads via presigned URLs and manifest serving for kiosk display.
  */
 export const adsRoutes: FastifyPluginAsync = async (fastify) => {
-  // Register multipart plugin scoped to this plugin only
-  await fastify.register(fastifyMultipart, {
-    attachFieldsToBody: true, // Enable to get fields in request.body
-    limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB max file size
-    },
-  });
+  // Allowed MIME types for ads
+  const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+  const ALLOWED_VIDEO_TYPES = ['video/mp4'];
+  const ALLOWED_MIME_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES];
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB max
 
   /**
-   * Upload an ad image.
+   * Request presigned URL for uploading an ad.
    * Requires company admin authentication.
-   * Uses stream-safe multipart handling to prevent hangs.
    * 
-   * @route POST /api/ads/upload
-   * @body file - Image file (multipart/form-data)
-   * @body adType - Type of ad: 'ad1' | 'ad2'
-   * @returns Success message with file path and version
+   * @route POST /api/ads/uploads
+   * @body shopId - Optional shop ID (for shop-specific ads)
+   * @body mediaType - 'image' or 'video'
+   * @body mimeType - MIME type (e.g., 'image/png', 'video/mp4')
+   * @body bytes - File size in bytes
+   * @body position - Position in the ad list (default: append to end)
+   * @returns Presigned upload URL and ad ID
    * @throws {400} If validation fails
    * @throws {401} If not authenticated
    * @throws {403} If not company admin
    */
   fastify.post(
-    '/ads/upload',
+    '/ads/uploads',
     {
       preHandler: [requireAuth(), requireCompanyAdmin()],
     },
     async (request, reply) => {
-      let filePart: any = null;
-      // #region agent log - declare once for reuse
-      const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
-      const logDir = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor';
-      const safeLog = (data: any) => {
-        try {
-          if (!existsSync(logDir)) {
-            mkdirSync(logDir, { recursive: true });
-          }
-          appendFileSync(logPath, JSON.stringify(data) + '\n');
-        } catch (e) {
-          // Silently fail - logging shouldn't break functionality
-        }
-      };
-      // #endregion
-      
-      // Log immediately when handler is called
-      request.log.info('=== AD UPLOAD HANDLER CALLED ===');
-      safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:upload',message:'Handler entry',data:{timestamp:Date.now()},timestamp:Date.now()});
-      
-      try {
-        // Log request details for debugging
-        request.log.info({
-          method: request.method,
-          url: request.url,
-          headers: {
-            'content-type': request.headers['content-type'],
-            'content-length': request.headers['content-length'],
-          },
-          hasUser: !!request.user,
-          companyId: request.user?.companyId,
-        }, 'Ad upload request received');
-        safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:upload',message:'Request received',data:{hasUser:!!request.user,companyId:request.user?.companyId},timestamp:Date.now()});
-
         if (!request.user || !request.user.companyId) {
           return reply.status(403).send({
             error: 'Company admin access required',
@@ -129,219 +47,115 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           });
         }
 
-        // Use request.file() for simpler single-file upload handling
-        // With attachFieldsToBody: true, fields are available in request.body
-        let adType: string | null = null;
-        request.log.info('=== CALLING request.file() ===');
-        safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Before request.file()',data:{timestamp:Date.now()},timestamp:Date.now()});
-        
-        try {
-          // Get the file using request.file() - simpler API for single file uploads
-          const data = await request.file();
-          request.log.info('=== GOT FILE DATA ===');
-          safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Got file data',data:{hasFile:!!data,filename:data?.filename,mimetype:data?.mimetype},timestamp:Date.now()});
-          
-          if (!data) {
-            return reply.status(400).send({
-              error: 'No file provided',
-              statusCode: 400,
-              code: 'VALIDATION_ERROR',
-            });
-          }
-          
-          filePart = data;
-          
-          // Get adType from request.body (since attachFieldsToBody is true)
-          adType = (request.body as any)?.adType;
-          
-          request.log.info('=== AD TYPE:', adType, '===');
-          request.log.info('=== REQUEST BODY:', JSON.stringify(request.body), '===');
-          safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Got adType',data:{adType,body:request.body},timestamp:Date.now()});
-          
-          if (!adType || !['ad1', 'ad2'].includes(adType)) {
-            // Clean up file stream before returning error
-            if (filePart?.file) {
-              try {
-                filePart.file.destroy();
-              } catch (destroyError) {
-                request.log.warn({ err: destroyError }, 'Error destroying file stream');
-              }
-            }
-            return reply.status(400).send({
-              error: 'Invalid adType. Must be "ad1" or "ad2"',
-              statusCode: 400,
-              code: 'VALIDATION_ERROR',
-            });
-          }
-        } catch (parseError) {
-          safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Parse error',data:{errorMessage:parseError instanceof Error?parseError.message:String(parseError)},timestamp:Date.now()});
-          request.log.error({ err: parseError }, 'Error parsing multipart data');
-          // Clean up file stream if it exists
-          if (filePart?.file) {
-            try {
-              filePart.file.destroy();
-            } catch (destroyError) {
-              request.log.warn({ err: destroyError }, 'Error destroying file stream');
-            }
-          }
-          return reply.status(400).send({
-            error: 'Error parsing multipart form data',
-            statusCode: 400,
-            code: 'VALIDATION_ERROR',
-          });
-        }
+      const bodySchema = z.object({
+        shopId: z.number().int().positive().nullable().optional(),
+        mediaType: z.enum(['image', 'video']),
+        mimeType: z.string().refine(
+          (val) => ALLOWED_MIME_TYPES.includes(val),
+          { message: `Invalid MIME type. Allowed: ${ALLOWED_MIME_TYPES.join(', ')}` }
+        ),
+        bytes: z.number().int().positive().max(MAX_FILE_SIZE),
+        position: z.number().int().nonnegative().optional(),
+      });
 
-        // TypeScript type narrowing: adType is now guaranteed to be 'ad1' | 'ad2'
-        const validatedAdType = adType as 'ad1' | 'ad2';
+      const body = validateRequest(bodySchema, request.body);
+      const companyId = request.user.companyId;
 
-        // Validate file type
-        const allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-        if (!allowedMimeTypes.includes(filePart.mimetype)) {
-          // Clean up file stream before returning error
-          if (filePart?.file) {
-            try {
-              filePart.file.destroy();
-            } catch (destroyError) {
-              request.log.warn({ err: destroyError }, 'Error destroying file stream');
-            }
-          }
-          return reply.status(400).send({
-            error: `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`,
-            statusCode: 400,
-            code: 'VALIDATION_ERROR',
-          });
-        }
-
-        // Determine file extension from MIME type
-        const mimeToExt: Record<string, string> = {
-          'image/png': '.png',
-          'image/jpeg': '.jpg',
-          'image/jpg': '.jpg',
-          'image/webp': '.webp',
-        };
-        const fileExt = mimeToExt[filePart.mimetype] || '.png';
-        
-        // Determine filename based on ad type, preserving original extension
-        const baseFilename = validatedAdType === 'ad1' ? 'gt-ad' : 'gt-ad2';
-        const filename = `${baseFilename}${fileExt}`;
-
-        // Save to company-specific directory in API's public folder
-        const companyId = request.user.companyId;
-        const companyAdsDir = join(__dirname, '..', '..', 'public', 'companies', String(companyId));
-        const filePath = join(companyAdsDir, filename);
-
-        // Ensure directory exists
-        if (!existsSync(companyAdsDir)) {
-          await mkdir(companyAdsDir, { recursive: true });
-        }
-
-        // Consume file stream to buffer and write
-        // This properly consumes the stream, preventing hangs
-        let buffer: Buffer;
-        try {
-          request.log.info('=== CALLING filePart.toBuffer() ===');
-          safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'apps/api/src/routes/ads.ts:upload',message:'Before filePart.toBuffer()',data:{timestamp:Date.now()},timestamp:Date.now()});
-          buffer = await filePart.toBuffer();
-          request.log.info({ bufferSize: buffer.length }, '=== BUFFER CONVERSION COMPLETE ===');
-          // #region agent log
-          safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'apps/api/src/routes/ads.ts:upload',message:'After filePart.toBuffer()',data:{bufferSize:buffer.length},timestamp:Date.now()});
-          // #endregion
-          request.log.debug({ bufferSize: buffer.length }, 'File stream converted to buffer');
-        } catch (bufferError) {
-          // #region agent log
-          safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'apps/api/src/routes/ads.ts:upload',message:'Buffer error',data:{errorMessage:bufferError instanceof Error?bufferError.message:String(bufferError)},timestamp:Date.now()});
-          // #endregion
-          request.log.error({ err: bufferError }, 'Error converting file stream to buffer');
-          // Clean up file stream on error
-          if (filePart?.file) {
-            try {
-              filePart.file.destroy();
-            } catch (destroyError) {
-              request.log.warn({ err: destroyError }, 'Error destroying file stream');
-            }
-          }
-          return reply.status(500).send({
-            error: 'Error processing file stream',
-            statusCode: 500,
-            code: 'INTERNAL_ERROR',
-          });
-        }
-
-        // Write file to disk
-        try {
-          await writeFile(filePath, buffer);
-          request.log.debug({ filePath }, 'File written to disk');
-        } catch (writeError) {
-          request.log.error({ err: writeError, filePath }, 'Error writing file to disk');
-          return reply.status(500).send({
-            error: 'Error saving file',
-            statusCode: 500,
-            code: 'INTERNAL_ERROR',
-          });
-        }
-        
-        // Update version and get new version number
-        const version = await updateAdVersion(companyAdsDir, validatedAdType);
-
-        const response = {
-          message: 'Ad image uploaded successfully',
-          filename,
-          path: `/api/ads/${companyId}/${filename}`,
-          version,
-        };
-
-        // Broadcast websocket event if websocket is available
-        const wsManager = (fastify as any).wsManager;
-        if (wsManager) {
-          try {
-            wsManager.broadcastAdUpdate(companyId, adType, version);
-          } catch (wsError) {
-            // Don't fail the request if websocket broadcast fails
-            request.log.warn({ err: wsError }, 'Error broadcasting websocket update');
-          }
-        }
-
-        request.log.info({ companyId, adType, filename, version }, 'Ad image uploaded successfully');
-        request.log.info('=== SENDING SUCCESS RESPONSE ===');
-        // #region agent log
-        safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:upload',message:'Sending success response',data:{companyId,adType,filename,version},timestamp:Date.now()});
-        // #endregion
-        return reply.status(200).send(response);
-      } catch (error) {
-        request.log.error({ err: error }, 'Error uploading ad image');
-        // #region agent log
-        safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H5',location:'apps/api/src/routes/ads.ts:upload',message:'Top-level error caught',data:{errorMessage:error instanceof Error?error.message:String(error),errorName:error instanceof Error?error.name:'unknown'},timestamp:Date.now()});
-        // #endregion
-        
-        // Ensure file stream is cleaned up on any error
-        if (filePart?.file) {
-          try {
-            filePart.file.destroy();
-          } catch (destroyError) {
-            request.log.warn({ err: destroyError }, 'Error destroying file stream in error handler');
-          }
-        }
-        
-        return reply.status(500).send({
-          error: error instanceof Error ? error.message : 'Internal server error',
-          statusCode: 500,
-          code: 'INTERNAL_ERROR',
+      // Validate shop belongs to company if shopId provided
+      if (body.shopId) {
+        const shop = await db.query.shops.findFirst({
+          where: and(
+            eq(schema.shops.id, body.shopId),
+            eq(schema.shops.companyId, companyId)
+          ),
         });
+
+        if (!shop) {
+          throw new ValidationError('Shop not found or does not belong to your company', [
+            { field: 'shopId', message: 'Invalid shop ID' },
+          ]);
+        }
       }
+
+      // Determine file extension from MIME type
+      const mimeToExt: Record<string, string> = {
+        'image/png': '.png',
+        'image/jpeg': '.jpg',
+        'image/jpg': '.jpg',
+        'image/webp': '.webp',
+        'video/mp4': '.mp4',
+      };
+      const extension = mimeToExt[body.mimeType] || '.bin';
+
+      // Get next position if not provided
+      let position = body.position;
+      if (position === undefined) {
+        const existingAds = await db.query.companyAds.findMany({
+          where: and(
+            eq(schema.companyAds.companyId, companyId),
+            body.shopId ? eq(schema.companyAds.shopId, body.shopId) : isNull(schema.companyAds.shopId)
+          ),
+          orderBy: (ads, { desc }) => [desc(ads.position)],
+          limit: 1,
+        });
+        position = existingAds.length > 0 ? existingAds[0].position + 1 : 0;
+      }
+
+      // Create ad record (disabled by default until upload is verified)
+      const [ad] = await db.insert(schema.companyAds).values({
+        companyId,
+        shopId: body.shopId || null,
+        position,
+        enabled: false,
+        mediaType: body.mediaType,
+        mimeType: body.mimeType,
+        bytes: body.bytes,
+        storageKey: '', // Will be set after upload
+        publicUrl: '', // Will be set after upload
+        version: 1,
+      }).returning();
+
+      // Generate storage key
+      const storageKey = storage.generateAdKey(companyId, body.shopId, ad.id, extension);
+
+      // Generate presigned URL
+      const { uploadUrl, requiredHeaders } = await storage.generatePresignedPutUrl(
+        storageKey,
+        body.mimeType,
+        900 // 15 minutes
+      );
+
+      // Update ad with storage key and public URL
+      await db.update(schema.companyAds)
+        .set({
+          storageKey,
+          publicUrl: storage.getPublicUrl(storageKey),
+        })
+        .where(eq(schema.companyAds.id, ad.id));
+
+      return {
+        adId: ad.id,
+        uploadUrl,
+        requiredHeaders,
+        storageKey,
+      };
     }
   );
 
   /**
-   * Get current ad images status.
+   * Complete an ad upload by verifying the file in storage.
    * Requires company admin authentication.
    * 
-   * @route GET /api/ads/status
-   * @returns Status of ad images
+   * @route POST /api/ads/uploads/complete
+   * @body adId - Ad ID from presign response
+   * @returns Success message with ad details
+   * @throws {400} If validation fails or file verification fails
    * @throws {401} If not authenticated
-   * @throws {403} If not company admin
+   * @throws {403} If not company admin or ad doesn't belong to company
+   * @throws {404} If ad not found
    */
-  fastify.get(
-    '/ads/status',
+  fastify.post(
+    '/ads/uploads/complete',
     {
       preHandler: [requireAuth(), requireCompanyAdmin()],
     },
@@ -354,135 +168,409 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         });
       }
 
+      const bodySchema = z.object({
+        adId: z.number().int().positive(),
+      });
+
+      const { adId } = validateRequest(bodySchema, request.body);
       const companyId = request.user.companyId;
-      const companyAdsDir = join(__dirname, '..', '..', 'public', 'companies', String(companyId));
-      
-      // Check for ad files with any supported extension
-      const adExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
-      
-      // Find existing ad1 file
-      let ad1Filename: string | null = null;
-      for (const ext of adExtensions) {
-        const path = join(companyAdsDir, `gt-ad${ext}`);
-        if (existsSync(path)) {
-          ad1Filename = `gt-ad${ext}`;
-          break;
-        }
+
+      // Get ad and verify ownership
+      const ad = await db.query.companyAds.findFirst({
+        where: and(
+          eq(schema.companyAds.id, adId),
+          eq(schema.companyAds.companyId, companyId)
+        ),
+      });
+
+      if (!ad) {
+        throw new NotFoundError('Ad not found or access denied');
       }
-      
-      // Find existing ad2 file
-      let ad2Filename: string | null = null;
-      for (const ext of adExtensions) {
-        const path = join(companyAdsDir, `gt-ad2${ext}`);
-        if (existsSync(path)) {
-          ad2Filename = `gt-ad2${ext}`;
-          break;
+
+      if (!ad.storageKey) {
+        throw new ValidationError('Ad storage key not set', [
+          { field: 'adId', message: 'Upload not initialized properly' },
+        ]);
+      }
+
+      // Verify file exists in storage
+      let fileMetadata;
+      try {
+        fileMetadata = await storage.verifyFileExists(ad.storageKey);
+      } catch (error) {
+        throw new ValidationError('File not found in storage. Upload may have failed.', [
+          { field: 'adId', message: 'File verification failed' },
+        ]);
+      }
+
+      // Verify file size matches
+      if (fileMetadata.bytes !== ad.bytes) {
+        throw new ValidationError('File size mismatch', [
+          { field: 'bytes', message: `Expected ${ad.bytes} bytes, got ${fileMetadata.bytes}` },
+        ]);
+      }
+
+      // Verify content type matches
+      if (fileMetadata.contentType !== ad.mimeType) {
+        throw new ValidationError('Content type mismatch', [
+          { field: 'mimeType', message: `Expected ${ad.mimeType}, got ${fileMetadata.contentType}` },
+        ]);
+      }
+
+      // Verify file type via magic bytes
+      try {
+        const fileHeader = await storage.getFileHeader(ad.storageKey);
+        const isValidType = storage.validateFileType(fileHeader, ad.mimeType);
+        
+        if (!isValidType) {
+          throw new ValidationError('File type verification failed. File content does not match declared MIME type.', [
+            { field: 'mimeType', message: 'File magic bytes do not match declared type' },
+          ]);
+        }
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          throw error;
+        }
+        // If magic byte check fails for other reasons, log but don't fail (some storage providers may not support Range requests)
+        request.log.warn({ err: error, adId }, 'Magic byte verification failed, but continuing');
+      }
+
+      // Update ad: enable it, store ETag, increment version
+      const [updatedAd] = await db.update(schema.companyAds)
+        .set({
+          enabled: true,
+          etag: fileMetadata.etag,
+          version: ad.version + 1,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.companyAds.id, ad.id))
+        .returning();
+
+      // Calculate manifest version for broadcast
+      const allAds = await db.query.companyAds.findMany({
+        where: and(
+          eq(schema.companyAds.companyId, companyId),
+          eq(schema.companyAds.enabled, true),
+          or(
+            eq(schema.companyAds.shopId, ad.shopId || -1),
+            isNull(schema.companyAds.shopId)
+          )
+        ),
+      });
+      const manifestVersion = allAds.reduce((sum, a) => sum + a.version, 0);
+
+      // Broadcast WebSocket update
+      const wsManager = (fastify as any).wsManager;
+      if (wsManager) {
+        try {
+          wsManager.broadcastAdsUpdated(companyId, ad.shopId, manifestVersion);
+        } catch (wsError) {
+          request.log.warn({ err: wsError }, 'Error broadcasting ads update');
         }
       }
 
       return {
-        ad1: {
-          exists: ad1Filename !== null,
-          path: ad1Filename ? `/api/ads/${companyId}/${ad1Filename}` : null,
-        },
-        ad2: {
-          exists: ad2Filename !== null,
-          path: ad2Filename ? `/api/ads/${companyId}/${ad2Filename}` : null,
+        message: 'Ad upload completed and verified',
+        ad: {
+          id: updatedAd.id,
+          position: updatedAd.position,
+          enabled: updatedAd.enabled,
+          mediaType: updatedAd.mediaType,
+          mimeType: updatedAd.mimeType,
+          publicUrl: updatedAd.publicUrl,
+          version: updatedAd.version,
         },
       };
     }
   );
 
   /**
-   * Serve ad image files.
-   * Public endpoint for kiosk display (no authentication required).
-   * Supports version query parameter for cache-busting.
+   * Get public manifest of enabled ads for a shop.
+   * No authentication required.
    * 
-   * @route GET /api/ads/:companyId/:filename
-   * @param companyId - Company ID
-   * @param filename - Image filename (gt-ad.png or gt-ad2.png)
-   * @query v - Optional version number for cache-busting
-   * @returns Image file stream with appropriate cache headers
-   * @throws {404} If file not found
+   * @route GET /api/ads/public/manifest
+   * @query shopSlug - Shop slug identifier
+   * @returns Manifest with ordered list of enabled ads
+   * @throws {404} If shop not found
+   */
+  fastify.get('/ads/public/manifest', async (request, reply) => {
+    const querySchema = z.object({
+      shopSlug: z.string().min(1),
+    });
+
+    const { shopSlug } = validateRequest(querySchema, request.query);
+
+    // Get shop
+    const shop = await db.query.shops.findFirst({
+      where: eq(schema.shops.slug, shopSlug),
+    });
+
+    if (!shop) {
+      throw new NotFoundError(`Shop with slug "${shopSlug}" not found`);
+    }
+
+    // Get enabled ads for this shop (shop-specific) or company-wide (if no shop-specific ads)
+    const shopAds = await db.query.companyAds.findMany({
+      where: and(
+        eq(schema.companyAds.companyId, shop.companyId!),
+        eq(schema.companyAds.shopId, shop.id),
+        eq(schema.companyAds.enabled, true)
+      ),
+      orderBy: (ads, { asc }) => [asc(ads.position)],
+    });
+
+    // If no shop-specific ads, fall back to company-wide ads
+    let ads = shopAds;
+    if (ads.length === 0) {
+      ads = await db.query.companyAds.findMany({
+        where: and(
+          eq(schema.companyAds.companyId, shop.companyId!),
+          isNull(schema.companyAds.shopId),
+          eq(schema.companyAds.enabled, true)
+        ),
+        orderBy: (ads, { asc }) => [asc(ads.position)],
+      });
+    }
+
+    // Calculate manifest version (sum of all ad versions for cache busting)
+    const manifestVersion = ads.reduce((sum, ad) => sum + ad.version, 0);
+
+    return {
+      manifestVersion,
+      ads: ads.map((ad) => ({
+        id: ad.id,
+        position: ad.position,
+        mediaType: ad.mediaType,
+        url: `${ad.publicUrl}?v=${ad.version}`,
+        version: ad.version,
+      })),
+    };
+  });
+
+  /**
+   * Get all ads for a company (admin view).
+   * Requires company admin authentication.
+   * 
+   * @route GET /api/ads
+   * @query shopId - Optional shop ID to filter by
+   * @returns List of all ads (enabled and disabled)
+   * @throws {401} If not authenticated
+   * @throws {403} If not company admin
    */
   fastify.get(
-    '/ads/:companyId/:filename',
+    '/ads',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
     async (request, reply) => {
-      const params = request.params as { companyId: string; filename: string };
-      const query = request.query as { v?: string };
-      const { companyId, filename } = params;
-
-      // Validate filename to prevent directory traversal
-      // Allow various extensions: .png, .jpg, .jpeg, .webp
-      const validFilenames = [
-        'gt-ad.png', 'gt-ad.jpg', 'gt-ad.jpeg', 'gt-ad.webp',
-        'gt-ad2.png', 'gt-ad2.jpg', 'gt-ad2.jpeg', 'gt-ad2.webp',
-      ];
-      
-      // Extract base name and requested extension
-      const baseNameMatch = filename.match(/^(gt-ad2?)(\.\w+)?$/);
-      if (!baseNameMatch) {
-        return reply.status(400).send({
-          error: 'Invalid filename',
-          statusCode: 400,
-          code: 'VALIDATION_ERROR',
+      if (!request.user || !request.user.companyId) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
         });
       }
-      
-      const baseName = baseNameMatch[1]; // 'gt-ad' or 'gt-ad2'
-      const requestedExt = baseNameMatch[2] || '.png'; // Use requested extension or default to .png
-      
-      const companyAdsDir = join(__dirname, '..', '..', 'public', 'companies', companyId);
-      
-      // First, try the exact filename requested
-      let filePath = join(companyAdsDir, filename);
-      let actualFilename = filename;
-      
-      // If exact file doesn't exist, try to find file with same base name but different extension
-      if (!existsSync(filePath)) {
-        const adExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
-        for (const ext of adExtensions) {
-          const candidatePath = join(companyAdsDir, `${baseName}${ext}`);
-          if (existsSync(candidatePath)) {
-            filePath = candidatePath;
-            actualFilename = `${baseName}${ext}`;
-            break;
-          }
+
+      const querySchema = z.object({
+        shopId: z.string().transform((val) => parseInt(val, 10)).optional(),
+      });
+
+      const query = validateRequest(querySchema, request.query);
+      const companyId = request.user.companyId;
+
+      const whereConditions = [
+        eq(schema.companyAds.companyId, companyId),
+      ];
+
+      if (query.shopId) {
+        whereConditions.push(eq(schema.companyAds.shopId, query.shopId));
+      }
+
+      const ads = await db.query.companyAds.findMany({
+        where: and(...whereConditions),
+        orderBy: (ads, { asc }) => [asc(ads.position), asc(ads.id)],
+      });
+
+      return ads;
+    }
+  );
+
+  /**
+   * Update an ad (enable/disable, reorder, delete).
+   * Requires company admin authentication.
+   * 
+   * @route PATCH /api/ads/:id
+   * @param id - Ad ID
+   * @body enabled - Enable/disable the ad
+   * @body position - New position in the list
+   * @returns Updated ad
+   * @throws {400} If validation fails
+   * @throws {401} If not authenticated
+   * @throws {403} If not company admin or ad doesn't belong to company
+   * @throws {404} If ad not found
+   */
+  fastify.patch(
+    '/ads/:id',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || !request.user.companyId) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+
+      const paramsSchema = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      });
+
+      const bodySchema = z.object({
+        enabled: z.boolean().optional(),
+        position: z.number().int().nonnegative().optional(),
+      });
+
+      const { id } = validateRequest(paramsSchema, request.params);
+      const body = validateRequest(bodySchema, request.body);
+      const companyId = request.user.companyId;
+
+      // Get ad and verify ownership
+      const ad = await db.query.companyAds.findFirst({
+        where: and(
+          eq(schema.companyAds.id, id),
+          eq(schema.companyAds.companyId, companyId)
+        ),
+      });
+
+      if (!ad) {
+        throw new NotFoundError('Ad not found or access denied');
+      }
+
+      // Build update object
+      const updates: Partial<typeof schema.companyAds.$inferInsert> = {
+        updatedAt: new Date(),
+      };
+
+      if (body.enabled !== undefined) {
+        updates.enabled = body.enabled;
+        // Increment version when enabling/disabling for cache busting
+        if (body.enabled !== ad.enabled) {
+          updates.version = ad.version + 1;
         }
       }
-      
-      // Check if file exists (after trying alternatives)
-      if (!existsSync(filePath)) {
-        return reply.status(404).send({
-          error: 'Ad image not found',
-          statusCode: 404,
-          code: 'NOT_FOUND',
+
+      if (body.position !== undefined && body.position !== ad.position) {
+        updates.position = body.position;
+      }
+
+      const [updatedAd] = await db.update(schema.companyAds)
+        .set(updates)
+        .where(eq(schema.companyAds.id, id))
+        .returning();
+
+      // Calculate manifest version for broadcast
+      const allAds = await db.query.companyAds.findMany({
+        where: and(
+          eq(schema.companyAds.companyId, companyId),
+          eq(schema.companyAds.enabled, true),
+          or(
+            eq(schema.companyAds.shopId, ad.shopId || -1),
+            isNull(schema.companyAds.shopId)
+          )
+        ),
+      });
+      const manifestVersion = allAds.reduce((sum, a) => sum + a.version, 0);
+
+      // Broadcast WebSocket update
+      const wsManager = (fastify as any).wsManager;
+      if (wsManager) {
+        try {
+          wsManager.broadcastAdsUpdated(companyId, ad.shopId, manifestVersion);
+        } catch (wsError) {
+          request.log.warn({ err: wsError }, 'Error broadcasting ads update');
+        }
+      }
+
+      return updatedAd;
+    }
+  );
+
+  /**
+   * Delete an ad.
+   * Requires company admin authentication.
+   * 
+   * @route DELETE /api/ads/:id
+   * @param id - Ad ID
+   * @returns Success message
+   * @throws {401} If not authenticated
+   * @throws {403} If not company admin or ad doesn't belong to company
+   * @throws {404} If ad not found
+   */
+  fastify.delete(
+    '/ads/:id',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || !request.user.companyId) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
         });
       }
 
-      // Determine MIME type from actual file extension
-      const ext = extname(actualFilename).toLowerCase();
-      const mimeTypes: Record<string, string> = {
-        '.png': 'image/png',
-        '.jpg': 'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.webp': 'image/webp',
-      };
-      const contentType = mimeTypes[ext] || 'application/octet-stream';
+      const paramsSchema = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      });
 
-      // Set cache headers based on version parameter
-      if (query.v) {
-        // Versioned requests can be cached aggressively (immutable)
-        reply.header('Cache-Control', 'public, max-age=31536000, immutable');
-      } else {
-        // Unversioned requests should not be cached to avoid stale content
-        reply.header('Cache-Control', 'no-cache, must-revalidate');
+      const { id } = validateRequest(paramsSchema, request.params);
+      const companyId = request.user.companyId;
+
+      // Get ad and verify ownership
+      const ad = await db.query.companyAds.findFirst({
+        where: and(
+          eq(schema.companyAds.id, id),
+          eq(schema.companyAds.companyId, companyId)
+        ),
+      });
+
+      if (!ad) {
+        throw new NotFoundError('Ad not found or access denied');
       }
 
-      // Stream the file
-      const stream = createReadStream(filePath);
-      return reply.type(contentType).send(stream);
+      // Delete ad
+      await db.delete(schema.companyAds)
+        .where(eq(schema.companyAds.id, id));
+
+      // Calculate manifest version for broadcast (before deletion)
+      const allAds = await db.query.companyAds.findMany({
+        where: and(
+          eq(schema.companyAds.companyId, companyId),
+          eq(schema.companyAds.enabled, true),
+          or(
+            eq(schema.companyAds.shopId, ad.shopId || -1),
+            isNull(schema.companyAds.shopId)
+          )
+        ),
+      });
+      const manifestVersion = allAds.reduce((sum, a) => sum + a.version, 0);
+
+      // Broadcast WebSocket update
+      const wsManager = (fastify as any).wsManager;
+      if (wsManager) {
+        try {
+          wsManager.broadcastAdsUpdated(companyId, ad.shopId, manifestVersion);
+        } catch (wsError) {
+          request.log.warn({ err: wsError }, 'Error broadcasting ads update');
+        }
+      }
+
+      return {
+        message: 'Ad deleted successfully',
+      };
     }
   );
 };
-

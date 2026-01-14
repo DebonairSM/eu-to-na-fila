@@ -10,11 +10,11 @@ interface SubscribeMessage {
   companyId: number;
 }
 
-interface AdUpdatedMessage {
+interface AdsUpdatedMessage {
   type: 'ads.updated';
   companyId: number;
-  adType: 'ad1' | 'ad2';
-  version: number;
+  shopId: number | null;
+  manifestVersion: number;
 }
 
 type ClientMessage = SubscribeMessage;
@@ -79,14 +79,19 @@ export class WebSocketManager {
   }
 
   /**
-   * Broadcast ad update to all subscribed clients for a company
+   * Broadcast ads updated event to all subscribed clients for a company.
+   * Clients should refetch the manifest after receiving this.
+   * 
+   * @param companyId - Company ID
+   * @param shopId - Shop ID (optional, null for company-wide ads)
+   * @param manifestVersion - Current manifest version for cache busting
    */
-  broadcastAdUpdate(companyId: number, adType: 'ad1' | 'ad2', version: number): void {
-    const message: AdUpdatedMessage = {
+  broadcastAdsUpdated(companyId: number, shopId: number | null, manifestVersion?: number): void {
+    const message: AdsUpdatedMessage = {
       type: 'ads.updated',
       companyId,
-      adType,
-      version,
+      shopId,
+      manifestVersion: manifestVersion || Date.now(), // Use timestamp as fallback
     };
 
     const messageStr = JSON.stringify(message);
@@ -106,8 +111,17 @@ export class WebSocketManager {
 
     // Log broadcast for debugging (optional)
     if (sentCount > 0) {
-      console.log(`[WS] Broadcasted ad update to ${sentCount} client(s): companyId=${companyId}, adType=${adType}, version=${version}`);
+      console.log(`[WS] Broadcasted ads updated to ${sentCount} client(s): companyId=${companyId}, shopId=${shopId}, manifestVersion=${message.manifestVersion}`);
     }
+  }
+
+  /**
+   * Legacy method for backward compatibility (deprecated, use broadcastAdsUpdated)
+   * @deprecated Use broadcastAdsUpdated instead
+   */
+  broadcastAdUpdate(companyId: number, adType: 'ad1' | 'ad2', version: number): void {
+    // Convert to new format
+    this.broadcastAdsUpdated(companyId, null);
   }
 
   /**

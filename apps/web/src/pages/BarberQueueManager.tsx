@@ -15,9 +15,7 @@ import { QueueCard } from '@/components/QueueCard';
 import { QRCode } from '@/components/QRCode';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Button } from '@/components/ui/button';
-import { GrandeTechAd } from '@/components/GrandeTechAd';
-import { Ad2Video } from '@/components/Ad2Video';
-import { Ad3Video } from '@/components/Ad3Video';
+import { KioskAdsPlayer } from '@/components/KioskAdsPlayer';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { cn, getErrorMessage, formatName, formatNameForDisplay } from '@/lib/utils';
@@ -32,6 +30,8 @@ export function BarberQueueManager() {
     currentView,
     isInRotation,
     isFullscreen,
+    ads,
+    currentAdIndex,
     enterKioskMode,
     showQueueView,
     toggleFullscreen,
@@ -490,29 +490,17 @@ export function BarberQueueManager() {
           </div>
         )}
 
-        {/* Ad Views */}
-        {currentView === 'ad1' && (
+        {/* Ad View */}
+        {currentView === 'ad' && (
           <div 
             className="flex-1 flex items-center justify-center relative cursor-pointer min-h-0 max-h-screen overflow-hidden"
             onClick={showQueueView}
           >
-            <GrandeTechAd showTimer={false} companyId={(queueData?.shop as { companyId?: number | null })?.companyId ?? null} />
-          </div>
-        )}
-        {currentView === 'ad2' && (
-          <div 
-            className="flex-1 flex items-center justify-center relative cursor-pointer min-h-0 max-h-screen overflow-hidden"
-            onClick={showQueueView}
-          >
-            <Ad2Video showTimer={false} companyId={(queueData?.shop as { companyId?: number | null })?.companyId ?? null} />
-          </div>
-        )}
-        {currentView === 'ad3' && (
-          <div 
-            className="flex-1 flex items-center justify-center relative cursor-pointer min-h-0 max-h-screen overflow-hidden"
-            onClick={showQueueView}
-          >
-            <Ad3Video showTimer={false} />
+            <KioskAdsPlayer
+              shopSlug={config.slug}
+              currentAdIndex={currentAdIndex}
+              onError={showQueueView}
+            />
           </div>
         )}
 

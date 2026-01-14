@@ -33,6 +33,14 @@ If Blueprint doesn't work, create the service manually:
    JWT_SECRET=<generate-a-secure-random-string-at-least-32-chars>
    CORS_ORIGIN=https://your-app.onrender.com
    SHOP_SLUG=mineiro
+   
+   # Storage Configuration (S3-compatible)
+   STORAGE_PROVIDER=s3
+   STORAGE_REGION=us-east-1
+   STORAGE_BUCKET=<your-bucket-name>
+   STORAGE_ACCESS_KEY_ID=<your-access-key-id>
+   STORAGE_SECRET_ACCESS_KEY=<your-secret-access-key>
+   STORAGE_PUBLIC_BASE_URL=https://<your-bucket>.s3.<region>.amazonaws.com
    ```
 
 4. **Create PostgreSQL Database (if not using existing):**
