@@ -6,6 +6,7 @@ import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
 import { storage } from '../lib/storage.js';
+import { env } from '../env.js';
 
 /**
  * Ad management routes.
@@ -124,6 +125,17 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         body.mimeType,
         900 // 15 minutes
       );
+      
+      // #region agent log
+      const { appendFileSync, mkdirSync, existsSync } = await import('fs');
+      const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
+      const logDir = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor';
+      try {
+        if (!existsSync(logDir)) mkdirSync(logDir, { recursive: true });
+        appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H4',location:'apps/api/src/routes/ads.ts:presign',message:'Presigned URL generated',data:{adId:ad.id,storageKey,uploadUrl:uploadUrl.substring(0,100)+'...',mimeType:body.mimeType},timestamp:Date.now()}) + '\n');
+      } catch {}
+      // #endregion
+      request.log.info({ adId: ad.id, storageKey, uploadUrl: uploadUrl.substring(0, 100) }, 'Presigned URL generated');
 
       // Update ad with storage key and public URL
       await db.update(schema.companyAds)
@@ -196,10 +208,51 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       // Verify file exists in storage
       let fileMetadata;
       try {
+        // #region agent log
+        const { appendFileSync, mkdirSync, existsSync } = await import('fs');
+        const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
+        const logDir = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor';
+        try {
+          if (!existsSync(logDir)) mkdirSync(logDir, { recursive: true });
+          appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:complete',message:'Before verifyFileExists',data:{adId,storageKey:ad.storageKey,bucket:env.STORAGE_BUCKET,endpoint:env.STORAGE_ENDPOINT,provider:env.STORAGE_PROVIDER},timestamp:Date.now()}) + '\n');
+        } catch {}
+        // #endregion
+        request.log.info({ adId, storageKey: ad.storageKey, bucket: env.STORAGE_BUCKET }, 'Verifying file exists in storage');
+        
         fileMetadata = await storage.verifyFileExists(ad.storageKey);
+        
+        // #region agent log
+        try {
+          appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:complete',message:'After verifyFileExists success',data:{bytes:fileMetadata.bytes,contentType:fileMetadata.contentType,etag:fileMetadata.etag},timestamp:Date.now()}) + '\n');
+        } catch {}
+        // #endregion
+        request.log.info({ adId, fileMetadata }, 'File verified successfully');
       } catch (error) {
-        throw new ValidationError('File not found in storage. Upload may have failed.', [
-          { field: 'adId', message: 'File verification failed' },
+        // #region agent log
+        const { appendFileSync, mkdirSync, existsSync } = await import('fs');
+        const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
+        const logDir = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor';
+        try {
+          if (!existsSync(logDir)) mkdirSync(logDir, { recursive: true });
+          const errorDetails = error instanceof Error ? {
+            message: error.message,
+            name: error.name,
+            code: (error as any).code,
+            statusCode: (error as any).$metadata?.httpStatusCode,
+            requestId: (error as any).$metadata?.requestId,
+          } : { error: String(error) };
+          appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:complete',message:'verifyFileExists error',data:{...errorDetails,storageKey:ad.storageKey,bucket:env.STORAGE_BUCKET},timestamp:Date.now()}) + '\n');
+        } catch {}
+        // #endregion
+        request.log.error({ err: error, adId, storageKey: ad.storageKey, bucket: env.STORAGE_BUCKET }, 'File verification failed');
+        
+        // Provide more detailed error message
+        const errorMessage = error instanceof Error 
+          ? `File verification failed: ${error.message}${(error as any).code ? ` (${(error as any).code})` : ''}`
+          : 'File verification failed';
+        
+        throw new ValidationError(errorMessage, [
+          { field: 'adId', message: 'File verification failed. Check if file was uploaded to storage.' },
         ]);
       }
 

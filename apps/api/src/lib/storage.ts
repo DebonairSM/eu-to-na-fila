@@ -83,14 +83,44 @@ class StorageClient {
     contentType: string;
     etag: string;
   }> {
+    // #region agent log
+    const { appendFileSync, mkdirSync, existsSync } = await import('fs');
+    const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
+    const logDir = '/Users/ronbandeira/Documents/eu-to-na-fila/.cursor';
+    try {
+      if (!existsSync(logDir)) mkdirSync(logDir, { recursive: true });
+      appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/lib/storage.ts:verifyFileExists',message:'Before HEAD request',data:{key,bucket:this.bucket},timestamp:Date.now()}) + '\n');
+    } catch {}
+    // #endregion
+    
     const command = new HeadObjectCommand({
       Bucket: this.bucket,
       Key: key,
     });
 
-    const response = await this.client.send(command);
+    let response;
+    try {
+      response = await this.client.send(command);
+      // #region agent log
+      try {
+        appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/lib/storage.ts:verifyFileExists',message:'HEAD request success',data:{contentLength:response.ContentLength,contentType:response.ContentType,etag:response.ETag,hasAllFields:!!(response.ContentLength && response.ContentType && response.ETag)},timestamp:Date.now()}) + '\n');
+      } catch {}
+      // #endregion
+    } catch (error) {
+      // #region agent log
+      try {
+        appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/lib/storage.ts:verifyFileExists',message:'HEAD request error',data:{error:error instanceof Error ? error.message : String(error),errorName:error instanceof Error ? error.name : undefined,key,bucket:this.bucket},timestamp:Date.now()}) + '\n');
+      } catch {}
+      // #endregion
+      throw error;
+    }
 
     if (!response.ContentLength || !response.ContentType || !response.ETag) {
+      // #region agent log
+      try {
+        appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'apps/api/src/lib/storage.ts:verifyFileExists',message:'Incomplete metadata',data:{contentLength:response.ContentLength,contentType:response.ContentType,etag:response.ETag},timestamp:Date.now()}) + '\n');
+      } catch {}
+      // #endregion
       throw new Error('File metadata incomplete');
     }
 
