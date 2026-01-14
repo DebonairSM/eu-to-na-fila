@@ -19,5 +19,20 @@ services:
         sync: false
       - key: SHOP_SLUG
         value: mineiro
+      # Storage configuration (S3-compatible)
+      # Set these in Render dashboard with your actual values
+      - key: STORAGE_PROVIDER
+        value: s3
+      - key: STORAGE_REGION
+        value: us-east-1
+      - key: STORAGE_BUCKET
+        sync: false  # Set in dashboard
+      - key: STORAGE_ACCESS_KEY_ID
+        sync: false  # Set in dashboard
+      - key: STORAGE_SECRET_ACCESS_KEY
+        sync: false  # Set in dashboard
+      - key: STORAGE_PUBLIC_BASE_URL
+        sync: false  # Set in dashboard
+      # STORAGE_ENDPOINT is optional (only needed for R2/MinIO)
 
 

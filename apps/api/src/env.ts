@@ -7,7 +7,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Load .env from project root (3 levels up from src/env.ts: src -> api -> root)
-dotenv.config({ path: resolve(__dirname, '../../../.env') });
+// In production (Render), environment variables are set via dashboard, not .env file
+const envPath = resolve(__dirname, '../../../.env');
+dotenv.config({ path: envPath });
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),

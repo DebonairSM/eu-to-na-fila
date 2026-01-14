@@ -34,14 +34,19 @@ If Blueprint doesn't work, create the service manually:
    CORS_ORIGIN=https://your-app.onrender.com
    SHOP_SLUG=mineiro
    
-   # Storage Configuration (S3-compatible)
+   # Storage Configuration (S3-compatible) - REQUIRED
    STORAGE_PROVIDER=s3
    STORAGE_REGION=us-east-1
    STORAGE_BUCKET=<your-bucket-name>
    STORAGE_ACCESS_KEY_ID=<your-access-key-id>
    STORAGE_SECRET_ACCESS_KEY=<your-secret-access-key>
    STORAGE_PUBLIC_BASE_URL=https://<your-bucket>.s3.<region>.amazonaws.com
+   
+   # Optional (only for R2/MinIO):
+   STORAGE_ENDPOINT=<your-endpoint-url>
    ```
+   
+   **Important:** All storage variables are now REQUIRED. If you don't have storage configured yet, you can temporarily use MinIO or a test S3 bucket. The app will fail to start without these variables.
 
 4. **Create PostgreSQL Database (if not using existing):**
    - In Render dashboard, go to **New > PostgreSQL**
