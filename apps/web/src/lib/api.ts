@@ -278,10 +278,12 @@ class ApiClient {
   }
 
   /**
+   * @deprecated This method is no longer used. The new ad upload system uses presigned URLs.
    * POST request helper for multipart/form-data.
    * Supports timeout and abort signal.
    */
-  private async postFormData<T>(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private async _postFormData<T>(
     path: string,
     formData: FormData,
     options?: { timeout?: number; signal?: AbortSignal }

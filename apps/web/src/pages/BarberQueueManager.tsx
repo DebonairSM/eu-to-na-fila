@@ -30,7 +30,6 @@ export function BarberQueueManager() {
     currentView,
     isInRotation,
     isFullscreen,
-    ads,
     currentAdIndex,
     enterKioskMode,
     showQueueView,

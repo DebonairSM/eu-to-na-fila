@@ -23,7 +23,6 @@ export function useKiosk() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [ads, setAds] = useState<Ad[]>([]);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
-  const [manifestVersion, setManifestVersion] = useState<number>(0);
   const rotationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fullscreenRequestInFlightRef = useRef(false);
@@ -113,7 +112,6 @@ export function useKiosk() {
     try {
       const manifest = await api.getAdsManifest(config.slug);
       setAds(manifest.ads);
-      setManifestVersion(manifest.manifestVersion);
       
       // Reset ad index if current index is out of bounds
       if (currentAdIndex >= manifest.ads.length) {

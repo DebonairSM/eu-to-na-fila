@@ -19,7 +19,6 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, onError }: KioskAdsPl
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [manifestVersion, setManifestVersion] = useState<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -31,7 +30,6 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, onError }: KioskAdsPl
       setError(false);
       const manifest = await api.getAdsManifest(shopSlug);
       setAds(manifest.ads);
-      setManifestVersion(manifest.manifestVersion);
     } catch (err) {
       console.error('[KioskAdsPlayer] Failed to fetch manifest:', err);
       setError(true);

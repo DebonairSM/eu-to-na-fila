@@ -117,7 +117,7 @@ export function AdManagementPage() {
       setUploadProgress(75);
 
       // Step 3: Complete upload (verify file)
-      const completeResponse = await api.completeAdUpload(presignResponse.adId);
+      await api.completeAdUpload(presignResponse.adId);
       
       setUploadProgress(100);
       setSuccess('Anúncio enviado e verificado com sucesso!');
