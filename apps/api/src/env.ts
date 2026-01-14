@@ -26,4 +26,32 @@ const envSchema = z.object({
   STORAGE_PUBLIC_BASE_URL: z.string(), // Public base URL for accessing files (CDN or storage public URL)
 });
 
-export const env = envSchema.parse(process.env);
+let env: z.infer<typeof envSchema>;
+try {
+  env = envSchema.parse(process.env);
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    const missingVars = error.errors
+      .filter((e) => e.code === 'invalid_type' && e.received === 'undefined')
+      .map((e) => e.path.join('.'));
+    
+    const invalidVars = error.errors
+      .filter((e) => e.code !== 'invalid_type' || e.received !== 'undefined')
+      .map((e) => `${e.path.join('.')}: ${e.message}`);
+    
+    const errorMessage = [
+      'Environment variable validation failed:',
+      missingVars.length > 0 && `Missing required variables: ${missingVars.join(', ')}`,
+      invalidVars.length > 0 && `Invalid variables: ${invalidVars.join('; ')}`,
+    ]
+      .filter(Boolean)
+      .join('\n');
+    
+    console.error(errorMessage);
+    console.error('Full Zod error:', JSON.stringify(error.errors, null, 2));
+    throw new Error(errorMessage);
+  }
+  throw error;
+}
+
+export { env };
