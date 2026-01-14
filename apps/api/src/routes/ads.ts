@@ -131,6 +131,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Use request.file() for simpler single-file upload handling
         // With attachFieldsToBody: true, fields are available in request.body
+        let adType: string | null = null;
         request.log.info('=== CALLING request.file() ===');
         safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Before request.file()',data:{timestamp:Date.now()},timestamp:Date.now()});
         
@@ -151,7 +152,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           filePart = data;
           
           // Get adType from request.body (since attachFieldsToBody is true)
-          const adType = (request.body as any)?.adType;
+          adType = (request.body as any)?.adType;
           
           request.log.info('=== AD TYPE:', adType, '===');
           request.log.info('=== REQUEST BODY:', JSON.stringify(request.body), '===');
@@ -191,7 +192,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         // TypeScript type narrowing: adType is now guaranteed to be 'ad1' | 'ad2'
-        const validatedAdType = (adType || 'ad1') as 'ad1' | 'ad2';
+        const validatedAdType = adType as 'ad1' | 'ad2';
 
         // Validate file type
         const allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
