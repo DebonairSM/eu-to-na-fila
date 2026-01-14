@@ -103,6 +103,10 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       };
       // #endregion
       
+      // Log immediately when handler is called
+      request.log.info('=== AD UPLOAD HANDLER CALLED ===');
+      safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:upload',message:'Handler entry',data:{timestamp:Date.now()},timestamp:Date.now()});
+      
       try {
         // Log request details for debugging
         request.log.info({
@@ -115,6 +119,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           hasUser: !!request.user,
           companyId: request.user?.companyId,
         }, 'Ad upload request received');
+        safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:upload',message:'Request received',data:{hasUser:!!request.user,companyId:request.user?.companyId},timestamp:Date.now()});
 
         if (!request.user || !request.user.companyId) {
           return reply.status(403).send({
@@ -133,7 +138,10 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         // #endregion
         
         try {
+          request.log.info('=== CALLING request.parts() ===');
+          safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Before request.parts() call',data:{timestamp:Date.now()},timestamp:Date.now()});
           const parts = request.parts();
+          request.log.info('=== GOT PARTS ITERATOR ===');
           // #region agent log
           safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:upload',message:'Got parts iterator, starting loop',data:{timestamp:Date.now()},timestamp:Date.now()});
           // #endregion
@@ -248,11 +256,10 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         // This properly consumes the stream, preventing hangs
         let buffer: Buffer;
         try {
-          request.log.debug('Converting file stream to buffer');
-          // #region agent log
+          request.log.info('=== CALLING filePart.toBuffer() ===');
           safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'apps/api/src/routes/ads.ts:upload',message:'Before filePart.toBuffer()',data:{timestamp:Date.now()},timestamp:Date.now()});
-          // #endregion
           buffer = await filePart.toBuffer();
+          request.log.info({ bufferSize: buffer.length }, '=== BUFFER CONVERSION COMPLETE ===');
           // #region agent log
           safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'apps/api/src/routes/ads.ts:upload',message:'After filePart.toBuffer()',data:{bufferSize:buffer.length},timestamp:Date.now()});
           // #endregion
@@ -312,6 +319,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         request.log.info({ companyId, adType, filename, version }, 'Ad image uploaded successfully');
+        request.log.info('=== SENDING SUCCESS RESPONSE ===');
         // #region agent log
         safeLog({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:upload',message:'Sending success response',data:{companyId,adType,filename,version},timestamp:Date.now()});
         // #endregion
