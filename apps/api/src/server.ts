@@ -44,7 +44,19 @@ fastify.register(fastifyHelmet, {
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Needed for Vite
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Allow Google Fonts
       imgSrc: ["'self'", "data:", "https:", "https://ui-avatars.com"],
-      connectSrc: ["'self'", "https://api.qrserver.com"], // Allow QR code API
+      connectSrc: [
+        "'self'", 
+        "https://api.qrserver.com", // QR code API
+        "https://*.s3.*.amazonaws.com", // AWS S3
+        "https://*.s3.*.amazonaws.com:*", // AWS S3 with ports
+        "https://*.r2.cloudflarestorage.com", // Cloudflare R2
+        "https://*.r2.dev", // Cloudflare R2 public URLs
+        "http://localhost:9000", // MinIO local dev
+        "http://127.0.0.1:9000", // MinIO local dev (alternative)
+        // Note: For dynamic storage URLs, we allow all HTTPS connections
+        // This is necessary because storage URLs can be from any provider/CDN
+        "https:", // Allow all HTTPS connections for storage/CDN
+      ],
       fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"], // Allow Google Fonts
       frameSrc: ["'self'", "https://www.google.com"], // Allow Google Maps iframe
     },

@@ -115,6 +115,22 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
+    // Skip external storage URLs (S3, R2, CDN, etc.) - let browser handle directly
+    // These are cross-origin and shouldn't be cached by service worker to avoid CSP violations
+    const isExternalStorage = url.origin !== self.location.origin && 
+      (url.hostname.includes('s3') || 
+       url.hostname.includes('r2') || 
+       url.hostname.includes('amazonaws.com') ||
+       url.hostname.includes('cloudflarestorage.com') ||
+       url.hostname.includes('r2.dev') ||
+       (url.hostname === 'localhost' && url.port === '9000'));
+    
+    if (isExternalStorage) {
+      // Don't intercept external storage requests - let browser handle them directly
+      // This prevents CSP violations when service worker tries to fetch them
+      return;
+    }
+
     // Handle API requests (network first, fallback to cache)
     if (url.pathname.startsWith('/api/')) {
       event.respondWith(apiNetworkFirstStrategy(request));
@@ -152,6 +168,29 @@ async function staticCacheFirstStrategy(request) {
   const cache = await caches.open(STATIC_CACHE_NAME);
   const cached = await cache.match(request);
 
+  // Check if this is a cross-origin request (external storage, CDN, etc.)
+  const requestUrl = new URL(request.url);
+  const isCrossOrigin = requestUrl.origin !== self.location.origin;
+
+  // For cross-origin requests, don't try to fetch in background (CSP will block)
+  // Just return cached version if available, otherwise fetch directly
+  if (isCrossOrigin) {
+    if (cached) {
+      console.log('[SW] Cache hit (cross-origin):', request.url);
+      return cached;
+    }
+    // For cross-origin, fetch directly without background update
+    try {
+      const response = await fetch(request);
+      // Don't cache cross-origin responses (CSP restrictions)
+      return response;
+    } catch (error) {
+      console.warn('[SW] Cross-origin fetch failed (CSP may block):', request.url, error.message);
+      throw error;
+    }
+  }
+
+  // For same-origin requests, use stale-while-revalidate
   // Always try to fetch fresh version in background
   const fetchPromise = fetch(request).then((response) => {
     // Only cache successful responses from same origin
@@ -165,7 +204,11 @@ async function staticCacheFirstStrategy(request) {
     }
     return response;
   }).catch((error) => {
-    console.error('[SW] Background fetch failed:', error);
+    // Silently handle CSP violations and other fetch errors
+    // Don't log CSP errors as they're expected for external resources
+    if (!error.message.includes('Content Security Policy') && !error.message.includes('CSP')) {
+      console.warn('[SW] Background fetch failed:', error.message);
+    }
     return null;
   });
 
