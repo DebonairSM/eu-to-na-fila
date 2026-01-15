@@ -71,7 +71,6 @@ export function AdManagementPage() {
       return;
     }
 
-    const mediaType = isImage ? 'image' : 'video';
     const allowedImageTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
     const allowedVideoTypes = ['video/mp4'];
     const allowedTypes = [...allowedImageTypes, ...allowedVideoTypes];
@@ -96,7 +95,7 @@ export function AdManagementPage() {
 
       // Upload file directly
       setUploadProgress(50);
-      const result = await api.uploadAd(file, undefined, undefined);
+      await api.uploadAd(file, undefined, undefined);
       
       setUploadProgress(100);
       setSuccess('Anúncio enviado com sucesso!');
