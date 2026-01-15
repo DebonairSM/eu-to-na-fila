@@ -19,20 +19,23 @@ services:
         sync: false
       - key: SHOP_SLUG
         value: mineiro
-      # Storage configuration (S3-compatible)
-      # Set these in Render dashboard with your actual values
-      - key: STORAGE_PROVIDER
-        value: s3
-      - key: STORAGE_REGION
-        value: us-east-1
-      - key: STORAGE_BUCKET
-        sync: false  # Set in dashboard
-      - key: STORAGE_ACCESS_KEY_ID
-        sync: false  # Set in dashboard
-      - key: STORAGE_SECRET_ACCESS_KEY
-        sync: false  # Set in dashboard
-      - key: STORAGE_PUBLIC_BASE_URL
-        sync: false  # Set in dashboard
-      # STORAGE_ENDPOINT is optional (only needed for R2/MinIO)
+      # Storage configuration (OPTIONAL - S3-compatible)
+      # If not set, files are stored locally (but will be lost on redeploy)
+      # For persistent storage, use Cloudflare R2 (free tier available)
+      # Set these in Render dashboard with your actual values if using cloud storage
+      # - key: STORAGE_PROVIDER
+      #   value: r2
+      # - key: STORAGE_ENDPOINT
+      #   sync: false  # Required for R2/MinIO, format: https://<account-id>.r2.cloudflarestorage.com
+      # - key: STORAGE_REGION
+      #   value: auto
+      # - key: STORAGE_BUCKET
+      #   sync: false  # Set in dashboard
+      # - key: STORAGE_ACCESS_KEY_ID
+      #   sync: false  # Set in dashboard
+      # - key: STORAGE_SECRET_ACCESS_KEY
+      #   sync: false  # Set in dashboard
+      # - key: STORAGE_PUBLIC_BASE_URL
+      #   sync: false  # Set in dashboard, format: https://<bucket-name>.<account-id>.r2.dev
 
 

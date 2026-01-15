@@ -34,26 +34,68 @@ If Blueprint doesn't work, create the service manually:
    CORS_ORIGIN=https://your-app.onrender.com
    SHOP_SLUG=mineiro
    
-   # Storage Configuration (S3-compatible) - REQUIRED
-   STORAGE_PROVIDER=s3
-   STORAGE_REGION=us-east-1
-   STORAGE_BUCKET=<your-bucket-name>
-   STORAGE_ACCESS_KEY_ID=<your-access-key-id>
-   STORAGE_SECRET_ACCESS_KEY=<your-secret-access-key>
-   STORAGE_PUBLIC_BASE_URL=https://<your-bucket>.s3.<region>.amazonaws.com
-   
-   # Optional (only for R2/MinIO):
-   STORAGE_ENDPOINT=<your-endpoint-url>
+   # Storage Configuration (OPTIONAL)
+   # If not set, files are stored locally (but will be lost on redeploy on Render)
+   # For persistent storage, use Cloudflare R2 (free tier available)
+   # STORAGE_PROVIDER=r2
+   # STORAGE_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+   # STORAGE_REGION=auto
+   # STORAGE_BUCKET=eutonafila-ads
+   # STORAGE_ACCESS_KEY_ID=<your-r2-access-key-id>
+   # STORAGE_SECRET_ACCESS_KEY=<your-r2-secret-access-key>
+   # STORAGE_PUBLIC_BASE_URL=https://<bucket-name>.<account-id>.r2.dev
    ```
    
-   **Important:** All storage variables are now REQUIRED. If you don't have storage configured yet, you can temporarily use MinIO or a test S3 bucket. The app will fail to start without these variables.
+   **Note:** Storage configuration is optional. If not provided, files are stored locally in `public/companies/`. However, on Render, local files are ephemeral and will be lost on redeploy. For production, consider setting up Cloudflare R2 (see section below).
 
 4. **Create PostgreSQL Database (if not using existing):**
    - In Render dashboard, go to **New > PostgreSQL**
    - Select plan and region
    - Copy the **Internal Database URL** for the `DATABASE_URL` environment variable
 
-5. Click **Create Web Service**
+5. **Setting Up Cloudflare R2 (Recommended):**
+   
+   Cloudflare R2 is free and S3-compatible. Follow these steps:
+   
+   a. **Create R2 Bucket:**
+      - Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
+      - Navigate to **R2** in the left sidebar
+      - Click **Create bucket**
+      - Name it `eutonafila-ads` (or your preferred name)
+      - Click **Create bucket**
+   
+   b. **Find Your Account ID:**
+      - In the Cloudflare dashboard, look at the URL: `https://dash.cloudflare.com/<account-id>/r2`
+      - The `<account-id>` is the long alphanumeric string in the URL
+      - Or go to R2 > Settings to find your Account ID
+   
+   c. **Create API Token:**
+      - In R2 dashboard, go to **Manage R2 API Tokens**
+      - Click **Create API token**
+      - Name it (e.g., "eutonafila-production")
+      - Set permissions: **Object Read & Write**
+      - Click **Create API token**
+      - **Save the Access Key ID and Secret Access Key** (you won't see the secret again)
+   
+   d. **Enable Public Access (Optional):**
+      - Go to your bucket settings
+      - Under **Public Access**, enable public access
+      - Note the public URL format: `https://<bucket-name>.<account-id>.r2.dev`
+   
+   e. **Set Environment Variables in Render:**
+      - In Render dashboard, go to your service > **Environment**
+      - Set the following variables:
+        - `STORAGE_PROVIDER=r2`
+        - `STORAGE_ENDPOINT=https://<your-account-id>.r2.cloudflarestorage.com`
+        - `STORAGE_REGION=auto`
+        - `STORAGE_BUCKET=eutonafila-ads`
+        - `STORAGE_ACCESS_KEY_ID=<your-access-key-id>`
+        - `STORAGE_SECRET_ACCESS_KEY=<your-secret-access-key>`
+        - `STORAGE_PUBLIC_BASE_URL=https://eutonafila-ads.<your-account-id>.r2.dev`
+   
+   For more details, see [Storage Setup Guide](../docs/STORAGE_SETUP.md).
+
+6. Click **Create Web Service**
 
 ## Post-Deployment
 

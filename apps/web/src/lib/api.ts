@@ -772,35 +772,19 @@ class ApiClient {
   // ==================== Ad Management Endpoints ====================
 
   /**
-   * Request presigned URL for uploading an ad.
+   * Upload an ad file directly.
    * 
-   * @param data - Upload request data
-   * @returns Presigned upload URL and ad ID
-   * @throws {ApiError} If request fails
+   * @param file - The image or video file to upload
+   * @param shopId - Optional shop ID (for shop-specific ads)
+   * @param position - Optional position in the ad list
+   * @returns Upload result with ad details
+   * @throws {ApiError} If upload fails
    */
-  async requestAdUpload(data: {
-    shopId?: number | null;
-    mediaType: 'image' | 'video';
-    mimeType: string;
-    bytes: number;
-    position?: number;
-  }): Promise<{
-    adId: number;
-    uploadUrl: string;
-    requiredHeaders: Record<string, string>;
-    storageKey: string;
-  }> {
-    return this.post('/ads/uploads', data);
-  }
-
-  /**
-   * Complete an ad upload by verifying the file.
-   * 
-   * @param adId - Ad ID from presign response
-   * @returns Upload completion result
-   * @throws {ApiError} If verification fails
-   */
-  async completeAdUpload(adId: number): Promise<{
+  async uploadAd(
+    file: File,
+    shopId?: number | null,
+    position?: number
+  ): Promise<{
     message: string;
     ad: {
       id: number;
@@ -812,7 +796,37 @@ class ApiClient {
       version: number;
     };
   }> {
-    return this.post('/ads/uploads/complete', { adId });
+    const formData = new FormData();
+    formData.append('file', file);
+    if (shopId !== undefined && shopId !== null) {
+      formData.append('shopId', shopId.toString());
+    }
+    if (position !== undefined) {
+      formData.append('position', position.toString());
+    }
+
+    const headers: Record<string, string> = {};
+    if (this.authToken) {
+      headers['Authorization'] = `Bearer ${this.authToken}`;
+    }
+
+    const response = await fetch(`${this.baseUrl}/ads/uploads`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiError(
+        errorData.error || `Upload failed: ${response.statusText}`,
+        response.status,
+        errorData.code || 'UPLOAD_ERROR',
+        errorData.errors
+      );
+    }
+
+    return response.json();
   }
 
   /**

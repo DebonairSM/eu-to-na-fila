@@ -5,12 +5,14 @@ import { eq, and, or, isNull, asc } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
-import { storage } from '../lib/storage.js';
-import { env } from '../env.js';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { mkdir, writeFile, unlink } from 'fs/promises';
+import { existsSync } from 'fs';
 
 /**
  * Ad management routes.
- * Handles ad uploads via presigned URLs and manifest serving for kiosk display.
+ * Handles direct file uploads and manifest serving for kiosk display.
  */
 export const adsRoutes: FastifyPluginAsync = async (fastify) => {
   // Allowed MIME types for ads
@@ -18,6 +20,11 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
   const ALLOWED_VIDEO_TYPES = ['video/mp4'];
   const ALLOWED_MIME_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES];
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB max
+
+  // Get public directory path
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const publicPath = join(__dirname, '..', 'public');
 
   /**
    * Request presigned URL for uploading an ad.
@@ -48,25 +55,50 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           });
         }
 
-      const bodySchema = z.object({
-        shopId: z.number().int().positive().nullable().optional(),
-        mediaType: z.enum(['image', 'video']),
-        mimeType: z.string().refine(
-          (val) => ALLOWED_MIME_TYPES.includes(val),
-          { message: `Invalid MIME type. Allowed: ${ALLOWED_MIME_TYPES.join(', ')}` }
-        ),
-        bytes: z.number().int().positive().max(MAX_FILE_SIZE),
-        position: z.number().int().nonnegative().optional(),
-      });
-
-      const body = validateRequest(bodySchema, request.body);
       const companyId = request.user.companyId;
+      const data = await request.file();
+
+      if (!data) {
+        throw new ValidationError('No file provided', [
+          { field: 'file', message: 'File is required' },
+        ]);
+      }
+
+      // Validate file type
+      if (!ALLOWED_MIME_TYPES.includes(data.mimetype)) {
+        throw new ValidationError(`Invalid file type. Allowed: ${ALLOWED_MIME_TYPES.join(', ')}`, [
+          { field: 'file', message: 'Invalid MIME type' },
+        ]);
+      }
+
+      // Validate file size
+      if (data.file.bytesRead > MAX_FILE_SIZE) {
+        throw new ValidationError(`File too large. Maximum size: ${MAX_FILE_SIZE / 1024 / 1024}MB`, [
+          { field: 'file', message: 'File size exceeds limit' },
+        ]);
+      }
+
+      // Determine media type and extension
+      const isImage = ALLOWED_IMAGE_TYPES.includes(data.mimetype);
+      const mediaType = isImage ? 'image' : 'video';
+      const mimeToExt: Record<string, string> = {
+        'image/png': '.png',
+        'image/jpeg': '.jpg',
+        'image/jpg': '.jpg',
+        'image/webp': '.webp',
+        'video/mp4': '.mp4',
+      };
+      const extension = mimeToExt[data.mimetype] || '.bin';
+
+      // Parse optional fields from form data
+      const shopId = data.fields.shopId?.value ? parseInt(data.fields.shopId.value as string, 10) : null;
+      const position = data.fields.position?.value ? parseInt(data.fields.position.value as string, 10) : undefined;
 
       // Validate shop belongs to company if shopId provided
-      if (body.shopId) {
+      if (shopId) {
         const shop = await db.query.shops.findFirst({
           where: and(
-            eq(schema.shops.id, body.shopId),
+            eq(schema.shops.id, shopId),
             eq(schema.shops.companyId, companyId)
           ),
         });
@@ -78,222 +110,54 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
 
-      // Determine file extension from MIME type
-      const mimeToExt: Record<string, string> = {
-        'image/png': '.png',
-        'image/jpeg': '.jpg',
-        'image/jpg': '.jpg',
-        'image/webp': '.webp',
-        'video/mp4': '.mp4',
-      };
-      const extension = mimeToExt[body.mimeType] || '.bin';
-
       // Get next position if not provided
-      let position = body.position;
-      if (position === undefined) {
+      let finalPosition = position;
+      if (finalPosition === undefined) {
         const existingAds = await db.query.companyAds.findMany({
           where: and(
             eq(schema.companyAds.companyId, companyId),
-            body.shopId ? eq(schema.companyAds.shopId, body.shopId) : isNull(schema.companyAds.shopId)
+            shopId ? eq(schema.companyAds.shopId, shopId) : isNull(schema.companyAds.shopId)
           ),
           orderBy: (ads, { desc }) => [desc(ads.position)],
           limit: 1,
         });
-        position = existingAds.length > 0 ? existingAds[0].position + 1 : 0;
+        finalPosition = existingAds.length > 0 ? existingAds[0].position + 1 : 0;
       }
 
-      // Create ad record (disabled by default until upload is verified)
+      // Create ad record first to get the ID
       const [ad] = await db.insert(schema.companyAds).values({
         companyId,
-        shopId: body.shopId || null,
-        position,
+        shopId: shopId || null,
+        position: finalPosition,
         enabled: false,
-        mediaType: body.mediaType,
-        mimeType: body.mimeType,
-        bytes: body.bytes,
-        storageKey: '', // Will be set after upload
-        publicUrl: '', // Will be set after upload
+        mediaType,
+        mimeType: data.mimetype,
+        bytes: data.file.bytesRead,
+        storageKey: '', // Not used for local storage
+        publicUrl: '', // Will be set after file save
         version: 1,
       }).returning();
 
-      // Generate storage key
-      const storageKey = storage.generateAdKey(companyId, body.shopId ?? null, ad.id, extension);
-
-      // Generate presigned URL
-      const { uploadUrl, requiredHeaders } = await storage.generatePresignedPutUrl(
-        storageKey,
-        body.mimeType,
-        900 // 15 minutes
-      );
-      
-      // #region agent log
-      const { appendFileSync, mkdirSync, existsSync } = await import('fs');
-      const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
-      const logDir = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor';
-      try {
-        if (!existsSync(logDir)) mkdirSync(logDir, { recursive: true });
-        appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H4',location:'apps/api/src/routes/ads.ts:presign',message:'Presigned URL generated',data:{adId:ad.id,storageKey,uploadUrl:uploadUrl.substring(0,100)+'...',mimeType:body.mimeType},timestamp:Date.now()}) + '\n');
-      } catch {}
-      // #endregion
-      request.log.info({ adId: ad.id, storageKey, uploadUrl: uploadUrl.substring(0, 100) }, 'Presigned URL generated');
-
-      // Update ad with storage key and public URL
-      await db.update(schema.companyAds)
-        .set({
-          storageKey,
-          publicUrl: storage.getPublicUrl(storageKey),
-        })
-        .where(eq(schema.companyAds.id, ad.id));
-
-      return {
-        adId: ad.id,
-        uploadUrl,
-        requiredHeaders,
-        storageKey,
-      };
-    }
-  );
-
-  /**
-   * Complete an ad upload by verifying the file in storage.
-   * Requires company admin authentication.
-   * 
-   * @route POST /api/ads/uploads/complete
-   * @body adId - Ad ID from presign response
-   * @returns Success message with ad details
-   * @throws {400} If validation fails or file verification fails
-   * @throws {401} If not authenticated
-   * @throws {403} If not company admin or ad doesn't belong to company
-   * @throws {404} If ad not found
-   */
-  fastify.post(
-    '/ads/uploads/complete',
-    {
-      preHandler: [requireAuth(), requireCompanyAdmin()],
-    },
-    async (request, reply) => {
-      if (!request.user || !request.user.companyId) {
-        return reply.status(403).send({
-          error: 'Company admin access required',
-          statusCode: 403,
-          code: 'FORBIDDEN',
-        });
-      }
-
-      const bodySchema = z.object({
-        adId: z.number().int().positive(),
-      });
-
-      const { adId } = validateRequest(bodySchema, request.body);
-      const companyId = request.user.companyId;
-
-      // Get ad and verify ownership
-      const ad = await db.query.companyAds.findFirst({
-        where: and(
-          eq(schema.companyAds.id, adId),
-          eq(schema.companyAds.companyId, companyId)
-        ),
-      });
-
-      if (!ad) {
-        throw new NotFoundError('Ad not found or access denied');
-      }
-
-      if (!ad.storageKey) {
-        throw new ValidationError('Ad storage key not set', [
-          { field: 'adId', message: 'Upload not initialized properly' },
-        ]);
-      }
-
-      // Verify file exists in storage
-      let fileMetadata;
-      try {
-        // #region agent log
-        const { appendFileSync, mkdirSync, existsSync } = await import('fs');
-        const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
-        const logDir = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor';
-        try {
-          if (!existsSync(logDir)) mkdirSync(logDir, { recursive: true });
-          appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:complete',message:'Before verifyFileExists',data:{adId,storageKey:ad.storageKey,bucket:env.STORAGE_BUCKET,endpoint:env.STORAGE_ENDPOINT,provider:env.STORAGE_PROVIDER},timestamp:Date.now()}) + '\n');
-        } catch {}
-        // #endregion
-        request.log.info({ adId, storageKey: ad.storageKey, bucket: env.STORAGE_BUCKET }, 'Verifying file exists in storage');
-        
-        fileMetadata = await storage.verifyFileExists(ad.storageKey);
-        
-        // #region agent log
-        try {
-          appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:complete',message:'After verifyFileExists success',data:{bytes:fileMetadata.bytes,contentType:fileMetadata.contentType,etag:fileMetadata.etag},timestamp:Date.now()}) + '\n');
-        } catch {}
-        // #endregion
-        request.log.info({ adId, fileMetadata }, 'File verified successfully');
-      } catch (error) {
-        // #region agent log
-        const { appendFileSync, mkdirSync, existsSync } = await import('fs');
-        const logPath = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor/debug.log';
-        const logDir = '/Users/ronbandeira/Documents/Repos/eu-to-na-fila/.cursor';
-        try {
-          if (!existsSync(logDir)) mkdirSync(logDir, { recursive: true });
-          const errorDetails = error instanceof Error ? {
-            message: error.message,
-            name: error.name,
-            code: (error as any).code,
-            statusCode: (error as any).$metadata?.httpStatusCode,
-            requestId: (error as any).$metadata?.requestId,
-          } : { error: String(error) };
-          appendFileSync(logPath, JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'apps/api/src/routes/ads.ts:complete',message:'verifyFileExists error',data:{...errorDetails,storageKey:ad.storageKey,bucket:env.STORAGE_BUCKET},timestamp:Date.now()}) + '\n');
-        } catch {}
-        // #endregion
-        request.log.error({ err: error, adId, storageKey: ad.storageKey, bucket: env.STORAGE_BUCKET }, 'File verification failed');
-        
-        // Provide more detailed error message
-        const errorMessage = error instanceof Error 
-          ? `File verification failed: ${error.message}${(error as any).code ? ` (${(error as any).code})` : ''}`
-          : 'File verification failed';
-        
-        throw new ValidationError(errorMessage, [
-          { field: 'adId', message: 'File verification failed. Check if file was uploaded to storage.' },
-        ]);
-      }
-
-      // Verify file size matches
-      if (fileMetadata.bytes !== ad.bytes) {
-        throw new ValidationError('File size mismatch', [
-          { field: 'bytes', message: `Expected ${ad.bytes} bytes, got ${fileMetadata.bytes}` },
-        ]);
-      }
-
-      // Verify content type matches
-      if (fileMetadata.contentType !== ad.mimeType) {
-        throw new ValidationError('Content type mismatch', [
-          { field: 'mimeType', message: `Expected ${ad.mimeType}, got ${fileMetadata.contentType}` },
-        ]);
-      }
-
-      // Verify file type via magic bytes
-      try {
-        const fileHeader = await storage.getFileHeader(ad.storageKey);
-        const isValidType = storage.validateFileType(fileHeader, ad.mimeType);
-        
-        if (!isValidType) {
-          throw new ValidationError('File type verification failed. File content does not match declared MIME type.', [
-            { field: 'mimeType', message: 'File magic bytes do not match declared type' },
-          ]);
+      // Create directory structure: public/companies/<company-id>/ads/
+      const companyAdsDir = join(publicPath, 'companies', companyId.toString(), 'ads');
+        if (!existsSync(companyAdsDir)) {
+          await mkdir(companyAdsDir, { recursive: true });
         }
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          throw error;
-        }
-        // If magic byte check fails for other reasons, log but don't fail (some storage providers may not support Range requests)
-        request.log.warn({ err: error, adId }, 'Magic byte verification failed, but continuing');
-      }
 
-      // Update ad: enable it, store ETag, increment version
+      // Save file
+      const filename = `${ad.id}${extension}`;
+      const filePath = join(companyAdsDir, filename);
+      const buffer = await data.toBuffer();
+      await writeFile(filePath, buffer);
+
+      // Set public URL (relative path for static serving)
+      const publicUrl = `/companies/${companyId}/ads/${filename}`;
+
+      // Update ad record with public URL and enable it
       const [updatedAd] = await db.update(schema.companyAds)
         .set({
+          publicUrl,
           enabled: true,
-          etag: fileMetadata.etag,
-          version: ad.version + 1,
           updatedAt: new Date(),
         })
         .where(eq(schema.companyAds.id, ad.id))
@@ -305,7 +169,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           eq(schema.companyAds.companyId, companyId),
           eq(schema.companyAds.enabled, true),
           or(
-            eq(schema.companyAds.shopId, ad.shopId || -1),
+            eq(schema.companyAds.shopId, shopId || -1),
             isNull(schema.companyAds.shopId)
           )
         ),
@@ -316,14 +180,14 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       const wsManager = (fastify as any).wsManager;
       if (wsManager) {
         try {
-          wsManager.broadcastAdsUpdated(companyId, ad.shopId, manifestVersion);
+          wsManager.broadcastAdsUpdated(companyId, shopId, manifestVersion);
         } catch (wsError) {
           request.log.warn({ err: wsError }, 'Error broadcasting ads update');
         }
       }
 
       return {
-        message: 'Ad upload completed and verified',
+        message: 'Ad uploaded successfully',
         ad: {
           id: updatedAd.id,
           position: updatedAd.position,
@@ -336,6 +200,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       };
     }
   );
+
 
   /**
    * Get public manifest of enabled ads for a shop.
@@ -594,7 +459,26 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         throw new NotFoundError('Ad not found or access denied');
       }
 
-      // Delete ad
+      // Delete file from filesystem if it exists
+      if (ad.publicUrl) {
+        try {
+          // Extract filename from publicUrl (format: /companies/<company-id>/ads/<filename>)
+          const urlParts = ad.publicUrl.split('/');
+          const filename = urlParts[urlParts.length - 1];
+          const companyId = ad.companyId.toString();
+          const filePath = join(publicPath, 'companies', companyId, 'ads', filename);
+          
+          if (existsSync(filePath)) {
+            await unlink(filePath);
+            request.log.info({ adId: id, filePath }, 'Deleted ad file from filesystem');
+          }
+        } catch (fileError) {
+          // Log error but don't fail the deletion - file might not exist
+          request.log.warn({ err: fileError, adId: id }, 'Error deleting ad file from filesystem');
+        }
+      }
+
+      // Delete ad from database
       await db.delete(schema.companyAds)
         .where(eq(schema.companyAds.id, id));
 

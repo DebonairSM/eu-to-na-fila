@@ -18,14 +18,15 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32).default('change_me_in_production_use_a_long_random_string_at_least_32_chars'),
   CORS_ORIGIN: z.string().default('http://localhost:4040'),
   SHOP_SLUG: z.string().default('mineiro'),
-  // Storage configuration (S3-compatible)
-  STORAGE_PROVIDER: z.enum(['s3', 'r2', 'minio']).default('s3'),
+  // Storage configuration (S3-compatible) - Optional, only needed if using cloud storage
+  // If not provided, files will be stored locally in public/companies/ directory
+  STORAGE_PROVIDER: z.enum(['s3', 'r2', 'minio']).optional(),
   STORAGE_ENDPOINT: z.string().optional(), // Required for R2/MinIO, optional for S3
-  STORAGE_REGION: z.string().default('us-east-1'),
-  STORAGE_BUCKET: z.string(),
-  STORAGE_ACCESS_KEY_ID: z.string(),
-  STORAGE_SECRET_ACCESS_KEY: z.string(),
-  STORAGE_PUBLIC_BASE_URL: z.string(), // Public base URL for accessing files (CDN or storage public URL)
+  STORAGE_REGION: z.string().optional(),
+  STORAGE_BUCKET: z.string().optional(),
+  STORAGE_ACCESS_KEY_ID: z.string().optional(),
+  STORAGE_SECRET_ACCESS_KEY: z.string().optional(),
+  STORAGE_PUBLIC_BASE_URL: z.string().optional(), // Public base URL for accessing files (CDN or storage public URL)
 });
 
 let env: z.infer<typeof envSchema>;

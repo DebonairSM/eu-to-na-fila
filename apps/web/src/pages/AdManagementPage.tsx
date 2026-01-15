@@ -94,33 +94,12 @@ export function AdManagementPage() {
       setError(null);
       setSuccess(null);
 
-      // Step 1: Request presigned URL
-      const presignResponse = await api.requestAdUpload({
-        mediaType,
-        mimeType: file.type,
-        bytes: file.size,
-      });
-
-      // Step 2: Upload file to storage using presigned URL
-      setUploadProgress(25);
-      
-      const uploadResponse = await fetch(presignResponse.uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: presignResponse.requiredHeaders,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error(`Upload failed: ${uploadResponse.statusText}`);
-      }
-
-      setUploadProgress(75);
-
-      // Step 3: Complete upload (verify file)
-      await api.completeAdUpload(presignResponse.adId);
+      // Upload file directly
+      setUploadProgress(50);
+      const result = await api.uploadAd(file, undefined, undefined);
       
       setUploadProgress(100);
-      setSuccess('Anúncio enviado e verificado com sucesso!');
+      setSuccess('Anúncio enviado com sucesso!');
       
       // Reload ads
       await loadAds();
@@ -296,7 +275,7 @@ export function AdManagementPage() {
                             className="w-32 h-32 object-contain bg-black rounded-lg border border-white/10"
                             controls={false}
                             muted
-                          />
+                  />
                 )}
               </div>
                       <div className="flex-1 min-w-0">

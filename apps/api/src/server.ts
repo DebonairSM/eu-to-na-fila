@@ -4,9 +4,10 @@ import fastifyHelmet from '@fastify/helmet';
 import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyWebSocketModule from '@fastify/websocket';
+import fastifyMultipart from '@fastify/multipart';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { existsSync, readFileSync, readdirSync } from 'fs';
+import { existsSync, readFileSync, readdirSync, mkdirSync } from 'fs';
 import { env } from './env.js';
 import { db } from './db/index.js';
 import { queueRoutes } from './routes/queue.js';
@@ -30,7 +31,7 @@ const fastify = Fastify({
   logger: {
     level: env.NODE_ENV === 'development' ? 'info' : 'warn',
   },
-  bodyLimit: 10 * 1024 * 1024, // 10MB request body size limit (matches multipart file size limit)
+  bodyLimit: 50 * 1024 * 1024, // 50MB request body size limit (for large video uploads)
   disableRequestLogging: false,
   requestIdLogLabel: 'reqId',
   requestIdHeader: 'x-request-id',
@@ -43,19 +44,11 @@ fastify.register(fastifyHelmet, {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Needed for Vite
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Allow Google Fonts
-      imgSrc: ["'self'", "data:", "https:", "https://ui-avatars.com"],
+      imgSrc: ["'self'", "data:", "https://ui-avatars.com"],
+      mediaSrc: ["'self'", "data:"], // Allow local video files
       connectSrc: [
         "'self'", 
         "https://api.qrserver.com", // QR code API
-        "https://*.s3.*.amazonaws.com", // AWS S3
-        "https://*.s3.*.amazonaws.com:*", // AWS S3 with ports
-        "https://*.r2.cloudflarestorage.com", // Cloudflare R2
-        "https://*.r2.dev", // Cloudflare R2 public URLs
-        "http://localhost:9000", // MinIO local dev
-        "http://127.0.0.1:9000", // MinIO local dev (alternative)
-        // Note: For dynamic storage URLs, we allow all HTTPS connections
-        // This is necessary because storage URLs can be from any provider/CDN
-        "https:", // Allow all HTTPS connections for storage/CDN
       ],
       fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"], // Allow Google Fonts
       frameSrc: ["'self'", "https://www.google.com"], // Allow Google Maps iframe
@@ -117,6 +110,14 @@ const fastifyWebSocket = (
 await fastify.register(async (instance) => {
   await instance.register(fastifyWebSocket);
   await registerWebSocket(instance);
+});
+
+// Register multipart support for file uploads
+fastify.register(fastifyMultipart, {
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB max file size
+  },
+  attachFieldsToBody: true,
 });
 
 // Global rate limiting for public endpoints
@@ -187,6 +188,32 @@ fastify.register(fastifyStatic, {
     // Don't cache HTML, SW, or manifest - always revalidate
     else if (/\.(html|js|json)$/i.test(path) && !path.includes('/assets/')) {
       res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    }
+  },
+});
+
+// Register static file serving for company ad files
+// Create companies directory if it doesn't exist
+const companiesPath = join(publicPath, 'companies');
+if (!existsSync(companiesPath)) {
+  try {
+    mkdirSync(companiesPath, { recursive: true });
+    fastify.log.info(`Created companies directory: ${companiesPath}`);
+  } catch (error) {
+    fastify.log.warn({ err: error }, 'Could not create companies directory');
+  }
+}
+
+// Register static file serving for /companies/ paths
+fastify.register(fastifyStatic, {
+  root: publicPath,
+  prefix: '/companies/',
+  decorateReply: false,
+  wildcard: true,
+  setHeaders: (res, path) => {
+    // Cache ad images/videos for 1 week
+    if (/\.(png|jpg|jpeg|gif|svg|webp|mp4)$/i.test(path)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800');
     }
   },
 });
