@@ -91,8 +91,20 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       const extension = mimeToExt[data.mimetype] || '.bin';
 
       // Parse optional fields from form data
-      const shopId = data.fields.shopId?.value ? parseInt(data.fields.shopId.value as string, 10) : null;
-      const position = data.fields.position?.value ? parseInt(data.fields.position.value as string, 10) : undefined;
+      // Handle both single Multipart and Multipart[] types
+      const getFieldValue = (field: any): string | undefined => {
+        if (!field) return undefined;
+        if (Array.isArray(field)) {
+          return field[0]?.value as string | undefined;
+        }
+        return field.value as string | undefined;
+      };
+
+      const shopIdValue = getFieldValue(data.fields.shopId);
+      const positionValue = getFieldValue(data.fields.position);
+      
+      const shopId = shopIdValue ? parseInt(shopIdValue, 10) : null;
+      const position = positionValue ? parseInt(positionValue, 10) : undefined;
 
       // Validate shop belongs to company if shopId provided
       if (shopId) {
@@ -148,7 +160,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       const filename = `${ad.id}${extension}`;
       const filePath = join(companyAdsDir, filename);
       const buffer = await data.toBuffer();
-      await writeFile(filePath, buffer);
+          await writeFile(filePath, buffer);
 
       // Set public URL (relative path for static serving)
       const publicUrl = `/companies/${companyId}/ads/${filename}`;
@@ -177,11 +189,11 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       const manifestVersion = allAds.reduce((sum, a) => sum + a.version, 0);
 
       // Broadcast WebSocket update
-      const wsManager = (fastify as any).wsManager;
-      if (wsManager) {
-        try {
+        const wsManager = (fastify as any).wsManager;
+        if (wsManager) {
+          try {
           wsManager.broadcastAdsUpdated(companyId, shopId, manifestVersion);
-        } catch (wsError) {
+          } catch (wsError) {
           request.log.warn({ err: wsError }, 'Error broadcasting ads update');
         }
       }
