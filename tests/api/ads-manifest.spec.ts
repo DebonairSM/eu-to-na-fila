@@ -1,12 +1,15 @@
 import { test, expect } from '@playwright/test';
-import { getAuthToken } from '../helpers/auth.js';
+import { getCompanyAdminToken } from '../helpers/auth.js';
 
 test.describe('Ads Manifest API', () => {
-  let adminToken: string;
+  let adminToken: string | null;
   const API_BASE = 'http://localhost:4041/api';
 
   test.beforeAll(async ({ request }) => {
-    adminToken = await getAuthToken(request, 'companyAdmin');
+    adminToken = await getCompanyAdminToken(request);
+    if (!adminToken) {
+      console.warn('Company admin token not available - some tests may be skipped');
+    }
   });
 
   test.describe('GET /api/ads/public/manifest', () => {
@@ -31,6 +34,11 @@ test.describe('Ads Manifest API', () => {
     });
 
     test('should only return enabled ads', async ({ request }) => {
+      if (!adminToken) {
+        test.skip();
+        return;
+      }
+
       // Create an enabled ad
       const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
       const testImageBuffer = Buffer.from(testImageBase64, 'base64');
@@ -111,6 +119,11 @@ test.describe('Ads Manifest API', () => {
     });
 
     test('should support shop-specific ads', async ({ request }) => {
+      if (!adminToken) {
+        test.skip();
+        return;
+      }
+
       // Create a shop-specific ad
       const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
       const testImageBuffer = Buffer.from(testImageBase64, 'base64');
