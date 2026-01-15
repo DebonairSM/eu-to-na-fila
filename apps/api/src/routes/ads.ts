@@ -57,8 +57,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const companyId = request.user.companyId;
       
-      // Use request.parts() to iterate through all multipart parts
-      // This works even with attachFieldsToBody: true
+      // Use request.parts() to get both file and form fields
       let fileData: any = null;
       let shopId: number | null = null;
       let position: number | undefined = undefined;
@@ -66,10 +65,8 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         try {
           const parts = request.parts();
           for await (const part of parts) {
-            if (part.type === 'file') {
-            if (part.fieldname === 'file') {
-              fileData = part;
-            }
+          if (part.type === 'file' && part.fieldname === 'file') {
+            fileData = part;
           } else if (part.type === 'field') {
             if (part.fieldname === 'shopId' && part.value) {
               const parsed = parseInt(String(part.value), 10);
@@ -93,7 +90,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         ]);
       }
 
-      // Validate file type
+        // Validate file type
       if (!ALLOWED_MIME_TYPES.includes(fileData.mimetype)) {
         throw new ValidationError(`Invalid file type. Allowed: ${ALLOWED_MIME_TYPES.join(', ')}`, [
           { field: 'file', message: 'Invalid MIME type' },

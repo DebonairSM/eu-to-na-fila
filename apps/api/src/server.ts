@@ -117,7 +117,7 @@ fastify.register(fastifyMultipart, {
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB max file size
   },
-  attachFieldsToBody: true,
+  attachFieldsToBody: false, // Disabled to allow proper file handling in routes
 });
 
 // Global rate limiting for public endpoints
