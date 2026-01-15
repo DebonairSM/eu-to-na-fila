@@ -56,30 +56,47 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
       const companyId = request.user.companyId;
-      const data = await request.file();
+      
+      // Use request.parts() to handle both file and form fields
+      let fileData: any = null;
+      let shopId: number | null = null;
+      let position: number | undefined = undefined;
 
-      if (!data) {
+          const parts = request.parts();
+          for await (const part of parts) {
+        if (part.type === 'file' && part.fieldname === 'file') {
+          fileData = part;
+        } else if (part.type === 'field') {
+          if (part.fieldname === 'shopId' && part.value) {
+            shopId = parseInt(part.value as string, 10) || null;
+          } else if (part.fieldname === 'position' && part.value) {
+            position = parseInt(part.value as string, 10);
+          }
+        }
+      }
+
+      if (!fileData) {
         throw new ValidationError('No file provided', [
           { field: 'file', message: 'File is required' },
         ]);
       }
 
       // Validate file type
-      if (!ALLOWED_MIME_TYPES.includes(data.mimetype)) {
+      if (!ALLOWED_MIME_TYPES.includes(fileData.mimetype)) {
         throw new ValidationError(`Invalid file type. Allowed: ${ALLOWED_MIME_TYPES.join(', ')}`, [
           { field: 'file', message: 'Invalid MIME type' },
         ]);
       }
 
       // Validate file size
-      if (data.file.bytesRead > MAX_FILE_SIZE) {
+      if (fileData.file.bytesRead > MAX_FILE_SIZE) {
         throw new ValidationError(`File too large. Maximum size: ${MAX_FILE_SIZE / 1024 / 1024}MB`, [
           { field: 'file', message: 'File size exceeds limit' },
         ]);
       }
 
       // Determine media type and extension
-      const isImage = ALLOWED_IMAGE_TYPES.includes(data.mimetype);
+      const isImage = ALLOWED_IMAGE_TYPES.includes(fileData.mimetype);
       const mediaType = isImage ? 'image' : 'video';
       const mimeToExt: Record<string, string> = {
         'image/png': '.png',
@@ -88,23 +105,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         'image/webp': '.webp',
         'video/mp4': '.mp4',
       };
-      const extension = mimeToExt[data.mimetype] || '.bin';
-
-      // Parse optional fields from form data
-      // Handle both single Multipart and Multipart[] types
-      const getFieldValue = (field: any): string | undefined => {
-        if (!field) return undefined;
-        if (Array.isArray(field)) {
-          return field[0]?.value as string | undefined;
-        }
-        return field.value as string | undefined;
-      };
-
-      const shopIdValue = getFieldValue(data.fields.shopId);
-      const positionValue = getFieldValue(data.fields.position);
-      
-      const shopId = shopIdValue ? parseInt(shopIdValue, 10) : null;
-      const position = positionValue ? parseInt(positionValue, 10) : undefined;
+      const extension = mimeToExt[fileData.mimetype] || '.bin';
 
       // Validate shop belongs to company if shopId provided
       if (shopId) {
@@ -143,8 +144,8 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         position: finalPosition,
         enabled: false,
         mediaType,
-        mimeType: data.mimetype,
-        bytes: data.file.bytesRead,
+        mimeType: fileData.mimetype,
+        bytes: fileData.file.bytesRead,
         storageKey: '', // Not used for local storage
         publicUrl: '', // Will be set after file save
         version: 1,
@@ -159,7 +160,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       // Save file
       const filename = `${ad.id}${extension}`;
       const filePath = join(companyAdsDir, filename);
-      const buffer = await data.toBuffer();
+      const buffer = await fileData.toBuffer();
           await writeFile(filePath, buffer);
 
       // Set public URL (relative path for static serving)

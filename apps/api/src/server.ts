@@ -44,8 +44,8 @@ fastify.register(fastifyHelmet, {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Needed for Vite
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Allow Google Fonts
-      imgSrc: ["'self'", "data:", "https://ui-avatars.com"],
-      mediaSrc: ["'self'", "data:"], // Allow local video files
+      imgSrc: ["'self'", "data:", "https://ui-avatars.com"], // 'self' allows same-origin images from /companies/ paths
+      mediaSrc: ["'self'", "data:"], // Allow local video files from same origin
       connectSrc: [
         "'self'", 
         "https://api.qrserver.com", // QR code API
