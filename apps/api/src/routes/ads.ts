@@ -57,29 +57,19 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const companyId = request.user.companyId;
       
-      // Use request.parts() to handle both file and form fields
-      let fileData: any = null;
-      let shopId: number | null = null;
-      let position: number | undefined = undefined;
-
-          const parts = request.parts();
-          for await (const part of parts) {
-        if (part.type === 'file' && part.fieldname === 'file') {
-          fileData = part;
-        } else if (part.type === 'field') {
-          if (part.fieldname === 'shopId' && part.value) {
-            shopId = parseInt(part.value as string, 10) || null;
-          } else if (part.fieldname === 'position' && part.value) {
-            position = parseInt(part.value as string, 10);
-          }
-        }
-      }
+      // Get file from multipart (attachFieldsToBody doesn't affect file handling)
+      const fileData = await request.file();
 
       if (!fileData) {
         throw new ValidationError('No file provided', [
           { field: 'file', message: 'File is required' },
         ]);
       }
+
+      // Get form fields from request.body (since attachFieldsToBody: true)
+      const body = request.body as any;
+      const shopId = body.shopId ? parseInt(String(body.shopId), 10) || null : null;
+      const position = body.position ? parseInt(String(body.position), 10) : undefined;
 
       // Validate file type
       if (!ALLOWED_MIME_TYPES.includes(fileData.mimetype)) {
