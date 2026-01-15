@@ -57,19 +57,41 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const companyId = request.user.companyId;
       
-      // Get file from multipart (attachFieldsToBody doesn't affect file handling)
-      const fileData = await request.file();
+      // Use request.parts() to iterate through all multipart parts
+      // This works even with attachFieldsToBody: true
+      let fileData: any = null;
+      let shopId: number | null = null;
+      let position: number | undefined = undefined;
+        
+        try {
+          const parts = request.parts();
+          for await (const part of parts) {
+            if (part.type === 'file') {
+            if (part.fieldname === 'file') {
+              fileData = part;
+            }
+          } else if (part.type === 'field') {
+            if (part.fieldname === 'shopId' && part.value) {
+              const parsed = parseInt(String(part.value), 10);
+              shopId = isNaN(parsed) ? null : parsed;
+            } else if (part.fieldname === 'position' && part.value) {
+              const parsed = parseInt(String(part.value), 10);
+              position = isNaN(parsed) ? undefined : parsed;
+            }
+          }
+        }
+      } catch (error) {
+        request.log.error({ err: error }, 'Error parsing multipart data');
+        throw new ValidationError('Failed to parse upload data', [
+          { field: 'file', message: 'Invalid multipart form data' },
+        ]);
+      }
 
       if (!fileData) {
         throw new ValidationError('No file provided', [
           { field: 'file', message: 'File is required' },
         ]);
       }
-
-      // Get form fields from request.body (since attachFieldsToBody: true)
-      const body = request.body as any;
-      const shopId = body.shopId ? parseInt(String(body.shopId), 10) || null : null;
-      const position = body.position ? parseInt(String(body.position), 10) : undefined;
 
       // Validate file type
       if (!ALLOWED_MIME_TYPES.includes(fileData.mimetype)) {
