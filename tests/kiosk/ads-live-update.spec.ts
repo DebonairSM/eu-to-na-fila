@@ -23,20 +23,9 @@ test.describe('Kiosk Mode Ad Live Updates', () => {
     const initialSrc = await initialAd1Image.getAttribute('src');
     expect(initialSrc).toBeTruthy();
     
-    // Step 3: Upload a new ad1 image as company admin
-    // First, get company admin token
-    const companyLoginResponse = await request.post('http://localhost:4041/api/company/auth/login', {
-      data: {
-        email: 'admin@test.com', // Adjust based on your test data
-        password: 'admin123', // Adjust based on your test data
-      },
-    });
-    
-    let companyToken: string | null = null;
-    if (companyLoginResponse.ok()) {
-      const loginData = await companyLoginResponse.json();
-      companyToken = loginData.token;
-    }
+    // Step 3: Upload a new ad as company admin
+    const { getCompanyAdminToken } = await import('../helpers/auth.js');
+    const companyToken = await getCompanyAdminToken(request);
     
     // If we can't login as company admin, skip the upload part but still test the websocket connection
     if (companyToken) {
@@ -44,13 +33,8 @@ test.describe('Kiosk Mode Ad Live Updates', () => {
       const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
       const testImageBuffer = Buffer.from(testImageBase64, 'base64');
       
-      // Upload new ad1
-      const formData = new FormData();
-      const blob = new Blob([testImageBuffer], { type: 'image/png' });
-      formData.append('file', blob, 'test-ad.png');
-      formData.append('adType', 'ad1');
-      
-      const uploadResponse = await request.post('http://localhost:4041/api/ads/upload', {
+      // Upload new ad using new endpoint
+      const uploadResponse = await request.post('http://localhost:4041/api/ads/uploads', {
         headers: {
           'Authorization': `Bearer ${companyToken}`,
         },
@@ -60,25 +44,24 @@ test.describe('Kiosk Mode Ad Live Updates', () => {
             mimeType: 'image/png',
             buffer: testImageBuffer,
           },
-          adType: 'ad1',
         },
       });
       
       expect(uploadResponse.ok()).toBeTruthy();
       const uploadData = await uploadResponse.json();
-      expect(uploadData.version).toBeTruthy();
+      expect(uploadData.ad).toHaveProperty('version');
+      expect(uploadData.ad).toHaveProperty('publicUrl');
       
-      // Step 4: Wait for websocket update and verify image src changes
-      // The image src should now include ?v=version query param
-      const newVersion = uploadData.version;
+      // Step 4: Wait for websocket update and verify new ad appears
+      // The kiosk should refresh and show the new ad
+      await page.waitForTimeout(3000);
       
-      // Wait for the image src to update (websocket should trigger this)
-      await expect(initialAd1Image).toHaveAttribute('src', new RegExp(`v=${newVersion}`), { timeout: 10000 });
+      // Check if the new ad appears (either replaces old one or appears in rotation)
+      const newAdImage = page.locator(`img[src*="${uploadData.ad.publicUrl}"], video[src*="${uploadData.ad.publicUrl}"]`);
+      const newAdVisible = await newAdImage.isVisible({ timeout: 10000 }).catch(() => false);
       
-      // Verify the new src contains the version
-      const updatedSrc = await initialAd1Image.getAttribute('src');
-      expect(updatedSrc).toContain(`v=${newVersion}`);
-      expect(updatedSrc).not.toBe(initialSrc);
+      // New ad should appear (WebSocket should trigger manifest refresh)
+      expect(newAdVisible).toBeTruthy();
     } else {
       // If we can't test upload, at least verify websocket connection exists
       // Check if WebSocket connection is established

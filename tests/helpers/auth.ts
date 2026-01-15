@@ -123,3 +123,32 @@ export async function getAuthToken(
   
   return data.token;
 }
+
+/**
+ * Gets a company admin authentication token for API requests
+ */
+export async function getCompanyAdminToken(
+  request: APIRequestContext
+): Promise<string | null> {
+  try {
+    const response = await request.post('http://localhost:4041/api/company/auth', {
+      data: {
+        username: 'admin', // Adjust based on your test data
+        password: 'admin123', // Adjust based on your test data
+      },
+    });
+
+    if (!response.ok()) {
+      return null;
+    }
+
+    const data = await response.json();
+    if (data.valid && data.token) {
+      return data.token;
+    }
+
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
