@@ -58,15 +58,21 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       const companyId = request.user.companyId;
       
       // Use request.parts() to get both file and form fields
-      let fileData: any = null;
+      // IMPORTANT: Must consume ALL parts completely or the stream will hang
+      let fileBuffer: Buffer | null = null;
+      let fileMimetype: string | null = null;
+      let fileBytesRead: number = 0;
       let shopId: number | null = null;
       let position: number | undefined = undefined;
         
-        try {
-          const parts = request.parts();
-          for await (const part of parts) {
+      try {
+        const parts = request.parts();
+        for await (const part of parts) {
           if (part.type === 'file' && part.fieldname === 'file') {
-            fileData = part;
+            // Consume the file stream immediately to prevent hanging
+            fileBuffer = await part.toBuffer();
+            fileMimetype = part.mimetype;
+            fileBytesRead = part.file.bytesRead;
           } else if (part.type === 'field') {
             if (part.fieldname === 'shopId' && part.value) {
               const parsed = parseInt(String(part.value), 10);
@@ -84,28 +90,28 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         ]);
       }
 
-      if (!fileData) {
+      if (!fileBuffer || !fileMimetype) {
         throw new ValidationError('No file provided', [
           { field: 'file', message: 'File is required' },
         ]);
       }
 
-        // Validate file type
-      if (!ALLOWED_MIME_TYPES.includes(fileData.mimetype)) {
+      // Validate file type
+      if (!ALLOWED_MIME_TYPES.includes(fileMimetype)) {
         throw new ValidationError(`Invalid file type. Allowed: ${ALLOWED_MIME_TYPES.join(', ')}`, [
           { field: 'file', message: 'Invalid MIME type' },
         ]);
       }
 
       // Validate file size
-      if (fileData.file.bytesRead > MAX_FILE_SIZE) {
+      if (fileBytesRead > MAX_FILE_SIZE) {
         throw new ValidationError(`File too large. Maximum size: ${MAX_FILE_SIZE / 1024 / 1024}MB`, [
           { field: 'file', message: 'File size exceeds limit' },
         ]);
       }
 
       // Determine media type and extension
-      const isImage = ALLOWED_IMAGE_TYPES.includes(fileData.mimetype);
+      const isImage = ALLOWED_IMAGE_TYPES.includes(fileMimetype);
       const mediaType = isImage ? 'image' : 'video';
       const mimeToExt: Record<string, string> = {
         'image/png': '.png',
@@ -114,7 +120,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         'image/webp': '.webp',
         'video/mp4': '.mp4',
       };
-      const extension = mimeToExt[fileData.mimetype] || '.bin';
+      const extension = mimeToExt[fileMimetype] || '.bin';
 
       // Validate shop belongs to company if shopId provided
       if (shopId) {
@@ -153,8 +159,8 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         position: finalPosition,
         enabled: false,
         mediaType,
-        mimeType: fileData.mimetype,
-        bytes: fileData.file.bytesRead,
+        mimeType: fileMimetype,
+        bytes: fileBytesRead,
         storageKey: '', // Not used for local storage
         publicUrl: '', // Will be set after file save
         version: 1,
@@ -166,11 +172,10 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
           await mkdir(companyAdsDir, { recursive: true });
         }
 
-      // Save file
+      // Save file (buffer was already consumed above)
       const filename = `${ad.id}${extension}`;
       const filePath = join(companyAdsDir, filename);
-      const buffer = await fileData.toBuffer();
-          await writeFile(filePath, buffer);
+      await writeFile(filePath, fileBuffer);
 
       // Set public URL (relative path for static serving)
       const publicUrl = `/companies/${companyId}/ads/${filename}`;
