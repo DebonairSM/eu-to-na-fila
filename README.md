@@ -220,7 +220,7 @@ pnpm start
 
 ### E2E Testing with Playwright
 
-The project includes Playwright end-to-end tests for the kiosk mode ads system.
+The project includes comprehensive Playwright end-to-end tests for the kiosk mode ads system and API endpoints.
 
 **Prerequisites:**
 ```bash
@@ -230,10 +230,13 @@ pnpm exec playwright install
 
 **Run Tests:**
 ```bash
-# Run all E2E tests
+# Run all E2E tests (all browsers)
 pnpm test:e2e
 
-# Run with UI mode (interactive)
+# Run only Chromium (faster for local development)
+PLAYWRIGHT_BROWSERS=chromium pnpm test:e2e
+
+# Run with UI mode (interactive, recommended for debugging)
 pnpm test:e2e:ui
 
 # Run in headed mode (see browser)
@@ -244,24 +247,78 @@ pnpm test:e2e:debug
 ```
 
 **Test Coverage:**
-- Kiosk mode ad rotation (sequence, timing, progress bar)
-- Ad display (images, video, loading states, error handling)
+
+**API Tests (`tests/api/`):**
+- Ad upload endpoints (multipart file uploads, validation)
+- Ad management (CRUD operations, status updates)
+- Ad manifest generation (public endpoint, filtering, ordering)
+- Authentication and authorization (company admin access)
+- File validation (MIME types, size limits, formats)
+
+**Kiosk Tests (`tests/kiosk/`):**
+- Ad display from manifest (images, video, loading states)
+- Ad rotation (queue → ad → queue sequence, timing)
 - User interactions (click to skip, idle timer, rotation pause/resume)
-- API endpoints (upload, status, authentication, validation)
+- WebSocket live updates (real-time ad changes)
+- Full upload-to-display flow (end-to-end validation)
 
 **Test Structure:**
 ```
 tests/
-├── helpers/          # Test utilities (auth, kiosk, API helpers)
-├── kiosk/           # Kiosk mode tests
-│   ├── ads-rotation.spec.ts
-│   ├── ads-display.spec.ts
-│   └── ads-interaction.spec.ts
-└── api/             # API endpoint tests
-    └── ads-endpoints.spec.ts
+├── helpers/                  # Test utilities
+│   ├── auth.ts              # Authentication helpers
+│   ├── kiosk.ts             # Kiosk mode helpers
+│   └── api.ts               # API client helpers
+├── api/                      # API endpoint tests
+│   ├── ads-upload.spec.ts   # Upload functionality
+│   ├── ads-management.spec.ts # CRUD operations
+│   ├── ads-manifest.spec.ts # Manifest endpoint
+│   └── ads-endpoints.spec.ts # General endpoints
+└── kiosk/                    # Kiosk mode tests
+    ├── ads-display.spec.ts  # Display logic
+    ├── ads-rotation.spec.ts # Rotation sequence
+    ├── ads-interaction.spec.ts # User interactions
+    ├── ads-live-update.spec.ts # WebSocket updates
+    └── ads-upload-flow.spec.ts # Full flow
 ```
 
-**Note:** Tests require the dev server to be running. The Playwright config will automatically start it if not already running.
+**Common Issues and Solutions:**
+
+1. **Browser Installation:**
+   - If you see "Executable doesn't exist" errors, run: `pnpm exec playwright install`
+   - Browsers are installed automatically on first run, but may need manual installation
+
+2. **Authentication Failures (403):**
+   - Some tests require company admin credentials
+   - Tests will skip gracefully if credentials aren't configured
+   - To fix: Ensure company admin account exists with username 'admin' and password 'admin123'
+
+3. **API Server Connection:**
+   - Ensure dev server is running: `pnpm dev`
+   - Check that API is accessible at `http://localhost:4041`
+   - Playwright should start servers automatically, but verify they're working
+
+4. **Test Timeouts:**
+   - Some tests may timeout due to large file uploads (51MB) - this is acceptable
+   - Network conditions can affect upload speed
+   - Dev server startup time may cause initial timeouts
+
+**Running Specific Tests:**
+```bash
+# Run a specific test file
+pnpm test:e2e tests/api/ads-upload.spec.ts
+
+# Run tests matching a pattern
+pnpm test:e2e --grep "should upload image"
+```
+
+**Best Practices:**
+- Use `PLAYWRIGHT_BROWSERS=chromium` for faster local development
+- Use `pnpm test:e2e:ui` for interactive debugging
+- See `tests/TEST_FAILURES_NOTES.md` for detailed troubleshooting
+- See `tests/MANUAL_TESTING_CHECKLIST.md` for manual testing procedures
+
+**Note:** Tests require the dev server to be running. The Playwright config will automatically start it if not already running. For more details, see `tests/README.md`.
 
 ### Manual Testing
 
