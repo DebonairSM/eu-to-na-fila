@@ -31,6 +31,7 @@ export default defineConfig({
   },
 
   /* Configure projects for major browsers */
+  /* Use PLAYWRIGHT_BROWSERS env var to limit browsers (e.g., "chromium" or "chromium,firefox") */
   projects: [
     {
       name: 'chromium',
@@ -46,7 +47,12 @@ export default defineConfig({
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
-  ],
+  ].filter((project) => {
+    // Allow filtering browsers via env var for faster local testing
+    const browsers = process.env.PLAYWRIGHT_BROWSERS;
+    if (!browsers) return true;
+    return browsers.split(',').includes(project.name);
+  }),
 
   /* Run your local dev server before starting the tests */
   webServer: {

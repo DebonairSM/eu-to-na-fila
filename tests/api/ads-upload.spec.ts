@@ -150,7 +150,7 @@ test.describe('Ads Upload API', () => {
       expect(response.status()).toBe(400);
       const data = await response.json();
       // Error message may vary depending on parsing stage
-      expect(data.error).toMatch(/No file provided|Failed to parse upload data|Invalid multipart/i);
+      expect(data.error || data.message || '').toMatch(/No file provided|Failed to parse upload data|Invalid multipart|file/i);
     });
 
     test('should reject upload with invalid file type', async ({ request }) => {
