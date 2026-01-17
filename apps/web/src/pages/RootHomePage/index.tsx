@@ -1,7 +1,16 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 
 export function RootHomePage() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navLinks = [
+    { to: '/projects', label: 'Projetos' },
+    { to: '/about', label: 'Sobre' },
+    { to: '/contact', label: 'Contato' },
+  ];
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <nav className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-50">
@@ -13,27 +22,48 @@ export function RootHomePage() {
               </div>
               <span className="text-lg font-medium tracking-tight">EuToNaFila</span>
             </Link>
-            <div className="flex items-center gap-8">
-              <Link
-                to="/projects"
-                className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
-              >
-                Projetos
-              </Link>
-              <Link
-                to="/about"
-                className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
-              >
-                Sobre
-              </Link>
-              <Link
-                to="/contact"
-                className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
-              >
-                Contato
-              </Link>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-8">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
+                >
+                  {link.label}
+                </Link>
+              ))}
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden bg-transparent border-0 text-white cursor-pointer p-2 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center transition-all hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle menu"
+              aria-expanded={isMobileMenuOpen}
+            >
+              <span className="material-symbols-outlined text-xl">
+                {isMobileMenuOpen ? 'close' : 'menu'}
+              </span>
+            </button>
           </div>
+
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden mt-4 pt-4 border-t border-white/5 space-y-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-medium"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          )}
         </Container>
       </nav>
 
