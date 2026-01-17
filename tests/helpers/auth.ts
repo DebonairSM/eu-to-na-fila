@@ -84,6 +84,43 @@ export async function loginAsBarber(page: Page) {
 }
 
 /**
+ * Retries a request with exponential backoff for connection errors
+ */
+async function retryConnection<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 500
+): Promise<T> {
+  let lastError: any;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Check if it's a connection error
+      const isConnectionError = 
+        error.message?.includes('ECONNREFUSED') ||
+        error.message?.includes('connect ECONNREFUSED') ||
+        error.code === 'ECONNREFUSED' ||
+        error.message?.includes('fetch failed');
+      
+      if (isConnectionError && attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      // Not a connection error or max retries reached
+      throw error;
+    }
+  }
+  
+  throw lastError;
+}
+
+/**
  * Gets an authentication token for API requests
  * Uses the authenticate endpoint directly
  * Can use either a Page (via page.request) or APIRequestContext
@@ -97,31 +134,33 @@ export async function getAuthToken(
   // Use page.request if it's a Page, otherwise use the request context directly
   const requestContext = 'request' in pageOrRequest ? pageOrRequest.request : pageOrRequest;
   
-  const response = await requestContext.post('http://localhost:4041/api/shops/mineiro/auth', {
-    data: {
-      pin: credentials.pin,
-    },
-  });
-  
-  // Handle rate limiting (429) - response may still contain valid token
-  const data = await response.json();
-  
-  // If we got a valid token, use it even if status is 429 (rate limited)
-  if (data.valid && data.token) {
+  return retryConnection(async () => {
+    const response = await requestContext.post('http://localhost:4041/api/shops/mineiro/auth', {
+      data: {
+        pin: credentials.pin,
+      },
+    });
+    
+    // Handle rate limiting (429) - response may still contain valid token
+    const data = await response.json();
+    
+    // If we got a valid token, use it even if status is 429 (rate limited)
+    if (data.valid && data.token) {
+      return data.token;
+    }
+    
+    // Otherwise check if response was successful
+    if (!response.ok()) {
+      const errorText = JSON.stringify(data);
+      throw new Error(`Authentication failed: ${response.status()} ${errorText}`);
+    }
+    
+    if (!data.valid || !data.token) {
+      throw new Error(`Authentication failed: ${JSON.stringify(data)}`);
+    }
+    
     return data.token;
-  }
-  
-  // Otherwise check if response was successful
-  if (!response.ok()) {
-    const errorText = JSON.stringify(data);
-    throw new Error(`Authentication failed: ${response.status()} ${errorText}`);
-  }
-  
-  if (!data.valid || !data.token) {
-    throw new Error(`Authentication failed: ${JSON.stringify(data)}`);
-  }
-  
-  return data.token;
+  });
 }
 
 /**
@@ -131,24 +170,40 @@ export async function getCompanyAdminToken(
   request: APIRequestContext
 ): Promise<string | null> {
   try {
-    const response = await request.post('http://localhost:4041/api/company/auth', {
-      data: {
-        username: 'admin', // Adjust based on your test data
-        password: 'admin123', // Adjust based on your test data
-      },
-    });
+    return await retryConnection(async () => {
+      const response = await request.post('http://localhost:4041/api/company/auth', {
+        data: {
+          username: 'admin', // Adjust based on your test data
+          password: 'admin123', // Adjust based on your test data
+        },
+      });
 
-    if (!response.ok()) {
+      if (!response.ok()) {
+        return null;
+      }
+
+      const data = await response.json();
+      if (data.valid && data.token) {
+        return data.token;
+      }
+
       return null;
+    });
+  } catch (error: any) {
+    // Check if it's a connection error - provide helpful message
+    const isConnectionError = 
+      error.message?.includes('ECONNREFUSED') ||
+      error.message?.includes('connect ECONNREFUSED') ||
+      error.code === 'ECONNREFUSED' ||
+      error.message?.includes('fetch failed');
+    
+    if (isConnectionError) {
+      console.warn(
+        'API server connection failed. Ensure dev server is running: pnpm dev\n' +
+        `Error: ${error.message || error}`
+      );
     }
-
-    const data = await response.json();
-    if (data.valid && data.token) {
-      return data.token;
-    }
-
-    return null;
-  } catch (error) {
+    
     return null;
   }
 }

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { CompanyNav } from '@/components/CompanyNav';
+import { Container } from '@/components/design-system/Spacing/Container';
 
 export function CompanyHomePage() {
   return (
@@ -9,7 +10,7 @@ export function CompanyHomePage() {
       <main className="w-full">
         <section className="relative min-h-[90vh] flex items-center justify-center px-4 sm:px-6 py-20 sm:py-32">
           <div className="absolute inset-0 bg-gradient-to-b from-[#D4AF37]/5 via-transparent to-transparent" />
-          <div className="relative max-w-6xl mx-auto text-center space-y-8">
+          <Container size="2xl" className="relative text-center space-y-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/8 border border-white/12 text-[#8ad6b0] text-xs font-semibold uppercase tracking-[0.28em]">
               Virtual lines • Florianópolis, SC
             </div>
@@ -33,10 +34,11 @@ export function CompanyHomePage() {
                 Saiba Mais
               </Link>
             </div>
-          </div>
+          </Container>
         </section>
 
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <section className="py-16 sm:py-24">
+          <Container size="2xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold mb-4">
               Por que escolher EuToNaFila?
@@ -90,9 +92,11 @@ export function CompanyHomePage() {
               </div>
             ))}
           </div>
+          </Container>
         </section>
 
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <section className="py-16 sm:py-24">
+          <Container size="2xl">
           <div className="relative rounded-[32px] border border-white/10 bg-gradient-to-br from-white/5 to-white/2 backdrop-blur-2xl p-8 sm:p-12 lg:p-16">
             <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-[#0f3d2e]/20 via-[#D4AF37]/10 to-[#0e1f3d]/20 blur-3xl" />
             <div className="relative">
@@ -128,9 +132,11 @@ export function CompanyHomePage() {
               </div>
             </div>
           </div>
+          </Container>
         </section>
 
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <section className="py-16 sm:py-24">
+          <Container size="2xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-semibold mb-4">
               Resultados que Falam
@@ -170,12 +176,12 @@ export function CompanyHomePage() {
             >
               Fale Conosco Agora
             </Link>
-          </div>
+          </Container>
         </section>
       </main>
 
       <footer className="border-t border-white/10 bg-[#050c18] py-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <Container size="2xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -229,7 +235,7 @@ export function CompanyHomePage() {
               </Link>
             </div>
           </div>
-        </div>
+        </Container>
       </footer>
     </div>
   );

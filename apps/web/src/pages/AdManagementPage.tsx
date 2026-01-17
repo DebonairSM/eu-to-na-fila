@@ -6,6 +6,7 @@ import { RootSiteNav } from '@/components/RootSiteNav';
 import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
+import { Container } from '@/components/design-system/Spacing/Container';
 
 interface Ad {
   id: number;
@@ -156,9 +157,10 @@ export function AdManagementPage() {
 
   if (useRootTheme) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white">
-        <RootSiteNav />
-        <main className="max-w-6xl mx-auto px-6 py-20">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <RootSiteNav />
+      <main className="py-20">
+        <Container size="2xl">
           <div className="text-center mb-16">
             <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Gerenciar Anúncios</h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
@@ -330,6 +332,7 @@ export function AdManagementPage() {
                   Voltar ao Dashboard
                 </button>
               </div>
+        </Container>
         </main>
       </div>
     );

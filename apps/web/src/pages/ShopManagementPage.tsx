@@ -10,6 +10,7 @@ import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
+import { Container } from '@/components/design-system/Spacing/Container';
 
 type Shop = {
   id: number;
@@ -177,7 +178,8 @@ export function ShopManagementPage() {
             </button>
           </div>
         )}
-        <main className="max-w-6xl mx-auto px-6 py-20">
+        <main className="py-20">
+          <Container size="2xl">
           <div className="text-center mb-16">
             <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Gerenciar Barbearias</h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
@@ -263,6 +265,7 @@ export function ShopManagementPage() {
             ))}
           </div>
         )}
+          </Container>
         </main>
       </div>
     );

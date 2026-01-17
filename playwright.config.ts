@@ -55,6 +55,8 @@ export default defineConfig({
   }),
 
   /* Run your local dev server before starting the tests */
+  /* Note: Playwright only supports one webServer entry, so we check web server
+   * and use a global setup to verify API server is ready */
   webServer: {
     command: 'pnpm dev',
     url: 'http://localhost:4040/mineiro',
@@ -63,6 +65,9 @@ export default defineConfig({
     stdout: 'ignore',
     stderr: 'pipe',
   },
+
+  /* Global setup to verify API server is ready */
+  globalSetup: './tests/global-setup.ts',
 
   /* Test timeout - increased for rotation tests that need to wait 15s+ */
   timeout: 60 * 1000, // 60 seconds

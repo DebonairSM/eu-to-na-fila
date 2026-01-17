@@ -1,13 +1,16 @@
 import { test, expect } from '@playwright/test';
-import { getAuthToken } from '../helpers/auth.js';
+import { getCompanyAdminToken } from '../helpers/auth.js';
 
 test.describe('Ads Management API', () => {
-  let adminToken: string;
+  let adminToken: string | null;
   let createdAdId: number;
   const API_BASE = 'http://localhost:4041/api';
 
   test.beforeAll(async ({ request }) => {
-    adminToken = await getAuthToken(request, 'companyAdmin');
+    adminToken = await getCompanyAdminToken(request);
+    if (!adminToken) {
+      console.warn('Company admin token not available - some tests may be skipped');
+    }
   });
 
   test.beforeEach(async ({ request }) => {

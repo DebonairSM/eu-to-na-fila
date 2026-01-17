@@ -4,6 +4,40 @@ import { readFile } from 'fs/promises';
 const API_BASE_URL = 'http://localhost:4041/api';
 
 /**
+ * Checks if an error is a connection error (server not ready)
+ */
+export function isConnectionError(error: any): boolean {
+  return (
+    error?.message?.includes('ECONNREFUSED') ||
+    error?.message?.includes('connect ECONNREFUSED') ||
+    error?.code === 'ECONNREFUSED' ||
+    error?.message?.includes('fetch failed') ||
+    error?.message?.includes('NetworkError')
+  );
+}
+
+/**
+ * Wraps an API request to provide better error messages for connection issues
+ */
+export async function handleApiRequest<T>(
+  requestFn: () => Promise<T>,
+  context: string = 'API request'
+): Promise<T> {
+  try {
+    return await requestFn();
+  } catch (error: any) {
+    if (isConnectionError(error)) {
+      throw new Error(
+        `${context} failed: API server at http://localhost:4041 is not accessible.\n` +
+        `This usually means the dev server is not running. Start it with: pnpm dev\n` +
+        `Original error: ${error.message || error}`
+      );
+    }
+    throw error;
+  }
+}
+
+/**
  * Creates a minimal test PNG image buffer
  * This is a 1x1 pixel PNG
  */

@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
+import { Container } from '@/components/design-system/Spacing/Container';
 
 export function RootHomePage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <nav className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-5">
+        <Container size="2xl" className="py-5">
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3 group">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm group-hover:from-blue-400 group-hover:to-indigo-500 transition-all">
@@ -33,7 +34,7 @@ export function RootHomePage() {
               </Link>
             </div>
           </div>
-        </div>
+        </Container>
       </nav>
 
       <main className="w-full">
@@ -70,7 +71,7 @@ export function RootHomePage() {
       </main>
 
       <footer className="border-t border-white/5 bg-[#0a0a0a] py-16">
-        <div className="max-w-7xl mx-auto px-6">
+        <Container size="2xl">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-4">
@@ -120,7 +121,7 @@ export function RootHomePage() {
               </Link>
             </div>
           </div>
-        </div>
+        </Container>
       </footer>
     </div>
   );

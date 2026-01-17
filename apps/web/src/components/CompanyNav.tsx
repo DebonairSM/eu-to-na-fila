@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Container } from '@/components/design-system/Spacing/Container';
 
 const links = [
   { label: 'Home', to: '/home' },
@@ -19,7 +20,7 @@ export function CompanyNav() {
 
   return (
     <header className="border-b border-white/10 bg-[#050c18]">
-      <div className="max-w-6xl mx-auto px-3 sm:px-5 py-4 flex items-center justify-between gap-4">
+      <Container size="2xl" className="py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg shadow-lg shadow-[#0f3d2e]/40">
             E
@@ -97,8 +98,7 @@ export function CompanyNav() {
               </div>
             )}
           </div>
-        </div>
-      </div>
+        </Container>
     </header>
   );
 }

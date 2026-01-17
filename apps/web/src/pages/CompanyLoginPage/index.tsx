@@ -2,22 +2,24 @@ import { Navigation } from '@/components/Navigation';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { CompanyLoginForm } from './CompanyLoginForm';
 import { isRootBuild } from '@/lib/build';
+import { Container } from '@/components/design-system/Spacing/Container';
 
 export function CompanyLoginPage() {
   const useRootTheme = isRootBuild();
 
   if (useRootTheme) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white">
-        <RootSiteNav />
-        <main className="max-w-4xl mx-auto px-6 py-20">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <RootSiteNav />
+      <main className="py-20">
+        <Container size="2xl">
           <div className="flex items-center justify-center min-h-[calc(100vh-120px)]">
             <div className="w-full max-w-md">
               <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-8 shadow-2xl">
                 <CompanyLoginForm />
               </div>
             </div>
-          </div>
+          </Container>
         </main>
       </div>
     );
