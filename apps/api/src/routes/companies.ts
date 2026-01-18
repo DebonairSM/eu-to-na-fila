@@ -160,10 +160,15 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         ),
       });
 
+      // Count all ads (enabled and disabled)
+      const allAds = await db.query.companyAds.findMany({
+        where: eq(schema.companyAds.companyId, id),
+      });
+
       return {
         totalShops: shops.length,
         activeAds: enabledAds.length,
-        totalAds: enabledAds.length,
+        totalAds: allAds.length,
       };
     }
   );

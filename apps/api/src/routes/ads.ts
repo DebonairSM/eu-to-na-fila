@@ -9,6 +9,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir, writeFile, unlink } from 'fs/promises';
 import { existsSync } from 'fs';
+import { env } from '../env.js';
 
 /**
  * Ad management routes.
@@ -254,10 +255,17 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Shop with slug "${shopSlug}" not found`);
     }
 
+    // Check if shop is linked to a company
+    if (!shop.companyId) {
+      throw new ValidationError('Shop is not linked to a company', [
+        { field: 'shopSlug', message: `Shop "${shopSlug}" must be linked to a company to display ads` },
+      ]);
+    }
+
     // Get enabled ads for this shop (shop-specific) or company-wide (if no shop-specific ads)
     const shopAds = await db.query.companyAds.findMany({
       where: and(
-        eq(schema.companyAds.companyId, shop.companyId!),
+        eq(schema.companyAds.companyId, shop.companyId),
         eq(schema.companyAds.shopId, shop.id),
         eq(schema.companyAds.enabled, true)
       ),
@@ -269,7 +277,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
     if (ads.length === 0) {
       ads = await db.query.companyAds.findMany({
         where: and(
-          eq(schema.companyAds.companyId, shop.companyId!),
+          eq(schema.companyAds.companyId, shop.companyId),
           isNull(schema.companyAds.shopId),
           eq(schema.companyAds.enabled, true)
         ),
@@ -280,13 +288,28 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
     // Calculate manifest version (sum of all ad versions for cache busting)
     const manifestVersion = ads.reduce((sum, ad) => sum + ad.version, 0);
 
+    // Build URLs - use absolute URL if STORAGE_PUBLIC_BASE_URL is set, otherwise use relative
+    const baseUrl = env.STORAGE_PUBLIC_BASE_URL;
+    const buildAdUrl = (publicUrl: string, version: number): string => {
+      const urlWithVersion = `${publicUrl}?v=${version}`;
+      if (baseUrl) {
+        try {
+          return new URL(urlWithVersion, baseUrl).toString();
+        } catch {
+          // If baseUrl is invalid, fall back to relative URL
+          return urlWithVersion;
+        }
+      }
+      return urlWithVersion;
+    };
+
     return {
       manifestVersion,
       ads: ads.map((ad) => ({
         id: ad.id,
         position: ad.position,
         mediaType: ad.mediaType,
-        url: `${ad.publicUrl}?v=${ad.version}`,
+        url: buildAdUrl(ad.publicUrl, ad.version),
         version: ad.version,
       })),
     };

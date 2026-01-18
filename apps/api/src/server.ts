@@ -206,7 +206,7 @@ if (!existsSync(companiesPath)) {
 
 // Register static file serving for /companies/ paths
 fastify.register(fastifyStatic, {
-  root: publicPath,
+  root: companiesPath,
   prefix: '/companies/',
   decorateReply: false,
   wildcard: true,
