@@ -140,6 +140,11 @@ fastify.register(fastifyRateLimit, {
     if (request.url.startsWith('/api/ads/public/manifest')) {
       return true;
     }
+    // Skip global rate limit for static files (SPA assets, PWA manifest, service worker)
+    // These are served as static files and shouldn't be rate limited
+    if (request.url.startsWith('/mineiro/') || request.url.startsWith('/companies/')) {
+      return true;
+    }
     // Skip global rate limit for authenticated requests (staff/owner operations)
     // These are already protected by authentication and don't need strict rate limiting
     const authHeader = request.headers.authorization;
