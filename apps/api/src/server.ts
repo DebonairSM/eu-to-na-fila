@@ -23,6 +23,7 @@ import { shopsRoutes } from './routes/shops.js';
 import { adsRoutes } from './routes/ads.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { registerWebSocket } from './websocket/handler.js';
+import { getPublicPath } from './lib/paths.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -166,7 +167,7 @@ fastify.register(fastifyRateLimit, {
 } as any);
 
 // Static file serving - register BEFORE routes to ensure assets are served first
-const publicPath = join(__dirname, '..', 'public');
+const publicPath = getPublicPath();
 const mineiroPath = join(publicPath, 'mineiro');
 const rootPath = join(publicPath, 'root');
 
@@ -431,25 +432,31 @@ fastify.addHook('onReady', async () => {
     fastify.log.error({ err: error }, 'Database connection test failed on startup');
   }
   
+  // Log path resolution for debugging
+  fastify.log.info(`[Paths] publicPath resolved to: ${publicPath}`);
+  fastify.log.info(`[Paths] companiesPath resolved to: ${companiesPath}`);
+  fastify.log.info(`[Paths] publicPath exists: ${existsSync(publicPath)}`);
+  fastify.log.info(`[Paths] companiesPath exists: ${existsSync(companiesPath)}`);
+  
   // Log companies directory structure for debugging
   try {
     if (existsSync(companiesPath)) {
       const companies = readdirSync(companiesPath);
-      fastify.log.info(`Companies directory contains: ${companies.join(', ')}`);
+      fastify.log.info(`[Ads] Companies directory contains: ${companies.join(', ')}`);
       for (const companyId of companies) {
         const companyPath = join(companiesPath, companyId);
         if (existsSync(companyPath)) {
           const adsPath = join(companyPath, 'ads');
           if (existsSync(adsPath)) {
             const adFiles = readdirSync(adsPath);
-            fastify.log.info(`Company ${companyId} ads directory: ${adFiles.length} files (${adFiles.slice(0, 5).join(', ')}${adFiles.length > 5 ? '...' : ''})`);
+            fastify.log.info(`[Ads] Company ${companyId} ads directory: ${adFiles.length} files (${adFiles.slice(0, 10).join(', ')}${adFiles.length > 10 ? '...' : ''})`);
           } else {
-            fastify.log.warn(`Company ${companyId} ads directory does not exist: ${adsPath}`);
+            fastify.log.warn(`[Ads] Company ${companyId} ads directory does not exist: ${adsPath}`);
           }
         }
       }
     } else {
-      fastify.log.warn(`Companies directory does not exist: ${companiesPath}`);
+      fastify.log.warn(`[Ads] Companies directory does not exist: ${companiesPath}`);
     }
   } catch (error) {
     fastify.log.warn({ err: error }, 'Error checking companies directory structure');
