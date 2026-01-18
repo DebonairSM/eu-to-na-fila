@@ -122,8 +122,9 @@ fastify.register(fastifyMultipart, {
 
 // Global rate limiting for public endpoints
 // Exclude auth routes - they have their own stricter rate limiting
+// Threshold set high for controlled environment (DDoS unlikely)
 fastify.register(fastifyRateLimit, {
-  max: 100,
+  max: 5000,
   timeWindow: '1 minute',
   addHeaders: {
     'x-ratelimit-limit': true,

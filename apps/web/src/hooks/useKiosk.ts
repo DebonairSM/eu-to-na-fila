@@ -132,6 +132,9 @@ export function useKiosk() {
 
     const connect = () => {
       try {
+        // #region agent log (debug-session)
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/web/src/hooks/useKiosk.ts:connect',message:'Creating WebSocket',data:{isKioskMode,wsUrl,windowLocation:{href:window.location.href,origin:window.location.origin,protocol:window.location.protocol,host:window.location.host}},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion agent log (debug-session)
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
@@ -158,9 +161,12 @@ export function useKiosk() {
           console.error('[useKiosk] WebSocket error:', err);
         };
 
-        ws.onclose = () => {
+        ws.onclose = (event) => {
           console.log('[useKiosk] WebSocket closed, reconnecting...');
           wsRef.current = null;
+          // #region agent log (debug-session)
+          fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/web/src/hooks/useKiosk.ts:onclose',message:'WebSocket closed',data:{isKioskMode,wsUrl,readyState:ws.readyState,close:{code:event.code,reason:event.reason,wasClean:event.wasClean}},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion agent log (debug-session)
           reconnectTimeoutRef.current = setTimeout(connect, 3000);
         };
       } catch (err) {

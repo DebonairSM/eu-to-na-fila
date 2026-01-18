@@ -846,7 +846,22 @@ class ApiClient {
       version: number;
     }>;
   }> {
-    return this.get(`/ads/public/manifest?shopSlug=${encodeURIComponent(shopSlug)}`);
+    const result = await this.get<{
+      manifestVersion: number;
+      ads: Array<{
+        id: number;
+        position: number;
+        mediaType: string;
+        url: string;
+        version: number;
+      }>;
+    }>(`/ads/public/manifest?shopSlug=${encodeURIComponent(shopSlug)}`);
+
+    // #region agent log (debug-session)
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H4',location:'apps/web/src/lib/api.ts:getAdsManifest',message:'Ads manifest fetched',data:{shopSlug,manifestVersion:result?.manifestVersion,adsCount:Array.isArray(result?.ads)?result.ads.length:null,sampleAds:Array.isArray(result?.ads)?result.ads.slice(0,3).map(a=>({id:a.id,mediaType:a.mediaType,version:a.version,url:a.url})):null},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion agent log (debug-session)
+
+    return result;
   }
 
   /**
@@ -934,13 +949,25 @@ class ApiClient {
     if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
       try {
         const url = new URL(baseUrl);
-        return `${wsProtocol}//${url.host}/ws`;
+        const wsUrl = `${wsProtocol}//${url.host}/ws`;
+        // #region agent log (debug-session)
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/web/src/lib/api.ts:getWebSocketUrl',message:'Computed WebSocket URL from absolute baseUrl',data:{baseUrl,wsProtocol,host,computedWsUrl:wsUrl,windowLocation:{href:window.location.href,origin:window.location.origin,protocol:window.location.protocol,host:window.location.host}},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion agent log (debug-session)
+        return wsUrl;
       } catch {
-        return `${wsProtocol}//${host}/ws`;
+        const wsUrl = `${wsProtocol}//${host}/ws`;
+        // #region agent log (debug-session)
+        fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/web/src/lib/api.ts:getWebSocketUrl',message:'Computed WebSocket URL after failing to parse absolute baseUrl',data:{baseUrl,wsProtocol,host,computedWsUrl:wsUrl,windowLocation:{href:window.location.href,origin:window.location.origin,protocol:window.location.protocol,host:window.location.host}},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion agent log (debug-session)
+        return wsUrl;
       }
     }
     
-    return `${wsProtocol}//${host}/ws`;
+    const wsUrl = `${wsProtocol}//${host}/ws`;
+    // #region agent log (debug-session)
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/web/src/lib/api.ts:getWebSocketUrl',message:'Computed WebSocket URL from relative baseUrl',data:{baseUrl,wsProtocol,host,computedWsUrl:wsUrl,windowLocation:{href:window.location.href,origin:window.location.origin,protocol:window.location.protocol,host:window.location.host}},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion agent log (debug-session)
+    return wsUrl;
   }
 }
 
