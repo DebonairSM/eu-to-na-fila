@@ -135,6 +135,11 @@ fastify.register(fastifyRateLimit, {
     if (request.url.startsWith('/api/shops/') && request.url.includes('/auth')) {
       return true;
     }
+    // Skip global rate limit for public manifest endpoint - needed for kiosk display
+    // and can be called frequently during WebSocket reconnections
+    if (request.url.startsWith('/api/ads/public/manifest')) {
+      return true;
+    }
     // Skip global rate limit for authenticated requests (staff/owner operations)
     // These are already protected by authentication and don't need strict rate limiting
     const authHeader = request.headers.authorization;
