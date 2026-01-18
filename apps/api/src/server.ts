@@ -430,6 +430,30 @@ fastify.addHook('onReady', async () => {
   } catch (error) {
     fastify.log.error({ err: error }, 'Database connection test failed on startup');
   }
+  
+  // Log companies directory structure for debugging
+  try {
+    if (existsSync(companiesPath)) {
+      const companies = readdirSync(companiesPath);
+      fastify.log.info(`Companies directory contains: ${companies.join(', ')}`);
+      for (const companyId of companies) {
+        const companyPath = join(companiesPath, companyId);
+        if (existsSync(companyPath)) {
+          const adsPath = join(companyPath, 'ads');
+          if (existsSync(adsPath)) {
+            const adFiles = readdirSync(adsPath);
+            fastify.log.info(`Company ${companyId} ads directory: ${adFiles.length} files (${adFiles.slice(0, 5).join(', ')}${adFiles.length > 5 ? '...' : ''})`);
+          } else {
+            fastify.log.warn(`Company ${companyId} ads directory does not exist: ${adsPath}`);
+          }
+        }
+      }
+    } else {
+      fastify.log.warn(`Companies directory does not exist: ${companiesPath}`);
+    }
+  } catch (error) {
+    fastify.log.warn({ err: error }, 'Error checking companies directory structure');
+  }
 });
 
 // Start server
