@@ -242,6 +242,21 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {404} If shop not found
    */
   fastify.get('/ads/public/manifest', async (request, reply) => {
+    // #region agent log
+    const origin = request.headers.origin;
+    const userAgent = request.headers['user-agent'];
+    const referer = request.headers.referer;
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:manifestEndpoint',message:'Manifest request received',data:{origin,userAgent,referer,url:request.url,ip:request.ip},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    
+    // Add CORS headers explicitly for guest network access
+    if (origin) {
+      reply.header('Access-Control-Allow-Origin', origin);
+      reply.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+      reply.header('Access-Control-Allow-Credentials', 'false');
+    } else {
+      reply.header('Access-Control-Allow-Origin', '*');
+    }
     const querySchema = z.object({
       shopSlug: z.string().min(1),
     });
@@ -305,7 +320,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       return urlWithVersion;
     };
 
-    return {
+    const manifest = {
       manifestVersion,
       ads: ads.map((ad) => ({
         id: ad.id,
@@ -315,6 +330,16 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         version: ad.version,
       })),
     };
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:manifestResponse',message:'Manifest response',data:{shopSlug,adsCount:manifest.ads.length,adUrls:manifest.ads.map(a=>a.url).slice(0,3)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:manifestResponse',message:'Manifest response',data:{shopSlug,adsCount:manifest.ads.length,adUrls:manifest.ads.map(a=>a.url).slice(0,3)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    
+    return manifest;
   });
 
   /**

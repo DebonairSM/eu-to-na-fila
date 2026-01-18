@@ -50,6 +50,8 @@ fastify.register(fastifyHelmet, {
       connectSrc: [
         "'self'", 
         "https://api.qrserver.com", // QR code API
+        "wss:", // WebSocket connections
+        "ws:", // WebSocket connections (non-secure)
       ],
       fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"], // Allow Google Fonts
       frameSrc: ["'self'", "https://www.google.com"], // Allow Google Maps iframe
@@ -231,11 +233,24 @@ fastify.register(fastifyStatic, {
   prefix: '/companies/',
   decorateReply: false,
   wildcard: true,
-  setHeaders: (res, path) => {
+  setHeaders: (res, path, request) => {
     // #region agent log
     const fileExists = existsSync(join(companiesPath, path));
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/server.ts:companiesStaticSetHeaders',message:'Static file serving check',data:{requestPath:path,resolvedPath:join(companiesPath,path),companiesPath,fileExists},timestamp:Date.now()})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/server.ts:companiesStaticSetHeaders',message:'Static file serving check',data:{requestPath:path,resolvedPath:join(companiesPath,path),companiesPath,fileExists,origin:request.headers.origin},timestamp:Date.now()})}).catch(()=>{});
     // #endregion
+    
+    // Add CORS headers for static files to allow cross-origin access (needed for guest networks)
+    const origin = request.headers.origin;
+    if (origin) {
+      // Allow same-origin or any origin for public ad files (they're not sensitive)
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+      res.setHeader('Access-Control-Allow-Credentials', 'false');
+    } else {
+      // No origin header (same-origin request) - allow it
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+    
     // Cache ad images/videos for 1 week
     if (/\.(png|jpg|jpeg|gif|svg|webp|mp4)$/i.test(path)) {
       res.setHeader('Cache-Control', 'public, max-age=604800');
