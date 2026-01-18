@@ -22,10 +22,11 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
   const ALLOWED_MIME_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES];
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB max
 
-  // Get public directory path
+  // Get public directory path (must match server.ts: same directory as server.ts)
+  // ads.ts is in routes/, so we need to go up 2 levels: ../.. from routes/ to src/ to api/
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
-  const publicPath = join(__dirname, '..', 'public');
+  const publicPath = join(__dirname, '..', '..', 'public');
 
   /**
    * Request presigned URL for uploading an ad.
