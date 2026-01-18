@@ -177,6 +177,10 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       const filename = `${ad.id}${extension}`;
       const filePath = join(companyAdsDir, filename);
       await writeFile(filePath, fileBuffer);
+      // #region agent log
+      const fileExistsAfterWrite = existsSync(filePath);
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:uploadAd',message:'File saved after upload',data:{adId:ad.id,filename,filePath,publicUrl:`/companies/${companyId}/ads/${filename}`,fileExistsAfterWrite,companyAdsDir},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
 
       // Set public URL (relative path for static serving)
       const publicUrl = `/companies/${companyId}/ads/${filename}`;

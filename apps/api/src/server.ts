@@ -131,6 +131,12 @@ fastify.register(fastifyRateLimit, {
     'x-ratelimit-reset': true,
   },
   skip: (request: FastifyRequest, key: string) => {
+    // #region agent log
+    const shouldSkipCompanies = request.url.startsWith('/companies/');
+    if (shouldSkipCompanies || request.url.startsWith('/mineiro/') || request.url.startsWith('/api/ads/public/manifest') || (request.url.startsWith('/api/shops/') && request.url.includes('/auth'))) {
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'apps/api/src/server.ts:rateLimitSkip',message:'Rate limit skip check',data:{url:request.url,skipped:true,reason:shouldSkipCompanies?'/companies/':'other'},timestamp:Date.now()})}).catch(()=>{});
+    }
+    // #endregion
     // Skip global rate limit for auth routes - they have their own rate limiting
     if (request.url.startsWith('/api/shops/') && request.url.includes('/auth')) {
       return true;
@@ -151,6 +157,9 @@ fastify.register(fastifyRateLimit, {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       return true;
     }
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'apps/api/src/server.ts:rateLimitSkip',message:'Rate limit NOT skipped',data:{url:request.url,hasAuth:!!authHeader},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     return false;
   },
 } as any);
@@ -221,6 +230,10 @@ fastify.register(fastifyStatic, {
   decorateReply: false,
   wildcard: true,
   setHeaders: (res, path) => {
+    // #region agent log
+    const fileExists = existsSync(join(companiesPath, path));
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/server.ts:companiesStaticSetHeaders',message:'Static file serving check',data:{requestPath:path,resolvedPath:join(companiesPath,path),companiesPath,fileExists},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     // Cache ad images/videos for 1 week
     if (/\.(png|jpg|jpeg|gif|svg|webp|mp4)$/i.test(path)) {
       res.setHeader('Cache-Control', 'public, max-age=604800');
@@ -396,6 +409,12 @@ fastify.addHook('onRequest', async (request, reply) => {
   // #region agent log
   if (request.method === 'POST' && request.url?.startsWith('/api/ads/upload')) {
     fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'apps/api/src/server.ts:onRequest',message:'incoming POST /api/ads/upload',data:{url:request.url,hasAuthHeader:!!request.headers?.authorization,contentType:(request.headers?.['content-type']||'').toString().slice(0,80),contentLength:(request.headers?.['content-length']||'').toString()},timestamp:Date.now()})}).catch(()=>{});
+  }
+  if (request.url?.startsWith('/companies/') && (request.url.endsWith('.png') || request.url.endsWith('.mp4') || request.url.includes('/ads/'))) {
+    const expectedPath = request.url.replace(/^\/companies\//, '');
+    const fullPath = join(companiesPath, expectedPath);
+    const exists = existsSync(fullPath);
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/server.ts:onRequest',message:'Request for company ad file',data:{requestUrl:request.url,expectedPath,fullPath,exists,companiesPath},timestamp:Date.now()})}).catch(()=>{});
   }
   // #endregion
 });
