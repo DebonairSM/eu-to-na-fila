@@ -7,7 +7,7 @@ import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
 import { join } from 'path';
 import { mkdir, writeFile, unlink } from 'fs/promises';
-import { existsSync } from 'fs';
+import { existsSync, createReadStream, statSync } from 'fs';
 import { env } from '../env.js';
 import { getPublicPath } from '../lib/paths.js';
 
@@ -233,6 +233,102 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
 
 
   /**
+   * Get ad media file (image or video).
+   * No authentication required - public endpoint for kiosk display.
+   * 
+   * @route GET /api/ads/:id/media
+   * @param id - Ad ID
+   * @query v - Optional version number for cache busting
+   * @returns Ad file (image or video)
+   * @throws {404} If ad not found or file doesn't exist
+   */
+  fastify.get('/ads/:id/media', async (request, reply) => {
+    const paramsSchema = z.object({
+      id: z.string().transform((val) => parseInt(val, 10)),
+    });
+
+    const { id } = validateRequest(paramsSchema, request.params);
+
+    // Get ad from database
+    const ad = await db.query.companyAds.findFirst({
+      where: eq(schema.companyAds.id, id),
+    });
+
+    if (!ad) {
+      throw new NotFoundError(`Ad with ID ${id} not found`);
+    }
+
+    // Build file path from publicUrl (format: /companies/{companyId}/ads/{filename})
+    if (!ad.publicUrl) {
+      throw new NotFoundError(`Ad ${id} has no associated file`);
+    }
+
+    // Extract filename from publicUrl
+    const urlParts = ad.publicUrl.split('/');
+    const filename = urlParts[urlParts.length - 1];
+    const companyId = ad.companyId.toString();
+    const filePath = join(publicPath, 'companies', companyId, 'ads', filename);
+
+    // Check if file exists
+    if (!existsSync(filePath)) {
+      fastify.log.warn({ adId: id, filePath }, 'Ad file not found on disk');
+      throw new NotFoundError(`Ad file not found for ad ${id}`);
+    }
+
+    // Set content type based on MIME type stored in database
+    if (ad.mimeType) {
+      reply.type(ad.mimeType);
+    } else {
+      // Fallback to extension-based detection
+      const ext = filePath.split('.').pop()?.toLowerCase();
+      const mimeTypes: Record<string, string> = {
+        png: 'image/png',
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        webp: 'image/webp',
+        mp4: 'video/mp4',
+      };
+      reply.type(mimeTypes[ext || ''] || 'application/octet-stream');
+    }
+
+    // Set cache headers with version for cache busting
+    reply.header('Cache-Control', 'public, max-age=604800'); // 1 week
+    if (request.query.v || ad.version) {
+      // Version is already in query param or we can add it
+      reply.header('ETag', `"${ad.id}-${ad.version}"`);
+    }
+
+    // Support range requests for video streaming (essential for <video> tags)
+    const fileStat = statSync(filePath);
+    const fileSize = fileStat.size;
+    const range = request.headers.range;
+
+    if (range) {
+      // Parse range header (format: "bytes=start-end")
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunksize = end - start + 1;
+
+      // Set range response headers
+      reply.code(206); // Partial Content
+      reply.header('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+      reply.header('Accept-Ranges', 'bytes');
+      reply.header('Content-Length', chunksize.toString());
+
+      // Stream the requested range
+      const stream = createReadStream(filePath, { start, end });
+      return reply.send(stream);
+    } else {
+      // No range requested - send full file
+      reply.header('Content-Length', fileSize.toString());
+      reply.header('Accept-Ranges', 'bytes');
+      const stream = createReadStream(filePath);
+      return reply.send(stream);
+    }
+  });
+
+  /**
    * Get public manifest of enabled ads for a shop.
    * No authentication required.
    * 
@@ -305,19 +401,11 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
     // Calculate manifest version (sum of all ad versions for cache busting)
     const manifestVersion = ads.reduce((sum, ad) => sum + ad.version, 0);
 
-    // Build URLs - use absolute URL if STORAGE_PUBLIC_BASE_URL is set, otherwise use relative
-    const baseUrl = env.STORAGE_PUBLIC_BASE_URL;
-    const buildAdUrl = (publicUrl: string, version: number): string => {
-      const urlWithVersion = `${publicUrl}?v=${version}`;
-      if (baseUrl) {
-        try {
-          return new URL(urlWithVersion, baseUrl).toString();
-        } catch {
-          // If baseUrl is invalid, fall back to relative URL
-          return urlWithVersion;
-        }
-      }
-      return urlWithVersion;
+    // Build URLs - use API endpoint instead of static file paths
+    // This simplifies the architecture and eliminates CORS/network issues
+    const buildAdUrl = (adId: number, version: number): string => {
+      // Use API endpoint: /api/ads/:id/media?v=:version
+      return `/api/ads/${adId}/media?v=${version}`;
     };
 
     const manifest = {
@@ -326,7 +414,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         id: ad.id,
         position: ad.position,
         mediaType: ad.mediaType,
-        url: buildAdUrl(ad.publicUrl, ad.version),
+        url: buildAdUrl(ad.id, ad.version),
         version: ad.version,
       })),
     };

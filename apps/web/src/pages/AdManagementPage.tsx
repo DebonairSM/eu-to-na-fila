@@ -263,7 +263,7 @@ export function AdManagementPage() {
                       <div className="flex-shrink-0">
                         {ad.mediaType === 'image' ? (
                           <img
-                            src={`${ad.publicUrl}?v=${ad.version}`}
+                            src={`/api/ads/${ad.id}/media?v=${ad.version}`}
                             alt={`Anúncio ${ad.position}`}
                             className="w-32 h-32 object-contain bg-black rounded-lg border border-white/10"
                     onError={(e) => {
@@ -272,7 +272,7 @@ export function AdManagementPage() {
                   />
                         ) : (
                           <video
-                            src={`${ad.publicUrl}?v=${ad.version}`}
+                            src={`/api/ads/${ad.id}/media?v=${ad.version}`}
                             className="w-32 h-32 object-contain bg-black rounded-lg border border-white/10"
                             controls={false}
                             muted
@@ -447,7 +447,7 @@ export function AdManagementPage() {
                     <div className="flex-shrink-0">
                       {ad.mediaType === 'image' ? (
                         <img
-                          src={`${ad.publicUrl}?v=${ad.version}`}
+                          src={`/api/ads/${ad.id}/media?v=${ad.version}`}
                           alt={`Anúncio ${ad.position}`}
                           className="w-32 h-32 object-contain bg-black rounded-lg border border-[rgba(212,175,55,0.3)]"
                     onError={(e) => {
@@ -456,7 +456,7 @@ export function AdManagementPage() {
                   />
                       ) : (
                         <video
-                          src={`${ad.publicUrl}?v=${ad.version}`}
+                          src={`/api/ads/${ad.id}/media?v=${ad.version}`}
                           className="w-32 h-32 object-contain bg-black rounded-lg border border-[rgba(212,175,55,0.3)]"
                           controls={false}
                           muted

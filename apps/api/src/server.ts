@@ -215,8 +215,9 @@ fastify.register(fastifyStatic, {
   },
 });
 
-// Register static file serving for company ad files
-// Create companies directory if it doesn't exist
+// Company ad files are now served through API endpoint /api/ads/:id/media
+// No need for static file serving - this simplifies the architecture and eliminates CORS issues
+// Create companies directory if it doesn't exist (for file storage, not serving)
 const companiesPath = join(publicPath, 'companies');
 if (!existsSync(companiesPath)) {
   try {
@@ -226,37 +227,6 @@ if (!existsSync(companiesPath)) {
     fastify.log.warn({ err: error }, 'Could not create companies directory');
   }
 }
-
-// Register static file serving for /companies/ paths
-fastify.register(fastifyStatic, {
-  root: companiesPath,
-  prefix: '/companies/',
-  decorateReply: false,
-  wildcard: true,
-  setHeaders: (res, path, request) => {
-    // #region agent log
-    const fileExists = existsSync(join(companiesPath, path));
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/server.ts:companiesStaticSetHeaders',message:'Static file serving check',data:{requestPath:path,resolvedPath:join(companiesPath,path),companiesPath,fileExists,origin:request.headers.origin},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-    
-    // Add CORS headers for static files to allow cross-origin access (needed for guest networks)
-    const origin = request.headers.origin;
-    if (origin) {
-      // Allow same-origin or any origin for public ad files (they're not sensitive)
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-      res.setHeader('Access-Control-Allow-Credentials', 'false');
-    } else {
-      // No origin header (same-origin request) - allow it
-      res.setHeader('Access-Control-Allow-Origin', '*');
-    }
-    
-    // Cache ad images/videos for 1 week
-    if (/\.(png|jpg|jpeg|gif|svg|webp|mp4)$/i.test(path)) {
-      res.setHeader('Cache-Control', 'public, max-age=604800');
-    }
-  },
-});
 
 // Register static file serving for root assets (if root build exists)
 if (existsSync(rootPath)) {
