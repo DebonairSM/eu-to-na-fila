@@ -28,7 +28,6 @@ If Blueprint doesn't work, create the service manually:
    **Environment Variables:**
    ```
    NODE_ENV=production
-   PORT=3000
    DATABASE_URL=<postgres-connection-string-from-render-postgres-database>
    JWT_SECRET=<generate-a-secure-random-string-at-least-32-chars>
    CORS_ORIGIN=https://your-app.onrender.com
@@ -101,6 +100,7 @@ If Blueprint doesn't work, create the service manually:
 
 1. Set `CORS_ORIGIN` to your actual Render URL (e.g., `https://eutonafila.onrender.com`)
 2. Set `DATABASE_URL` to your PostgreSQL connection string (if not already set)
+3. Do not set `PORT` manually on Render. Render injects `PORT` at runtime and the app binds to it.
 3. Database migrations run automatically on start, but you can manually run:
    - In Render dashboard, go to **Shell**
    - Run: `pnpm db:migrate`
