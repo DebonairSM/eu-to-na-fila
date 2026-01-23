@@ -144,6 +144,7 @@ export function CompanyDashboard() {
             Sair
           </button>
         </div>
+        </Container>
       </main>
     </div>
     );

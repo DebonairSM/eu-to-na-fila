@@ -15,12 +15,12 @@ export function RootHomePage() {
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <nav className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-50">
         <Container size="2xl">
-          <div className="flex items-center justify-between py-5">
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm group-hover:from-blue-400 group-hover:to-indigo-500 transition-all">
+          <div className="flex items-center justify-between py-4 sm:py-5">
+            <Link to="/" className="flex items-center gap-3 group leading-none">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm group-hover:from-blue-400 group-hover:to-indigo-500 transition-all shrink-0">
                 E
               </div>
-              <span className="text-lg font-medium tracking-tight">EuToNaFila</span>
+              <span className="text-lg font-medium tracking-tight leading-none">EuToNaFila</span>
             </Link>
             
             {/* Desktop Navigation */}
@@ -68,7 +68,7 @@ export function RootHomePage() {
       </nav>
 
       <main className="w-full">
-        <section className="relative min-h-[92vh] flex items-center justify-center px-6 py-24">
+        <section className="relative min-h-[92vh] flex items-start sm:items-center justify-start sm:justify-center px-6 pt-10 pb-20 sm:py-24">
           <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-transparent" />
           <div className="relative max-w-4xl mx-auto text-center space-y-8">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-400 text-xs font-medium uppercase tracking-wider">

@@ -160,6 +160,7 @@ export function CompanyHomePage() {
               </div>
             ))}
           </div>
+          </Container>
         </section>
 
         <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
@@ -176,7 +177,7 @@ export function CompanyHomePage() {
             >
               Fale Conosco Agora
             </Link>
-          </Container>
+          </div>
         </section>
       </main>
 

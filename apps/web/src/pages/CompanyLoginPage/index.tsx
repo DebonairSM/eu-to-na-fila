@@ -19,6 +19,7 @@ export function CompanyLoginPage() {
                 <CompanyLoginForm />
               </div>
             </div>
+          </div>
           </Container>
         </main>
       </div>

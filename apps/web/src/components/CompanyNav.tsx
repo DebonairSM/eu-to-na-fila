@@ -31,6 +31,7 @@ export function CompanyNav() {
             <p className="text-lg font-semibold">Virtual Line Software</p>
           </div>
         </div>
+        </div>
 
         <div className="flex items-center gap-3">
           <nav className="hidden md:flex items-center gap-2 text-sm">
