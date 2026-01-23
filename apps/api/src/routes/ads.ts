@@ -242,12 +242,21 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
    * @returns Ad file (image or video)
    * @throws {404} If ad not found or file doesn't exist
    */
-  fastify.get('/ads/:id/media', async (request, reply) => {
+  fastify.get<{
+    Params: { id: string };
+    Querystring: { v?: string | string[] };
+  }>('/ads/:id/media', async (request, reply) => {
     const paramsSchema = z.object({
       id: z.string().transform((val) => parseInt(val, 10)),
     });
 
     const { id } = validateRequest(paramsSchema, request.params);
+    const { v } = validateRequest(
+      z.object({
+        v: z.union([z.string(), z.array(z.string())]).optional(),
+      }),
+      request.query
+    );
 
     // Get ad from database
     const ad = await db.query.companyAds.findFirst({
@@ -293,7 +302,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Set cache headers with version for cache busting
     reply.header('Cache-Control', 'public, max-age=604800'); // 1 week
-    if (request.query.v || ad.version) {
+    if (v !== undefined || ad.version) {
       // Version is already in query param or we can add it
       reply.header('ETag', `"${ad.id}-${ad.version}"`);
     }
