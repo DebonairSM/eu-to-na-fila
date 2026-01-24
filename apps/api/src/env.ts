@@ -18,6 +18,9 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32).default('change_me_in_production_use_a_long_random_string_at_least_32_chars'),
   CORS_ORIGIN: z.string().default('http://localhost:4040'),
   SHOP_SLUG: z.string().default('mineiro'),
+  // Supabase Storage configuration for ad files
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   // Storage configuration (S3-compatible) - Optional, only needed if using cloud storage
   // If not provided, files will be stored locally in public/companies/ directory
   STORAGE_PROVIDER: z.enum(['s3', 'r2', 'minio']).optional(),

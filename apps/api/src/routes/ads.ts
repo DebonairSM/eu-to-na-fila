@@ -10,6 +10,7 @@ import { mkdir, writeFile, unlink } from 'fs/promises';
 import { existsSync, createReadStream, statSync } from 'fs';
 import { env } from '../env.js';
 import { getPublicPath } from '../lib/paths.js';
+import { uploadAdFile, getAdFileUrl, deleteAdFile } from '../lib/storage.js';
 
 /**
  * Ad management routes.
@@ -160,33 +161,39 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         mediaType,
         mimeType: fileMimetype,
         bytes: fileBytesRead,
-        storageKey: '', // Not used for local storage
-        publicUrl: '', // Will be set after file save
+        storageKey: '', // Will be set after upload
+        publicUrl: '', // Will be set after upload
         version: 1,
       }).returning();
 
-      // Create directory structure: public/companies/<company-id>/ads/
-      const companyAdsDir = join(publicPath, 'companies', companyId.toString(), 'ads');
+      // Upload to Supabase Storage if configured, otherwise fall back to local filesystem
+      let publicUrl: string;
+      let storageKey: string;
+      
+      if (env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY) {
+        // Upload to Supabase Storage
+        publicUrl = await uploadAdFile(companyId, ad.id, fileBuffer, fileMimetype);
+        storageKey = `companies/${companyId}/ads/${ad.id}${extension}`;
+      } else {
+        // Fallback to local filesystem
+        const companyAdsDir = join(publicPath, 'companies', companyId.toString(), 'ads');
         if (!existsSync(companyAdsDir)) {
           await mkdir(companyAdsDir, { recursive: true });
         }
 
-      // Save file (buffer was already consumed above)
-      const filename = `${ad.id}${extension}`;
-      const filePath = join(companyAdsDir, filename);
-      await writeFile(filePath, fileBuffer);
-      // #region agent log
-      const fileExistsAfterWrite = existsSync(filePath);
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:uploadAd',message:'File saved after upload',data:{adId:ad.id,filename,filePath,publicUrl:`/companies/${companyId}/ads/${filename}`,fileExistsAfterWrite,companyAdsDir},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
+        const filename = `${ad.id}${extension}`;
+        const filePath = join(companyAdsDir, filename);
+        await writeFile(filePath, fileBuffer);
+        
+        publicUrl = `/companies/${companyId}/ads/${filename}`;
+        storageKey = `companies/${companyId}/ads/${filename}`;
+      }
 
-      // Set public URL (relative path for static serving)
-      const publicUrl = `/companies/${companyId}/ads/${filename}`;
-
-      // Update ad record with public URL and enable it
+      // Update ad record with public URL, storage key, and enable it
       const [updatedAd] = await db.update(schema.companyAds)
         .set({
           publicUrl,
+          storageKey,
           enabled: true,
           updatedAt: new Date(),
         })
@@ -267,12 +274,23 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Ad with ID ${id} not found`);
     }
 
-    // Build file path from publicUrl (format: /companies/{companyId}/ads/{filename})
     if (!ad.publicUrl) {
       throw new NotFoundError(`Ad ${id} has no associated file`);
     }
 
-    // Extract filename from publicUrl
+    // If publicUrl is a full URL (Supabase Storage), redirect to it
+    if (ad.publicUrl.startsWith('http://') || ad.publicUrl.startsWith('https://')) {
+      // Set cache headers
+      reply.header('Cache-Control', 'public, max-age=604800'); // 1 week
+      if (v !== undefined || ad.version) {
+        reply.header('ETag', `"${ad.id}-${ad.version}"`);
+      }
+      // Redirect to Supabase Storage URL (CDN-backed, handles range requests automatically)
+      return reply.redirect(302, ad.publicUrl);
+    }
+
+    // Fallback to local filesystem for legacy ads
+    // Build file path from publicUrl (format: /companies/{companyId}/ads/{filename})
     const urlParts = ad.publicUrl.split('/');
     const filename = urlParts[urlParts.length - 1];
     const companyId = ad.companyId.toString();
@@ -347,13 +365,6 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {404} If shop not found
    */
   fastify.get('/ads/public/manifest', async (request, reply) => {
-    // #region agent log
-    const origin = request.headers.origin;
-    const userAgent = request.headers['user-agent'];
-    const referer = request.headers.referer;
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:manifestEndpoint',message:'Manifest request received',data:{origin,userAgent,referer,url:request.url,ip:request.ip},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-    
     // Add CORS headers explicitly for guest network access
     if (origin) {
       reply.header('Access-Control-Allow-Origin', origin);
@@ -427,14 +438,6 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         version: ad.version,
       })),
     };
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:manifestResponse',message:'Manifest response',data:{shopSlug,adsCount:manifest.ads.length,adUrls:manifest.ads.map(a=>a.url).slice(0,3)},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'apps/api/src/routes/ads.ts:manifestResponse',message:'Manifest response',data:{shopSlug,adsCount:manifest.ads.length,adUrls:manifest.ads.map(a=>a.url).slice(0,3)},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     
     return manifest;
   });
@@ -633,22 +636,30 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         throw new NotFoundError('Ad not found or access denied');
       }
 
-      // Delete file from filesystem if it exists
+      // Delete file from storage if it exists
       if (ad.publicUrl) {
         try {
-          // Extract filename from publicUrl (format: /companies/<company-id>/ads/<filename>)
-          const urlParts = ad.publicUrl.split('/');
-          const filename = urlParts[urlParts.length - 1];
-          const companyId = ad.companyId.toString();
-          const filePath = join(publicPath, 'companies', companyId, 'ads', filename);
-          
-          if (existsSync(filePath)) {
-            await unlink(filePath);
-            request.log.info({ adId: id, filePath }, 'Deleted ad file from filesystem');
+          // If it's a Supabase URL, delete from Supabase Storage
+          if (ad.publicUrl.startsWith('http://') || ad.publicUrl.startsWith('https://')) {
+            if (env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY && ad.mimeType) {
+              await deleteAdFile(ad.companyId, id, ad.mimeType);
+              request.log.info({ adId: id }, 'Deleted ad file from Supabase Storage');
+            }
+          } else {
+            // Fallback to local filesystem deletion
+            const urlParts = ad.publicUrl.split('/');
+            const filename = urlParts[urlParts.length - 1];
+            const companyId = ad.companyId.toString();
+            const filePath = join(publicPath, 'companies', companyId, 'ads', filename);
+            
+            if (existsSync(filePath)) {
+              await unlink(filePath);
+              request.log.info({ adId: id, filePath }, 'Deleted ad file from filesystem');
+            }
           }
         } catch (fileError) {
           // Log error but don't fail the deletion - file might not exist
-          request.log.warn({ err: fileError, adId: id }, 'Error deleting ad file from filesystem');
+          request.log.warn({ err: fileError, adId: id }, 'Error deleting ad file from storage');
         }
       }
 

@@ -17,8 +17,14 @@ services:
         sync: false
       - key: SHOP_SLUG
         value: mineiro
-      # Storage configuration (OPTIONAL - S3-compatible)
-      # If not set, files are stored locally (but will be lost on redeploy)
+      # Supabase Storage configuration for ad files
+      # Set these in Render dashboard with your actual Supabase values
+      - key: SUPABASE_URL
+        sync: false  # Set in dashboard, format: https://<project-ref>.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false  # Set in dashboard (service role key from Supabase dashboard)
+      # Legacy storage configuration (OPTIONAL - S3-compatible)
+      # If Supabase is configured, it takes precedence over local filesystem
       # For persistent storage, use Cloudflare R2 (free tier available)
       # Set these in Render dashboard with your actual values if using cloud storage
       # - key: STORAGE_PROVIDER
