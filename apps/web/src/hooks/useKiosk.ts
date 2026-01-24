@@ -158,7 +158,7 @@ export function useKiosk() {
           console.error('[useKiosk] WebSocket error:', err);
         };
 
-        ws.onclose = (event) => {
+        ws.onclose = (_event) => {
           console.log('[useKiosk] WebSocket closed, reconnecting...');
           wsRef.current = null;
           reconnectTimeoutRef.current = setTimeout(connect, 3000);

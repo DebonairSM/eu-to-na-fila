@@ -366,6 +366,7 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
    */
   fastify.get('/ads/public/manifest', async (request, reply) => {
     // Add CORS headers explicitly for guest network access
+    const origin = request.headers.origin;
     if (origin) {
       reply.header('Access-Control-Allow-Origin', origin);
       reply.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');

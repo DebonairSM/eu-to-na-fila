@@ -75,7 +75,7 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, onError }: KioskAdsPl
           console.error('[KioskAdsPlayer] WebSocket error:', err);
         };
 
-        ws.onclose = (event) => {
+        ws.onclose = (_event) => {
           console.log('[KioskAdsPlayer] WebSocket closed, reconnecting...');
           wsRef.current = null;
           // Reconnect after a delay
