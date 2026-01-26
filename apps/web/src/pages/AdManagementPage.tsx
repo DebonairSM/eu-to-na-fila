@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
 import { Container } from '@/components/design-system/Spacing/Container';
@@ -54,9 +54,15 @@ export function AdManagementPage() {
       const loadedAds = await api.getAds();
       setAds(loadedAds);
     } catch (err) {
+      // Don't show error for auth errors - onAuthError callback will handle redirect
+      if (err instanceof ApiError && err.isAuthError()) {
+        // Auth error - onAuthError callback will redirect to login
+        // Don't set error state to avoid showing error message before redirect
+        return;
+      }
       setError(getErrorMessage(err, 'Erro ao carregar anúncios'));
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -111,6 +117,14 @@ export function AdManagementPage() {
       }, 1000);
     } catch (err) {
       console.error('[AdManagement] Upload failed:', err);
+      // Don't show error for auth errors - onAuthError callback will handle redirect
+      if (err instanceof ApiError && err.isAuthError()) {
+        // Auth error - onAuthError callback will redirect to login
+        // Don't set error state to avoid showing error message before redirect
+        setUploading(null);
+        setUploadProgress(0);
+        return;
+      }
       setError(getErrorMessage(err, 'Erro ao fazer upload do anúncio'));
       setUploadProgress(0);
       setUploading(null);
@@ -124,6 +138,11 @@ export function AdManagementPage() {
       setSuccess(`Anúncio ${!currentEnabled ? 'ativado' : 'desativado'} com sucesso!`);
       await loadAds();
     } catch (err) {
+      // Don't show error for auth errors - onAuthError callback will handle redirect
+      if (err instanceof ApiError && err.isAuthError()) {
+        // Auth error - onAuthError callback will redirect to login
+        return;
+      }
       setError(getErrorMessage(err, 'Erro ao atualizar anúncio'));
     }
   };
@@ -139,6 +158,11 @@ export function AdManagementPage() {
       setSuccess('Anúncio excluído com sucesso!');
       await loadAds();
     } catch (err) {
+      // Don't show error for auth errors - onAuthError callback will handle redirect
+      if (err instanceof ApiError && err.isAuthError()) {
+        // Auth error - onAuthError callback will redirect to login
+        return;
+      }
       setError(getErrorMessage(err, 'Erro ao excluir anúncio'));
     }
   };
