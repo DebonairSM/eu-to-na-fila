@@ -22,6 +22,7 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, onError }: KioskAdsPl
   const containerRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const preloadRef = useRef<HTMLImageElement | HTMLVideoElement | null>(null);
 
   // Fetch manifest
   const fetchManifest = async () => {
@@ -110,6 +111,58 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, onError }: KioskAdsPl
   const currentAd = ads.length > 0 && currentAdIndex >= 0 && currentAdIndex < ads.length
     ? ads[currentAdIndex]
     : null;
+
+  // Calculate next ad index for preloading
+  const nextAdIndex = ads.length > 0 ? (currentAdIndex + 1) % ads.length : 0;
+  const nextAd = ads.length > 0 && nextAdIndex >= 0 && nextAdIndex < ads.length
+    ? ads[nextAdIndex]
+    : null;
+
+  // Preload next ad in the background
+  useEffect(() => {
+    if (!nextAd || !currentAd) return;
+
+    // Clean up previous preload element
+    if (preloadRef.current) {
+      if (preloadRef.current.parentNode) {
+        preloadRef.current.parentNode.removeChild(preloadRef.current);
+      }
+      preloadRef.current = null;
+    }
+
+    // Create hidden preload element
+    if (nextAd.mediaType === 'image') {
+      const img = document.createElement('img');
+      img.src = nextAd.url;
+      img.style.display = 'none';
+      img.style.position = 'absolute';
+      img.style.visibility = 'hidden';
+      img.style.width = '1px';
+      img.style.height = '1px';
+      document.body.appendChild(img);
+      preloadRef.current = img;
+    } else {
+      const video = document.createElement('video');
+      video.src = nextAd.url;
+      video.preload = 'auto';
+      video.muted = true;
+      video.style.display = 'none';
+      video.style.position = 'absolute';
+      video.style.visibility = 'hidden';
+      video.style.width = '1px';
+      video.style.height = '1px';
+      document.body.appendChild(video);
+      preloadRef.current = video;
+    }
+
+    // Cleanup on unmount or when next ad changes
+    return () => {
+      if (preloadRef.current && preloadRef.current.parentNode) {
+        preloadRef.current.parentNode.removeChild(preloadRef.current);
+        preloadRef.current = null;
+      }
+    };
+  }, [nextAd, currentAd]);
 
   if (loading) {
     return (
