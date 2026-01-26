@@ -298,6 +298,20 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Check if file exists
     if (!existsSync(filePath)) {
+      // If Supabase is configured and we have storage_key or can construct it, try Supabase URL
+      if (env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY && ad.mimeType) {
+        try {
+          const supabaseUrl = getAdFileUrl(ad.companyId, id, ad.mimeType);
+          fastify.log.info({ adId: id, supabaseUrl }, 'Legacy ad not found locally, redirecting to Supabase');
+          reply.header('Cache-Control', 'public, max-age=604800');
+          if (v !== undefined || ad.version) {
+            reply.header('ETag', `"${ad.id}-${ad.version}"`);
+          }
+          return reply.redirect(302, supabaseUrl);
+        } catch (error) {
+          fastify.log.warn({ adId: id, err: error }, 'Failed to construct Supabase URL for legacy ad');
+        }
+      }
       fastify.log.warn({ adId: id, filePath }, 'Ad file not found on disk');
       throw new NotFoundError(`Ad file not found for ad ${id}`);
     }
