@@ -39,44 +39,26 @@ declare module 'fastify' {
  */
 export function requireAuth(): preHandlerHookHandler {
   return async (request: FastifyRequest, reply: FastifyReply) => {
-    // #region agent log (debug-session)
-    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/middleware/auth.ts:requireAuth:entry',message:'Auth middleware called',data:{path:request.url,method:request.method,hasAuthHeader:!!request.headers.authorization,authHeaderPrefix:request.headers.authorization?.substring(0,30)||'none'},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion agent log (debug-session)
     // Extract token from Authorization header
     const authHeader = request.headers.authorization;
 
     if (!authHeader) {
-      // #region agent log (debug-session)
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H6',location:'apps/api/src/middleware/auth.ts:requireAuth:no-header',message:'Missing authorization header',data:{path:request.url},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion agent log (debug-session)
       throw new UnauthorizedError('Missing authorization header');
     }
 
     if (!authHeader.startsWith('Bearer ')) {
-      // #region agent log (debug-session)
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'apps/api/src/middleware/auth.ts:requireAuth:invalid-format',message:'Invalid authorization format',data:{authHeaderPrefix:authHeader.substring(0,30)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion agent log (debug-session)
       throw new UnauthorizedError('Invalid authorization format');
     }
 
     const token = authHeader.substring(7);
 
     if (!token) {
-      // #region agent log (debug-session)
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'apps/api/src/middleware/auth.ts:requireAuth:empty-token',message:'Empty token after Bearer prefix',data:{},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion agent log (debug-session)
       throw new UnauthorizedError('Missing token');
     }
 
     // Verify JWT token
     try {
-      // #region agent log (debug-session)
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/middleware/auth.ts:requireAuth:before-verify',message:'About to verify token',data:{tokenLength:token.length,tokenPrefix:token.substring(0,20),serverTime:new Date().toISOString()},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion agent log (debug-session)
       const decoded = verifyToken(token);
-      // #region agent log (debug-session)
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/middleware/auth.ts:requireAuth:verify-success',message:'Token verified successfully',data:{userId:decoded.userId,role:decoded.role,companyId:decoded.companyId,shopId:decoded.shopId,iat:decoded.iat,exp:decoded.exp,expiresAt:decoded.exp?new Date(decoded.exp*1000).toISOString():null,currentTime:new Date().toISOString()},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion agent log (debug-session)
       request.user = {
         id: decoded.userId,
         shopId: decoded.shopId,
@@ -84,9 +66,6 @@ export function requireAuth(): preHandlerHookHandler {
         role: decoded.role,
       };
     } catch (error) {
-      // #region agent log (debug-session)
-      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/api/src/middleware/auth.ts:requireAuth:verify-error',message:'Token verification failed',data:{errorType:error instanceof Error?error.constructor.name:'unknown',errorMessage:error instanceof Error?error.message:String(error),tokenLength:token.length,tokenPrefix:token.substring(0,20),serverTime:new Date().toISOString()},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion agent log (debug-session)
       const message = error instanceof Error ? error.message : 'Invalid or expired token';
       throw new UnauthorizedError(message);
     }
