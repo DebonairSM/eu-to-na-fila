@@ -796,6 +796,9 @@ class ApiClient {
       version: number;
     };
   }> {
+    // #region agent log (debug-session)
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/web/src/lib/api.ts:uploadAd:entry',message:'Upload ad called',data:{hasToken:!!this.authToken,tokenLength:this.authToken?.length||0,tokenPrefix:this.authToken?.substring(0,20)||'none',fileSize:file.size,fileName:file.name,shopId,position},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion agent log (debug-session)
     const formData = new FormData();
     formData.append('file', file);
     if (shopId !== undefined && shopId !== null) {
@@ -808,6 +811,13 @@ class ApiClient {
     const headers: Record<string, string> = {};
     if (this.authToken) {
       headers['Authorization'] = `Bearer ${this.authToken}`;
+      // #region agent log (debug-session)
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/web/src/lib/api.ts:uploadAd:before-request',message:'Token added to headers',data:{tokenLength:this.authToken.length,tokenPrefix:this.authToken.substring(0,20),authHeader:headers['Authorization']?.substring(0,30)||'none'},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion agent log (debug-session)
+    } else {
+      // #region agent log (debug-session)
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H6',location:'apps/web/src/lib/api.ts:uploadAd:no-token',message:'No auth token available',data:{},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion agent log (debug-session)
     }
 
     const response = await fetch(`${this.baseUrl}/ads/uploads`, {
@@ -815,9 +825,15 @@ class ApiClient {
       headers,
       body: formData,
     });
+    // #region agent log (debug-session)
+    fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/web/src/lib/api.ts:uploadAd:response',message:'Response received',data:{status:response.status,statusText:response.statusText,ok:response.ok},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion agent log (debug-session)
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      // #region agent log (debug-session)
+      fetch('http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'apps/web/src/lib/api.ts:uploadAd:error',message:'Upload failed',data:{status:response.status,error:errorData.error,code:errorData.code,hasToken:!!this.authToken},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion agent log (debug-session)
       throw new ApiError(
         errorData.error || `Upload failed: ${response.statusText}`,
         response.status,
