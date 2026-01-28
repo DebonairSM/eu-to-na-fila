@@ -6,7 +6,6 @@ import { api } from './lib/api';
 import { lazyWithRetry } from './lib/lazyWithRetry';
 
 const LandingPage = lazyWithRetry(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })));
-const CompanyHomePage = lazyWithRetry(() => import('./pages/CompanyHomePage').then((m) => ({ default: m.CompanyHomePage })));
 const ContactPage = lazyWithRetry(() => import('./pages/ContactPage').then((m) => ({ default: m.ContactPage })));
 const NetworkPage = lazyWithRetry(() => import('./pages/NetworkPage').then((m) => ({ default: m.NetworkPage })));
 const AboutPage = lazyWithRetry(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
@@ -73,7 +72,6 @@ function AppContent() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<LandingPage />} />
-      <Route path="/company" element={<CompanyHomePage />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/network" element={<NetworkPage />} />
       <Route path="/about" element={<AboutPage />} />

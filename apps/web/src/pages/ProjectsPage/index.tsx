@@ -5,8 +5,8 @@ export function ProjectsPage() {
   const projects = [
     {
       id: 'eu-to-na-fila',
-      title: 'EuToNaFila Gerenciamento de Fila',
-      description: 'Sistema completo de gerenciamento de filas para barbearias e empresas de serviços. Inclui rastreamento de fila em tempo real, gerenciamento de equipe, analytics e suporte PWA para totens em tablets.',
+      title: 'EuToNaFila – Fila Virtual ao Vivo',
+      description: 'Fila virtual em tempo real para barbearias. Clientes entram, saem e voltam na vez. Posição ao vivo, estimativa de espera, notificações. Painel para o dono, analytics e página pública por barbearia. Inclui PWA para totens.',
       technologies: ['React', 'TypeScript', 'Fastify', 'PostgreSQL', 'WebSockets', 'PWA'],
       link: '/mineiro/',
       status: 'Ativo',
@@ -53,7 +53,7 @@ export function ProjectsPage() {
         <header className="mb-16">
           <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Projetos</h1>
           <p className="text-xl text-gray-400 max-w-2xl leading-relaxed font-light">
-            Explore nosso portfólio de soluções de software e aplicações.
+            O EuToNaFila em produção. Acesse a fila virtual e o app.
           </p>
         </header>
 
@@ -122,7 +122,7 @@ export function ProjectsPage() {
                 <span className="text-lg font-medium">EuToNaFila</span>
               </div>
               <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                Construindo soluções de software inteligentes para empresas que buscam melhorar a eficácia e impulsionar o crescimento.
+                Fila virtual ao vivo para barbearias. Simples, local, em tempo real.
               </p>
             </div>
             <div>
@@ -144,14 +144,20 @@ export function ProjectsPage() {
             </div>
             <div>
               <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Empresa</h3>
-              <p className="text-gray-500 text-sm mb-2">Desenvolvimento de Software com IA</p>
-              <p className="text-gray-600 text-sm">
-                Focados em construir soluções eficazes
-              </p>
+              <p className="text-gray-500 text-sm">Feito para barbearias</p>
             </div>
           </div>
           <div className="pt-8 border-t border-white/5 text-center text-gray-600 text-sm">
-            <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
+              <Link
+                to="/company/login"
+                className="text-gray-500/60 hover:text-gray-400 transition-colors text-xs flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">lock</span>
+                Admin
+              </Link>
+            </div>
           </div>
         </Container>
       </footer>

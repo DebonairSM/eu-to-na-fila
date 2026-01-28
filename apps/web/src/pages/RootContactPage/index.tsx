@@ -42,7 +42,7 @@ export function RootContactPage() {
         <header className="mb-16 text-center">
           <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Entre em Contato</h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-            Interessado em trabalhar juntos? Entre em contato e vamos discutir como podemos ajudar a melhorar seu negócio.
+            Quer levar a fila virtual para sua barbearia? Fale conosco.
           </p>
         </header>
 
@@ -50,7 +50,7 @@ export function RootContactPage() {
           <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-12">
             <h2 className="text-3xl font-light mb-8">Entre em Contato</h2>
             <p className="text-lg text-gray-300 leading-relaxed mb-10">
-              Se você está procurando melhorar as operações do seu negócio, explorar soluções com IA ou discutir um projeto de software personalizado, estamos aqui para ajudar. Entre em contato e vamos começar uma conversa.
+              Barbearia com fila na calçada ou cliente que desiste por incerteza? O EuToNaFila resolve. Escreva e conversamos.
             </p>
             
             <div className="space-y-8">
@@ -72,9 +72,9 @@ export function RootContactPage() {
                 <div>
                   <h3 className="text-lg font-medium mb-3">Serviços</h3>
                   <div className="space-y-1.5 text-gray-400">
-                    <p>Desenvolvimento de Software com IA</p>
-                    <p>Otimização de Processos de Negócios</p>
-                    <p>Soluções de Software Personalizadas</p>
+                    <p>Fila virtual ao vivo para barbearias</p>
+                    <p>Painel, analytics e IA para decisões</p>
+                    <p>Página pública por barbearia</p>
                   </div>
                 </div>
               </div>
@@ -104,7 +104,7 @@ export function RootContactPage() {
                 <span className="text-lg font-medium">EuToNaFila</span>
               </div>
               <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                Construindo soluções de software inteligentes para empresas que buscam melhorar a eficácia e impulsionar o crescimento.
+                Fila virtual ao vivo para barbearias. Simples, local, em tempo real.
               </p>
             </div>
             <div>
@@ -126,14 +126,20 @@ export function RootContactPage() {
             </div>
             <div>
               <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Empresa</h3>
-              <p className="text-gray-500 text-sm mb-2">Desenvolvimento de Software com IA</p>
-              <p className="text-gray-600 text-sm">
-                Focados em construir soluções eficazes
-              </p>
+              <p className="text-gray-500 text-sm">Feito para barbearias</p>
             </div>
           </div>
           <div className="pt-8 border-t border-white/5 text-center text-gray-600 text-sm">
-            <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
+              <Link
+                to="/company/login"
+                className="text-gray-500/60 hover:text-gray-400 transition-colors text-xs flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">lock</span>
+                Admin
+              </Link>
+            </div>
           </div>
         </Container>
       </footer>

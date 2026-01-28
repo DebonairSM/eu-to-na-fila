@@ -42,51 +42,51 @@ export function RootAboutPage() {
         <header className="mb-16">
           <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Sobre EuToNaFila</h1>
           <p className="text-xl text-gray-400 max-w-2xl leading-relaxed font-light">
-            Construímos soluções de software sofisticadas que ajudam empresas a melhorar a eficácia e alcançar seus objetivos.
+            Fila virtual ao vivo para barbearias. Simples, local, em tempo real.
           </p>
         </header>
 
         <section className="mb-20">
           <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-12">
-            <h2 className="text-3xl font-light mb-6">Nossa Missão</h2>
+            <h2 className="text-3xl font-light mb-6">O que fazemos</h2>
             <div className="space-y-4 text-gray-300 leading-relaxed">
               <p className="text-lg">
-                EuToNaFila é uma empresa de desenvolvimento de software focada em criar soluções inteligentes que ajudam empresas a melhorar sua eficácia. Combinamos tecnologia avançada com insights práticos de negócios para entregar software que faz uma diferença significativa.
+                O EuToNaFila é um sistema de fila virtual ao vivo para barbearias. Não é agendamento nem SaaS genérico. Os clientes entram na fila, saem, vivem a vida e voltam na vez. O dono vê o fluxo em tempo real, tem analytics e uma página pública por barbearia.
               </p>
               <p className="text-lg">
-                Nossa abordagem está centrada em entender as necessidades do negócio e construir soluções que são tecnicamente excelentes e genuinamente úteis. Buscamos capacitar empresas com ferramentas que agilizam operações, otimizam fluxos de trabalho e impulsionam o crescimento sustentável.
+                Focamos em clareza operacional e decisões apoiadas por dados. A IA usa dados ao vivo e histórico para sugerir, por exemplo, quando falta equipe, quando vale divulgar promoção ou em que horário colocar mais um barbeiro. Tudo pensado para quem comanda o dia a dia da barbearia.
               </p>
             </div>
           </div>
         </section>
 
         <section className="mb-20">
-          <h2 className="text-3xl font-light mb-12">O Que Fazemos</h2>
+          <h2 className="text-3xl font-light mb-12">Pilares</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
-                title: 'Soluções com IA',
-                description: 'Aproveite a inteligência artificial para automatizar processos, obter insights e tomar decisões baseadas em dados.',
+                title: 'Fila ao vivo',
+                description: 'Fila virtual em tempo real. Posição, tempo estimado e notificações quando a vez se aproxima.',
               },
               {
-                title: 'Melhorar Eficácia',
-                description: 'Otimize fluxos de trabalho e operações para aumentar a produtividade e reduzir custos operacionais.',
+                title: 'Controle do fluxo',
+                description: 'Veja quantos esperam, picos e baixas. Menos cliente que desiste por incerteza.',
               },
               {
-                title: 'Desenvolvimento Personalizado',
-                description: 'Soluções de software sob medida projetadas para atender às necessidades e requisitos específicos do seu negócio.',
+                title: 'Analytics',
+                description: 'Fluxo diário, semanal e mensal. Tempo médio de espera, abandono, melhores horários.',
               },
               {
-                title: 'Análise de Dados',
-                description: 'Transforme dados brutos em insights acionáveis que impulsionam o crescimento e a otimização do negócio.',
+                title: 'IA para decisões',
+                description: 'Sugestões baseadas em dados ao vivo e histórico. Ex.: falta de equipe, boa hora para promoção.',
               },
               {
-                title: 'Foco em Performance',
-                description: 'Aplicações de alto desempenho construídas para escala, confiabilidade e experiência do usuário otimizada.',
+                title: 'Página por barbearia',
+                description: 'Cada barbearia tem página pública: site, entrada na fila e divulgação em um lugar.',
               },
               {
-                title: 'Pronto para Empresas',
-                description: 'Soluções seguras e escaláveis que atendem aos padrões empresariais e requisitos de conformidade.',
+                title: 'Feito para barbearias',
+                description: 'Do bairro walk-in à barbearia premium. Um sistema, apresentação flexível.',
               },
             ].map((feature, idx) => (
               <div
@@ -122,7 +122,7 @@ export function RootAboutPage() {
                 <span className="text-lg font-medium">EuToNaFila</span>
               </div>
               <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                Construindo soluções de software inteligentes para empresas que buscam melhorar a eficácia e impulsionar o crescimento.
+                Fila virtual ao vivo para barbearias. Simples, local, em tempo real.
               </p>
             </div>
             <div>
@@ -144,14 +144,20 @@ export function RootAboutPage() {
             </div>
             <div>
               <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Empresa</h3>
-              <p className="text-gray-500 text-sm mb-2">Desenvolvimento de Software com IA</p>
-              <p className="text-gray-600 text-sm">
-                Focados em construir soluções eficazes
-              </p>
+              <p className="text-gray-500 text-sm">Feito para barbearias</p>
             </div>
           </div>
           <div className="pt-8 border-t border-white/5 text-center text-gray-600 text-sm">
-            <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
+              <Link
+                to="/company/login"
+                className="text-gray-500/60 hover:text-gray-400 transition-colors text-xs flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">lock</span>
+                Admin
+              </Link>
+            </div>
           </div>
         </Container>
       </footer>
