@@ -8,8 +8,8 @@ const shops = [
     name: 'Barbearia Mineiro',
     city: 'Sangão, SC',
     description: 'Fila virtual em produção com presença, painéis e totem.',
-    clientLink: '/mineiro/',
-    staffLink: '/mineiro/shop/login',
+    clientLink: '/home',
+    staffLink: '/login',
   },
 ];
 

@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Container } from '@/components/design-system/Spacing/Container';
 
 const links = [
-  { label: 'Início', to: '/' },
-  { label: 'Projetos', to: '/projects' },
+  { label: 'Home', to: '/home' },
   { label: 'Sobre', to: '/about' },
   { label: 'Galeria', to: '/network' },
   { label: 'Contato', to: '/contact' },
@@ -23,17 +22,18 @@ export function CompanyNav() {
     <header className="border-b border-white/10 bg-[#050c18]">
       <Container size="2xl">
         <div className="flex items-center justify-between gap-4 py-4">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg shadow-lg shadow-[#0f3d2e]/40">
-              E
-            </div>
-            <div>
-              <p className="text-sm text-white/70">EuToNaFila</p>
-              <p className="text-lg font-semibold">Fila virtual para barbearias</p>
-            </div>
-          </Link>
-
           <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg shadow-lg shadow-[#0f3d2e]/40">
+            E
+          </div>
+          <div>
+            <p className="text-sm text-white/70">EuToNaFila</p>
+            <p className="text-lg font-semibold">Virtual Line Software</p>
+          </div>
+        </div>
+        </div>
+
+        <div className="flex items-center gap-3">
           <nav className="hidden md:flex items-center gap-2 text-sm">
             {links.map((link) => {
               const active = location.pathname === link.to;
@@ -99,7 +99,6 @@ export function CompanyNav() {
                 </Link>
               </div>
             )}
-          </div>
           </div>
         </div>
       </Container>
