@@ -133,7 +133,7 @@ export function RootHomePage() {
               <span className="text-blue-400">longe da calçada.</span>
             </h1>
             <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-              Clientes entram na fila virtual, saem, vivem a vida e voltam na hora. Sem aglomeração, sem caos, sem adivinhar.
+              Clientes entram na fila virtual, acompanham em tempo real e são chamados na vez. Ficam à vontade enquanto esperam. Sem aglomeração, sem caos, sem adivinhar.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
               <Link
@@ -206,14 +206,14 @@ export function RootHomePage() {
                 Como funciona
               </h2>
               <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                Entra, espera, volta. Simples.
+                Entra, acompanha, é chamado. Simples.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-4xl mx-auto">
               {[
                 { step: '1', title: 'Entra na fila', desc: 'QR code, link ou totem. O cliente entra em segundos.' },
-                { step: '2', title: 'Espera longe', desc: 'Acompanha posição e tempo estimado. Pode sair e voltar.' },
-                { step: '3', title: 'Volta na vez', desc: 'Aviso quando estiver perto. Aparece na hora do atendimento.' },
+                { step: '2', title: 'Espera com flexibilidade', desc: 'Acompanha posição e tempo ao vivo. Fica à vontade—café, sinuca, ou onde preferir.' },
+                { step: '3', title: 'É chamado na vez', desc: 'Aviso quando estiver perto. Aparece na hora do atendimento.' },
               ].map((item) => (
                 <div key={item.step} className="text-center">
                   <div className="w-14 h-14 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-xl font-semibold mx-auto mb-4">

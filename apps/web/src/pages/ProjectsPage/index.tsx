@@ -6,7 +6,7 @@ export function ProjectsPage() {
     {
       id: 'eu-to-na-fila',
       title: 'EuToNaFila – Fila Virtual ao Vivo',
-      description: 'Fila virtual em tempo real para barbearias. Clientes entram, saem e voltam na vez. Posição ao vivo, estimativa de espera, notificações. Painel para o dono, analytics e página pública por barbearia. Inclui PWA para totens.',
+      description: 'Fila virtual em tempo real para barbearias. Clientes entram, acompanham e são chamados na vez. Posição ao vivo, estimativa de espera, notificações. Painel para o dono, analytics e página pública por barbearia. Inclui PWA para totens.',
       technologies: ['React', 'TypeScript', 'Fastify', 'PostgreSQL', 'WebSockets', 'PWA'],
       link: '/mineiro/',
       status: 'Ativo',

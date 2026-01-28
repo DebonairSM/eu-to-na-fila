@@ -51,7 +51,7 @@ export function RootAboutPage() {
             <h2 className="text-3xl font-light mb-6">O que fazemos</h2>
             <div className="space-y-4 text-gray-300 leading-relaxed">
               <p className="text-lg">
-                O EuToNaFila é um sistema de fila virtual ao vivo para barbearias. Não é agendamento nem SaaS genérico. Os clientes entram na fila, saem, vivem a vida e voltam na vez. O dono vê o fluxo em tempo real, tem analytics e uma página pública por barbearia.
+                O EuToNaFila é um sistema de fila virtual ao vivo para barbearias. Não é agendamento nem SaaS genérico. Os clientes entram na fila, acompanham em tempo real e são chamados na vez—ficam à vontade enquanto esperam. O dono vê o fluxo em tempo real, tem analytics e uma página pública por barbearia.
               </p>
               <p className="text-lg">
                 Focamos em clareza operacional e decisões apoiadas por dados. A IA usa dados ao vivo e histórico para sugerir, por exemplo, quando falta equipe, quando vale divulgar promoção ou em que horário colocar mais um barbeiro. Tudo pensado para quem comanda o dia a dia da barbearia.

@@ -5,7 +5,7 @@ export function HeroSection() {
   return (
     <section
       id="main-content"
-      className="hero relative min-h-screen flex items-center justify-center overflow-hidden"
+      className="hero relative min-h-screen flex items-start justify-center pt-16 lg:items-center lg:pt-0 overflow-hidden"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]" />
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.05)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
