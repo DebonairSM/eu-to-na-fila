@@ -277,7 +277,7 @@ export function CompanyHomePage() {
             <div>
               <h3 className="font-semibold mb-4">Links</h3>
               <nav className="space-y-2">
-                <Link to="/company" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
+                <Link to="/" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
                   Home
                 </Link>
                 <Link to="/about" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Container } from '@/components/design-system/Spacing/Container';
 
 const links = [
-  { label: 'Home', to: '/company' },
+  { label: 'Home', to: '/' },
   { label: 'Sobre', to: '/about' },
   { label: 'Barbearias', to: '/network' },
   { label: 'Contato', to: '/contact' },
@@ -36,7 +36,7 @@ export function CompanyNav() {
         <div className="flex items-center gap-3">
           <nav className="hidden md:flex items-center gap-2 text-sm">
             {links.map((link) => {
-              const active = location.pathname === link.to;
+              const active = location.pathname === link.to || (link.to === '/' && location.pathname === '/company');
               return (
                 <Link
                   key={link.to}
