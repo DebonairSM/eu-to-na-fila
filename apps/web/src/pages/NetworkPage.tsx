@@ -7,9 +7,9 @@ const shops = [
   {
     name: 'Barbearia Mineiro',
     city: 'Sangão, SC',
-    description: 'Fila virtual ao vivo em produção. Presença, painéis e totem.',
-    clientLink: '/home',
-    staffLink: '/login',
+    description: 'Fila virtual em produção com presença, painéis e totem.',
+    clientLink: '/mineiro/',
+    staffLink: '/mineiro/shop/login',
   },
 ];
 
@@ -19,11 +19,8 @@ export function NetworkPage() {
       <CompanyNav />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-10">
         <header className="space-y-3">
-          <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37]">Barbearias na rede</p>
-          <h1 className="text-3xl sm:text-4xl font-semibold">Onde estamos</h1>
-          <p className="text-white/70 max-w-2xl">
-            Barbearias com fila virtual ao vivo em produção. Uma rede só de barbearias.
-          </p>
+          <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37]">Rede EuToNaFila</p>
+          <h1 className="text-3xl sm:text-4xl font-semibold">Barbearias</h1>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

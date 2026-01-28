@@ -1,10 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { RootHomePage } from './pages/RootHomePage';
+import { CompanyHomePage } from './pages/CompanyHomePage';
 import { ProjectsPage } from './pages/ProjectsPage';
-import { RootAboutPage } from './pages/RootAboutPage';
-import { RootContactPage } from './pages/RootContactPage';
+import { AboutPage } from './pages/AboutPage';
+import { ContactPage } from './pages/ContactPage';
+import { NetworkPage } from './pages/NetworkPage';
 import { CompanyLoginPage } from './pages/CompanyLoginPage';
 import { CompanyDashboard } from './pages/CompanyDashboard';
 import { AdManagementPage } from './pages/AdManagementPage';
@@ -40,10 +41,11 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<RootHomePage />} />
+          <Route path="/" element={<CompanyHomePage />} />
           <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/about" element={<RootAboutPage />} />
-          <Route path="/contact" element={<RootContactPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/network" element={<NetworkPage />} />
           <Route path="/company/login" element={<CompanyLoginPage />} />
           <Route path="/company/dashboard" element={<ProtectedRoute requireCompanyAdmin><CompanyDashboard /></ProtectedRoute>} />
           <Route path="/company/ads" element={<ProtectedRoute requireCompanyAdmin><AdManagementPage /></ProtectedRoute>} />

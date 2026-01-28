@@ -71,7 +71,7 @@ function AppContent() {
 
   return (
     <Routes>
-      <Route path="/" element={<CompanyHomePage />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<LandingPage />} />
       <Route path="/company" element={<CompanyHomePage />} />
       <Route path="/contact" element={<ContactPage />} />

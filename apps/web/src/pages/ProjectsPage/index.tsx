@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
+import { CompanyNav } from '@/components/CompanyNav';
 import { Container } from '@/components/design-system/Spacing/Container';
 
 export function ProjectsPage() {
   const projects = [
     {
-      id: 'eu-to-na-fila',
-      title: 'EuToNaFila Gerenciamento de Fila',
-      description: 'Sistema completo de gerenciamento de filas para barbearias e empresas de serviços. Inclui rastreamento de fila em tempo real, gerenciamento de equipe, analytics e suporte PWA para totens em tablets.',
+      id: 'mineiro',
+      title: 'Barbearia Mineiro',
+      description: 'Fila virtual ao vivo em produção. Clientes entram na fila, acompanham a posição em tempo real e voltam na hora do atendimento. Inclui painéis, totem e PWA.',
       technologies: ['React', 'TypeScript', 'Fastify', 'PostgreSQL', 'WebSockets', 'PWA'],
       link: '/mineiro/',
       status: 'Ativo',
@@ -14,144 +15,129 @@ export function ProjectsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
-      <nav className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-50">
-        <Container size="2xl" className="py-5">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm group-hover:from-blue-400 group-hover:to-indigo-500 transition-all">
-                E
-              </div>
-              <span className="text-lg font-medium tracking-tight">EuToNaFila</span>
-            </Link>
-            <div className="flex items-center gap-8">
-              <Link
-                to="/projects"
-                className="text-sm text-white border-b border-white/20 pb-1 font-medium"
-              >
-                Projetos
-              </Link>
-              <Link
-                to="/about"
-                className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
-              >
-                Sobre
-              </Link>
-              <Link
-                to="/contact"
-                className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
-              >
-                Contato
-              </Link>
-            </div>
-          </div>
-        </Container>
-      </nav>
+    <div className="min-h-screen bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
+      <CompanyNav />
 
-      <main className="py-20">
+      <main className="py-16 sm:py-24">
         <Container size="2xl">
-        <header className="mb-16">
-          <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Projetos</h1>
-          <p className="text-xl text-gray-400 max-w-2xl leading-relaxed font-light">
-            Explore nosso portfólio de soluções de software e aplicações.
-          </p>
-        </header>
+          <header className="mb-14">
+            <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37] mb-3">Projetos</p>
+            <h1 className="text-4xl sm:text-5xl font-semibold mb-4">Rede EuToNaFila</h1>
+            <p className="text-lg text-white/70 max-w-2xl">
+              Barbearias em produção com fila virtual ao vivo. Acesse o app de cada unidade.
+            </p>
+          </header>
 
-        <div className="grid grid-cols-1 gap-6">
-          {projects.map((project) => (
-            <div
-              key={project.id}
-              className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-10 hover:border-white/20 hover:bg-white/10 transition-all"
-            >
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
-                <div className="flex-1">
-                  <div className="flex items-center gap-4 mb-4">
-                    <h2 className="text-3xl font-light">{project.title}</h2>
-                    <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium uppercase tracking-wider border border-blue-500/30">
-                      {project.status}
-                    </span>
-                  </div>
-                  <p className="text-gray-300 text-lg mb-6 leading-relaxed">
-                    {project.description}
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {project.technologies.map((tech) => (
-                      <span
-                        key={tech}
-                        className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-400 text-sm"
-                      >
-                        {tech}
+          <div className="grid grid-cols-1 gap-6">
+            {projects.map((project) => (
+              <div
+                key={project.id}
+                className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 sm:p-10 hover:border-white/20 hover:bg-white/8 transition-all"
+              >
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-4">
+                      <h2 className="text-2xl sm:text-3xl font-semibold">{project.title}</h2>
+                      <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-medium uppercase tracking-wider border border-[#D4AF37]/30">
+                        {project.status}
                       </span>
-                    ))}
+                    </div>
+                    <p className="text-white/80 text-lg mb-6 leading-relaxed">
+                      {project.description}
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-8">
+                      {project.technologies.map((tech) => (
+                        <span
+                          key={tech}
+                          className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 text-sm"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                    <a
+                      href={project.link}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold rounded-xl hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all text-sm"
+                    >
+                      Acessar app
+                      <span className="material-symbols-outlined text-[#0a0a0a] text-lg">
+                        arrow_forward
+                      </span>
+                    </a>
                   </div>
-                  <a
-                    href={project.link}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#0a0a0a] font-medium rounded-lg hover:bg-gray-100 transition-all text-sm"
-                  >
-                    Ver Projeto
-                    <span className="material-symbols-outlined text-[#0a0a0a] text-lg">
-                      arrow_forward
-                    </span>
-                  </a>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className="mt-16 text-center">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 px-6 py-3 border border-white/20 text-white font-medium rounded-lg hover:border-white/40 hover:bg-white/5 transition-all text-sm"
-          >
-            <span className="material-symbols-outlined text-lg">arrow_back</span>
-            Voltar ao Início
-          </Link>
-        </div>
+          <div className="mt-14 text-center">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-white/20 text-white font-semibold rounded-xl hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all text-sm"
+            >
+              <span className="material-symbols-outlined text-lg">arrow_back</span>
+              Voltar ao Início
+            </Link>
+          </div>
         </Container>
       </main>
 
-      <footer className="border-t border-white/5 bg-[#0a0a0a] py-16 mt-24">
+      <footer className="border-t border-white/10 bg-[#050c18] py-12 mt-24">
         <Container size="2xl">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            <div className="md:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg">
                   E
                 </div>
-                <span className="text-lg font-medium">EuToNaFila</span>
+                <div>
+                  <p className="text-sm text-white/70">EuToNaFila</p>
+                  <p className="text-lg font-semibold">Fila virtual para barbearias</p>
+                </div>
               </div>
-              <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                Construindo soluções de software inteligentes para empresas que buscam melhorar a eficácia e impulsionar o crescimento.
+              <p className="text-white/60 text-sm">
+                Fila ao vivo, simples e prática. Feito para barbearias.
               </p>
             </div>
             <div>
-              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Navegação</h3>
-              <nav className="space-y-3">
-                <Link to="/" className="block text-gray-500 hover:text-white text-sm transition-colors">
+              <h3 className="font-semibold mb-4">Links</h3>
+              <nav className="space-y-2">
+                <Link to="/" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
                   Início
                 </Link>
-                <Link to="/projects" className="block text-gray-500 hover:text-white text-sm transition-colors">
+                <Link to="/projects" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
                   Projetos
                 </Link>
-                <Link to="/about" className="block text-gray-500 hover:text-white text-sm transition-colors">
+                <Link to="/about" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
                   Sobre
                 </Link>
-                <Link to="/contact" className="block text-gray-500 hover:text-white text-sm transition-colors">
+                <Link to="/contact" className="block text-white/70 hover:text-[#D4AF37] text-sm transition-colors">
                   Contato
                 </Link>
               </nav>
             </div>
             <div>
-              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Empresa</h3>
-              <p className="text-gray-500 text-sm mb-2">Desenvolvimento de Software com IA</p>
-              <p className="text-gray-600 text-sm">
-                Focados em construir soluções eficazes
-              </p>
+              <h3 className="font-semibold mb-4">Contato</h3>
+              <p className="text-white/70 text-sm mb-2">Florianópolis, SC</p>
+              <Link
+                to="/contact"
+                className="inline-block mt-4 px-6 py-2 border border-white/20 text-white rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all text-sm"
+              >
+                Entre em Contato
+              </Link>
             </div>
           </div>
-          <div className="pt-8 border-t border-white/5 text-center text-gray-600 text-sm">
-            <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
+          <div className="pt-8 border-t border-white/10 text-center text-white/50 text-sm">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
+              <Link
+                to="/company/login"
+                className="text-white/40 hover:text-white/60 transition-colors text-xs flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">lock</span>
+                Admin
+              </Link>
+            </div>
           </div>
         </Container>
       </footer>
