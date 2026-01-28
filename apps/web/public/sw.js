@@ -5,6 +5,14 @@
  * Auto-updates when new version is deployed.
  */
 
+// #region agent log
+const DEBUG_INGEST = 'http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d';
+function dbg(location, message, data, hypothesisId) {
+  const payload = { location, message, data: data || {}, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId };
+  fetch(DEBUG_INGEST, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(function () {});
+}
+// #endregion
+
 // Bump this when deploying changes that affect built asset graphs.
 // A stale cached HTML/JS combo is the most common cause of "blank black screen" after deploy.
 const CACHE_VERSION = 'v6';
@@ -128,6 +136,9 @@ self.addEventListener('fetch', (event) => {
     if (isExternalStorage) {
       // Don't intercept external storage requests - let browser handle them directly
       // This prevents CSP violations when service worker tries to fetch them
+      // #region agent log
+      dbg('sw.js:fetch', 'skip external storage', { url: request.url }, 'H2');
+      // #endregion
       return;
     }
 
@@ -151,6 +162,12 @@ self.addEventListener('fetch', (event) => {
     }
     
     // Handle static assets (stale-while-revalidate)
+    // #region agent log
+    const _logUrl = request.url;
+    const _logOrigin = url.origin;
+    const _logSelf = self.location.origin;
+    dbg('sw.js:fetch', 'routing to staticStrategy', { url: _logUrl, origin: _logOrigin, selfOrigin: _logSelf, isCrossOrigin: _logOrigin !== _logSelf }, 'H2');
+    // #endregion
     event.respondWith(staticCacheFirstStrategy(request));
   } catch (error) {
     // Skip requests that can't be parsed as URLs
@@ -172,6 +189,10 @@ async function staticCacheFirstStrategy(request) {
   const requestUrl = new URL(request.url);
   const isCrossOrigin = requestUrl.origin !== self.location.origin;
 
+  // #region agent log
+  dbg('sw.js:staticStrategy', 'entry', { url: request.url, isCrossOrigin: isCrossOrigin, hasCached: !!cached }, 'H1');
+  // #endregion
+
   // For cross-origin requests, don't try to fetch in background (CSP will block)
   // Just return cached version if available, otherwise fetch directly
   if (isCrossOrigin) {
@@ -180,11 +201,17 @@ async function staticCacheFirstStrategy(request) {
       return cached;
     }
     // For cross-origin, fetch directly without background update
+    // #region agent log
+    dbg('sw.js:staticStrategy', 'cross-origin fetch (no cache)', { url: request.url }, 'H1');
+    // #endregion
     try {
       const response = await fetch(request);
       // Don't cache cross-origin responses (CSP restrictions)
       return response;
     } catch (error) {
+      // #region agent log
+      dbg('sw.js:staticStrategy', 'cross-origin fetch failed', { url: request.url, errorMessage: error.message, hasCsp: /CSP|Content Security Policy/i.test(String(error.message)) }, 'H1');
+      // #endregion
       console.warn('[SW] Cross-origin fetch failed (CSP may block):', request.url, error.message);
       throw error;
     }
