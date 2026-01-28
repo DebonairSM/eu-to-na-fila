@@ -107,21 +107,31 @@ export function useKiosk() {
     }
   }, [exitFullscreen, getFullscreenElement, requestFullscreen]);
 
-  // Fetch ads manifest
+  const MAX_MANIFEST_RETRIES = 3;
+  const RETRY_DELAYS_MS = [0, 400, 1200];
+
+  // Fetch ads manifest (with retries for cold/no-cache loads, e.g. guest profile)
   const fetchManifest = useCallback(async () => {
-    try {
-      const manifest = await api.getAdsManifest(config.slug);
-      setAds(manifest.ads);
-      
-      // Reset ad index if current index is out of bounds
-      if (currentAdIndex >= manifest.ads.length) {
-        setCurrentAdIndex(0);
+    let lastErr: unknown;
+    for (let attempt = 0; attempt < MAX_MANIFEST_RETRIES; attempt++) {
+      if (attempt > 0) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
       }
-    } catch (err) {
-      console.error('[useKiosk] Failed to fetch manifest:', err);
-      setAds([]);
+      try {
+        const manifest = await api.getAdsManifest(config.slug);
+        setAds(manifest.ads);
+        setCurrentAdIndex((prev) =>
+          prev >= manifest.ads.length ? 0 : prev
+        );
+        return;
+      } catch (err) {
+        lastErr = err;
+        console.warn(`[useKiosk] Manifest fetch attempt ${attempt + 1}/${MAX_MANIFEST_RETRIES} failed:`, err);
+      }
     }
-  }, [currentAdIndex]);
+    console.error('[useKiosk] Failed to fetch manifest after retries:', lastErr);
+    setAds([]);
+  }, []);
 
   // Connect to WebSocket for real-time updates
   useEffect(() => {

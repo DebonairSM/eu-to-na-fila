@@ -19,25 +19,37 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, onError }: KioskAdsPl
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [mediaRetry, setMediaRetry] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const preloadRef = useRef<HTMLImageElement | HTMLVideoElement | null>(null);
 
-  // Fetch manifest
+  const MAX_MANIFEST_RETRIES = 3;
+  const RETRY_DELAYS_MS = [0, 400, 1200];
+
   const fetchManifest = async () => {
-    try {
-      setLoading(true);
-      setError(false);
-      const manifest = await api.getAdsManifest(shopSlug);
-      setAds(manifest.ads);
-    } catch (err) {
-      console.error('[KioskAdsPlayer] Failed to fetch manifest:', err);
-      setError(true);
-      if (onError) onError();
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    setError(false);
+    let lastErr: unknown;
+    for (let attempt = 0; attempt < MAX_MANIFEST_RETRIES; attempt++) {
+      if (attempt > 0) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
+      }
+      try {
+        const manifest = await api.getAdsManifest(shopSlug);
+        setAds(manifest.ads);
+        setLoading(false);
+        return;
+      } catch (err) {
+        lastErr = err;
+        console.warn(`[KioskAdsPlayer] Manifest fetch attempt ${attempt + 1}/${MAX_MANIFEST_RETRIES} failed:`, err);
+      }
     }
+    console.error('[KioskAdsPlayer] Failed to fetch manifest after retries:', lastErr);
+    setError(true);
+    setLoading(false);
+    if (onError) onError();
   };
 
   // Connect to WebSocket for real-time updates
@@ -104,6 +116,10 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, onError }: KioskAdsPl
 
   // Fetch manifest on mount and when shopSlug changes
   useEffect(() => {
+    if (!shopSlug) {
+      setLoading(false);
+      return;
+    }
     void fetchManifest();
   }, [shopSlug]);
 
@@ -111,6 +127,14 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, onError }: KioskAdsPl
   const currentAd = ads.length > 0 && currentAdIndex >= 0 && currentAdIndex < ads.length
     ? ads[currentAdIndex]
     : null;
+
+  useEffect(() => {
+    setMediaRetry(0);
+  }, [currentAdIndex, currentAd?.id]);
+
+  const mediaKey = currentAd
+    ? `ad-${currentAd.id}-v${currentAd.version}-${mediaRetry}`
+    : '';
 
   // Calculate next ad index for preloading
   const nextAdIndex = ads.length > 0 ? (currentAdIndex + 1) % ads.length : 0;
@@ -182,6 +206,15 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, onError }: KioskAdsPl
     );
   }
 
+  const handleMediaError = () => {
+    if (mediaRetry < 1) {
+      setMediaRetry((r) => r + 1);
+      return;
+    }
+    setError(true);
+    if (onError) onError();
+  };
+
   return (
     <div
       ref={containerRef}
@@ -191,26 +224,20 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, onError }: KioskAdsPl
         <img
           src={currentAd.url}
           alt={`Anúncio ${currentAd.position}`}
-          key={`ad-${currentAd.id}-v${currentAd.version}`}
+          key={mediaKey}
           className="w-full h-full object-contain"
-          onError={() => {
-            setError(true);
-            if (onError) onError();
-          }}
+          onError={handleMediaError}
         />
       ) : (
         <video
           src={currentAd.url}
-          key={`ad-${currentAd.id}-v${currentAd.version}`}
+          key={mediaKey}
           className="w-full h-full object-contain"
           autoPlay
           loop
           muted
           playsInline
-          onError={() => {
-            setError(true);
-            if (onError) onError();
-          }}
+          onError={handleMediaError}
         />
       )}
     </div>

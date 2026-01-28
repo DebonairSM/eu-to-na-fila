@@ -76,7 +76,13 @@ export function BarberSelector({
       title={customerName ? `Atribuir barbeiro para ${customerName}` : 'Selecionar Barbeiro'}
       className="max-w-2xl"
     >
-      <div className="space-y-4">
+      <div className="space-y-4 relative">
+        {/* Hidden focus target so the first barber doesn't get auto-focused (and show a focus ring) when the modal opens */}
+        <button
+          type="button"
+          className="sr-only focus:outline-none focus:ring-0"
+          aria-hidden="true"
+        />
         {preferredBarberId && (
           <div className="text-center py-2 px-4 bg-primary/10 border border-primary/30 rounded-lg">
             <p className="text-sm text-primary flex items-center justify-center gap-2">
