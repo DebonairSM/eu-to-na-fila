@@ -20,6 +20,9 @@ export function AboutPage() {
         <header className="space-y-3">
           <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37]">Sobre nós</p>
           <h1 className="text-3xl sm:text-4xl font-semibold">EuToNaFila</h1>
+          <p className="text-white/70 max-w-2xl">
+            Fila virtual ao vivo só para barbearias. Focamos em operação prática, tempo real e clareza — para o cliente e para o dono.
+          </p>
         </header>
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -52,11 +55,11 @@ export function AboutPage() {
 
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Equipe central</h2>
-            <Card className="bg-white/5 border-white/10">
-              <CardContent className="p-5 space-y-2">
-                <p className="text-sm text-white/70">Time em Florianópolis, próximo das operações.</p>
-              </CardContent>
-            </Card>
+          <Card className="bg-white/5 border-white/10">
+            <CardContent className="p-5 space-y-2">
+              <p className="text-sm text-white/70">Time em Florianópolis, próximo das barbearias e das operações.</p>
+            </CardContent>
+          </Card>
         </section>
       </div>
     </div>

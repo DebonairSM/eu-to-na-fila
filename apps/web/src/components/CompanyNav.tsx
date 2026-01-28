@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Container } from '@/components/design-system/Spacing/Container';
 
 const links = [
-  { label: 'Home', to: '/home' },
+  { label: 'Home', to: '/company' },
   { label: 'Sobre', to: '/about' },
-  { label: 'Galeria', to: '/network' },
+  { label: 'Barbearias', to: '/network' },
   { label: 'Contato', to: '/contact' },
 ];
 
@@ -28,7 +28,7 @@ export function CompanyNav() {
           </div>
           <div>
             <p className="text-sm text-white/70">EuToNaFila</p>
-            <p className="text-lg font-semibold">Virtual Line Software</p>
+            <p className="text-lg font-semibold">Fila virtual ao vivo para barbearias</p>
           </div>
         </div>
         </div>
