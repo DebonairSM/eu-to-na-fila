@@ -15,7 +15,7 @@ function dbg(location, message, data, hypothesisId) {
 
 // Bump this when deploying changes that affect built asset graphs.
 // A stale cached HTML/JS combo is the most common cause of "blank black screen" after deploy.
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v7';
 
 const STATIC_CACHE_NAME = `eutonafila-static-${CACHE_VERSION}`;
 const PAGE_CACHE_NAME = `eutonafila-pages-${CACHE_VERSION}`;
@@ -48,7 +48,7 @@ const API_ROUTES = [
  * Install event - cache static assets
  */
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker...');
+  console.log('[SW] Installing service worker', CACHE_VERSION, '(cross-origin skip fix)');
   
   event.waitUntil(
     caches.open(PAGE_CACHE_NAME).then((cache) => {
@@ -172,8 +172,15 @@ self.addEventListener('fetch', (event) => {
     // SW fetch() is subject to connect-src; document-initiated link/style/font use style-src/font-src.
     // Intercepting and fetching here causes "Refused to connect" CSP errors on cold load / refresh.
     if (url.origin !== self.location.origin) {
+      // #region agent log
+      console.log('[SW] skip cross-origin (no intercept):', request.url);
+      dbg('sw.js:fetch', 'skip cross-origin', { url: request.url, origin: url.origin, selfOrigin: self.location.origin }, 'H2');
+      // #endregion
       return;
     }
+    // #region agent log
+    console.log('[SW] staticStrategy same-origin:', request.url);
+    // #endregion
     event.respondWith(staticCacheFirstStrategy(request));
   } catch (error) {
     // Skip requests that can't be parsed as URLs
