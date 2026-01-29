@@ -1013,7 +1013,7 @@ export function BarberQueueManager() {
                     type="button"
                     onClick={() => setPreferredBarberId(barber.id)}
                     className={cn(
-                      'px-3 py-2 rounded-lg border text-sm font-medium transition-all text-center',
+                      'px-3 py-2 rounded-lg border text-sm font-medium transition-all text-center focus:outline-none',
                       isSelected
                         ? 'bg-primary/20 border-primary text-primary'
                         : isAbsent

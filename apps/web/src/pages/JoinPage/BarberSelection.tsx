@@ -102,8 +102,7 @@ export function BarberSelection({
                 'focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]',
                 selectedBarberId === null
                   ? 'bg-[rgba(212,175,55,0.15)] border-[#D4AF37] shadow-lg shadow-[rgba(212,175,55,0.2)]'
-                  : 'bg-[rgba(255,255,255,0.03)] border-[rgba(212,175,55,0.3)] hover:border-[rgba(212,175,55,0.4)] hover:bg-[rgba(212,175,55,0.05)]',
-                fastestOption?.id === null && selectedBarberId !== null && 'ring-2 ring-white/50'
+                  : 'bg-[rgba(255,255,255,0.03)] border-[rgba(212,175,55,0.3)] hover:border-[rgba(212,175,55,0.4)] hover:bg-[rgba(212,175,55,0.05)]'
               )}
             >
               <div className="flex items-center justify-between">
@@ -162,8 +161,7 @@ export function BarberSelection({
                       'focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]',
                       isSelected
                         ? 'bg-[rgba(212,175,55,0.15)] border-[#D4AF37] shadow-lg shadow-[rgba(212,175,55,0.2)]'
-                        : 'bg-[rgba(255,255,255,0.03)] border-[rgba(212,175,55,0.3)] hover:border-[rgba(212,175,55,0.4)] hover:bg-[rgba(212,175,55,0.05)]',
-                      isFastest && 'ring-2 ring-white/50'
+                        : 'bg-[rgba(255,255,255,0.03)] border-[rgba(212,175,55,0.3)] hover:border-[rgba(212,175,55,0.4)] hover:bg-[rgba(212,175,55,0.05)]'
                     )}
                   >
                     <div className="flex items-center justify-between">

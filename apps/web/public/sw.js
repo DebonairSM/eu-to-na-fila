@@ -168,6 +168,12 @@ self.addEventListener('fetch', (event) => {
     const _logSelf = self.location.origin;
     dbg('sw.js:fetch', 'routing to staticStrategy', { url: _logUrl, origin: _logOrigin, selfOrigin: _logSelf, isCrossOrigin: _logOrigin !== _logSelf }, 'H2');
     // #endregion
+    // Don't intercept cross-origin requests (fonts, CDNs, etc.). Let the browser handle them.
+    // SW fetch() is subject to connect-src; document-initiated link/style/font use style-src/font-src.
+    // Intercepting and fetching here causes "Refused to connect" CSP errors on cold load / refresh.
+    if (url.origin !== self.location.origin) {
+      return;
+    }
     event.respondWith(staticCacheFirstStrategy(request));
   } catch (error) {
     // Skip requests that can't be parsed as URLs
