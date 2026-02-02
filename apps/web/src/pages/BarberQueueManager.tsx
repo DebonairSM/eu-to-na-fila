@@ -24,7 +24,6 @@ const AD_VIEW_DURATION = 15000; // 15 seconds
 
 export function BarberQueueManager() {
   const [searchParams] = useSearchParams();
-  const { barbers, togglePresence } = useBarbers();
   const {
     isKioskMode,
     currentView,
@@ -35,16 +34,12 @@ export function BarberQueueManager() {
     showQueueView,
     toggleFullscreen,
   } = useKiosk();
-  
+
   // Use longer polling interval in kiosk mode to improve performance
   const pollInterval = isKioskMode ? 10000 : 5000; // 10s for kiosk, 5s for management
+  const barberPollInterval = isKioskMode ? 10000 : 0; // Poll barbers in kiosk mode so presence updates without refresh
   const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval);
-  
-  const checkInModal = useModal();
-  const barberSelectorModal = useModal();
-  const removeConfirmModal = useModal();
-  const completeConfirmModal = useModal();
-  const { validateName } = useProfanityFilter();
+  const { barbers, togglePresence } = useBarbers(barberPollInterval);
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [customerToRemove, setCustomerToRemove] = useState<number | null>(null);

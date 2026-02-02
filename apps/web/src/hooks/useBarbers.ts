@@ -1,29 +1,73 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '@/lib/api';
 import { config } from '@/lib/config';
 import type { Barber } from '@eutonafila/shared';
 
-export function useBarbers() {
+export function useBarbers(pollInterval?: number) {
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const previousDataRef = useRef<string>('');
 
   const fetchBarbers = useCallback(async () => {
+    if (document.hidden) {
+      return;
+    }
+
     try {
-      setIsLoading(true);
       setError(null);
       const barbersList = await api.getBarbers(config.slug);
-      setBarbers(barbersList);
+
+      if (pollInterval && pollInterval > 0) {
+        const dataString = JSON.stringify(barbersList);
+        if (dataString !== previousDataRef.current) {
+          previousDataRef.current = dataString;
+          setBarbers(barbersList);
+        }
+      } else {
+        setBarbers(barbersList);
+      }
+      setIsLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch barbers'));
-    } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [pollInterval]);
 
   useEffect(() => {
+    setIsLoading(true);
     fetchBarbers();
-  }, [fetchBarbers]);
+
+    if (!pollInterval || pollInterval <= 0) {
+      return;
+    }
+
+    let intervalId: number | null = null;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+      } else {
+        if (!intervalId) {
+          fetchBarbers();
+          intervalId = window.setInterval(fetchBarbers, pollInterval);
+        }
+      }
+    };
+
+    intervalId = window.setInterval(fetchBarbers, pollInterval);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchBarbers, pollInterval]);
 
   const togglePresence = useCallback(
     async (barberId: number, isPresent: boolean) => {

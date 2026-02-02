@@ -118,7 +118,7 @@ export function useKiosk() {
         await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
       }
       try {
-        const manifest = await api.getAdsManifest(config.slug);
+        const manifest = await api.getAdsManifest(config.slug, { timeout: 8000 });
         setAds(manifest.ads);
         setCurrentAdIndex((prev) =>
           prev >= manifest.ads.length ? 0 : prev

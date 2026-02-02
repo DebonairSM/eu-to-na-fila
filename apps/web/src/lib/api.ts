@@ -143,15 +143,17 @@ class ApiClient {
 
   /**
    * Make an HTTP request.
-   * 
+   *
    * @param path - API path (e.g., '/shops/mineiro/queue')
    * @param options - Fetch options
+   * @param timeoutMs - Request timeout in milliseconds (default 15000)
    * @returns Parsed response data
    * @throws {ApiError} If request fails
    */
   private async request<T>(
     path: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    timeoutMs = 15000
   ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
 
@@ -175,10 +177,14 @@ class ApiClient {
       Object.assign(headers, options.headers);
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
       const response = await fetch(url, {
         ...options,
         headers,
+        signal: controller.signal,
       });
 
       // Read response as text first (can only read body once)
@@ -233,6 +239,8 @@ class ApiClient {
 
       return data as T;
     } catch (error) {
+      clearTimeout(timeoutId);
+
       // Re-throw ApiError as is
       if (error instanceof ApiError) {
         // If it's an auth error, trigger the callback before throwing
@@ -240,6 +248,15 @@ class ApiClient {
           this.onAuthError();
         }
         throw error;
+      }
+
+      // Handle request timeout (AbortController abort)
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new ApiError(
+          'Request timed out - please check your connection',
+          408,
+          'TIMEOUT_ERROR'
+        );
       }
 
       // Wrap network errors
@@ -257,14 +274,18 @@ class ApiClient {
         500,
         'UNKNOWN_ERROR'
       );
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
   /**
    * GET request helper.
+   * @param path - API path
+   * @param timeoutMs - Optional timeout in milliseconds
    */
-  private async get<T>(path: string): Promise<T> {
-    return this.request<T>(path, { method: 'GET' });
+  private async get<T>(path: string, timeoutMs?: number): Promise<T> {
+    return this.request<T>(path, { method: 'GET' }, timeoutMs ?? 15000);
   }
 
   /**
@@ -832,12 +853,16 @@ class ApiClient {
 
   /**
    * Get public manifest of enabled ads for a shop.
-   * 
+   *
    * @param shopSlug - Shop slug identifier
+   * @param options - Optional options (e.g. timeout in ms)
    * @returns Manifest with ordered list of enabled ads
    * @throws {ApiError} If request fails
    */
-  async getAdsManifest(shopSlug: string): Promise<{
+  async getAdsManifest(
+    shopSlug: string,
+    options?: { timeout?: number }
+  ): Promise<{
     manifestVersion: number;
     ads: Array<{
       id: number;
@@ -847,6 +872,7 @@ class ApiClient {
       version: number;
     }>;
   }> {
+    const timeoutMs = options?.timeout ?? 15000;
     const result = await this.get<{
       manifestVersion: number;
       ads: Array<{
@@ -856,7 +882,7 @@ class ApiClient {
         url: string;
         version: number;
       }>;
-    }>(`/ads/public/manifest?shopSlug=${encodeURIComponent(shopSlug)}`);
+    }>(`/ads/public/manifest?shopSlug=${encodeURIComponent(shopSlug)}`, timeoutMs);
 
     return result;
   }
