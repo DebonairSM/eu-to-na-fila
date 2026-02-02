@@ -56,6 +56,7 @@ export function BarberQueueManager() {
   const barberSelectorModal = useModal(false);
   const removeConfirmModal = useModal(false);
   const completeConfirmModal = useModal(false);
+  const { validateName } = useProfanityFilter();
 
   // Enter kiosk mode if ?kiosk=true in URL
   useEffect(() => {
