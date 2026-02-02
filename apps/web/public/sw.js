@@ -6,11 +6,8 @@
  */
 
 // #region agent log
-const DEBUG_INGEST = 'http://127.0.0.1:7242/ingest/205e19f8-df1a-492f-93e9-a1c96fc43d6d';
-function dbg(location, message, data, hypothesisId) {
-  const payload = { location, message, data: data || {}, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId };
-  fetch(DEBUG_INGEST, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(function () {});
-}
+// No-op: avoid fetch to localhost ingest; it violates document CSP in production.
+function dbg() {}
 // #endregion
 
 // Bump this when deploying changes that affect built asset graphs.
