@@ -142,6 +142,13 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
+    // Don't intercept ad media (GET /api/ads/:id/media) - let browser handle directly.
+    // SW fetch() can fail for range requests (video), binary responses, or network issues,
+    // causing "Failed to fetch" and breaking kiosk ad display on tablets/laptops.
+    if (/^\/api\/ads\/\d+\/media$/.test(url.pathname)) {
+      return;
+    }
+
     // Handle API requests (network first, fallback to cache)
     if (url.pathname.startsWith('/api/')) {
       event.respondWith(apiNetworkFirstStrategy(request));
