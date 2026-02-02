@@ -361,60 +361,37 @@ export function BarberQueueManager() {
                         key={ticket.id}
                         className={cn(
                           'w-full px-8 py-6 rounded-2xl border transition-all',
-                          'hover:scale-[1.01] hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
                           {
-                            'bg-black border-[rgba(212,175,55,0.4)] hover:border-[rgba(212,175,55,0.6)]': isServing,
-                            'bg-[rgba(20,20,20,0.8)] border-[rgba(212,175,55,0.2)] hover:border-[rgba(212,175,55,0.4)]': !isServing,
+                            'bg-black border-[rgba(212,175,55,0.4)]': isServing,
+                            'bg-[rgba(20,20,20,0.8)] border-[rgba(212,175,55,0.2)]': !isServing,
                           }
                         )}
                       >
                         <div className="flex items-center gap-6">
-                          {/* Position Badge / Complete Button */}
+                          {/* Position badge (read-only in kiosk; no assign/finish actions) */}
                           {isServing ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCustomerToComplete(ticket.id);
-                                completeConfirmModal.open();
-                                showQueueView();
-                              }}
+                            <div
                               className={cn(
                                 'w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl flex-shrink-0',
-                                'bg-black text-[#D4AF37] border-2 border-[#D4AF37] hover:bg-black hover:text-[#E8C547] hover:border-[#E8C547] transition-all cursor-pointer',
-                                'hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-0'
+                                'bg-black text-[#D4AF37] border-2 border-[#D4AF37]'
                               )}
-                              aria-label={`Finalizar atendimento de ${ticket.customerName}`}
+                              aria-hidden="true"
                             >
                               <span className="material-symbols-outlined text-3xl">check</span>
-                            </button>
+                            </div>
                           ) : (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedCustomerId(ticket.id);
-                                barberSelectorModal.open();
-                                showQueueView();
-                              }}
+                            <div
                               className={cn(
                                 'w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl flex-shrink-0',
-                                'bg-black text-[#D4AF37] border-2 border-[#D4AF37] hover:text-[#E8C547] hover:border-[#E8C547] transition-all cursor-pointer',
-                                'hover:scale-110 active:scale-95'
+                                'bg-black text-[#D4AF37] border-2 border-[#D4AF37]'
                               )}
-                              aria-label={`Atribuir barbeiro para ${ticket.customerName}`}
+                              aria-hidden="true"
                             >
                               {displayPosition}
-                            </button>
+                            </div>
                           )}
-                          {/* Customer Info - Clickable to assign barber */}
-                          <button
-                            onClick={() => {
-                              setSelectedCustomerId(ticket.id);
-                              barberSelectorModal.open();
-                              showQueueView();
-                            }}
-                            className="flex-1 min-w-0 text-left"
-                            aria-label={`Atribuir barbeiro para ${ticket.customerName}`}
-                          >
+                          {/* Customer info (read-only in kiosk) */}
+                          <div className="flex-1 min-w-0">
                             <p className="font-semibold text-2xl text-white truncate">{formatNameForDisplay(ticket.customerName)}</p>
                             {!assignedBarber && (() => {
                               const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
@@ -441,7 +418,7 @@ export function BarberQueueManager() {
                                 </p>
                               );
                             })()}
-                          </button>
+                          </div>
                           {/* Status indicator */}
                           {isServing && (
                             <div className="flex-shrink-0 px-4 py-2 bg-[rgba(212,175,55,0.2)] border border-[rgba(212,175,55,0.4)] rounded-xl">
@@ -456,32 +433,23 @@ export function BarberQueueManager() {
               </div>
             </div>
 
-            {/* Bottom Bar - Barber Presence */}
+            {/* Bottom Bar - Barber presence (read-only in kiosk) */}
             <footer className="flex-shrink-0 py-6 px-8 border-t border-[rgba(212,175,55,0.15)] bg-[rgba(10,10,10,0.95)]">
               <div className="max-w-4xl mx-auto">
                 <div className="flex items-center justify-center gap-4 flex-wrap">
                   {sortedBarbers.map((barber) => (
-                    <button
+                    <div
                       key={barber.id}
-                      onClick={async () => {
-                        try {
-                          await togglePresence(barber.id, !barber.isPresent);
-                          await refetchQueue();
-                        } catch (error) {
-                          const errorMsg = getErrorMessage(error, 'Erro ao alterar presença do barbeiro. Tente novamente.');
-                          setErrorMessage(errorMsg);
-                        }
-                      }}
                       className={cn(
-                        'px-6 py-3 rounded-xl border-2 font-medium transition-all text-lg',
+                        'px-6 py-3 rounded-xl border-2 font-medium text-lg',
                         barber.isPresent
-                          ? 'bg-[#D4AF37] border-[#D4AF37] text-black'
-                          : 'bg-black/50 border-[rgba(212,175,55,0.3)] text-[#D4AF37]/60'
+                          ? 'bg-[#D4AF37]/20 border-[#D4AF37]/50 text-[#D4AF37]'
+                          : 'bg-black/50 border-[rgba(212,175,55,0.2)] text-white/50'
                       )}
-                      aria-label={`${barber.isPresent ? 'Marcar ausente' : 'Marcar presente'}: ${barber.name}`}
+                      aria-hidden="true"
                     >
                       {barber.name}
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -616,197 +584,7 @@ export function BarberQueueManager() {
           </div>
         )}
 
-        {/* Barber Selector Modal */}
-        {barberSelectorModal.isOpen && selectedCustomerId && (() => {
-          const selectedTicket = tickets.find((t) => t.id === selectedCustomerId);
-          const currentBarberId = selectedTicket?.barberId || null;
-          const preferredBarberId = (selectedTicket && 'preferredBarberId' in selectedTicket) 
-            ? ((selectedTicket as { preferredBarberId?: number }).preferredBarberId ?? null)
-            : null;
-          
-          // Calculate which barbers are busy (have an in_progress ticket)
-          // Exclude the current ticket being edited
-          const busyBarberIds = new Set<number>();
-          tickets.forEach((ticket) => {
-            if (
-              ticket.status === 'in_progress' &&
-              ticket.barberId &&
-              ticket.id !== selectedCustomerId
-            ) {
-              busyBarberIds.add(ticket.barberId);
-            }
-          });
-          
-          // Sort barbers: preferred barber first, then others
-          const sortedBarbersForSelection = [...barbers.filter(b => b.isPresent)].sort((a, b) => {
-            const aIsPreferred = a.id === preferredBarberId;
-            const bIsPreferred = b.id === preferredBarberId;
-            if (aIsPreferred && !bIsPreferred) return -1;
-            if (!aIsPreferred && bIsPreferred) return 1;
-            return 0;
-          });
-          
-          return (
-            <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-8">
-              <div className="bg-[#1a1a1a] border-2 border-[#D4AF37]/30 rounded-3xl p-10 max-w-3xl w-full">
-                <h2 className="text-4xl font-['Playfair_Display',serif] text-[#D4AF37] mb-3 text-center">
-                  Selecionar Barbeiro
-                </h2>
-                <p className="text-xl text-white/70 mb-8 text-center">
-                  {selectedTicket?.customerName}
-                </p>
-                {preferredBarberId && (
-                  <p className="text-lg text-[#D4AF37]/80 mb-4 text-center flex items-center justify-center gap-2">
-                    <span className="material-symbols-outlined text-xl">star</span>
-                    Preferência: {barbers.find(b => b.id === preferredBarberId)?.name}
-                  </p>
-                )}
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  {sortedBarbersForSelection.map((barber) => {
-                    const isBusy = busyBarberIds.has(barber.id);
-                    const isCurrentlyAssigned = currentBarberId === barber.id;
-                    const isDisabled = isBusy && !isCurrentlyAssigned;
-                    
-                    return (
-                      <button
-                        key={barber.id}
-                        onClick={() => {
-                          // If clicking the same barber, unassign
-                          if (isCurrentlyAssigned) {
-                            handleSelectBarber(null);
-                          } else if (!isBusy) {
-                            handleSelectBarber(barber.id);
-                          }
-                        }}
-                        disabled={isDisabled}
-                        className={cn(
-                          'p-6 rounded-2xl border-2 transition-all text-xl font-medium relative',
-                          'focus:outline-none',
-                          isCurrentlyAssigned
-                            ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]'
-                            : isDisabled
-                              ? 'bg-white/5 border-white/10 text-white/40 cursor-not-allowed opacity-50'
-                              : 'bg-white/5 border-white/20 text-white hover:border-[#D4AF37]/50'
-                        )}
-                        title={isDisabled ? 'Atendendo outro cliente' : undefined}
-                      >
-                        {barber.name}
-                        {isDisabled && (
-                          <span className="block text-sm text-white/40 mt-1">Atendendo outro cliente</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-                {currentBarberId && (
-                  <div className="mb-4 pb-4 border-b border-white/10">
-                    <button
-                      onClick={() => handleSelectBarber(null)}
-                      className="w-full px-8 py-5 text-xl rounded-2xl bg-white/5 border-2 border-white/20 text-white/70 hover:bg-white/10 hover:text-white hover:border-white/30 transition-all"
-                    >
-                      Retornar para a Fila
-                    </button>
-                  </div>
-                )}
-                <div className="mb-4 pb-4 border-b border-white/10">
-                  <button
-                    onClick={() => {
-                      setCustomerToRemove(selectedCustomerId);
-                      barberSelectorModal.close();
-                      removeConfirmModal.open();
-                      showQueueView();
-                    }}
-                    className="w-full px-8 py-5 text-xl rounded-2xl bg-[#ef4444]/20 border-2 border-[#ef4444]/50 text-[#ef4444] hover:bg-[#ef4444]/30 hover:border-[#ef4444] transition-all flex items-center justify-center gap-2"
-                  >
-                    <span className="material-symbols-outlined">delete</span>
-                    Remover da Fila
-                  </button>
-                </div>
-                <button
-                  onClick={barberSelectorModal.close}
-                  className="w-full px-8 py-5 text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all"
-                >
-                  Fechar
-                </button>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Complete Confirmation Modal */}
-        {completeConfirmModal.isOpen && customerToComplete && (
-          <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-8">
-            <div className="bg-[#1a1a1a] border-2 border-[#D4AF37]/30 rounded-3xl p-10 max-w-2xl w-full">
-              <h2 className="text-4xl font-['Playfair_Display',serif] text-[#D4AF37] mb-4 text-center">
-                Finalizar Atendimento
-              </h2>
-              <p className="text-2xl text-white/70 mb-8 text-center">
-                Tem certeza que deseja finalizar o atendimento de{' '}
-                <span className="font-semibold text-white">
-                  {tickets.find((t) => t.id === customerToComplete)?.customerName}
-                </span>?
-              </p>
-              <div className="flex gap-4">
-                <button
-                  onClick={() => {
-                    completeConfirmModal.close();
-                    setCustomerToComplete(null);
-                  }}
-                  className="flex-1 px-8 py-5 text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={async () => {
-                    await handleCompleteService();
-                    showQueueView();
-                  }}
-                  className="flex-1 px-8 py-5 text-xl rounded-2xl bg-[#D4AF37] text-black font-semibold hover:bg-[#E8C547] transition-all"
-                >
-                  Finalizar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Remove Confirmation Modal */}
-        {removeConfirmModal.isOpen && customerToRemove && (
-          <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-8">
-            <div className="bg-[#1a1a1a] border-2 border-[#ef4444]/30 rounded-3xl p-10 max-w-2xl w-full">
-              <h2 className="text-4xl font-['Playfair_Display',serif] text-[#ef4444] mb-4 text-center">
-                Remover da Fila
-              </h2>
-              <p className="text-2xl text-white/70 mb-8 text-center">
-                Tem certeza que deseja remover{' '}
-                <span className="font-semibold text-white">
-                  {tickets.find((t) => t.id === customerToRemove)?.customerName}
-                </span>{' '}
-                da fila?
-              </p>
-              <div className="flex gap-4">
-                <button
-                  onClick={() => {
-                    removeConfirmModal.close();
-                    setCustomerToRemove(null);
-                  }}
-                  className="flex-1 px-8 py-5 text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={async () => {
-                    await handleRemoveCustomer();
-                    showQueueView();
-                  }}
-                  className="flex-1 px-8 py-5 text-xl rounded-2xl bg-[#ef4444] text-white font-semibold hover:bg-[#ef4444]/80 transition-all"
-                >
-                  Remover
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Kiosk: no barber selector, complete, or remove modals - only add client and view line/ads */}
       </div>
     );
   }
