@@ -58,7 +58,7 @@ export const QueueCard = memo(function QueueCard({
         <div className="flex items-center gap-3 flex-1 min-w-0">
           {/* Position Badge / Action Buttons */}
           <div className="flex items-center gap-2">
-            {/* Position Badge - 52px × 52px for management mode */}
+            {/* Position Badge or Complete button - 52px × 52px for management mode */}
             <button
               type="button"
               className={cn(
@@ -77,8 +77,8 @@ export const QueueCard = memo(function QueueCard({
                 }
               }}
               aria-label={
-                isServing 
-                  ? `Finalizar atendimento de ${ticket.customerName}` 
+                isServing
+                  ? `Finalizar atendimento de ${ticket.customerName}`
                   : `Remover ${ticket.customerName} da fila`
               }
             >
@@ -88,6 +88,20 @@ export const QueueCard = memo(function QueueCard({
                 <span aria-hidden="true">{displayPosition !== null && displayPosition !== undefined ? displayPosition : ticket.position}</span>
               )}
             </button>
+            {/* Remove/cancel button - shown for in_progress clients to cancel the service */}
+            {isServing && onRemove && (
+              <button
+                type="button"
+                className="flex-shrink-0 w-9 h-9 rounded-md flex items-center justify-center text-red-400/90 hover:text-red-400 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 transition-all focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove();
+                }}
+                aria-label={`Remover ${ticket.customerName} da fila e cancelar atendimento`}
+              >
+                <span className="material-symbols-outlined text-xl" aria-hidden="true">close</span>
+              </button>
+            )}
           </div>
 
           {/* Customer Name */}
