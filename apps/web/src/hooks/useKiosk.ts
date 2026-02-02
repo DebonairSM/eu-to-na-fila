@@ -23,6 +23,7 @@ export function useKiosk() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [ads, setAds] = useState<Ad[]>([]);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  const [lastAdsUpdate, setLastAdsUpdate] = useState<number | null>(null);
   const rotationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fullscreenRequestInFlightRef = useRef(false);
@@ -158,6 +159,7 @@ export function useKiosk() {
             if (message.type === 'ads.updated') {
               console.log('[useKiosk] Received ads.updated, refetching manifest');
               void fetchManifest();
+              setLastAdsUpdate(Date.now());
             }
           } catch (err) {
             console.error('[useKiosk] Failed to parse WebSocket message:', err);
@@ -329,6 +331,7 @@ export function useKiosk() {
     isFullscreen,
     ads,
     currentAdIndex,
+    lastAdsUpdate,
     enterKioskMode,
     exitKioskMode,
     showQueueView,

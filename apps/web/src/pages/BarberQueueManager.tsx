@@ -30,6 +30,7 @@ export function BarberQueueManager() {
     isInRotation,
     isFullscreen,
     currentAdIndex,
+    lastAdsUpdate,
     enterKioskMode,
     showQueueView,
     toggleFullscreen,
@@ -461,6 +462,7 @@ export function BarberQueueManager() {
             <KioskAdsPlayer
               shopSlug={config.slug}
               currentAdIndex={currentAdIndex}
+              manifestInvalidated={lastAdsUpdate}
               onError={showQueueView}
             />
           </div>

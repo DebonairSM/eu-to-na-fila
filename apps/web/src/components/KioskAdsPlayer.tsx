@@ -12,17 +12,17 @@ interface Ad {
 interface KioskAdsPlayerProps {
   shopSlug: string;
   currentAdIndex: number; // Index in the ads array to display
+  /** When set (e.g. from useKiosk lastAdsUpdate), refetch manifest. Used so one WebSocket in kiosk drives both. */
+  manifestInvalidated?: number | null;
   onError?: () => void;
 }
 
-export function KioskAdsPlayer({ shopSlug, currentAdIndex, onError }: KioskAdsPlayerProps) {
+export function KioskAdsPlayer({ shopSlug, currentAdIndex, manifestInvalidated, onError }: KioskAdsPlayerProps) {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [mediaRetry, setMediaRetry] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const preloadRef = useRef<HTMLImageElement | HTMLVideoElement | null>(null);
 
   const MAX_MANIFEST_RETRIES = 3;
@@ -52,7 +52,7 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, onError }: KioskAdsPl
     if (onError) onError();
   };
 
-  // Fetch manifest on mount and when shopSlug changes (runs first)
+  // Fetch manifest on mount and when shopSlug changes
   useEffect(() => {
     if (!shopSlug) {
       setLoading(false);
@@ -61,62 +61,12 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, onError }: KioskAdsPl
     void fetchManifest();
   }, [shopSlug]);
 
-  // Connect to WebSocket for real-time updates only after manifest has loaded
+  // Refetch when parent (useKiosk) receives ads.updated via its single WebSocket
   useEffect(() => {
-    if (!shopSlug || ads.length === 0) return;
-
-    const wsUrl = api.getWebSocketUrl();
-    if (!wsUrl) return;
-
-    const connect = () => {
-      try {
-        const ws = new WebSocket(wsUrl);
-        wsRef.current = ws;
-
-        ws.onopen = () => {
-          console.log('[KioskAdsPlayer] WebSocket connected');
-        };
-
-        ws.onmessage = (event) => {
-          try {
-            const message = JSON.parse(event.data);
-            if (message.type === 'ads.updated') {
-              console.log('[KioskAdsPlayer] Received ads.updated, refetching manifest');
-              void fetchManifest();
-            }
-          } catch (err) {
-            console.error('[KioskAdsPlayer] Failed to parse WebSocket message:', err);
-          }
-        };
-
-        ws.onerror = (err) => {
-          console.error('[KioskAdsPlayer] WebSocket error:', err);
-        };
-
-        ws.onclose = (_event) => {
-          console.log('[KioskAdsPlayer] WebSocket closed, reconnecting...');
-          wsRef.current = null;
-          reconnectTimeoutRef.current = setTimeout(connect, 3000);
-        };
-      } catch (err) {
-        console.error('[KioskAdsPlayer] Failed to connect WebSocket:', err);
-        reconnectTimeoutRef.current = setTimeout(connect, 3000);
-      }
-    };
-
-    connect();
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-        reconnectTimeoutRef.current = null;
-      }
-    };
-  }, [shopSlug, ads.length]);
+    if (manifestInvalidated != null && shopSlug) {
+      void fetchManifest();
+    }
+  }, [manifestInvalidated, shopSlug]);
 
   // Get current ad to display
   const currentAd = ads.length > 0 && currentAdIndex >= 0 && currentAdIndex < ads.length
