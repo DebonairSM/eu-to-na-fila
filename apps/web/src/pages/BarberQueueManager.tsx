@@ -52,6 +52,11 @@ export function BarberQueueManager() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const firstNameInputRef = useRef<HTMLInputElement>(null);
 
+  const checkInModal = useModal(false);
+  const barberSelectorModal = useModal(false);
+  const removeConfirmModal = useModal(false);
+  const completeConfirmModal = useModal(false);
+
   // Enter kiosk mode if ?kiosk=true in URL
   useEffect(() => {
     if (searchParams.get('kiosk') === 'true' && !isKioskMode) {
