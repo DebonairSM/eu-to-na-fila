@@ -146,6 +146,12 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
+    // Don't intercept ads public manifest - let browser fetch directly so we always get
+    // a fresh manifest and the page's timeout applies. Avoids stale cache and "fetching but no ads".
+    if (url.pathname === '/api/ads/public/manifest') {
+      return;
+    }
+
     // Handle API requests (network first, fallback to cache)
     if (url.pathname.startsWith('/api/')) {
       event.respondWith(apiNetworkFirstStrategy(request));
