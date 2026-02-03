@@ -1,4 +1,5 @@
 import { Page, expect, APIRequestContext } from '@playwright/test';
+import { apiBaseUrlWithPath } from '../config.js';
 
 /**
  * Authentication credentials for testing
@@ -135,7 +136,7 @@ export async function getAuthToken(
   const requestContext = 'request' in pageOrRequest ? pageOrRequest.request : pageOrRequest;
   
   return retryConnection(async () => {
-    const response = await requestContext.post('http://localhost:4041/api/shops/mineiro/auth', {
+    const response = await requestContext.post(`${apiBaseUrlWithPath}/shops/mineiro/auth`, {
       data: {
         pin: credentials.pin,
       },
@@ -171,7 +172,7 @@ export async function getCompanyAdminToken(
 ): Promise<string | null> {
   try {
     return await retryConnection(async () => {
-      const response = await request.post('http://localhost:4041/api/company/auth', {
+      const response = await request.post(`${apiBaseUrlWithPath}/company/auth`, {
         data: {
           username: 'admin', // Adjust based on your test data
           password: 'admin123', // Adjust based on your test data

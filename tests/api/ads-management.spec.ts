@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { getCompanyAdminToken } from '../helpers/auth.js';
+import { apiBaseUrlWithPath, testConfig } from '../config.js';
 
 test.describe('Ads Management API', () => {
   let adminToken: string | null;
   let createdAdId: number;
-  const API_BASE = 'http://localhost:4041/api';
+  const API_BASE = apiBaseUrlWithPath;
 
   test.beforeAll(async ({ request }) => {
     adminToken = await getCompanyAdminToken(request);
@@ -273,7 +274,7 @@ test.describe('Ads Management API', () => {
       expect(deleteResponse.status()).toBe(200);
 
       // Verify file is no longer accessible (should 404)
-      const fileResponse = await request.get(`http://localhost:4041${publicUrl}`);
+      const fileResponse = await request.get(`${testConfig.apiBaseUrl}${publicUrl}`);
       expect([404, 403]).toContain(fileResponse.status());
     });
 

@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { testConfig } from './tests/config.js';
 
 /**
  * Playwright configuration for EuToNaFila E2E tests
@@ -19,7 +20,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:4040',
+    baseURL: testConfig.webBaseUrl,
     /* Set viewport size - login form might be hidden on small screens */
     viewport: { width: 1280, height: 720 },
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
@@ -59,7 +60,7 @@ export default defineConfig({
    * and use a global setup to verify API server is ready */
   webServer: {
     command: 'pnpm dev',
-    url: 'http://localhost:4040/mineiro',
+    url: `${testConfig.webBaseUrl}/mineiro`,
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
     stdout: 'ignore',

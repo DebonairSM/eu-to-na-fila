@@ -198,7 +198,7 @@ class ApiClient {
         // If response is not JSON (e.g., HTML error page from proxy)
         if (response.status === 502) {
           data = {
-            error: 'API server is not reachable. Please ensure the API server is running on port 4041.',
+            error: 'API server is not reachable. Please ensure the API server is running (e.g. pnpm dev).',
             statusCode: 502,
             code: 'BAD_GATEWAY',
           };

@@ -17,6 +17,9 @@ const redirectPlugin = (): Plugin => ({
   },
 });
 
+const webPort = Number(process.env.WEB_PORT ?? process.env.PORT ?? 4040);
+const apiPort = Number(process.env.API_PORT ?? 4041);
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [redirectPlugin(), react()],
@@ -27,21 +30,21 @@ export default defineConfig({
     },
   },
   server: {
-    port: 4040,
+    port: webPort,
     hmr: {
-      clientPort: 4040,
+      clientPort: webPort,
       path: '/mineiro/',
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:4041',
+        target: `http://localhost:${apiPort}`,
         changeOrigin: true,
         // Increase timeout and body size for file uploads
         timeout: 120000, // 2 minutes
         // Note: Vite proxy doesn't have a body size limit, but we ensure it's configured properly
       },
       '/ws': {
-        target: 'ws://localhost:4041',
+        target: `ws://localhost:${apiPort}`,
         ws: true,
       },
     },

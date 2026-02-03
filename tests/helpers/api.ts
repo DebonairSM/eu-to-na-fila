@@ -1,7 +1,8 @@
 import { APIRequestContext, expect } from '@playwright/test';
 import { readFile } from 'fs/promises';
+import { apiBaseUrlWithPath, testConfig } from '../config.js';
 
-const API_BASE_URL = 'http://localhost:4041/api';
+const API_BASE_URL = apiBaseUrlWithPath;
 
 /**
  * Checks if an error is a connection error (server not ready)
@@ -28,7 +29,7 @@ export async function handleApiRequest<T>(
   } catch (error: any) {
     if (isConnectionError(error)) {
       throw new Error(
-        `${context} failed: API server at http://localhost:4041 is not accessible.\n` +
+        `${context} failed: API server at ${testConfig.apiBaseUrl} is not accessible.\n` +
         `This usually means the dev server is not running. Start it with: pnpm dev\n` +
         `Original error: ${error.message || error}`
       );

@@ -1,6 +1,7 @@
 import { test, expect } from '../helpers/fixtures.js';
 import { loginAsBarber, getCompanyAdminToken } from '../helpers/auth.js';
 import { enterKioskMode, waitForQueueView } from '../helpers/kiosk.js';
+import { apiBaseUrlWithPath } from '../config.js';
 
 test.describe('Kiosk Mode Ad Upload Flow', () => {
   test('should display newly uploaded ad in kiosk mode', async ({ page, request }) => {
@@ -20,7 +21,7 @@ test.describe('Kiosk Mode Ad Upload Flow', () => {
     const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
     const testImageBuffer = Buffer.from(testImageBase64, 'base64');
 
-    const uploadResponse = await request.post('http://localhost:4041/api/ads/uploads', {
+    const uploadResponse = await request.post(`${apiBaseUrlWithPath}/ads/uploads`, {
       headers: {
         Authorization: `Bearer ${adminToken}`,
       },
@@ -63,7 +64,7 @@ test.describe('Kiosk Mode Ad Upload Flow', () => {
     const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
     const testImageBuffer = Buffer.from(testImageBase64, 'base64');
 
-    const uploadResponse = await request.post('http://localhost:4041/api/ads/uploads', {
+    const uploadResponse = await request.post(`${apiBaseUrlWithPath}/ads/uploads`, {
       headers: {
         Authorization: `Bearer ${adminToken}`,
       },
@@ -91,7 +92,7 @@ test.describe('Kiosk Mode Ad Upload Flow', () => {
     const initiallyVisible = await adImage.isVisible({ timeout: 15000 }).catch(() => false);
 
     // Disable the ad
-    await request.patch(`http://localhost:4041/api/ads/${adId}`, {
+    await request.patch(`${apiBaseUrlWithPath}/ads/${adId}`, {
       headers: {
         Authorization: `Bearer ${adminToken}`,
         'Content-Type': 'application/json',
@@ -127,7 +128,7 @@ test.describe('Kiosk Mode Ad Upload Flow', () => {
 
     const adIds: number[] = [];
     for (let i = 0; i < 3; i++) {
-      const uploadResponse = await request.post('http://localhost:4041/api/ads/uploads', {
+      const uploadResponse = await request.post(`${apiBaseUrlWithPath}/ads/uploads`, {
         headers: {
           Authorization: `Bearer ${adminToken}`,
         },

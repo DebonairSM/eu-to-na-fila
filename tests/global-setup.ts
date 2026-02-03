@@ -1,5 +1,6 @@
 import { FullConfig } from '@playwright/test';
 import http from 'http';
+import { testConfig } from './config.js';
 
 /**
  * Makes an HTTP request and returns whether it was successful
@@ -80,8 +81,8 @@ async function globalSetup(config: FullConfig) {
   // Increase retries and delay - API server may take time to start after webServer check passes
   const maxRetries = 60; // 60 seconds total wait time
   const retryDelay = 1000; // 1 second
-  const apiUrl = 'http://localhost:4041/health';
-  const webUrl = 'http://localhost:4040/mineiro';
+  const apiUrl = `${testConfig.apiBaseUrl}/health`;
+  const webUrl = `${testConfig.webBaseUrl}/mineiro`;
 
   console.log('Verifying servers are ready...');
 

@@ -1,12 +1,12 @@
 import { test, expect } from '../helpers/fixtures.js';
-import { 
-  enterKioskMode, 
-  waitForQueueView, 
+import {
+  enterKioskMode,
+  waitForQueueView,
   waitForAdView,
-  getCurrentView,
   KIOSK_TIMINGS,
 } from '../helpers/kiosk.js';
 import { loginAsBarber } from '../helpers/auth.js';
+import { apiBaseUrlWithPath } from '../config.js';
 
 test.describe('Kiosk Mode Ad Live Updates', () => {
   test('should update ad1 image when new ad is uploaded via admin', async ({ page, request }) => {
@@ -34,7 +34,7 @@ test.describe('Kiosk Mode Ad Live Updates', () => {
       const testImageBuffer = Buffer.from(testImageBase64, 'base64');
       
       // Upload new ad using new endpoint
-      const uploadResponse = await request.post('http://localhost:4041/api/ads/uploads', {
+      const uploadResponse = await request.post(`${apiBaseUrlWithPath}/ads/uploads`, {
         headers: {
           'Authorization': `Bearer ${companyToken}`,
         },
@@ -84,9 +84,9 @@ test.describe('Kiosk Mode Ad Live Updates', () => {
     expect(initialSrc).toBeTruthy();
     
     // Try to upload new ad2 (similar to ad1 test)
-    const companyLoginResponse = await request.post('http://localhost:4041/api/company/auth/login', {
+    const companyLoginResponse = await request.post(`${apiBaseUrlWithPath}/company/auth`, {
       data: {
-        email: 'admin@test.com',
+        username: 'admin',
         password: 'admin123',
       },
     });
@@ -101,7 +101,7 @@ test.describe('Kiosk Mode Ad Live Updates', () => {
       const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
       const testImageBuffer = Buffer.from(testImageBase64, 'base64');
       
-      const uploadResponse = await request.post('http://localhost:4041/api/ads/upload', {
+      const uploadResponse = await request.post(`${apiBaseUrlWithPath}/ads/uploads`, {
         headers: {
           'Authorization': `Bearer ${companyToken}`,
         },

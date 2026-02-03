@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { getCompanyAdminToken } from '../helpers/auth.js';
+import { apiBaseUrlWithPath } from '../config.js';
 
 test.describe('Ads Manifest API', () => {
   let adminToken: string | null;
-  const API_BASE = 'http://localhost:4041/api';
+  const API_BASE = apiBaseUrlWithPath;
 
   test.beforeAll(async ({ request }) => {
     adminToken = await getCompanyAdminToken(request);
