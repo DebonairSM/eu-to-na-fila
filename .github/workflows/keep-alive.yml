@@ -12,14 +12,19 @@ jobs:
     steps:
       - name: Ping health endpoint
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 120 \
-            "${{ secrets.RENDER_URL }}/health" || echo "000")
-          
+          url="${{ secrets.RENDER_URL }}/health"
+          if [ -z "${{ secrets.RENDER_URL }}" ]; then
+            echo "RENDER_URL secret is not set; skipping ping"
+            exit 0
+          fi
+          response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 120 "$url" || true)
+          # Normalize: curl can leave http_code empty on failure; some runners show 000 or 000000
+          code=$(echo "$response" | tr -d '\n' | sed 's/^0*//' || true)
+          [ -z "$code" ] && code="0"
           if [ "$response" = "200" ]; then
-            echo "Service is healthy (HTTP $response)"
-          elif [ "$response" = "000" ]; then
-            echo "Service is waking up (cold start timeout)"
+            echo "Service is healthy (HTTP 200)"
+          elif [ "$code" = "0" ] || [ -z "$(echo "$response" | tr -d '0')" ]; then
+            echo "Service unreachable or waking up (cold start); HTTP code was: $response"
           else
             echo "Service returned HTTP $response"
             exit 1

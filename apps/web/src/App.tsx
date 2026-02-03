@@ -34,7 +34,11 @@ function ProtectedRoute({
   const { isAuthenticated, isOwner, isCompanyAdmin, isLoading } = useAuthContext();
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white/70 flex items-center justify-center">
+        <p className="text-sm">Carregando…</p>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
@@ -166,9 +170,11 @@ function App() {
       </a>
       <Suspense
         fallback={
-          <div className="min-h-screen bg-[#0a0a0a] text-white">
-            <div className="h-1 w-full bg-gradient-to-r from-[#D4AF37]/50 via-[#0f3d2e]/30 to-[#D4AF37]/50 animate-pulse" />
-            <div className="p-6 text-sm text-white/60">Carregando…</div>
+          <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col">
+            <div className="h-1 w-full bg-[#D4AF37]/40 animate-pulse shrink-0" />
+            <div className="flex-1 flex items-center justify-center p-6">
+              <p className="text-sm text-white/60">Carregando…</p>
+            </div>
           </div>
         }
       >

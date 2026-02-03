@@ -198,7 +198,9 @@ class ApiClient {
         // If response is not JSON (e.g., HTML error page from proxy)
         if (response.status === 502) {
           data = {
-            error: 'API server is not reachable. Please ensure the API server is running (e.g. pnpm dev).',
+            error: import.meta.env.DEV
+              ? 'API não está respondendo. Rode pnpm dev para subir o servidor.'
+              : 'Serviço temporariamente indisponível. Tente novamente em alguns instantes.',
             statusCode: 502,
             code: 'BAD_GATEWAY',
           };
