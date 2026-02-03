@@ -2,7 +2,7 @@
  * E2E test URLs. Override via env for different ports.
  * Defaults match apps/web (port 4040) and apps/api (port 4041).
  */
-const WEB_PORT = process.env.WEB_PORT ?? process.env.PORT ?? '4040';
+const WEB_PORT = process.env.WEB_PORT ?? '4040';
 const API_PORT = process.env.API_PORT ?? '4041';
 
 export const testConfig = {

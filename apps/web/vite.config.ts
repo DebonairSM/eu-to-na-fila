@@ -2,13 +2,15 @@ import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-// Plugin to redirect /mineiro to /mineiro/
+// Plugin to redirect root and /mineiro to /mineiro/ so the app loads
 const redirectPlugin = (): Plugin => ({
   name: 'redirect-mineiro',
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
-      if (req.url === '/mineiro') {
-        res.writeHead(301, { Location: '/mineiro/' });
+      const path = req.url?.split('?')[0] ?? '';
+      if (path === '/' || path === '/mineiro') {
+        const q = req.url?.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+        res.writeHead(302, { Location: `/mineiro/${q}` });
         res.end();
         return;
       }
@@ -17,8 +19,10 @@ const redirectPlugin = (): Plugin => ({
   },
 });
 
-const webPort = Number(process.env.WEB_PORT ?? process.env.PORT ?? 4040);
-const apiPort = Number(process.env.API_PORT ?? 4041);
+// Web dev server port; do not use PORT (API may use it in .env)
+const webPort = Number(process.env.WEB_PORT ?? 4040);
+// Proxy target: use API_PORT if set, else PORT so it matches the API server (same .env)
+const apiPort = Number(process.env.API_PORT ?? process.env.PORT ?? 4041);
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -39,9 +43,18 @@ export default defineConfig({
       '/api': {
         target: `http://localhost:${apiPort}`,
         changeOrigin: true,
-        // Increase timeout and body size for file uploads
-        timeout: 120000, // 2 minutes
-        // Note: Vite proxy doesn't have a body size limit, but we ensure it's configured properly
+        timeout: 120000,
+        configure: (proxy) => {
+          proxy.on('error', (err, req, res) => {
+            console.error(
+              `[vite] API proxy error: cannot reach http://localhost:${apiPort}. Is the API running? (pnpm dev starts both web and API.)`
+            );
+            if (res && !res.headersSent) {
+              res.writeHead(502, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'API server unreachable', code: 'BAD_GATEWAY' }));
+            }
+          });
+        },
       },
       '/ws': {
         target: `ws://localhost:${apiPort}`,
