@@ -52,28 +52,18 @@ test.describe('Kiosk Mode Ad Live Updates', () => {
       expect(uploadData.ad).toHaveProperty('version');
       expect(uploadData.ad).toHaveProperty('publicUrl');
       
-      // Step 4: Wait for websocket update and verify new ad appears
-      // The kiosk should refresh and show the new ad
-      await page.waitForTimeout(3000);
+      // Step 4: Wait for manifest poll (kiosk polls every 45s) and verify new ad appears
+      await page.waitForTimeout(50000);
       
       // Check if the new ad appears (either replaces old one or appears in rotation)
       const newAdImage = page.locator(`img[src*="${uploadData.ad.publicUrl}"], video[src*="${uploadData.ad.publicUrl}"]`);
-      const newAdVisible = await newAdImage.isVisible({ timeout: 10000 }).catch(() => false);
+      const newAdVisible = await newAdImage.isVisible({ timeout: 15000 }).catch(() => false);
       
-      // New ad should appear (WebSocket should trigger manifest refresh)
       expect(newAdVisible).toBeTruthy();
     } else {
-      // If we can't test upload, at least verify websocket connection exists
-      // Check if WebSocket connection is established
-      const wsConnected = await page.evaluate(() => {
-        return (window as any).wsClient?.ws?.readyState === WebSocket.OPEN;
-      });
-      
-      // Note: This is a basic check - in a real scenario, we'd want to verify
-      // the websocket is actually connected and can receive messages
       test.info().annotations.push({
         type: 'note',
-        description: 'Company admin login not available - skipped upload test, verified websocket client exists',
+        description: 'Company admin login not available - skipped upload test',
       });
     }
   });
@@ -129,33 +119,24 @@ test.describe('Kiosk Mode Ad Live Updates', () => {
       const uploadData = await uploadResponse.json();
       const newVersion = uploadData.version;
       
-      // Wait for websocket update
-      await expect(initialAd2Image).toHaveAttribute('src', new RegExp(`v=${newVersion}`), { timeout: 10000 });
+      // Wait for manifest poll (kiosk polls every 45s)
+      await page.waitForTimeout(50000);
+      await expect(initialAd2Image).toHaveAttribute('src', new RegExp(`v=${newVersion}`), { timeout: 15000 });
       
       const updatedSrc = await initialAd2Image.getAttribute('src');
       expect(updatedSrc).toContain(`v=${newVersion}`);
     }
   });
 
-  test('should handle websocket reconnection gracefully', async ({ page }) => {
+  test('kiosk uses polling for manifest updates', async ({ page }) => {
     await loginAsBarber(page);
     await enterKioskMode(page);
     
-    // Verify websocket client exists
-    const wsExists = await page.evaluate(() => {
-      return typeof (window as any).wsClient !== 'undefined';
-    });
-    expect(wsExists).toBeTruthy();
-    
-    // Check if websocket connection is established or attempting to connect
-    const wsState = await page.evaluate(() => {
-      const client = (window as any).wsClient;
-      if (!client || !client.ws) return 'no-client';
-      return client.ws.readyState; // 0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED
-    });
-    
-    // WebSocket should be connecting or open
-    expect([0, 1]).toContain(wsState);
+    // Kiosk no longer uses WebSocket; it polls the manifest every 45s.
+    // Verify kiosk is active (queue or ad view visible).
+    await waitForQueueView(page, 10000);
+    const queueOrAdVisible = await page.locator('button:has-text("Entrar na Fila"), img[src*="?v="], video[src*="?v="], text=/Nenhum anúncio/i').first().isVisible({ timeout: 5000 }).catch(() => false);
+    expect(queueOrAdVisible).toBeTruthy();
   });
 });
 

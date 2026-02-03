@@ -23,12 +23,10 @@ export function useKiosk() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [ads, setAds] = useState<Ad[]>([]);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
-  const [lastAdsUpdate, setLastAdsUpdate] = useState<number | null>(null);
   const rotationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fullscreenRequestInFlightRef = useRef(false);
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const manifestPollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const getFullscreenElement = useCallback((): Element | null => {
     const docAny = document as unknown as {
@@ -134,72 +132,29 @@ export function useKiosk() {
     setAds([]);
   }, []);
 
-  // Connect to WebSocket for real-time updates
-  useEffect(() => {
-    if (!isKioskMode) return;
-
-    const wsUrl = api.getWebSocketUrl();
-    if (!wsUrl) return;
-
-    const connect = () => {
-      try {
-        const ws = new WebSocket(wsUrl);
-        wsRef.current = ws;
-
-        ws.onopen = () => {
-          console.log('[useKiosk] WebSocket connected');
-          // Note: Backend subscription requires companyId, which we don't have here
-          // For now, we'll just listen for any ads.updated messages
-          // In a full implementation, we'd need to get companyId from shop data
-        };
-
-        ws.onmessage = (event) => {
-          try {
-            const message = JSON.parse(event.data);
-            if (message.type === 'ads.updated') {
-              console.log('[useKiosk] Received ads.updated, refetching manifest');
-              void fetchManifest();
-              setLastAdsUpdate(Date.now());
-            }
-          } catch (err) {
-            console.error('[useKiosk] Failed to parse WebSocket message:', err);
-          }
-        };
-
-        ws.onerror = (err) => {
-          console.error('[useKiosk] WebSocket error:', err);
-        };
-
-        ws.onclose = (_event) => {
-          console.log('[useKiosk] WebSocket closed, reconnecting...');
-          wsRef.current = null;
-          reconnectTimeoutRef.current = setTimeout(connect, 3000);
-        };
-      } catch (err) {
-        console.error('[useKiosk] Failed to connect WebSocket:', err);
-        reconnectTimeoutRef.current = setTimeout(connect, 3000);
-      }
-    };
-
-    connect();
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-        reconnectTimeoutRef.current = null;
-      }
-    };
-  }, [isKioskMode, fetchManifest]);
-
   // Fetch manifest when entering kiosk mode
   useEffect(() => {
     if (isKioskMode) {
       void fetchManifest();
     }
+  }, [isKioskMode, fetchManifest]);
+
+  // Poll manifest periodically while in kiosk mode
+  const MANIFEST_POLL_INTERVAL_MS = 45000;
+  useEffect(() => {
+    if (!isKioskMode) return;
+
+    const intervalId = setInterval(() => {
+      void fetchManifest();
+    }, MANIFEST_POLL_INTERVAL_MS);
+    manifestPollIntervalRef.current = intervalId;
+
+    return () => {
+      if (manifestPollIntervalRef.current) {
+        clearInterval(manifestPollIntervalRef.current);
+        manifestPollIntervalRef.current = null;
+      }
+    };
   }, [isKioskMode, fetchManifest]);
 
   const enterKioskMode = useCallback(() => {
@@ -253,6 +208,10 @@ export function useKiosk() {
     if (idleTimerRef.current) {
       clearTimeout(idleTimerRef.current);
       idleTimerRef.current = null;
+    }
+    if (manifestPollIntervalRef.current) {
+      clearInterval(manifestPollIntervalRef.current);
+      manifestPollIntervalRef.current = null;
     }
   }, [exitFullscreen]);
 
@@ -331,7 +290,6 @@ export function useKiosk() {
     isFullscreen,
     ads,
     currentAdIndex,
-    lastAdsUpdate,
     enterKioskMode,
     exitKioskMode,
     showQueueView,

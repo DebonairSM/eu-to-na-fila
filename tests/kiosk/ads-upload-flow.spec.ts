@@ -38,15 +38,13 @@ test.describe('Kiosk Mode Ad Upload Flow', () => {
     expect(uploadData.ad).toHaveProperty('id');
     expect(uploadData.ad).toHaveProperty('publicUrl');
 
-    // Step 4: Wait for WebSocket update and verify ad appears in kiosk
-    // The kiosk should refresh and show the new ad
-    await page.waitForTimeout(3000); // Give time for WebSocket update
+    // Step 4: Wait for manifest poll (kiosk polls every 45s) and verify ad appears
+    await page.waitForTimeout(50000);
 
     // Check if the ad appears in the kiosk (either in current view or after rotation)
     const adImage = page.locator(`img[src*="${uploadData.ad.publicUrl}"], video[src*="${uploadData.ad.publicUrl}"]`);
-    const adVisible = await adImage.isVisible({ timeout: 10000 }).catch(() => false);
+    const adVisible = await adImage.isVisible({ timeout: 15000 }).catch(() => false);
     
-    // Ad should appear either immediately or after rotation
     expect(adVisible).toBeTruthy();
   });
 
@@ -87,10 +85,10 @@ test.describe('Kiosk Mode Ad Upload Flow', () => {
     const adId = uploadData.ad.id;
     const publicUrl = uploadData.ad.publicUrl;
 
-    // Wait for ad to appear
-    await page.waitForTimeout(3000);
+    // Wait for manifest poll so ad appears
+    await page.waitForTimeout(50000);
     const adImage = page.locator(`img[src*="${publicUrl}"], video[src*="${publicUrl}"]`);
-    const initiallyVisible = await adImage.isVisible({ timeout: 10000 }).catch(() => false);
+    const initiallyVisible = await adImage.isVisible({ timeout: 15000 }).catch(() => false);
 
     // Disable the ad
     await request.patch(`http://localhost:4041/api/ads/${adId}`, {
@@ -103,8 +101,8 @@ test.describe('Kiosk Mode Ad Upload Flow', () => {
       },
     });
 
-    // Wait for WebSocket update
-    await page.waitForTimeout(3000);
+    // Wait for next manifest poll (45s)
+    await page.waitForTimeout(50000);
 
     // Ad should no longer be visible (or should be removed from rotation)
     // This is a soft check - the ad might still be visible until next rotation
@@ -148,8 +146,8 @@ test.describe('Kiosk Mode Ad Upload Flow', () => {
       }
     }
 
-    // Wait for all ads to be processed
-    await page.waitForTimeout(5000);
+    // Wait for manifest poll (kiosk polls every 45s) to pick up new ads
+    await page.waitForTimeout(50000);
 
     // Verify multiple ads can be displayed
     // The kiosk should rotate through all enabled ads

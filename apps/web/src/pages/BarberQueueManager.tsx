@@ -29,8 +29,8 @@ export function BarberQueueManager() {
     currentView,
     isInRotation,
     isFullscreen,
+    ads,
     currentAdIndex,
-    lastAdsUpdate,
     enterKioskMode,
     showQueueView,
     toggleFullscreen,
@@ -465,12 +465,7 @@ export function BarberQueueManager() {
             className="flex-1 flex items-center justify-center relative cursor-pointer min-h-0 max-h-screen overflow-hidden"
             onClick={showQueueView}
           >
-            <KioskAdsPlayer
-              shopSlug={config.slug}
-              currentAdIndex={currentAdIndex}
-              manifestInvalidated={lastAdsUpdate}
-              onError={showQueueView}
-            />
+            <KioskAdsPlayer ads={ads} currentAdIndex={currentAdIndex} />
           </div>
         )}
 
