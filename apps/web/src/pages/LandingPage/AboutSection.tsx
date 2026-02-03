@@ -7,6 +7,9 @@ const features = [
   { icon: 'local_parking', text: 'Estacionamento fácil' },
 ];
 
+const BARBERSHOP_IMAGE_URL =
+  'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80';
+
 export function AboutSection() {
   return (
     <Section id="about" variant="primary">
@@ -30,15 +33,11 @@ export function AboutSection() {
         </div>
         <div className="aspect-[4/5] rounded-xl overflow-hidden border border-[rgba(212,175,55,0.2)] shadow-lg">
           <img
-            src="/barbershop-image.jpg"
+            src={BARBERSHOP_IMAGE_URL}
             alt="Interior da barbearia"
             className="w-full h-full object-cover"
             loading="lazy"
             decoding="async"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80';
-            }}
           />
         </div>
       </div>
@@ -63,15 +62,11 @@ export function AboutSection() {
         </div>
         <div className="aspect-[4/5] rounded-2xl overflow-hidden border border-[rgba(212,175,55,0.2)] shadow-lg">
           <img
-            src="/barbershop-image.jpg"
+            src={BARBERSHOP_IMAGE_URL}
             alt="Interior da barbearia"
             className="w-full h-full object-cover"
             loading="lazy"
             decoding="async"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80';
-            }}
           />
         </div>
       </div>
