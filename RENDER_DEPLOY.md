@@ -99,9 +99,14 @@ If Blueprint doesn't work, create the service manually:
 ## Post-Deployment
 
 1. Set `CORS_ORIGIN` to your actual Render URL (e.g., `https://eutonafila.onrender.com`)
-2. Set `DATABASE_URL` to your PostgreSQL connection string (if not already set)
-3. Do not set `PORT` manually on Render. Render injects `PORT` at runtime and the app binds to it.
-3. Database migrations run automatically on start, but you can manually run:
+
+2. **Keep-alive (optional):** To prevent Render from spinning down after inactivity, add a GitHub repository secret:
+   - Go to **Settings > Secrets and variables > Actions**
+   - Add secret `RENDER_URL` with value `https://your-app.onrender.com` (no trailing slash)
+   - The scheduled workflow in `.github/workflows/keep-alive.yml` will ping `/health` every 10 minutes
+3. Set `DATABASE_URL` to your PostgreSQL connection string (if not already set)
+4. Do not set `PORT` manually on Render. Render injects `PORT` at runtime and the app binds to it.
+5. Database migrations run automatically on start, but you can manually run:
    - In Render dashboard, go to **Shell**
    - Run: `pnpm db:migrate`
    - (Optional) Run: `pnpm db:seed` for test data

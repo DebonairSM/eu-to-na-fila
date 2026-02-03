@@ -17,7 +17,7 @@ interface KioskAdsPlayerProps {
   onError?: () => void;
 }
 
-export function KioskAdsPlayer({ shopSlug, currentAdIndex, manifestInvalidated, onError }: KioskAdsPlayerProps) {
+export function KioskAdsPlayer({ shopSlug, currentAdIndex, manifestInvalidated }: KioskAdsPlayerProps) {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
