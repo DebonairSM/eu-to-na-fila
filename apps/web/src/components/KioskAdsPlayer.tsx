@@ -49,7 +49,7 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, manifestInvalidated, 
     console.error('[KioskAdsPlayer] Failed to fetch manifest after retries:', lastErr);
     setError(true);
     setLoading(false);
-    if (onError) onError();
+    // Don't call onError() - stay on ad view and show error so user sees the message; rotation will return to queue after 15s
   };
 
   // Fetch manifest on mount and when shopSlug changes
@@ -157,7 +157,7 @@ export function KioskAdsPlayer({ shopSlug, currentAdIndex, manifestInvalidated, 
       return;
     }
     setError(true);
-    if (onError) onError();
+    // Don't call onError() - show error in player and let rotation return to queue after 15s
   };
 
   return (
