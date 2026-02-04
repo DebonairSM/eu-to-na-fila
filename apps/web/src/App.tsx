@@ -18,7 +18,6 @@ const BarberQueueManager = lazyWithRetry(() => import('./pages/BarberQueueManage
 const AnalyticsPage = lazyWithRetry(() => import('./pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
 const BarberManagementPage = lazyWithRetry(() => import('./pages/BarberManagementPage').then((m) => ({ default: m.BarberManagementPage })));
 const AdManagementPage = lazyWithRetry(() => import('./pages/AdManagementPage').then((m) => ({ default: m.AdManagementPage })));
-const CompanyLoginPage = lazyWithRetry(() => import('./pages/CompanyLoginPage').then((m) => ({ default: m.CompanyLoginPage })));
 const CompanyDashboard = lazyWithRetry(() => import('./pages/CompanyDashboard').then((m) => ({ default: m.CompanyDashboard })));
 
 // Protected Route Component
@@ -42,9 +41,6 @@ function ProtectedRoute({
   }
 
   if (!isAuthenticated) {
-    if (requireCompanyAdmin) {
-      return <Navigate to="/company/login" replace />;
-    }
     return <Navigate to="/shop/login" replace />;
   }
 
@@ -53,7 +49,7 @@ function ProtectedRoute({
   }
 
   if (requireCompanyAdmin && !isCompanyAdmin) {
-    return <Navigate to="/company/login" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return <>{children}</>;
@@ -66,11 +62,10 @@ function AppContent() {
   // Set up global auth error handler
   useEffect(() => {
     api.setOnAuthError(() => {
-      const isCompanyAdmin = user?.role === 'company_admin';
       logout();
-      navigate(isCompanyAdmin ? '/company/login' : '/shop/login', { replace: true });
+      navigate('/shop/login', { replace: true });
     });
-  }, [logout, navigate, user]);
+  }, [logout, navigate]);
 
   return (
     <Routes>
@@ -81,7 +76,6 @@ function AppContent() {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/join" element={<JoinPageGuard />} />
       <Route path="/status/:id" element={<StatusPage />} />
-      <Route path="/company/login" element={<CompanyLoginPage />} />
       <Route path="/shop/login" element={<LoginPage />} />
 
       <Route

@@ -51,13 +51,6 @@ export function CompanyNav() {
                 </Link>
               );
             })}
-            <Link
-              to="/company/login"
-              className="ml-2 px-2 py-1.5 text-white/40 hover:text-white/70 transition-colors text-xs flex items-center gap-1"
-              title="Admin Login"
-            >
-              <span className="material-symbols-outlined text-sm">lock</span>
-            </Link>
           </nav>
 
           <div className="relative md:hidden">
@@ -89,14 +82,6 @@ export function CompanyNav() {
                     {item.label}
                   </Link>
                 ))}
-                <Link
-                  to="/company/login"
-                  className="block rounded-md px-3 py-2 text-white/60 hover:text-[#D4AF37] hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1a33] flex items-center gap-2"
-                  onClick={() => setOpen(false)}
-                >
-                  <span className="material-symbols-outlined text-sm">lock</span>
-                  Admin
-                </Link>
               </div>
             )}
           </div>
