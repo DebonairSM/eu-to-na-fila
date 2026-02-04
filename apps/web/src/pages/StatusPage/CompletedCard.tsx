@@ -10,12 +10,36 @@ export function CompletedCard({ barberName, isPreferredBarber }: CompletedCardPr
     <StatusTransition status="completed">
       <Card
         variant="outlined"
-        className="bg-white text-center"
+        className="border-[#D4AF37]/40 bg-[rgba(255,255,255,0.03)] text-center overflow-visible"
       >
         <CardContent className="p-8 sm:p-10 lg:p-12">
-          <span className="material-symbols-outlined text-5xl sm:text-6xl lg:text-7xl text-white mb-4 sm:mb-6 block">
-            check_circle
-          </span>
+          <div className="inline-flex items-center justify-center mb-4 sm:mb-6 animate-checkmark-glow">
+            <svg
+              viewBox="0 0 64 64"
+              className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 text-[#D4AF37]"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                className="text-[#D4AF37]/30 stroke-[#D4AF37] animate-checkmark-circle-draw"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+                style={{ strokeDasharray: 176 }}
+              />
+              <path
+                d="M18 32l8 8 20-24"
+                style={{ strokeDasharray: 100 }}
+                className="animate-checkmark-draw"
+              />
+            </svg>
+          </div>
           <Heading level={2} className="mb-4 sm:mb-6 text-white text-xl sm:text-2xl lg:text-3xl">
             Concluído
           </Heading>

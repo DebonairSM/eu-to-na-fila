@@ -14,8 +14,7 @@ export function StatusTransition({ className, status, children, ...props }: Stat
         'transition-all',
         {
           'animate-in fade-in slide-in-from-bottom-4': status === 'waiting',
-          'animate-in fade-in': status === 'in-progress',
-          'animate-pulse': status === 'completed',
+          'animate-in fade-in': status === 'in-progress' || status === 'completed',
         },
         className
       )}

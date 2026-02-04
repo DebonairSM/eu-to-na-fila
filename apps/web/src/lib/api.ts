@@ -834,11 +834,42 @@ class ApiClient {
     } else {
     }
 
-    const response = await fetch(`${this.baseUrl}/ads/uploads`, {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
+    // Long timeout for large files (50MB); avoids generic "Failed to fetch" on timeout/SSL drops
+    const uploadTimeoutMs = 120_000;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), uploadTimeoutMs);
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseUrl}/ads/uploads`, {
+        method: 'POST',
+        headers,
+        body: formData,
+        signal: controller.signal,
+      });
+    } catch (err) {
+      clearTimeout(timeoutId);
+      const isAbort = err instanceof Error && err.name === 'AbortError';
+      const isNetwork =
+        err instanceof TypeError &&
+        (err.message === 'Failed to fetch' || err.message.includes('fetch'));
+      if (isAbort) {
+        throw new ApiError(
+          'Upload timed out. Try a smaller file or check your connection.',
+          408,
+          'UPLOAD_TIMEOUT'
+        );
+      }
+      if (isNetwork) {
+        throw new ApiError(
+          'Network error during upload (connection lost or SSL error). Try again or use a smaller file.',
+          0,
+          'NETWORK_ERROR'
+        );
+      }
+      throw err;
+    }
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
