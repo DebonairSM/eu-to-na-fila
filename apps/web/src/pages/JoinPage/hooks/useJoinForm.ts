@@ -22,7 +22,6 @@ export function useJoinForm() {
   const [isAlreadyInQueue, setIsAlreadyInQueue] = useState(false);
   const [existingTicketId, setExistingTicketId] = useState<number | null>(null);
   const [nameCollisionError, setNameCollisionError] = useState<string | null>(null);
-  const [selectedBarberId, setSelectedBarberId] = useState<number | null>(null);
   const [waitTimes, setWaitTimes] = useState<{
     standardWaitTime: number | null;
     barberWaitTimes: Array<{
@@ -315,7 +314,6 @@ export function useJoinForm() {
         customerName: fullName,
         serviceId: 1, // Default service
         deviceId, // Include deviceId to prevent multiple active tickets per device
-        ...(selectedBarberId && { preferredBarberId: selectedBarberId }),
       });
 
       // Store ticket ID in localStorage for persistence
@@ -365,8 +363,6 @@ export function useJoinForm() {
     nameCollisionError,
     handleSubmit,
     navigate,
-    selectedBarberId,
-    setSelectedBarberId,
     waitTimes,
     isLoadingWaitTimes,
     barbers,

@@ -47,7 +47,6 @@ export function BarberQueueManager() {
   const [customerToComplete, setCustomerToComplete] = useState<number | null>(null);
   const [checkInName, setCheckInName] = useState({ first: '', last: '' });
   const [combinedCheckInName, setCombinedCheckInName] = useState('');
-  const [preferredBarberId, setPreferredBarberId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const firstNameInputRef = useRef<HTMLInputElement>(null);
@@ -76,7 +75,6 @@ export function BarberQueueManager() {
       // Reset form when modal closes
       setCheckInName({ first: '', last: '' });
       setCombinedCheckInName('');
-      setPreferredBarberId(null);
     }
   }, [checkInModal.isOpen]);
 
@@ -204,11 +202,9 @@ export function BarberQueueManager() {
       await api.createTicket(config.slug, {
         customerName: fullName,
         serviceId: 1,
-        ...(preferredBarberId && { preferredBarberId }),
       });
       setCheckInName({ first: '', last: '' });
       setCombinedCheckInName('');
-      setPreferredBarberId(null);
       checkInModal.close();
       await refetchQueue();
     } catch (error) {
@@ -217,7 +213,7 @@ export function BarberQueueManager() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [checkInName, preferredBarberId, validateName, refetchQueue, checkInModal]);
+  }, [checkInName, validateName, refetchQueue, checkInModal]);
 
   const handleSelectBarber = useCallback(async (barberId: number | null) => {
     if (!selectedCustomerId) return;
@@ -395,31 +391,12 @@ export function BarberQueueManager() {
                           {/* Customer info (read-only in kiosk) */}
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-2xl text-white truncate">{formatNameForDisplay(ticket.customerName)}</p>
-                            {!assignedBarber && (() => {
-                              const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
-                              const preferredBarber = preferredBarberId ? barbers.find(b => b.id === preferredBarberId) : null;
-                              if (preferredBarber) {
-                                return (
-                                  <p className="text-base text-white/40 mt-1 truncate">
-                                    Preferência: {preferredBarber.name}
-                                  </p>
-                                );
-                              }
-                              return null;
-                            })()}
-                            {assignedBarber && (() => {
-                              const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
-                              const isPreferredBarber = preferredBarberId && assignedBarber.id === preferredBarberId;
-                              return (
-                                <p className="text-lg text-white/60 mt-1 truncate flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-lg">content_cut</span>
-                                  {isPreferredBarber && (
-                                    <span className="material-symbols-outlined text-base text-[#D4AF37]">star</span>
-                                  )}
-                                  {assignedBarber.name}
-                                </p>
-                              );
-                            })()}
+                            {assignedBarber && (
+                              <p className="text-lg text-white/60 mt-1 truncate flex items-center gap-2">
+                                <span className="material-symbols-outlined text-lg">content_cut</span>
+                                {assignedBarber.name}
+                              </p>
+                            )}
                           </div>
                           {/* Status indicator */}
                           {isServing && (
@@ -516,50 +493,6 @@ export function BarberQueueManager() {
                     required
                     className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
                   />
-                </div>
-                <div>
-                  <label className="block text-xl font-medium mb-3 text-white">
-                    Barbeiro Preferido (opcional)
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setPreferredBarberId(null)}
-                      className={cn(
-                        'px-4 py-3 rounded-xl border-2 text-lg font-medium transition-all text-center',
-                        preferredBarberId === null
-                          ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]'
-                          : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40'
-                      )}
-                    >
-                      Nenhum
-                    </button>
-                    {sortedBarbers.map((barber) => {
-                      const isSelected = preferredBarberId === barber.id;
-                      const isAbsent = !barber.isPresent;
-                      
-                      return (
-                        <button
-                          key={barber.id}
-                          type="button"
-                          onClick={() => setPreferredBarberId(barber.id)}
-                          className={cn(
-                            'px-4 py-3 rounded-xl border-2 text-lg font-medium transition-all text-center',
-                            isSelected
-                              ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]'
-                              : isAbsent
-                                ? 'bg-white/5 border-white/10 text-white/40 opacity-60'
-                                : 'bg-white/5 border-white/20 text-white hover:border-[#D4AF37]/50'
-                          )}
-                        >
-                          {barber.name}
-                          {isAbsent && (
-                            <span className="block text-xs text-white/40 mt-1">Indisponível</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
                 <div className="flex gap-3 sm:gap-4 mt-6 sm:mt-8">
                   <button
@@ -762,50 +695,6 @@ export function BarberQueueManager() {
               }}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Barbeiro Preferido (opcional)
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setPreferredBarberId(null)}
-                className={cn(
-                  'px-3 py-2 rounded-lg border text-sm font-medium transition-all text-center',
-                  preferredBarberId === null
-                    ? 'bg-primary/20 border-primary text-primary'
-                    : 'bg-muted/50 border-border text-muted-foreground hover:border-primary/50'
-                )}
-              >
-                Nenhum
-              </button>
-              {sortedBarbers.map((barber) => {
-                const isSelected = preferredBarberId === barber.id;
-                const isAbsent = !barber.isPresent;
-                
-                return (
-                  <button
-                    key={barber.id}
-                    type="button"
-                    onClick={() => setPreferredBarberId(barber.id)}
-                    className={cn(
-                      'px-3 py-2 rounded-lg border text-sm font-medium transition-all text-center focus:outline-none',
-                      isSelected
-                        ? 'bg-primary/20 border-primary text-primary'
-                        : isAbsent
-                          ? 'bg-muted/30 border-border/50 text-muted-foreground opacity-60'
-                          : 'bg-muted/50 border-border text-foreground hover:border-primary/50'
-                    )}
-                  >
-                    {barber.name}
-                    {isAbsent && (
-                      <span className="block text-xs text-muted-foreground mt-0.5">Indisponível</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
           <div className="flex gap-3">
             <Button type="button" variant="outline" onClick={checkInModal.close} className="flex-1">
               Cancelar
@@ -820,10 +709,6 @@ export function BarberQueueManager() {
       {/* Barber Selector Modal */}
       {barberSelectorModal.isOpen && selectedCustomerId && (() => {
         const selectedTicket = tickets.find((t) => t.id === selectedCustomerId);
-        const preferredBarberId = (selectedTicket && 'preferredBarberId' in selectedTicket) 
-          ? ((selectedTicket as { preferredBarberId?: number }).preferredBarberId ?? null)
-          : null;
-        
         return (
           <BarberSelector
             isOpen={barberSelectorModal.isOpen}
@@ -834,7 +719,6 @@ export function BarberQueueManager() {
             customerName={selectedTicket?.customerName}
             tickets={tickets}
             currentTicketId={selectedCustomerId}
-            preferredBarberId={preferredBarberId}
           />
         );
       })()}

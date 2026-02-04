@@ -2,10 +2,9 @@ import { Card, CardContent, Heading, Text, StatusTransition } from '@/components
 
 interface CompletedCardProps {
   barberName?: string;
-  isPreferredBarber?: boolean;
 }
 
-export function CompletedCard({ barberName, isPreferredBarber }: CompletedCardProps) {
+export function CompletedCard({ barberName }: CompletedCardProps) {
   return (
     <StatusTransition status="completed">
       <Card
@@ -55,9 +54,6 @@ export function CompletedCard({ barberName, isPreferredBarber }: CompletedCardPr
                 <span className="material-symbols-outlined text-xl sm:text-2xl lg:text-3xl">
                   content_cut
                 </span>
-                {isPreferredBarber && (
-                  <span className="material-symbols-outlined text-xl sm:text-2xl lg:text-3xl text-[#D4AF37]">star</span>
-                )}
                 {barberName}
               </Text>
             </div>

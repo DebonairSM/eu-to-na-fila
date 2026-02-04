@@ -389,13 +389,13 @@ User interactions and implementation status for EuToNaFila queue management syst
 
 ---
 
-### US-F02: Barber Preference ⏳
+### US-F02: Barber assignment
 
 **As a** customer  
-**I want to** choose preferred barber  
-**So that** I get my favorite
+**I want to** be assigned to any available barber  
+**So that** I am served in order
 
-*Currently: Barbers assigned by staff based on availability*
+*Barbers are assigned by staff based on availability. Queue entry does not allow choosing a preferred barber; the join page shows which barbers are active for information only.*
 
 ---
 

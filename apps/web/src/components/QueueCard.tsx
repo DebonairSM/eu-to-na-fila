@@ -6,8 +6,8 @@ import type { Ticket, Barber } from '@eutonafila/shared';
 export interface QueueCardProps {
   ticket: Ticket;
   assignedBarber?: Barber | null;
-  barbers?: Barber[]; // For displaying preferred barber
-  displayPosition?: number | null; // Display position (calculated from sorted order)
+  barbers?: Barber[];
+  displayPosition?: number | null;
   onClick?: () => void;
   onRemove?: () => void;
   onComplete?: () => void;
@@ -107,18 +107,9 @@ export const QueueCard = memo(function QueueCard({
           {/* Customer Name */}
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-white truncate">{formatNameForDisplay(ticket.customerName)}</p>
-            {assignedBarber && (() => {
-              const preferredBarberId = 'preferredBarberId' in ticket ? (ticket as { preferredBarberId?: number }).preferredBarberId : undefined;
-              const isPreferredBarber = preferredBarberId && assignedBarber.id === preferredBarberId;
-              return (
-                <p className="text-sm text-[rgba(255,255,255,0.7)] truncate flex items-center gap-1">
-                  {isPreferredBarber && (
-                    <span className="material-symbols-outlined text-xs text-[#D4AF37]">star</span>
-                  )}
-                  {assignedBarber.name}
-                </p>
-              );
-            })()}
+            {assignedBarber && (
+              <p className="text-sm text-[rgba(255,255,255,0.7)] truncate">{assignedBarber.name}</p>
+            )}
           </div>
         </div>
 

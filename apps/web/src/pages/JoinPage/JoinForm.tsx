@@ -1,5 +1,5 @@
 import { useJoinForm } from './hooks/useJoinForm';
-import { BarberSelection } from './BarberSelection';
+import { ActiveBarbersInfo } from './ActiveBarbersInfo';
 import { Card, CardContent, Input, InputLabel, InputError, Button, Stack } from '@/components/design-system';
 
 export function JoinForm() {
@@ -14,8 +14,6 @@ export function JoinForm() {
     nameCollisionError,
     handleSubmit,
     navigate,
-    selectedBarberId,
-    setSelectedBarberId,
     waitTimes,
     isLoadingWaitTimes,
     barbers,
@@ -95,11 +93,9 @@ export function JoinForm() {
               </div>
             )}
 
-            <BarberSelection
+            <ActiveBarbersInfo
               barbers={barbers}
               waitTimes={waitTimes}
-              selectedBarberId={selectedBarberId}
-              onSelect={setSelectedBarberId}
               isLoading={isLoadingWaitTimes}
             />
 
