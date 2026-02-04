@@ -508,37 +508,35 @@ export class TicketService {
   private async recalculateWaitTimes(shopId: number): Promise<void> {
     const waitingTickets = await this.getByShop(shopId, 'waiting');
 
-    // Recalculate all tickets - this ensures positions and wait times are accurate
-    // after any status changes (e.g., when someone ahead gets taken by a different barber)
+    // Recalculate all tickets. When preferred barber is inactive, ticket counts in general line;
+    // when barber goes active again, it counts in that barber's line (preferredBarberId unchanged).
     for (const ticket of waitingTickets) {
       let waitTime: number | null;
       let position: number;
+      const ticketCreatedAt = new Date(ticket.createdAt);
 
+      let preferredBarberActive = false;
       if (ticket.preferredBarberId) {
-        // Use preferred barber calculation
-        // Recalculate position first - this will correctly exclude tickets that are no longer waiting
-        const ticketCreatedAt = new Date(ticket.createdAt);
+        const barber = await db.query.barbers.findFirst({
+          where: eq(schema.barbers.id, ticket.preferredBarberId),
+        });
+        preferredBarberActive = barber?.isActive ?? false;
+      }
+
+      if (ticket.preferredBarberId && preferredBarberActive) {
         position = await queueService.calculatePositionForPreferredBarber(
           shopId,
-          ticket.preferredBarberId,
+          ticket.preferredBarberId!,
           ticketCreatedAt
         );
-        // Then calculate wait time with the updated position and createdAt
-        // This ensures we only count tickets that were actually created before this ticket
         waitTime = await queueService.calculateWaitTimeForPreferredBarber(
           shopId,
-          ticket.preferredBarberId,
+          ticket.preferredBarberId!,
           position,
           ticketCreatedAt
         );
       } else {
-        // Use standard calculation
-        // Recalculate position first
-        position = await queueService.calculatePosition(
-          shopId,
-          new Date(ticket.createdAt)
-        );
-        // Then calculate wait time with the updated position
+        position = await queueService.calculatePosition(shopId, ticketCreatedAt);
         waitTime = await queueService.calculateWaitTime(shopId, position);
       }
       

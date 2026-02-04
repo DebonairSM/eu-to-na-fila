@@ -10,11 +10,46 @@ import { auditService } from './AuditService.js';
  * - Wait time estimation
  * - Position recalculation after status changes
  * - Queue metrics
+ * 
+ * General line: tickets with no preferred barber, or whose preferred barber is inactive.
+ * When a barber goes inactive, their preferred customers count in the general line;
+ * when the barber goes active again, those customers go back to that barber's line.
  */
 export class QueueService {
   /**
-   * Calculate queue position for a new ticket.
-   * Position is based on the number of waiting tickets created before this one.
+   * Returns IDs of barbers that are active (available for queue) in the shop.
+   */
+  private async getActiveBarberIds(shopId: number): Promise<Set<number>> {
+    const barbers = await db.query.barbers.findMany({
+      where: and(
+        eq(schema.barbers.shopId, shopId),
+        eq(schema.barbers.isActive, true)
+      ),
+    });
+    return new Set(barbers.map((b) => b.id));
+  }
+
+  /**
+   * Returns waiting tickets that are in the "general line": no preferred barber,
+   * or preferred barber is inactive. Ordered by createdAt.
+   */
+  private async getGeneralLineWaitingTickets(shopId: number) {
+    const activeBarberIds = await this.getActiveBarberIds(shopId);
+    const waitingTickets = await db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.status, 'waiting')
+      ),
+      orderBy: [asc(schema.tickets.createdAt)],
+    });
+    return waitingTickets.filter(
+      (t) => t.preferredBarberId === null || !activeBarberIds.has(t.preferredBarberId!)
+    );
+  }
+
+  /**
+   * Calculate queue position in the general line.
+   * Only counts tickets in the general line (no preferred barber or preferred barber inactive).
    * 
    * @param shopId - Shop database ID
    * @param createdAt - Ticket creation timestamp (for ordering)
@@ -23,28 +58,17 @@ export class QueueService {
    * @example
    * ```typescript
    * const position = await queueService.calculatePosition(1, new Date());
-   * // Returns: 5 (fifth in queue)
+   * // Returns: 5 (fifth in general queue)
    * ```
    */
   async calculatePosition(
     shopId: number,
     createdAt: Date = new Date()
   ): Promise<number> {
-    // Get all waiting tickets for this shop created before this time
-    const waitingTickets = await db.query.tickets.findMany({
-      where: and(
-        eq(schema.tickets.shopId, shopId),
-        eq(schema.tickets.status, 'waiting')
-      ),
-      orderBy: [asc(schema.tickets.createdAt)],
-    });
-
-    // Filter tickets created before the given time
-    const ticketsAhead = waitingTickets.filter(
-      ticket => new Date(ticket.createdAt) < createdAt
+    const generalLineTickets = await this.getGeneralLineWaitingTickets(shopId);
+    const ticketsAhead = generalLineTickets.filter(
+      (ticket) => new Date(ticket.createdAt) < createdAt
     );
-
-    // Position is number of tickets ahead + 1
     return ticketsAhead.length + 1;
   }
 
@@ -104,15 +128,9 @@ export class QueueService {
     const busyBarberCount = busyBarberIds.size;
     const availableBarberCount = Math.max(0, totalBarberCount - busyBarberCount);
 
-    // Waiting tickets ahead of this position
-    const waitingTickets = await db.query.tickets.findMany({
-      where: and(
-        eq(schema.tickets.shopId, shopId),
-        eq(schema.tickets.status, 'waiting')
-      ),
-      orderBy: [asc(schema.tickets.createdAt)],
-    });
-    const ticketsAhead = waitingTickets.slice(0, Math.max(position - 1, 0));
+    // Waiting tickets ahead of this position (general line only)
+    const generalLineTickets = await this.getGeneralLineWaitingTickets(shopId);
+    const ticketsAhead = generalLineTickets.slice(0, Math.max(position - 1, 0));
     const peopleAhead = ticketsAhead.length;
 
     // Calculate remaining in-progress time (only for tickets with assigned barbers)
@@ -241,15 +259,16 @@ export class QueueService {
     activeBarbers: number;
     ticketsInProgress: number;
   }> {
-    // Get waiting tickets
-    const waitingTickets = await db.query.tickets.findMany({
-      where: and(
-        eq(schema.tickets.shopId, shopId),
-        eq(schema.tickets.status, 'waiting')
-      ),
-    });
+    // General line only (no preferred barber or preferred barber inactive)
+    const generalLineTickets = await this.getGeneralLineWaitingTickets(shopId);
+    const totalWaitTime = generalLineTickets.reduce(
+      (sum, t) => sum + (t.estimatedWaitTime ?? 0),
+      0
+    );
+    const averageWaitTime = generalLineTickets.length > 0
+      ? Math.ceil(totalWaitTime / generalLineTickets.length)
+      : 0;
 
-    // Get in-progress tickets
     const inProgressTickets = await db.query.tickets.findMany({
       where: and(
         eq(schema.tickets.shopId, shopId),
@@ -257,7 +276,6 @@ export class QueueService {
       ),
     });
 
-    // Get active barbers
     const activeBarbers = await db.query.barbers.findMany({
       where: and(
         eq(schema.barbers.shopId, shopId),
@@ -266,17 +284,8 @@ export class QueueService {
       ),
     });
 
-    // Calculate average wait time from waiting tickets
-    const totalWaitTime = waitingTickets.reduce(
-      (sum, ticket) => sum + (ticket.estimatedWaitTime || 0),
-      0
-    );
-    const averageWaitTime = waitingTickets.length > 0
-      ? Math.ceil(totalWaitTime / waitingTickets.length)
-      : 0;
-
     return {
-      queueLength: waitingTickets.length,
+      queueLength: generalLineTickets.length,
       averageWaitTime,
       activeBarbers: activeBarbers.length,
       ticketsInProgress: inProgressTickets.length,

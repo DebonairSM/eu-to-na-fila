@@ -5,6 +5,7 @@ import { eq, and, asc } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { ticketService } from '../services/TicketService.js';
 
 /**
  * Barber routes.
@@ -103,6 +104,52 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
       })
       .where(eq(schema.barbers.id, id))
       .returning();
+
+    return updatedBarber;
+  });
+
+  /**
+   * Update a barber's active status (available for queue / on break).
+   * When a barber goes inactive, tickets with that preferred barber are recalculated
+   * into the general line; when they go active again, those tickets go back to that barber's line.
+   * Requires staff or owner authentication.
+   * 
+   * @route PATCH /api/barbers/:id/status
+   * @param id - Barber ID
+   * @body isActive - Whether the barber is active (available for queue)
+   * @returns Updated barber
+   * @throws {401} If not authenticated
+   * @throws {404} If barber not found
+   */
+  fastify.patch('/barbers/:id/status', {
+    preHandler: [requireAuth(), requireRole(['owner', 'staff'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      id: z.coerce.number().int().positive(),
+    });
+    const bodySchema = z.object({
+      isActive: z.boolean(),
+    });
+
+    const { id } = validateRequest(paramsSchema, request.params);
+    const { isActive } = validateRequest(bodySchema, request.body);
+
+    const barber = await db.query.barbers.findFirst({
+      where: eq(schema.barbers.id, id),
+    });
+
+    if (!barber) {
+      throw new NotFoundError(`Barber with ID ${id} not found`);
+    }
+
+    const [updatedBarber] = await db
+      .update(schema.barbers)
+      .set({ isActive, updatedAt: new Date() })
+      .where(eq(schema.barbers.id, id))
+      .returning();
+
+    // Recalculate positions and wait times so preferred-barber tickets move to/from general line
+    await ticketService.recalculateShopQueue(barber.shopId);
 
     return updatedBarber;
   });

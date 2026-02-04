@@ -92,13 +92,9 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Shop with slug "${slug}" not found`);
     }
 
-    // Waiting tickets ordered
-    const waitingTickets = await db.query.tickets.findMany({
-      where: and(eq(schema.tickets.shopId, shop.id), eq(schema.tickets.status, 'waiting')),
-      orderBy: [asc(schema.tickets.createdAt)],
-    });
-    // For a new entrant, everyone currently waiting is ahead
-    const peopleAhead = waitingTickets.length;
+    // General line only (no preferred barber or preferred barber inactive)
+    const metrics = await queueService.getMetrics(shop.id);
+    const peopleAhead = metrics.queueLength;
 
     // Active & present barbers
     const activeBarbers = await db.query.barbers.findMany({
