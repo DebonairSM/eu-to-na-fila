@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { DAY_NAMES_PT_FULL } from '@/lib/constants';
 
 interface AnalyticsData {
   summary: {
@@ -183,12 +184,14 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
     const minDay = dayEntries.reduce((min, [day, count]) => count < min.count && count > 0 ? { day, count } : min, { day: '', count: Infinity });
     
     if (maxDay.count > minDay.count * 2 && minDay.count > 0) {
+      const maxDayPt = DAY_NAMES_PT_FULL[maxDay.day] ?? maxDay.day;
+      const minDayPt = DAY_NAMES_PT_FULL[minDay.day] ?? minDay.day;
       result.push({
         type: 'insight',
         category: 'traffic',
         severity: 'info',
         title: 'Padrão semanal',
-        message: `${maxDay.day} é o dia mais movimentado (${maxDay.count} tickets), enquanto ${minDay.day} é o mais calmo (${minDay.count}).`,
+        message: `${maxDayPt} é o dia mais movimentado (${maxDay.count} tickets), enquanto ${minDayPt} é o mais calmo (${minDay.count}).`,
         icon: 'calendar_month',
       });
     }

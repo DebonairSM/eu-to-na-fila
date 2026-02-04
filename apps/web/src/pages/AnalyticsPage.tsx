@@ -14,6 +14,14 @@ import { DayOfWeekChart } from '@/components/DayOfWeekChart';
 import { WaitTimeTrendChart } from '@/components/WaitTimeTrendChart';
 import { CancellationChart } from '@/components/CancellationChart';
 import { ServiceTimeDistributionChart } from '@/components/ServiceTimeDistributionChart';
+import { DAY_NAMES_PT_FULL } from '@/lib/constants';
+
+function formatPeriodRange(since: string, until: string): string {
+  const s = new Date(since);
+  const u = new Date(until);
+  const fmt = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return `${fmt(s)} – ${fmt(u)}`;
+}
 
 interface AnalyticsData {
   period: {
@@ -136,6 +144,9 @@ export function AnalyticsPage() {
               <h1 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl md:text-6xl text-white mb-3">
                 Analytics
               </h1>
+              <p className="text-sm text-white/50">
+                {formatPeriodRange(data.period.since, data.period.until)}
+              </p>
             </div>
             <select
               value={days}
@@ -224,16 +235,24 @@ export function AnalyticsPage() {
             <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#ef4444] mb-2">
               {stats.cancelled}
             </div>
-            <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
+            <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider mb-2">
               Cancelados
             </div>
+            {stats.total > 0 && (
+              <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-[#ef4444] rounded-full transition-all" style={{ width: `${stats.cancellationRate}%` }} />
+              </div>
+            )}
           </div>
           <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
             <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#D4AF37] mb-2">
               {stats.completionRate}%
             </div>
-            <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
+            <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider mb-2">
               Taxa Conclusão
+            </div>
+            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div className="h-full bg-[#D4AF37] rounded-full transition-all" style={{ width: `${stats.completionRate}%` }} />
             </div>
           </div>
           <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
@@ -274,6 +293,41 @@ export function AnalyticsPage() {
                   </p>
                 </div>
               )}
+
+              {(() => {
+                const dayEntries = Object.entries(data.dayOfWeekDistribution);
+                const totalByDay = dayEntries.reduce((s, [, n]) => s + n, 0);
+                if (totalByDay === 0) return null;
+                const busiest = dayEntries.reduce((a, b) => (b[1] > a[1] ? b : a));
+                const withData = dayEntries.filter(([, n]) => n > 0);
+                const quietest = withData.length > 1
+                  ? withData.reduce((a, b) => (b[1] < a[1] ? b : a))
+                  : null;
+                const busiestName = DAY_NAMES_PT_FULL[busiest[0]] ?? busiest[0];
+                const quietestName = quietest ? (DAY_NAMES_PT_FULL[quietest[0]] ?? quietest[0]) : null;
+                return (
+                  <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-6 flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-[#D4AF37] text-2xl">calendar_today</span>
+                      <div className="text-left">
+                        <p className="text-xs text-white/50 uppercase tracking-wider">Dia mais movimentado</p>
+                        <p className="text-lg font-semibold text-white">{busiestName}</p>
+                        <p className="text-sm text-white/60">{busiest[1]} {busiest[1] === 1 ? 'atendimento' : 'atendimentos'}</p>
+                      </div>
+                    </div>
+                    {quietest && quietestName && quietest[0] !== busiest[0] && (
+                      <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-white/50 text-2xl">event_available</span>
+                        <div className="text-left">
+                          <p className="text-xs text-white/50 uppercase tracking-wider">Dia mais calmo</p>
+                          <p className="text-lg font-semibold text-white/80">{quietestName}</p>
+                          <p className="text-sm text-white/50">{quietest[1]} {quietest[1] === 1 ? 'atendimento' : 'atendimentos'}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </>
           )}
 

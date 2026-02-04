@@ -1,3 +1,5 @@
+import { DAY_NAMES_PT, DAY_ORDER_API } from '@/lib/constants';
+
 interface DailyChartProps {
   data: Record<string, number>;
 }
@@ -20,7 +22,7 @@ export function DailyChart({ data }: DailyChartProps) {
         const value = data[day] || 0;
         const height = maxValue > 0 ? (value / maxValue) * (chartHeight - labelSpace) : 4;
         const date = new Date(day);
-        const dayName = date.toLocaleDateString('pt-BR', { weekday: 'short' });
+        const dayName = DAY_NAMES_PT[DAY_ORDER_API[date.getDay()]] ?? date.toLocaleDateString('pt-BR', { weekday: 'short' });
         const dayNum = date.getDate();
 
         return (

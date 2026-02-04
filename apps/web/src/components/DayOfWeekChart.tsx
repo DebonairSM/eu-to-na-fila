@@ -1,17 +1,10 @@
+import { DAY_NAMES_PT } from '@/lib/constants';
+
 interface DayOfWeekChartProps {
   data: Record<string, number>;
 }
 
 const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const dayLabels: Record<string, string> = {
-  Monday: 'Seg',
-  Tuesday: 'Ter',
-  Wednesday: 'Qua',
-  Thursday: 'Qui',
-  Friday: 'Sex',
-  Saturday: 'Sáb',
-  Sunday: 'Dom',
-};
 
 export function DayOfWeekChart({ data }: DayOfWeekChartProps) {
   const maxValue = Math.max(...Object.values(data), 1);
@@ -27,7 +20,7 @@ export function DayOfWeekChart({ data }: DayOfWeekChartProps) {
         return (
           <div key={day} className="flex-1 flex flex-col items-center h-full min-w-[40px] sm:min-w-[50px] group">
             <div className="mb-3 text-[0.7rem] sm:text-xs text-[rgba(255,255,255,0.7)] text-center font-medium">
-              {dayLabels[day]}
+              {DAY_NAMES_PT[day] ?? day}
             </div>
             <div className="flex-1 flex items-end w-full">
               <div

@@ -66,3 +66,35 @@ export const DEFAULT_SERVICE_ID = 1;
  */
 export const HEADER_OFFSET = 100;
 
+/**
+ * Day-of-week order as returned by the API (getDay(): 0=Sunday, 1=Monday, ...)
+ */
+export const DAY_ORDER_API = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+
+/**
+ * Portuguese labels for day-of-week (short for charts).
+ * Keys match API day names.
+ */
+export const DAY_NAMES_PT: Record<string, string> = {
+  Sunday: 'Dom',
+  Monday: 'Seg',
+  Tuesday: 'Ter',
+  Wednesday: 'Qua',
+  Thursday: 'Qui',
+  Friday: 'Sex',
+  Saturday: 'Sáb',
+};
+
+/**
+ * Portuguese full names for day-of-week (for text like "Segunda é o dia mais movimentado").
+ */
+export const DAY_NAMES_PT_FULL: Record<string, string> = {
+  Sunday: 'Domingo',
+  Monday: 'Segunda-feira',
+  Tuesday: 'Terça-feira',
+  Wednesday: 'Quarta-feira',
+  Thursday: 'Quinta-feira',
+  Friday: 'Sexta-feira',
+  Saturday: 'Sábado',
+};
+
