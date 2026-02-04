@@ -29,7 +29,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       slug: z.string().min(1),
     });
     const querySchema = z.object({
-      days: z.coerce.number().int().min(1).max(90).default(7),
+      days: z.coerce.number().int().min(0).max(3650).default(7), // 0 = all time
     });
 
     const { slug } = validateRequest(paramsSchema, request.params);
@@ -44,11 +44,19 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const since = new Date();
-    since.setDate(since.getDate() - days);
-    since.setHours(0, 0, 0, 0); // Normalize to start of day for consistent boundaries
+    if (days > 0) {
+      since.setDate(since.getDate() - days);
+      since.setHours(0, 0, 0, 0);
+    } else {
+      since.setTime(0);
+    }
     const previousPeriodStart = new Date();
-    previousPeriodStart.setDate(previousPeriodStart.getDate() - (days * 2));
-    previousPeriodStart.setHours(0, 0, 0, 0); // Normalize to start of day
+    if (days > 0) {
+      previousPeriodStart.setDate(previousPeriodStart.getDate() - (days * 2));
+      previousPeriodStart.setHours(0, 0, 0, 0);
+    } else {
+      previousPeriodStart.setTime(0);
+    }
 
     // Get all tickets in the period
     const tickets = await db.query.tickets.findMany({
@@ -92,8 +100,14 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       ticketsByDay[day] = (ticketsByDay[day] || 0) + 1;
     });
 
-    // Average per day
-    const avgPerDay = days > 0 ? Math.round(total / days) : 0;
+    // Average per day (for all-time, use days since first ticket or 1)
+    const dayCount = days > 0 ? days : (() => {
+      const first = tickets.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
+      if (!first || total === 0) return 1;
+      const span = (Date.now() - first.createdAt.getTime()) / (1000 * 60 * 60 * 24);
+      return Math.max(1, Math.ceil(span));
+    })();
+    const avgPerDay = Math.round(total / dayCount);
 
     // Calculate average service time (for completed tickets)
     // Use actual timestamps: completedAt - startedAt
@@ -339,7 +353,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     const barberEfficiency = barbers.map(barber => {
       const barberTickets = tickets.filter(t => t.barberId === barber.id);
       const barberCompleted = barberTickets.filter(t => t.status === 'completed');
-      const ticketsPerDay = days > 0 ? Math.round(barberTickets.length / days * 10) / 10 : 0;
+      const ticketsPerDay = dayCount > 0 ? Math.round(barberTickets.length / dayCount * 10) / 10 : 0;
       const barberCompletionRate = barberTickets.length > 0 
         ? Math.round((barberCompleted.length / barberTickets.length) * 100) 
         : 0;

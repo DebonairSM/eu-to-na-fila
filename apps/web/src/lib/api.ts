@@ -765,8 +765,8 @@ class ApiClient {
    * @returns Analytics data
    */
   async getAnalytics(shopSlug: string, days?: number): Promise<any> {
-    const params = days ? `?days=${days}` : '';
-    return this.get(`/shops/${shopSlug}/analytics${params}`);
+    const d = typeof days === 'number' ? days : 7;
+    return this.get(`/shops/${shopSlug}/analytics?days=${d}`);
   }
 
   // ==================== Shop Endpoints ====================

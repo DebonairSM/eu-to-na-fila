@@ -13,30 +13,29 @@ const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satur
 export function CancellationChart({ data }: CancellationChartProps) {
   const maxRateByDay = Math.max(...Object.values(data.rateByDay), 1);
   const maxRateByHour = Math.max(...Object.values(data.rateByHour), 1);
-  const dayChartHeight = 200;
-  const dayLabelSpace = 50; // Reserved space for labels
-  const hourChartHeight = 200;
-  const hourLabelSpace = 35; // Reserved space for labels
+  const dayBarAreaHeight = 200;
+  const hourBarAreaHeight = 165;
 
   return (
     <div className="space-y-8">
       <div>
         <h3 className="text-lg font-semibold text-white mb-4">Taxa de cancelamento por dia</h3>
-        <div className="flex items-start gap-2 sm:gap-3 h-[200px] py-5">
+        <div className="flex items-end gap-2 sm:gap-3 py-5" style={{ minHeight: dayBarAreaHeight + 56 }}>
           {dayOrder.map((day) => {
             const rate = data.rateByDay[day] || 0;
-            const height = maxRateByDay > 0 ? (rate / maxRateByDay) * (dayChartHeight - dayLabelSpace) : 4;
+            const heightPercent = maxRateByDay > 0 ? (rate / maxRateByDay) * 100 : 0;
 
             return (
-              <div key={day} className="flex-1 flex flex-col items-center h-full min-w-[40px] group">
-                <div className="mb-3 text-[0.7rem] text-[rgba(255,255,255,0.7)] text-center font-medium">
+              <div key={day} className="flex-1 flex flex-col items-center min-w-[40px] group">
+                <div className="mb-3 text-[0.7rem] text-[rgba(255,255,255,0.7)] text-center font-medium flex-shrink-0">
                   {DAY_NAMES_PT[day] ?? day}
                 </div>
-                <div className="flex-1 flex items-end w-full">
+                <div className="w-full flex items-end flex-shrink-0" style={{ height: dayBarAreaHeight }}>
                   <div
-                    className="w-full bg-gradient-to-t from-[#ef4444] to-[#f87171] rounded-t-lg min-h-[4px] transition-all cursor-pointer relative"
+                    className="w-full bg-gradient-to-t from-[#ef4444] to-[#f87171] rounded-t-lg transition-all cursor-pointer relative"
                     style={{
-                      height: `${height}px`,
+                      height: `${heightPercent}%`,
+                      minHeight: rate > 0 ? 4 : 0,
                       animation: 'growUp 0.8s ease-out',
                     }}
                   >
@@ -53,23 +52,24 @@ export function CancellationChart({ data }: CancellationChartProps) {
 
       <div>
         <h3 className="text-lg font-semibold text-white mb-4">Taxa de cancelamento por hora</h3>
-        <div className="grid grid-cols-12 sm:grid-cols-24 gap-1 sm:gap-2 h-[200px] py-5">
+        <div className="grid grid-cols-12 sm:grid-cols-24 gap-1 sm:gap-2 py-5" style={{ minHeight: hourBarAreaHeight + 40 }}>
           {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
             const rate = data.rateByHour[hour] || 0;
-            const height = maxRateByHour > 0 ? (rate / maxRateByHour) * (hourChartHeight - hourLabelSpace) : 4;
+            const heightPercent = maxRateByHour > 0 ? (rate / maxRateByHour) * 100 : 0;
 
             return (
-              <div key={hour} className="flex flex-col items-center relative h-full group">
-                <div className="mb-2 text-[0.6rem] text-[rgba(255,255,255,0.5)] text-center font-medium">
+              <div key={hour} className="flex flex-col items-center relative group">
+                <div className="mb-2 text-[0.6rem] text-[rgba(255,255,255,0.5)] text-center font-medium flex-shrink-0">
                   {hour}h
                 </div>
-                <div className="flex-1 flex items-end w-full">
+                <div className="w-full flex items-end flex-shrink-0" style={{ height: hourBarAreaHeight }}>
                   <div
                     className={`w-full bg-gradient-to-t from-[#f59e0b] to-[#fbbf24] rounded-t transition-all cursor-pointer relative ${
                       rate > 20 ? 'ring-2 ring-[#ef4444] ring-offset-1 ring-offset-[#242424]' : ''
                     }`}
                     style={{
-                      height: `${height}px`,
+                      height: `${heightPercent}%`,
+                      minHeight: rate > 0 ? 4 : 0,
                       animation: 'growUp 0.8s ease-out',
                     }}
                   >

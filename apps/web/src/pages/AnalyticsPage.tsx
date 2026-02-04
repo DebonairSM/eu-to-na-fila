@@ -15,12 +15,19 @@ import { WaitTimeTrendChart } from '@/components/WaitTimeTrendChart';
 import { CancellationChart } from '@/components/CancellationChart';
 import { ServiceTimeDistributionChart } from '@/components/ServiceTimeDistributionChart';
 import { DAY_NAMES_PT_FULL } from '@/lib/constants';
+import { downloadAnalyticsPdf } from '@/lib/analyticsPdf';
 
-function formatPeriodRange(since: string, until: string): string {
+function formatPeriodRange(since: string, until: string, days: number): string {
+  if (days === 0) return 'Todo o período';
   const s = new Date(since);
   const u = new Date(until);
   const fmt = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
   return `${fmt(s)} – ${fmt(u)}`;
+}
+
+function periodLabel(days: number): string {
+  if (days === 0) return 'Todo o período';
+  return `${days} dias`;
 }
 
 interface AnalyticsData {
@@ -145,18 +152,42 @@ export function AnalyticsPage() {
                 Analytics
               </h1>
               <p className="text-sm text-white/50">
-                {formatPeriodRange(data.period.since, data.period.until)}
+                {formatPeriodRange(data.period.since, data.period.until, data.period.days)}
               </p>
             </div>
-            <select
-              value={days}
-              onChange={(e) => setDays(Number(e.target.value))}
-              className="px-4 py-2.5 bg-[#1a1a1a] border border-[rgba(255,255,255,0.15)] rounded-xl text-white text-base cursor-pointer focus:outline-none focus:border-[#D4AF37] transition-colors"
-            >
-              <option value={7}>7 dias</option>
-              <option value={30}>30 dias</option>
-              <option value={90}>90 dias</option>
-            </select>
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                value={days}
+                onChange={(e) => setDays(Number(e.target.value))}
+                className="px-4 py-2.5 bg-[#1a1a1a] border border-[rgba(255,255,255,0.15)] rounded-xl text-white text-base cursor-pointer focus:outline-none focus:border-[#D4AF37] transition-colors"
+              >
+                <option value={7}>7 dias</option>
+                <option value={30}>30 dias</option>
+                <option value={90}>90 dias</option>
+                <option value={0}>Todo o período</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  downloadAnalyticsPdf(
+                    {
+                      period: data.period,
+                      summary: data.summary,
+                      barbers: data.barbers,
+                      serviceBreakdown: data.serviceBreakdown,
+                      dayOfWeekDistribution: data.dayOfWeekDistribution,
+                      cancellationAnalysis: data.cancellationAnalysis,
+                      barberEfficiency: data.barberEfficiency,
+                    },
+                    { shopName: config.name, periodLabel: periodLabel(data.period.days) }
+                  );
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D4AF37] text-black font-semibold rounded-xl hover:bg-[#E8C547] transition-colors focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
+              >
+                <span className="material-symbols-outlined text-xl">download</span>
+                Download PDF
+              </button>
+            </div>
           </div>
 
           {/* View Selection Menu */}
@@ -334,27 +365,31 @@ export function AnalyticsPage() {
           {/* Time Analysis View */}
           {activeView === 'time' && (
             <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden min-h-[420px] flex flex-col">
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
-                  <div className="mb-6 flex items-center gap-4">
+                  <div className="mb-6 flex items-center gap-4 flex-shrink-0">
                     <span className="material-symbols-outlined text-[#D4AF37] text-3xl">bar_chart</span>
                     <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
                       Atendimentos por Dia
                     </h2>
                   </div>
-                  <DailyChart data={data.ticketsByDay} />
+                  <div className="flex-1 min-h-[280px]">
+                    <DailyChart data={data.ticketsByDay} />
+                  </div>
                 </div>
 
-                <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
+                <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden min-h-[420px] flex flex-col">
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
-                  <div className="mb-6 flex items-center gap-4">
+                  <div className="mb-6 flex items-center gap-4 flex-shrink-0">
                     <span className="material-symbols-outlined text-[#D4AF37] text-3xl">schedule</span>
                     <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
                       Atendimentos por Hora
                     </h2>
                   </div>
-                  <HourlyChart data={data.hourlyDistribution} peakHour={data.peakHour} />
+                  <div className="flex-1 min-h-[280px]">
+                    <HourlyChart data={data.hourlyDistribution} peakHour={data.peakHour} />
+                  </div>
                 </div>
               </div>
 

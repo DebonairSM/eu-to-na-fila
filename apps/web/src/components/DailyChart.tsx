@@ -13,29 +13,29 @@ export function DailyChart({ data }: DailyChartProps) {
   });
 
   const maxValue = Math.max(...Object.values(data), 1);
-  const chartHeight = 250;
-  const labelSpace = 50; // Reserved space for labels
+  const barAreaHeight = 200; // Fixed height so bar proportions are consistent
 
   return (
-    <div className="daily-chart flex items-start gap-2 sm:gap-3 h-[250px] py-5 overflow-x-auto">
+    <div className="daily-chart flex items-end gap-2 sm:gap-3 py-5 overflow-x-auto" style={{ minHeight: barAreaHeight + 56 }}>
       {days.map((day) => {
         const value = data[day] || 0;
-        const height = maxValue > 0 ? (value / maxValue) * (chartHeight - labelSpace) : 4;
+        const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
         const date = new Date(day);
         const dayName = DAY_NAMES_PT[DAY_ORDER_API[date.getDay()]] ?? date.toLocaleDateString('pt-BR', { weekday: 'short' });
         const dayNum = date.getDate();
 
         return (
-          <div key={day} className="daily-bar flex-1 flex flex-col items-center h-full min-w-[35px] sm:min-w-[40px] group">
-            <div className="daily-bar-label mb-3 text-[0.7rem] sm:text-xs text-[rgba(255,255,255,0.7)] text-center">
+          <div key={day} className="daily-bar flex-1 flex flex-col items-center min-w-[35px] sm:min-w-[40px] group">
+            <div className="daily-bar-label mb-3 text-[0.7rem] sm:text-xs text-[rgba(255,255,255,0.7)] text-center flex-shrink-0">
               <div className="font-medium">{dayName}</div>
               <div className="text-[rgba(255,255,255,0.5)]">{dayNum}</div>
             </div>
-            <div className="flex-1 flex items-end w-full">
+            <div className="w-full flex items-end flex-shrink-0" style={{ height: barAreaHeight }}>
               <div
-                className="daily-bar-fill w-full bg-gradient-to-t from-[#D4AF37] to-[#E8C547] rounded-t-lg min-h-[4px] transition-all cursor-pointer relative"
+                className="daily-bar-fill w-full bg-gradient-to-t from-[#D4AF37] to-[#E8C547] rounded-t-lg transition-all cursor-pointer relative"
                 style={{ 
-                  height: `${height}px`,
+                  height: `${heightPercent}%`,
+                  minHeight: value > 0 ? 4 : 0,
                   animation: 'growUp 0.8s ease-out',
                 }}
               >

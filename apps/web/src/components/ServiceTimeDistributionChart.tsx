@@ -14,25 +14,25 @@ const rangeLabels: Record<string, string> = {
 
 export function ServiceTimeDistributionChart({ data }: ServiceTimeDistributionChartProps) {
   const maxValue = Math.max(...Object.values(data), 1);
-  const chartHeight = 200;
-  const labelSpace = 50; // Reserved space for labels
+  const barAreaHeight = 200;
 
   return (
-    <div className="service-time-distribution-chart flex items-start gap-2 sm:gap-3 h-[200px] py-5">
+    <div className="service-time-distribution-chart flex items-end gap-2 sm:gap-3 py-5" style={{ minHeight: barAreaHeight + 56 }}>
       {ranges.map((range) => {
         const value = data[range] || 0;
-        const height = maxValue > 0 ? (value / maxValue) * (chartHeight - labelSpace) : 4;
+        const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
 
         return (
-          <div key={range} className="flex-1 flex flex-col items-center h-full min-w-[50px] group">
-            <div className="mb-3 text-[0.7rem] sm:text-xs text-[rgba(255,255,255,0.7)] text-center font-medium">
+          <div key={range} className="flex-1 flex flex-col items-center min-w-[50px] group">
+            <div className="mb-3 text-[0.7rem] sm:text-xs text-[rgba(255,255,255,0.7)] text-center font-medium flex-shrink-0">
               {rangeLabels[range]}
             </div>
-            <div className="flex-1 flex items-end w-full">
+            <div className="w-full flex items-end flex-shrink-0" style={{ height: barAreaHeight }}>
               <div
-                className="w-full bg-white rounded-t-lg min-h-[4px] transition-all cursor-pointer relative"
+                className="w-full bg-white rounded-t-lg transition-all cursor-pointer relative"
                 style={{
-                  height: `${height}px`,
+                  height: `${heightPercent}%`,
+                  minHeight: value > 0 ? 4 : 0,
                   animation: 'growUp 0.8s ease-out',
                 }}
               >

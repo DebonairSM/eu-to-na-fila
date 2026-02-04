@@ -14,7 +14,7 @@ export function JoinPage() {
     <div className="min-h-screen bg-[#0a0a0a]">
       <Navigation />
 
-      <Container className="pt-20 pb-10">
+      <Container className="pt-20 md:pt-28 lg:pt-32 pb-10">
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center">
             <Heading level={1} className="mb-8 text-3xl">
