@@ -3,8 +3,7 @@ import { LoginForm } from './LoginForm';
 
 export function LoginPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
-      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
+    <div className="min-h-screen bg-[#0a0a0a]">
       <Navigation />
       
       <div className="lg:hidden flex items-center justify-center min-h-screen px-4 sm:px-6 py-20 sm:py-24">

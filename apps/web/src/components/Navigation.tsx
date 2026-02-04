@@ -84,9 +84,9 @@ export function Navigation() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all overflow-x-hidden ${
         isScrolled
-          ? 'bg-[#0a0a0a] py-0.5 sm:py-1.5 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
+          ? 'bg-[#0a0a0a] py-0.5 sm:py-1.5 shadow-[0_1px_0_rgba(255,255,255,0.06)]'
           : 'bg-[#0a0a0a] py-0.5 sm:py-2'
-      } border-b border-[rgba(212,175,55,0.1)]`}
+      } border-b border-[rgba(255,255,255,0.08)]`}
       role="navigation"
       aria-label="Main navigation"
     >
@@ -138,7 +138,7 @@ export function Navigation() {
                 <li>
                   <Link
                     to={user.role === 'owner' ? '/owner' : '/manage'}
-                    className="bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold text-[0.9rem] px-4 py-2.5 rounded-lg min-h-[48px] flex items-center gap-2 transition-all hover:from-[#E8C547] hover:to-[#F5D76E] hover:shadow-lg hover:shadow-[#D4AF37]/50 focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 focus:ring-offset-[#0a0a0a] shadow-md shadow-[#D4AF37]/20"
+                    className="bg-[#D4AF37] text-[#0a0a0a] font-semibold text-[0.9rem] px-4 py-2.5 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors hover:bg-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
                   >
                     <span className="material-symbols-outlined text-lg">dashboard</span>
                     Dashboard
@@ -149,7 +149,7 @@ export function Navigation() {
                 <li>
                   <Link
                     to="/company/dashboard"
-                    className="bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold text-[0.9rem] px-4 py-2.5 rounded-lg min-h-[48px] flex items-center gap-2 transition-all hover:from-[#E8C547] hover:to-[#F5D76E] hover:shadow-lg hover:shadow-[#D4AF37]/50 focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 focus:ring-offset-[#0a0a0a] shadow-md shadow-[#D4AF37]/20"
+                    className="bg-[#D4AF37] text-[#0a0a0a] font-semibold text-[0.9rem] px-4 py-2.5 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors hover:bg-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
                   >
                     <span className="material-symbols-outlined text-lg">business</span>
                     Dashboard Empresarial
@@ -208,7 +208,7 @@ export function Navigation() {
             aria-hidden="true"
           />
           <div
-            className="fixed top-0 left-0 w-64 max-w-[70vw] h-full bg-[#0a0a0a] z-[101] p-4 flex flex-col overflow-y-auto lg:hidden shadow-2xl border-r border-[rgba(212,175,55,0.1)] animate-in slide-in-from-left-4"
+            className="fixed top-0 left-0 w-64 max-w-[70vw] h-full bg-[#0a0a0a] z-[101] p-4 flex flex-col overflow-y-auto lg:hidden shadow-2xl border-r border-[rgba(255,255,255,0.08)] animate-in slide-in-from-left-4"
             role="dialog"
             aria-modal="true"
             aria-label="Menu de navegação"
@@ -277,7 +277,7 @@ export function Navigation() {
                     {(user.role === 'owner' || user.role === 'barber') && (
                       <Link
                         to={user.role === 'owner' ? '/owner' : '/manage'}
-                        className="block w-full bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold text-sm px-4 py-3 rounded-lg min-h-[48px] flex items-center gap-2 transition-all hover:from-[#E8C547] hover:to-[#F5D76E] hover:shadow-lg hover:shadow-[#D4AF37]/50 focus:outline-none focus:ring-2 focus:ring-[#E8C547] shadow-md shadow-[#D4AF37]/20"
+                        className="block w-full bg-[#D4AF37] text-[#0a0a0a] font-semibold text-sm px-4 py-3 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors hover:bg-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsMobileMenuOpen(false);
@@ -290,7 +290,7 @@ export function Navigation() {
                     {user.role === 'company_admin' && (
                       <Link
                         to="/company/dashboard"
-                        className="block w-full bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold text-sm px-4 py-3 rounded-lg min-h-[48px] flex items-center gap-2 transition-all hover:from-[#E8C547] hover:to-[#F5D76E] hover:shadow-lg hover:shadow-[#D4AF37]/50 focus:outline-none focus:ring-2 focus:ring-[#E8C547] shadow-md shadow-[#D4AF37]/20"
+                        className="block w-full bg-[#D4AF37] text-[#0a0a0a] font-semibold text-sm px-4 py-3 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors hover:bg-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsMobileMenuOpen(false);

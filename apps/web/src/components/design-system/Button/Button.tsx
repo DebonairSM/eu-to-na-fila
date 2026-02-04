@@ -26,11 +26,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           'active:scale-[0.98]',
           // Variants
           {
-            // Default (primary gold)
-            'bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#E8C547] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(212,175,55,0.3)]':
+            // Default (primary gold, solid, no lift)
+            'bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#E8C547]':
               variant === 'default',
             // Outline
-            'bg-transparent text-white border-2 border-[rgba(255,255,255,0.3)] hover:border-[#D4AF37] hover:text-[#D4AF37]':
+            'bg-transparent text-white border border-[rgba(255,255,255,0.25)] hover:border-[#D4AF37] hover:text-[#D4AF37]':
               variant === 'outline',
             // Ghost
             'bg-transparent text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)]':

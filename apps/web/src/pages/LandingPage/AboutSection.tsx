@@ -21,7 +21,7 @@ export function AboutSection() {
           <Grid cols={{ mobile: 2 }} gap="md" className="mb-8">
             {features.map((feature) => (
               <div key={feature.text} className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
+                <span className="material-symbols-outlined text-[#D4AF37] text-xl">
                   {feature.icon}
                 </span>
                 <Text size="sm" variant="secondary">
@@ -31,7 +31,7 @@ export function AboutSection() {
             ))}
           </Grid>
         </div>
-        <div className="aspect-[4/5] rounded-xl overflow-hidden border border-[rgba(212,175,55,0.2)] shadow-lg">
+        <div className="aspect-[4/5] rounded-xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
           <img
             src={BARBERSHOP_IMAGE_URL}
             alt="Interior da barbearia"
@@ -50,7 +50,7 @@ export function AboutSection() {
           <Grid cols={{ mobile: 2 }} gap="lg">
             {features.map((feature) => (
               <div key={feature.text} className="flex items-center gap-4">
-                <span className="material-symbols-outlined text-[#D4AF37] text-3xl">
+                <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
                   {feature.icon}
                 </span>
                 <Text size="base" variant="secondary">
@@ -60,7 +60,7 @@ export function AboutSection() {
             ))}
           </Grid>
         </div>
-        <div className="aspect-[4/5] rounded-2xl overflow-hidden border border-[rgba(212,175,55,0.2)] shadow-lg">
+        <div className="aspect-[4/5] rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
           <img
             src={BARBERSHOP_IMAGE_URL}
             alt="Interior da barbearia"

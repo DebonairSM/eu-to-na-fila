@@ -51,7 +51,7 @@ const locationInfo = [
 export function LocationSection() {
   return (
     <Section id="location" variant="secondary">
-      <div className="text-center mb-16">
+      <div className="text-center mb-12">
         <Heading level={2}>Localização</Heading>
       </div>
 
@@ -59,7 +59,7 @@ export function LocationSection() {
         <Stack spacing="lg">
           {locationInfo.map((item) => (
             <div key={item.title} className="flex gap-4">
-              <span className="material-symbols-outlined text-[#D4AF37] text-2xl flex-shrink-0">
+              <span className="material-symbols-outlined text-[#D4AF37] text-xl flex-shrink-0">
                 {item.icon}
               </span>
               <div>
@@ -74,7 +74,7 @@ export function LocationSection() {
           ))}
         </Stack>
 
-        <div className="rounded-xl overflow-hidden border border-[rgba(212,175,55,0.2)]">
+        <div className="rounded-xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
           <iframe
             src="https://www.google.com/maps?q=R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000&output=embed"
             width="100%"
@@ -93,7 +93,7 @@ export function LocationSection() {
         <Stack spacing="xl">
           {locationInfo.map((item) => (
             <div key={item.title} className="flex gap-6">
-              <span className="material-symbols-outlined text-[#D4AF37] text-3xl flex-shrink-0">
+              <span className="material-symbols-outlined text-[#D4AF37] text-2xl flex-shrink-0">
                 {item.icon}
               </span>
               <div>
@@ -107,7 +107,7 @@ export function LocationSection() {
             </div>
           ))}
         </Stack>
-        <div className="rounded-2xl overflow-hidden border border-[rgba(212,175,55,0.2)] shadow-lg">
+        <div className="rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
           <iframe
             src="https://www.google.com/maps?q=R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000&output=embed"
             width="100%"

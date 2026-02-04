@@ -57,13 +57,13 @@ export function StatusPage() {
 
   if (!id) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
+      <div className="min-h-screen bg-[#0a0a0a]">
         <Navigation />
-        <Container className="relative z-10 pt-24 pb-12">
+        <Container className="pt-24 pb-12">
           <div className="text-center space-y-4">
             <p className="text-[rgba(255,255,255,0.7)]">Ticket não encontrado</p>
             <Link to="/home">
-              <button className="px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all min-h-[52px]">
+              <button className="px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border border-[rgba(255,255,255,0.25)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-colors min-h-[52px]">
                 Voltar ao Início
               </button>
             </Link>
@@ -75,9 +75,9 @@ export function StatusPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
+      <div className="min-h-screen bg-[#0a0a0a]">
         <Navigation />
-        <Container className="relative z-10 pt-24 pb-12">
+        <Container className="pt-24 pb-12">
           <LoadingSpinner size="lg" text="Carregando..." />
         </Container>
       </div>
@@ -86,9 +86,9 @@ export function StatusPage() {
 
   if (error || !ticket) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
+      <div className="min-h-screen bg-[#0a0a0a]">
         <Navigation />
-        <Container className="relative z-10 pt-24 pb-12">
+        <Container className="pt-24 pb-12">
           <ErrorDisplay
             error={error || new Error('Ticket não encontrado')}
             onRetry={() => {
@@ -101,7 +101,7 @@ export function StatusPage() {
           />
           <div className="mt-4">
             <Link to="/home">
-              <button className="w-full px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all min-h-[52px]">
+              <button className="w-full px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border border-[rgba(255,255,255,0.25)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-colors min-h-[52px]">
                 Voltar ao Início
               </button>
             </Link>
@@ -117,11 +117,10 @@ export function StatusPage() {
   const waitTime = ticket.estimatedWaitTime ?? null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
-      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
+    <div className="min-h-screen bg-[#0a0a0a]">
       <Navigation />
 
-      <Container className="relative z-10 pt-24 pb-20">
+      <Container className="pt-24 pb-20">
         <div className="lg:hidden space-y-8">
           <StatusHeader customerName={ticket.customerName} status={ticket.status} />
 

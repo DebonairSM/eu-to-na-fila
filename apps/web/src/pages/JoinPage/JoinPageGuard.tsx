@@ -100,9 +100,9 @@ export function JoinPageGuard() {
   // Block rendering until check completes
   if (isChecking) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416] relative">
+      <div className="min-h-screen bg-[#0a0a0a]">
         <Navigation />
-        <Container className="relative z-10 pt-20 sm:pt-[100px] pb-12">
+        <Container className="pt-20 sm:pt-[100px] pb-12">
           <LoadingSpinner text="Verificando seu status..." />
         </Container>
       </div>

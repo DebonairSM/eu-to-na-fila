@@ -5,15 +5,12 @@ export function HeroSection() {
   return (
     <section
       id="main-content"
-      className="hero relative min-h-screen flex items-start justify-center pt-16 lg:items-center lg:pt-0 overflow-hidden"
+      className="hero relative min-h-screen flex items-start justify-center pt-16 lg:items-center lg:pt-0 overflow-hidden bg-[#0a0a0a]"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(212,175,55,0.05)_0%,transparent_50%)] animate-spin-slow pointer-events-none" />
-
       <Container size="2xl" className="relative z-10 w-full">
         <div className="lg:hidden text-center">
           <FadeIn delay={0}>
-            <div className="inline-block px-4 py-2 mb-6 border border-[rgba(212,175,55,0.4)] rounded-full text-[#D4AF37] text-xs font-medium uppercase tracking-[0.35em]">
+            <div className="hero-badge">
               Sangão, Santa Catarina
             </div>
           </FadeIn>
@@ -51,7 +48,7 @@ export function HeroSection() {
         <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-center min-h-screen py-20">
           <FadeIn delay={200}>
             <div>
-              <div className="inline-block px-5 py-2 mb-8 border border-[rgba(212,175,55,0.4)] rounded-full text-[#D4AF37] text-xs font-medium uppercase tracking-[0.35em]">
+              <div className="hero-badge mb-6">
                 Sangão, Santa Catarina
               </div>
               <Heading level={1} className="mb-6">
@@ -79,8 +76,8 @@ export function HeroSection() {
           
           <FadeIn delay={400}>
             <div className="flex items-center justify-center">
-              <div className="w-full max-w-md aspect-square bg-gradient-to-br from-[rgba(212,175,55,0.1)] to-[rgba(212,175,55,0.05)] rounded-3xl border border-[rgba(212,175,55,0.2)] flex items-center justify-center">
-                <span className="material-symbols-outlined text-[12rem] text-[#D4AF37]/30">
+              <div className="w-full max-w-[200px] aspect-square rounded-2xl border border-[rgba(255,255,255,0.08)] flex items-center justify-center bg-[rgba(255,255,255,0.02)]">
+                <span className="material-symbols-outlined text-5xl text-[#D4AF37]/20">
                   content_cut
                 </span>
               </div>

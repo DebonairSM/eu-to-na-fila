@@ -17,7 +17,7 @@ const Section = React.forwardRef<HTMLElement, SectionProps>(
         ref={ref}
         className={cn(
           bgColor,
-          'py-12 sm:py-16 lg:py-24', // Responsive padding using Tailwind (48px mobile, 64px desktop)
+          'py-16 lg:py-20',
           className
         )}
         {...props}
