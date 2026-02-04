@@ -12,7 +12,7 @@ function dbg() {}
 
 // Bump this when deploying changes that affect built asset graphs.
 // A stale cached HTML/JS combo is the most common cause of "blank black screen" after deploy.
-const CACHE_VERSION = 'v7';
+const CACHE_VERSION = 'v8';
 
 const STATIC_CACHE_NAME = `eutonafila-static-${CACHE_VERSION}`;
 const PAGE_CACHE_NAME = `eutonafila-pages-${CACHE_VERSION}`;
@@ -171,26 +171,29 @@ self.addEventListener('fetch', (event) => {
       return;
     }
     
-    // Handle static assets (stale-while-revalidate)
-    // #region agent log
-    const _logUrl = request.url;
-    const _logOrigin = url.origin;
-    const _logSelf = self.location.origin;
-    dbg('sw.js:fetch', 'routing to staticStrategy', { url: _logUrl, origin: _logOrigin, selfOrigin: _logSelf, isCrossOrigin: _logOrigin !== _logSelf }, 'H2');
-    // #endregion
+    // Handle static assets
     // Don't intercept cross-origin requests (fonts, CDNs, etc.). Let the browser handle them.
     // SW fetch() is subject to connect-src; document-initiated link/style/font use style-src/font-src.
     // Intercepting and fetching here causes "Refused to connect" CSP errors on cold load / refresh.
     if (url.origin !== self.location.origin) {
-      // #region agent log
       console.log('[SW] skip cross-origin (no intercept):', request.url);
-      dbg('sw.js:fetch', 'skip cross-origin', { url: request.url, origin: url.origin, selfOrigin: self.location.origin }, 'H2');
-      // #endregion
       return;
     }
-    // #region agent log
+    
+    // For hashed JS/CSS files (e.g., main-abc123.js), use network-first
+    // These are content-addressed - if they exist in cache, they're correct
+    // But if network has a new version, we need it (old version may reference missing chunks)
+    const isHashedAsset = /\.[a-f0-9]{8,}\.(js|css)$/.test(url.pathname) ||
+                          /-([\w]{8,})\.(js|css)$/.test(url.pathname);
+    
+    if (isHashedAsset) {
+      console.log('[SW] Network-first for hashed asset:', request.url);
+      event.respondWith(hashedAssetStrategy(request));
+      return;
+    }
+    
+    // Other static assets (images, fonts) - cache first
     console.log('[SW] staticStrategy same-origin:', request.url);
-    // #endregion
     event.respondWith(staticCacheFirstStrategy(request));
   } catch (error) {
     // Skip requests that can't be parsed as URLs
@@ -200,100 +203,87 @@ self.addEventListener('fetch', (event) => {
 });
 
 /**
- * Stale-while-revalidate strategy for static assets
- * Serves from cache immediately, then updates cache in background
- * Prevents stale CSS/JS from causing black/white screens
+ * Network-first strategy for hashed assets (JS/CSS with content hashes)
+ * These files are immutable - if we have them cached, they're correct
+ * But we prefer network to ensure we have the latest version graph
+ */
+async function hashedAssetStrategy(request) {
+  const cache = await caches.open(STATIC_CACHE_NAME);
+  
+  try {
+    const response = await fetch(request);
+    
+    if (response.status === 200) {
+      // Cache the response for offline use
+      cache.put(request, response.clone());
+      return response;
+    }
+    
+    // 404 means this chunk doesn't exist (likely after deploy)
+    // This is a strong signal that cached HTML is stale
+    if (response.status === 404) {
+      console.warn('[SW] Chunk not found (404):', request.url);
+      notifyChunkError(request.url);
+      
+      // Try cache as fallback (might work if it's an old chunk that still exists locally)
+      const cached = await cache.match(request);
+      if (cached) {
+        return cached;
+      }
+    }
+    
+    return response;
+  } catch (error) {
+    // Network failed, try cache
+    const cached = await cache.match(request);
+    
+    if (cached) {
+      console.log('[SW] Network failed, using cached hashed asset:', request.url);
+      return cached;
+    }
+    
+    // No cache, throw error (will trigger chunk loading retry in app)
+    console.error('[SW] Hashed asset not available:', request.url);
+    throw error;
+  }
+}
+
+/**
+ * Cache-first strategy for static assets (images, fonts, etc.)
+ * Used for assets that don't have content hashes and are less critical
  */
 async function staticCacheFirstStrategy(request) {
   const cache = await caches.open(STATIC_CACHE_NAME);
   const cached = await cache.match(request);
 
-  // Check if this is a cross-origin request (external storage, CDN, etc.)
-  const requestUrl = new URL(request.url);
-  const isCrossOrigin = requestUrl.origin !== self.location.origin;
-
-  // #region agent log
-  dbg('sw.js:staticStrategy', 'entry', { url: request.url, isCrossOrigin: isCrossOrigin, hasCached: !!cached }, 'H1');
-  // #endregion
-
-  // For cross-origin requests, don't try to fetch in background (CSP will block)
-  // Just return cached version if available, otherwise fetch directly
-  if (isCrossOrigin) {
-    if (cached) {
-      console.log('[SW] Cache hit (cross-origin):', request.url);
-      return cached;
-    }
-    // For cross-origin, fetch directly without background update
-    // #region agent log
-    dbg('sw.js:staticStrategy', 'cross-origin fetch (no cache)', { url: request.url }, 'H1');
-    // #endregion
-    try {
-      const response = await fetch(request);
-      // Don't cache cross-origin responses (CSP restrictions)
-      return response;
-    } catch (error) {
-      // #region agent log
-      dbg('sw.js:staticStrategy', 'cross-origin fetch failed', { url: request.url, errorMessage: error.message, hasCsp: /CSP|Content Security Policy/i.test(String(error.message)) }, 'H1');
-      // #endregion
-      console.warn('[SW] Cross-origin fetch failed (CSP may block):', request.url, error.message);
-      throw error;
-    }
-  }
-
-  // For same-origin requests, use stale-while-revalidate
-  // Always try to fetch fresh version in background
-  const fetchPromise = fetch(request).then((response) => {
-    // Only cache successful responses from same origin
-    if (response.status === 200 && response.type !== 'opaque') {
-      try {
-        cache.put(request, response.clone());
-      } catch (cacheError) {
-        // Silently fail cache writes for unsupported requests
-        console.warn('[SW] Failed to cache:', request.url, cacheError.message);
-      }
-    }
-    return response;
-  }).catch((error) => {
-    // Silently handle CSP violations and other fetch errors
-    // Don't log CSP errors as they're expected for external resources
-    if (!error.message.includes('Content Security Policy') && !error.message.includes('CSP')) {
-      console.warn('[SW] Background fetch failed:', error.message);
-    }
-    return null;
-  });
-
-  // If we have cached version, return it immediately
+  // If cached, return immediately and update in background
   if (cached) {
-    console.log('[SW] Cache hit (stale-while-revalidate):', request.url);
-    // Update cache in background
-    fetchPromise.catch(() => {
+    console.log('[SW] Cache hit:', request.url);
+    
+    // Update cache in background (stale-while-revalidate)
+    fetch(request).then((response) => {
+      if (response.status === 200) {
+        cache.put(request, response.clone());
+      }
+    }).catch(() => {
       // Ignore background update errors
     });
+    
     return cached;
   }
 
-  // No cache, wait for network
+  // No cache, fetch from network
   try {
     console.log('[SW] Fetching from network:', request.url);
-    const response = await fetchPromise;
+    const response = await fetch(request);
     
-    if (response) {
-      return response;
+    if (response.status === 200) {
+      cache.put(request, response.clone());
     }
     
-    throw new Error('Network fetch failed');
+    return response;
   } catch (error) {
     console.error('[SW] Fetch failed:', error);
-    
-    // Return offline page for navigation requests
-    if (request.mode === 'navigate') {
-      const pageCache = await caches.open(PAGE_CACHE_NAME);
-      const offlinePage = await pageCache.match('/mineiro/index.html');
-      if (offlinePage) {
-        return offlinePage;
-      }
-    }
-    
     throw error;
   }
 }
@@ -458,5 +448,25 @@ self.addEventListener('message', (event) => {
       })
     );
   }
+  
+  // Force update check
+  if (event.data && event.data.type === 'CHECK_UPDATE') {
+    self.registration.update();
+  }
 });
+
+/**
+ * Notify clients when a chunk/asset returns 404 (likely stale cache issue)
+ */
+function notifyChunkError(url) {
+  self.clients.matchAll().then((clients) => {
+    clients.forEach((client) => {
+      client.postMessage({ 
+        type: 'CHUNK_NOT_FOUND', 
+        url: url,
+        cacheVersion: CACHE_VERSION 
+      });
+    });
+  });
+}
 

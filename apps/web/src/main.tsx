@@ -58,7 +58,17 @@ const basename = (() => {
   return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
 })();
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+// Signal to recovery system that app mounted
+declare global {
+  interface Window {
+    __markAppMounted?: () => void;
+    __clearCacheAndReload?: () => void;
+  }
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root')!);
+
+root.render(
   <React.StrictMode>
     <BrowserRouter 
       basename={basename}
@@ -73,4 +83,18 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+// Mark app as mounted after render completes
+// Use requestIdleCallback for better timing, fallback to setTimeout
+const markMounted = () => {
+  if (window.__markAppMounted) {
+    window.__markAppMounted();
+  }
+};
+
+if ('requestIdleCallback' in window) {
+  (window as any).requestIdleCallback(markMounted, { timeout: 3000 });
+} else {
+  setTimeout(markMounted, 100);
+}
 

@@ -70,12 +70,134 @@
         word-wrap: normal;
         direction: ltr;
       }
+      
+      /* Recovery UI for stuck app */
+      .app-recovery {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #0a0a0a;
+        color: #fff;
+        z-index: 99999;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 24px;
+        font-family: 'Roboto', -apple-system, sans-serif;
+      }
+      .app-recovery.visible { display: flex; }
+      .app-recovery h2 { margin: 0 0 12px; font-size: 18px; font-weight: 500; }
+      .app-recovery p { margin: 0 0 24px; font-size: 14px; color: rgba(255,255,255,0.7); max-width: 300px; }
+      .app-recovery button {
+        background: #D4AF37;
+        color: #000;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+      .app-recovery button:hover { opacity: 0.9; }
+      .app-recovery button:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
     
     <title>Barbearia Mineiro - EuToNaFila</title>
   </head>
   <body>
     <div id="root"></div>
+    
+    <!-- Recovery UI shown when app is stuck -->
+    <div id="app-recovery" class="app-recovery">
+      <h2>A página não carregou corretamente</h2>
+      <p>Isso pode acontecer após uma atualização. Clique abaixo para recarregar.</p>
+      <button id="recovery-btn" onclick="window.__clearCacheAndReload()">Recarregar Página</button>
+    </div>
+    
+    <!-- Stuck app detection (runs before React) -->
+    <script>
+      (function() {
+        var APP_LOAD_TIMEOUT = 8000; // 8 seconds to mount
+        var STUCK_CHECK_INTERVAL = 500;
+        var recoveryEl = document.getElementById('app-recovery');
+        var recoveryBtn = document.getElementById('recovery-btn');
+        var appMounted = false;
+        var startTime = Date.now();
+        
+        // Mark app as mounted (called from React)
+        window.__markAppMounted = function() {
+          appMounted = true;
+          recoveryEl.classList.remove('visible');
+        };
+        
+        // Clear all caches and reload
+        window.__clearCacheAndReload = function() {
+          recoveryBtn.disabled = true;
+          recoveryBtn.textContent = 'Recarregando...';
+          
+          // Clear service worker caches
+          if ('caches' in window) {
+            caches.keys().then(function(names) {
+              return Promise.all(names.map(function(name) { return caches.delete(name); }));
+            }).then(function() {
+              // Unregister service workers
+              if ('serviceWorker' in navigator) {
+                return navigator.serviceWorker.getRegistrations().then(function(regs) {
+                  return Promise.all(regs.map(function(reg) { return reg.unregister(); }));
+                });
+              }
+            }).finally(function() {
+              // Force hard reload
+              window.location.href = window.location.href.split('?')[0] + '?cache_bust=' + Date.now();
+            });
+          } else {
+            window.location.reload(true);
+          }
+        };
+        
+        // Check if app is stuck
+        function checkStuck() {
+          if (appMounted) return;
+          
+          var elapsed = Date.now() - startTime;
+          if (elapsed > APP_LOAD_TIMEOUT) {
+            // Check if root is empty or only has loading indicator
+            var root = document.getElementById('root');
+            var hasContent = root && root.children.length > 0 && root.textContent.trim().length > 50;
+            
+            if (!hasContent) {
+              console.warn('[Recovery] App appears stuck. Showing recovery UI.');
+              recoveryEl.classList.add('visible');
+              return;
+            }
+          }
+          setTimeout(checkStuck, STUCK_CHECK_INTERVAL);
+        }
+        
+        // Start checking after a short delay (give app time to start)
+        setTimeout(checkStuck, 2000);
+        
+        // Listen for service worker messages about missing chunks
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'CHUNK_NOT_FOUND') {
+              console.warn('[Recovery] Chunk not found, likely stale cache:', event.data.url);
+              // Show recovery UI
+              recoveryEl.classList.add('visible');
+            }
+            if (event.data && event.data.type === 'SW_ACTIVATED') {
+              console.log('[SW] New service worker activated, version:', event.data.cacheVersion);
+            }
+          });
+        }
+      })();
+    </script>
+    
     <script type="module" src="/src/main.tsx"></script>
     
     <!-- Service Worker Registration -->
