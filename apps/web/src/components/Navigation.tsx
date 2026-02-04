@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { config } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { Button } from '@/components/design-system';
 import { Container } from '@/components/design-system';
 
 export function Navigation() {
@@ -168,10 +167,12 @@ export function Navigation() {
           ) : (
             <>
               <li>
-                <Link to="/join">
-                  <Button size="sm" className="min-h-[44px]">
-                    Entrar na Fila
-                  </Button>
+                <Link
+                  to="/join"
+                  className="inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] text-[#0a0a0a] bg-[#D4AF37] px-4 py-2.5 rounded-xl min-h-[44px] shadow-[0_4px_20px_rgba(212,175,55,0.25)] hover:bg-[#E8C547] hover:shadow-[0_6px_24px_rgba(212,175,55,0.35)] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
+                >
+                  <span className="material-symbols-outlined text-lg" aria-hidden>queue</span>
+                  Entrar na Fila
                 </Link>
               </li>
               <li>
@@ -316,12 +317,13 @@ export function Navigation() {
                   <>
                     <Link
                       to="/join"
-                      className="block text-sm font-medium text-[rgba(255,255,255,0.85)] px-3 py-3 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                      className="flex items-center justify-center gap-2 w-full font-semibold text-sm text-[#0a0a0a] bg-[#D4AF37] px-4 py-3 rounded-xl min-h-[48px] shadow-[0_4px_20px_rgba(212,175,55,0.25)] hover:bg-[#E8C547] hover:shadow-[0_6px_24px_rgba(212,175,55,0.35)] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsMobileMenuOpen(false);
                       }}
                     >
+                      <span className="material-symbols-outlined text-lg" aria-hidden>queue</span>
                       Entrar na Fila
                     </Link>
                     <Link
