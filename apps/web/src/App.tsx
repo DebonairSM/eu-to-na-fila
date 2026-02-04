@@ -56,7 +56,7 @@ function ProtectedRoute({
 }
 
 function AppContent() {
-  const { logout, user } = useAuthContext();
+  const { logout } = useAuthContext();
   const navigate = useNavigate();
 
   // Set up global auth error handler
