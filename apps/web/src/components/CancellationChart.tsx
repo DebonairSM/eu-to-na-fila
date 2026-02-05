@@ -11,8 +11,8 @@ interface CancellationChartProps {
 const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export function CancellationChart({ data }: CancellationChartProps) {
-  const maxRateByDay = Math.max(...Object.values(data.rateByDay), 1);
-  const maxRateByHour = Math.max(...Object.values(data.rateByHour), 1);
+  const maxRateByDay = Math.max(1, ...dayOrder.map((d) => data.rateByDay[d] ?? 0));
+  const maxRateByHour = Math.max(1, ...Array.from({ length: 24 }, (_, i) => data.rateByHour[i] ?? 0));
   const dayBarAreaHeight = 200;
   const hourBarAreaHeight = 165;
 
@@ -23,7 +23,7 @@ export function CancellationChart({ data }: CancellationChartProps) {
         <div className="flex items-end gap-2 sm:gap-3 py-5" style={{ minHeight: dayBarAreaHeight + 56 }}>
           {dayOrder.map((day) => {
             const rate = data.rateByDay[day] || 0;
-            const heightPercent = maxRateByDay > 0 ? (rate / maxRateByDay) * 100 : 0;
+            const heightPx = maxRateByDay > 0 ? (rate / maxRateByDay) * dayBarAreaHeight : 0;
 
             return (
               <div key={day} className="flex-1 flex flex-col items-center min-w-[40px] group">
@@ -34,7 +34,7 @@ export function CancellationChart({ data }: CancellationChartProps) {
                   <div
                     className="w-full bg-gradient-to-t from-[#ef4444] to-[#f87171] rounded-t-lg transition-all cursor-pointer relative"
                     style={{
-                      height: `${heightPercent}%`,
+                      height: `${heightPx}px`,
                       minHeight: rate > 0 ? 4 : 0,
                       animation: 'growUp 0.8s ease-out',
                     }}
@@ -55,7 +55,7 @@ export function CancellationChart({ data }: CancellationChartProps) {
         <div className="grid grid-cols-12 sm:grid-cols-24 gap-1 sm:gap-2 py-5" style={{ minHeight: hourBarAreaHeight + 40 }}>
           {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
             const rate = data.rateByHour[hour] || 0;
-            const heightPercent = maxRateByHour > 0 ? (rate / maxRateByHour) * 100 : 0;
+            const heightPx = maxRateByHour > 0 ? (rate / maxRateByHour) * hourBarAreaHeight : 0;
 
             return (
               <div key={hour} className="flex flex-col items-center relative group">
@@ -68,7 +68,7 @@ export function CancellationChart({ data }: CancellationChartProps) {
                       rate > 20 ? 'ring-2 ring-[#ef4444] ring-offset-1 ring-offset-[#242424]' : ''
                     }`}
                     style={{
-                      height: `${heightPercent}%`,
+                      height: `${heightPx}px`,
                       minHeight: rate > 0 ? 4 : 0,
                       animation: 'growUp 0.8s ease-out',
                     }}

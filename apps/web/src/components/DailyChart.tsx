@@ -12,14 +12,15 @@ export function DailyChart({ data }: DailyChartProps) {
     return date.toISOString().split('T')[0];
   });
 
-  const maxValue = Math.max(...Object.values(data), 1);
+  const displayedValues = days.map((day) => data[day] ?? 0);
+  const maxValue = Math.max(1, ...displayedValues);
   const barAreaHeight = 200; // Fixed height so bar proportions are consistent
 
   return (
     <div className="daily-chart flex items-end gap-2 sm:gap-3 py-5 overflow-x-auto" style={{ minHeight: barAreaHeight + 56 }}>
       {days.map((day) => {
         const value = data[day] || 0;
-        const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
+        const heightPx = maxValue > 0 ? (value / maxValue) * barAreaHeight : 0;
         const date = new Date(day);
         const dayName = DAY_NAMES_PT[DAY_ORDER_API[date.getDay()]] ?? date.toLocaleDateString('pt-BR', { weekday: 'short' });
         const dayNum = date.getDate();
@@ -34,7 +35,7 @@ export function DailyChart({ data }: DailyChartProps) {
               <div
                 className="daily-bar-fill w-full bg-gradient-to-t from-[#D4AF37] to-[#E8C547] rounded-t-lg transition-all cursor-pointer relative"
                 style={{ 
-                  height: `${heightPercent}%`,
+                  height: `${heightPx}px`,
                   minHeight: value > 0 ? 4 : 0,
                   animation: 'growUp 0.8s ease-out',
                 }}

@@ -6,14 +6,14 @@ interface HourlyChartProps {
 export function HourlyChart({ data, peakHour }: HourlyChartProps) {
   // Get all 24 hours
   const hours = Array.from({ length: 24 }, (_, i) => i);
-  const maxValue = Math.max(...Object.values(data), 1);
+  const maxValue = Math.max(1, ...hours.map((h) => data[h] ?? 0));
   const barAreaHeight = 165;
 
   return (
     <div className="hourly-chart grid grid-cols-12 sm:grid-cols-24 gap-1 sm:gap-2 py-5 overflow-x-auto" style={{ minHeight: barAreaHeight + 40 }}>
       {hours.map((hour) => {
         const value = data[hour] || 0;
-        const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
+        const heightPx = maxValue > 0 ? (value / maxValue) * barAreaHeight : 0;
         const isPeak = peakHour?.hour === hour;
 
         return (
@@ -27,7 +27,7 @@ export function HourlyChart({ data, peakHour }: HourlyChartProps) {
                   isPeak ? 'ring-2 ring-[#D4AF37] ring-offset-1 sm:ring-offset-2 ring-offset-[#242424]' : ''
                 }`}
                 style={{
-                  height: `${heightPercent}%`,
+                  height: `${heightPx}px`,
                   minHeight: value > 0 ? 4 : 0,
                   animation: 'growUp 0.8s ease-out',
                 }}

@@ -13,14 +13,14 @@ const rangeLabels: Record<string, string> = {
 };
 
 export function ServiceTimeDistributionChart({ data }: ServiceTimeDistributionChartProps) {
-  const maxValue = Math.max(...Object.values(data), 1);
+  const maxValue = Math.max(1, ...ranges.map((r) => data[r] ?? 0));
   const barAreaHeight = 200;
 
   return (
     <div className="service-time-distribution-chart flex items-end gap-2 sm:gap-3 py-5" style={{ minHeight: barAreaHeight + 56 }}>
       {ranges.map((range) => {
         const value = data[range] || 0;
-        const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
+        const heightPx = maxValue > 0 ? (value / maxValue) * barAreaHeight : 0;
 
         return (
           <div key={range} className="flex-1 flex flex-col items-center min-w-[50px] group">
@@ -31,7 +31,7 @@ export function ServiceTimeDistributionChart({ data }: ServiceTimeDistributionCh
               <div
                 className="w-full bg-white rounded-t-lg transition-all cursor-pointer relative"
                 style={{
-                  height: `${heightPercent}%`,
+                  height: `${heightPx}px`,
                   minHeight: value > 0 ? 4 : 0,
                   animation: 'growUp 0.8s ease-out',
                 }}
