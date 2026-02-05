@@ -13,14 +13,14 @@ export function RootSiteNav() {
   ];
 
   return (
-    <nav className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-50">
+    <nav className="border-b border-white/5 bg-black sticky top-0 z-50">
       <Container size="2xl">
         <div className="flex items-center justify-between py-4 sm:py-5">
           <Link to="/" className="flex items-center gap-3 group leading-none">
             <img
               src="/logo-eutonafila.png"
               alt="EuTô NaFila"
-              className="h-9 w-auto object-contain shrink-0"
+              className="h-12 w-auto object-contain shrink-0"
             />
           </Link>
           

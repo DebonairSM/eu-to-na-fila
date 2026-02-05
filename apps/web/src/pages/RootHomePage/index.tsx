@@ -11,14 +11,14 @@ const navLinks = [
 function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   return (
-    <nav className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-50">
+    <nav className="border-b border-white/5 bg-black sticky top-0 z-50">
       <Container size="2xl">
         <div className="flex items-center justify-between py-4 sm:py-5">
           <Link to="/" className="flex items-center gap-3 group leading-none">
             <img
               src="/logo-eutonafila.png"
               alt="EuTô NaFila"
-              className="h-9 w-auto object-contain shrink-0"
+              className="h-12 w-auto object-contain shrink-0"
             />
           </Link>
           <div className="hidden md:flex items-center gap-8">
@@ -62,7 +62,7 @@ function Nav() {
 
 function Footer() {
   return (
-    <footer className="border-t border-white/5 bg-[#0a0a0a] py-16">
+    <footer className="border-t border-white/5 bg-black py-16">
       <Container size="2xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div className="md:col-span-2">
@@ -70,7 +70,7 @@ function Footer() {
               <img
                 src="/logo-eutonafila.png"
                 alt="EuTô NaFila"
-                className="h-9 w-auto object-contain shrink-0"
+                className="h-12 w-auto object-contain shrink-0"
               />
             </div>
             <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
