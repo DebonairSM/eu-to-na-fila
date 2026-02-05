@@ -24,12 +24,12 @@ export function CompanyNav() {
         <div className="flex items-center justify-between gap-4 py-4">
           <div className="flex items-center gap-3">
             <img
-              src="/favicon.svg"
-              alt="EuToNaFila"
-              className="w-10 h-10 rounded-xl object-contain flex-shrink-0"
+              src="/logo-eutonafila.png"
+              alt="EuTô NaFila"
+              className="h-10 w-auto object-contain flex-shrink-0"
             />
           <div>
-            <p className="text-sm text-white/70">EuToNaFila</p>
+            <p className="text-sm text-white/70">EuTô NaFila</p>
             <p className="text-lg font-semibold">Virtual Line Software</p>
           </div>
         </div>

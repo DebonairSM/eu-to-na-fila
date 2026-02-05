@@ -55,14 +55,14 @@ export function ContactPage() {
               <CardContent className="p-5 space-y-2">
                 <p className="text-sm text-[#D4AF37] uppercase tracking-[0.15em]">Fale agora</p>
                 <h3 className="text-lg font-semibold">Comercial</h3>
-                <p className="text-white">comercial@eutonafila.com</p>
+                <p className="text-white">eutonafila@gmail.com</p>
               </CardContent>
             </Card>
             <Card className="bg-white/5 border-white/10">
               <CardContent className="p-5 space-y-2">
                 <p className="text-sm text-[#8ad6b0] uppercase tracking-[0.15em]">Suporte</p>
                 <h3 className="text-lg font-semibold">Técnico</h3>
-                <p className="text-white">suporte@eutonafila.com</p>
+                <p className="text-white">eutonafila@gmail.com</p>
               </CardContent>
             </Card>
             <Card className="bg-white/5 border-white/10">

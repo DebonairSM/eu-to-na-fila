@@ -18,11 +18,10 @@ export function RootSiteNav() {
         <div className="flex items-center justify-between py-4 sm:py-5">
           <Link to="/" className="flex items-center gap-3 group leading-none">
             <img
-              src="/favicon.svg"
-              alt="EuToNaFila"
-              className="w-9 h-9 rounded-lg object-contain shrink-0"
+              src="/logo-eutonafila.png"
+              alt="EuTô NaFila"
+              className="h-9 w-auto object-contain shrink-0"
             />
-            <span className="text-lg font-medium tracking-tight leading-none">EuToNaFila</span>
           </Link>
           
           {/* Desktop Navigation */}

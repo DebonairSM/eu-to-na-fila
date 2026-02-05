@@ -9,11 +9,10 @@ export function RootContactPage() {
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3 group">
               <img
-                src="/favicon.svg"
-                alt="EuToNaFila"
-                className="w-9 h-9 rounded-lg object-contain shrink-0"
+                src="/logo-eutonafila.png"
+                alt="EuTô NaFila"
+                className="h-9 w-auto object-contain shrink-0"
               />
-              <span className="text-lg font-medium tracking-tight">EuToNaFila</span>
             </Link>
             <div className="flex items-center gap-8">
               <Link
@@ -63,7 +62,7 @@ export function RootContactPage() {
                 <div>
                   <h3 className="text-lg font-medium mb-2">Email</h3>
                   <p className="text-gray-400 mb-1">Para consultas e discussões de projetos</p>
-                  <p className="text-blue-400">contact@eutonafila.com</p>
+                  <p className="text-blue-400">eutonafila@gmail.com</p>
                 </div>
               </div>
 
@@ -101,11 +100,10 @@ export function RootContactPage() {
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-4">
                 <img
-                  src="/favicon.svg"
-                  alt="EuToNaFila"
-                  className="w-9 h-9 rounded-lg object-contain shrink-0"
+                  src="/logo-eutonafila.png"
+                  alt="EuTô NaFila"
+                  className="h-9 w-auto object-contain shrink-0"
                 />
-                <span className="text-lg font-medium">EuToNaFila</span>
               </div>
               <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
                 Fila virtual ao vivo para barbearias. Simples, local, em tempo real.
