@@ -15,9 +15,11 @@ function Nav() {
       <Container size="2xl">
         <div className="flex items-center justify-between py-4 sm:py-5">
           <Link to="/" className="flex items-center gap-3 group leading-none">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm group-hover:from-blue-400 group-hover:to-indigo-500 transition-all shrink-0">
-              E
-            </div>
+            <img
+              src="/favicon.svg"
+              alt="EuToNaFila"
+              className="w-9 h-9 rounded-lg object-contain shrink-0"
+            />
             <span className="text-lg font-medium tracking-tight leading-none">EuToNaFila</span>
           </Link>
           <div className="hidden md:flex items-center gap-8">
@@ -66,9 +68,11 @@ function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-                E
-              </div>
+              <img
+                src="/favicon.svg"
+                alt="EuToNaFila"
+                className="w-9 h-9 rounded-lg object-contain shrink-0"
+              />
               <span className="text-lg font-medium">EuToNaFila</span>
             </div>
             <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
