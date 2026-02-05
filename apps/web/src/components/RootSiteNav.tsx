@@ -20,7 +20,7 @@ export function RootSiteNav() {
             <img
               src="/logo-eutonafila.png"
               alt="EuTô NaFila"
-              className="h-12 w-auto object-contain shrink-0"
+              className="h-24 w-auto object-contain shrink-0"
             />
           </Link>
           

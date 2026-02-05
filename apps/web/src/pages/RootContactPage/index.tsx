@@ -11,7 +11,7 @@ export function RootContactPage() {
               <img
                 src="/logo-eutonafila.png"
                 alt="EuTô NaFila"
-                className="h-12 w-auto object-contain shrink-0"
+                className="h-24 w-auto object-contain shrink-0"
               />
             </Link>
             <div className="flex items-center gap-8">
@@ -102,7 +102,7 @@ export function RootContactPage() {
                 <img
                   src="/logo-eutonafila.png"
                   alt="EuTô NaFila"
-                  className="h-12 w-auto object-contain shrink-0"
+                  className="h-24 w-auto object-contain shrink-0"
                 />
               </div>
               <p className="text-gray-500 text-sm leading-relaxed max-w-sm">

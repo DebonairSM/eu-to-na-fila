@@ -26,7 +26,7 @@ export function CompanyNav() {
             <img
               src="/logo-eutonafila.png"
               alt="EuTô NaFila"
-              className="h-14 w-auto object-contain flex-shrink-0"
+              className="h-[7rem] w-auto object-contain flex-shrink-0"
             />
           <div>
             <p className="text-sm text-white/70">EuTô NaFila</p>
