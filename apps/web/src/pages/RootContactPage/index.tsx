@@ -5,13 +5,13 @@ export function RootContactPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <nav className="border-b border-white/5 bg-black sticky top-0 z-50">
-        <Container size="2xl" className="py-5">
+        <Container size="2xl" className="py-2 sm:py-2.5">
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3 group">
               <img
                 src="/logo-eutonafila.png"
                 alt="EuTô NaFila"
-                className="h-24 w-auto object-contain shrink-0"
+                className="h-14 sm:h-16 md:h-20 w-auto object-contain shrink-0"
               />
             </Link>
             <div className="flex items-center gap-8">

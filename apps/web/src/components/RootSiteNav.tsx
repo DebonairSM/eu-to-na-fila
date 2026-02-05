@@ -15,12 +15,12 @@ export function RootSiteNav() {
   return (
     <nav className="border-b border-white/5 bg-black sticky top-0 z-50">
       <Container size="2xl">
-        <div className="flex items-center justify-between py-4 sm:py-5">
+        <div className="flex items-center justify-between py-2 sm:py-2.5">
           <Link to="/" className="flex items-center gap-3 group leading-none">
             <img
               src="/logo-eutonafila.png"
               alt="EuTô NaFila"
-              className="h-24 w-auto object-contain shrink-0"
+              className="h-14 sm:h-16 md:h-20 w-auto object-contain shrink-0"
             />
           </Link>
           

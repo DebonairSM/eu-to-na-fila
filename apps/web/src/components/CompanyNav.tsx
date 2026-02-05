@@ -21,12 +21,12 @@ export function CompanyNav() {
   return (
     <header className="border-b border-white/10 bg-black">
       <Container size="2xl">
-        <div className="flex items-center justify-between gap-4 py-4">
+        <div className="flex items-center justify-between gap-4 py-2">
           <div className="flex items-center gap-3">
             <img
               src="/logo-eutonafila.png"
               alt="EuTô NaFila"
-              className="h-28 w-auto object-contain flex-shrink-0"
+              className="h-16 sm:h-20 md:h-24 w-auto object-contain flex-shrink-0"
             />
           <div>
             <p className="text-sm text-white/70">EuTô NaFila</p>
