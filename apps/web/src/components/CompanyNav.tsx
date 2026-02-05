@@ -23,9 +23,11 @@ export function CompanyNav() {
       <Container size="2xl">
         <div className="flex items-center justify-between gap-4 py-4">
           <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-extrabold text-lg shadow-lg shadow-[#0f3d2e]/40">
-            E
-          </div>
+            <img
+              src="/favicon.svg"
+              alt="EuToNaFila"
+              className="w-10 h-10 rounded-xl object-contain flex-shrink-0"
+            />
           <div>
             <p className="text-sm text-white/70">EuToNaFila</p>
             <p className="text-lg font-semibold">Virtual Line Software</p>
