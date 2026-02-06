@@ -20,7 +20,12 @@ const repoRoot = join(__dirname, '..');
 const serverPath = join(repoRoot, 'apps', 'api', 'dist', 'server.js');
 const apiDir = join(repoRoot, 'apps', 'api');
 
-if (!existsSync(serverPath)) {
+const exists = existsSync(serverPath);
+console.log('[start-api] repoRoot:', repoRoot);
+console.log('[start-api] serverPath:', serverPath);
+console.log('[start-api] server.js exists:', exists);
+
+if (!exists) {
   console.error('[start-api] server.js not found at', serverPath);
   console.error('[start-api] running pnpm build:api...');
   const build = spawn('pnpm', ['build:api'], {
