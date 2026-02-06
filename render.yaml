@@ -5,7 +5,7 @@ services:
     plan: starter
     region: oregon
     buildCommand: pnpm install --frozen-lockfile && pnpm build
-    startCommand: pnpm db:migrate && node apps/api/dist/server.js
+    startCommand: pnpm db:migrate && pnpm start
     # Note: Removed db:seed from startup to prevent health check timeouts
     envVars:
       - key: NODE_ENV
