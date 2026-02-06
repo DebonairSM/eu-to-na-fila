@@ -17,9 +17,17 @@ All core backend functionality is implemented and operational.
 
 ## Database Schema
 
+### projects
+- `id` SERIAL PRIMARY KEY
+- `slug` TEXT UNIQUE - Project identifier (e.g. "mineiro")
+- `name` TEXT, `path` TEXT - Display name and URL path
+- `created_at`, `updated_at` TIMESTAMP
+
 ### shops
 - `id` SERIAL PRIMARY KEY
-- `slug` TEXT UNIQUE - URL identifier
+- `project_id` INTEGER NOT NULL FK → projects - Shop belongs to a project
+- `company_id` INTEGER FK → companies (optional)
+- `slug` TEXT - URL identifier (unique per project)
 - `name` TEXT - Shop name
 - `owner_pin` TEXT - Owner PIN (full access)
 - `staff_pin` TEXT - Staff PIN (queue management only)

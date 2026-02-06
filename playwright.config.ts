@@ -60,7 +60,7 @@ export default defineConfig({
    * and use a global setup to verify API server is ready */
   webServer: {
     command: 'pnpm dev',
-    url: `${testConfig.webBaseUrl}/mineiro`,
+    url: `${testConfig.webBaseUrl}/projects/mineiro`,
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
     stdout: 'ignore',

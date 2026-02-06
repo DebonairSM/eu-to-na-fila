@@ -2,7 +2,7 @@
   "slug": "mineiro",
   "name": "Barbearia Mineiro",
   "domain": "eutonafila.com",
-  "path": "/mineiro",
+  "path": "/projects/mineiro",
   "apiBase": "https://eutonafila.com",
   "theme": {
     "primary": "#3E2723",

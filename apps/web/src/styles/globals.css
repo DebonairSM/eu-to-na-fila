@@ -3,7 +3,7 @@
   font-family: 'Material Symbols Outlined';
   font-style: normal;
   font-weight: 400;
-  src: url('/mineiro/fonts/MaterialSymbolsOutlined.ttf') format('truetype');
+  src: url('/projects/mineiro/fonts/MaterialSymbolsOutlined.ttf') format('truetype');
   font-display: swap; /* Shows fallback immediately, swaps when font loads */
 }
 

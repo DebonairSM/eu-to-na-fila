@@ -65,7 +65,7 @@ export function Navigation() {
     const targetId = hash.replace('#', '');
     
     // Check if we're on the home route (with or without basename)
-    const isHomeRoute = location.pathname === '/home' || location.pathname === '/mineiro/home' || location.pathname.endsWith('/home');
+    const isHomeRoute = location.pathname === '/home' || location.pathname === '/projects/mineiro/home' || location.pathname.endsWith('/home');
     
     if (isHomeRoute) {
       scrollToSection(targetId);

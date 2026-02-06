@@ -42,7 +42,7 @@ Some tests may fail due to configuration or environment issues. This document ex
 - Consider skipping or increasing timeout for large file tests
 
 #### B. Kiosk Test Timeouts
-- Page navigation timing out at `/mineiro/manage`
+- Page navigation timing out at `/projects/mineiro/manage`
 - Dev server might not be running
 - Page might not be loading properly
 

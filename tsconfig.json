@@ -9,8 +9,17 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true
   },
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts", "mockups"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/dist",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "mockups",
+    "apps/api/public",
+    "apps/web/public"
+  ]
 }
-

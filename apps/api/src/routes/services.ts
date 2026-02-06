@@ -5,6 +5,7 @@ import { eq, and, or } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ConflictError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { getShopBySlug } from '../lib/shop.js';
 
 /**
  * Service routes.
@@ -25,14 +26,8 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const { slug } = validateRequest(paramsSchema, request.params);
 
-    // Get shop
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, slug),
-    });
-
-    if (!shop) {
-      throw new NotFoundError(`Shop with slug "${slug}" not found`);
-    }
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     // Get services for this shop
     const services = await db.query.services.findMany({
@@ -76,14 +71,8 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
     const { slug } = validateRequest(paramsSchema, request.params);
     const body = validateRequest(bodySchema, request.body);
 
-    // Get shop
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, slug),
-    });
-
-    if (!shop) {
-      throw new NotFoundError(`Shop with slug "${slug}" not found`);
-    }
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     // Create service
     const [newService] = await db

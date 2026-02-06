@@ -111,9 +111,9 @@ pnpm integrate:web
 
 1. Checks if web app is built (`apps/web/dist`)
 2. Creates `apps/api/public` directory
-3. Copies web build to `apps/api/public/mineiro`
+3. Copies web build to `apps/api/public/projects/mineiro`
 
-This enables the API server to serve the web app at `/mineiro/` path.
+This enables the API server to serve the web app at `/projects/mineiro/` path.
 
 ### backup-database.js
 
@@ -168,7 +168,7 @@ pnpm install
 powershell -ExecutionPolicy Bypass -File scripts\install-windows-production.ps1 -InstallService
 
 # 4. Access application
-# Web: http://localhost:3000/mineiro/
+# Web: http://localhost:3000/projects/mineiro/
 # API: http://localhost:3000/api
 ```
 

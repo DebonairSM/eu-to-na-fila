@@ -3,7 +3,7 @@
 /**
  * integrate-web.js
  * 
- * Copies the built React app from apps/web/dist to apps/api/public/mineiro
+ * Copies the built React app from apps/web/dist to apps/api/public/projects/mineiro
  * Run this after building the web app and before building the API.
  */
 
@@ -18,7 +18,7 @@ const __dirname = dirname(__filename);
 const rootDir = join(__dirname, '..');
 const webDistDir = join(rootDir, 'apps/web/dist');
 const webDistRootDir = join(webDistDir, 'root');
-const apiPublicDir = join(rootDir, 'apps/api/public/mineiro');
+const apiPublicDir = join(rootDir, 'apps/api/public/projects/mineiro');
 const apiPublicRootDir = join(rootDir, 'apps/api/public/root');
 
 async function integrate() {
@@ -30,27 +30,33 @@ async function integrate() {
     process.exit(1);
   }
 
-  // Create public directory if it doesn't exist
+  // Create public and projects/mineiro directories if they don't exist
   const publicDir = join(rootDir, 'apps/api/public');
   if (!existsSync(publicDir)) {
     await mkdir(publicDir, { recursive: true });
     console.log('✅ Created apps/api/public directory');
+  }
+  const projectsMineiroDir = join(publicDir, 'projects', 'mineiro');
+  const projectsDir = join(publicDir, 'projects');
+  if (!existsSync(projectsDir)) {
+    await mkdir(projectsDir, { recursive: true });
+    console.log('✅ Created apps/api/public/projects directory');
   }
 
   // Remove old files (HTML mockups) if they exist
   if (existsSync(apiPublicDir)) {
     try {
       await rm(apiPublicDir, { recursive: true, force: true });
-      console.log('🧹 Cleaned old files from apps/api/public/mineiro');
+      console.log('🧹 Cleaned old files from apps/api/public/projects/mineiro');
     } catch (error) {
       console.warn('⚠️  Warning: Could not clean old files:', error);
     }
   }
 
-  // Copy web dist to api public/mineiro
+  // Copy web dist to api public/projects/mineiro
   try {
     await cp(webDistDir, apiPublicDir, { recursive: true, force: true });
-    console.log('✅ Copied React app from apps/web/dist to apps/api/public/mineiro');
+    console.log('✅ Copied React app from apps/web/dist to apps/api/public/projects/mineiro');
   } catch (error) {
     console.error('❌ Error copying files:', error);
     process.exit(1);

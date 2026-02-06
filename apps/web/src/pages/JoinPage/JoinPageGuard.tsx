@@ -6,7 +6,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Container } from '@/components/design-system';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { getOrCreateDeviceId } from '@/lib/utils';
-import { config } from '@/lib/config';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { JoinPage } from './index';
 
 const STORAGE_KEY = STORAGE_KEYS.ACTIVE_TICKET_ID;
@@ -22,6 +22,7 @@ export function JoinPageGuard() {
   const [isChecking, setIsChecking] = useState(true);
   const [shouldRenderJoinPage, setShouldRenderJoinPage] = useState(false);
   const navigate = useNavigate();
+  const shopSlug = useShopSlug();
 
   useEffect(() => {
     const checkActiveTicket = async () => {
@@ -29,7 +30,7 @@ export function JoinPageGuard() {
       // This is the primary method and should always be tried first
       try {
         const deviceId = getOrCreateDeviceId();
-        const activeTicket = await api.getActiveTicketByDevice(config.slug, deviceId);
+        const activeTicket = await api.getActiveTicketByDevice(shopSlug, deviceId);
         
         if (activeTicket && (activeTicket.status === 'waiting' || activeTicket.status === 'in_progress')) {
           // Device has an active ticket - store it and redirect immediately
@@ -46,7 +47,7 @@ export function JoinPageGuard() {
         try {
           // Retry the deviceId check once
           const deviceId = getOrCreateDeviceId();
-          const activeTicket = await api.getActiveTicketByDevice(config.slug, deviceId);
+          const activeTicket = await api.getActiveTicketByDevice(shopSlug, deviceId);
           
           if (activeTicket && (activeTicket.status === 'waiting' || activeTicket.status === 'in_progress')) {
             console.log('[JoinPageGuard] Found active ticket by deviceId on retry, redirecting:', activeTicket.id);
@@ -95,7 +96,7 @@ export function JoinPageGuard() {
     };
 
     checkActiveTicket();
-  }, [navigate]);
+  }, [navigate, shopSlug]);
 
   // Block rendering until check completes
   if (isChecking) {

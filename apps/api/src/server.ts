@@ -146,7 +146,7 @@ fastify.register(fastifyRateLimit, {
     }
     // Skip global rate limit for static files (SPA assets, PWA manifest, service worker)
     // These are served as static files and shouldn't be rate limited
-    if (request.url.startsWith('/mineiro/') || request.url.startsWith('/companies/')) {
+    if (request.url.startsWith('/projects/mineiro/') || request.url.startsWith('/companies/')) {
       return true;
     }
     // Skip global rate limit for authenticated requests (staff/owner operations)
@@ -161,18 +161,18 @@ fastify.register(fastifyRateLimit, {
 
 // Static file serving - register BEFORE routes to ensure assets are served first
 const publicPath = getPublicPath();
-const mineiroPath = join(publicPath, 'mineiro');
+const projectsMineiroPath = join(publicPath, 'projects', 'mineiro');
 const rootPath = join(publicPath, 'root');
 
 // Log static file directory status
-if (!existsSync(mineiroPath)) {
-  fastify.log.warn(`Static files directory not found: ${mineiroPath}. Static assets will not be served.`);
+if (!existsSync(projectsMineiroPath)) {
+  fastify.log.warn(`Static files directory not found: ${projectsMineiroPath}. Static assets will not be served.`);
 } else {
   try {
-    const files = readdirSync(mineiroPath);
-    fastify.log.info(`Static files directory found: ${mineiroPath} (${files.length} items)`);
+    const files = readdirSync(projectsMineiroPath);
+    fastify.log.info(`Static files directory found: ${projectsMineiroPath} (${files.length} items)`);
     // Log assets directory if it exists
-    const assetsPath = join(mineiroPath, 'assets');
+    const assetsPath = join(projectsMineiroPath, 'assets');
     if (existsSync(assetsPath)) {
       const assetFiles = readdirSync(assetsPath);
       fastify.log.info(`Assets directory found with ${assetFiles.length} files: ${assetFiles.slice(0, 5).join(', ')}${assetFiles.length > 5 ? '...' : ''}`);
@@ -182,11 +182,11 @@ if (!existsSync(mineiroPath)) {
   }
 }
 
-// Register static file serving for /mineiro/ assets
+// Register static file serving for /projects/mineiro/ assets
 // fastifyStatic serves actual files, but we need to handle SPA routes separately
 fastify.register(fastifyStatic, {
-  root: mineiroPath,
-  prefix: '/mineiro/',
+  root: projectsMineiroPath,
+  prefix: '/projects/mineiro/',
   decorateReply: false,
   wildcard: false, // Don't use wildcard - we'll handle SPA routes in 404 handler
   index: false, // Don't auto-serve index.html - handle in 404 handler
@@ -305,18 +305,23 @@ fastify.get('/', async (request, reply) => {
     const fileContent = readFileSync(rootIndexPath, 'utf-8');
     return reply.type('text/html').send(fileContent);
   }
-  // Fallback: redirect to /mineiro/ if root build doesn't exist
-  return reply.redirect('/mineiro/');
+  // Fallback: redirect to /projects/mineiro/ if root build doesn't exist
+  return reply.redirect('/projects/mineiro/');
 });
 
-// Redirect /mineiro to /mineiro/ for proper base path
+// Redirect /mineiro to /projects/mineiro/ for backwards compatibility
 fastify.get('/mineiro', async (request, reply) => {
-  return reply.redirect('/mineiro/');
+  return reply.redirect('/projects/mineiro/');
 });
 
-// Serve index.html for /mineiro/ root
-fastify.get('/mineiro/', async (request, reply) => {
-  const indexPath = join(mineiroPath, 'index.html');
+// Redirect /projects/mineiro to /projects/mineiro/ for proper base path
+fastify.get('/projects/mineiro', async (request, reply) => {
+  return reply.redirect('/projects/mineiro/');
+});
+
+// Serve index.html for /projects/mineiro/ root
+fastify.get('/projects/mineiro/', async (request, reply) => {
+  const indexPath = join(projectsMineiroPath, 'index.html');
   if (existsSync(indexPath)) {
     const fileContent = readFileSync(indexPath, 'utf-8');
     return reply.type('text/html').send(fileContent);
@@ -339,21 +344,21 @@ fastify.setNotFoundHandler(async (request, reply) => {
   
   // If it's an asset file that 404s, return proper 404
   if (hasAssetExtension) {
-    if (url.startsWith('/mineiro/')) {
+    if (url.startsWith('/projects/mineiro/')) {
       fastify.log.warn({ url }, 'Static asset not found');
     }
     return notFoundHandler(request, reply);
   }
   
   // SPA fallback: serve index.html for client routes
-  // Only routes under /mineiro/ should be handled by the barbershop SPA
+  // Only routes under /projects/mineiro/ should be handled by the barbershop SPA
   // Root routes (/) are handled by the root route handler above
   const isMineiroSpaRoute =
-    urlPath.startsWith('/mineiro/') ||
-    urlPath === '/mineiro';
+    urlPath.startsWith('/projects/mineiro/') ||
+    urlPath === '/projects/mineiro';
 
   if (isMineiroSpaRoute) {
-    const indexPath = join(mineiroPath, 'index.html');
+    const indexPath = join(projectsMineiroPath, 'index.html');
     if (existsSync(indexPath)) {
       try {
         const fileContent = readFileSync(indexPath, 'utf-8');
@@ -366,7 +371,7 @@ fastify.setNotFoundHandler(async (request, reply) => {
   
   // Handle root SPA routes (company homepage routes like /projects, /about, /contact)
   // These should serve the root.html file
-  if (!urlPath.startsWith('/mineiro') && !urlPath.startsWith('/api')) {
+  if (!urlPath.startsWith('/projects/mineiro') && !urlPath.startsWith('/api')) {
     const rootIndexPath = join(rootPath, 'root.html');
     if (existsSync(rootIndexPath)) {
       try {
@@ -432,7 +437,7 @@ fastify.addHook('onReady', async () => {
 // Start server
 fastify.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {
   console.log(`✅ Server running at http://localhost:${env.PORT}`);
-  console.log(`📱 SPA available at http://localhost:${env.PORT}/mineiro`);
+  console.log(`📱 SPA available at http://localhost:${env.PORT}/projects/mineiro`);
   console.log(`🔌 API available at http://localhost:${env.PORT}/api`);
   console.log('\n📋 Registered routes:');
   fastify.printRoutes();

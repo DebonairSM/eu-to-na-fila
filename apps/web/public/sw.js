@@ -26,13 +26,13 @@ const MAX_API_CACHE_SIZE = 5 * 1024 * 1024; // 5MB for API responses
 
 // Assets to cache on install
 const STATIC_ASSETS = [
-  '/mineiro/',
-  '/mineiro/index.html',
-  '/mineiro/favicon.svg',
-  '/mineiro/manifest.json',
-  '/mineiro/icon-192.png',
-  '/mineiro/icon-512.png',
-  '/mineiro/fonts/MaterialSymbolsOutlined.ttf'
+  '/projects/mineiro/',
+  '/projects/mineiro/index.html',
+  '/projects/mineiro/favicon.svg',
+  '/projects/mineiro/manifest.json',
+  '/projects/mineiro/icon-192.png',
+  '/projects/mineiro/icon-512.png',
+  '/projects/mineiro/fonts/MaterialSymbolsOutlined.ttf'
 ];
 
 // API endpoints to cache (with short TTL)

@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-// Vite config for root homepage build (no /mineiro/ base path)
+// Vite config for root homepage build (no /projects/mineiro/ base path)
 export default defineConfig({
   plugins: [react()],
   base: '/',

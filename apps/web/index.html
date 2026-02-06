@@ -2,13 +2,13 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     
     <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="./manifest.json" />
     
     <!-- Theme Color for Browser UI (dark to avoid tinting the page) -->
     <meta name="theme-color" content="#0a0a0a" />
@@ -18,7 +18,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Mineiro" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
     
     <!-- Description -->
     <meta name="description" content="Sistema de gerenciamento de fila para barbearia" />
@@ -32,7 +32,7 @@
     
     <!-- Prefetch font resource (changed from preload to avoid warnings) -->
     <!-- Note: Favicons and icons don't need explicit preloading as browsers handle them efficiently -->
-    <link rel="prefetch" href="/mineiro/fonts/MaterialSymbolsOutlined.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
+    <link rel="prefetch" href="/projects/mineiro/fonts/MaterialSymbolsOutlined.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
     
     <!-- Critical CSS to prevent black/white screens -->
     <style>
@@ -53,7 +53,7 @@
         font-family: 'Material Symbols Outlined';
         font-style: normal;
         font-weight: 400;
-        src: url('/mineiro/fonts/MaterialSymbolsOutlined.ttf') format('truetype');
+        src: url('/projects/mineiro/fonts/MaterialSymbolsOutlined.ttf') format('truetype');
         font-display: swap;
       }
       
@@ -207,8 +207,8 @@
       
       if ('serviceWorker' in navigator && isProduction) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/mineiro/sw.js', {
-            scope: '/mineiro/'
+          navigator.serviceWorker.register('/projects/mineiro/sw.js', {
+            scope: '/projects/mineiro/'
           })
           .then(registration => {
             console.log('Service Worker registered:', registration.scope);

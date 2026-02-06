@@ -101,7 +101,7 @@ export function GrandeTechAd({ onClose, showTimer = true, companyId }: GrandeTec
             src={
               companyId
                 ? `/api/ads/${companyId}/gt-ad.png${adVersion > 0 ? `?v=${adVersion}` : ''}`
-                : '/mineiro/gt-ad.png'
+                : `${import.meta.env.BASE_URL}gt-ad.png`
             }
             alt="Grande Tech"
             key={adVersion} // Force re-render on version change

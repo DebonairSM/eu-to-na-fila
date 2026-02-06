@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '@/lib/api';
-import { config } from '@/lib/config';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import type { Barber } from '@eutonafila/shared';
 
 export function useBarbers(pollInterval?: number) {
+  const shopSlug = useShopSlug();
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -16,7 +17,7 @@ export function useBarbers(pollInterval?: number) {
 
     try {
       setError(null);
-      const barbersList = await api.getBarbers(config.slug);
+      const barbersList = await api.getBarbers(shopSlug);
 
       if (pollInterval && pollInterval > 0) {
         const dataString = JSON.stringify(barbersList);
@@ -32,7 +33,7 @@ export function useBarbers(pollInterval?: number) {
       setError(err instanceof Error ? err : new Error('Failed to fetch barbers'));
       setIsLoading(false);
     }
-  }, [pollInterval]);
+  }, [pollInterval, shopSlug]);
 
   useEffect(() => {
     setIsLoading(true);

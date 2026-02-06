@@ -11,6 +11,7 @@ import { existsSync, createReadStream, statSync } from 'fs';
 import { env } from '../env.js';
 import { getPublicPath } from '../lib/paths.js';
 import { uploadAdFile, getAdFileUrl, deleteAdFile } from '../lib/storage.js';
+import { getShopBySlug } from '../lib/shop.js';
 
 /**
  * Ad management routes.
@@ -394,14 +395,8 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const { shopSlug } = validateRequest(querySchema, request.query);
 
-    // Get shop
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, shopSlug),
-    });
-
-    if (!shop) {
-      throw new NotFoundError(`Shop with slug "${shopSlug}" not found`);
-    }
+    const shop = await getShopBySlug(shopSlug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${shopSlug}" not found`);
 
     // Check if shop is linked to a company
     if (!shop.companyId) {

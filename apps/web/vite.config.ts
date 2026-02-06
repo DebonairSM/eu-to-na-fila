@@ -9,7 +9,7 @@ function isRootSpaPath(path: string): boolean {
   return ROOT_SPA_PATHS.some((p) => path === p || path.startsWith(p + '/'));
 }
 
-// Plugin: redirect / and /mineiro to /mineiro/; serve root.html for root SPA paths
+// Plugin: redirect / and /mineiro to /projects/mineiro/; serve root.html for root SPA paths
 const redirectPlugin = (): Plugin => ({
   name: 'redirect-mineiro',
   configureServer(server) {
@@ -23,7 +23,7 @@ const redirectPlugin = (): Plugin => ({
         return;
       }
       if (path === '/' || path === '/mineiro') {
-        res.writeHead(302, { Location: `/mineiro/${q}` });
+        res.writeHead(302, { Location: `/projects/mineiro/${q}` });
         res.end();
         return;
       }
@@ -40,7 +40,7 @@ const apiPort = Number(process.env.API_PORT ?? process.env.PORT ?? 4041);
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [redirectPlugin(), react()],
-  base: '/mineiro/',
+  base: '/projects/mineiro/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -50,7 +50,7 @@ export default defineConfig({
     port: webPort,
     hmr: {
       clientPort: webPort,
-      path: '/mineiro/',
+      path: '/projects/mineiro/',
     },
     proxy: {
       '/api': {

@@ -8,6 +8,7 @@ import { queueService } from '../services/QueueService.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { getShopBySlug } from '../lib/shop.js';
 
 /**
  * Ticket routes.
@@ -35,14 +36,8 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const { slug } = validateRequest(paramsSchema, request.params);
 
-    // Get shop
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, slug),
-    });
-
-    if (!shop) {
-      throw new NotFoundError(`Shop with slug "${slug}" not found`);
-    }
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     // Validate body - remove shopId from external request
     const bodySchema = z.object({
@@ -110,14 +105,8 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const { deviceId } = validateRequest(querySchema, request.query);
 
-    // Get shop
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, slug),
-    });
-
-    if (!shop) {
-      throw new NotFoundError(`Shop with slug "${slug}" not found`);
-    }
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     // Find active ticket for device
     const ticket = await ticketService.findActiveTicketByDevice(shop.id, deviceId);
@@ -277,13 +266,8 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const { slug } = validateRequest(paramsSchema, request.params);
 
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, slug),
-    });
-
-    if (!shop) {
-      throw new NotFoundError(`Shop with slug "${slug}" not found`);
-    }
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     const deleted = await db
       .delete(schema.tickets)

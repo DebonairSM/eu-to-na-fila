@@ -34,7 +34,7 @@ async function assignAvatars() {
   // Assign avatars in rotation (barber-1.png through barber-16.png)
   const avatarCount = 16;
   const avatarUrls = Array.from({ length: avatarCount }, (_, i) => 
-    `/mineiro/avatars/barber-${i + 1}.png`
+    `/projects/mineiro/avatars/barber-${i + 1}.png`
   );
 
   let assignedCount = 0;

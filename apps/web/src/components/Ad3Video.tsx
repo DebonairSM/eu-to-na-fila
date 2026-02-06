@@ -81,7 +81,7 @@ export function Ad3Video({ onClose: _onClose, showTimer: _showTimer = true }: Ad
       {shouldLoad ? (
         <video
           ref={videoRef}
-          src="/mineiro/gt-ad-001.mp4"
+          src={`${import.meta.env.BASE_URL}gt-ad-001.mp4`}
           autoPlay
           loop
           muted

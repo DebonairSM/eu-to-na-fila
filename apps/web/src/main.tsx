@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ShopSlugProvider } from './contexts/ShopSlugContext';
 import App from './App';
 import './styles/globals.css';
 
@@ -50,7 +51,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Derive router basename from Vite's configured base URL.
-// - For the Mineiro build, Vite base is "/mineiro/".
+// - For the Mineiro build, Vite base is "/projects/mineiro/".
 // - In other environments it may be "/" (or something else), and hardcoding can blank the app.
 const basename = (() => {
   const baseUrl = import.meta.env.BASE_URL ?? '/';
@@ -78,7 +79,9 @@ root.render(
       }}
     >
       <AuthProvider>
-        <App />
+        <ShopSlugProvider>
+          <App />
+        </ShopSlugProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

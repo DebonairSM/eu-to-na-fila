@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/design-system/Spacing/Container';
+import { LOGO_URL } from '@/lib/logo';
 
 const links = [
   { label: 'Home', to: '/home' },
@@ -24,7 +25,7 @@ export function CompanyNav() {
         <div className="flex items-center justify-between gap-4 py-2">
           <div className="flex items-center gap-3">
             <img
-              src="/logo-eutonafila.png"
+              src={LOGO_URL}
               alt="EuTô NaFila"
               className="h-16 sm:h-20 md:h-24 w-auto object-contain flex-shrink-0"
             />

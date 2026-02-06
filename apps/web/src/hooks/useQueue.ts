@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '@/lib/api';
-import { config } from '@/lib/config';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import type { GetQueueResponse } from '@eutonafila/shared';
 
 export function useQueue(pollInterval?: number) {
+  const shopSlug = useShopSlug();
   const [data, setData] = useState<GetQueueResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -17,7 +18,7 @@ export function useQueue(pollInterval?: number) {
 
     try {
       setError(null);
-      const queueData = await api.getQueue(config.slug);
+      const queueData = await api.getQueue(shopSlug);
 
       // Smart diffing: only update if data actually changed
       const dataString = JSON.stringify(queueData);
@@ -30,7 +31,7 @@ export function useQueue(pollInterval?: number) {
       setError(err instanceof Error ? err : new Error('Failed to fetch queue'));
       setIsLoading(false);
     }
-  }, []);
+  }, [shopSlug]);
 
   useEffect(() => {
     fetchQueue();

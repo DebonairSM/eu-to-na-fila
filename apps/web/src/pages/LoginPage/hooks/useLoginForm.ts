@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
-import { config } from '@/lib/config';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { getErrorMessage } from '@/lib/utils';
 
@@ -19,6 +19,7 @@ export function useLoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const shopSlug = useShopSlug();
   const { login } = useAuthContext();
   
   // Use ref to track if request is in flight to prevent double submissions
@@ -65,7 +66,7 @@ export function useLoginForm() {
       }
 
       // Authenticate with API
-      const result = await api.authenticate(config.slug, pin);
+      const result = await api.authenticate(shopSlug, pin);
 
       if (result.valid && result.token) {
         // Login successful - token is stored in API client

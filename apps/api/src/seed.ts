@@ -1,6 +1,6 @@
 import { db, schema } from './db/index.js';
 import { env } from './env.js';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { hashPin } from './lib/pin.js';
 import { hashPassword } from './lib/password.js';
 
@@ -49,9 +49,25 @@ async function seed() {
     console.log('Company admin already exists:', companyAdmin.username);
   }
 
-  // Check if shop already exists
+  // Ensure project "mineiro" exists
+  let project = await db.query.projects.findFirst({
+    where: eq(schema.projects.slug, 'mineiro'),
+  });
+  if (!project) {
+    [project] = await db
+      .insert(schema.projects)
+      .values({
+        slug: 'mineiro',
+        name: 'Mineiro',
+        path: '/projects/mineiro',
+      })
+      .returning();
+    console.log('Created project:', project);
+  }
+
+  // Check if shop already exists (by project + slug)
   let shop = await db.query.shops.findFirst({
-    where: eq(schema.shops.slug, 'mineiro'),
+    where: and(eq(schema.shops.projectId, project.id), eq(schema.shops.slug, 'mineiro')),
   });
 
   if (shop) {
@@ -85,11 +101,12 @@ async function seed() {
     [shop] = await db
       .insert(schema.shops)
       .values({
+        projectId: project.id,
         companyId: company.id,
         slug: 'mineiro',
         name: 'Barbearia Mineiro',
         domain: 'eutonafila.com',
-        path: '/mineiro',
+        path: '/projects/mineiro',
         apiBase: 'https://eutonafila.com',
         theme: JSON.stringify({
           primary: '#3E2723',
@@ -160,7 +177,7 @@ async function seed() {
       const barber = existingBarbers[i];
       if (!barber.avatarUrl) {
         const avatarIndex = (i % avatarCount) + 1;
-        const avatarUrl = `/mineiro/avatars/barber-${avatarIndex}.png`;
+        const avatarUrl = `/projects/mineiro/avatars/barber-${avatarIndex}.png`;
         await db
           .update(schema.barbers)
           .set({ avatarUrl, updatedAt: new Date() })
@@ -171,10 +188,10 @@ async function seed() {
   } else {
     // Create barbers with avatars
     const barberData = [
-      { name: 'João Silva', email: 'joao@mineiro.com', phone: '+5511999999999', avatarUrl: '/mineiro/avatars/barber-1.png', isPresent: true },
-      { name: 'Pedro Santos', email: 'pedro@mineiro.com', phone: '+5511988888888', avatarUrl: '/mineiro/avatars/barber-2.png', isPresent: true },
-      { name: 'Carlos Oliveira', email: 'carlos@mineiro.com', phone: '+5511977777777', avatarUrl: '/mineiro/avatars/barber-3.png', isPresent: true },
-      { name: 'Miguel Costa', email: 'miguel@mineiro.com', phone: '+5511966666666', avatarUrl: '/mineiro/avatars/barber-4.png', isPresent: true },
+      { name: 'João Silva', email: 'joao@mineiro.com', phone: '+5511999999999', avatarUrl: '/projects/mineiro/avatars/barber-1.png', isPresent: true },
+      { name: 'Pedro Santos', email: 'pedro@mineiro.com', phone: '+5511988888888', avatarUrl: '/projects/mineiro/avatars/barber-2.png', isPresent: true },
+      { name: 'Carlos Oliveira', email: 'carlos@mineiro.com', phone: '+5511977777777', avatarUrl: '/projects/mineiro/avatars/barber-3.png', isPresent: true },
+      { name: 'Miguel Costa', email: 'miguel@mineiro.com', phone: '+5511966666666', avatarUrl: '/projects/mineiro/avatars/barber-4.png', isPresent: true },
     ];
 
     const barbers = await db

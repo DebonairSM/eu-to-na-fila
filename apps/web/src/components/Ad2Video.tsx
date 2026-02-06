@@ -84,7 +84,7 @@ export function Ad2Video({ onClose: _onClose, showTimer: _showTimer = true, comp
             src={
               companyId
                 ? `/api/ads/${companyId}/gt-ad2.png${adVersion > 0 ? `?v=${adVersion}` : ''}`
-                : '/mineiro/gt-ad2.png'
+                : `${import.meta.env.BASE_URL}gt-ad2.png`
             }
             alt="Grande Tech"
             key={adVersion} // Force re-render on version change

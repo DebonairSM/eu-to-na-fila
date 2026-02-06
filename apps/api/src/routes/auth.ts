@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
+import { getShopBySlug } from '../lib/shop.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { signToken } from '../lib/jwt.js';
 import { verifyPin, validatePin } from '../lib/pin.js';
@@ -58,9 +59,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       throw new ValidationError(pinValidation.error || 'Invalid PIN format');
     }
 
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, slug),
-    });
+    const shop = await getShopBySlug(slug);
 
     if (!shop) {
       // Don't reveal that shop doesn't exist - same response as wrong PIN

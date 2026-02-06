@@ -29,7 +29,7 @@ export async function errorHandler(
   const assetExtensions = ['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.map'];
   const isAssetRequest = assetExtensions.some(ext => urlPath.endsWith(ext));
   
-  // For ANY asset file request (not just /mineiro/), return plain text 404
+  // For ANY asset file request (not just /projects/mineiro/), return plain text 404
   if (isAssetRequest) {
     request.log.warn({ url, error: error.message }, 'Static asset error - returning 404');
     reply.status(404).type('text/plain').send('Not Found');

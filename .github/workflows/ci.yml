@@ -55,5 +55,5 @@ jobs:
       - name: Check build artifacts
         run: |
           ls -la apps/api/dist
-          ls -la apps/api/public/mineiro
+          ls -la apps/api/public/projects/mineiro
 

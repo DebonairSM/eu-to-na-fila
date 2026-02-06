@@ -73,6 +73,7 @@ function AppContent() {
       <Route path="/home" element={<LandingPage />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/network" element={<NetworkPage />} />
+      <Route path="/shops" element={<NetworkPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/join" element={<JoinPageGuard />} />
       <Route path="/status/:id" element={<StatusPage />} />

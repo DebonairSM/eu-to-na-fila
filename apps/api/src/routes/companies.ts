@@ -5,6 +5,8 @@ import { eq, and } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
+import { getProjectBySlug } from '../lib/shop.js';
+import { env } from '../env.js';
 
 /**
  * Company routes.
@@ -234,26 +236,41 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
           .substring(0, 50); // Limit length
       }
 
-      // Check if slug already exists
-      const existingShop = await db.query.shops.findFirst({
-        where: eq(schema.shops.slug, slug),
+      const projectSlug = env.PROJECT_SLUG ?? env.SHOP_SLUG;
+      const project = await getProjectBySlug(projectSlug);
+      if (!project) {
+        throw new ValidationError(`Project "${projectSlug}" not found`, [
+          { field: 'project', message: 'Default project must exist. Run seed or create project first.' },
+        ]);
+      }
+
+      // Check if slug already exists within this project
+      let existingShop = await db.query.shops.findFirst({
+        where: and(
+          eq(schema.shops.projectId, project.id),
+          eq(schema.shops.slug, slug)
+        ),
       });
 
       if (existingShop) {
-        // If slug exists, append a number
         let counter = 1;
         let uniqueSlug = `${slug}-${counter}`;
-        while (await db.query.shops.findFirst({ where: eq(schema.shops.slug, uniqueSlug) })) {
+        while (await db.query.shops.findFirst({
+          where: and(
+            eq(schema.shops.projectId, project.id),
+            eq(schema.shops.slug, uniqueSlug)
+          ),
+        })) {
           counter++;
           uniqueSlug = `${slug}-${counter}`;
         }
         slug = uniqueSlug;
       }
 
-      // Create shop
       const [newShop] = await db
         .insert(schema.shops)
         .values({
+          projectId: project.id,
           companyId: id,
           slug,
           name: body.name,
@@ -331,15 +348,17 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         throw new NotFoundError('Shop not found');
       }
 
-      // Check if slug is being changed and if it already exists
       if (body.slug && body.slug !== shop.slug) {
         const existingShop = await db.query.shops.findFirst({
-          where: eq(schema.shops.slug, body.slug),
+          where: and(
+            eq(schema.shops.projectId, shop.projectId),
+            eq(schema.shops.slug, body.slug)
+          ),
         });
 
         if (existingShop) {
           throw new ValidationError('Slug already exists', [
-            { field: 'slug', message: 'This slug is already in use' },
+            { field: 'slug', message: 'This slug is already in use in this project' },
           ]);
         }
       }

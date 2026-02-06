@@ -75,7 +75,7 @@ apps/web/
 
 ## Routing
 
-Base path: `/mineiro` (configured in Vite)
+Base path: `/projects/mineiro` (configured in Vite)
 
 ### Public Routes
 | Route | Component | Description |
@@ -457,7 +457,7 @@ Implemented in `QRCode` component.
 pnpm dev  # Starts Vite dev server on port 4040
 ```
 
-Access: http://localhost:4040/mineiro
+Access: http://localhost:4040/projects/mineiro
 
 ### Production Build
 ```bash
@@ -468,7 +468,7 @@ pnpm integrate:web  # Copies to apps/api/public/
 Output: `apps/api/public/` (served by API server)
 
 ### Vite Config
-- Base path: `/mineiro/`
+- Base path: `/projects/mineiro/`
 - Output directory: `dist/`
 - SPA fallback: `index.html`
 

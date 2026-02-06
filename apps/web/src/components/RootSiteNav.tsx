@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
+import { LOGO_URL } from '@/lib/logo';
 
 export function RootSiteNav() {
   const location = useLocation();
@@ -18,7 +19,7 @@ export function RootSiteNav() {
         <div className="flex items-center justify-between py-2 sm:py-2.5">
           <Link to="/" className="flex items-center gap-3 group leading-none">
             <img
-              src="/logo-eutonafila.png"
+              src={LOGO_URL}
               alt="EuTô NaFila"
               className="h-14 sm:h-16 md:h-20 w-auto object-contain shrink-0"
             />

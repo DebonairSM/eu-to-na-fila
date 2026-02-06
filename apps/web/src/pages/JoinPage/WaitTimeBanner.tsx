@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { config } from '@/lib/config';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { WaitTimeDisplay } from '@/components/WaitTimeDisplay';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
@@ -10,6 +10,7 @@ interface WaitTimeBannerProps {
 }
 
 export function WaitTimeBanner({ sticky = false }: WaitTimeBannerProps) {
+  const shopSlug = useShopSlug();
   const [waitEstimate, setWaitEstimate] = useState<number | null>(null);
   const [waitLoading, setWaitLoading] = useState(true);
   const [waitError, setWaitError] = useState<Error | null>(null);
@@ -18,7 +19,7 @@ export function WaitTimeBanner({ sticky = false }: WaitTimeBannerProps) {
     try {
       setWaitError(null);
       setWaitLoading(true);
-      const debug = await api.getWaitDebug(config.slug);
+      const debug = await api.getWaitDebug(shopSlug);
       const nextWait =
         typeof debug.sampleEstimateForNext === 'number'
           ? debug.sampleEstimateForNext
@@ -48,7 +49,7 @@ export function WaitTimeBanner({ sticky = false }: WaitTimeBannerProps) {
       mounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [shopSlug]);
 
   if (waitLoading) {
     return (

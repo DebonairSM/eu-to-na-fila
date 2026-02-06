@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, ApiError } from '@/lib/api';
-import { config } from '@/lib/config';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useQueue } from '@/hooks/useQueue';
 import { useBarbers } from '@/hooks/useBarbers';
@@ -33,6 +33,7 @@ export function useJoinForm() {
   } | null>(null);
   const [isLoadingWaitTimes, setIsLoadingWaitTimes] = useState(true);
   const navigate = useNavigate();
+  const shopSlug = useShopSlug();
   const { validateName } = useProfanityFilter();
   const { data } = useQueue(30000);
   const { barbers } = useBarbers();
@@ -50,7 +51,7 @@ export function useJoinForm() {
 
       try {
         setIsLoadingWaitTimes(true);
-        const times = await api.getWaitTimes(config.slug);
+        const times = await api.getWaitTimes(shopSlug);
         if (mounted) {
           setWaitTimes(times);
           setIsLoadingWaitTimes(false);
@@ -98,7 +99,7 @@ export function useJoinForm() {
       stopPolling();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [shopSlug]);
 
   // Load stored customer name on mount
   useEffect(() => {
@@ -233,7 +234,7 @@ export function useJoinForm() {
     // Step 1: Check by deviceId FIRST (server-side check - most reliable)
     // This prevents multiple active tickets from the same device
     try {
-      const activeTicketByDevice = await api.getActiveTicketByDevice(config.slug, deviceId);
+      const activeTicketByDevice = await api.getActiveTicketByDevice(shopSlug, deviceId);
       if (activeTicketByDevice && (activeTicketByDevice.status === 'waiting' || activeTicketByDevice.status === 'in_progress')) {
         // Device already has an active ticket - store it and redirect immediately
         console.log('[useJoinForm] Found active ticket by deviceId during form submission, redirecting:', activeTicketByDevice.id);
@@ -310,7 +311,7 @@ export function useJoinForm() {
     try {
       // Create ticket with deviceId included
       // Backend will check if device already has an active ticket and return existing if found
-      const ticket = await api.createTicket(config.slug, {
+      const ticket = await api.createTicket(shopSlug, {
         customerName: fullName,
         serviceId: 1, // Default service
         deviceId, // Include deviceId to prevent multiple active tickets per device

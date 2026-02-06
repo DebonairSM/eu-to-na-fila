@@ -7,6 +7,7 @@ import { queueService } from '../services/QueueService.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { getShopBySlug } from '../lib/shop.js';
 
 /**
  * Queue routes.
@@ -28,14 +29,8 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const { slug } = validateRequest(paramsSchema, request.params);
 
-    // Get shop
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, slug),
-    });
-
-    if (!shop) {
-      throw new NotFoundError(`Shop with slug "${slug}" not found`);
-    }
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     // Get tickets using service
     const tickets = await ticketService.getByShop(shop.id);
@@ -57,14 +52,8 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const { slug } = validateRequest(paramsSchema, request.params);
 
-    // Get shop
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, slug),
-    });
-
-    if (!shop) {
-      throw new NotFoundError(`Shop with slug "${slug}" not found`);
-    }
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     // Get metrics using service
     const metrics = await queueService.getMetrics(shop.id);
@@ -84,13 +73,8 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const { slug } = validateRequest(paramsSchema, request.params);
 
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, slug),
-    });
-
-    if (!shop) {
-      throw new NotFoundError(`Shop with slug "${slug}" not found`);
-    }
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     // General line only (no preferred barber or preferred barber inactive)
     const metrics = await queueService.getMetrics(shop.id);
@@ -151,14 +135,8 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     const { slug } = validateRequest(paramsSchema, request.params);
     const { since } = validateRequest(querySchema, request.query);
 
-    // Get shop
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, slug),
-    });
-
-    if (!shop) {
-      throw new NotFoundError(`Shop with slug "${slug}" not found`);
-    }
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     // Get statistics using service
     const statistics = await ticketService.getStatistics(
@@ -183,14 +161,8 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const { slug } = validateRequest(paramsSchema, request.params);
 
-    // Get shop
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, slug),
-    });
-
-    if (!shop) {
-      throw new NotFoundError(`Shop with slug "${slug}" not found`);
-    }
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     const now = new Date();
 
@@ -255,13 +227,8 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const { slug } = validateRequest(paramsSchema, request.params);
 
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, slug),
-    });
-
-    if (!shop) {
-      throw new NotFoundError(`Shop with slug "${slug}" not found`);
-    }
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     await ticketService.recalculateShopQueue(shop.id);
     return { ok: true };

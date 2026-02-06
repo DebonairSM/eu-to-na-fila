@@ -31,7 +31,7 @@ export async function loginAsOwner(page: Page) {
   const token = await getAuthToken(page.request, 'owner');
   
   // Set authentication state in sessionStorage BEFORE navigating
-  await page.goto('/mineiro');
+  await page.goto('/projects/mineiro');
   await page.evaluate(({ token, username }) => {
     // Set token in sessionStorage (matches API client storage key)
     sessionStorage.setItem('eutonafila_auth_token', token);
@@ -47,7 +47,7 @@ export async function loginAsOwner(page: Page) {
   }, { token, username: TEST_CREDENTIALS.owner.username });
   
   // Now navigate to owner page
-  await page.goto('/mineiro/owner', { waitUntil: 'networkidle' });
+  await page.goto('/projects/mineiro/owner', { waitUntil: 'networkidle' });
   
   // Wait for page to load and verify we're on owner dashboard
   await page.waitForURL(/\/owner/, { timeout: 15000 });
@@ -62,7 +62,7 @@ export async function loginAsBarber(page: Page) {
   const token = await getAuthToken(page.request, 'barber');
   
   // Set authentication state in sessionStorage BEFORE navigating
-  await page.goto('/mineiro');
+  await page.goto('/projects/mineiro');
   await page.evaluate(({ token, username }) => {
     // Set token in sessionStorage (matches API client storage key)
     sessionStorage.setItem('eutonafila_auth_token', token);
@@ -78,7 +78,7 @@ export async function loginAsBarber(page: Page) {
   }, { token, username: TEST_CREDENTIALS.barber.username });
   
   // Now navigate to manage page
-  await page.goto('/mineiro/manage', { waitUntil: 'networkidle' });
+  await page.goto('/projects/mineiro/manage', { waitUntil: 'networkidle' });
   
   // Wait for page to load and verify we're on queue manager
   await page.waitForURL(/\/manage/, { timeout: 15000 });

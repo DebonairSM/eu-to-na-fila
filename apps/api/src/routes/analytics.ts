@@ -5,6 +5,7 @@ import { eq, and, gte, lt } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { getShopBySlug } from '../lib/shop.js';
 
 /**
  * Analytics routes.
@@ -35,13 +36,8 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     const { slug } = validateRequest(paramsSchema, request.params);
     const { days } = validateRequest(querySchema, request.query);
 
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.slug, slug),
-    });
-
-    if (!shop) {
-      throw new NotFoundError(`Shop with slug "${slug}" not found`);
-    }
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     const since = new Date();
     if (days > 0) {

@@ -15,7 +15,7 @@ export const KIOSK_TIMINGS = {
  * Assumes user is already logged in
  */
 export async function enterKioskMode(page: Page) {
-  await page.goto('/mineiro/manage?kiosk=true');
+  await page.goto('/projects/mineiro/manage?kiosk=true');
   
   // Wait for kiosk mode to be active - look for exit button or queue/ad content
   // The exit button with aria-label="Exit kiosk mode" is a reliable indicator
@@ -77,17 +77,17 @@ export async function waitForAdView(page: Page, adNumber: 1 | 2 | 3 | 'any' = 'a
       selectors = [
         'img[src*="gt-ad.png"]:not([src*="gt-ad2"])',
         'img[alt="Grande Tech"]',
-        'img[src*="/mineiro/gt-ad"]:not([src*="gt-ad2"])'
+        'img[src*="/projects/mineiro/gt-ad"]:not([src*="gt-ad2"])'
       ];
     } else if (adNumber === 2) {
       selectors = [
         'img[src*="gt-ad2.png"]',
-        'img[src*="/mineiro/gt-ad2"]'
+        'img[src*="/projects/mineiro/gt-ad2"]'
       ];
     } else {
       selectors = [
         'video[src*="gt-ad-001.mp4"]',
-        'video[src*="/mineiro/gt-ad-001"]'
+        'video[src*="/projects/mineiro/gt-ad-001"]'
       ];
     }
     

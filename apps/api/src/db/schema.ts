@@ -1,5 +1,14 @@
-import { pgTable, text, integer, boolean, timestamp, serial, jsonb, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, timestamp, serial, jsonb, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+
+export const projects = pgTable('projects', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').notNull().unique(),
+  name: text('name').notNull(),
+  path: text('path').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
 
 export const companies = pgTable('companies', {
   id: serial('id').primaryKey(),
@@ -26,8 +35,9 @@ export const companyAdmins = pgTable('company_admins', {
 
 export const shops = pgTable('shops', {
   id: serial('id').primaryKey(),
+  projectId: integer('project_id').notNull().references(() => projects.id),
   companyId: integer('company_id').references(() => companies.id),
-  slug: text('slug').notNull().unique(),
+  slug: text('slug').notNull(),
   name: text('name').notNull(),
   domain: text('domain'),
   path: text('path'),
@@ -43,6 +53,8 @@ export const shops = pgTable('shops', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({
   companyIdIdx: index('shops_company_id_idx').on(table.companyId),
+  projectIdIdx: index('shops_project_id_idx').on(table.projectId),
+  projectSlugUnique: uniqueIndex('shops_project_id_slug_unique').on(table.projectId, table.slug),
 }));
 
 export const services = pgTable('services', {
@@ -115,6 +127,10 @@ export const companyAds = pgTable('company_ads', {
 }));
 
 // Relations
+export const projectsRelations = relations(projects, ({ many }) => ({
+  shops: many(shops),
+}));
+
 export const companiesRelations = relations(companies, ({ many }) => ({
   admins: many(companyAdmins),
   shops: many(shops),
@@ -126,6 +142,7 @@ export const companyAdminsRelations = relations(companyAdmins, ({ one }) => ({
 }));
 
 export const shopsRelations = relations(shops, ({ one, many }) => ({
+  project: one(projects, { fields: [shops.projectId], references: [projects.id] }),
   company: one(companies, { fields: [shops.companyId], references: [companies.id] }),
   services: many(services),
   barbers: many(barbers),

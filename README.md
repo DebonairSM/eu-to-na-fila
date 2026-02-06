@@ -43,7 +43,7 @@ pnpm dev
 ```
 
 **Access:**
-- Web: http://localhost:4040/mineiro
+- Web: http://localhost:4040/projects/mineiro
 - API: http://localhost:4041/api
 - Health: http://localhost:4041/health
 
@@ -203,7 +203,7 @@ pnpm start
 ### Tablet Installation (PWA)
 
 1. Open Chrome on Android tablet
-2. Navigate to shop URL (e.g., `https://yourdomain.com/mineiro`)
+2. Navigate to shop URL (e.g., `https://yourdomain.com/projects/mineiro`)
 3. Tap menu (⋮) → "Add to Home screen"
 4. App launches fullscreen
 
@@ -325,7 +325,7 @@ pnpm test:e2e --grep "should upload image"
 **Customer Flow:**
 ```bash
 # 1. Visit landing page
-open http://localhost:4040/mineiro
+open http://localhost:4040/projects/mineiro
 
 # 2. Join queue
 # 3. Check status page

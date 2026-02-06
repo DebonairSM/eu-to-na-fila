@@ -82,7 +82,7 @@ async function globalSetup(config: FullConfig) {
   const maxRetries = 60; // 60 seconds total wait time
   const retryDelay = 1000; // 1 second
   const apiUrl = `${testConfig.apiBaseUrl}/health`;
-  const webUrl = `${testConfig.webBaseUrl}/mineiro`;
+  const webUrl = `${testConfig.webBaseUrl}/projects/mineiro`;
 
   console.log('Verifying servers are ready...');
 
