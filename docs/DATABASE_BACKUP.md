@@ -94,14 +94,14 @@ Backups should be stored off the database host (e.g. S3, R2) so they survive iss
 
 ## Supabase API security (RLS)
 
-Row Level Security (RLS) is enabled on all public tables. That locks down Supabase’s auto-generated PostgREST API: requests using the publishable (anon) key cannot read or write any rows, because there are no permissive policies for the anon role.
+Row Level Security (RLS) is enabled on all public tables. That locks down Supabase’s auto-generated PostgREST API: requests using the publishable (anon) key cannot read or write any rows, Each table has a `deny_public_api_access` policy (FOR ALL TO PUBLIC USING (false)) that explicitly denies access to non-bypass roles.
 
 The app is unchanged:
 
 - **Data access**: The API uses a direct Postgres connection (`DATABASE_URL`) and Drizzle, not the Supabase REST API. Migrations and app code run with a privileged DB role and are not restricted by RLS.
 - **Storage**: Supabase Storage (e.g. ads) is used only from the API with the service role key, which bypasses RLS.
 
-So only your backend (and direct DB connections with the same credentials) can access data. If the anon key is ever exposed, it still cannot read or modify table data. The migration that enables RLS is `0009_enable_rls_public_tables.sql` in `apps/api/drizzle/`. It has already been applied to the linked Supabase project; for other environments, run migrations as usual so RLS is applied there too.
+So only your backend (and direct DB connections with the same credentials) can access data. If the anon key is ever exposed, it still cannot read or modify table data. Migrations `0009_enable_rls_public_tables.sql` and `0010_add_rls_policies.sql` in `apps/api/drizzle/` enable RLS and add explicit deny policies. Run migrations as usual so RLS is applied in all environments.
 
 ## Existing Script Note
 
