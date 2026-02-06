@@ -13,6 +13,7 @@
     "generate:avatars": "pnpm --filter api exec tsx scripts/generate-barber-avatars.ts",
     "integrate:web": "node scripts/integrate-web.js",
     "build:api": "pnpm --filter api build",
+    "build:render": "pnpm build:shared && pnpm build:api",
     "build": "pnpm build:shared && pnpm build:api && pnpm generate:avatars && pnpm build:web && pnpm --filter web build:root && pnpm integrate:web",
     "build:fast": "pnpm build:shared && pnpm build:api && pnpm build:web:fast && pnpm --filter web build:root && pnpm integrate:web",
     "start": "pnpm --filter api start",
