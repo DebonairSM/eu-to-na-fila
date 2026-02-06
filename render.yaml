@@ -4,8 +4,9 @@ services:
     env: node
     plan: starter
     region: oregon
-    buildCommand: pnpm install --frozen-lockfile && pnpm build
-    startCommand: pnpm db:migrate && pnpm start
+    buildCommand: pnpm install --frozen-lockfile && pnpm build && test -f apps/api/dist/server.js || (echo "Build failed: apps/api/dist/server.js not produced. Check that build:api ran (full build may have failed earlier)." && exit 1)
+    # If apps/api/dist/server.js is missing (e.g. build failed before build:api), build API at start so the server can run.
+    startCommand: pnpm db:migrate && (test -f apps/api/dist/server.js || pnpm build:api) && cd apps/api && node dist/server.js
     # Note: Removed db:seed from startup to prevent health check timeouts
     envVars:
       - key: NODE_ENV
