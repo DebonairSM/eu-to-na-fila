@@ -1,4 +1,4 @@
-import type { Ticket, TicketStatus } from '../schemas/ticket.js';
+import type { Ticket, TicketStatus } from '../schemas/ticket';
 
 /**
  * All possible WebSocket event types.

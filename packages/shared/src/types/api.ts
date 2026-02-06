@@ -1,11 +1,11 @@
-import type { Ticket, TicketStatus } from '../schemas/ticket.js';
-import type { Shop } from '../schemas/shop.js';
-import type { Service } from '../schemas/service.js';
-import type { Barber } from '../schemas/barber.js';
+import type { Ticket, TicketStatus } from '../schemas/ticket';
+import type { Shop } from '../schemas/shop';
+import type { Service } from '../schemas/service';
+import type { Barber } from '../schemas/barber';
 
 // Error response types are defined in types/errors.ts
 // Import and re-export if needed in API context
-import type { ErrorResponse, ValidationErrorResponse } from './errors.js';
+import type { ErrorResponse, ValidationErrorResponse } from './errors';
 
 export type { ErrorResponse as ApiErrorResponse, ValidationErrorResponse };
 

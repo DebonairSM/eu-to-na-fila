@@ -1,12 +1,12 @@
 // Schemas
-export * from './schemas/shop.js';
-export * from './schemas/service.js';
-export * from './schemas/barber.js';
-export * from './schemas/ticket.js';
+export * from './schemas/shop';
+export * from './schemas/service';
+export * from './schemas/barber';
+export * from './schemas/ticket';
 
 // Types
-export * from './types/api.js';
-export * from './types/errors.js';
+export * from './types/api';
+export * from './types/errors';
 
 // Note: WebSocket types removed - using HTTP polling instead
 
