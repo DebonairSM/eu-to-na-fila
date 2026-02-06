@@ -8,6 +8,7 @@ type Barber = InferSelectModel<typeof barbers>;
 type Ticket = InferSelectModel<typeof tickets>;
 
 interface CreateShopData {
+  projectId?: number;
   slug?: string;
   name?: string;
   domain?: string;
@@ -54,15 +55,31 @@ interface CreateTicketData {
 }
 
 /**
- * Create a test shop
+ * Create a test shop.
+ * If projectId is not provided, uses the first project in the DB or creates one.
  */
 export async function createShop(data: CreateShopData = {}): Promise<Shop> {
-  // Generate unique slug if not provided
+  let projectId = data.projectId;
+  if (projectId === undefined) {
+    const project = await db.query.projects.findFirst();
+    if (!project) {
+      const uniqueSlug = `test-project-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const [inserted] = await db
+        .insert(schema.projects)
+        .values({ slug: uniqueSlug, name: 'Test Project', path: '/test' })
+        .returning();
+      projectId = inserted.id;
+    } else {
+      projectId = project.id;
+    }
+  }
+
   const uniqueSlug = data.slug || `test-shop-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-  
+
   const [shop] = await db
     .insert(schema.shops)
     .values({
+      projectId,
       slug: uniqueSlug,
       name: data.name || 'Test Shop',
       domain: data.domain || 'test.com',
