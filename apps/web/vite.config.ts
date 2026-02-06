@@ -2,14 +2,27 @@ import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-// Plugin to redirect root and /mineiro to /mineiro/ so the app loads
+// Paths that belong to the root SPA (company site), not the barbershop app
+const ROOT_SPA_PATHS = ['/company', '/projects', '/about', '/contact'];
+
+function isRootSpaPath(path: string): boolean {
+  return ROOT_SPA_PATHS.some((p) => path === p || path.startsWith(p + '/'));
+}
+
+// Plugin: redirect / and /mineiro to /mineiro/; serve root.html for root SPA paths
 const redirectPlugin = (): Plugin => ({
   name: 'redirect-mineiro',
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
       const path = req.url?.split('?')[0] ?? '';
+      const q = req.url?.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+
+      if (isRootSpaPath(path)) {
+        req.url = '/root.html' + q;
+        next();
+        return;
+      }
       if (path === '/' || path === '/mineiro') {
-        const q = req.url?.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
         res.writeHead(302, { Location: `/mineiro/${q}` });
         res.end();
         return;
