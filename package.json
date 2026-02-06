@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Queue management system for barbershops",
   "scripts": {
+    "prepare": "pnpm build:shared",
     "dev": "pnpm build:shared && concurrently \"pnpm --filter api dev\" \"pnpm --filter web dev\"",
     "build:shared": "pnpm --filter shared build",
     "build:web": "pnpm --filter web build",
