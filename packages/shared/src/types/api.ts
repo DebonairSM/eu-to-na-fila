@@ -5,7 +5,7 @@ import type { Barber } from '../schemas/barber';
 
 // Error response types are defined in types/errors.ts
 // Import and re-export if needed in API context
-import type { ErrorResponse, ValidationErrorResponse } from './errors';
+import type { ErrorResponse, ValidationErrorResponse } from './errors.js';
 
 export type { ErrorResponse as ApiErrorResponse, ValidationErrorResponse };
 
