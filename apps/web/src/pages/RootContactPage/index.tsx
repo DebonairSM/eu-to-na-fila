@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { RootSiteNav } from '@/components/RootSiteNav';
+import { LOGO_URL } from '@/lib/logo';
 
 export function RootContactPage() {
   return (
