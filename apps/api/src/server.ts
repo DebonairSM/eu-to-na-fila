@@ -354,13 +354,10 @@ fastify.setNotFoundHandler(async (request, reply) => {
   }
   
   // SPA fallback: serve index.html for client routes
-  // Only routes under /projects/mineiro/ should be handled by the barbershop SPA
-  // Root routes (/) are handled by the root route handler above
-  const isMineiroSpaRoute =
-    urlPath.startsWith('/projects/mineiro/') ||
-    urlPath === '/projects/mineiro';
+  // Any /projects/:slug/ path is the barbershop SPA (same build for all shops)
+  const isBarbershopSpaRoute = /^\/projects\/[^/]+(\/|$)/.test(urlPath);
 
-  if (isMineiroSpaRoute) {
+  if (isBarbershopSpaRoute) {
     const indexPath = join(projectsMineiroPath, 'index.html');
     if (existsSync(indexPath)) {
       try {
@@ -372,9 +369,8 @@ fastify.setNotFoundHandler(async (request, reply) => {
     }
   }
   
-  // Handle root SPA routes (company homepage routes like /projects, /about, /contact)
-  // These should serve the root.html file
-  if (!urlPath.startsWith('/projects/mineiro') && !urlPath.startsWith('/api')) {
+  // Handle root SPA routes (company homepage: /, /projects, /about, /contact, /company/*)
+  if (!urlPath.startsWith('/api')) {
     const rootIndexPath = join(rootPath, 'root.html');
     if (existsSync(rootIndexPath)) {
       try {

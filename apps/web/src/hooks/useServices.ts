@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { config } from '@/lib/config';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import type { Service } from '@eutonafila/shared';
 
 /**
@@ -28,6 +28,7 @@ import type { Service } from '@eutonafila/shared';
  * ```
  */
 export function useServices() {
+  const shopSlug = useShopSlug();
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -36,14 +37,14 @@ export function useServices() {
     try {
       setIsLoading(true);
       setError(null);
-      const servicesList = await api.getServices(config.slug);
+      const servicesList = await api.getServices(shopSlug);
       setServices(servicesList);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch services'));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [shopSlug]);
 
   useEffect(() => {
     fetchServices();

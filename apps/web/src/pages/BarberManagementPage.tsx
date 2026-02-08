@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
-import { config } from '@/lib/config';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useModal } from '@/hooks/useModal';
@@ -13,6 +13,7 @@ import { getErrorMessage } from '@/lib/utils';
 import type { Barber } from '@eutonafila/shared';
 
 export function BarberManagementPage() {
+  const shopSlug = useShopSlug();
   const { isOwner } = useAuthContext();
   const navigate = useNavigate();
   const { barbers, isLoading, error, refetch } = useBarbers();
@@ -41,7 +42,7 @@ export function BarberManagementPage() {
     }
 
     try {
-      await api.createBarber?.(config.slug, {
+      await api.createBarber?.(shopSlug, {
         name: formData.name,
         avatarUrl: formData.avatarUrl || null,
       });
@@ -52,7 +53,7 @@ export function BarberManagementPage() {
       const errorMsg = getErrorMessage(error, 'Erro ao adicionar barbeiro. Tente novamente.');
       setErrorMessage(errorMsg);
     }
-  }, [formData, refetch, addModal]);
+  }, [formData, refetch, addModal, shopSlug]);
 
   const handleEdit = useCallback(async () => {
     if (!editingBarber || !formData.name.trim()) {

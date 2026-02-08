@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
-import { config } from '@/lib/config';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { logError } from '@/lib/logger';
 import type { Ticket, Barber } from '@eutonafila/shared';
 
 const STORAGE_KEY = 'eutonafila_active_ticket_id';
 
 export function useStatusDisplay(ticket: Ticket | null) {
+  const shopSlug = useShopSlug();
   const [barber, setBarber] = useState<Barber | null>(null);
   const [isLeaving, setIsLeaving] = useState(false);
   const prevStatusRef = useRef<string | null>(null);
@@ -23,7 +24,7 @@ export function useStatusDisplay(ticket: Ticket | null) {
       }
 
       try {
-        const barbers = await api.getBarbers(config.slug);
+        const barbers = await api.getBarbers(shopSlug);
         const assignedBarber = barbers.find(b => b.id === ticket.barberId);
         setBarber(assignedBarber || null);
       } catch (error) {
@@ -33,7 +34,7 @@ export function useStatusDisplay(ticket: Ticket | null) {
     };
 
     fetchBarber();
-  }, [ticket?.barberId]);
+  }, [ticket?.barberId, shopSlug]);
 
   // Handle localStorage updates based on ticket status
   useEffect(() => {

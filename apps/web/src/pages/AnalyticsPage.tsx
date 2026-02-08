@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
-import { config } from '@/lib/config';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
@@ -81,6 +81,7 @@ interface AnalyticsData {
 type AnalyticsView = 'overview' | 'time' | 'services' | 'barbers' | 'cancellations';
 
 export function AnalyticsPage() {
+  const shopSlug = useShopSlug();
   const { isOwner } = useAuthContext();
   const navigate = useNavigate();
   const [days, setDays] = useState(30);
@@ -100,7 +101,7 @@ export function AnalyticsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const analyticsData = await api.getAnalytics(config.slug, days);
+        const analyticsData = await api.getAnalytics(shopSlug, days);
         setData(analyticsData);
       } catch (err) {
         if (err instanceof Error) {
@@ -115,7 +116,7 @@ export function AnalyticsPage() {
       }
     };
     fetchAnalytics();
-  }, [days]);
+  }, [days, shopSlug]);
 
   if (isLoading) {
     return (

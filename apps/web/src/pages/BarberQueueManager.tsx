@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api';
-import { config } from '@/lib/config';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useQueue } from '@/hooks/useQueue';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useKiosk } from '@/hooks/useKiosk';
@@ -23,6 +23,7 @@ import { cn, getErrorMessage, formatName, formatNameForDisplay } from '@/lib/uti
 const AD_VIEW_DURATION = 15000; // 15 seconds
 
 export function BarberQueueManager() {
+  const shopSlug = useShopSlug();
   const [searchParams] = useSearchParams();
   const {
     isKioskMode,
@@ -199,7 +200,7 @@ export function BarberQueueManager() {
     setIsSubmitting(true);
     setErrorMessage(null);
     try {
-      await api.createTicket(config.slug, {
+      await api.createTicket(shopSlug, {
         customerName: fullName,
         serviceId: 1,
       });
@@ -213,7 +214,7 @@ export function BarberQueueManager() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [checkInName, validateName, refetchQueue, checkInModal]);
+  }, [checkInName, validateName, refetchQueue, checkInModal, shopSlug]);
 
   const handleSelectBarber = useCallback(async (barberId: number | null) => {
     if (!selectedCustomerId) return;

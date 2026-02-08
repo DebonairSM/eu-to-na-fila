@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '@/lib/api';
-import { config } from '@/lib/config';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 
 const QUEUE_VIEW_DURATION = 15000; // 15 seconds per US-013
 const AD_VIEW_DURATION = 15000; // 15 seconds per US-013
@@ -17,6 +17,7 @@ interface Ad {
 }
 
 export function useKiosk() {
+  const shopSlug = useShopSlug();
   const [isKioskMode, setIsKioskMode] = useState(false);
   const [currentView, setCurrentView] = useState<KioskView>('queue');
   const [isInRotation, setIsInRotation] = useState(true);
@@ -117,7 +118,7 @@ export function useKiosk() {
         await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
       }
       try {
-        const manifest = await api.getAdsManifest(config.slug, { timeout: 8000 });
+        const manifest = await api.getAdsManifest(shopSlug, { timeout: 8000 });
         setAds(manifest.ads);
         setCurrentAdIndex((prev) =>
           prev >= manifest.ads.length ? 0 : prev
@@ -130,7 +131,7 @@ export function useKiosk() {
     }
     console.error('[useKiosk] Failed to fetch manifest after retries:', lastErr);
     setAds([]);
-  }, []);
+  }, [shopSlug]);
 
   // Fetch manifest when entering kiosk mode
   useEffect(() => {

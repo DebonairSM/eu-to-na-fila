@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import type { Ticket } from '@eutonafila/shared';
-import { config } from '../lib/config';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { logError } from '../lib/logger';
 import { api } from '../lib/api';
 
@@ -45,9 +45,11 @@ function getNetworkMultiplier(): number {
  * @returns Queue data, loading state, and error state
  */
 export function useQueuePolling(
-  shopId: string = config.slug,
+  shopId?: string,
   options: UsePollingOptions = {}
 ) {
+  const shopSlugFromContext = useShopSlug();
+  const effectiveShopId = shopId ?? shopSlugFromContext;
   const { interval = 3000, enabled = true } = options;
   const [data, setData] = useState<QueueData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,7 +66,7 @@ export function useQueuePolling(
 
     try {
       const startTime = performance.now();
-      const queueData = await api.getQueue(shopId);
+      const queueData = await api.getQueue(effectiveShopId);
       const fetchTime = performance.now() - startTime;
       
       if (isMountedRef.current) {
@@ -87,7 +89,7 @@ export function useQueuePolling(
       }
       logError('Error fetching queue', err);
     }
-  }, [shopId]);
+  }, [effectiveShopId]);
 
   const scheduleNextPoll = useCallback(() => {
     if (!isMountedRef.current || !enabled || document.hidden) {

@@ -50,13 +50,12 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Derive router basename from Vite's configured base URL.
-// - For the Mineiro build, Vite base is "/projects/mineiro/".
-// - In other environments it may be "/" (or something else), and hardcoding can blank the app.
+// Derive router basename from current URL path so the same build works for any /projects/:slug.
+// When at /projects/barbearia-premium/, basename is /projects/barbearia-premium.
 const basename = (() => {
-  const baseUrl = import.meta.env.BASE_URL ?? '/';
-  if (baseUrl === '/') return '/';
-  return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  if (typeof window === 'undefined') return '/projects/mineiro';
+  const match = window.location.pathname.match(/^\/projects\/[^/]+/);
+  return match ? match[0] : (import.meta.env.BASE_URL ?? '/').replace(/\/$/, '') || '/projects/mineiro';
 })();
 
 // Signal to recovery system that app mounted
