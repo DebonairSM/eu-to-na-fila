@@ -724,9 +724,6 @@ class ApiClient {
     name: string;
     slug?: string;
     domain?: string;
-    theme?: { primary: string; accent: string };
-    ownerPin: string;
-    staffPin: string;
     services: Array<{
       name: string;
       description?: string;

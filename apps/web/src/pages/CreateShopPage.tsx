@@ -30,10 +30,6 @@ interface ShopFormData {
   name: string;
   slug: string;
   domain: string;
-  themePrimary: string;
-  themeAccent: string;
-  ownerPin: string;
-  staffPin: string;
   services: ServiceItem[];
   barbers: BarberItem[];
 }
@@ -46,10 +42,6 @@ const TEMPLATE: ShopFormData = {
   name: '',
   slug: '',
   domain: '',
-  themePrimary: '#3E2723',
-  themeAccent: '#FFD54F',
-  ownerPin: '',
-  staffPin: '',
   services: [
     { id: uid(), name: 'Corte de Cabelo', description: 'Corte tradicional', duration: 30, price: 3000 },
     { id: uid(), name: 'Barba', description: 'Aparar e modelar barba', duration: 20, price: 2000 },
@@ -180,99 +172,9 @@ function StepBasicInfo({
         </div>
       </div>
 
-      <div className="border-t border-white/10 pt-6">
-        <h3 className="text-lg font-semibold text-white mb-4">PINs de Acesso</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-white/70 text-sm mb-2">PIN do Proprietario * (4-6 digitos)</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={data.ownerPin}
-              onChange={(e) => onChange({ ownerPin: e.target.value.replace(/\D/g, '').slice(0, 6) })}
-              placeholder="1234"
-              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all tracking-[0.3em] text-center font-mono text-lg"
-            />
-            {errors.ownerPin && <p className="text-red-400 text-xs mt-1">{errors.ownerPin}</p>}
-          </div>
-          <div>
-            <label className="block text-white/70 text-sm mb-2">PIN da Equipe * (4-6 digitos)</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={data.staffPin}
-              onChange={(e) => onChange({ staffPin: e.target.value.replace(/\D/g, '').slice(0, 6) })}
-              placeholder="0000"
-              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all tracking-[0.3em] text-center font-mono text-lg"
-            />
-            {errors.staffPin && <p className="text-red-400 text-xs mt-1">{errors.staffPin}</p>}
-          </div>
-        </div>
-      </div>
-
-      <div className="border-t border-white/10 pt-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Tema</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-white/70 text-sm mb-2">Cor Primaria</label>
-            <div className="flex items-center gap-3">
-              <input
-                type="color"
-                value={data.themePrimary}
-                onChange={(e) => onChange({ themePrimary: e.target.value })}
-                className="w-10 h-10 rounded-lg border border-white/20 cursor-pointer bg-transparent"
-              />
-              <input
-                type="text"
-                value={data.themePrimary}
-                onChange={(e) => onChange({ themePrimary: e.target.value })}
-                className="flex-1 px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-white/70 text-sm mb-2">Cor de Destaque</label>
-            <div className="flex items-center gap-3">
-              <input
-                type="color"
-                value={data.themeAccent}
-                onChange={(e) => onChange({ themeAccent: e.target.value })}
-                className="w-10 h-10 rounded-lg border border-white/20 cursor-pointer bg-transparent"
-              />
-              <input
-                type="text"
-                value={data.themeAccent}
-                onChange={(e) => onChange({ themeAccent: e.target.value })}
-                className="flex-1 px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Live preview */}
-        {data.name && (
-          <div className="mt-4 p-4 rounded-xl border border-white/10 bg-white/5">
-            <p className="text-white/40 text-xs uppercase tracking-wider mb-2">Preview</p>
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold"
-                style={{
-                  background: `linear-gradient(135deg, ${data.themeAccent}, ${data.themePrimary})`,
-                  color: '#0a0a0a',
-                }}
-              >
-                {data.name.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <p className="text-white font-semibold">{data.name}</p>
-                {data.domain && <p className="text-white/50 text-xs">{data.domain}</p>}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      <p className="text-white/40 text-xs mt-4">
+        PINs de acesso (proprietario: 1234, equipe: 0000) serao definidos por padrao. O dono podera alterar depois.
+      </p>
     </div>
   );
 }
@@ -530,19 +432,6 @@ function StepReview({ data }: { data: ShopFormData }) {
               <p className="text-white">{data.domain}</p>
             </div>
           )}
-          <div>
-            <span className="text-white/50">PIN Proprietario:</span>
-            <p className="text-white font-mono">{'*'.repeat(data.ownerPin.length)}</p>
-          </div>
-          <div>
-            <span className="text-white/50">PIN Equipe:</span>
-            <p className="text-white font-mono">{'*'.repeat(data.staffPin.length)}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-white/50 text-sm">Tema:</span>
-          <div className="w-5 h-5 rounded" style={{ backgroundColor: data.themePrimary }} />
-          <div className="w-5 h-5 rounded" style={{ backgroundColor: data.themeAccent }} />
         </div>
       </div>
 
@@ -616,7 +505,7 @@ export function CreateShopPage() {
   const Nav = useRootTheme ? RootSiteNav : CompanyNav;
 
   const isDirty = useMemo(() => {
-    return data.name !== '' || data.ownerPin !== '' || data.staffPin !== '';
+    return data.name !== '';
   }, [data]);
 
   const onChange = useCallback((patch: Partial<ShopFormData>) => {
@@ -633,8 +522,6 @@ export function CreateShopPage() {
 
       if (s === 0) {
         if (!data.name.trim()) errs.name = 'Nome e obrigatorio';
-        if (!data.ownerPin || data.ownerPin.length < 4) errs.ownerPin = 'PIN deve ter 4-6 digitos';
-        if (!data.staffPin || data.staffPin.length < 4) errs.staffPin = 'PIN deve ter 4-6 digitos';
       }
 
       if (s === 1) {
@@ -692,9 +579,6 @@ export function CreateShopPage() {
         name: data.name,
         slug: data.slug || undefined,
         domain: data.domain || undefined,
-        theme: { primary: data.themePrimary, accent: data.themeAccent },
-        ownerPin: data.ownerPin,
-        staffPin: data.staffPin,
         services: data.services.map((s) => ({
           name: s.name,
           description: s.description || undefined,

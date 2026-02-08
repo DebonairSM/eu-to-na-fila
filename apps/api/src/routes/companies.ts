@@ -5,9 +5,7 @@ import { eq, and } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
-import { getProjectBySlug } from '../lib/shop.js';
 import { hashPin } from '../lib/pin.js';
-import { env } from '../env.js';
 
 /**
  * Company routes.
@@ -237,46 +235,35 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
           .substring(0, 50); // Limit length
       }
 
-      const projectSlug = env.PROJECT_SLUG ?? env.SHOP_SLUG;
-      const project = await getProjectBySlug(projectSlug);
-      if (!project) {
-        throw new ValidationError(`Project "${projectSlug}" not found`, [
-          { field: 'project', message: 'Default project must exist. Run seed or create project first.' },
-        ]);
+      // Ensure project slug is globally unique (projects.slug is unique)
+      let projectSlug = slug;
+      let counter = 0;
+      while (await db.query.projects.findFirst({ where: eq(schema.projects.slug, projectSlug) })) {
+        counter++;
+        projectSlug = `${slug}-${counter}`;
       }
+      if (counter > 0) slug = projectSlug;
 
-      // Check if slug already exists within this project
-      let existingShop = await db.query.shops.findFirst({
-        where: and(
-          eq(schema.shops.projectId, project.id),
-          eq(schema.shops.slug, slug)
-        ),
-      });
-
-      if (existingShop) {
-        let counter = 1;
-        let uniqueSlug = `${slug}-${counter}`;
-        while (await db.query.shops.findFirst({
-          where: and(
-            eq(schema.shops.projectId, project.id),
-            eq(schema.shops.slug, uniqueSlug)
-          ),
-        })) {
-          counter++;
-          uniqueSlug = `${slug}-${counter}`;
-        }
-        slug = uniqueSlug;
-      }
+      const [newProject] = await db
+        .insert(schema.projects)
+        .values({
+          slug: projectSlug,
+          name: body.name,
+          path: body.path || `/projects/${projectSlug}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
 
       const [newShop] = await db
         .insert(schema.shops)
         .values({
-          projectId: project.id,
+          projectId: newProject.id,
           companyId: id,
           slug,
           name: body.name,
           domain: body.domain || null,
-          path: body.path || null,
+          path: body.path || `/projects/${projectSlug}`,
           apiBase: body.apiBase || null,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -434,8 +421,22 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         throw new NotFoundError('Shop not found');
       }
 
-      // Delete shop (cascade will handle related records)
-      await db.delete(schema.shops).where(eq(schema.shops.id, shopId));
+      // Delete shop and all related records in a transaction.
+      // Order matters: delete children before parents to respect FK constraints.
+      await db.transaction(async (tx) => {
+        // 1. Audit log (references shop + ticket)
+        await tx.delete(schema.auditLog).where(eq(schema.auditLog.shopId, shopId));
+        // 2. Tickets (references shop, service, barber)
+        await tx.delete(schema.tickets).where(eq(schema.tickets.shopId, shopId));
+        // 3. Services (references shop)
+        await tx.delete(schema.services).where(eq(schema.services.shopId, shopId));
+        // 4. Barbers (references shop)
+        await tx.delete(schema.barbers).where(eq(schema.barbers.shopId, shopId));
+        // 5. Company ads linked to this shop (nullable FK, set to null or delete)
+        await tx.delete(schema.companyAds).where(eq(schema.companyAds.shopId, shopId));
+        // 6. Shop itself
+        await tx.delete(schema.shops).where(eq(schema.shops.id, shopId));
+      });
 
       return reply.status(200).send({
         success: true,
@@ -486,12 +487,8 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         name: z.string().min(1).max(200),
         slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
         domain: z.string().optional(),
-        theme: z.object({
-          primary: z.string(),
-          accent: z.string(),
-        }).optional(),
-        ownerPin: z.string().min(4).max(6).regex(/^\d+$/),
-        staffPin: z.string().min(4).max(6).regex(/^\d+$/),
+        ownerPin: z.string().min(4).max(12).regex(/^\d+$/).optional(),
+        staffPin: z.string().min(4).max(12).regex(/^\d+$/).optional(),
         services: z.array(z.object({
           name: z.string().min(1).max(200),
           description: z.string().max(500).optional(),
@@ -519,54 +516,45 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
           .substring(0, 50);
       }
 
-      const projectSlug = env.PROJECT_SLUG ?? env.SHOP_SLUG;
-      const project = await getProjectBySlug(projectSlug);
-      if (!project) {
-        throw new ValidationError(`Project "${projectSlug}" not found`, [
-          { field: 'project', message: 'Default project must exist. Run seed or create project first.' },
-        ]);
+      // Ensure project slug is globally unique (projects.slug is unique)
+      let projectSlug = slug;
+      let counter = 0;
+      while (await db.query.projects.findFirst({ where: eq(schema.projects.slug, projectSlug) })) {
+        counter++;
+        projectSlug = `${slug}-${counter}`;
       }
+      if (counter > 0) slug = projectSlug;
 
-      // Ensure slug uniqueness
-      let existingShop = await db.query.shops.findFirst({
-        where: and(
-          eq(schema.shops.projectId, project.id),
-          eq(schema.shops.slug, slug)
-        ),
-      });
+      // Hash PINs (defaults: owner 1234, staff 0000)
+      const ownerPin = body.ownerPin ?? '1234';
+      const staffPin = body.staffPin ?? '0000';
+      const ownerPinHash = await hashPin(ownerPin);
+      const staffPinHash = await hashPin(staffPin);
 
-      if (existingShop) {
-        let counter = 1;
-        let uniqueSlug = `${slug}-${counter}`;
-        while (await db.query.shops.findFirst({
-          where: and(
-            eq(schema.shops.projectId, project.id),
-            eq(schema.shops.slug, uniqueSlug)
-          ),
-        })) {
-          counter++;
-          uniqueSlug = `${slug}-${counter}`;
-        }
-        slug = uniqueSlug;
-      }
-
-      // Hash PINs
-      const ownerPinHash = await hashPin(body.ownerPin);
-      const staffPinHash = await hashPin(body.staffPin);
-
-      // Create everything in a transaction
+      // Create project + shop + services + barbers in a transaction
       const result = await db.transaction(async (tx) => {
+        const [newProject] = await tx
+          .insert(schema.projects)
+          .values({
+            slug: projectSlug,
+            name: body.name,
+            path: `/projects/${projectSlug}`,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .returning();
+
         const [newShop] = await tx
           .insert(schema.shops)
           .values({
-            projectId: project.id,
+            projectId: newProject.id,
             companyId: id,
             slug,
             name: body.name,
             domain: body.domain || null,
-            path: null,
+            path: `/projects/${projectSlug}`,
             apiBase: null,
-            theme: body.theme ? JSON.stringify(body.theme) : null,
+            theme: JSON.stringify({ primary: '#3E2723', accent: '#FFD54F' }),
             ownerPinHash,
             staffPinHash,
             ownerPinResetRequired: false,
