@@ -11,9 +11,10 @@ function getSlugFromPath(pathname: string): string | null {
 }
 
 export function ShopSlugProvider({ children }: { children: React.ReactNode }) {
-  const { pathname } = useLocation();
+  useLocation(); // Subscribe to route changes so we re-render on navigation
   const [searchParams] = useSearchParams();
-  const fromPath = getSlugFromPath(pathname);
+  const fullPath = typeof window !== 'undefined' ? window.location.pathname : '';
+  const fromPath = getSlugFromPath(fullPath);
   const fromQuery = searchParams.get('shop');
   const slug = useMemo(
     () =>
