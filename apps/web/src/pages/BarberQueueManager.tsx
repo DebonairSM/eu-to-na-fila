@@ -335,7 +335,7 @@ export function BarberQueueManager() {
                 aria-label="Adicionar cliente à fila"
               >
                 <span className="material-symbols-outlined text-2xl">person_add</span>
-                <span className="font-['Playfair_Display',serif] text-2xl tracking-wide uppercase">{config.name}</span>
+                <span className="font-['Playfair_Display',serif] text-2xl tracking-wide uppercase">{queueData?.shop?.name ?? shopSlug}</span>
               </button>
             </header>
 
