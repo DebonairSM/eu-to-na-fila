@@ -27,7 +27,11 @@
 
 @layer base {
   :root {
-    /* Design System Colors - Primary */
+    /* Shop-specific theme (set by ShopConfigContext, fallback to defaults) */
+    --shop-primary: #3E2723;
+    --shop-accent: #FFD54F;
+
+    /* Design System Colors - Primary (gold default, maps to --shop-accent when themed) */
     --gold: #D4AF37;
     --gold-hover: #E5C047;
     --gold-active: #C49B2E;
@@ -368,6 +372,26 @@
 
 .animate-bounce-slow {
   animation: bounce 2s ease-in-out infinite;
+}
+
+/* Shop theme utilities - use var(--shop-accent) / var(--shop-primary) for per-shop branding */
+.text-shop-accent {
+  color: var(--shop-accent);
+}
+.bg-shop-accent {
+  background-color: var(--shop-accent);
+}
+.border-shop-accent {
+  border-color: var(--shop-accent);
+}
+.hover\:bg-shop-accent:hover {
+  background-color: var(--shop-accent);
+}
+.focus\:border-shop-accent:focus {
+  border-color: var(--shop-accent);
+}
+.focus\:ring-shop-accent:focus {
+  --tw-ring-color: var(--shop-accent);
 }
 
 /* Completed checkmark - draws itself then gently pulses */

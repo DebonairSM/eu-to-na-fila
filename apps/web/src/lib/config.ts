@@ -2,13 +2,12 @@
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? '/api';
 
 export const config = {
+  apiBase,
+  /** Fallback slug when URL path does not contain /projects/:slug (e.g. config loading). */
   slug: 'mineiro',
-  name: 'Barbearia Mineiro',
+  /** Fallback name when shop config is loading or fetch fails. */
+  name: 'Barbearia',
+  /** Fallback path when shop config is loading or fetch fails. */
   path: '/projects/mineiro',
-  apiBase: apiBase,
-  theme: {
-    primary: '#3E2723',
-    accent: '#FFD54F',
-  },
 };
 

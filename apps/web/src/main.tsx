@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ShopSlugProvider } from './contexts/ShopSlugContext';
+import { ShopConfigProvider } from './contexts/ShopConfigContext';
 import App from './App';
 import './styles/globals.css';
 
@@ -79,7 +80,9 @@ root.render(
     >
       <AuthProvider>
         <ShopSlugProvider>
-          <App />
+          <ShopConfigProvider>
+            <App />
+          </ShopConfigProvider>
         </ShopSlugProvider>
       </AuthProvider>
     </BrowserRouter>

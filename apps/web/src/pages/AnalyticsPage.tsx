@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
@@ -82,6 +83,7 @@ type AnalyticsView = 'overview' | 'time' | 'services' | 'barbers' | 'cancellatio
 
 export function AnalyticsPage() {
   const shopSlug = useShopSlug();
+  const { config: shopConfig } = useShopConfig();
   const { isOwner } = useAuthContext();
   const navigate = useNavigate();
   const [days, setDays] = useState(30);
@@ -180,7 +182,7 @@ export function AnalyticsPage() {
                       cancellationAnalysis: data.cancellationAnalysis,
                       barberEfficiency: data.barberEfficiency,
                     },
-                    { shopName: shopSlug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()), periodLabel: periodLabel(data.period.days) }
+                    { shopName: shopConfig.name, periodLabel: periodLabel(data.period.days) }
                   );
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D4AF37] text-black font-semibold rounded-xl hover:bg-[#E8C547] transition-colors focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"

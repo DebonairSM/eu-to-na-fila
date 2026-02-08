@@ -317,6 +317,20 @@ class ApiClient {
     return this.request<T>(path, { method: 'DELETE' });
   }
 
+  /**
+   * Get public shop config (name, theme, path). No auth required.
+   *
+   * @param shopSlug - Shop identifier
+   * @returns Shop config for branding and theming
+   */
+  async getShopConfig(shopSlug: string): Promise<{
+    name: string;
+    theme: { primary: string; accent: string };
+    path: string;
+  }> {
+    return this.get(`/shops/${shopSlug}/config`);
+  }
+
   // ==================== Queue Endpoints ====================
 
   /**

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useQueue } from '@/hooks/useQueue';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useKiosk } from '@/hooks/useKiosk';
@@ -24,6 +25,7 @@ const AD_VIEW_DURATION = 15000; // 15 seconds
 
 export function BarberQueueManager() {
   const shopSlug = useShopSlug();
+  const { config: shopConfig } = useShopConfig();
   const [searchParams] = useSearchParams();
   const {
     isKioskMode,
@@ -331,11 +333,11 @@ export function BarberQueueManager() {
                   checkInModal.open();
                   showQueueView();
                 }}
-                className="inline-flex items-center gap-4 px-10 py-4 bg-[#D4AF37] text-black rounded-2xl font-semibold text-xl hover:bg-[#E8C547] hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(212,175,55,0.5)] transition-all"
+                className="inline-flex items-center gap-4 px-10 py-4 bg-[var(--shop-accent)] text-black rounded-2xl font-semibold text-xl hover:opacity-90 hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(212,175,55,0.5)] transition-all"
                 aria-label="Adicionar cliente à fila"
               >
                 <span className="material-symbols-outlined text-2xl">person_add</span>
-                <span className="font-['Playfair_Display',serif] text-2xl tracking-wide uppercase">{queueData?.shop?.name ?? shopSlug}</span>
+                <span className="font-['Playfair_Display',serif] text-2xl tracking-wide uppercase">{queueData?.shop?.name ?? shopConfig.name}</span>
               </button>
             </header>
 

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useModal } from '@/hooks/useModal';
@@ -14,6 +15,7 @@ import type { Barber } from '@eutonafila/shared';
 
 export function BarberManagementPage() {
   const shopSlug = useShopSlug();
+  const { config: shopConfig } = useShopConfig();
   const { isOwner } = useAuthContext();
   const navigate = useNavigate();
   const { barbers, isLoading, error, refetch } = useBarbers();
@@ -127,14 +129,14 @@ export function BarberManagementPage() {
         className="container max-w-[1200px] mx-auto px-4 sm:px-6 pt-24 pb-10 relative z-10"
       >
         <div className="text-center mb-8">
-          <h1 className="font-['Playfair_Display',serif] text-2xl text-[#D4AF37] mb-3">
+          <h1 className="font-['Playfair_Display',serif] text-2xl text-[var(--shop-accent)] mb-3">
             Gerenciar Barbeiros
           </h1>
         </div>
 
         <button
           onClick={addModal.open}
-          className="add-barber-btn flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(212,175,55,0.4)] min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
+          className="add-barber-btn flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-[var(--shop-accent)] text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:opacity-90 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(212,175,55,0.4)] min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
           aria-label="Adicionar novo barbeiro"
         >
           <span className="material-symbols-outlined text-lg sm:text-xl" aria-hidden="true">add</span>
