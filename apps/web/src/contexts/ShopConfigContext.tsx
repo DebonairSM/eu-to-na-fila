@@ -22,7 +22,7 @@ export interface ShopConfig {
 }
 
 interface ShopConfigContextValue {
-  config: ShopConfig | null;
+  config: ShopConfig;
   isLoading: boolean;
   error: string | null;
 }

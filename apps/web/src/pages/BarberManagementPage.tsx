@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
-import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useModal } from '@/hooks/useModal';
@@ -15,7 +14,6 @@ import type { Barber } from '@eutonafila/shared';
 
 export function BarberManagementPage() {
   const shopSlug = useShopSlug();
-  const { config: shopConfig } = useShopConfig();
   const { isOwner } = useAuthContext();
   const navigate = useNavigate();
   const { barbers, isLoading, error, refetch } = useBarbers();
