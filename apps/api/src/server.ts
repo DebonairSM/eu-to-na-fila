@@ -1,3 +1,4 @@
+import './dns-config.js';
 import Fastify, { type FastifyRequest, type FastifyPluginCallback } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fastifyHelmet from '@fastify/helmet';

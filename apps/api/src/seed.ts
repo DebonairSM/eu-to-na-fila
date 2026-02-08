@@ -1,3 +1,4 @@
+import './dns-config.js';
 import { db, schema } from './db/index.js';
 import { env } from './env.js';
 import { and, eq } from 'drizzle-orm';
