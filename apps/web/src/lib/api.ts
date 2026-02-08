@@ -838,6 +838,21 @@ class ApiClient {
     return this.get('/shops');
   }
 
+  /**
+   * List all projects (barbershops).
+   * Public endpoint, no auth required.
+   *
+   * @returns Array of projects with id, slug, name, path
+   */
+  async getProjects(): Promise<Array<{
+    id: number;
+    slug: string;
+    name: string;
+    path: string;
+  }>> {
+    return this.get('/projects');
+  }
+
   // ==================== Ad Management Endpoints ====================
 
   /**

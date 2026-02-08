@@ -1,19 +1,36 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { LOGO_URL } from '@/lib/logo';
+import { api } from '@/lib/api';
+
+const DEFAULT_DESCRIPTION =
+  'Fila virtual em tempo real para barbearias. Clientes entram, acompanham e são chamados na vez. Posição ao vivo, estimativa de espera, notificações. Painel para o dono, analytics e página pública por barbearia. Inclui PWA para totens.';
+
+const DEFAULT_TECHNOLOGIES = ['React', 'TypeScript', 'Fastify', 'PostgreSQL', 'WebSockets', 'PWA'];
 
 export function ProjectsPage() {
-  const projects = [
-    {
-      id: 'eu-to-na-fila',
-      title: 'EuToNaFila – Fila Virtual ao Vivo',
-      description: 'Fila virtual em tempo real para barbearias. Clientes entram, acompanham e são chamados na vez. Posição ao vivo, estimativa de espera, notificações. Painel para o dono, analytics e página pública por barbearia. Inclui PWA para totens.',
-      technologies: ['React', 'TypeScript', 'Fastify', 'PostgreSQL', 'WebSockets', 'PWA'],
-      link: '/projects/mineiro/',
-      status: 'Ativo',
-    },
-  ];
+  const [projects, setProjects] = useState<Array<{ id: number; slug: string; name: string; path: string }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .getProjects()
+      .then(setProjects)
+      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar projetos'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const projectCards = projects.map((p) => ({
+    id: String(p.id),
+    title: p.name,
+    description: DEFAULT_DESCRIPTION,
+    technologies: DEFAULT_TECHNOLOGIES,
+    link: p.path.endsWith('/') ? p.path : `${p.path}/`,
+    status: 'Ativo' as const,
+  }));
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
@@ -28,8 +45,17 @@ export function ProjectsPage() {
           </p>
         </header>
 
+        {loading && (
+          <div className="text-center py-12 text-gray-400">Carregando projetos...</div>
+        )}
+        {error && (
+          <div className="text-center py-12 text-red-400">{error}</div>
+        )}
+        {!loading && !error && projectCards.length === 0 && (
+          <div className="text-center py-12 text-gray-400">Nenhum projeto cadastrado.</div>
+        )}
         <div className="grid grid-cols-1 gap-6">
-          {projects.map((project) => (
+            {projectCards.map((project) => (
             <div
               key={project.id}
               className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-10 hover:border-white/20 hover:bg-white/10 transition-all"
