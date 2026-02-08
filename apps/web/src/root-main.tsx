@@ -9,6 +9,7 @@ import { CompanyLoginPage } from './pages/CompanyLoginPage';
 import { CompanyDashboard } from './pages/CompanyDashboard';
 import { AdManagementPage } from './pages/AdManagementPage';
 import { ShopManagementPage } from './pages/ShopManagementPage';
+import { CreateShopPage } from './pages/CreateShopPage';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Navigate } from 'react-router-dom';
@@ -48,6 +49,7 @@ function App() {
           <Route path="/company/dashboard" element={<ProtectedRoute requireCompanyAdmin><CompanyDashboard /></ProtectedRoute>} />
           <Route path="/company/ads" element={<ProtectedRoute requireCompanyAdmin><AdManagementPage /></ProtectedRoute>} />
           <Route path="/company/shops" element={<ProtectedRoute requireCompanyAdmin><ShopManagementPage /></ProtectedRoute>} />
+          <Route path="/company/shops/new" element={<ProtectedRoute requireCompanyAdmin><CreateShopPage /></ProtectedRoute>} />
         </Routes>
       </AuthProvider>
     </ErrorBoundary>
