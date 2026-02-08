@@ -714,6 +714,55 @@ class ApiClient {
   }
 
   /**
+   * Create a full shop with services and barbers in a single transaction.
+   *
+   * @param companyId - Company ID
+   * @param data - Shop, services, and barbers data
+   * @returns Created shop, services, and barbers
+   */
+  async createFullShop(companyId: number, data: {
+    name: string;
+    slug?: string;
+    domain?: string;
+    theme?: { primary: string; accent: string };
+    ownerPin: string;
+    staffPin: string;
+    services: Array<{
+      name: string;
+      description?: string;
+      duration: number;
+      price?: number;
+    }>;
+    barbers: Array<{
+      name: string;
+      email?: string;
+      phone?: string;
+    }>;
+  }): Promise<{
+    shop: {
+      id: number;
+      slug: string;
+      name: string;
+      companyId: number | null;
+      domain: string | null;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+    services: Array<{
+      id: number;
+      name: string;
+      duration: number;
+      price: number | null;
+    }>;
+    barbers: Array<{
+      id: number;
+      name: string;
+    }>;
+  }> {
+    return this.post(`/companies/${companyId}/shops/full`, data);
+  }
+
+  /**
    * Update a shop.
    * 
    * @param companyId - Company ID

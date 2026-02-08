@@ -6,6 +6,7 @@ import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
 import { getProjectBySlug } from '../lib/shop.js';
+import { hashPin } from '../lib/pin.js';
 import { env } from '../env.js';
 
 /**
@@ -440,6 +441,173 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         success: true,
         message: 'Shop deleted successfully',
       });
+    }
+  );
+
+  /**
+   * Create a full shop with services and barbers in a single transaction.
+   * Requires company admin authentication.
+   *
+   * @route POST /api/companies/:id/shops/full
+   * @returns Created shop, services, and barbers
+   * @throws {401} If not authenticated
+   * @throws {403} If not company admin
+   * @throws {400} If validation fails
+   */
+  fastify.post(
+    '/companies/:id/shops/full',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || !request.user.companyId) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+
+      const paramsSchema = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      });
+
+      const { id } = validateRequest(paramsSchema, request.params);
+
+      if (request.user.companyId !== id) {
+        return reply.status(403).send({
+          error: 'Access denied to this company',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+
+      const bodySchema = z.object({
+        name: z.string().min(1).max(200),
+        slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
+        domain: z.string().optional(),
+        theme: z.object({
+          primary: z.string(),
+          accent: z.string(),
+        }).optional(),
+        ownerPin: z.string().min(4).max(6).regex(/^\d+$/),
+        staffPin: z.string().min(4).max(6).regex(/^\d+$/),
+        services: z.array(z.object({
+          name: z.string().min(1).max(200),
+          description: z.string().max(500).optional(),
+          duration: z.number().int().positive(),
+          price: z.number().int().nonnegative().optional(),
+        })).min(1),
+        barbers: z.array(z.object({
+          name: z.string().min(1).max(100),
+          email: z.string().email().optional().or(z.literal('')),
+          phone: z.string().optional().or(z.literal('')),
+        })).min(1),
+      });
+
+      const body = validateRequest(bodySchema, request.body);
+
+      // Generate slug from name if not provided
+      let slug = body.slug;
+      if (!slug) {
+        slug = body.name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .substring(0, 50);
+      }
+
+      const projectSlug = env.PROJECT_SLUG ?? env.SHOP_SLUG;
+      const project = await getProjectBySlug(projectSlug);
+      if (!project) {
+        throw new ValidationError(`Project "${projectSlug}" not found`, [
+          { field: 'project', message: 'Default project must exist. Run seed or create project first.' },
+        ]);
+      }
+
+      // Ensure slug uniqueness
+      let existingShop = await db.query.shops.findFirst({
+        where: and(
+          eq(schema.shops.projectId, project.id),
+          eq(schema.shops.slug, slug)
+        ),
+      });
+
+      if (existingShop) {
+        let counter = 1;
+        let uniqueSlug = `${slug}-${counter}`;
+        while (await db.query.shops.findFirst({
+          where: and(
+            eq(schema.shops.projectId, project.id),
+            eq(schema.shops.slug, uniqueSlug)
+          ),
+        })) {
+          counter++;
+          uniqueSlug = `${slug}-${counter}`;
+        }
+        slug = uniqueSlug;
+      }
+
+      // Hash PINs
+      const ownerPinHash = await hashPin(body.ownerPin);
+      const staffPinHash = await hashPin(body.staffPin);
+
+      // Create everything in a transaction
+      const result = await db.transaction(async (tx) => {
+        const [newShop] = await tx
+          .insert(schema.shops)
+          .values({
+            projectId: project.id,
+            companyId: id,
+            slug,
+            name: body.name,
+            domain: body.domain || null,
+            path: null,
+            apiBase: null,
+            theme: body.theme ? JSON.stringify(body.theme) : null,
+            ownerPinHash,
+            staffPinHash,
+            ownerPinResetRequired: false,
+            staffPinResetRequired: false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .returning();
+
+        const newServices = await tx
+          .insert(schema.services)
+          .values(
+            body.services.map((s) => ({
+              shopId: newShop.id,
+              name: s.name,
+              description: s.description || null,
+              duration: s.duration,
+              price: s.price ?? null,
+              isActive: true,
+            }))
+          )
+          .returning();
+
+        const newBarbers = await tx
+          .insert(schema.barbers)
+          .values(
+            body.barbers.map((b) => ({
+              shopId: newShop.id,
+              name: b.name,
+              email: b.email || null,
+              phone: b.phone || null,
+              isActive: true,
+              isPresent: true,
+            }))
+          )
+          .returning();
+
+        return { shop: newShop, services: newServices, barbers: newBarbers };
+      });
+
+      return reply.status(201).send(result);
     }
   );
 };

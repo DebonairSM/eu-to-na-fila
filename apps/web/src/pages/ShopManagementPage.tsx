@@ -27,7 +27,6 @@ type Shop = {
 export function ShopManagementPage() {
   const { user, isCompanyAdmin } = useAuthContext();
   const navigate = useNavigate();
-  const addModal = useModal();
   const editModal = useModal();
   const deleteConfirmModal = useModal();
   
@@ -75,29 +74,6 @@ export function ShopManagementPage() {
       loadShops();
     }
   }, [user?.companyId, loadShops]);
-
-  const handleAdd = useCallback(async () => {
-    if (!user?.companyId || !formData.name.trim()) {
-      setErrorMessage('Nome é obrigatório');
-      return;
-    }
-
-    try {
-      await api.createCompanyShop(user.companyId, {
-        name: formData.name,
-        slug: formData.slug || undefined,
-        domain: formData.domain || undefined,
-        path: formData.path || undefined,
-        apiBase: formData.apiBase || undefined,
-      });
-      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '' });
-      addModal.close();
-      await loadShops();
-    } catch (error) {
-      const errorMsg = getErrorMessage(error, 'Erro ao adicionar barbearia. Tente novamente.');
-      setErrorMessage(errorMsg);
-    }
-  }, [formData, user?.companyId, loadShops, addModal]);
 
   const handleEdit = useCallback(async () => {
     if (!user?.companyId || !editingShop || !formData.name.trim()) {
@@ -188,7 +164,7 @@ export function ShopManagementPage() {
           </div>
 
           <button
-            onClick={addModal.open}
+            onClick={() => navigate('/company/shops/new')}
             className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-white text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-medium transition-all hover:bg-gray-100 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-white/30"
             aria-label="Adicionar nova barbearia"
           >
@@ -304,7 +280,7 @@ export function ShopManagementPage() {
         </div>
 
         <button
-          onClick={addModal.open}
+          onClick={() => navigate('/company/shops/new')}
           className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(212,175,55,0.4)] min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
           aria-label="Adicionar nova barbearia"
         >
@@ -382,114 +358,6 @@ export function ShopManagementPage() {
           </div>
         )}
       </main>
-
-      {/* Add Shop Modal */}
-      {addModal.isOpen && (
-        <div 
-          className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-5"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(4px)' }}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="add-modal-title"
-        >
-          <div className="modal-content bg-[#242424] border border-[rgba(212,175,55,0.3)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4">
-            <h2 id="add-modal-title" className="modal-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-[#D4AF37] mb-5 sm:mb-6">
-              Adicionar Barbearia
-            </h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleAdd();
-              }}
-            >
-              <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="addName" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
-                  Nome *
-                </label>
-                <input
-                  id="addName"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
-                />
-              </div>
-              <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="addSlug" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
-                  Slug (opcional - gerado automaticamente se não fornecido)
-                </label>
-                <input
-                  id="addSlug"
-                  type="text"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
-                  placeholder="minha-barbearia"
-                  pattern="[a-z0-9-]+"
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
-                />
-              </div>
-              <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="addDomain" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
-                  Domínio (opcional)
-                </label>
-                <input
-                  id="addDomain"
-                  type="text"
-                  value={formData.domain}
-                  onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                  placeholder="exemplo.com"
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
-                />
-              </div>
-              <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="addPath" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
-                  Caminho (opcional)
-                </label>
-                <input
-                  id="addPath"
-                  type="text"
-                  value={formData.path}
-                  onChange={(e) => setFormData({ ...formData, path: e.target.value })}
-                  placeholder="/caminho"
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
-                />
-              </div>
-              <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="addApiBase" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
-                  API Base URL (opcional)
-                </label>
-                <input
-                  id="addApiBase"
-                  type="url"
-                  value={formData.apiBase}
-                  onChange={(e) => setFormData({ ...formData, apiBase: e.target.value })}
-                  placeholder="https://api.exemplo.com"
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
-                />
-              </div>
-              <div className="modal-actions flex gap-2 sm:gap-3 mt-5 sm:mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    addModal.close();
-                    setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '' });
-                  }}
-                  className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="modal-btn primary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#242424]"
-                >
-                  Adicionar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Edit Shop Modal */}
       {editModal.isOpen && (

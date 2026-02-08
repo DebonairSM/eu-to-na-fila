@@ -20,18 +20,18 @@ export function CompanyNav() {
   }, [location.pathname]);
 
   return (
-    <header className="border-b border-white/10 bg-black">
+    <header className="border-b border-white/10 bg-[#071124]">
       <Container size="2xl">
         <div className="flex items-center justify-between gap-4 py-2">
           <div className="flex items-center gap-3">
             <img
               src={LOGO_URL}
               alt="EuTô NaFila"
-              className="h-16 sm:h-20 md:h-24 w-auto object-contain flex-shrink-0"
+              className="h-8 sm:h-10 w-auto object-contain flex-shrink-0"
             />
           <div>
-            <p className="text-sm text-white/70">EuTô NaFila</p>
-            <p className="text-lg font-semibold">Virtual Line Software</p>
+            <p className="text-xs text-white/70">EuTô NaFila</p>
+            <p className="text-sm font-semibold">Virtual Line Software</p>
           </div>
         </div>
         </div>
@@ -71,7 +71,7 @@ export function CompanyNav() {
               Menu
             </Button>
             {open && (
-              <div className="absolute right-0 mt-2 w-52 rounded-lg border border-white/20 bg-black shadow-lg shadow-black/30 p-2 space-y-1 text-sm z-50">
+              <div className="absolute right-0 mt-2 w-52 rounded-lg border border-white/20 bg-[#0b1a33] shadow-lg shadow-black/30 p-2 space-y-1 text-sm z-50">
                 {links.map((item) => (
                   <Link
                     key={item.to}

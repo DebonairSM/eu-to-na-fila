@@ -19,6 +19,7 @@ const AnalyticsPage = lazyWithRetry(() => import('./pages/AnalyticsPage').then((
 const BarberManagementPage = lazyWithRetry(() => import('./pages/BarberManagementPage').then((m) => ({ default: m.BarberManagementPage })));
 const AdManagementPage = lazyWithRetry(() => import('./pages/AdManagementPage').then((m) => ({ default: m.AdManagementPage })));
 const CompanyDashboard = lazyWithRetry(() => import('./pages/CompanyDashboard').then((m) => ({ default: m.CompanyDashboard })));
+const CreateShopPage = lazyWithRetry(() => import('./pages/CreateShopPage').then((m) => ({ default: m.CreateShopPage })));
 
 // Protected Route Component
 function ProtectedRoute({
@@ -124,6 +125,14 @@ function AppContent() {
         element={
           <ProtectedRoute requireCompanyAdmin>
             <CompanyDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/company/shops/new"
+        element={
+          <ProtectedRoute requireCompanyAdmin>
+            <CreateShopPage />
           </ProtectedRoute>
         }
       />
