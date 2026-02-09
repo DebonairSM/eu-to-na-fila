@@ -3,12 +3,12 @@ import { z } from 'zod';
 import type { UpdateTicketStatus } from '@eutonafila/shared';
 import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
-import { ticketService } from '../services/TicketService.js';
-import { queueService } from '../services/QueueService.js';
+import { ticketService, queueService } from '../services/index.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
+import { shapeTicketResponse } from '../lib/ticketResponse.js';
 
 /**
  * Ticket routes.
@@ -138,7 +138,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Ticket with ID ${id} not found`);
     }
 
-    return ticket;
+    return shapeTicketResponse(ticket as Record<string, unknown>);
   });
 
   /**

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 
-export type UserRole = 'owner' | 'barber' | 'company_admin';
+export type UserRole = 'owner' | 'staff' | 'barber' | 'company_admin';
 
 export interface User {
   id: number;

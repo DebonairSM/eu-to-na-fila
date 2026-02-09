@@ -77,11 +77,15 @@ export const barbers = pgTable('barbers', {
   email: text('email'),
   phone: text('phone'),
   avatarUrl: text('avatar_url'),
+  username: text('username'),
+  passwordHash: text('password_hash'),
   isActive: boolean('is_active').notNull().default(true),
   isPresent: boolean('is_present').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+}, (table) => ({
+  shopUsernameUnique: uniqueIndex('barbers_shop_username_unique').on(table.shopId, table.username),
+}));
 
 export const tickets = pgTable('tickets', {
   id: serial('id').primaryKey(),

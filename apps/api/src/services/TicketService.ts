@@ -1,81 +1,41 @@
-import { db, schema } from '../db/index.js';
+import type { DbClient } from '../db/types.js';
+import { schema } from '../db/index.js';
 import { eq, and, or, ne, sql } from 'drizzle-orm';
 import type { CreateTicket, UpdateTicketStatus, Ticket } from '@eutonafila/shared';
-import { queueService } from './QueueService.js';
-import { auditService } from './AuditService.js';
+import type { QueueService } from './QueueService.js';
+import type { AuditService } from './AuditService.js';
 import { ConflictError, NotFoundError } from '../lib/errors.js';
 
 /**
  * Service for managing ticket operations.
- * 
- * Handles:
- * - Ticket creation and validation
- * - Status updates with business logic
- * - Ticket retrieval
- * - Queue position management
  */
 export class TicketService {
-  /**
-   * Get a ticket by ID.
-   * 
-   * @param id - Ticket ID
-   * @returns The ticket with related data, or null if not found
-   * 
-   * @example
-   * ```typescript
-   * const ticket = await ticketService.getById(42);
-   * if (!ticket) {
-   *   throw new NotFoundError('Ticket not found');
-   * }
-   * ```
-   */
-  async getById(id: number): Promise<Ticket | null> {
-    const ticket = await db.query.tickets.findFirst({
-      where: eq(schema.tickets.id, id),
-      with: {
-        shop: true,
-        service: true,
-        barber: true,
-      },
-    });
+  constructor(
+    private db: DbClient,
+    private queueService: QueueService,
+    private auditService: AuditService
+  ) {}
 
+  async getById(id: number): Promise<Ticket | null> {
+    const ticket = await this.db.query.tickets.findFirst({
+      where: eq(schema.tickets.id, id),
+      with: { shop: true, service: true, barber: true },
+    });
     return ticket as Ticket | null;
   }
 
-  /**
-   * Get all tickets for a shop.
-   * 
-   * @param shopId - Shop database ID
-   * @param status - Optional status filter
-   * @returns Array of tickets
-   * 
-   * @example
-   * ```typescript
-   * // Get all tickets
-   * const allTickets = await ticketService.getByShop(1);
-   * 
-   * // Get only waiting tickets
-   * const waitingTickets = await ticketService.getByShop(1, 'waiting');
-   * ```
-   */
   async getByShop(
     shopId: number,
     status?: 'waiting' | 'in_progress' | 'completed' | 'cancelled'
   ): Promise<Ticket[]> {
     const whereClause = status
-      ? and(
-          eq(schema.tickets.shopId, shopId),
-          eq(schema.tickets.status, status)
-        )
+      ? and(eq(schema.tickets.shopId, shopId), eq(schema.tickets.status, status))
       : eq(schema.tickets.shopId, shopId);
 
     try {
-      const tickets = await db.query.tickets.findMany({
+      const tickets = await this.db.query.tickets.findMany({
         where: whereClause,
-        with: {
-          service: true,
-          barber: true,
-        },
+        with: { service: true, barber: true },
         orderBy: (tickets, { asc }) => [asc(tickets.createdAt)],
       });
       return tickets as Ticket[];
@@ -84,200 +44,80 @@ export class TicketService {
     }
   }
 
-  /**
-   * Find an active ticket for a customer (waiting or in_progress status).
-   * 
-   * @param shopId - Shop database ID
-   * @param customerName - Customer's name
-   * @returns The active ticket if found, null otherwise
-   * 
-   * @example
-   * ```typescript
-   * const existingTicket = await ticketService.findActiveTicketByCustomer(1, 'João Silva');
-   * if (existingTicket) {
-   *   // Customer already in queue
-   * }
-   * ```
-   */
   async findActiveTicketByCustomer(shopId: number, customerName: string): Promise<Ticket | null> {
-    const ticket = await db.query.tickets.findFirst({
+    const ticket = await this.db.query.tickets.findFirst({
       where: and(
         eq(schema.tickets.shopId, shopId),
         eq(schema.tickets.customerName, customerName),
-        or(
-          eq(schema.tickets.status, 'waiting'),
-          eq(schema.tickets.status, 'in_progress')
-        )
+        or(eq(schema.tickets.status, 'waiting'), eq(schema.tickets.status, 'in_progress'))
       ),
-      with: {
-        shop: true,
-        service: true,
-        barber: true,
-      },
-      orderBy: (tickets, { desc }) => [desc(tickets.createdAt)], // Get most recent
+      with: { shop: true, service: true, barber: true },
+      orderBy: (tickets, { desc }) => [desc(tickets.createdAt)],
     });
-
     return ticket as Ticket | null;
   }
 
-  /**
-   * Find an active ticket for a device (waiting or in_progress status).
-   * Used to prevent multiple active tickets from the same device.
-   * 
-   * @param shopId - Shop database ID
-   * @param deviceId - Device identifier
-   * @returns The active ticket if found, null otherwise
-   * 
-   * @example
-   * ```typescript
-   * const existingTicket = await ticketService.findActiveTicketByDevice(1, 'device-uuid-123');
-   * if (existingTicket) {
-   *   // Device already has an active ticket
-   * }
-   * ```
-   */
   async findActiveTicketByDevice(shopId: number, deviceId: string): Promise<Ticket | null> {
-    if (!deviceId || deviceId.trim().length === 0) {
-      return null;
-    }
-
-    const ticket = await db.query.tickets.findFirst({
+    if (!deviceId || deviceId.trim().length === 0) return null;
+    const ticket = await this.db.query.tickets.findFirst({
       where: and(
         eq(schema.tickets.shopId, shopId),
         eq(schema.tickets.deviceId, deviceId),
-        or(
-          eq(schema.tickets.status, 'waiting'),
-          eq(schema.tickets.status, 'in_progress')
-        )
+        or(eq(schema.tickets.status, 'waiting'), eq(schema.tickets.status, 'in_progress'))
       ),
-      with: {
-        shop: true,
-        service: true,
-        barber: true,
-      },
-      orderBy: (tickets, { desc }) => [desc(tickets.createdAt)], // Get most recent
+      with: { shop: true, service: true, barber: true },
+      orderBy: (tickets, { desc }) => [desc(tickets.createdAt)],
     });
-
     return ticket as Ticket | null;
   }
 
-  /**
-   * Create a new ticket and add it to the queue.
-   * If customer already has an active ticket, returns the existing ticket instead.
-   * 
-   * @param shopId - Shop database ID
-   * @param data - Ticket creation data
-   * @returns The created ticket (or existing ticket if customer already in queue) with position and estimated wait time
-   * @throws {Error} If shop or service doesn't exist
-   * @throws {Error} If queue is full
-   * 
-   * @example
-   * ```typescript
-   * const ticket = await ticketService.create(1, {
-   *   serviceId: 2,
-   *   customerName: 'João Silva',
-   *   customerPhone: '11999999999'
-   * });
-   * // Returns ticket with position: 3, estimatedWaitTime: 45
-   * // Or returns existing ticket if customer already in queue
-   * ```
-   */
   async create(shopId: number, data: CreateTicket): Promise<Ticket> {
-    // Verify shop exists
-    const shop = await db.query.shops.findFirst({
+    const shop = await this.db.query.shops.findFirst({
       where: eq(schema.shops.id, shopId),
     });
+    if (!shop) throw new NotFoundError('Shop not found');
 
-    if (!shop) {
-      throw new NotFoundError('Shop not found');
-    }
-
-    // Verify service exists and belongs to shop
-    const service = await db.query.services.findFirst({
-      where: and(
-        eq(schema.services.id, data.serviceId),
-        eq(schema.services.shopId, shopId)
-      ),
+    const service = await this.db.query.services.findFirst({
+      where: and(eq(schema.services.id, data.serviceId), eq(schema.services.shopId, shopId)),
     });
+    if (!service) throw new NotFoundError('Service not found');
+    if (!service.isActive) throw new ConflictError('Service is not active');
 
-    if (!service) {
-      throw new NotFoundError('Service not found');
-    }
-
-    if (!service.isActive) {
-      throw new ConflictError('Service is not active');
-    }
-
-    // Check if device already has an active ticket (if deviceId provided)
-    // This prevents multiple active tickets from the same device
     if (data.deviceId && data.deviceId.trim().length > 0) {
       const existingTicketByDevice = await this.findActiveTicketByDevice(shopId, data.deviceId);
-      if (existingTicketByDevice) {
-        // Device already has an active ticket - return it instead of creating a new one
-        return existingTicketByDevice;
-      }
+      if (existingTicketByDevice) return existingTicketByDevice;
     }
 
-    // Fallback: Check if customer already has an active ticket (by name)
-    // This provides backward compatibility and catches edge cases
     const existingTicket = await this.findActiveTicketByCustomer(shopId, data.customerName);
     if (existingTicket) {
-      // Customer name is already in use - throw error
       throw new ConflictError('Este nome já está em uso. Por favor, escolha outro nome.');
     }
 
-    // Check if queue is full
-    const isQueueFull = await queueService.isQueueFull(shopId);
-    if (isQueueFull) {
-      throw new ConflictError('Queue is full');
-    }
+    const isQueueFull = await this.queueService.isQueueFull(shopId);
+    if (isQueueFull) throw new ConflictError('Queue is full');
 
-    // Validate preferred barber if provided
     if (data.preferredBarberId) {
-      const preferredBarber = await db.query.barbers.findFirst({
+      const preferredBarber = await this.db.query.barbers.findFirst({
         where: eq(schema.barbers.id, data.preferredBarberId),
       });
-
-      if (!preferredBarber) {
-        throw new NotFoundError('Preferred barber not found');
-      }
-
-      if (!preferredBarber.isActive) {
-        throw new ConflictError('Preferred barber is not active');
-      }
-
-      // Verify preferred barber belongs to same shop
-      if (preferredBarber.shopId !== shopId) {
-        throw new ConflictError('Preferred barber does not belong to this shop');
-      }
+      if (!preferredBarber) throw new NotFoundError('Preferred barber not found');
+      if (!preferredBarber.isActive) throw new ConflictError('Preferred barber is not active');
+      if (preferredBarber.shopId !== shopId) throw new ConflictError('Preferred barber does not belong to this shop');
     }
 
-    // Calculate position and wait time
     const now = new Date();
     let position: number;
     let estimatedWaitTime: number | null;
 
     if (data.preferredBarberId) {
-      // Use preferred barber calculation methods
-      position = await queueService.calculatePositionForPreferredBarber(
-        shopId,
-        data.preferredBarberId,
-        now
-      );
-      estimatedWaitTime = await queueService.calculateWaitTimeForPreferredBarber(
-        shopId,
-        data.preferredBarberId,
-        position,
-        now
-      );
+      position = await this.queueService.calculatePositionForPreferredBarber(shopId, data.preferredBarberId, now);
+      estimatedWaitTime = await this.queueService.calculateWaitTimeForPreferredBarber(shopId, data.preferredBarberId, position, now);
     } else {
-      // Use standard calculation methods
-      position = await queueService.calculatePosition(shopId, now);
-      estimatedWaitTime = await queueService.calculateWaitTime(shopId, position);
+      position = await this.queueService.calculatePosition(shopId, now);
+      estimatedWaitTime = await this.queueService.calculateWaitTime(shopId, position);
     }
 
-    // Create ticket
-    const [ticket] = await db
+    const [ticket] = await this.db
       .insert(schema.tickets)
       .values({
         shopId,
@@ -292,198 +132,103 @@ export class TicketService {
       })
       .returning();
 
-    // Log ticket creation
-    auditService.logTicketCreated(ticket.id, shopId, {
+    this.auditService.logTicketCreated(ticket.id, shopId, {
       customerName: data.customerName,
       serviceId: data.serviceId,
       preferredBarberId: data.preferredBarberId,
       actorType: 'customer',
     });
 
-    // Log barber preference if set
     if (data.preferredBarberId) {
-      auditService.logBarberPreferenceSet(ticket.id, shopId, data.preferredBarberId);
+      this.auditService.logBarberPreferenceSet(ticket.id, shopId, data.preferredBarberId);
     }
 
-    // Recalculate wait times for other tickets
     await this.recalculateWaitTimes(shopId);
 
     return ticket as Ticket;
   }
 
-  /**
-   * Update a ticket's status.
-   * Handles state transitions and business logic.
-   * 
-   * @param id - Ticket ID
-   * @param data - Status update data
-   * @returns The updated ticket
-   * @throws {Error} If ticket doesn't exist
-   * @throws {Error} If barber doesn't exist or is inactive
-   * @throws {Error} If status transition is invalid
-   * 
-   * @example
-   * ```typescript
-   * // Start service
-   * const ticket = await ticketService.updateStatus(42, {
-   *   status: 'in_progress',
-   *   barberId: 3
-   * });
-   * 
-   * // Complete service
-   * await ticketService.updateStatus(42, {
-   *   status: 'completed'
-   * });
-   * ```
-   */
-  async updateStatus(
-    id: number,
-    data: UpdateTicketStatus
-  ): Promise<Ticket> {
-    // Get existing ticket
+  async updateStatus(id: number, data: UpdateTicketStatus): Promise<Ticket> {
     const existingTicket = await this.getById(id);
-    if (!existingTicket) {
-      throw new Error('Ticket not found');
-    }
+    if (!existingTicket) throw new Error('Ticket not found');
 
-    // Validate status transition only if status is actually changing
-    // Allow same-status updates (e.g., changing barber while staying in_progress)
     if (existingTicket.status !== data.status) {
       this.validateStatusTransition(existingTicket.status, data.status);
     }
 
-    // If assigning a barber, verify they exist and are active
     if (data.barberId) {
-      const barber = await db.query.barbers.findFirst({
+      const barber = await this.db.query.barbers.findFirst({
         where: eq(schema.barbers.id, data.barberId),
       });
+      if (!barber) throw new Error('Barber not found');
+      if (!barber.isActive) throw new Error('Barber is not active');
+      if (barber.shopId !== existingTicket.shopId) throw new Error('Barber does not belong to this shop');
 
-      if (!barber) {
-        throw new Error('Barber not found');
-      }
-
-      if (!barber.isActive) {
-        throw new Error('Barber is not active');
-      }
-
-      // Verify barber belongs to same shop
-      if (barber.shopId !== existingTicket.shopId) {
-        throw new Error('Barber does not belong to this shop');
-      }
-
-      // Check if barber is already serving another client
-      // Only validate when assigning to in_progress status
       if (data.status === 'in_progress') {
-        const existingInProgressTicket = await db.query.tickets.findFirst({
+        const existingInProgressTicket = await this.db.query.tickets.findFirst({
           where: and(
             eq(schema.tickets.barberId, data.barberId),
             eq(schema.tickets.status, 'in_progress'),
-            // Exclude the current ticket if we're updating it (reassignment to same barber is fine)
             ne(schema.tickets.id, id)
           ),
         });
-
         if (existingInProgressTicket) {
           throw new ConflictError('Barbeiro já está atendendo outro cliente');
         }
       }
     }
 
-    // Update ticket
     const now = new Date();
-    const updateData: any = {
-      status: data.status,
-      updatedAt: now,
-    };
+    const updateData: any = { status: data.status, updatedAt: now };
 
-    // Set timestamps based on status changes
-    if (data.status === 'in_progress' && existingTicket.status !== 'in_progress') {
-      updateData.startedAt = now;
-    }
-    // Clear startedAt when returning to waiting (service never actually started)
-    if (data.status === 'waiting' && existingTicket.status === 'in_progress') {
-      updateData.startedAt = null;
-    }
-    if (data.status === 'completed' && existingTicket.status !== 'completed') {
-      updateData.completedAt = now;
-    }
-    if (data.status === 'cancelled' && existingTicket.status !== 'cancelled') {
-      updateData.cancelledAt = now;
-    }
+    if (data.status === 'in_progress' && existingTicket.status !== 'in_progress') updateData.startedAt = now;
+    if (data.status === 'waiting' && existingTicket.status === 'in_progress') updateData.startedAt = null;
+    if (data.status === 'completed' && existingTicket.status !== 'completed') updateData.completedAt = now;
+    if (data.status === 'cancelled' && existingTicket.status !== 'cancelled') updateData.cancelledAt = now;
 
-    // Set position based on status
     if (data.status === 'in_progress' || data.status === 'completed' || data.status === 'cancelled') {
       updateData.position = 0;
       updateData.estimatedWaitTime = null;
     }
 
-    // Set barber if provided
     if (data.barberId !== undefined) {
       const isNewAssignment = existingTicket.barberId !== data.barberId && data.barberId !== null;
       const isUnassignment = data.barberId === null && existingTicket.barberId !== null;
       updateData.barberId = data.barberId;
-      if (isNewAssignment) {
-        updateData.barberAssignedAt = now;
-      } else if (isUnassignment) {
-        // Clear barberAssignedAt when unassigning
-        updateData.barberAssignedAt = null;
-      }
+      if (isNewAssignment) updateData.barberAssignedAt = now;
+      else if (isUnassignment) updateData.barberAssignedAt = null;
     }
 
-    const [ticket] = await db
+    const [ticket] = await this.db
       .update(schema.tickets)
       .set(updateData)
       .where(eq(schema.tickets.id, id))
       .returning();
 
-    // Log actions based on changes
     if (data.barberId !== undefined && existingTicket.barberId !== data.barberId && data.barberId !== null) {
-      auditService.logBarberAssigned(id, existingTicket.shopId, data.barberId, {
-        actorType: 'staff',
-      });
+      this.auditService.logBarberAssigned(id, existingTicket.shopId, data.barberId, { actorType: 'staff' });
     }
-
     if (data.status === 'in_progress' && existingTicket.status !== 'in_progress') {
       const barberIdForLog = data.barberId || existingTicket.barberId;
-      if (barberIdForLog) {
-        auditService.logServiceStarted(id, existingTicket.shopId, barberIdForLog, {
-          actorType: 'staff',
-        });
-      }
+      if (barberIdForLog) this.auditService.logServiceStarted(id, existingTicket.shopId, barberIdForLog, { actorType: 'staff' });
     }
-
     if (data.status === 'completed' && existingTicket.status !== 'completed') {
       const barberIdForLog = data.barberId || existingTicket.barberId || ticket.barberId;
-      if (barberIdForLog) {
-        auditService.logServiceCompleted(id, existingTicket.shopId, barberIdForLog, {
-          actorType: 'staff',
-        });
-      }
+      if (barberIdForLog) this.auditService.logServiceCompleted(id, existingTicket.shopId, barberIdForLog, { actorType: 'staff' });
     }
-
     if (data.status === 'cancelled' && existingTicket.status !== 'cancelled') {
-      auditService.logTicketCancelled(id, existingTicket.shopId, {
-        reason: 'Status updated to cancelled',
-        actorType: 'staff',
-      });
+      this.auditService.logTicketCancelled(id, existingTicket.shopId, { reason: 'Status updated to cancelled', actorType: 'staff' });
     }
 
     // Update per-barber weekday stats when a ticket is completed
     if (data.status === 'completed' && existingTicket.status !== 'completed') {
       const completedBarberId = ticket.barberId ?? existingTicket.barberId;
-      const completedStartedAt = existingTicket.startedAt
-        ? new Date(existingTicket.startedAt)
-        : null;
-
+      const completedStartedAt = existingTicket.startedAt ? new Date(existingTicket.startedAt) : null;
       if (completedBarberId && completedStartedAt) {
-        const serviceTimeMinutes =
-          (now.getTime() - completedStartedAt.getTime()) / 60000;
-
-        // Only record plausible service times (> 0 and < 120 min)
+        const serviceTimeMinutes = (now.getTime() - completedStartedAt.getTime()) / 60000;
         if (serviceTimeMinutes > 0 && serviceTimeMinutes < 120) {
-          const dayOfWeek = now.getDay(); // 0=Sunday .. 6=Saturday
-
-          await db
+          const dayOfWeek = now.getDay();
+          await this.db
             .insert(schema.barberServiceWeekdayStats)
             .values({
               barberId: completedBarberId,
@@ -511,48 +256,23 @@ export class TicketService {
       }
     }
 
-    // Recalculate positions and wait times for remaining queue
-    await queueService.recalculatePositions(existingTicket.shopId);
+    await this.queueService.recalculatePositions(existingTicket.shopId);
     await this.recalculateWaitTimes(existingTicket.shopId);
 
     return ticket as Ticket;
   }
 
-  /**
-   * Cancel a ticket.
-   * Convenience method for updating status to cancelled.
-   * 
-   * @param id - Ticket ID
-   * @param reason - Optional reason for cancellation
-   * @param actorType - Type of actor cancelling (default: 'customer')
-   * @returns The cancelled ticket
-   */
   async cancel(id: number, reason?: string, actorType: 'customer' | 'staff' | 'owner' = 'customer'): Promise<Ticket> {
     const ticket = await this.updateStatus(id, { status: 'cancelled' });
-    
-    // Log cancellation (updateStatus already logs, but we add reason here if provided)
     if (reason) {
-      auditService.logTicketCancelled(id, ticket.shopId, {
-        reason,
-        actorType,
-      });
+      this.auditService.logTicketCancelled(id, ticket.shopId, { reason, actorType });
     }
-    
     return ticket;
   }
 
-  /**
-   * Recalculate wait times for all waiting tickets in a shop.
-   * Should be called after ticket creation or status change.
-   * Uses specialized calculation for tickets with preferred barbers.
-   * 
-   * @param shopId - Shop database ID
-   */
   private async recalculateWaitTimes(shopId: number): Promise<void> {
     const waitingTickets = await this.getByShop(shopId, 'waiting');
 
-    // Recalculate all tickets. When preferred barber is inactive, ticket counts in general line;
-    // when barber goes active again, it counts in that barber's line (preferredBarberId unchanged).
     for (const ticket of waitingTickets) {
       let waitTime: number | null;
       let position: number;
@@ -560,111 +280,54 @@ export class TicketService {
 
       let preferredBarberActive = false;
       if (ticket.preferredBarberId) {
-        const barber = await db.query.barbers.findFirst({
+        const barber = await this.db.query.barbers.findFirst({
           where: eq(schema.barbers.id, ticket.preferredBarberId),
         });
         preferredBarberActive = barber?.isActive ?? false;
       }
 
       if (ticket.preferredBarberId && preferredBarberActive) {
-        position = await queueService.calculatePositionForPreferredBarber(
-          shopId,
-          ticket.preferredBarberId!,
-          ticketCreatedAt
-        );
-        waitTime = await queueService.calculateWaitTimeForPreferredBarber(
-          shopId,
-          ticket.preferredBarberId!,
-          position,
-          ticketCreatedAt
-        );
+        position = await this.queueService.calculatePositionForPreferredBarber(shopId, ticket.preferredBarberId!, ticketCreatedAt);
+        waitTime = await this.queueService.calculateWaitTimeForPreferredBarber(shopId, ticket.preferredBarberId!, position, ticketCreatedAt);
       } else {
-        position = await queueService.calculatePosition(shopId, ticketCreatedAt);
-        waitTime = await queueService.calculateWaitTime(shopId, position);
-      }
-      
-      // Log changes if they occurred
-      if (ticket.position !== position) {
-        auditService.logPositionUpdated(ticket.id, shopId, ticket.position, position);
-      }
-      if (ticket.estimatedWaitTime !== waitTime) {
-        auditService.logWaitTimeUpdated(ticket.id, shopId, ticket.estimatedWaitTime ?? null, waitTime);
+        position = await this.queueService.calculatePosition(shopId, ticketCreatedAt);
+        waitTime = await this.queueService.calculateWaitTime(shopId, position);
       }
 
-      // Update both position and wait time
-      await db
+      if (ticket.position !== position) {
+        this.auditService.logPositionUpdated(ticket.id, shopId, ticket.position, position);
+      }
+      if (ticket.estimatedWaitTime !== waitTime) {
+        this.auditService.logWaitTimeUpdated(ticket.id, shopId, ticket.estimatedWaitTime ?? null, waitTime);
+      }
+
+      await this.db
         .update(schema.tickets)
-        .set({ 
-          position,
-          estimatedWaitTime: waitTime,
-          updatedAt: new Date(),
-        })
+        .set({ position, estimatedWaitTime: waitTime, updatedAt: new Date() })
         .where(eq(schema.tickets.id, ticket.id));
     }
   }
 
-  /**
-   * Validate a status transition.
-   * 
-   * @param currentStatus - Current ticket status
-   * @param newStatus - Desired new status
-   * @throws {Error} If transition is not allowed
-   */
-  private validateStatusTransition(
-    currentStatus: string,
-    newStatus: string
-  ): void {
+  private validateStatusTransition(currentStatus: string, newStatus: string): void {
     const validTransitions: Record<string, string[]> = {
       waiting: ['in_progress', 'cancelled'],
       in_progress: ['completed', 'cancelled', 'waiting'],
-      completed: [], // Cannot transition from completed
-      cancelled: [], // Cannot transition from cancelled
+      completed: [],
+      cancelled: [],
     };
-
     const allowed = validTransitions[currentStatus] || [];
-
     if (!allowed.includes(newStatus)) {
-      throw new Error(
-        `Cannot transition from ${currentStatus} to ${newStatus}`
-      );
+      throw new Error(`Cannot transition from ${currentStatus} to ${newStatus}`);
     }
   }
 
-  /**
-   * Get statistics for a shop's tickets.
-   * 
-   * @param shopId - Shop database ID
-   * @param since - Start date for statistics (optional)
-   * @returns Ticket statistics
-   * 
-   * @example
-   * ```typescript
-   * const stats = await ticketService.getStatistics(1);
-   * // Returns: { total: 100, completed: 85, cancelled: 5, waiting: 10 }
-   * ```
-   */
-  async getStatistics(
-    shopId: number,
-    since?: Date
-  ): Promise<{
-    total: number;
-    waiting: number;
-    inProgress: number;
-    completed: number;
-    cancelled: number;
+  async getStatistics(shopId: number, since?: Date): Promise<{
+    total: number; waiting: number; inProgress: number; completed: number; cancelled: number;
   }> {
     const whereClause = since
-      ? and(
-          eq(schema.tickets.shopId, shopId),
-          // Note: This would require a proper date comparison
-          // For now, getting all tickets
-        )
+      ? and(eq(schema.tickets.shopId, shopId))
       : eq(schema.tickets.shopId, shopId);
-
-    const tickets = await db.query.tickets.findMany({
-      where: whereClause,
-    });
-
+    const tickets = await this.db.query.tickets.findMany({ where: whereClause });
     return {
       total: tickets.length,
       waiting: tickets.filter(t => t.status === 'waiting').length,
@@ -674,25 +337,8 @@ export class TicketService {
     };
   }
 
-  /**
-   * Recalculate positions and wait times for a shop (owner/admin utility).
-   */
   async recalculateShopQueue(shopId: number): Promise<void> {
-    await queueService.recalculatePositions(shopId);
+    await this.queueService.recalculatePositions(shopId);
     await this.recalculateWaitTimes(shopId);
   }
 }
-
-/**
- * Singleton instance of TicketService.
- * Use this exported instance throughout the application.
- * 
- * @example
- * ```typescript
- * import { ticketService } from './services/TicketService.js';
- * 
- * const ticket = await ticketService.create(shopId, data);
- * ```
- */
-export const ticketService = new TicketService();
-

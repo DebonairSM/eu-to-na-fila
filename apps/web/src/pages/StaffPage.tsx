@@ -3,7 +3,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 
 export function StaffPage() {
-  const { logout, isOwner } = useAuthContext();
+  const { logout, isOwner, isBarber } = useAuthContext();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -36,6 +36,23 @@ export function StaffPage() {
               arrow_forward
             </span>
           </Link>
+
+          {isBarber && (
+            <Link
+              to="/my-stats"
+              className="bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-10 flex flex-col items-center gap-4 transition-all hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.3)] hover:-translate-y-1"
+            >
+              <div className="text-5xl text-[#D4AF37]">
+                <span className="material-symbols-outlined">bar_chart</span>
+              </div>
+              <h2 className="text-2xl font-semibold text-white text-center">
+                Meu desempenho
+              </h2>
+              <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
+                arrow_forward
+              </span>
+            </Link>
+          )}
 
           {isOwner && (
             <Link

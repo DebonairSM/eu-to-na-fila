@@ -3,10 +3,25 @@ import { z } from 'zod';
 import { db, schema } from '../db/index.js';
 import { eq, and, asc } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
-import { NotFoundError } from '../lib/errors.js';
+import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
-import { ticketService } from '../services/TicketService.js';
+import { ticketService } from '../services/index.js';
+import { hashPassword, validatePassword } from '../lib/password.js';
+
+/** Normalize username for storage (trim + lowercase) for case-insensitive login. */
+function normalizeUsername(username: string): string {
+  return username.trim().toLowerCase();
+}
+
+/** Validate barber username format. */
+function validateBarberUsername(username: string): { isValid: boolean; error?: string } {
+  const trimmed = username.trim();
+  if (trimmed.length < 1) return { isValid: false, error: 'Username is required' };
+  if (trimmed.length > 100) return { isValid: false, error: 'Username must be at most 100 characters' };
+  if (!/^[a-zA-Z0-9_.-]+$/.test(trimmed)) return { isValid: false, error: 'Username can only contain letters, numbers, underscore, hyphen and period' };
+  return { isValid: true };
+}
 
 /**
  * Barber routes.
@@ -30,10 +45,23 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    // Get barbers for this shop, sorted by ID for consistent ordering
+    // Get barbers for this shop, sorted by ID for consistent ordering (omit passwordHash)
     const barbers = await db.query.barbers.findMany({
       where: eq(schema.barbers.shopId, shop.id),
-      orderBy: (barbers, { asc }) => [asc(barbers.id)],
+      orderBy: (b, { asc }) => [asc(b.id)],
+      columns: {
+        id: true,
+        shopId: true,
+        name: true,
+        email: true,
+        phone: true,
+        avatarUrl: true,
+        username: true,
+        isActive: true,
+        isPresent: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     return barbers;
@@ -171,6 +199,8 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     const bodySchema = z.object({
       name: z.string().min(1).max(100).optional(),
       avatarUrl: z.string().url().optional().nullable(),
+      username: z.string().min(1).max(100).optional().nullable(),
+      password: z.string().min(1).max(200).optional(),
     });
 
     const { id } = validateRequest(paramsSchema, request.params);
@@ -186,7 +216,13 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     // Build update object
-    const updateData: { name?: string; avatarUrl?: string | null; updatedAt: Date } = {
+    const updateData: {
+      name?: string;
+      avatarUrl?: string | null;
+      username?: string | null;
+      passwordHash?: string | null;
+      updatedAt: Date;
+    } = {
       updatedAt: new Date(),
     };
     if (body.name !== undefined) {
@@ -194,6 +230,21 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     }
     if (body.avatarUrl !== undefined) {
       updateData.avatarUrl = body.avatarUrl;
+    }
+    if (body.username !== undefined) {
+      if (body.username === null || body.username === '') {
+        updateData.username = null;
+        updateData.passwordHash = null; // Clear login when clearing username
+      } else {
+        const unValidation = validateBarberUsername(body.username);
+        if (!unValidation.isValid) throw new ValidationError(unValidation.error);
+        updateData.username = normalizeUsername(body.username);
+      }
+    }
+    if (body.password !== undefined && body.password !== '') {
+      const pwValidation = validatePassword(body.password);
+      if (!pwValidation.isValid) throw new ValidationError(pwValidation.error);
+      updateData.passwordHash = await hashPassword(body.password);
     }
 
     // Update barber
@@ -203,7 +254,49 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
       .where(eq(schema.barbers.id, id))
       .returning();
 
-    return updatedBarber;
+    if (!updatedBarber) throw new NotFoundError(`Barber with ID ${id} not found`);
+    const { passwordHash: _ph, ...safe } = updatedBarber;
+    return safe;
+  });
+
+  /**
+   * Set or update a barber's password (owner only).
+   *
+   * @route POST /api/shops/:slug/barbers/:id/set-password
+   * @body password - New password
+   */
+  fastify.post('/shops/:slug/barbers/:id/set-password', {
+    preHandler: [requireAuth(), requireRole(['owner'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+      id: z.coerce.number().int().positive(),
+    });
+    const bodySchema = z.object({
+      password: z.string().min(1).max(200),
+    });
+
+    const { slug, id } = validateRequest(paramsSchema, request.params);
+    const { password } = validateRequest(bodySchema, request.body);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    const barber = await db.query.barbers.findFirst({
+      where: and(eq(schema.barbers.id, id), eq(schema.barbers.shopId, shop.id)),
+    });
+    if (!barber) throw new NotFoundError(`Barber with ID ${id} not found`);
+
+    const pwValidation = validatePassword(password);
+    if (!pwValidation.isValid) throw new ValidationError(pwValidation.error);
+
+    const passwordHash = await hashPassword(password);
+    await db
+      .update(schema.barbers)
+      .set({ passwordHash, updatedAt: new Date() })
+      .where(eq(schema.barbers.id, id));
+
+    return { success: true, message: 'Password updated' };
   });
 
   /**
@@ -228,13 +321,32 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     const bodySchema = z.object({
       name: z.string().min(1).max(100),
       avatarUrl: z.string().url().optional().nullable(),
+      username: z.string().min(1).max(100).optional(),
+      password: z.string().min(1).max(200).optional(),
     });
 
     const { slug } = validateRequest(paramsSchema, request.params);
-    const { name, avatarUrl } = validateRequest(bodySchema, request.body);
+    const body = validateRequest(bodySchema, request.body);
+    const { name, avatarUrl, username, password } = body;
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    let usernameNormalized: string | null = null;
+    let passwordHash: string | null = null;
+    if (username !== undefined && username !== '') {
+      const unValidation = validateBarberUsername(username);
+      if (!unValidation.isValid) throw new ValidationError(unValidation.error);
+      usernameNormalized = normalizeUsername(username);
+      if (password === undefined || password === '') {
+        throw new ValidationError('Password is required when setting username');
+      }
+      const pwValidation = validatePassword(password);
+      if (!pwValidation.isValid) throw new ValidationError(pwValidation.error);
+      passwordHash = await hashPassword(password);
+    } else if (password !== undefined && password !== '') {
+      throw new ValidationError('Username is required when setting password');
+    }
 
     // Create barber
     const [newBarber] = await db
@@ -243,6 +355,8 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
         shopId: shop.id,
         name,
         avatarUrl: avatarUrl || null,
+        username: usernameNormalized,
+        passwordHash,
         isPresent: false,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -270,7 +384,8 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
       await db.insert(schema.barberServiceWeekdayStats).values(statsRows);
     }
 
-    return newBarber;
+    const { passwordHash: _ph, ...safe } = newBarber;
+    return safe;
   });
 
   /**

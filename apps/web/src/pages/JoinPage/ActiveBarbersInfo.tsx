@@ -25,11 +25,13 @@ export function ActiveBarbersInfo({
 }: ActiveBarbersInfoProps) {
   const presentBarbers = barbers.filter((b) => b.isActive && b.isPresent);
   const standardWaitTime = waitTimes?.standardWaitTime ?? null;
+  const hasActiveBarbers = presentBarbers.length > 0;
 
   const formatWaitTime = (minutes: number | null): string => {
+    if (!hasActiveBarbers) return 'Indisponível';
     if (minutes === null) return '--';
-    if (minutes === 0) return 'Agora';
-    return `${minutes} ${minutes === 1 ? 'min' : 'min'}`;
+    if (minutes <= 0) return 'Agora';
+    return `${minutes} min`;
   };
 
   if (isLoading) {
@@ -50,9 +52,18 @@ export function ActiveBarbersInfo({
           <p className="text-sm uppercase tracking-wider text-white/60 mb-1">
             Tempo estimado
           </p>
-          <p className="text-4xl sm:text-5xl font-bold text-[#D4AF37] tabular-nums">
+          <p
+            className={`font-bold tabular-nums ${
+              !hasActiveBarbers
+                ? 'text-2xl sm:text-3xl text-white/40'
+                : 'text-4xl sm:text-5xl text-[#D4AF37]'
+            }`}
+          >
             {formatWaitTime(standardWaitTime)}
           </p>
+          {!hasActiveBarbers && (
+            <p className="text-xs text-white/40 mt-1">Nenhum barbeiro ativo no momento</p>
+          )}
         </div>
 
         {/* Available barbers — compact list */}

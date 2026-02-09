@@ -33,12 +33,24 @@ export function useJoinForm() {
     }>;
   } | null>(null);
   const [isLoadingWaitTimes, setIsLoadingWaitTimes] = useState(true);
+  const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
   const { validateName } = useProfanityFilter();
   const { data } = useQueue(30000);
   const { barbers } = useBarbers();
   const { activeServices, isLoading: isLoadingServices } = useServices();
+
+  // Default selected service to first active when list loads or changes; keep selection if still valid
+  useEffect(() => {
+    if (activeServices.length === 0) {
+      setSelectedServiceId(null);
+      return;
+    }
+    const validIds = new Set(activeServices.map((s) => s.id));
+    if (selectedServiceId !== null && validIds.has(selectedServiceId)) return;
+    setSelectedServiceId(activeServices[0].id);
+  }, [activeServices, selectedServiceId]);
 
   // Fetch wait times on mount and periodically (with Page Visibility API support)
   useEffect(() => {
@@ -310,10 +322,13 @@ export function useJoinForm() {
 
     setIsSubmitting(true);
 
-    // Use first active service for this shop; backend requires a valid serviceId
-    const serviceId = activeServices.length > 0 ? activeServices[0].id : null;
+    // Use selected service; must be in active list
+    const validServiceIds = new Set(activeServices.map((s) => s.id));
+    const serviceId = selectedServiceId !== null && validServiceIds.has(selectedServiceId)
+      ? selectedServiceId
+      : null;
     if (serviceId == null) {
-      setSubmitError('Nenhum serviço disponível. Tente novamente mais tarde.');
+      setSubmitError('Selecione um serviço.');
       setIsSubmitting(false);
       return;
     }
@@ -379,5 +394,8 @@ export function useJoinForm() {
     barbers,
     hasServices: activeServices.length > 0,
     isLoadingServices,
+    activeServices,
+    selectedServiceId,
+    setSelectedServiceId,
   };
 }

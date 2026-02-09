@@ -2,7 +2,8 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
-import type { ShopTheme, HomeContent } from '@/lib/api';
+import type { ShopTheme, HomeContent } from '@eutonafila/shared';
+import { DEFAULT_THEME, DEFAULT_HOME_CONTENT } from '@eutonafila/shared';
 import { useModal } from '@/hooks/useModal';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { CompanyNav } from '@/components/CompanyNav';
@@ -27,26 +28,7 @@ interface BarberItem {
   phone: string;
 }
 
-const DEFAULT_THEME: ShopTheme = {
-  primary: '#3E2723',
-  accent: '#D4AF37',
-  background: '#0a0a0a',
-  surfacePrimary: '#0a0a0a',
-  surfaceSecondary: '#1a1a1a',
-  navBg: '#0a0a0a',
-  textPrimary: '#ffffff',
-  textSecondary: 'rgba(255,255,255,0.7)',
-  borderColor: 'rgba(255,255,255,0.08)',
-};
-
-const DEFAULT_HOME_CONTENT: HomeContent = {
-  hero: { badge: 'Sangão, Santa Catarina', subtitle: 'Entre na fila online', ctaJoin: 'Entrar na Fila', ctaLocation: 'Como Chegar' },
-  nav: { linkServices: 'Serviços', linkAbout: 'Sobre', linkLocation: 'Localização', ctaJoin: 'Entrar na Fila', linkBarbers: 'Barbeiros', labelDashboard: 'Dashboard', labelDashboardCompany: 'Dashboard Empresarial', labelLogout: 'Sair', labelMenu: 'Menu' },
-  services: { sectionTitle: 'Serviços', loadingText: 'Carregando serviços...', emptyText: 'Nenhum serviço cadastrado.' },
-  about: { sectionTitle: 'Sobre', imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80', imageAlt: 'Interior da barbearia', features: [{ icon: 'schedule', text: 'Fila online' }, { icon: 'workspace_premium', text: 'Produtos premium' }, { icon: 'groups', text: 'Equipe experiente' }, { icon: 'local_parking', text: 'Estacionamento fácil' }] },
-  location: { sectionTitle: 'Localização', labelAddress: 'Endereço', labelHours: 'Horário de Funcionamento', labelPhone: 'Telefone', labelLanguages: 'Idiomas', linkMaps: 'Ver no Google Maps', address: '', addressLink: '', hours: '', phone: '', phoneHref: '', languages: '', mapQuery: '' },
-  accessibility: { skipLink: 'Pular para o conteúdo principal', loading: 'Carregando…' },
-};
+// DEFAULT_THEME and DEFAULT_HOME_CONTENT imported from @eutonafila/shared
 
 interface ShopFormData {
   name: string;

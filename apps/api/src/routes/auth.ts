@@ -1,12 +1,13 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db, schema } from '../db/index.js';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { getShopBySlug } from '../lib/shop.js';
-import { NotFoundError, ValidationError } from '../lib/errors.js';
+import { ValidationError } from '../lib/errors.js';
 import { signToken } from '../lib/jwt.js';
 import { verifyPin, validatePin } from '../lib/pin.js';
+import { verifyPassword, validatePassword } from '../lib/password.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { logAuthFailure, logAuthSuccess, getClientIp } from '../middleware/security.js';
 
@@ -121,6 +122,78 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       role,
       token,
       pinResetRequired,
+    };
+  });
+
+  /**
+   * Barber login: username + password. Issues JWT with role 'barber'.
+   *
+   * @route POST /api/shops/:slug/auth/barber
+   * @body username - Barber username (unique per shop)
+   * @body password - Barber password
+   * @returns { valid, role: 'barber', token?, barberName?, pinResetRequired?: false }
+   */
+  fastify.post('/shops/:slug/auth/barber', {
+    preHandler: [authRateLimit],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1).max(100),
+    });
+    const bodySchema = z.object({
+      username: z.string().min(1).max(100),
+      password: z.string().min(1).max(200),
+    });
+
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { username, password } = validateRequest(bodySchema, request.body);
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      logAuthFailure(request, 'invalid_password_format', slug);
+      throw new ValidationError(passwordValidation.error || 'Invalid password format');
+    }
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) {
+      logAuthFailure(request, 'shop_not_found', slug);
+      return { valid: false, role: null };
+    }
+
+    const usernameNormalized = username.trim().toLowerCase();
+    const barber = await db.query.barbers.findFirst({
+      where: and(
+        eq(schema.barbers.shopId, shop.id),
+        eq(schema.barbers.username, usernameNormalized)
+      ),
+    });
+
+    if (!barber || !barber.passwordHash) {
+      logAuthFailure(request, 'invalid_barber_login', slug);
+      return { valid: false, role: null };
+    }
+
+    const passwordMatches = await verifyPassword(password, barber.passwordHash);
+    if (!passwordMatches) {
+      logAuthFailure(request, 'invalid_barber_login', slug);
+      return { valid: false, role: null };
+    }
+
+    logAuthSuccess(request, shop.id, 'barber');
+
+    const token = signToken({
+      userId: barber.id,
+      shopId: barber.shopId,
+      role: 'barber',
+      barberId: barber.id,
+    });
+
+    return {
+      valid: true,
+      role: 'barber' as const,
+      token,
+      barberId: barber.id,
+      barberName: barber.name,
+      pinResetRequired: false,
     };
   });
 };

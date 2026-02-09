@@ -3,10 +3,17 @@ import { z } from 'zod';
 export const ticketStatusSchema = z.enum(['waiting', 'in_progress', 'completed', 'cancelled']);
 export type TicketStatus = z.infer<typeof ticketStatusSchema>;
 
+/** Optional service info included in ticket API responses for display. */
+export const ticketServiceSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+});
+
 export const ticketSchema = z.object({
   id: z.number(),
   shopId: z.number(),
   serviceId: z.number(),
+  service: ticketServiceSchema.optional(), // Present when API embeds service for display
   barberId: z.number().optional(),
   preferredBarberId: z.number().optional(),
   customerName: z.string().min(1).max(200),

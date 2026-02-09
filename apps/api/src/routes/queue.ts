@@ -2,12 +2,12 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db, schema } from '../db/index.js';
 import { eq, and, asc, inArray } from 'drizzle-orm';
-import { ticketService } from '../services/TicketService.js';
-import { queueService } from '../services/QueueService.js';
+import { ticketService, queueService } from '../services/index.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
+import { shapeTicketResponse } from '../lib/ticketResponse.js';
 
 /**
  * Queue routes.
@@ -32,10 +32,13 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    // Get tickets using service
+    // Get tickets using service (includes service relation for display)
     const tickets = await ticketService.getByShop(shop.id);
 
-    return { shop, tickets };
+    return {
+      shop,
+      tickets: tickets.map((t) => shapeTicketResponse(t as Record<string, unknown>)),
+    };
   });
 
   /**

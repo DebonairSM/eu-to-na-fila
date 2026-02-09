@@ -9,7 +9,8 @@ export interface AuthUser {
   id: number;
   shopId?: number;
   companyId?: number;
-  role: 'owner' | 'staff' | 'company_admin';
+  role: 'owner' | 'staff' | 'company_admin' | 'barber';
+  barberId?: number;
 }
 
 /**
@@ -64,6 +65,7 @@ export function requireAuth(): preHandlerHookHandler {
         shopId: decoded.shopId,
         companyId: decoded.companyId,
         role: decoded.role,
+        barberId: decoded.barberId,
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Invalid or expired token';
@@ -92,7 +94,7 @@ export function requireAuth(): preHandlerHookHandler {
  * ```
  */
 export function requireRole(
-  allowedRoles: Array<'owner' | 'staff' | 'company_admin'>
+  allowedRoles: Array<'owner' | 'staff' | 'company_admin' | 'barber'>
 ): preHandlerHookHandler {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     if (!request.user) {
@@ -151,9 +153,36 @@ export function requireShopAccess(
       return;
     }
 
-    // Staff can only access their own shop
+    // Staff and barbers can only access their own shop
     if (request.user.shopId !== requestedShopId) {
       throw new ForbiddenError('Access denied to this shop');
+    }
+  };
+}
+
+/**
+ * Require barber role and that the barber belongs to the shop from the request.
+ * Must be used after requireAuth() and requireRole(['barber']).
+ *
+ * @param shopIdGetter - Function to get shop ID from request (may be async, e.g. resolve slug to shop id)
+ * @returns Fastify pre-handler hook
+ */
+export function requireBarberShop(
+  shopIdGetter: (request: FastifyRequest) => number | Promise<number>
+): preHandlerHookHandler {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!request.user) {
+      throw new UnauthorizedError('User not authenticated');
+    }
+    if (request.user.role !== 'barber') {
+      throw new ForbiddenError('Requires barber role');
+    }
+    const requestedShopId = await Promise.resolve(shopIdGetter(request));
+    if (request.user.shopId !== requestedShopId) {
+      throw new ForbiddenError('Access denied to this shop');
+    }
+    if (request.user.barberId == null) {
+      throw new ForbiddenError('Invalid barber token');
     }
   };
 }
@@ -200,6 +229,7 @@ export function optionalAuth(): preHandlerHookHandler {
         shopId: decoded.shopId,
         companyId: decoded.companyId,
         role: decoded.role,
+        barberId: decoded.barberId,
       };
     } catch (error) {
       // Invalid token, but that's okay for optional auth

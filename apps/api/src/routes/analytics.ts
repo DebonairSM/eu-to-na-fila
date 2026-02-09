@@ -4,7 +4,7 @@ import { db, schema } from '../db/index.js';
 import { eq, and, gte, lt } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireRole, requireBarberShop } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 
 /**
@@ -425,6 +425,138 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         weekOverWeek,
         last7DaysComparison,
       },
+    };
+  });
+
+  /**
+   * Get analytics for the authenticated barber only.
+   * Requires barber authentication; barber must belong to the shop.
+   *
+   * @route GET /api/shops/:slug/analytics/me
+   * @query days - Number of days to look back (default 7)
+   */
+  fastify.get('/shops/:slug/analytics/me', {
+    preHandler: [
+      requireAuth(),
+      requireRole(['barber']),
+      requireBarberShop(async (request) => {
+        const slug = (request.params as { slug: string }).slug;
+        const shop = await getShopBySlug(slug);
+        if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+        return shop.id;
+      }),
+    ],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+    });
+    const querySchema = z.object({
+      days: z.coerce.number().int().min(0).max(3650).default(7),
+    });
+
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { days } = validateRequest(querySchema, request.query);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    const barberId = request.user!.barberId!;
+
+    const since = new Date();
+    if (days > 0) {
+      since.setDate(since.getDate() - days);
+      since.setHours(0, 0, 0, 0);
+    } else {
+      since.setTime(0);
+    }
+
+    const tickets = await db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shop.id),
+        eq(schema.tickets.barberId, barberId),
+        gte(schema.tickets.createdAt, since)
+      ),
+    });
+
+    const services = await db.query.services.findMany({
+      where: eq(schema.services.shopId, shop.id),
+    });
+    const serviceMap = new Map(services.map(s => [s.id, s]));
+    const serviceNameMap = new Map(services.map(s => [s.id, s.name]));
+
+    const total = tickets.length;
+    const completed = tickets.filter(t => t.status === 'completed');
+    const cancelled = tickets.filter(t => t.status === 'cancelled');
+    const completionRate = total > 0 ? Math.round((completed.length / total) * 100) : 0;
+    const cancellationRate = total > 0 ? Math.round((cancelled.length / total) * 100) : 0;
+
+    const dayCount = days > 0 ? days : Math.max(1, Math.ceil((Date.now() - since.getTime()) / (1000 * 60 * 60 * 24)));
+    const avgPerDay = Math.round(total / dayCount * 10) / 10;
+
+    let totalServiceTime = 0;
+    let serviceTimeCount = 0;
+    completed.forEach(ticket => {
+      if (ticket.completedAt && ticket.startedAt) {
+        const mins = (new Date(ticket.completedAt).getTime() - new Date(ticket.startedAt).getTime()) / (1000 * 60);
+        if (mins > 0 && mins < 120) {
+          totalServiceTime += mins;
+          serviceTimeCount++;
+        }
+      }
+    });
+    const avgServiceTime = serviceTimeCount > 0 ? Math.round(totalServiceTime / serviceTimeCount) : 0;
+
+    let revenueCents = 0;
+    completed.forEach(ticket => {
+      const svc = serviceMap.get(ticket.serviceId);
+      if (svc?.price != null) revenueCents += svc.price;
+    });
+
+    const ticketsByDay: Record<string, number> = {};
+    tickets.forEach(t => {
+      const day = t.createdAt.toISOString().split('T')[0];
+      ticketsByDay[day] = (ticketsByDay[day] || 0) + 1;
+    });
+
+    const serviceCounts: Record<number, number> = {};
+    tickets.forEach(t => {
+      serviceCounts[t.serviceId] = (serviceCounts[t.serviceId] || 0) + 1;
+    });
+    const serviceBreakdown = Object.entries(serviceCounts)
+      .map(([serviceId, count]) => ({
+        serviceId: parseInt(serviceId),
+        serviceName: serviceNameMap.get(parseInt(serviceId)) || `Service ${serviceId}`,
+        count,
+        percentage: total > 0 ? Math.round((count / total) * 100) : 0,
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayOfWeekDistribution: Record<string, number> = Object.fromEntries(dayNames.map(d => [d, 0]));
+    tickets.forEach(t => {
+      const dayName = dayNames[t.createdAt.getDay()];
+      dayOfWeekDistribution[dayName]++;
+    });
+
+    return {
+      period: {
+        days,
+        since: since.toISOString(),
+        until: new Date().toISOString(),
+      },
+      summary: {
+        total,
+        completed: completed.length,
+        cancelled: cancelled.length,
+        completionRate,
+        cancellationRate,
+        avgPerDay,
+        avgServiceTime,
+        revenueCents,
+      },
+      ticketsByDay,
+      serviceBreakdown,
+      dayOfWeekDistribution,
     };
   });
 };

@@ -24,7 +24,13 @@ export function BarberManagementPage() {
   
   const [barberToDelete, setBarberToDelete] = useState<number | null>(null);
   const [editingBarber, setEditingBarber] = useState<Barber | null>(null);
-  const [formData, setFormData] = useState({ name: '', avatarUrl: '' });
+  const [formData, setFormData] = useState({
+    name: '',
+    avatarUrl: '',
+    username: '',
+    password: '',
+    newPassword: '',
+  });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // -- Services state --
@@ -98,13 +104,24 @@ export function BarberManagementPage() {
       setErrorMessage('Nome é obrigatório');
       return;
     }
+    if (formData.username.trim() && !formData.password) {
+      setErrorMessage('Senha é obrigatória quando usuário é definido.');
+      return;
+    }
+    if (formData.password && !formData.username.trim()) {
+      setErrorMessage('Usuário é obrigatório quando senha é definida.');
+      return;
+    }
 
     try {
-      await api.createBarber?.(shopSlug, {
+      await api.createBarber(shopSlug, {
         name: formData.name,
         avatarUrl: formData.avatarUrl || null,
+        ...(formData.username.trim() && formData.password
+          ? { username: formData.username.trim(), password: formData.password }
+          : {}),
       });
-      setFormData({ name: '', avatarUrl: '' });
+      setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '' });
       addModal.close();
       await refetch();
     } catch (error) {
@@ -120,12 +137,19 @@ export function BarberManagementPage() {
     }
 
     try {
-      await api.updateBarber?.(editingBarber.id, {
+      const payload: { name: string; avatarUrl: string | null; username?: string | null; password?: string } = {
         name: formData.name,
         avatarUrl: formData.avatarUrl || null,
-      });
+      };
+      if (formData.username !== undefined) {
+        payload.username = formData.username.trim() || null;
+      }
+      if (formData.newPassword.trim()) {
+        payload.password = formData.newPassword;
+      }
+      await api.updateBarber(editingBarber.id, payload);
       setEditingBarber(null);
-      setFormData({ name: '', avatarUrl: '' });
+      setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '' });
       editModal.close();
       await refetch();
     } catch (error) {
@@ -154,6 +178,9 @@ export function BarberManagementPage() {
     setFormData({
       name: barber.name,
       avatarUrl: barber.avatarUrl || '',
+      username: barber.username ?? '',
+      password: '',
+      newPassword: '',
     });
     editModal.open();
   };
@@ -448,12 +475,47 @@ export function BarberManagementPage() {
                   className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
                 />
               </div>
+              <div className="form-group mb-4 sm:mb-5">
+                <p className="text-[rgba(255,255,255,0.5)] text-xs mb-2">
+                  Login para o barbeiro acessar &quot;Meu desempenho&quot; (opcional)
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="addUsername" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-1">
+                      Usuário
+                    </label>
+                    <input
+                      id="addUsername"
+                      type="text"
+                      value={formData.username}
+                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      placeholder="Ex: joao"
+                      autoComplete="off"
+                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm min-h-[40px] focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="addPassword" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-1">
+                      Senha
+                    </label>
+                    <input
+                      id="addPassword"
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      placeholder="Mín. 6 caracteres"
+                      autoComplete="new-password"
+                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm min-h-[40px] focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                </div>
+              </div>
               <div className="modal-actions flex gap-2 sm:gap-3 mt-5 sm:mt-6">
                 <button
                   type="button"
                   onClick={() => {
                     addModal.close();
-                    setFormData({ name: '', avatarUrl: '' });
+                    setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '' });
                   }}
                   className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
@@ -516,13 +578,48 @@ export function BarberManagementPage() {
                   className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
                 />
               </div>
+              <div className="form-group mb-4 sm:mb-5">
+                <p className="text-[rgba(255,255,255,0.5)] text-xs mb-2">
+                  Login para &quot;Meu desempenho&quot;
+                </p>
+                <div className="space-y-3">
+                  <div>
+                    <label htmlFor="editUsername" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-1">
+                      Usuário
+                    </label>
+                    <input
+                      id="editUsername"
+                      type="text"
+                      value={formData.username}
+                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      placeholder="Deixe vazio para remover login"
+                      autoComplete="off"
+                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm min-h-[40px] focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="editNewPassword" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-1">
+                      Nova senha
+                    </label>
+                    <input
+                      id="editNewPassword"
+                      type="password"
+                      value={formData.newPassword}
+                      onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                      placeholder="Deixe em branco para manter a atual"
+                      autoComplete="new-password"
+                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm min-h-[40px] focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                </div>
+              </div>
               <div className="modal-actions flex gap-2 sm:gap-3 mt-5 sm:mt-6">
                 <button
                   type="button"
                   onClick={() => {
                     editModal.close();
                     setEditingBarber(null);
-                    setFormData({ name: '', avatarUrl: '' });
+                    setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '' });
                   }}
                   className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >

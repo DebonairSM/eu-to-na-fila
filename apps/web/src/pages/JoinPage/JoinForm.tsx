@@ -19,13 +19,46 @@ export function JoinForm() {
     barbers,
     hasServices,
     isLoadingServices,
+    activeServices,
+    selectedServiceId,
+    setSelectedServiceId,
   } = useJoinForm();
+
+  const formatPrice = (cents: number | undefined): string => {
+    if (cents == null) return '';
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
+  };
 
   return (
     <Card variant="default" className="shadow-lg min-w-[320px]">
       <CardContent className="p-6 sm:p-8">
         <form onSubmit={handleSubmit} autoComplete="off">
           <Stack spacing="lg">
+            {hasServices && (
+              <div>
+                <InputLabel htmlFor="service">Serviço *</InputLabel>
+                <select
+                  id="service"
+                  value={selectedServiceId ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setSelectedServiceId(v ? parseInt(v, 10) : null);
+                  }}
+                  required
+                  className="flex w-full rounded-lg bg-[#2a2a2a] border border-[rgba(255,255,255,0.2)] px-4 py-3.5 text-white text-base min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                >
+                  <option value="">Selecione...</option>
+                  {activeServices.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                      {s.duration ? ` (${s.duration} min)` : ''}
+                      {s.price != null && s.price > 0 ? ` – ${formatPrice(s.price)}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
               <InputLabel htmlFor="customerName">Nome *</InputLabel>
               <Input
@@ -111,7 +144,7 @@ export function JoinForm() {
               type="submit"
               fullWidth
               size="lg"
-              disabled={isSubmitting || !!validationError || isAlreadyInQueue || !!nameCollisionError || isLoadingServices || !hasServices}
+              disabled={isSubmitting || !!validationError || isAlreadyInQueue || !!nameCollisionError || isLoadingServices || !hasServices || (hasServices && selectedServiceId == null)}
             >
               {isSubmitting ? (
                 <>

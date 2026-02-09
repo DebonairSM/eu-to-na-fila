@@ -1,4 +1,5 @@
-import { db, schema } from '../db/index.js';
+import type { DbClient } from '../db/types.js';
+import { schema } from '../db/index.js';
 
 /**
  * Actor types for audit logging.
@@ -35,14 +36,11 @@ export interface AuditMetadata {
  * Errors are caught and logged but don't throw.
  */
 export class AuditService {
+  constructor(private db: DbClient) {}
+
   /**
    * Log an action to the audit log.
-   * This is a fire-and-forget operation that doesn't block the request.
-   * 
-   * @param shopId - Shop ID
-   * @param action - Action type
-   * @param actorType - Type of actor performing the action
-   * @param data - Additional data including ticketId, actorId, and metadata
+   * Fire-and-forget.
    */
   private async logAction(
     shopId: number,
@@ -54,10 +52,9 @@ export class AuditService {
       metadata?: AuditMetadata;
     } = {}
   ): Promise<void> {
-    // Fire-and-forget: use setImmediate to defer execution
     setImmediate(async () => {
       try {
-        await db.insert(schema.auditLog).values({
+        await this.db.insert(schema.auditLog).values({
           shopId,
           ticketId: data.ticketId,
           action,
@@ -66,7 +63,6 @@ export class AuditService {
           metadata: data.metadata || {},
         });
       } catch (error) {
-        // Log error but don't throw - audit logging should never break the main flow
         console.error('[AuditService] Failed to log action:', {
           shopId,
           action,
@@ -77,9 +73,6 @@ export class AuditService {
     });
   }
 
-  /**
-   * Log ticket creation.
-   */
   logTicketCreated(
     ticketId: number,
     shopId: number,
@@ -100,93 +93,57 @@ export class AuditService {
     });
   }
 
-  /**
-   * Log barber assignment.
-   */
   logBarberAssigned(
     ticketId: number,
     shopId: number,
     barberId: number,
-    data: {
-      actorType?: ActorType;
-      actorId?: number;
-    } = {}
+    data: { actorType?: ActorType; actorId?: number } = {}
   ): void {
     this.logAction(shopId, 'barber_assigned', data.actorType || 'staff', {
       ticketId,
       actorId: data.actorId || barberId,
-      metadata: {
-        barberId,
-      },
+      metadata: { barberId },
     });
   }
 
-  /**
-   * Log service start.
-   */
   logServiceStarted(
     ticketId: number,
     shopId: number,
     barberId: number,
-    data: {
-      actorType?: ActorType;
-      actorId?: number;
-    } = {}
+    data: { actorType?: ActorType; actorId?: number } = {}
   ): void {
     this.logAction(shopId, 'service_started', data.actorType || 'staff', {
       ticketId,
       actorId: data.actorId || barberId,
-      metadata: {
-        barberId,
-      },
+      metadata: { barberId },
     });
   }
 
-  /**
-   * Log service completion.
-   */
   logServiceCompleted(
     ticketId: number,
     shopId: number,
     barberId: number,
-    data: {
-      actorType?: ActorType;
-      actorId?: number;
-    } = {}
+    data: { actorType?: ActorType; actorId?: number } = {}
   ): void {
     this.logAction(shopId, 'service_completed', data.actorType || 'staff', {
       ticketId,
       actorId: data.actorId || barberId,
-      metadata: {
-        barberId,
-      },
+      metadata: { barberId },
     });
   }
 
-  /**
-   * Log ticket cancellation.
-   */
   logTicketCancelled(
     ticketId: number,
     shopId: number,
-    data: {
-      reason?: string;
-      actorType?: ActorType;
-      actorId?: number;
-    } = {}
+    data: { reason?: string; actorType?: ActorType; actorId?: number } = {}
   ): void {
     this.logAction(shopId, 'ticket_cancelled', data.actorType || 'customer', {
       ticketId,
       actorId: data.actorId,
-      metadata: {
-        reason: data.reason,
-      },
+      metadata: { reason: data.reason },
     });
   }
 
-  /**
-   * Log position update.
-   */
   logPositionUpdated(
     ticketId: number,
     shopId: number,
@@ -195,16 +152,10 @@ export class AuditService {
   ): void {
     this.logAction(shopId, 'position_updated', 'system', {
       ticketId,
-      metadata: {
-        oldValue: oldPosition,
-        newValue: newPosition,
-      },
+      metadata: { oldValue: oldPosition, newValue: newPosition },
     });
   }
 
-  /**
-   * Log wait time update.
-   */
   logWaitTimeUpdated(
     ticketId: number,
     shopId: number,
@@ -213,16 +164,10 @@ export class AuditService {
   ): void {
     this.logAction(shopId, 'wait_time_updated', 'system', {
       ticketId,
-      metadata: {
-        oldValue: oldWaitTime,
-        newValue: newWaitTime,
-      },
+      metadata: { oldValue: oldWaitTime, newValue: newWaitTime },
     });
   }
 
-  /**
-   * Log barber preference set.
-   */
   logBarberPreferenceSet(
     ticketId: number,
     shopId: number,
@@ -230,25 +175,7 @@ export class AuditService {
   ): void {
     this.logAction(shopId, 'barber_preference_set', 'customer', {
       ticketId,
-      metadata: {
-        preferredBarberId,
-      },
+      metadata: { preferredBarberId },
     });
   }
 }
-
-/**
- * Singleton instance of AuditService.
- * Use this exported instance throughout the application.
- * 
- * @example
- * ```typescript
- * import { auditService } from './services/AuditService.js';
- * 
- * auditService.logTicketCreated(ticketId, shopId, { customerName, serviceId });
- * ```
- */
-export const auditService = new AuditService();
-
-
-

@@ -7,6 +7,7 @@ export const barberSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
   avatarUrl: z.string().url().nullable(),
+  username: z.string().nullable().optional(),
   isActive: z.boolean().default(true),
   isPresent: z.boolean().default(true),
   createdAt: z.date().or(z.string()),

@@ -17,6 +17,7 @@ const OwnerDashboard = lazyWithRetry(() => import('./pages/OwnerDashboard').then
 const StaffPage = lazyWithRetry(() => import('./pages/StaffPage').then((m) => ({ default: m.StaffPage })));
 const BarberQueueManager = lazyWithRetry(() => import('./pages/BarberQueueManager').then((m) => ({ default: m.BarberQueueManager })));
 const AnalyticsPage = lazyWithRetry(() => import('./pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
+const BarberAnalyticsPage = lazyWithRetry(() => import('./pages/BarberAnalyticsPage').then((m) => ({ default: m.BarberAnalyticsPage })));
 const BarberManagementPage = lazyWithRetry(() => import('./pages/BarberManagementPage').then((m) => ({ default: m.BarberManagementPage })));
 const AdManagementPage = lazyWithRetry(() => import('./pages/AdManagementPage').then((m) => ({ default: m.AdManagementPage })));
 const CompanyDashboard = lazyWithRetry(() => import('./pages/CompanyDashboard').then((m) => ({ default: m.CompanyDashboard })));
@@ -27,12 +28,14 @@ function ProtectedRoute({
   children,
   requireOwner = false,
   requireCompanyAdmin = false,
+  requireBarber = false,
 }: {
   children: React.ReactNode;
   requireOwner?: boolean;
   requireCompanyAdmin?: boolean;
+  requireBarber?: boolean;
 }) {
-  const { isAuthenticated, isOwner, isCompanyAdmin, isLoading } = useAuthContext();
+  const { isAuthenticated, isOwner, isCompanyAdmin, isBarber, isLoading } = useAuthContext();
 
   const { config } = useShopConfig();
   const loadingText = config.homeContent?.accessibility?.loading ?? 'Carregando…';
@@ -55,6 +58,10 @@ function ProtectedRoute({
 
   if (requireCompanyAdmin && !isCompanyAdmin) {
     return <Navigate to="/home" replace />;
+  }
+
+  if (requireBarber && !isBarber) {
+    return <Navigate to={isOwner ? '/owner' : '/manage'} replace />;
   }
 
   return <>{children}</>;
@@ -113,6 +120,14 @@ function AppContent() {
         element={
           <ProtectedRoute requireOwner>
             <AnalyticsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-stats"
+        element={
+          <ProtectedRoute requireBarber>
+            <BarberAnalyticsPage />
           </ProtectedRoute>
         }
       />

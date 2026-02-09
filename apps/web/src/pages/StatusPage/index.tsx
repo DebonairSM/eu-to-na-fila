@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import { useTicketStatus } from '@/hooks/useTicketStatus';
 import { useQueue } from '@/hooks/useQueue';
+import { useServices } from '@/hooks/useServices';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
@@ -19,8 +20,14 @@ export function StatusPage() {
   const ticketIdFromParams = id ? parseInt(id, 10) : null;
   const { ticket, isLoading, error, refetch } = useTicketStatus(ticketIdFromParams);
   const { data: queueData } = useQueue(3000);
+  const { getServiceById } = useServices();
   const [shareSuccess, setShareSuccess] = useState(false);
   const { barber, isLeaving, handleLeaveQueue, handleShareTicket } = useStatusDisplay(ticket);
+
+  const serviceName =
+    ticket?.service?.name ??
+    (ticket ? getServiceById(ticket.serviceId)?.name : null) ??
+    null;
 
   // Memoize position calculation to avoid expensive recalculation on every render
   const positionInfo = useMemo(() => {
@@ -122,7 +129,7 @@ export function StatusPage() {
 
       <Container className="pt-24 pb-20">
         <div className="lg:hidden space-y-8">
-          <StatusHeader customerName={ticket.customerName} status={ticket.status} />
+          <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} />
 
           {isWaiting && (
             <WaitingCard
@@ -157,7 +164,7 @@ export function StatusPage() {
 
         <div className="hidden lg:block">
           <div className="max-w-2xl mx-auto space-y-10">
-            <StatusHeader customerName={ticket.customerName} status={ticket.status} />
+            <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} />
 
             {isWaiting && (
               <WaitingCard

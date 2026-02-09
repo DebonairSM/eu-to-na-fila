@@ -9,23 +9,31 @@ export interface JWTPayload {
   userId: number;
   shopId?: number;
   companyId?: number;
-  role: 'owner' | 'staff' | 'company_admin';
+  role: 'owner' | 'staff' | 'company_admin' | 'barber';
+  barberId?: number;
   iat?: number;
   exp?: number;
 }
 
 /**
  * Sign a JWT token for a user.
- * 
+ *
  * @param user - User information to encode in token
  * @returns Signed JWT token
  */
-export function signToken(user: { userId: number; shopId?: number; companyId?: number; role: 'owner' | 'staff' | 'company_admin' }): string {
+export function signToken(user: {
+  userId: number;
+  shopId?: number;
+  companyId?: number;
+  role: 'owner' | 'staff' | 'company_admin' | 'barber';
+  barberId?: number;
+}): string {
   const payload: JWTPayload = {
     userId: user.userId,
     shopId: user.shopId,
     companyId: user.companyId,
     role: user.role,
+    barberId: user.barberId,
   };
 
   return jwt.sign(payload, env.JWT_SECRET, {

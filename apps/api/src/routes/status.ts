@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { updateTicketStatusSchema } from '@eutonafila/shared';
-import { ticketService } from '../services/TicketService.js';
+import { ticketService } from '../services/index.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';

@@ -1,6 +1,6 @@
 import { db, schema } from '../db/index.js';
 import { eq, or } from 'drizzle-orm';
-import { ticketService } from '../services/TicketService.js';
+import { ticketService } from '../services/index.js';
 
 const RECALC_INTERVAL_MS = 60_000; // 60 seconds
 let intervalId: ReturnType<typeof setInterval> | null = null;

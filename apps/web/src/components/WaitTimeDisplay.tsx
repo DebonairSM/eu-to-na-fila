@@ -4,12 +4,14 @@ export interface WaitTimeDisplayProps {
   minutes: number | null;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  unavailable?: boolean;
 }
 
 export function WaitTimeDisplay({
   minutes,
   className,
   size = 'lg',
+  unavailable = false,
 }: WaitTimeDisplayProps) {
   const sizeClasses = {
     sm: 'text-2xl sm:text-3xl',
@@ -17,7 +19,22 @@ export function WaitTimeDisplay({
     lg: 'text-4xl sm:text-5xl md:text-6xl',
   };
 
-  const displayValue = minutes !== null ? minutes : '--';
+  let displayValue: string | number;
+  let unitLabel: string;
+
+  if (unavailable) {
+    displayValue = 'Indisponível';
+    unitLabel = 'nenhum barbeiro ativo';
+  } else if (minutes === null) {
+    displayValue = '--';
+    unitLabel = 'minutos';
+  } else if (minutes <= 0) {
+    displayValue = 'Agora';
+    unitLabel = 'sem espera';
+  } else {
+    displayValue = minutes;
+    unitLabel = 'minutos';
+  }
 
   return (
     <div
@@ -36,13 +53,16 @@ export function WaitTimeDisplay({
       </div>
       <div
         className={cn(
-          'wait-value font-bold text-[#D4AF37] leading-tight',
-          sizeClasses[size]
+          'wait-value font-bold leading-tight',
+          unavailable ? 'text-white/40' : 'text-[#D4AF37]',
+          typeof displayValue === 'string' && displayValue.length > 5
+            ? 'text-2xl sm:text-3xl md:text-4xl'
+            : sizeClasses[size]
         )}
       >
         {displayValue}
       </div>
-      <div className="wait-unit text-sm text-[rgba(255,255,255,0.5)] mt-1">minutos</div>
+      <div className="wait-unit text-sm text-[rgba(255,255,255,0.5)] mt-1">{unitLabel}</div>
     </div>
   );
 }

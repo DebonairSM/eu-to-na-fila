@@ -4,19 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CompanyNav } from '@/components/CompanyNav';
 import { api } from '@/lib/api';
+import type { ShopListItem } from '@eutonafila/shared';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 
-interface Shop {
-  id: number;
-  slug: string;
-  name: string;
-  domain: string | null;
-  createdAt: Date;
-}
-
 export function NetworkPage() {
-  const [shops, setShops] = useState<Shop[]>([]);
+  const [shops, setShops] = useState<ShopListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 

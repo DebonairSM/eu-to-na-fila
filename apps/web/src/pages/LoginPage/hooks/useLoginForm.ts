@@ -5,13 +5,6 @@ import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { getErrorMessage } from '@/lib/utils';
 
-// Demo credentials - In production, use real username/password authentication
-const CREDENTIALS = {
-  owner: { username: 'owner', password: 'owner123', pin: '1234' },
-  barber: { username: 'barber', password: 'barber123', pin: '0000' },
-  kiosk: { username: 'kiosk', password: 'kiosk123', pin: '0000' },
-};
-
 export function useLoginForm() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -21,66 +14,46 @@ export function useLoginForm() {
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
   const { login } = useAuthContext();
-  
-  // Use ref to track if request is in flight to prevent double submissions
-  // This is more reliable than just isLoading state, especially with React StrictMode
+
   const isSubmittingRef = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Prevent double submission
-    if (isSubmittingRef.current || isLoading) {
-      return;
-    }
-    
+
+    if (isSubmittingRef.current || isLoading) return;
+
     setError(null);
     setIsLoading(true);
     isSubmittingRef.current = true;
 
     try {
-      // Check credentials and get corresponding PIN
-      let pin: string | null = null;
-      let role: 'owner' | 'barber' = 'barber';
-      let redirectTo = '/manage';
-      let isKiosk = false;
-
-      if (username === CREDENTIALS.owner.username && password === CREDENTIALS.owner.password) {
-        pin = CREDENTIALS.owner.pin;
-        role = 'owner';
-        redirectTo = '/owner';
-      } else if (username === CREDENTIALS.barber.username && password === CREDENTIALS.barber.password) {
-        pin = CREDENTIALS.barber.pin;
-        role = 'barber';
-        redirectTo = '/manage';
-      } else if (username === CREDENTIALS.kiosk.username && password === CREDENTIALS.kiosk.password) {
-        pin = CREDENTIALS.kiosk.pin;
-        role = 'barber'; // Kiosk uses staff-level access
-        redirectTo = '/manage?kiosk=true';
-        isKiosk = true;
-      } else {
-        setError('Credenciais inválidas. Verifique usuário e senha.');
-        setIsLoading(false);
-        isSubmittingRef.current = false;
+      // 1) Try owner/staff PIN (password field as PIN)
+      const pinResult = await api.authenticate(shopSlug, password);
+      if (pinResult.valid && pinResult.token) {
+        login({
+          id: 0,
+          username: pinResult.role ?? 'staff',
+          role: pinResult.role === 'owner' ? 'owner' : 'staff',
+          name: pinResult.role === 'owner' ? 'owner' : 'staff',
+        });
+        navigate(pinResult.role === 'owner' ? '/owner' : '/manage');
         return;
       }
 
-      // Authenticate with API
-      const result = await api.authenticate(shopSlug, pin);
-
-      if (result.valid && result.token) {
-        // Login successful - token is stored in API client
+      // 2) Try barber username + password
+      const barberResult = await api.authenticateBarber(shopSlug, username.trim(), password);
+      if (barberResult.valid && barberResult.token) {
         login({
-          id: 1,
-          username: username,
-          role: isKiosk ? 'barber' : role,
-          name: username,
+          id: barberResult.barberId ?? 0,
+          username: username.trim(),
+          role: 'barber',
+          name: barberResult.barberName ?? username.trim(),
         });
-
-        navigate(redirectTo);
-      } else {
-        setError('Erro de autenticação. Tente novamente.');
+        navigate('/my-stats');
+        return;
       }
+
+      setError('Credenciais inválidas. Verifique usuário e senha ou PIN.');
     } catch (err) {
       setError(getErrorMessage(err, 'Erro ao fazer login. Tente novamente.'));
     } finally {

@@ -3,6 +3,7 @@ export * from './schemas/shop.js';
 export * from './schemas/service.js';
 export * from './schemas/barber.js';
 export * from './schemas/ticket.js';
+export * from './schemas/shopConfig.js';
 
 // Types
 export * from './types/api.js';

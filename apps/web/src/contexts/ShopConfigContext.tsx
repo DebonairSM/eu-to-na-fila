@@ -6,55 +6,15 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { api, type HomeContent, type ShopTheme } from '@/lib/api';
+import { api } from '@/lib/api';
+import type { HomeContent, ShopTheme } from '@eutonafila/shared';
+import { DEFAULT_HOME_CONTENT, DEFAULT_THEME } from '@eutonafila/shared';
 import { useShopSlug } from './ShopSlugContext';
 import { config as appConfig } from '@/lib/config';
 
 export type { ShopTheme };
 
-/** Default home content when API does not return it (fallback). */
-const defaultHomeContent: HomeContent = {
-  hero: { badge: 'Sangão, Santa Catarina', subtitle: 'Entre na fila online', ctaJoin: 'Entrar na Fila', ctaLocation: 'Como Chegar' },
-  nav: {
-    linkServices: 'Serviços',
-    linkAbout: 'Sobre',
-    linkLocation: 'Localização',
-    ctaJoin: 'Entrar na Fila',
-    linkBarbers: 'Barbeiros',
-    labelDashboard: 'Dashboard',
-    labelDashboardCompany: 'Dashboard Empresarial',
-    labelLogout: 'Sair',
-    labelMenu: 'Menu',
-  },
-  services: { sectionTitle: 'Serviços', loadingText: 'Carregando serviços...', emptyText: 'Nenhum serviço cadastrado.' },
-  about: {
-    sectionTitle: 'Sobre',
-    imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80',
-    imageAlt: 'Interior da barbearia',
-    features: [
-      { icon: 'schedule', text: 'Fila online' },
-      { icon: 'workspace_premium', text: 'Produtos premium' },
-      { icon: 'groups', text: 'Equipe experiente' },
-      { icon: 'local_parking', text: 'Estacionamento fácil' },
-    ],
-  },
-  location: {
-    sectionTitle: 'Localização',
-    labelAddress: 'Endereço',
-    labelHours: 'Horário de Funcionamento',
-    labelPhone: 'Telefone',
-    labelLanguages: 'Idiomas',
-    linkMaps: 'Ver no Google Maps',
-    address: 'R. João M Silvano, 281 - Morro Grande\nSangão - SC, 88717-000',
-    addressLink: 'https://www.google.com/maps/search/?api=1&query=R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000',
-    hours: 'Segunda a Sábado: 9:00 - 19:00\nDomingo: Fechado',
-    phone: '(48) 99835-4097',
-    phoneHref: 'tel:+5548998354097',
-    languages: 'Português & English',
-    mapQuery: 'R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000',
-  },
-  accessibility: { skipLink: 'Pular para o conteúdo principal', loading: 'Carregando…' },
-};
+const defaultHomeContent: HomeContent = DEFAULT_HOME_CONTENT;
 
 export interface ShopConfig {
   name: string;
@@ -69,17 +29,7 @@ interface ShopConfigContextValue {
   error: string | null;
 }
 
-const defaultTheme: ShopTheme = {
-  primary: '#3E2723',
-  accent: '#FFD54F',
-  background: '#0a0a0a',
-  surfacePrimary: '#0a0a0a',
-  surfaceSecondary: '#1a1a1a',
-  navBg: '#0a0a0a',
-  textPrimary: '#ffffff',
-  textSecondary: 'rgba(255,255,255,0.7)',
-  borderColor: 'rgba(255,255,255,0.08)',
-};
+const defaultTheme: Required<ShopTheme> = DEFAULT_THEME;
 
 const defaultConfig: ShopConfig = {
   name: appConfig.name,

@@ -1,20 +1,13 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import type { ShopListItem } from '@eutonafila/shared';
 import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Card, CardContent } from '@/components/ui/card';
 
-interface Shop {
-  id: number;
-  slug: string;
-  name: string;
-  domain: string | null;
-  createdAt: Date;
-}
-
 export function HomePage() {
-  const [shops, setShops] = useState<Shop[]>([]);
+  const [shops, setShops] = useState<ShopListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 

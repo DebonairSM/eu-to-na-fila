@@ -24,10 +24,10 @@ export function WaitingCard({ waitTime, position, total, ahead }: WaitingCardPro
             level={1}
             className="text-6xl font-semibold text-white mb-3 drop-shadow-[0_4px_20px_rgba(212,175,55,0.3)] leading-tight"
           >
-            {waitTime !== null ? waitTime : '--'}
+            {waitTime === null ? '--' : waitTime <= 0 ? 'Agora' : waitTime}
           </Heading>
           <Text size="lg" variant="secondary" className="mb-6 text-xl">
-            minutos
+            {waitTime !== null && waitTime <= 0 ? 'sua vez chegou' : 'minutos'}
           </Text>
 
           {position !== undefined && total !== undefined && (

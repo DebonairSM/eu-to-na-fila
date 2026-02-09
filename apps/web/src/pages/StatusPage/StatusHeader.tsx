@@ -1,11 +1,12 @@
-import { Badge, Heading } from '@/components/design-system';
+import { Badge, Heading, Text } from '@/components/design-system';
 
 interface StatusHeaderProps {
   customerName: string;
   status: 'waiting' | 'in_progress' | 'completed' | 'cancelled';
+  serviceName?: string | null;
 }
 
-export function StatusHeader({ customerName, status }: StatusHeaderProps) {
+export function StatusHeader({ customerName, status, serviceName }: StatusHeaderProps) {
   const isWaiting = status === 'waiting';
   const isInProgress = status === 'in_progress';
   const isCompleted = status === 'completed';
@@ -34,6 +35,9 @@ export function StatusHeader({ customerName, status }: StatusHeaderProps) {
       <Heading level={1} className="mb-3 sm:mb-4">
         {customerName}
       </Heading>
+      <Text size="sm" variant="secondary" className="mb-2">
+        Serviço: {serviceName ?? '—'}
+      </Text>
       <Badge variant={badgeVariant} size="default">
         <span className="material-symbols-outlined text-xl sm:text-2xl">{badgeIcon}</span>
         <span>{badgeText}</span>

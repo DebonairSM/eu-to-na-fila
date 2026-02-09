@@ -19,6 +19,7 @@ import { serviceRoutes } from './routes/services.js';
 import { authRoutes } from './routes/auth.js';
 import { companyAuthRoutes } from './routes/company-auth.js';
 import { companiesRoutes } from './routes/companies.js';
+import { companyShopsRoutes } from './routes/company-shops.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { shopsRoutes } from './routes/shops.js';
 import { adsRoutes } from './routes/ads.js';
@@ -294,6 +295,7 @@ fastify.register(
     instance.register(authRoutes);
     instance.register(companyAuthRoutes);
     instance.register(companiesRoutes);
+    instance.register(companyShopsRoutes);
     instance.register(analyticsRoutes);
     instance.register(shopsRoutes);
     instance.register(adsRoutes);
