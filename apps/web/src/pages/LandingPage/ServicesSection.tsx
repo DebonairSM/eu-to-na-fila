@@ -13,7 +13,7 @@ export function ServicesSection() {
   const { config } = useShopConfig();
   const { homeContent } = config;
   const { activeServices, isLoading } = useServices();
-  const sectionTitle = homeContent.services.sectionTitle;
+  const sectionTitle = homeContent?.services?.sectionTitle ?? 'Serviços';
 
   if (isLoading) {
     return (

@@ -576,10 +576,10 @@ class ApiClient {
    * @returns List of services
    */
   async getServices(shopSlug: string): Promise<Service[]> {
-    const response = await this.get<{ services: Service[] }>(
+    const response = await this.get<{ services?: Service[] }>(
       `/shops/${shopSlug}/services`
     );
-    return response.services;
+    return Array.isArray(response?.services) ? response.services : [];
   }
 
   /**

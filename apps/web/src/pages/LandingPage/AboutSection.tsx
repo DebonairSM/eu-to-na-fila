@@ -1,9 +1,11 @@
 import { Heading, Text, Section, Grid } from '@/components/design-system';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 
+const fallbackAbout = { sectionTitle: 'Sobre', imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80', features: [] as Array<{ icon: string; text: string }> };
+
 export function AboutSection() {
   const { config } = useShopConfig();
-  const { sectionTitle, imageUrl, features } = config.homeContent.about;
+  const { sectionTitle, imageUrl, features } = config.homeContent?.about ?? fallbackAbout;
 
   return (
     <Section id="about" variant="primary">

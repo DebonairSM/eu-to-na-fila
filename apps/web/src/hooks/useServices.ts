@@ -38,7 +38,7 @@ export function useServices() {
       setIsLoading(true);
       setError(null);
       const servicesList = await api.getServices(shopSlug);
-      setServices(servicesList);
+      setServices(Array.isArray(servicesList) ? servicesList : []);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch services'));
     } finally {
@@ -50,8 +50,8 @@ export function useServices() {
     fetchServices();
   }, [fetchServices]);
 
-  // Filter active services
-  const activeServices = services.filter((s) => s.isActive);
+  // Filter active services (guard against undefined from state)
+  const activeServices = (Array.isArray(services) ? services : []).filter((s) => s.isActive);
 
   // Get service by ID
   const getServiceById = useCallback(

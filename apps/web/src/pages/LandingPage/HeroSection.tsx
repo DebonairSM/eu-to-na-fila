@@ -5,7 +5,7 @@ import { useShopConfig } from '@/contexts/ShopConfigContext';
 export function HeroSection() {
   const { config } = useShopConfig();
   const { name, homeContent } = config;
-  const hero = homeContent.hero;
+  const hero = homeContent?.hero ?? { badge: '', subtitle: '', ctaJoin: 'Entrar na Fila', ctaLocation: 'Como Chegar' };
 
   return (
     <section
