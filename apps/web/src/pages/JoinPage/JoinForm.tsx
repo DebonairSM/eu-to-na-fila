@@ -39,7 +39,7 @@ export function JoinForm() {
       <CardContent className="p-6 sm:p-8">
         <form onSubmit={handleSubmit} autoComplete="off">
           <Stack spacing="lg">
-            {hasServices && (
+            {hasServices && activeServices.length >= 2 && (
               <div>
                 <InputLabel htmlFor="service">Serviço *</InputLabel>
                 <select
