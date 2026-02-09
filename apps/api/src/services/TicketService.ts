@@ -256,8 +256,16 @@ export class TicketService {
       }
     }
 
-    await this.queueService.recalculatePositions(existingTicket.shopId);
-    await this.recalculateWaitTimes(existingTicket.shopId);
+    const shopIdForRecalc = existingTicket.shopId;
+    void Promise.resolve()
+      .then(() =>
+        this.queueService.recalculatePositions(shopIdForRecalc).then(() =>
+          this.recalculateWaitTimes(shopIdForRecalc)
+        )
+      )
+      .catch((err) => {
+        console.error('[TicketService] Deferred recalc failed for shop', shopIdForRecalc, err);
+      });
 
     return ticket as Ticket;
   }
@@ -272,27 +280,23 @@ export class TicketService {
 
   private async recalculateWaitTimes(shopId: number): Promise<void> {
     const waitingTickets = await this.getByShop(shopId, 'waiting');
+    if (waitingTickets.length === 0) return;
 
+    const ticketsForRecalc = waitingTickets.map((t) => ({
+      id: t.id,
+      serviceId: t.serviceId,
+      preferredBarberId: t.preferredBarberId ?? null,
+      createdAt: new Date(t.createdAt),
+    }));
+
+    const context = await this.queueService.loadContextForRecalc(shopId, ticketsForRecalc);
+    const computed = this.queueService.computeWaitTimesForWaitingTickets(shopId, context);
+
+    const now = new Date();
     for (const ticket of waitingTickets) {
-      let waitTime: number | null;
-      let position: number;
-      const ticketCreatedAt = new Date(ticket.createdAt);
-
-      let preferredBarberActive = false;
-      if (ticket.preferredBarberId) {
-        const barber = await this.db.query.barbers.findFirst({
-          where: eq(schema.barbers.id, ticket.preferredBarberId),
-        });
-        preferredBarberActive = barber?.isActive ?? false;
-      }
-
-      if (ticket.preferredBarberId && preferredBarberActive) {
-        position = await this.queueService.calculatePositionForPreferredBarber(shopId, ticket.preferredBarberId!, ticketCreatedAt);
-        waitTime = await this.queueService.calculateWaitTimeForPreferredBarber(shopId, ticket.preferredBarberId!, position, ticketCreatedAt);
-      } else {
-        position = await this.queueService.calculatePosition(shopId, ticketCreatedAt);
-        waitTime = await this.queueService.calculateWaitTime(shopId, position);
-      }
+      const entry = computed.get(ticket.id);
+      if (!entry) continue;
+      const { position, estimatedWaitTime: waitTime } = entry;
 
       if (ticket.position !== position) {
         this.auditService.logPositionUpdated(ticket.id, shopId, ticket.position, position);
@@ -303,7 +307,7 @@ export class TicketService {
 
       await this.db
         .update(schema.tickets)
-        .set({ position, estimatedWaitTime: waitTime, updatedAt: new Date() })
+        .set({ position, estimatedWaitTime: waitTime, updatedAt: now })
         .where(eq(schema.tickets.id, ticket.id));
     }
   }

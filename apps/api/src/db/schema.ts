@@ -107,6 +107,8 @@ export const tickets = pgTable('tickets', {
   barberAssignedAt: timestamp('barber_assigned_at'), // when barber was assigned
 }, (table) => ({
   shopDeviceIdx: index('tickets_shop_device_idx').on(table.shopId, table.deviceId),
+  shopStatusIdx: index('tickets_shop_status_idx').on(table.shopId, table.status),
+  shopCreatedIdx: index('tickets_shop_created_idx').on(table.shopId, table.createdAt),
 }));
 
 export const companyAds = pgTable('company_ads', {

@@ -25,7 +25,8 @@ export function createTicketsApi(client: BaseApiClient): TicketsApi {
     },
     createTicket: (shopSlug, data) => c.post(`/shops/${shopSlug}/tickets`, data),
     getTicket: (ticketId) => c.get(`/tickets/${ticketId}`),
-    updateTicketStatus: (ticketId, data) => c.patch(`/tickets/${ticketId}/status`, data),
+    updateTicketStatus: (ticketId, data) =>
+      c.patch(`/tickets/${ticketId}/status`, data, 45000),
     cancelTicket: (ticketId) => c.post(`/tickets/${ticketId}/cancel`, {}),
     cancelTicketAsStaff: (ticketId) => c.del(`/tickets/${ticketId}`),
     updateTicket: (ticketId, updates) => c.patch(`/tickets/${ticketId}`, updates),

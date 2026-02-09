@@ -39,7 +39,7 @@ export function LoginForm() {
             onChange={(e) => setUsername(e.target.value)}
             placeholder=" "
             autoComplete="username"
-            required
+            aria-describedby="username-hint"
             className="w-full px-4 py-4 pt-6 rounded-lg border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)] text-white text-base placeholder:text-[rgba(255,255,255,0.5)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37]"
           />
           <label
@@ -48,9 +48,12 @@ export function LoginForm() {
               username ? 'top-2 text-xs text-[#D4AF37]' : 'top-4'
             }`}
           >
-            Usuário
+            Usuário <span className="text-white/40">(barbeiros)</span>
           </label>
         </div>
+        <p id="username-hint" className="text-xs text-white/40 mt-1 mb-2">
+          Deixe em branco para login com PIN (dono/funcionário)
+        </p>
 
         <div className="relative">
           <input
@@ -124,15 +127,15 @@ export function LoginForm() {
             <div className="text-xs text-[rgba(255,255,255,0.6)] space-y-2">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-sm text-[#D4AF37]">admin_panel_settings</span>
-                <span>Owner: owner / owner123</span>
+                <span>Dono: usuário em branco / PIN 1234</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm text-[#D4AF37]">badge</span>
+                <span>Funcionário: usuário em branco / PIN 0000</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-sm text-[#D4AF37]">content_cut</span>
-                <span>Barber: barber / barber123</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm text-[#D4AF37]">tv</span>
-                <span>Kiosk: kiosk / kiosk123</span>
+                <span>Barbeiro: barber / barber123</span>
               </div>
             </div>
           </div>

@@ -40,7 +40,7 @@ export class BaseApiClient {
   protected async request<T>(
     path: string,
     options: RequestInit = {},
-    timeoutMs = 15000
+    timeoutMs = 30000
   ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     const headers: Record<string, string> = {};
@@ -137,15 +137,15 @@ export class BaseApiClient {
   }
 
   protected async get<T>(path: string, timeoutMs?: number): Promise<T> {
-    return this.request<T>(path, { method: 'GET' }, timeoutMs ?? 15000);
+    return this.request<T>(path, { method: 'GET' }, timeoutMs ?? 30000);
   }
 
   protected async post<T>(path: string, body: unknown): Promise<T> {
     return this.request<T>(path, { method: 'POST', body: JSON.stringify(body) });
   }
 
-  protected async patch<T>(path: string, body: unknown): Promise<T> {
-    return this.request<T>(path, { method: 'PATCH', body: JSON.stringify(body) });
+  protected async patch<T>(path: string, body: unknown, timeoutMs?: number): Promise<T> {
+    return this.request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }, timeoutMs ?? 30000);
   }
 
   protected async del<T>(path: string): Promise<T> {

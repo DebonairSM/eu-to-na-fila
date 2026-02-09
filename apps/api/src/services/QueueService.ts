@@ -3,9 +3,42 @@ import { schema } from '../db/index.js';
 import { eq, and, asc, inArray } from 'drizzle-orm';
 import type { AuditService } from './AuditService.js';
 
+/** Minimal ticket shape for wait-time computation. */
+export interface TicketForRecalc {
+  id: number;
+  serviceId: number;
+  preferredBarberId: number | null;
+  createdAt: Date;
+}
+
+/** In-progress ticket shape for wave simulation. */
+export interface InProgressForRecalc {
+  barberId: number | null;
+  serviceId: number;
+  startedAt: Date | null;
+  updatedAt: Date | null;
+}
+
+/** Barber shape for context. */
+export interface BarberForRecalc {
+  id: number;
+  isActive: boolean;
+  isPresent: boolean;
+}
+
+/** Pre-loaded shop context for batch wait-time computation (avoids N+1 queries). */
+export interface PreloadedShopContext {
+  activeBarberIds: Set<number>;
+  presentBarbers: BarberForRecalc[];
+  waitingTickets: TicketForRecalc[];
+  inProgressTickets: InProgressForRecalc[];
+  serviceDurations: Map<number, number>;
+  barberStats: Map<string, number>;
+}
+
 /**
  * Service for managing queue operations.
- * 
+ *
  * General line: tickets with no preferred barber, or whose preferred barber is inactive.
  */
 export class QueueService {
@@ -68,6 +101,173 @@ export class QueueService {
       }
     }
     return map;
+  }
+
+  /**
+   * Load all context needed to compute wait times for a shop in one shot.
+   * Used by TicketService.recalculateWaitTimes to avoid N+1 queries.
+   */
+  async loadContextForRecalc(
+    shopId: number,
+    waitingTickets: TicketForRecalc[]
+  ): Promise<PreloadedShopContext> {
+    const [barbers, inProgressRows] = await Promise.all([
+      this.db.query.barbers.findMany({
+        where: and(eq(schema.barbers.shopId, shopId), eq(schema.barbers.isActive, true)),
+      }),
+      this.db.query.tickets.findMany({
+        where: and(
+          eq(schema.tickets.shopId, shopId),
+          eq(schema.tickets.status, 'in_progress')
+        ),
+      }),
+    ]);
+
+    const activeBarberIds = new Set(barbers.map((b) => b.id));
+    const presentBarbers: BarberForRecalc[] = barbers
+      .filter((b) => b.isPresent)
+      .map((b) => ({ id: b.id, isActive: b.isActive, isPresent: b.isPresent }));
+
+    const inProgressTickets: InProgressForRecalc[] = inProgressRows.map((t) => ({
+      barberId: t.barberId,
+      serviceId: t.serviceId,
+      startedAt: t.startedAt,
+      updatedAt: t.updatedAt,
+    }));
+
+    const serviceIds = new Set<number>();
+    for (const t of waitingTickets) serviceIds.add(t.serviceId);
+    for (const t of inProgressRows) serviceIds.add(t.serviceId);
+
+    const barberIds = barbers.map((b) => b.id);
+    const [serviceDurations, barberStats] = await Promise.all([
+      this.loadServiceDurations(serviceIds),
+      this.loadBarberWeekdayStats(barberIds, [...serviceIds]),
+    ]);
+
+    return {
+      activeBarberIds,
+      presentBarbers,
+      waitingTickets,
+      inProgressTickets,
+      serviceDurations,
+      barberStats,
+    };
+  }
+
+  /**
+   * Compute position and estimated wait time for every waiting ticket using pre-loaded context.
+   * Pure in-memory wave simulation; no DB reads.
+   */
+  computeWaitTimesForWaitingTickets(
+    _shopId: number,
+    ctx: PreloadedShopContext
+  ): Map<number, { position: number; estimatedWaitTime: number | null }> {
+    const now = new Date();
+    const result = new Map<number, { position: number; estimatedWaitTime: number | null }>();
+
+    const getDuration = (serviceId: number, barberId?: number) => {
+      if (barberId) {
+        const avg = ctx.barberStats.get(`${barberId}:${serviceId}`);
+        if (avg !== undefined) return avg;
+      }
+      return ctx.serviceDurations.get(serviceId) ?? 20;
+    };
+
+    const inProgressWithBarbers = ctx.inProgressTickets.filter((t) => t.barberId !== null);
+
+    const generalLineTickets = ctx.waitingTickets
+      .filter(
+        (t) =>
+          t.preferredBarberId === null || !ctx.activeBarberIds.has(t.preferredBarberId!)
+      )
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    for (const ticket of ctx.waitingTickets) {
+      const ticketCreatedAt = new Date(ticket.createdAt);
+      const usePreferred =
+        ticket.preferredBarberId !== null &&
+        ctx.activeBarberIds.has(ticket.preferredBarberId);
+
+      let position: number;
+      let estimatedWaitTime: number | null;
+
+      if (usePreferred && ticket.preferredBarberId !== null) {
+        const preferredLine = ctx.waitingTickets
+          .filter((t) => t.preferredBarberId === ticket.preferredBarberId)
+          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        const ticketsAhead = preferredLine.filter(
+          (t) => new Date(t.createdAt) < ticketCreatedAt
+        );
+        position = ticketsAhead.length + 1;
+
+        const inProgressForBarber = inProgressWithBarbers.find(
+          (t) => t.barberId === ticket.preferredBarberId
+        );
+        let barberAvailability = 0;
+        if (inProgressForBarber) {
+          const startTime = inProgressForBarber.startedAt
+            ? new Date(inProgressForBarber.startedAt)
+            : inProgressForBarber.updatedAt
+              ? new Date(inProgressForBarber.updatedAt)
+              : now;
+          const elapsedMinutes = Math.max(
+            0,
+            (now.getTime() - startTime.getTime()) / 60000
+          );
+          const serviceDuration = getDuration(
+            inProgressForBarber.serviceId,
+            ticket.preferredBarberId
+          );
+          barberAvailability = Math.max(0, serviceDuration - elapsedMinutes);
+        }
+        let totalWait = barberAvailability;
+        for (const t of ticketsAhead) {
+          totalWait += getDuration(t.serviceId);
+        }
+        estimatedWaitTime = position === 0 ? null : Math.ceil(totalWait);
+      } else {
+        const ticketsAhead = generalLineTickets.filter(
+          (t) => new Date(t.createdAt) < ticketCreatedAt
+        );
+        position = ticketsAhead.length + 1;
+
+        const activeBarbers = ctx.presentBarbers;
+        const barberAvailability: number[] = [];
+        for (const barber of activeBarbers) {
+          const inProgress = inProgressWithBarbers.find((t) => t.barberId === barber.id);
+          if (inProgress) {
+            const startTime = inProgress.startedAt
+              ? new Date(inProgress.startedAt)
+              : inProgress.updatedAt
+                ? new Date(inProgress.updatedAt)
+                : now;
+            const elapsedMinutes = Math.max(
+              0,
+              (now.getTime() - startTime.getTime()) / 60000
+            );
+            const serviceDuration = getDuration(inProgress.serviceId, barber.id);
+            barberAvailability.push(Math.max(0, serviceDuration - elapsedMinutes));
+          } else {
+            barberAvailability.push(0);
+          }
+        }
+        if (barberAvailability.length === 0) barberAvailability.push(0);
+
+        for (const t of ticketsAhead) {
+          const minTime = Math.min(...barberAvailability);
+          const minIdx = barberAvailability.indexOf(minTime);
+          const barberId = activeBarbers[minIdx]?.id;
+          barberAvailability[minIdx] += getDuration(t.serviceId, barberId);
+        }
+        estimatedWaitTime =
+          position === 0 ? null : Math.ceil(Math.min(...barberAvailability));
+      }
+
+      result.set(ticket.id, { position, estimatedWaitTime });
+    }
+
+    return result;
   }
 
   async calculatePosition(shopId: number, createdAt: Date = new Date()): Promise<number> {

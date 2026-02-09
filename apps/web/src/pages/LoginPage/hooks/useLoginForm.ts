@@ -27,7 +27,22 @@ export function useLoginForm() {
     isSubmittingRef.current = true;
 
     try {
-      // 1) Try owner/staff PIN (password field as PIN)
+      // 1) If username provided, try barber (username + password) first
+      if (username.trim()) {
+        const barberResult = await api.authenticateBarber(shopSlug, username.trim(), password);
+        if (barberResult.valid && barberResult.token) {
+          login({
+            id: barberResult.barberId ?? 0,
+            username: username.trim(),
+            role: 'barber',
+            name: barberResult.barberName ?? username.trim(),
+          });
+          navigate('/my-stats');
+          return;
+        }
+      }
+
+      // 2) Try owner/staff PIN (password field as PIN, leave username empty for PIN-only)
       const pinResult = await api.authenticate(shopSlug, password);
       if (pinResult.valid && pinResult.token) {
         login({
@@ -37,19 +52,6 @@ export function useLoginForm() {
           name: pinResult.role === 'owner' ? 'owner' : 'staff',
         });
         navigate(pinResult.role === 'owner' ? '/owner' : '/manage');
-        return;
-      }
-
-      // 2) Try barber username + password
-      const barberResult = await api.authenticateBarber(shopSlug, username.trim(), password);
-      if (barberResult.valid && barberResult.token) {
-        login({
-          id: barberResult.barberId ?? 0,
-          username: username.trim(),
-          role: 'barber',
-          name: barberResult.barberName ?? username.trim(),
-        });
-        navigate('/my-stats');
         return;
       }
 
