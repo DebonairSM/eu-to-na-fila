@@ -35,7 +35,7 @@ cp .env.example .env
 # 4. Run migrations
 pnpm db:migrate
 
-# 5. Seed test data (optional)
+# 5. Seed initial data (required for default shop)
 pnpm db:seed
 
 # 6. Start dev servers
@@ -162,7 +162,7 @@ pnpm --filter api db:generate
 # Run migrations
 pnpm db:migrate
 
-# Seed test data
+# Seed initial data
 pnpm db:seed
 
 # Open Drizzle Studio
