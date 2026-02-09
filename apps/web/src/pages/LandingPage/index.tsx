@@ -29,7 +29,7 @@ export function LandingPage() {
   }, [location.hash]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--shop-background, #0a0a0a)' }}>
       <Navigation />
       <HeroSection />
       <ServicesSection />

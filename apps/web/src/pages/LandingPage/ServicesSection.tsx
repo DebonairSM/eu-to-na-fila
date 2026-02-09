@@ -15,11 +15,14 @@ export function ServicesSection() {
   const { activeServices, isLoading } = useServices();
   const sectionTitle = homeContent?.services?.sectionTitle ?? 'Serviços';
 
+  const loadingText = homeContent?.services?.loadingText ?? 'Carregando serviços...';
+  const emptyText = homeContent?.services?.emptyText ?? 'Nenhum serviço cadastrado.';
+
   if (isLoading) {
     return (
       <Section id="services" variant="secondary">
         <div className="text-center py-12">
-          <LoadingSpinner size="lg" text="Carregando serviços..." />
+          <LoadingSpinner size="lg" text={loadingText} />
         </div>
       </Section>
     );
@@ -33,7 +36,7 @@ export function ServicesSection() {
 
       {activeServices.length === 0 ? (
         <div className="text-center py-8">
-          <Text variant="secondary">Nenhum serviço cadastrado.</Text>
+          <Text variant="secondary">{emptyText}</Text>
         </div>
       ) : (
         <>

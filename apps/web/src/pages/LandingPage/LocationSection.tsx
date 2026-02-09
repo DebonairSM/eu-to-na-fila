@@ -3,6 +3,11 @@ import { useShopConfig } from '@/contexts/ShopConfigContext';
 
 const fallbackLocation = {
   sectionTitle: 'Localização',
+  labelAddress: 'Endereço',
+  labelHours: 'Horário de Funcionamento',
+  labelPhone: 'Telefone',
+  labelLanguages: 'Idiomas',
+  linkMaps: 'Ver no Google Maps',
   address: '',
   addressLink: '#',
   hours: '',
@@ -20,25 +25,25 @@ export function LocationSection() {
   const locationItems = [
     {
       icon: 'location_on' as const,
-      title: 'Endereço',
+      title: loc.labelAddress ?? 'Endereço',
       content: (
         <>
           <span className="whitespace-pre-line">{loc.address}</span>
           <br />
           <a href={loc.addressLink} target="_blank" rel="noopener noreferrer" className={accentClass}>
-            Ver no Google Maps
+            {loc.linkMaps ?? 'Ver no Google Maps'}
           </a>
         </>
       ),
     },
     {
       icon: 'schedule' as const,
-      title: 'Horário de Funcionamento',
+      title: loc.labelHours ?? 'Horário de Funcionamento',
       content: <span className="whitespace-pre-line">{loc.hours}</span>,
     },
     {
       icon: 'phone' as const,
-      title: 'Telefone',
+      title: loc.labelPhone ?? 'Telefone',
       content: (
         <a href={loc.phoneHref} className={accentClass}>
           {loc.phone}
@@ -47,7 +52,7 @@ export function LocationSection() {
     },
     {
       icon: 'language' as const,
-      title: 'Idiomas',
+      title: loc.labelLanguages ?? 'Idiomas',
       content: loc.languages,
     },
   ];

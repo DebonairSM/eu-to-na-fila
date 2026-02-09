@@ -1,5 +1,5 @@
 import { db, schema } from '../db/index.js';
-import { eq, and, or, ne } from 'drizzle-orm';
+import { eq, and, or, ne, sql } from 'drizzle-orm';
 import type { CreateTicket, UpdateTicketStatus, Ticket } from '@eutonafila/shared';
 import { queueService } from './QueueService.js';
 import { auditService } from './AuditService.js';
@@ -466,6 +466,49 @@ export class TicketService {
         reason: 'Status updated to cancelled',
         actorType: 'staff',
       });
+    }
+
+    // Update per-barber weekday stats when a ticket is completed
+    if (data.status === 'completed' && existingTicket.status !== 'completed') {
+      const completedBarberId = ticket.barberId ?? existingTicket.barberId;
+      const completedStartedAt = existingTicket.startedAt
+        ? new Date(existingTicket.startedAt)
+        : null;
+
+      if (completedBarberId && completedStartedAt) {
+        const serviceTimeMinutes =
+          (now.getTime() - completedStartedAt.getTime()) / 60000;
+
+        // Only record plausible service times (> 0 and < 120 min)
+        if (serviceTimeMinutes > 0 && serviceTimeMinutes < 120) {
+          const dayOfWeek = now.getDay(); // 0=Sunday .. 6=Saturday
+
+          await db
+            .insert(schema.barberServiceWeekdayStats)
+            .values({
+              barberId: completedBarberId,
+              serviceId: existingTicket.serviceId,
+              shopId: existingTicket.shopId,
+              dayOfWeek,
+              avgDuration: serviceTimeMinutes,
+              totalCompleted: 1,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .onConflictDoUpdate({
+              target: [
+                schema.barberServiceWeekdayStats.barberId,
+                schema.barberServiceWeekdayStats.serviceId,
+                schema.barberServiceWeekdayStats.dayOfWeek,
+              ],
+              set: {
+                totalCompleted: sql`${schema.barberServiceWeekdayStats.totalCompleted} + 1`,
+                avgDuration: sql`(${schema.barberServiceWeekdayStats.avgDuration} * ${schema.barberServiceWeekdayStats.totalCompleted} + ${serviceTimeMinutes}) / (${schema.barberServiceWeekdayStats.totalCompleted} + 1)`,
+                updatedAt: now,
+              },
+            });
+        }
+      }
     }
 
     // Recalculate positions and wait times for remaining queue

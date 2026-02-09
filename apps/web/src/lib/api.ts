@@ -11,17 +11,47 @@ import type {
   GetStatisticsResponse,
 } from '@eutonafila/shared';
 
-/** Per-shop home page content (hero, services, about, location). All elements overridable. */
+/** Per-shop theme (colors). All elements overridable. */
+export interface ShopTheme {
+  primary: string;
+  accent: string;
+  background?: string;
+  surfacePrimary?: string;
+  surfaceSecondary?: string;
+  navBg?: string;
+  textPrimary?: string;
+  textSecondary?: string;
+  borderColor?: string;
+}
+
+/** Per-shop home page content (hero, services, about, location, nav, accessibility). All elements overridable. */
 export interface HomeContent {
   hero: { badge: string; subtitle: string; ctaJoin: string; ctaLocation: string };
-  services: { sectionTitle: string };
+  nav: {
+    linkServices: string;
+    linkAbout: string;
+    linkLocation: string;
+    ctaJoin: string;
+    linkBarbers: string;
+    labelDashboard: string;
+    labelDashboardCompany: string;
+    labelLogout: string;
+    labelMenu: string;
+  };
+  services: { sectionTitle: string; loadingText: string; emptyText: string };
   about: {
     sectionTitle: string;
     imageUrl: string;
+    imageAlt: string;
     features: Array<{ icon: string; text: string }>;
   };
   location: {
     sectionTitle: string;
+    labelAddress: string;
+    labelHours: string;
+    labelPhone: string;
+    labelLanguages: string;
+    linkMaps: string;
     address: string;
     addressLink: string;
     hours: string;
@@ -30,6 +60,7 @@ export interface HomeContent {
     languages: string;
     mapQuery: string;
   };
+  accessibility: { skipLink: string; loading: string };
 }
 
 /**
@@ -346,7 +377,7 @@ class ApiClient {
    */
   async getShopConfig(shopSlug: string): Promise<{
     name: string;
-    theme: { primary: string; accent: string };
+    theme: ShopTheme;
     path: string;
     homeContent: HomeContent;
   }> {
@@ -576,10 +607,49 @@ class ApiClient {
    * @returns List of services
    */
   async getServices(shopSlug: string): Promise<Service[]> {
-    const response = await this.get<{ services?: Service[] }>(
+    const response = await this.get<{ services?: Service[] } | Service[]>(
       `/shops/${shopSlug}/services`
     );
+    if (Array.isArray(response)) return response;
     return Array.isArray(response?.services) ? response.services : [];
+  }
+
+  /**
+   * Create a new service for a shop.
+   *
+   * @param shopSlug - Shop identifier
+   * @param data - Service data
+   * @returns Created service
+   */
+  async createService(
+    shopSlug: string,
+    data: { name: string; description?: string; duration: number; price?: number; isActive?: boolean }
+  ): Promise<Service> {
+    return this.post<Service>(`/shops/${shopSlug}/services`, data);
+  }
+
+  /**
+   * Update a service's details.
+   *
+   * @param serviceId - Service ID
+   * @param data - Fields to update
+   * @returns Updated service
+   */
+  async updateService(
+    serviceId: number,
+    data: { name?: string; description?: string | null; duration?: number; price?: number | null; isActive?: boolean }
+  ): Promise<Service> {
+    return this.patch<Service>(`/services/${serviceId}`, data);
+  }
+
+  /**
+   * Delete a service.
+   *
+   * @param serviceId - Service ID
+   * @returns Success response
+   */
+  async deleteService(serviceId: number): Promise<{ success: boolean; message: string }> {
+    return this.delete<{ success: boolean; message: string }>(`/services/${serviceId}`);
   }
 
   /**
@@ -716,6 +786,8 @@ class ApiClient {
     domain: string | null;
     path: string | null;
     apiBase: string | null;
+    theme: string | null;
+    homeContent: HomeContent | Record<string, unknown> | null;
     createdAt: Date;
     updatedAt: Date;
   }>> {
@@ -760,6 +832,8 @@ class ApiClient {
     name: string;
     slug?: string;
     domain?: string;
+    theme?: Partial<ShopTheme>;
+    homeContent?: Partial<HomeContent>;
     services: Array<{
       name: string;
       description?: string;
@@ -809,6 +883,8 @@ class ApiClient {
     domain?: string | null;
     path?: string | null;
     apiBase?: string | null;
+    theme?: Partial<ShopTheme>;
+    homeContent?: Partial<HomeContent>;
   }): Promise<{
     id: number;
     slug: string;

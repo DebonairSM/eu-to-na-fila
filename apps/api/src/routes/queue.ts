@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db, schema } from '../db/index.js';
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, and, asc, inArray } from 'drizzle-orm';
 import { ticketService } from '../services/TicketService.js';
 import { queueService } from '../services/QueueService.js';
 import { validateRequest } from '../lib/validation.js';
@@ -90,22 +90,84 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const activePresentBarbers = Math.max(activeBarbers.length, 1);
 
-    // In-progress remaining
+    // Build per-barber availability (minutes until free) using actual service durations
     const now = new Date();
     const inProgressTickets = await db.query.tickets.findMany({
       where: and(eq(schema.tickets.shopId, shop.id), eq(schema.tickets.status, 'in_progress')),
       orderBy: [asc(schema.tickets.updatedAt)],
     });
-    const inProgressRemaining = inProgressTickets.reduce((sum, t) => {
-      const updatedAt = t.updatedAt ? new Date(t.updatedAt) : now;
-      const elapsedMinutes = Math.max(0, (now.getTime() - updatedAt.getTime()) / 60000);
-      const remaining = Math.max(0, 20 - elapsedMinutes);
-      return sum + remaining;
-    }, 0);
+    const inProgressWithBarbers = inProgressTickets.filter(t => t.barberId !== null);
 
-    const sampleEstimateForNext = Math.ceil(
-      Math.max(0, (peopleAhead * 20) / activePresentBarbers) + inProgressRemaining
-    );
+    // Also get waiting tickets in general line for the simulation
+    const generalWaiting = await db.query.tickets.findMany({
+      where: and(eq(schema.tickets.shopId, shop.id), eq(schema.tickets.status, 'waiting')),
+      orderBy: [asc(schema.tickets.createdAt)],
+    });
+
+    // Pre-load service durations
+    const serviceIds = new Set<number>();
+    for (const t of inProgressWithBarbers) serviceIds.add(t.serviceId);
+    for (const t of generalWaiting) serviceIds.add(t.serviceId);
+    const durationMap = new Map<number, number>();
+    if (serviceIds.size > 0) {
+      const svcs = await db.query.services.findMany({
+        where: inArray(schema.services.id, [...serviceIds]),
+      });
+      for (const s of svcs) durationMap.set(s.id, s.duration);
+    }
+
+    // Pre-load per-barber weekday stats for barber-aware duration lookups
+    const barberIds = activeBarbers.map((b) => b.id);
+    const todayDow = now.getDay();
+    const barberStatsMap = new Map<string, number>();
+    if (barberIds.length > 0 && serviceIds.size > 0) {
+      const stats = await db.query.barberServiceWeekdayStats.findMany({
+        where: and(
+          eq(schema.barberServiceWeekdayStats.dayOfWeek, todayDow),
+          inArray(schema.barberServiceWeekdayStats.barberId, barberIds),
+          inArray(schema.barberServiceWeekdayStats.serviceId, [...serviceIds]),
+        ),
+      });
+      for (const s of stats) {
+        if (s.totalCompleted >= 10) {
+          barberStatsMap.set(`${s.barberId}:${s.serviceId}`, s.avgDuration);
+        }
+      }
+    }
+
+    const getDuration = (serviceId: number, barberId?: number) => {
+      if (barberId) {
+        const avg = barberStatsMap.get(`${barberId}:${serviceId}`);
+        if (avg !== undefined) return avg;
+      }
+      return durationMap.get(serviceId) ?? 20;
+    };
+
+    const barberAvailability: number[] = [];
+    for (const barber of activeBarbers) {
+      const ip = inProgressWithBarbers.find(t => t.barberId === barber.id);
+      if (ip) {
+        const startTime = ip.startedAt ? new Date(ip.startedAt) :
+                          ip.updatedAt ? new Date(ip.updatedAt) : now;
+        const elapsed = Math.max(0, (now.getTime() - startTime.getTime()) / 60000);
+        barberAvailability.push(Math.max(0, getDuration(ip.serviceId, barber.id) - elapsed));
+      } else {
+        barberAvailability.push(0);
+      }
+    }
+    if (barberAvailability.length === 0) barberAvailability.push(0);
+
+    // Simulate wave-based assignment using barber-aware service durations
+    const simAvailability = [...barberAvailability];
+    for (let i = 0; i < peopleAhead && i < generalWaiting.length; i++) {
+      const minTime = Math.min(...simAvailability);
+      const minIdx = simAvailability.indexOf(minTime);
+      const barberId = activeBarbers[minIdx]?.id;
+      simAvailability[minIdx] += getDuration(generalWaiting[i].serviceId, barberId);
+    }
+    const sampleEstimateForNext = Math.ceil(Math.min(...simAvailability));
+
+    const inProgressRemaining = barberAvailability.reduce((sum, v) => sum + v, 0);
 
     return {
       peopleAhead,
@@ -166,7 +228,12 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
 
     const now = new Date();
 
-    // Get all active barbers
+    // Standard queue: "if the next customer joins the general line now, what's their wait?"
+    // Use general-line position (no preferred barber) and general-line wait time.
+    const generalPosition = await queueService.calculatePosition(shop.id, now);
+    const standardWaitTime = await queueService.calculateWaitTime(shop.id, generalPosition);
+
+    // Get all active barbers for per-barber wait times (for barber-specific display if needed)
     const barbers = await db.query.barbers.findMany({
       where: and(
         eq(schema.barbers.shopId, shop.id),
@@ -174,7 +241,6 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
       ),
     });
 
-    // Calculate wait time for each barber
     const barberWaitTimes = await Promise.all(
       barbers.map(async (barber) => {
         const position = await queueService.calculatePositionForPreferredBarber(
@@ -197,16 +263,6 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
         };
       })
     );
-
-    // Standard queue wait time should be the minimum of all present barbers' wait times
-    // because the standard queue can assign to any available barber (the fastest one)
-    const presentBarberWaitTimes = barberWaitTimes
-      .filter((bt) => bt.isPresent && bt.waitTime !== null)
-      .map((bt) => bt.waitTime as number);
-    
-    const standardWaitTime = presentBarberWaitTimes.length > 0
-      ? Math.min(...presentBarberWaitTimes)
-      : null;
 
     return {
       standardWaitTime,

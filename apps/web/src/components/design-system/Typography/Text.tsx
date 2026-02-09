@@ -10,8 +10,8 @@ export interface TextProps extends React.HTMLAttributes<HTMLParagraphElement> {
 const Text = React.forwardRef<HTMLElement, TextProps>(
   ({ className, variant = 'primary', size = 'base', as: Component = 'p', ...props }, ref) => {
     const colorClasses = {
-      primary: 'text-white',
-      secondary: 'text-[rgba(255,255,255,0.7)]',
+      primary: 'text-[var(--shop-text-primary,#ffffff)]',
+      secondary: 'text-[var(--shop-text-secondary,rgba(255,255,255,0.7))]',
       tertiary: 'text-[rgba(255,255,255,0.5)]',
     };
 

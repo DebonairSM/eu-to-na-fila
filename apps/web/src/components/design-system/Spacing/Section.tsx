@@ -10,16 +10,13 @@ export interface SectionProps extends React.HTMLAttributes<HTMLElement> {
 
 const Section = React.forwardRef<HTMLElement, SectionProps>(
   ({ className, variant = 'primary', containerSize = '2xl', fullWidth = false, children, ...props }, ref) => {
-    const bgColor = variant === 'primary' ? 'bg-[#0a0a0a]' : 'bg-[#1a1a1a]';
+    const bgVar = variant === 'primary' ? 'var(--shop-surface-primary, #0a0a0a)' : 'var(--shop-surface-secondary, #1a1a1a)';
 
     return (
       <section
         ref={ref}
-        className={cn(
-          bgColor,
-          'py-16 lg:py-20',
-          className
-        )}
+        className={cn('py-16 lg:py-20', className)}
+        style={{ backgroundColor: bgVar }}
         {...props}
       >
         <Container size={containerSize} fullWidth={fullWidth}>

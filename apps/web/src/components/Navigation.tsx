@@ -1,15 +1,29 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { config } from '@/lib/config';
+import { config as appConfig } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { Container } from '@/components/design-system';
 
 export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, logout } = useAuthContext();
+  const { config: shopConfig } = useShopConfig();
   const navigate = useNavigate();
   const location = useLocation();
+  const navLabels = shopConfig.homeContent?.nav ?? {
+    linkServices: 'Serviços',
+    linkAbout: 'Sobre',
+    linkLocation: 'Localização',
+    ctaJoin: 'Entrar na Fila',
+    linkBarbers: 'Barbeiros',
+    labelDashboard: 'Dashboard',
+    labelDashboardCompany: 'Dashboard Empresarial',
+    labelLogout: 'Sair',
+    labelMenu: 'Menu',
+  };
+  const shopName = shopConfig.name || appConfig.name;
 
   useEffect(() => {
     let ticking = false;
@@ -83,9 +97,13 @@ export function Navigation() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all overflow-x-hidden ${
         isScrolled
-          ? 'bg-[#0a0a0a] py-0.5 sm:py-1.5 shadow-[0_1px_0_rgba(255,255,255,0.06)]'
-          : 'bg-[#0a0a0a] py-0.5 sm:py-2'
-      } border-b border-[rgba(255,255,255,0.08)]`}
+          ? 'py-0.5 sm:py-1.5 shadow-[0_1px_0_rgba(255,255,255,0.06)]'
+          : 'py-0.5 sm:py-2'
+      }`}
+      style={{
+        backgroundColor: 'var(--shop-nav-bg, #0a0a0a)',
+        borderBottom: '1px solid var(--shop-border-color, rgba(255,255,255,0.08))',
+      }}
       role="navigation"
       aria-label="Main navigation"
     >
@@ -93,13 +111,14 @@ export function Navigation() {
         {/* Logo */}
         <Link
           to="/home"
-          className="font-['Playfair_Display',serif] text-base sm:text-2xl font-semibold text-[#D4AF37] flex items-center justify-center gap-1 sm:gap-3 min-h-[48px] min-w-[48px] px-1 sm:px-2 py-0 rounded transition-all hover:text-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 flex-shrink-0"
-          aria-label={`${config.name} - Home`}
+          className="font-['Playfair_Display',serif] text-base sm:text-2xl font-semibold flex items-center justify-center gap-1 sm:gap-3 min-h-[48px] min-w-[48px] px-1 sm:px-2 py-0 rounded transition-all flex-shrink-0 [&:hover]:opacity-90"
+          style={{ color: 'var(--shop-accent, #D4AF37)' }}
+          aria-label={`${shopName} - Home`}
         >
           <span className="material-symbols-outlined text-xl sm:text-2xl leading-none flex items-center justify-center flex-shrink-0">
             content_cut
           </span>
-          <span className="hidden sm:inline truncate">{config.name}</span>
+          <span className="hidden sm:inline truncate">{shopName}</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -108,27 +127,36 @@ export function Navigation() {
             <a
               href="/home#services"
               onClick={(e) => handleHashLink(e, '#services')}
-              className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 cursor-pointer"
+              className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-nav-bg)] cursor-pointer [&:hover]:[color:var(--shop-accent)]"
+              style={{
+                color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
+              }}
             >
-              Serviços
+              {navLabels.linkServices}
             </a>
           </li>
           <li>
             <a
               href="/home#about"
               onClick={(e) => handleHashLink(e, '#about')}
-              className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 cursor-pointer"
+              className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-nav-bg)] cursor-pointer [&:hover]:[color:var(--shop-accent)]"
+              style={{
+                color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
+              }}
             >
-              Sobre
+              {navLabels.linkAbout}
             </a>
           </li>
           <li>
             <a
               href="/home#location"
               onClick={(e) => handleHashLink(e, '#location')}
-              className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 cursor-pointer"
+              className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-nav-bg)] cursor-pointer [&:hover]:[color:var(--shop-accent)]"
+              style={{
+                color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
+              }}
             >
-              Localização
+              {navLabels.linkLocation}
             </a>
           </li>
           {user ? (
@@ -137,10 +165,14 @@ export function Navigation() {
                 <li>
                   <Link
                     to={user.role === 'owner' ? '/owner' : '/manage'}
-                    className="bg-[#D4AF37] text-[#0a0a0a] font-semibold text-[0.9rem] px-4 py-2.5 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors hover:bg-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
+                    className="font-semibold text-[0.9rem] px-4 py-2.5 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
+                    style={{
+                      backgroundColor: 'var(--shop-accent, #D4AF37)',
+                      color: '#0a0a0a',
+                    }}
                   >
                     <span className="material-symbols-outlined text-lg">dashboard</span>
-                    Dashboard
+                    {navLabels.labelDashboard}
                   </Link>
                 </li>
               )}
@@ -148,19 +180,26 @@ export function Navigation() {
                 <li>
                   <Link
                     to="/company/dashboard"
-                    className="bg-[#D4AF37] text-[#0a0a0a] font-semibold text-[0.9rem] px-4 py-2.5 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors hover:bg-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
+                    className="font-semibold text-[0.9rem] px-4 py-2.5 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
+                    style={{
+                      backgroundColor: 'var(--shop-accent, #D4AF37)',
+                      color: '#0a0a0a',
+                    }}
                   >
                     <span className="material-symbols-outlined text-lg">business</span>
-                    Dashboard Empresarial
+                    {navLabels.labelDashboardCompany}
                   </Link>
                 </li>
               )}
               <li>
                 <button
                   onClick={handleLogout}
-                  className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+                  className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 [&:hover]:[color:var(--shop-accent)]"
+                  style={{
+                    color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
+                  }}
                 >
-                  Sair
+                  {navLabels.labelLogout}
                 </button>
               </li>
             </>
@@ -169,18 +208,25 @@ export function Navigation() {
               <li>
                 <Link
                   to="/join"
-                  className="inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] text-[#0a0a0a] bg-[#D4AF37] px-4 py-2.5 rounded-xl min-h-[44px] shadow-[0_4px_20px_rgba(212,175,55,0.25)] hover:bg-[#E8C547] hover:shadow-[0_6px_24px_rgba(212,175,55,0.35)] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
+                  className="inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] px-4 py-2.5 rounded-xl min-h-[44px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  style={{
+                    color: '#0a0a0a',
+                    backgroundColor: 'var(--shop-accent, #D4AF37)',
+                  }}
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden>queue</span>
-                  Entrar na Fila
+                  {navLabels.ctaJoin}
                 </Link>
               </li>
               <li>
                 <Link
                   to="/shop/login"
-                  className="text-[0.9rem] font-medium text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37] transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+                  className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 [&:hover]:[color:var(--shop-accent)]"
+                  style={{
+                    color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
+                  }}
                 >
-                  Barbeiros
+                  {navLabels.linkBarbers}
                 </Link>
               </li>
             </>
@@ -189,7 +235,8 @@ export function Navigation() {
 
         {/* Mobile Menu Button */}
         <button
-          className="lg:hidden bg-transparent border-0 text-white cursor-pointer p-0 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 flex-shrink-0"
+          className="lg:hidden bg-transparent border-0 cursor-pointer p-0 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 flex-shrink-0"
+          style={{ color: 'var(--shop-text-primary, #fff)' }}
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label="Toggle menu"
           aria-expanded={isMobileMenuOpen}
@@ -209,7 +256,7 @@ export function Navigation() {
             aria-hidden="true"
           />
           <div
-            className="fixed top-0 left-0 w-64 max-w-[70vw] h-full bg-[#0a0a0a] z-[101] p-4 flex flex-col overflow-y-auto lg:hidden shadow-2xl border-r border-[rgba(255,255,255,0.08)] animate-in slide-in-from-left-4"
+            className="fixed top-0 left-0 w-64 max-w-[70vw] h-full z-[101] p-4 flex flex-col overflow-y-auto lg:hidden shadow-2xl animate-in slide-in-from-left-4"
             role="dialog"
             aria-modal="true"
             aria-label="Menu de navegação"
@@ -217,12 +264,14 @@ export function Navigation() {
             style={{
               animationDuration: '250ms',
               animationFillMode: 'both',
+              backgroundColor: 'var(--shop-nav-bg, #0a0a0a)',
+              borderRight: '1px solid var(--shop-border-color, rgba(255,255,255,0.08))',
             }}
           >
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-[rgba(255,255,255,0.1)]">
-                <h2 className="text-base font-semibold text-[#D4AF37]">Menu</h2>
+              <div className="flex items-center justify-between mb-4 pb-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                <h2 className="text-base font-semibold" style={{ color: 'var(--shop-accent)' }}>{navLabels.labelMenu}</h2>
                 <button
-                  className="bg-transparent border-none text-white cursor-pointer p-1.5 min-w-[48px] min-h-[48px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2"
+                  className="bg-transparent border-none text-white cursor-pointer p-1.5 min-w-[48px] min-h-[48px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -242,9 +291,10 @@ export function Navigation() {
                       e.stopPropagation();
                       handleHashLink(e, '#services');
                     }}
-                    className="block text-sm font-medium text-[rgba(255,255,255,0.7)] px-3 py-3 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
+                    className="block text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] cursor-pointer [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)]"
+                    style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
                   >
-                    Serviços
+                    {navLabels.linkServices}
                   </a>
                 </li>
                 <li>
@@ -254,9 +304,10 @@ export function Navigation() {
                       e.stopPropagation();
                       handleHashLink(e, '#about');
                     }}
-                    className="block text-sm font-medium text-[rgba(255,255,255,0.7)] px-3 py-3 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
+                    className="block text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] cursor-pointer [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)]"
+                    style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
                   >
-                    Sobre
+                    {navLabels.linkAbout}
                   </a>
                 </li>
                 <li>
@@ -266,9 +317,10 @@ export function Navigation() {
                       e.stopPropagation();
                       handleHashLink(e, '#location');
                     }}
-                    className="block text-sm font-medium text-[rgba(255,255,255,0.7)] px-3 py-3 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547] cursor-pointer"
+                    className="block text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] cursor-pointer [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)]"
+                    style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
                   >
-                    Localização
+                    {navLabels.linkLocation}
                   </a>
                 </li>
               </ul>
@@ -278,27 +330,29 @@ export function Navigation() {
                     {(user.role === 'owner' || user.role === 'barber') && (
                       <Link
                         to={user.role === 'owner' ? '/owner' : '/manage'}
-                        className="block w-full bg-[#D4AF37] text-[#0a0a0a] font-semibold text-sm px-4 py-3 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors hover:bg-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                        className="block w-full font-semibold text-sm px-4 py-3 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                        style={{ backgroundColor: 'var(--shop-accent)', color: '#0a0a0a' }}
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsMobileMenuOpen(false);
                         }}
                       >
                         <span className="material-symbols-outlined text-lg">dashboard</span>
-                        Dashboard
+                        {navLabels.labelDashboard}
                       </Link>
                     )}
                     {user.role === 'company_admin' && (
                       <Link
                         to="/company/dashboard"
-                        className="block w-full bg-[#D4AF37] text-[#0a0a0a] font-semibold text-sm px-4 py-3 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors hover:bg-[#E8C547] focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                        className="block w-full font-semibold text-sm px-4 py-3 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                        style={{ backgroundColor: 'var(--shop-accent)', color: '#0a0a0a' }}
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsMobileMenuOpen(false);
                         }}
                       >
                         <span className="material-symbols-outlined text-lg">business</span>
-                        Dashboard Empresarial
+                        {navLabels.labelDashboardCompany}
                       </Link>
                     )}
                     <button
@@ -307,34 +361,37 @@ export function Navigation() {
                         e.stopPropagation();
                         handleLogout();
                       }}
-                      className="block w-full text-left text-sm font-medium text-[rgba(255,255,255,0.85)] px-3 py-3 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                      className="block w-full text-left text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)]"
+                      style={{ color: 'rgba(255,255,255,0.85)' }}
                       type="button"
                     >
-                      Sair
+                      {navLabels.labelLogout}
                     </button>
                   </>
                 ) : (
                   <>
                     <Link
                       to="/join"
-                      className="flex items-center justify-center gap-2 w-full font-semibold text-sm text-[#0a0a0a] bg-[#D4AF37] px-4 py-3 rounded-xl min-h-[48px] shadow-[0_4px_20px_rgba(212,175,55,0.25)] hover:bg-[#E8C547] hover:shadow-[0_6px_24px_rgba(212,175,55,0.35)] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#E8C547] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
+                      className="flex items-center justify-center gap-2 w-full font-semibold text-sm px-4 py-3 rounded-xl min-h-[48px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2"
+                      style={{ color: '#0a0a0a', backgroundColor: 'var(--shop-accent)' }}
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsMobileMenuOpen(false);
                       }}
                     >
                       <span className="material-symbols-outlined text-lg" aria-hidden>queue</span>
-                      Entrar na Fila
+                      {navLabels.ctaJoin}
                     </Link>
                     <Link
                       to="/shop/login"
-                      className="block text-sm font-medium text-[rgba(255,255,255,0.85)] px-3 py-3 rounded-md transition-all hover:text-[#D4AF37] hover:bg-[#1a1a1a] min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[#E8C547]"
+                      className="block text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)]"
+                      style={{ color: 'rgba(255,255,255,0.85)' }}
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsMobileMenuOpen(false);
                       }}
                     >
-                      Barbeiros
+                      {navLabels.linkBarbers}
                     </Link>
                   </>
                 )}

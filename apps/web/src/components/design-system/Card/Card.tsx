@@ -17,15 +17,15 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           'transition-all',
           // Variants
           {
-            'bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)]':
+            'bg-[rgba(255,255,255,0.02)] border':
               variant === 'default',
-            'bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] shadow-md':
+            'bg-[rgba(255,255,255,0.02)] border shadow-md':
               variant === 'elevated',
             'bg-transparent border border-[rgba(255,255,255,0.15)]':
               variant === 'outlined',
           },
-          // Hover: subtle border change only, no lift
-          hover && 'lg:hover:border-[rgba(212,175,55,0.35)]',
+          variant !== 'outlined' && 'border-[var(--shop-border-color,rgba(255,255,255,0.08))]',
+          hover && 'lg:hover:border-[color-mix(in_srgb,var(--shop-accent,#D4AF37)_35%,transparent)]',
           className
         )}
         style={{

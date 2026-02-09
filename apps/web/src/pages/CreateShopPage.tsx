@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
+import type { ShopTheme, HomeContent } from '@/lib/api';
 import { useModal } from '@/hooks/useModal';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { CompanyNav } from '@/components/CompanyNav';
@@ -26,10 +27,33 @@ interface BarberItem {
   phone: string;
 }
 
+const DEFAULT_THEME: ShopTheme = {
+  primary: '#3E2723',
+  accent: '#D4AF37',
+  background: '#0a0a0a',
+  surfacePrimary: '#0a0a0a',
+  surfaceSecondary: '#1a1a1a',
+  navBg: '#0a0a0a',
+  textPrimary: '#ffffff',
+  textSecondary: 'rgba(255,255,255,0.7)',
+  borderColor: 'rgba(255,255,255,0.08)',
+};
+
+const DEFAULT_HOME_CONTENT: HomeContent = {
+  hero: { badge: 'Sangão, Santa Catarina', subtitle: 'Entre na fila online', ctaJoin: 'Entrar na Fila', ctaLocation: 'Como Chegar' },
+  nav: { linkServices: 'Serviços', linkAbout: 'Sobre', linkLocation: 'Localização', ctaJoin: 'Entrar na Fila', linkBarbers: 'Barbeiros', labelDashboard: 'Dashboard', labelDashboardCompany: 'Dashboard Empresarial', labelLogout: 'Sair', labelMenu: 'Menu' },
+  services: { sectionTitle: 'Serviços', loadingText: 'Carregando serviços...', emptyText: 'Nenhum serviço cadastrado.' },
+  about: { sectionTitle: 'Sobre', imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80', imageAlt: 'Interior da barbearia', features: [{ icon: 'schedule', text: 'Fila online' }, { icon: 'workspace_premium', text: 'Produtos premium' }, { icon: 'groups', text: 'Equipe experiente' }, { icon: 'local_parking', text: 'Estacionamento fácil' }] },
+  location: { sectionTitle: 'Localização', labelAddress: 'Endereço', labelHours: 'Horário de Funcionamento', labelPhone: 'Telefone', labelLanguages: 'Idiomas', linkMaps: 'Ver no Google Maps', address: '', addressLink: '', hours: '', phone: '', phoneHref: '', languages: '', mapQuery: '' },
+  accessibility: { skipLink: 'Pular para o conteúdo principal', loading: 'Carregando…' },
+};
+
 interface ShopFormData {
   name: string;
   slug: string;
   domain: string;
+  theme: ShopTheme;
+  homeContent: HomeContent;
   services: ServiceItem[];
   barbers: BarberItem[];
 }
@@ -42,6 +66,8 @@ const TEMPLATE: ShopFormData = {
   name: '',
   slug: '',
   domain: '',
+  theme: { ...DEFAULT_THEME },
+  homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)),
   services: [
     { id: uid(), name: 'Corte de Cabelo', description: 'Corte tradicional', duration: 30, price: 3000 },
     { id: uid(), name: 'Barba', description: 'Aparar e modelar barba', duration: 20, price: 2000 },
@@ -53,9 +79,9 @@ const TEMPLATE: ShopFormData = {
   ],
 };
 
-const STEPS = ['Informacoes', 'Servicos', 'Barbeiros', 'Revisao'] as const;
-const STEP_LABELS = ['Informacoes', 'Servicos', 'Barbeiros', 'Revisao'];
-const STEP_ICONS = ['store', 'content_cut', 'group', 'checklist'];
+const STEPS = ['Informacoes', 'Aparencia e Conteudo', 'Servicos', 'Barbeiros', 'Revisao'] as const;
+const STEP_LABELS = ['Informacoes', 'Aparência e Conteúdo', 'Servicos', 'Barbeiros', 'Revisao'];
+const STEP_ICONS = ['store', 'palette', 'content_cut', 'group', 'checklist'];
 
 // --- Helpers ---
 
@@ -179,7 +205,129 @@ function StepBasicInfo({
   );
 }
 
-// --- Step 2: Services ---
+// --- Step 2: Appearance and Content ---
+
+function StepAppearanceContent({
+  theme,
+  homeContent,
+  onChange,
+}: {
+  theme: ShopTheme;
+  homeContent: HomeContent;
+  onChange: (patch: Partial<ShopFormData>) => void;
+}) {
+  const inputClass = 'w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] text-sm';
+  const labelClass = 'block text-white/70 text-xs mb-1';
+
+  return (
+    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 max-h-[60vh] overflow-y-auto pr-2">
+      <p className="text-white/60 text-sm">Personalize cores e textos da pagina inicial da barbearia. Todos os campos sao opcionais.</p>
+
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-3">Cores (tema)</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {(['primary', 'accent', 'background', 'surfacePrimary', 'surfaceSecondary', 'navBg'] as const).map((key) => (
+            <div key={key}>
+              <label className={labelClass}>{key}</label>
+              <input
+                type="text"
+                value={theme[key] ?? ''}
+                onChange={(e) => onChange({ theme: { ...theme, [key]: e.target.value } })}
+                placeholder="#hex"
+                className={inputClass}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-3">Hero</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="sm:col-span-2"><label className={labelClass}>badge</label><input type="text" value={homeContent.hero.badge} onChange={(e) => onChange({ homeContent: { ...homeContent, hero: { ...homeContent.hero, badge: e.target.value } } })} className={inputClass} /></div>
+          <div className="sm:col-span-2"><label className={labelClass}>subtitle</label><input type="text" value={homeContent.hero.subtitle} onChange={(e) => onChange({ homeContent: { ...homeContent, hero: { ...homeContent.hero, subtitle: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>ctaJoin</label><input type="text" value={homeContent.hero.ctaJoin} onChange={(e) => onChange({ homeContent: { ...homeContent, hero: { ...homeContent.hero, ctaJoin: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>ctaLocation</label><input type="text" value={homeContent.hero.ctaLocation} onChange={(e) => onChange({ homeContent: { ...homeContent, hero: { ...homeContent.hero, ctaLocation: e.target.value } } })} className={inputClass} /></div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-3">Navegacao</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {(['linkServices', 'linkAbout', 'linkLocation', 'ctaJoin', 'linkBarbers', 'labelDashboard', 'labelDashboardCompany', 'labelLogout', 'labelMenu'] as const).map((key) => (
+            <div key={key}>
+              <label className={labelClass}>{key}</label>
+              <input type="text" value={homeContent.nav[key]} onChange={(e) => onChange({ homeContent: { ...homeContent, nav: { ...homeContent.nav, [key]: e.target.value } } })} className={inputClass} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-3">Servicos (titulos)</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div><label className={labelClass}>sectionTitle</label><input type="text" value={homeContent.services.sectionTitle} onChange={(e) => onChange({ homeContent: { ...homeContent, services: { ...homeContent.services, sectionTitle: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>loadingText</label><input type="text" value={homeContent.services.loadingText} onChange={(e) => onChange({ homeContent: { ...homeContent, services: { ...homeContent.services, loadingText: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>emptyText</label><input type="text" value={homeContent.services.emptyText} onChange={(e) => onChange({ homeContent: { ...homeContent, services: { ...homeContent.services, emptyText: e.target.value } } })} className={inputClass} /></div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-3">Sobre</h3>
+        <div className="space-y-3">
+          <div><label className={labelClass}>sectionTitle</label><input type="text" value={homeContent.about.sectionTitle} onChange={(e) => onChange({ homeContent: { ...homeContent, about: { ...homeContent.about, sectionTitle: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>imageUrl</label><input type="url" value={homeContent.about.imageUrl} onChange={(e) => onChange({ homeContent: { ...homeContent, about: { ...homeContent.about, imageUrl: e.target.value } } })} className={inputClass} placeholder="https://..." /></div>
+          <div><label className={labelClass}>imageAlt</label><input type="text" value={homeContent.about.imageAlt} onChange={(e) => onChange({ homeContent: { ...homeContent, about: { ...homeContent.about, imageAlt: e.target.value } } })} className={inputClass} /></div>
+          <div>
+            <label className={labelClass}>features (icon | text, um por linha)</label>
+            <textarea
+              value={homeContent.about.features.map((f) => `${f.icon}|${f.text}`).join('\n')}
+              onChange={(e) => {
+                const lines = e.target.value.split('\n').filter(Boolean);
+                const features = lines.map((line) => {
+                  const [icon, text] = line.split('|');
+                  return { icon: (icon ?? '').trim(), text: (text ?? '').trim() };
+                });
+                onChange({ homeContent: { ...homeContent, about: { ...homeContent.about, features } } });
+              }}
+              className={inputClass + ' min-h-[80px]'}
+              placeholder="schedule|Fila online"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-3">Localizacao</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div><label className={labelClass}>sectionTitle</label><input type="text" value={homeContent.location.sectionTitle} onChange={(e) => onChange({ homeContent: { ...homeContent, location: { ...homeContent.location, sectionTitle: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>labelAddress</label><input type="text" value={homeContent.location.labelAddress} onChange={(e) => onChange({ homeContent: { ...homeContent, location: { ...homeContent.location, labelAddress: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>labelHours</label><input type="text" value={homeContent.location.labelHours} onChange={(e) => onChange({ homeContent: { ...homeContent, location: { ...homeContent.location, labelHours: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>labelPhone</label><input type="text" value={homeContent.location.labelPhone} onChange={(e) => onChange({ homeContent: { ...homeContent, location: { ...homeContent.location, labelPhone: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>labelLanguages</label><input type="text" value={homeContent.location.labelLanguages} onChange={(e) => onChange({ homeContent: { ...homeContent, location: { ...homeContent.location, labelLanguages: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>linkMaps</label><input type="text" value={homeContent.location.linkMaps} onChange={(e) => onChange({ homeContent: { ...homeContent, location: { ...homeContent.location, linkMaps: e.target.value } } })} className={inputClass} /></div>
+          <div className="sm:col-span-2"><label className={labelClass}>address</label><textarea value={homeContent.location.address} onChange={(e) => onChange({ homeContent: { ...homeContent, location: { ...homeContent.location, address: e.target.value } } })} className={inputClass + ' min-h-[60px]'} /></div>
+          <div><label className={labelClass}>addressLink</label><input type="url" value={homeContent.location.addressLink} onChange={(e) => onChange({ homeContent: { ...homeContent, location: { ...homeContent.location, addressLink: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>hours</label><textarea value={homeContent.location.hours} onChange={(e) => onChange({ homeContent: { ...homeContent, location: { ...homeContent.location, hours: e.target.value } } })} className={inputClass + ' min-h-[60px]'} /></div>
+          <div><label className={labelClass}>phone</label><input type="text" value={homeContent.location.phone} onChange={(e) => onChange({ homeContent: { ...homeContent, location: { ...homeContent.location, phone: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>phoneHref</label><input type="text" value={homeContent.location.phoneHref} onChange={(e) => onChange({ homeContent: { ...homeContent, location: { ...homeContent.location, phoneHref: e.target.value } } })} className={inputClass} placeholder="tel:+55..." /></div>
+          <div><label className={labelClass}>languages</label><input type="text" value={homeContent.location.languages} onChange={(e) => onChange({ homeContent: { ...homeContent, location: { ...homeContent.location, languages: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>mapQuery</label><input type="text" value={homeContent.location.mapQuery} onChange={(e) => onChange({ homeContent: { ...homeContent, location: { ...homeContent.location, mapQuery: e.target.value } } })} className={inputClass} placeholder="Endereco para Google Maps" /></div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-3">Acessibilidade</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div><label className={labelClass}>skipLink</label><input type="text" value={homeContent.accessibility.skipLink} onChange={(e) => onChange({ homeContent: { ...homeContent, accessibility: { ...homeContent.accessibility, skipLink: e.target.value } } })} className={inputClass} /></div>
+          <div><label className={labelClass}>loading</label><input type="text" value={homeContent.accessibility.loading} onChange={(e) => onChange({ homeContent: { ...homeContent, accessibility: { ...homeContent.accessibility, loading: e.target.value } } })} className={inputClass} /></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Step 3: Services ---
 
 function StepServices({
   services,
@@ -417,6 +565,7 @@ function StepReview({ data }: { data: ShopFormData }) {
           <span className="material-symbols-outlined text-[#D4AF37]">store</span>
           <h3 className="text-lg font-semibold text-white">Barbearia</h3>
         </div>
+        <p className="text-white/50 text-xs">Tema e conteudo da pagina inicial configurados.</p>
         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <div>
             <span className="text-white/50">Nome:</span>
@@ -523,14 +672,13 @@ export function CreateShopPage() {
       if (s === 0) {
         if (!data.name.trim()) errs.name = 'Nome e obrigatorio';
       }
-
-      if (s === 1) {
-        const hasEmpty = data.services.some((s) => !s.name.trim());
+      // s === 1: Aparência e Conteúdo - no validation
+      if (s === 2) {
+        const hasEmpty = data.services.some((svc) => !svc.name.trim());
         if (hasEmpty) errs.services = 'Todos os servicos precisam de um nome';
         if (data.services.length === 0) errs.services = 'Adicione pelo menos 1 servico';
       }
-
-      if (s === 2) {
+      if (s === 3) {
         const hasEmpty = data.barbers.some((b) => !b.name.trim());
         if (hasEmpty) errs.barbers = 'Todos os barbeiros precisam de um nome';
         if (data.barbers.length === 0) errs.barbers = 'Adicione pelo menos 1 barbeiro';
@@ -563,8 +711,8 @@ export function CreateShopPage() {
   const handleSubmit = useCallback(async () => {
     if (!user?.companyId) return;
 
-    // Validate all steps
-    for (let s = 0; s < 3; s++) {
+    // Validate all steps (0=info, 2=services, 3=barbers; step 1 has no validation)
+    for (const s of [0, 2, 3]) {
       if (!validateStep(s)) {
         setStep(s);
         return;
@@ -579,6 +727,8 @@ export function CreateShopPage() {
         name: data.name,
         slug: data.slug || undefined,
         domain: data.domain || undefined,
+        theme: data.theme,
+        homeContent: data.homeContent,
         services: data.services.map((s) => ({
           name: s.name,
           description: s.description || undefined,
@@ -630,20 +780,27 @@ export function CreateShopPage() {
         {/* Steps */}
         {step === 0 && <StepBasicInfo data={data} onChange={onChange} errors={errors} />}
         {step === 1 && (
+          <StepAppearanceContent
+            theme={data.theme}
+            homeContent={data.homeContent}
+            onChange={onChange}
+          />
+        )}
+        {step === 2 && (
           <StepServices
             services={data.services}
             onChange={(services) => onChange({ services })}
             errors={errors}
           />
         )}
-        {step === 2 && (
+        {step === 3 && (
           <StepBarbers
             barbers={data.barbers}
             onChange={(barbers) => onChange({ barbers })}
             errors={errors}
           />
         )}
-        {step === 3 && <StepReview data={data} />}
+        {step === 4 && <StepReview data={data} />}
 
         {/* Navigation buttons */}
         <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/10">

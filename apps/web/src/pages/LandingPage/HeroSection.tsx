@@ -10,7 +10,8 @@ export function HeroSection() {
   return (
     <section
       id="main-content"
-      className="hero relative min-h-screen flex items-start justify-center pt-16 lg:items-center lg:pt-0 overflow-hidden bg-[#0a0a0a]"
+      className="hero relative min-h-screen flex items-start justify-center pt-16 lg:items-center lg:pt-0 overflow-hidden"
+      style={{ backgroundColor: 'var(--shop-background, #0a0a0a)' }}
     >
       <Container size="2xl" className="relative z-10 w-full">
         <div className="lg:hidden text-center">

@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, serial, jsonb, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, timestamp, serial, jsonb, index, uniqueIndex, real } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const projects = pgTable('projects', {
@@ -186,4 +186,28 @@ export const auditLog = pgTable('audit_log', {
 export const companyAdsRelations = relations(companyAds, ({ one }) => ({
   company: one(companies, { fields: [companyAds.companyId], references: [companies.id] }),
   shop: one(shops, { fields: [companyAds.shopId], references: [shops.id] }),
+}));
+
+// Per-barber, per-service, per-day-of-week average service duration stats.
+// Used by QueueService to estimate wait times based on actual historical data.
+export const barberServiceWeekdayStats = pgTable('barber_service_weekday_stats', {
+  id: serial('id').primaryKey(),
+  barberId: integer('barber_id').notNull().references(() => barbers.id),
+  serviceId: integer('service_id').notNull().references(() => services.id),
+  shopId: integer('shop_id').notNull().references(() => shops.id),
+  dayOfWeek: integer('day_of_week').notNull(), // 0=Sunday .. 6=Saturday (JS Date.getDay())
+  avgDuration: real('avg_duration').notNull().default(0), // average in minutes
+  totalCompleted: integer('total_completed').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  barberServiceDayUnique: uniqueIndex('bsws_barber_service_day_unique').on(table.barberId, table.serviceId, table.dayOfWeek),
+  shopIdIdx: index('bsws_shop_id_idx').on(table.shopId),
+  barberIdIdx: index('bsws_barber_id_idx').on(table.barberId),
+}));
+
+export const barberServiceWeekdayStatsRelations = relations(barberServiceWeekdayStats, ({ one }) => ({
+  barber: one(barbers, { fields: [barberServiceWeekdayStats.barberId], references: [barbers.id] }),
+  service: one(services, { fields: [barberServiceWeekdayStats.serviceId], references: [services.id] }),
+  shop: one(shops, { fields: [barberServiceWeekdayStats.shopId], references: [shops.id] }),
 }));

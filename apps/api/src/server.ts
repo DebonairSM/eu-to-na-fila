@@ -26,6 +26,7 @@ import { projectsRoutes } from './routes/projects.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { registerWebSocket } from './websocket/handler.js';
 import { getPublicPath } from './lib/paths.js';
+import { startQueueCountdown } from './jobs/queueCountdown.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -440,6 +441,9 @@ fastify.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {
   console.log(`🔌 API available at http://localhost:${env.PORT}/api`);
   console.log('\n📋 Registered routes:');
   fastify.printRoutes();
+
+  // Start periodic queue recalculation (every 60s) so wait times tick down
+  startQueueCountdown();
 }).catch((err) => {
   console.error('❌ Failed to start server:', err);
   process.exit(1);

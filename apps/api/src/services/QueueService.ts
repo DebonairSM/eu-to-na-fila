@@ -1,5 +1,5 @@
 import { db, schema } from '../db/index.js';
-import { eq, and, asc, or, isNull } from 'drizzle-orm';
+import { eq, and, asc, or, isNull, inArray } from 'drizzle-orm';
 import { auditService } from './AuditService.js';
 
 /**
@@ -7,7 +7,7 @@ import { auditService } from './AuditService.js';
  * 
  * Handles:
  * - Queue position calculation
- * - Wait time estimation
+ * - Wait time estimation (using actual per-ticket service durations)
  * - Position recalculation after status changes
  * - Queue metrics
  * 
@@ -48,18 +48,59 @@ export class QueueService {
   }
 
   /**
+   * Pre-load service durations for a set of service IDs.
+   * Returns a Map<serviceId, durationMinutes> for O(1) lookups.
+   */
+  private async loadServiceDurations(serviceIds: Set<number>): Promise<Map<number, number>> {
+    const map = new Map<number, number>();
+    if (serviceIds.size === 0) return map;
+
+    const services = await db.query.services.findMany({
+      where: inArray(schema.services.id, [...serviceIds]),
+    });
+    for (const s of services) map.set(s.id, s.duration);
+    return map;
+  }
+
+  /**
+   * Pre-load per-barber weekday stats for today's day of the week.
+   * Returns a Map keyed by "barberId:serviceId" -> avgDuration for stats with
+   * totalCompleted >= 10. If fewer than 10, the entry is omitted so callers
+   * fall back to the standard service duration.
+   */
+  private async loadBarberWeekdayStats(
+    barberIds: number[],
+    serviceIds: number[]
+  ): Promise<Map<string, number>> {
+    const map = new Map<string, number>();
+    if (barberIds.length === 0 || serviceIds.length === 0) return map;
+
+    const todayDow = new Date().getDay(); // 0=Sunday .. 6=Saturday
+
+    const stats = await db.query.barberServiceWeekdayStats.findMany({
+      where: and(
+        eq(schema.barberServiceWeekdayStats.dayOfWeek, todayDow),
+        inArray(schema.barberServiceWeekdayStats.barberId, barberIds),
+        inArray(schema.barberServiceWeekdayStats.serviceId, serviceIds),
+      ),
+    });
+
+    for (const s of stats) {
+      if (s.totalCompleted >= 10) {
+        map.set(`${s.barberId}:${s.serviceId}`, s.avgDuration);
+      }
+    }
+
+    return map;
+  }
+
+  /**
    * Calculate queue position in the general line.
    * Only counts tickets in the general line (no preferred barber or preferred barber inactive).
    * 
    * @param shopId - Shop database ID
    * @param createdAt - Ticket creation timestamp (for ordering)
    * @returns The position in queue (1-based index, 0 means not in active queue)
-   * 
-   * @example
-   * ```typescript
-   * const position = await queueService.calculatePosition(1, new Date());
-   * // Returns: 5 (fifth in general queue)
-   * ```
    */
   async calculatePosition(
     shopId: number,
@@ -73,22 +114,18 @@ export class QueueService {
   }
 
   /**
-   * Calculate estimated wait time based on queue position and service durations.
+   * Calculate estimated wait time using wave-based simulation with actual
+   * per-ticket service durations.
    * 
    * Algorithm:
-   * 1. Get all tickets ahead in queue
-   * 2. Sum their service durations
-   * 3. Factor in number of active barbers (parallel processing)
+   * 1. Build per-barber availability (remaining time on current service)
+   * 2. For each ticket ahead in the general line, assign it to the
+   *    earliest-available barber and add that ticket's service duration
+   * 3. Result = time until the first barber becomes free
    * 
    * @param shopId - Shop database ID
    * @param position - Position in queue (1-based)
-   * @returns Estimated wait time in minutes (null if position is 0 or being served)
-   * 
-   * @example
-   * ```typescript
-   * const waitTime = await queueService.calculateWaitTime(1, 3);
-   * // Returns: 45 (approximately 45 minutes)
-   * ```
+   * @returns Estimated wait time in minutes (null if position is 0)
    */
   async calculateWaitTime(
     shopId: number,
@@ -106,7 +143,6 @@ export class QueueService {
         eq(schema.barbers.isPresent, true)
       ),
     });
-    const totalBarberCount = Math.max(activeBarbers.length, 1);
 
     // Get all in-progress tickets to find which barbers are busy
     const inProgressTickets = await db.query.tickets.findMany({
@@ -115,69 +151,65 @@ export class QueueService {
         eq(schema.tickets.status, 'in_progress')
       ),
     });
-    
-    // Filter to only tickets with assigned barbers (barbers that are actually working)
-    const inProgressTicketsWithBarbers = inProgressTickets.filter(t => t.barberId !== null);
-
-    // Count how many unique barbers are currently working
-    const busyBarberIds = new Set(
-      inProgressTicketsWithBarbers
-        .map(t => t.barberId)
-        .filter((id): id is number => id !== null)
-    );
-    const busyBarberCount = busyBarberIds.size;
-    const availableBarberCount = Math.max(0, totalBarberCount - busyBarberCount);
+    const inProgressWithBarbers = inProgressTickets.filter(t => t.barberId !== null);
 
     // Waiting tickets ahead of this position (general line only)
     const generalLineTickets = await this.getGeneralLineWaitingTickets(shopId);
     const ticketsAhead = generalLineTickets.slice(0, Math.max(position - 1, 0));
-    const peopleAhead = ticketsAhead.length;
 
-    // Calculate remaining in-progress time (only for tickets with assigned barbers)
-    const remainingInProgress = inProgressTicketsWithBarbers.reduce((sum, t) => {
-      const updatedAt = t.updatedAt ? new Date(t.updatedAt) : now;
-      const elapsedMinutes = Math.max(0, (now.getTime() - updatedAt.getTime()) / 60000);
-      const remaining = Math.max(0, 20 - elapsedMinutes);
-      return sum + remaining;
-    }, 0);
+    // Pre-load all service durations in one query
+    const serviceIds = new Set<number>();
+    for (const t of inProgressWithBarbers) serviceIds.add(t.serviceId);
+    for (const t of ticketsAhead) serviceIds.add(t.serviceId);
+    const durations = await this.loadServiceDurations(serviceIds);
 
-    // If no people ahead and barbers are available → immediate service (0 minutes)
-    if (peopleAhead === 0 && availableBarberCount > 0) {
-      return 0;
-    }
+    // Pre-load barber weekday stats for barber-aware duration lookups
+    const barberIds = activeBarbers.map((b) => b.id);
+    const barberStats = await this.loadBarberWeekdayStats(barberIds, [...serviceIds]);
 
-    // If no people ahead but all barbers are busy → wait for first barber to finish
-    if (peopleAhead === 0 && availableBarberCount === 0) {
-      // Return minimum remaining time (time until first barber is free)
-      const remainingTimes = inProgressTicketsWithBarbers
-        .map(t => {
-          const updatedAt = t.updatedAt ? new Date(t.updatedAt) : now;
-          const elapsedMinutes = Math.max(0, (now.getTime() - updatedAt.getTime()) / 60000);
-          return Math.max(0, 20 - elapsedMinutes);
-        })
-        .filter(t => t > 0);
-      
-      if (remainingTimes.length === 0) {
-        return 0; // All services just finished
+    // Resolve duration: use barber-specific avg if >= 10 completions, else service default
+    const getDuration = (serviceId: number, barberId?: number) => {
+      if (barberId) {
+        const avg = barberStats.get(`${barberId}:${serviceId}`);
+        if (avg !== undefined) return avg;
       }
-      return Math.ceil(Math.min(...remainingTimes));
+      return durations.get(serviceId) ?? 20;
+    };
+
+    // Build barber availability: minutes until each barber is free.
+    // Uses startedAt (when service began) for elapsed time calculation.
+    const barberAvailability: number[] = [];
+    for (const barber of activeBarbers) {
+      const inProgress = inProgressWithBarbers.find(t => t.barberId === barber.id);
+      if (inProgress) {
+        const startTime = inProgress.startedAt
+          ? new Date(inProgress.startedAt)
+          : inProgress.updatedAt ? new Date(inProgress.updatedAt) : now;
+        const elapsedMinutes = Math.max(0, (now.getTime() - startTime.getTime()) / 60000);
+        const serviceDuration = getDuration(inProgress.serviceId, barber.id);
+        barberAvailability.push(Math.max(0, serviceDuration - elapsedMinutes));
+      } else {
+        barberAvailability.push(0);
+      }
     }
 
-    // If people ahead, calculate based on available barbers
-    // Use available barbers if any, otherwise use total barbers
-    const effectiveBarberCount = availableBarberCount > 0 ? availableBarberCount : totalBarberCount;
-    
-    // Distribute work across available barbers
-    const parallelShare = peopleAhead > 0 ? (peopleAhead * 20) / effectiveBarberCount : 0;
-    
-    // Only add remaining in-progress time if all barbers are busy
-    // If there are available barbers, they can start immediately on waiting customers
-    const additionalWaitTime = availableBarberCount === 0 ? remainingInProgress : 0;
-    
-    const totalWorkMinutes = Math.max(0, parallelShare) + additionalWaitTime;
-    const estimatedTime = Math.ceil(totalWorkMinutes);
+    // Fallback: if no active barbers, assume 1 virtual barber available now
+    if (barberAvailability.length === 0) {
+      barberAvailability.push(0);
+    }
 
-    return estimatedTime;
+    // Simulate queue processing: assign each ticket ahead to the
+    // earliest-available barber, adding that ticket's actual service duration.
+    // This models "waves" correctly — e.g. 4 barbers clear 4 people per wave.
+    for (const ticket of ticketsAhead) {
+      const minTime = Math.min(...barberAvailability);
+      const minIdx = barberAvailability.indexOf(minTime);
+      const barberId = activeBarbers[minIdx]?.id;
+      barberAvailability[minIdx] += getDuration(ticket.serviceId, barberId);
+    }
+
+    // Wait time = when the first barber becomes free after all people ahead
+    return Math.ceil(Math.min(...barberAvailability));
   }
 
   /**
@@ -378,54 +410,64 @@ export class QueueService {
 
     const now = new Date();
 
-    // Use barberCount = 1 (only that one barber is available - customer doesn't benefit from pool)
-    const barberCount = 1;
-
     // Get waiting tickets that are ahead for this preferred barber
-    // Only count tickets with the same preferred barber (not general queue tickets)
-    // General queue tickets can be taken by any barber, so we don't count them for wait time
     const waitingTickets = await db.query.tickets.findMany({
       where: and(
         eq(schema.tickets.shopId, shopId),
         eq(schema.tickets.status, 'waiting'),
-        eq(schema.tickets.preferredBarberId, preferredBarberId) // Only same preferred barber
+        eq(schema.tickets.preferredBarberId, preferredBarberId)
       ),
       orderBy: [asc(schema.tickets.createdAt)],
     });
-    
-    // Filter tickets created BEFORE this ticket (tickets ahead in queue)
-    // This ensures we only count tickets that are actually ahead
     const ticketsAhead = waitingTickets.filter(
       ticket => new Date(ticket.createdAt) < createdAt
     );
 
-    // Count only tickets that are actually ahead for this preferred barber
-    const peopleAhead = ticketsAhead.length;
-
-    // In-progress tickets for that specific barber only
-    const inProgressTickets = await db.query.tickets.findMany({
+    // Check if the preferred barber is currently serving someone
+    const inProgressTicket = await db.query.tickets.findFirst({
       where: and(
         eq(schema.tickets.shopId, shopId),
         eq(schema.tickets.status, 'in_progress'),
         eq(schema.tickets.barberId, preferredBarberId)
       ),
-      orderBy: [asc(schema.tickets.updatedAt)],
     });
 
-    const remainingInProgress = inProgressTickets.reduce((sum, t) => {
-      const updatedAt = t.updatedAt ? new Date(t.updatedAt) : now;
-      const elapsedMinutes = Math.max(0, (now.getTime() - updatedAt.getTime()) / 60000);
-      const remaining = Math.max(0, 20 - elapsedMinutes);
-      return sum + remaining;
-    }, 0);
+    // Pre-load service durations
+    const serviceIds = new Set<number>();
+    for (const t of ticketsAhead) serviceIds.add(t.serviceId);
+    if (inProgressTicket) serviceIds.add(inProgressTicket.serviceId);
+    const durations = await this.loadServiceDurations(serviceIds);
 
-    // Formula: (peopleAhead * 20) / 1 + remainingInProgressForBarber
-    // peopleAhead is already calculated above from ticketsAhead.length
-    const parallelShare = peopleAhead > 0 ? (peopleAhead * 20) / barberCount : 0;
-    const totalWorkMinutes = Math.max(0, parallelShare) + remainingInProgress;
-    const estimatedTime = Math.ceil(totalWorkMinutes);
+    // Pre-load barber weekday stats for the preferred barber
+    const barberStats = await this.loadBarberWeekdayStats(
+      [preferredBarberId],
+      [...serviceIds]
+    );
 
-    return estimatedTime;
+    // Resolve duration: use barber-specific avg if >= 10 completions, else service default
+    const getDuration = (serviceId: number) => {
+      const avg = barberStats.get(`${preferredBarberId}:${serviceId}`);
+      if (avg !== undefined) return avg;
+      return durations.get(serviceId) ?? 20;
+    };
+
+    // Single barber availability: remaining time if busy, 0 if idle
+    let barberAvailability = 0;
+    if (inProgressTicket) {
+      const startTime = inProgressTicket.startedAt
+        ? new Date(inProgressTicket.startedAt)
+        : inProgressTicket.updatedAt ? new Date(inProgressTicket.updatedAt) : now;
+      const elapsedMinutes = Math.max(0, (now.getTime() - startTime.getTime()) / 60000);
+      const serviceDuration = getDuration(inProgressTicket.serviceId);
+      barberAvailability = Math.max(0, serviceDuration - elapsedMinutes);
+    }
+
+    // Simulate: each ticket ahead adds its actual service duration
+    let totalWait = barberAvailability;
+    for (const ticket of ticketsAhead) {
+      totalWait += getDuration(ticket.serviceId);
+    }
+    return Math.ceil(totalWait);
   }
 }
 

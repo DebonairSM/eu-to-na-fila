@@ -30,6 +30,13 @@
     /* Shop-specific theme (set by ShopConfigContext, fallback to defaults) */
     --shop-primary: #3E2723;
     --shop-accent: #FFD54F;
+    --shop-background: #0a0a0a;
+    --shop-surface-primary: #0a0a0a;
+    --shop-surface-secondary: #1a1a1a;
+    --shop-nav-bg: #0a0a0a;
+    --shop-text-primary: #ffffff;
+    --shop-text-secondary: rgba(255,255,255,0.7);
+    --shop-border-color: rgba(255,255,255,0.08);
 
     /* Design System Colors - Primary (gold default, maps to --shop-accent when themed) */
     --gold: #D4AF37;
@@ -458,9 +465,9 @@
 .hero-badge {
   display: inline-block;
   padding: 6px 14px;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid color-mix(in srgb, var(--shop-accent, #D4AF37) 30%, transparent);
   border-radius: 100px;
-  color: #D4AF37;
+  color: var(--shop-accent, #D4AF37);
   font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.12em;
@@ -526,7 +533,7 @@
 }
 
 .section-label {
-  color: #D4AF37;
+  color: var(--shop-accent, #D4AF37);
   font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.15em;

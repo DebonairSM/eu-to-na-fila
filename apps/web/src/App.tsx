@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Suspense, useEffect } from 'react';
 import { useAuthContext } from './contexts/AuthContext';
+import { useShopConfig } from './contexts/ShopConfigContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { api } from './lib/api';
 import { lazyWithRetry } from './lib/lazyWithRetry';
@@ -33,10 +34,13 @@ function ProtectedRoute({
 }) {
   const { isAuthenticated, isOwner, isCompanyAdmin, isLoading } = useAuthContext();
 
+  const { config } = useShopConfig();
+  const loadingText = config.homeContent?.accessibility?.loading ?? 'Carregando…';
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white/70 flex items-center justify-center">
-        <p className="text-sm">Carregando…</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--shop-background, #0a0a0a)', color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}>
+        <p className="text-sm">{loadingText}</p>
       </div>
     );
   }
@@ -151,6 +155,10 @@ function AppContent() {
 }
 
 function App() {
+  const { config } = useShopConfig();
+  const skipLinkText = config.homeContent?.accessibility?.skipLink ?? 'Pular para o conteúdo principal';
+  const loadingText = config.homeContent?.accessibility?.loading ?? 'Carregando…';
+
   useEffect(() => {
     const preload = [
       import('./pages/JoinPage/JoinPageGuard'),
@@ -170,14 +178,14 @@ function App() {
   return (
     <ErrorBoundary>
       <a href="#main-content" className="skip-link">
-        Pular para o conteúdo principal
+        {skipLinkText}
       </a>
       <Suspense
         fallback={
-          <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col">
-            <div className="h-1 w-full bg-[#D4AF37]/40 animate-pulse shrink-0" />
+          <div className="min-h-screen text-white flex flex-col" style={{ backgroundColor: 'var(--shop-background, #0a0a0a)' }}>
+            <div className="h-1 w-full animate-pulse shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--shop-accent, #D4AF37) 40%, transparent)' }} />
             <div className="flex-1 flex items-center justify-center p-6">
-              <p className="text-sm text-white/60">Carregando…</p>
+              <p className="text-sm" style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.6))' }}>{loadingText}</p>
             </div>
           </div>
         }

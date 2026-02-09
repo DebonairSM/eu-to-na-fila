@@ -4,57 +4,38 @@ import { db, schema } from '../db/index.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
+import { mergeHomeContent } from '../lib/homeContent.js';
 
-/** Default home page content when shop has none set. Every element is overridable per shop. */
-const DEFAULT_HOME_CONTENT = {
-  hero: {
-    badge: 'Sangão, Santa Catarina',
-    subtitle: 'Entre na fila online',
-    ctaJoin: 'Entrar na Fila',
-    ctaLocation: 'Como Chegar',
-  },
-  services: { sectionTitle: 'Serviços' },
-  about: {
-    sectionTitle: 'Sobre',
-    imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80',
-    features: [
-      { icon: 'schedule', text: 'Fila online' },
-      { icon: 'workspace_premium', text: 'Produtos premium' },
-      { icon: 'groups', text: 'Equipe experiente' },
-      { icon: 'local_parking', text: 'Estacionamento fácil' },
-    ],
-  },
-  location: {
-    sectionTitle: 'Localização',
-    address: 'R. João M Silvano, 281 - Morro Grande\nSangão - SC, 88717-000',
-    addressLink: 'https://www.google.com/maps/search/?api=1&query=R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000',
-    hours: 'Segunda a Sábado: 9:00 - 19:00\nDomingo: Fechado',
-    phone: '(48) 99835-4097',
-    phoneHref: 'tel:+5548998354097',
-    languages: 'Português & English',
-    mapQuery: 'R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000',
-  },
-} as const;
+const DEFAULT_THEME = {
+  primary: '#3E2723',
+  accent: '#FFD54F',
+  background: '#0a0a0a',
+  surfacePrimary: '#0a0a0a',
+  surfaceSecondary: '#1a1a1a',
+  navBg: '#0a0a0a',
+  textPrimary: '#ffffff',
+  textSecondary: 'rgba(255,255,255,0.7)',
+  borderColor: 'rgba(255,255,255,0.08)',
+};
 
-function mergeHomeContent(stored: unknown): typeof DEFAULT_HOME_CONTENT {
-  if (!stored || typeof stored !== 'object') return DEFAULT_HOME_CONTENT;
-  const s = stored as Record<string, unknown>;
-  const deepMerge = <T>(def: T, from: unknown): T => {
-    if (from == null || typeof from !== 'object') return def;
-    const o = from as Record<string, unknown>;
-    const out = { ...def } as Record<string, unknown>;
-    for (const k of Object.keys(def as object)) {
-      const defVal = (def as Record<string, unknown>)[k];
-      const fromVal = o[k];
-      if (defVal && typeof defVal === 'object' && !Array.isArray(defVal) && fromVal && typeof fromVal === 'object' && !Array.isArray(fromVal)) {
-        out[k] = deepMerge(defVal, fromVal);
-      } else if (fromVal !== undefined) {
-        out[k] = Array.isArray(fromVal) ? [...fromVal] : fromVal;
-      }
-    }
-    return out as T;
-  };
-  return deepMerge(DEFAULT_HOME_CONTENT, stored);
+function parseTheme(themeJson: string | null): typeof DEFAULT_THEME {
+  if (!themeJson) return DEFAULT_THEME;
+  try {
+    const parsed = JSON.parse(themeJson) as Record<string, string>;
+    return {
+      primary: parsed.primary ?? DEFAULT_THEME.primary,
+      accent: parsed.accent ?? DEFAULT_THEME.accent,
+      background: parsed.background ?? DEFAULT_THEME.background,
+      surfacePrimary: parsed.surfacePrimary ?? DEFAULT_THEME.surfacePrimary,
+      surfaceSecondary: parsed.surfaceSecondary ?? DEFAULT_THEME.surfaceSecondary,
+      navBg: parsed.navBg ?? DEFAULT_THEME.navBg,
+      textPrimary: parsed.textPrimary ?? DEFAULT_THEME.textPrimary,
+      textSecondary: parsed.textSecondary ?? DEFAULT_THEME.textSecondary,
+      borderColor: parsed.borderColor ?? DEFAULT_THEME.borderColor,
+    };
+  } catch {
+    return DEFAULT_THEME;
+  }
 }
 
 /**
@@ -75,17 +56,12 @@ export const shopsRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    const theme = shop.theme
-      ? (JSON.parse(shop.theme) as { primary?: string; accent?: string })
-      : null;
-
+    const theme = parseTheme(shop.theme);
     const homeContent = mergeHomeContent(shop.homeContent ?? null);
 
     return {
       name: shop.name,
-      theme: theme
-        ? { primary: theme.primary ?? '#3E2723', accent: theme.accent ?? '#FFD54F' }
-        : { primary: '#3E2723', accent: '#FFD54F' },
+      theme,
       path: shop.path ?? `/projects/${shop.slug}`,
       homeContent,
     };

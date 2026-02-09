@@ -1,11 +1,11 @@
 import { Heading, Text, Section, Grid } from '@/components/design-system';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 
-const fallbackAbout = { sectionTitle: 'Sobre', imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80', features: [] as Array<{ icon: string; text: string }> };
+const fallbackAbout = { sectionTitle: 'Sobre', imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80', imageAlt: 'Interior da barbearia', features: [] as Array<{ icon: string; text: string }> };
 
 export function AboutSection() {
   const { config } = useShopConfig();
-  const { sectionTitle, imageUrl, features } = config.homeContent?.about ?? fallbackAbout;
+  const { sectionTitle, imageUrl, imageAlt, features } = config.homeContent?.about ?? fallbackAbout;
 
   return (
     <Section id="about" variant="primary">
@@ -30,7 +30,7 @@ export function AboutSection() {
         <div className="aspect-[4/5] rounded-xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
           <img
             src={imageUrl}
-            alt="Interior da barbearia"
+            alt={imageAlt}
             className="w-full h-full object-cover"
             loading="lazy"
             decoding="async"
@@ -59,7 +59,7 @@ export function AboutSection() {
         <div className="aspect-[4/5] rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
           <img
             src={imageUrl}
-            alt="Interior da barbearia"
+            alt={imageAlt}
             className="w-full h-full object-cover"
             loading="lazy"
             decoding="async"

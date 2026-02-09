@@ -6,6 +6,72 @@ import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
 import { hashPin } from '../lib/pin.js';
+import { mergeHomeContent } from '../lib/homeContent.js';
+
+const themeSchema = z.object({
+  primary: z.string().max(50).optional(),
+  accent: z.string().max(50).optional(),
+  background: z.string().max(50).optional(),
+  surfacePrimary: z.string().max(50).optional(),
+  surfaceSecondary: z.string().max(50).optional(),
+  navBg: z.string().max(50).optional(),
+  textPrimary: z.string().max(100).optional(),
+  textSecondary: z.string().max(100).optional(),
+  borderColor: z.string().max(100).optional(),
+}).optional();
+
+const homeContentSchema = z.object({
+  hero: z.object({
+    badge: z.string().max(500).optional(),
+    subtitle: z.string().max(500).optional(),
+    ctaJoin: z.string().max(100).optional(),
+    ctaLocation: z.string().max(100).optional(),
+  }).optional(),
+  nav: z.object({
+    linkServices: z.string().max(100).optional(),
+    linkAbout: z.string().max(100).optional(),
+    linkLocation: z.string().max(100).optional(),
+    ctaJoin: z.string().max(100).optional(),
+    linkBarbers: z.string().max(100).optional(),
+    labelDashboard: z.string().max(100).optional(),
+    labelDashboardCompany: z.string().max(100).optional(),
+    labelLogout: z.string().max(100).optional(),
+    labelMenu: z.string().max(100).optional(),
+  }).optional(),
+  services: z.object({
+    sectionTitle: z.string().max(200).optional(),
+    loadingText: z.string().max(200).optional(),
+    emptyText: z.string().max(200).optional(),
+  }).optional(),
+  about: z.object({
+    sectionTitle: z.string().max(200).optional(),
+    imageUrl: z.string().url().max(1000).optional().or(z.literal('')),
+    imageAlt: z.string().max(200).optional(),
+    features: z.array(z.object({
+      icon: z.string().max(50),
+      text: z.string().max(500),
+    })).optional(),
+  }).optional(),
+  location: z.object({
+    sectionTitle: z.string().max(200).optional(),
+    labelAddress: z.string().max(100).optional(),
+    labelHours: z.string().max(100).optional(),
+    labelPhone: z.string().max(100).optional(),
+    labelLanguages: z.string().max(100).optional(),
+    linkMaps: z.string().max(100).optional(),
+    address: z.string().max(500).optional(),
+    addressLink: z.string().url().max(1000).optional().or(z.literal('')),
+    hours: z.string().max(500).optional(),
+    phone: z.string().max(50).optional(),
+    phoneHref: z.string().max(100).optional(),
+    languages: z.string().max(200).optional(),
+    mapQuery: z.string().max(500).optional(),
+  }).optional(),
+  accessibility: z.object({
+    skipLink: z.string().max(200).optional(),
+    loading: z.string().max(200).optional(),
+  }).optional(),
+}).optional();
 
 /**
  * Company routes.
@@ -320,6 +386,8 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         domain: z.string().optional().nullable(),
         path: z.string().optional().nullable(),
         apiBase: z.string().url().optional().nullable(),
+        theme: themeSchema,
+        homeContent: homeContentSchema,
       });
 
       const body = validateRequest(bodySchema, request.body);
@@ -351,17 +419,30 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
 
+      const updatePayload: Record<string, unknown> = {
+        ...(body.name && { name: body.name }),
+        ...(body.slug && { slug: body.slug }),
+        ...(body.domain !== undefined && { domain: body.domain }),
+        ...(body.path !== undefined && { path: body.path }),
+        ...(body.apiBase !== undefined && { apiBase: body.apiBase }),
+        updatedAt: new Date(),
+      };
+
+      if (body.theme !== undefined) {
+        const existingTheme = shop.theme ? (JSON.parse(shop.theme) as Record<string, string>) : {};
+        updatePayload.theme = JSON.stringify({ ...existingTheme, ...body.theme });
+      }
+
+      if (body.homeContent !== undefined) {
+        const existing = (shop.homeContent ?? {}) as Record<string, unknown>;
+        const merged = mergeHomeContent({ ...existing, ...body.homeContent });
+        updatePayload.homeContent = merged;
+      }
+
       // Update shop
       const [updatedShop] = await db
         .update(schema.shops)
-        .set({
-          ...(body.name && { name: body.name }),
-          ...(body.slug && { slug: body.slug }),
-          ...(body.domain !== undefined && { domain: body.domain }),
-          ...(body.path !== undefined && { path: body.path }),
-          ...(body.apiBase !== undefined && { apiBase: body.apiBase }),
-          updatedAt: new Date(),
-        })
+        .set(updatePayload as Record<string, unknown>)
         .where(eq(schema.shops.id, shopId))
         .returning();
 
@@ -489,6 +570,8 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         domain: z.string().optional(),
         ownerPin: z.string().min(4).max(12).regex(/^\d+$/).optional(),
         staffPin: z.string().min(4).max(12).regex(/^\d+$/).optional(),
+        theme: themeSchema,
+        homeContent: homeContentSchema,
         services: z.array(z.object({
           name: z.string().min(1).max(200),
           description: z.string().max(500).optional(),
@@ -544,6 +627,10 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
           })
           .returning();
 
+        const defaultTheme = { primary: '#3E2723', accent: '#FFD54F', background: '#0a0a0a', surfacePrimary: '#0a0a0a', surfaceSecondary: '#1a1a1a', navBg: '#0a0a0a', textPrimary: '#ffffff', textSecondary: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.08)' };
+        const themeToStore = body.theme ? { ...defaultTheme, ...body.theme } : defaultTheme;
+        const homeContentToStore = body.homeContent ? mergeHomeContent(body.homeContent) : null;
+
         const [newShop] = await tx
           .insert(schema.shops)
           .values({
@@ -554,7 +641,8 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
             domain: body.domain || null,
             path: `/projects/${projectSlug}`,
             apiBase: null,
-            theme: JSON.stringify({ primary: '#3E2723', accent: '#FFD54F' }),
+            theme: JSON.stringify(themeToStore),
+            homeContent: homeContentToStore,
             ownerPinHash,
             staffPinHash,
             ownerPinResetRequired: false,

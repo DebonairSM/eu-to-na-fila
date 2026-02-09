@@ -89,6 +89,27 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       })
       .returning();
 
+    // Seed barber_service_weekday_stats rows (7 days x each barber)
+    const shopBarbers = await db.query.barbers.findMany({
+      where: eq(schema.barbers.shopId, shop.id),
+    });
+    if (shopBarbers.length > 0) {
+      const now = new Date();
+      const statsRows = shopBarbers.flatMap((barber) =>
+        Array.from({ length: 7 }, (_, day) => ({
+          barberId: barber.id,
+          serviceId: newService.id,
+          shopId: shop.id,
+          dayOfWeek: day,
+          avgDuration: 0,
+          totalCompleted: 0,
+          createdAt: now,
+          updatedAt: now,
+        }))
+      );
+      await db.insert(schema.barberServiceWeekdayStats).values(statsRows);
+    }
+
     return reply.status(201).send(newService);
   });
 
@@ -217,6 +238,11 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
     if (activeTickets.length > 0) {
       throw new ConflictError('Cannot delete service that is in use by active tickets');
     }
+
+    // Delete weekday stats (also handled by CASCADE, but explicit for clarity)
+    await db
+      .delete(schema.barberServiceWeekdayStats)
+      .where(eq(schema.barberServiceWeekdayStats.serviceId, id));
 
     // Delete service
     await db

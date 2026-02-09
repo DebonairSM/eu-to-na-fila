@@ -249,6 +249,27 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
       })
       .returning();
 
+    // Seed barber_service_weekday_stats rows (7 days x each service)
+    const shopServices = await db.query.services.findMany({
+      where: eq(schema.services.shopId, shop.id),
+    });
+    if (shopServices.length > 0) {
+      const now = new Date();
+      const statsRows = shopServices.flatMap((svc) =>
+        Array.from({ length: 7 }, (_, day) => ({
+          barberId: newBarber.id,
+          serviceId: svc.id,
+          shopId: shop.id,
+          dayOfWeek: day,
+          avgDuration: 0,
+          totalCompleted: 0,
+          createdAt: now,
+          updatedAt: now,
+        }))
+      );
+      await db.insert(schema.barberServiceWeekdayStats).values(statsRows);
+    }
+
     return newBarber;
   });
 
@@ -290,6 +311,11 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
         updatedAt: new Date(),
       })
       .where(eq(schema.tickets.barberId, id));
+
+    // Delete weekday stats (also handled by CASCADE, but explicit for clarity)
+    await db
+      .delete(schema.barberServiceWeekdayStats)
+      .where(eq(schema.barberServiceWeekdayStats.barberId, id));
 
     // Delete barber
     await db

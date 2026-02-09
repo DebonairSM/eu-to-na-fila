@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
@@ -9,8 +9,9 @@ import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
+import { WaitTimeSimulator } from '@/components/WaitTimeSimulator';
 import { getErrorMessage } from '@/lib/utils';
-import type { Barber } from '@eutonafila/shared';
+import type { Barber, Service } from '@eutonafila/shared';
 
 export function BarberManagementPage() {
   const shopSlug = useShopSlug();
@@ -26,8 +27,65 @@ export function BarberManagementPage() {
   const [formData, setFormData] = useState({ name: '', avatarUrl: '' });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // -- Services state --
+  const [shopServices, setShopServices] = useState<Service[]>([]);
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const [isAddingSvc, setIsAddingSvc] = useState(false);
+  const [editingSvc, setEditingSvc] = useState<Service | null>(null);
+  const [svcForm, setSvcForm] = useState({ name: '', description: '', duration: 30, price: 0 });
+
   // Auto-clear error messages after timeout
   useErrorTimeout(errorMessage, () => setErrorMessage(null));
+
+  // Load services on mount
+  const loadServices = useCallback(async () => {
+    try {
+      const svcs = await api.getServices(shopSlug);
+      setShopServices(svcs);
+    } catch { setShopServices([]); }
+  }, [shopSlug]);
+
+  useEffect(() => { loadServices(); }, [loadServices]);
+
+  const handleAddSvc = useCallback(async () => {
+    if (!svcForm.name.trim()) return;
+    try {
+      await api.createService(shopSlug, {
+        name: svcForm.name,
+        description: svcForm.description || undefined,
+        duration: svcForm.duration,
+        price: svcForm.price > 0 ? svcForm.price : undefined,
+      });
+      setSvcForm({ name: '', description: '', duration: 30, price: 0 });
+      setIsAddingSvc(false);
+      await loadServices();
+    } catch (err) { setErrorMessage(getErrorMessage(err, 'Erro ao criar servico.')); }
+  }, [shopSlug, svcForm, loadServices]);
+
+  const handleUpdateSvc = useCallback(async () => {
+    if (!editingSvc) return;
+    try {
+      await api.updateService(editingSvc.id, {
+        name: svcForm.name || undefined,
+        description: svcForm.description,
+        duration: svcForm.duration,
+        price: svcForm.price > 0 ? svcForm.price : null,
+      });
+      setEditingSvc(null);
+      setSvcForm({ name: '', description: '', duration: 30, price: 0 });
+      await loadServices();
+    } catch (err) { setErrorMessage(getErrorMessage(err, 'Erro ao atualizar servico.')); }
+  }, [editingSvc, svcForm, loadServices]);
+
+  const handleDeleteSvc = useCallback(async (id: number) => {
+    try { await api.deleteService(id); await loadServices(); }
+    catch (err) { setErrorMessage(getErrorMessage(err, 'Erro ao remover servico.')); }
+  }, [loadServices]);
+
+  const handleToggleSvcActive = useCallback(async (svc: Service) => {
+    try { await api.updateService(svc.id, { isActive: !svc.isActive }); await loadServices(); }
+    catch (err) { setErrorMessage(getErrorMessage(err, 'Erro ao atualizar servico.')); }
+  }, [loadServices]);
 
   // Redirect if not owner
   if (!isOwner) {
@@ -239,6 +297,110 @@ export function BarberManagementPage() {
             ))}
           </div>
         )}
+
+        {/* Services Section (collapsible) */}
+        <section className="mt-8 sm:mt-10">
+          <button
+            type="button"
+            onClick={() => setServicesOpen(!servicesOpen)}
+            className="flex items-center gap-2 text-[var(--shop-accent,#D4AF37)] mb-4 hover:underline"
+          >
+            <span className="material-symbols-outlined text-base">
+              {servicesOpen ? 'expand_less' : 'expand_more'}
+            </span>
+            <h2 className="font-['Playfair_Display',serif] text-xl">Servicos</h2>
+          </button>
+
+          {servicesOpen && (
+            <div className="space-y-4 bg-[rgba(36,36,36,0.6)] backdrop-blur-sm border border-[rgba(212,175,55,0.15)] rounded-xl p-4 sm:p-6">
+              <div className="flex items-center justify-between">
+                <p className="text-white/50 text-sm">Gerencie tempos estimados e precos dos servicos.</p>
+                {!isAddingSvc && !editingSvc && (
+                  <button
+                    type="button"
+                    onClick={() => { setIsAddingSvc(true); setSvcForm({ name: '', description: '', duration: 30, price: 0 }); }}
+                    className="px-3 py-1.5 bg-[var(--shop-accent,#D4AF37)]/20 text-[var(--shop-accent,#D4AF37)] rounded-lg text-sm font-medium hover:bg-[var(--shop-accent,#D4AF37)]/30 transition-colors"
+                  >
+                    + Adicionar
+                  </button>
+                )}
+              </div>
+
+              {/* Add / Edit form */}
+              {(isAddingSvc || editingSvc) && (
+                <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2">
+                      <label className="text-white/60 text-xs block mb-1">Nome *</label>
+                      <input type="text" value={svcForm.name} onChange={(e) => setSvcForm({ ...svcForm, name: e.target.value })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" placeholder="Ex: Corte Masculino" />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-white/60 text-xs block mb-1">Descricao</label>
+                      <input type="text" value={svcForm.description} onChange={(e) => setSvcForm({ ...svcForm, description: e.target.value })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" placeholder="Descricao opcional" />
+                    </div>
+                    <div>
+                      <label className="text-white/60 text-xs block mb-1">Duracao (min) *</label>
+                      <input type="number" min={1} value={svcForm.duration} onChange={(e) => setSvcForm({ ...svcForm, duration: parseInt(e.target.value) || 1 })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-white/60 text-xs block mb-1">Preco (centavos)</label>
+                      <input type="number" min={0} value={svcForm.price} onChange={(e) => setSvcForm({ ...svcForm, price: parseInt(e.target.value) || 0 })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" placeholder="0 = sem preco" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <button type="button" onClick={() => { setIsAddingSvc(false); setEditingSvc(null); }} className="px-3 py-1.5 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20 transition-colors">
+                      Cancelar
+                    </button>
+                    <button type="button" onClick={editingSvc ? handleUpdateSvc : handleAddSvc} disabled={!svcForm.name.trim()} className="px-3 py-1.5 bg-[var(--shop-accent,#D4AF37)] text-[#0a0a0a] rounded-lg text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-50">
+                      {editingSvc ? 'Salvar' : 'Criar'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Services list */}
+              {shopServices.length === 0 && !isAddingSvc ? (
+                <p className="text-white/40 text-sm text-center py-6">Nenhum servico cadastrado.</p>
+              ) : (
+                <div className="space-y-2">
+                  {shopServices.map((svc) => (
+                    <div
+                      key={svc.id}
+                      className={`flex items-center justify-between gap-3 p-3 rounded-lg border transition-colors ${
+                        svc.isActive ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5 opacity-60'
+                      }`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-white text-sm font-medium truncate">{svc.name}</span>
+                          {!svc.isActive && <span className="text-xs text-white/40 bg-white/10 px-1.5 py-0.5 rounded">inativo</span>}
+                        </div>
+                        <div className="flex gap-3 text-xs text-white/50 mt-0.5">
+                          <span>{svc.duration} min</span>
+                          {svc.price != null && svc.price > 0 && <span>R$ {(svc.price / 100).toFixed(2)}</span>}
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <button type="button" onClick={() => handleToggleSvcActive(svc)} className="p-1.5 rounded text-white/40 hover:text-white hover:bg-white/10 transition-colors" title={svc.isActive ? 'Desativar' : 'Ativar'}>
+                          <span className="material-symbols-outlined text-base">{svc.isActive ? 'toggle_on' : 'toggle_off'}</span>
+                        </button>
+                        <button type="button" onClick={() => { setEditingSvc(svc); setIsAddingSvc(false); setSvcForm({ name: svc.name, description: svc.description || '', duration: svc.duration, price: svc.price ?? 0 }); }} className="p-1.5 rounded text-white/40 hover:text-white hover:bg-white/10 transition-colors" title="Editar">
+                          <span className="material-symbols-outlined text-base">edit</span>
+                        </button>
+                        <button type="button" onClick={() => handleDeleteSvc(svc.id)} className="p-1.5 rounded text-red-400/60 hover:text-red-400 hover:bg-red-400/10 transition-colors" title="Remover">
+                          <span className="material-symbols-outlined text-base">delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Wait-time simulator */}
+              <WaitTimeSimulator services={shopServices} />
+            </div>
+          )}
+        </section>
       </main>
 
       {/* Add Barber Modal */}
