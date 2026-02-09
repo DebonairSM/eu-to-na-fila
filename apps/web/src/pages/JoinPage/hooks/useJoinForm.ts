@@ -5,6 +5,7 @@ import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useQueue } from '@/hooks/useQueue';
 import { useBarbers } from '@/hooks/useBarbers';
+import { useServices } from '@/hooks/useServices';
 import { getErrorMessage, formatName, getOrCreateDeviceId } from '@/lib/utils';
 import { logError } from '@/lib/logger';
 import { STORAGE_KEYS } from '@/lib/constants';
@@ -37,6 +38,7 @@ export function useJoinForm() {
   const { validateName } = useProfanityFilter();
   const { data } = useQueue(30000);
   const { barbers } = useBarbers();
+  const { activeServices, isLoading: isLoadingServices } = useServices();
 
   // Fetch wait times on mount and periodically (with Page Visibility API support)
   useEffect(() => {
@@ -308,12 +310,20 @@ export function useJoinForm() {
 
     setIsSubmitting(true);
 
+    // Use first active service for this shop; backend requires a valid serviceId
+    const serviceId = activeServices.length > 0 ? activeServices[0].id : null;
+    if (serviceId == null) {
+      setSubmitError('Nenhum serviço disponível. Tente novamente mais tarde.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       // Create ticket with deviceId included
       // Backend will check if device already has an active ticket and return existing if found
       const ticket = await api.createTicket(shopSlug, {
         customerName: fullName,
-        serviceId: 1, // Default service
+        serviceId,
         deviceId, // Include deviceId to prevent multiple active tickets per device
       });
 
@@ -367,5 +377,7 @@ export function useJoinForm() {
     waitTimes,
     isLoadingWaitTimes,
     barbers,
+    hasServices: activeServices.length > 0,
+    isLoadingServices,
   };
 }

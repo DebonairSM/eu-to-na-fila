@@ -17,6 +17,8 @@ export function JoinForm() {
     waitTimes,
     isLoadingWaitTimes,
     barbers,
+    hasServices,
+    isLoadingServices,
   } = useJoinForm();
 
   return (
@@ -99,11 +101,17 @@ export function JoinForm() {
               isLoading={isLoadingWaitTimes}
             />
 
+            {!isLoadingServices && !hasServices && (
+              <p className="text-sm text-[rgba(255,255,255,0.7)]">
+                Nenhum serviço disponível no momento.
+              </p>
+            )}
+
             <Button
               type="submit"
               fullWidth
               size="lg"
-              disabled={isSubmitting || !!validationError || isAlreadyInQueue || !!nameCollisionError}
+              disabled={isSubmitting || !!validationError || isAlreadyInQueue || !!nameCollisionError || isLoadingServices || !hasServices}
             >
               {isSubmitting ? (
                 <>
