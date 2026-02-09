@@ -6,6 +6,10 @@ export function JoinForm() {
   const {
     combinedName,
     handleCombinedNameChange,
+    customerPhone,
+    setCustomerPhone,
+    selectedBarberId,
+    setSelectedBarberId,
     validationError,
     isSubmitting,
     submitError,
@@ -22,6 +26,7 @@ export function JoinForm() {
     activeServices,
     selectedServiceId,
     setSelectedServiceId,
+    settings,
   } = useJoinForm();
 
   const formatPrice = (cents: number | undefined): string => {
@@ -89,6 +94,76 @@ export function JoinForm() {
               <InputError message={validationError || ''} />
             </div>
 
+            {settings.requirePhone && (
+              <div>
+                <InputLabel htmlFor="customerPhone">Telefone *</InputLabel>
+                <Input
+                  id="customerPhone"
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomerPhone(e.target.value)}
+                  placeholder="(00) 00000-0000"
+                  required
+                  className="min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                />
+              </div>
+            )}
+
+            {!settings.requirePhone && (
+              <div>
+                <InputLabel htmlFor="customerPhone">Telefone</InputLabel>
+                <Input
+                  id="customerPhone"
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomerPhone(e.target.value)}
+                  placeholder="(00) 00000-0000"
+                  className="min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                />
+              </div>
+            )}
+
+            {settings.requireBarberChoice && barbers.length > 0 && (
+              <div>
+                <InputLabel htmlFor="preferredBarber">Barbeiro *</InputLabel>
+                <select
+                  id="preferredBarber"
+                  value={selectedBarberId ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setSelectedBarberId(v ? parseInt(v, 10) : null);
+                  }}
+                  required
+                  className="flex w-full rounded-lg bg-[#2a2a2a] border border-[rgba(255,255,255,0.2)] px-4 py-3.5 text-white text-base min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                >
+                  <option value="">Selecione...</option>
+                  {barbers.filter(b => b.isActive).map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {!settings.requireBarberChoice && barbers.length > 0 && (
+              <div>
+                <InputLabel htmlFor="preferredBarberOptional">Barbeiro (opcional)</InputLabel>
+                <select
+                  id="preferredBarberOptional"
+                  value={selectedBarberId ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setSelectedBarberId(v ? parseInt(v, 10) : null);
+                  }}
+                  className="flex w-full rounded-lg bg-[#2a2a2a] border border-[rgba(255,255,255,0.2)] px-4 py-3.5 text-white text-base min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                >
+                  <option value="">Selecione...</option>
+                  {barbers.filter(b => b.isActive).map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {nameCollisionError && (
               <div className="p-4 rounded-lg bg-[#ef4444]/20 border-2 border-[#ef4444] flex items-start gap-3">
                 <span className="material-symbols-outlined text-[#ef4444] text-xl flex-shrink-0 mt-0.5">
@@ -144,7 +219,17 @@ export function JoinForm() {
               type="submit"
               fullWidth
               size="lg"
-              disabled={isSubmitting || !!validationError || isAlreadyInQueue || !!nameCollisionError || isLoadingServices || !hasServices || (hasServices && selectedServiceId == null)}
+              disabled={
+                isSubmitting ||
+                !!validationError ||
+                isAlreadyInQueue ||
+                !!nameCollisionError ||
+                isLoadingServices ||
+                !hasServices ||
+                (hasServices && selectedServiceId == null) ||
+                (settings.requirePhone && !customerPhone.trim()) ||
+                (settings.requireBarberChoice && !selectedBarberId)
+              }
             >
               {isSubmitting ? (
                 <>

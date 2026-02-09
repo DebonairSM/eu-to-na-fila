@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import { useTicketStatus } from '@/hooks/useTicketStatus';
 import { useQueue } from '@/hooks/useQueue';
 import { useServices } from '@/hooks/useServices';
+import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
@@ -22,7 +23,8 @@ export function StatusPage() {
   const { data: queueData } = useQueue(3000);
   const { getServiceById } = useServices();
   const [shareSuccess, setShareSuccess] = useState(false);
-  const { barber, isLeaving, handleLeaveQueue, handleShareTicket } = useStatusDisplay(ticket);
+  const { config: shopConfig } = useShopConfig();
+  const { barber, isLeaving, handleLeaveQueue, handleShareTicket, leaveError, clearLeaveError } = useStatusDisplay(ticket);
 
   const serviceName =
     ticket?.service?.name ??
@@ -122,6 +124,9 @@ export function StatusPage() {
   const isInProgress = ticket.status === 'in_progress';
   const isCompleted = ticket.status === 'completed';
   const waitTime = ticket.estimatedWaitTime ?? null;
+  const canCancel =
+    ticket.status === 'waiting' ||
+    (ticket.status === 'in_progress' && shopConfig.settings.allowCustomerCancelInProgress);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
@@ -147,8 +152,11 @@ export function StatusPage() {
           <ActionButtons
             status={ticket.status}
             ticketId={ticket.id}
+            canCancel={canCancel}
             onLeaveQueue={handleLeaveQueue}
             isLeaving={isLeaving}
+            leaveError={leaveError}
+            onDismissLeaveError={clearLeaveError}
             onShare={handleShare}
           />
 
@@ -182,8 +190,11 @@ export function StatusPage() {
             <ActionButtons
               status={ticket.status}
               ticketId={ticket.id}
+              canCancel={canCancel}
               onLeaveQueue={handleLeaveQueue}
               isLeaving={isLeaving}
+              leaveError={leaveError}
+              onDismissLeaveError={clearLeaveError}
               onShare={handleShare}
             />
           </div>

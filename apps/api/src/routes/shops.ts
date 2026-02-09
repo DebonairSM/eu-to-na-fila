@@ -6,6 +6,7 @@ import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 import { mergeHomeContent } from '../lib/homeContent.js';
 import { parseTheme } from '../lib/theme.js';
+import { parseSettings } from '../lib/settings.js';
 
 /**
  * Shop routes.
@@ -28,11 +29,14 @@ export const shopsRoutes: FastifyPluginAsync = async (fastify) => {
     const theme = parseTheme(shop.theme);
     const homeContent = mergeHomeContent(shop.homeContent ?? null);
 
+    const settings = parseSettings(shop.settings);
+
     return {
       name: shop.name,
       theme,
       path: shop.path ?? `/projects/${shop.slug}`,
       homeContent,
+      settings,
     };
   });
 

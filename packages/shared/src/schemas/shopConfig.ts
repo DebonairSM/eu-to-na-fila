@@ -132,6 +132,42 @@ export const homeContentInputSchema = z.object({
   }).optional(),
 }).optional();
 
+/** Per-shop business rules. All fields have defaults matching current hardcoded behavior. */
+export interface ShopSettings {
+  maxQueueSize: number;
+  defaultServiceDuration: number;
+  requirePhone: boolean;
+  requireBarberChoice: boolean;
+  allowDuplicateNames: boolean;
+  deviceDeduplication: boolean;
+  allowCustomerCancelInProgress: boolean;
+}
+
+/** Zod schema for settings validation with defaults. Adding a new field here with a .default() is all you need. */
+export const shopSettingsSchema = z.object({
+  maxQueueSize: z.number().int().min(1).max(500).default(80),
+  defaultServiceDuration: z.number().int().min(1).max(480).default(20),
+  requirePhone: z.boolean().default(false),
+  requireBarberChoice: z.boolean().default(false),
+  allowDuplicateNames: z.boolean().default(false),
+  deviceDeduplication: z.boolean().default(true),
+  allowCustomerCancelInProgress: z.boolean().default(false),
+});
+
+/** Partial input for PATCH (all optional, shallow-merged with existing). */
+export const shopSettingsInputSchema = z.object({
+  maxQueueSize: z.number().int().min(1).max(500).optional(),
+  defaultServiceDuration: z.number().int().min(1).max(480).optional(),
+  requirePhone: z.boolean().optional(),
+  requireBarberChoice: z.boolean().optional(),
+  allowDuplicateNames: z.boolean().optional(),
+  deviceDeduplication: z.boolean().optional(),
+  allowCustomerCancelInProgress: z.boolean().optional(),
+}).optional();
+
+/** Default settings values. Single source of truth. */
+export const DEFAULT_SETTINGS: ShopSettings = shopSettingsSchema.parse({});
+
 /** Default theme values. Single source of truth. */
 export const DEFAULT_THEME: Required<ShopTheme> = {
   primary: '#3E2723',
@@ -211,6 +247,7 @@ export interface ShopPublicConfig {
   theme: Required<ShopTheme>;
   path: string;
   homeContent: HomeContent;
+  settings: ShopSettings;
 }
 
 /** What shop listing pages need (company dashboard, project list). */
@@ -233,6 +270,7 @@ export interface ShopAdminView {
   apiBase: string | null;
   theme: string | null;
   homeContent: HomeContent | Record<string, unknown> | null;
+  settings: ShopSettings | Record<string, unknown> | null;
   createdAt: Date | string;
   updatedAt: Date | string;
 }

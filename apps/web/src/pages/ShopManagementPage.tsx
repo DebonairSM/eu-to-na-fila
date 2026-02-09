@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
-import type { ShopTheme, HomeContent, ShopAdminView } from '@eutonafila/shared';
-import { DEFAULT_THEME, DEFAULT_HOME_CONTENT } from '@eutonafila/shared';
+import type { ShopTheme, HomeContent, ShopAdminView, ShopSettings } from '@eutonafila/shared';
+import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS } from '@eutonafila/shared';
 import type { Service } from '@eutonafila/shared';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useModal } from '@/hooks/useModal';
@@ -47,6 +47,11 @@ function mergeHomeContentForEdit(stored: HomeContent | Record<string, unknown> |
   };
 }
 
+function mergeSettingsForEdit(stored: ShopSettings | Record<string, unknown> | null | undefined): ShopSettings {
+  if (!stored || typeof stored !== 'object') return { ...DEFAULT_SETTINGS };
+  return { ...DEFAULT_SETTINGS, ...(stored as Partial<ShopSettings>) };
+}
+
 type Shop = ShopAdminView;
 
 export function ShopManagementPage() {
@@ -60,7 +65,7 @@ export function ShopManagementPage() {
   const [error, setError] = useState<Error | null>(null);
   const [shopToDelete, setShopToDelete] = useState<number | null>(null);
   const [editingShop, setEditingShop] = useState<Shop | null>(null);
-  const [editTab, setEditTab] = useState<'info' | 'appearance' | 'content' | 'services'>('info');
+  const [editTab, setEditTab] = useState<'info' | 'appearance' | 'content' | 'services' | 'settings'>('info');
   // -- Services state --
   const [shopServices, setShopServices] = useState<Service[]>([]);
   const [editingService, setEditingService] = useState<Service | null>(null);
@@ -74,6 +79,7 @@ export function ShopManagementPage() {
     apiBase: string;
     theme: ShopTheme;
     homeContent: HomeContent;
+    settings: ShopSettings;
   }>({
     name: '',
     slug: '',
@@ -82,6 +88,7 @@ export function ShopManagementPage() {
     apiBase: '',
     theme: { ...DEFAULT_THEME },
     homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)),
+    settings: { ...DEFAULT_SETTINGS },
   });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -131,9 +138,10 @@ export function ShopManagementPage() {
         apiBase: formData.apiBase || null,
         theme: formData.theme,
         homeContent: formData.homeContent,
+        settings: formData.settings,
       });
       setEditingShop(null);
-      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)) });
+      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS } });
       editModal.close();
       await loadShops();
     } catch (error) {
@@ -231,6 +239,7 @@ export function ShopManagementPage() {
       apiBase: shop.apiBase || '',
       theme: mergeTheme(shop.theme ?? null),
       homeContent: mergeHomeContentForEdit(shop.homeContent ?? null),
+      settings: mergeSettingsForEdit(shop.settings ?? null),
     });
     setEditTab('info');
     setShopServices([]);
@@ -370,7 +379,7 @@ export function ShopManagementPage() {
                   Editar Barbearia
                 </h2>
                 <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-                  {(['info', 'appearance', 'content', 'services'] as const).map((tab) => (
+                  {(['info', 'appearance', 'content', 'services', 'settings'] as const).map((tab) => (
                     <button
                       key={tab}
                       type="button"
@@ -383,6 +392,7 @@ export function ShopManagementPage() {
                       {tab === 'appearance' && 'Aparência'}
                       {tab === 'content' && 'Conteúdo'}
                       {tab === 'services' && 'Serviços'}
+                      {tab === 'settings' && 'Configurações'}
                     </button>
                   ))}
                 </div>
@@ -580,10 +590,52 @@ export function ShopManagementPage() {
                       <WaitTimeSimulator services={shopServices} />
                     </div>
                   )}
+                  {editTab === 'settings' && (
+                    <div className="space-y-6">
+                      <div>
+                        <h4 className="text-white font-medium mb-3">Fila</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-white/60 text-xs mb-1">Tamanho maximo da fila</label>
+                            <input type="number" min={1} max={500} value={formData.settings.maxQueueSize} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                          </div>
+                          <div>
+                            <label className="block text-white/60 text-xs mb-1">Duracao padrao do servico (min)</label>
+                            <input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-medium mb-3">Regras de Atendimento</h4>
+                        <div className="space-y-3">
+                          {([
+                            { key: 'requirePhone' as const, label: 'Exigir telefone do cliente' },
+                            { key: 'requireBarberChoice' as const, label: 'Exigir escolha de barbeiro' },
+                            { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' },
+                            { key: 'deviceDeduplication' as const, label: 'Impedir multiplos tickets por dispositivo' },
+                            { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' },
+                          ]).map(({ key, label }) => (
+                            <label key={key} className="flex items-center gap-3 cursor-pointer group">
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={formData.settings[key]}
+                                onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })}
+                                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-white' : 'bg-white/20'}`}
+                              >
+                                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-[#0a0a0a]' : 'translate-x-0 bg-white/60'}`} />
+                              </button>
+                              <span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex gap-2 sm:gap-3 mt-5 sm:mt-6 flex-shrink-0 pt-4 border-t border-white/10">
                     <button
                       type="button"
-                      onClick={() => { editModal.close(); setEditingShop(null); setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)) }); }}
+                      onClick={() => { editModal.close(); setEditingShop(null); setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS } }); }}
                       className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-medium cursor-pointer transition-all min-h-[44px] bg-white/10 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                     >
                       Cancelar
@@ -741,7 +793,7 @@ export function ShopManagementPage() {
               Editar Barbearia
             </h2>
             <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-              {(['info', 'appearance', 'content', 'services'] as const).map((tab) => (
+              {(['info', 'appearance', 'content', 'services', 'settings'] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -754,6 +806,7 @@ export function ShopManagementPage() {
                   {tab === 'appearance' && 'Aparência'}
                   {tab === 'content' && 'Conteúdo'}
                   {tab === 'services' && 'Serviços'}
+                  {tab === 'settings' && 'Configurações'}
                 </button>
               ))}
             </div>
@@ -1038,13 +1091,55 @@ export function ShopManagementPage() {
                   <WaitTimeSimulator services={shopServices} />
                 </div>
               )}
+              {editTab === 'settings' && (
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-white font-medium mb-3">Fila</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-white/60 text-xs mb-1">Tamanho maximo da fila</label>
+                        <input type="number" min={1} max={500} value={formData.settings.maxQueueSize} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-white/60 text-xs mb-1">Duracao padrao do servico (min)</label>
+                        <input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" />
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-white font-medium mb-3">Regras de Atendimento</h4>
+                    <div className="space-y-3">
+                      {([
+                        { key: 'requirePhone' as const, label: 'Exigir telefone do cliente' },
+                        { key: 'requireBarberChoice' as const, label: 'Exigir escolha de barbeiro' },
+                        { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' },
+                        { key: 'deviceDeduplication' as const, label: 'Impedir multiplos tickets por dispositivo' },
+                        { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' },
+                      ]).map(({ key, label }) => (
+                        <label key={key} className="flex items-center gap-3 cursor-pointer group">
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={formData.settings[key]}
+                            onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })}
+                            className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}
+                          >
+                            <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} />
+                          </button>
+                          <span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="modal-actions flex gap-2 sm:gap-3 mt-5 sm:mt-6 flex-shrink-0 pt-4 border-t border-white/10">
                 <button
                   type="button"
                   onClick={() => {
                     editModal.close();
                     setEditingShop(null);
-                    setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)) });
+                    setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS } });
                   }}
                   className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >

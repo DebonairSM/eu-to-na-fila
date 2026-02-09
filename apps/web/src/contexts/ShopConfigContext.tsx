@@ -7,8 +7,8 @@ import {
   useRef,
 } from 'react';
 import { api } from '@/lib/api';
-import type { HomeContent, ShopTheme } from '@eutonafila/shared';
-import { DEFAULT_HOME_CONTENT, DEFAULT_THEME } from '@eutonafila/shared';
+import type { HomeContent, ShopTheme, ShopSettings } from '@eutonafila/shared';
+import { DEFAULT_HOME_CONTENT, DEFAULT_THEME, DEFAULT_SETTINGS } from '@eutonafila/shared';
 import { useShopSlug } from './ShopSlugContext';
 import { config as appConfig } from '@/lib/config';
 
@@ -21,6 +21,7 @@ export interface ShopConfig {
   theme: ShopTheme;
   path: string;
   homeContent: HomeContent;
+  settings: ShopSettings;
 }
 
 interface ShopConfigContextValue {
@@ -36,6 +37,7 @@ const defaultConfig: ShopConfig = {
   theme: defaultTheme,
   path: appConfig.path,
   homeContent: defaultHomeContent,
+  settings: DEFAULT_SETTINGS,
 };
 
 const ShopConfigContext = createContext<ShopConfigContextValue>({
@@ -92,6 +94,7 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
           theme: data.theme,
           path: data.path,
           homeContent: data.homeContent ?? defaultHomeContent,
+          settings: data.settings ?? DEFAULT_SETTINGS,
         };
         cache.set(shopSlug, shopConfig);
         setConfig(shopConfig);

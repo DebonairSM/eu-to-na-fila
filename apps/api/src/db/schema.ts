@@ -50,6 +50,7 @@ export const shops = pgTable('shops', {
   ownerPinResetRequired: boolean('owner_pin_reset_required').notNull().default(true), // Require PIN reset on next login
   staffPinResetRequired: boolean('staff_pin_reset_required').notNull().default(true), // Require PIN reset on next login
   homeContent: jsonb('home_content'), // Per-shop home page copy: hero, services, about, location
+  settings: jsonb('settings'), // Per-shop business rules (queue config, ticket rules)
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({

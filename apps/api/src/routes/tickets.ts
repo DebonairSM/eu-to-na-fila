@@ -9,6 +9,7 @@ import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { shapeTicketResponse } from '../lib/ticketResponse.js';
+import { parseSettings } from '../lib/settings.js';
 
 /**
  * Ticket routes.
@@ -39,6 +40,8 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
+    const settings = parseSettings(shop.settings);
+
     // Validate body - remove shopId from external request
     const bodySchema = z.object({
       serviceId: z.number(),
@@ -48,6 +51,18 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       deviceId: z.string().optional(), // Device identifier for preventing multiple active tickets per device
     });
     const data = validateRequest(bodySchema, request.body);
+
+    // Enforce per-shop required fields
+    if (settings.requirePhone && !data.customerPhone) {
+      throw new ValidationError('Phone number is required', [
+        { field: 'customerPhone', message: 'Este campo é obrigatório' },
+      ]);
+    }
+    if (settings.requireBarberChoice && !data.preferredBarberId) {
+      throw new ValidationError('Barber selection is required', [
+        { field: 'preferredBarberId', message: 'Escolha um barbeiro' },
+      ]);
+    }
 
     // Check for existing active ticket by device FIRST (before creating)
     // Device-based check takes priority to prevent multiple tickets from same device
@@ -210,8 +225,17 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Ticket with ID ${id} not found`);
     }
 
-    // Only allow cancelling tickets that are waiting (customers can't cancel in_progress)
-    if (existingTicket.status !== 'waiting') {
+    // Load shop settings for cancellation rules
+    const shop = await db.query.shops.findFirst({
+      where: eq(schema.shops.id, existingTicket.shopId),
+    });
+    const settings = parseSettings(shop?.settings);
+
+    // Check if customer is allowed to cancel this ticket
+    const canCancel = existingTicket.status === 'waiting'
+      || (settings.allowCustomerCancelInProgress && existingTicket.status === 'in_progress');
+
+    if (!canCancel) {
       throw new Error('Only waiting tickets can be cancelled by customers');
     }
 

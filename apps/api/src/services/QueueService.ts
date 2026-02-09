@@ -34,6 +34,8 @@ export interface PreloadedShopContext {
   inProgressTickets: InProgressForRecalc[];
   serviceDurations: Map<number, number>;
   barberStats: Map<string, number>;
+  /** Fallback duration (minutes) when service duration is not found. */
+  defaultServiceDuration: number;
 }
 
 /**
@@ -109,7 +111,8 @@ export class QueueService {
    */
   async loadContextForRecalc(
     shopId: number,
-    waitingTickets: TicketForRecalc[]
+    waitingTickets: TicketForRecalc[],
+    defaultServiceDuration: number = 20
   ): Promise<PreloadedShopContext> {
     const [barbers, inProgressRows] = await Promise.all([
       this.db.query.barbers.findMany({
@@ -152,6 +155,7 @@ export class QueueService {
       inProgressTickets,
       serviceDurations,
       barberStats,
+      defaultServiceDuration,
     };
   }
 
@@ -171,7 +175,7 @@ export class QueueService {
         const avg = ctx.barberStats.get(`${barberId}:${serviceId}`);
         if (avg !== undefined) return avg;
       }
-      return ctx.serviceDurations.get(serviceId) ?? 20;
+      return ctx.serviceDurations.get(serviceId) ?? ctx.defaultServiceDuration;
     };
 
     const inProgressWithBarbers = ctx.inProgressTickets.filter((t) => t.barberId !== null);
@@ -278,7 +282,7 @@ export class QueueService {
     return ticketsAhead.length + 1;
   }
 
-  async calculateWaitTime(shopId: number, position: number): Promise<number | null> {
+  async calculateWaitTime(shopId: number, position: number, defaultServiceDuration: number = 20): Promise<number | null> {
     if (position === 0) return null;
     const now = new Date();
 
@@ -314,7 +318,7 @@ export class QueueService {
         const avg = barberStats.get(`${barberId}:${serviceId}`);
         if (avg !== undefined) return avg;
       }
-      return durations.get(serviceId) ?? 20;
+      return durations.get(serviceId) ?? defaultServiceDuration;
     };
 
     const barberAvailability: number[] = [];
@@ -448,7 +452,8 @@ export class QueueService {
     shopId: number,
     preferredBarberId: number,
     position: number,
-    createdAt: Date = new Date()
+    createdAt: Date = new Date(),
+    defaultServiceDuration: number = 20
   ): Promise<number | null> {
     if (position === 0) return null;
     const now = new Date();
@@ -486,7 +491,7 @@ export class QueueService {
     const getDuration = (serviceId: number) => {
       const avg = barberStats.get(`${preferredBarberId}:${serviceId}`);
       if (avg !== undefined) return avg;
-      return durations.get(serviceId) ?? 20;
+      return durations.get(serviceId) ?? defaultServiceDuration;
     };
 
     let barberAvailability = 0;

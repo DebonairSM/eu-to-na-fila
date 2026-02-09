@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, ApiError } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useQueue } from '@/hooks/useQueue';
 import { useBarbers } from '@/hooks/useBarbers';
@@ -17,6 +18,8 @@ export function useJoinForm() {
   const [combinedName, setCombinedName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [selectedBarberId, setSelectedBarberId] = useState<number | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -36,6 +39,8 @@ export function useJoinForm() {
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
+  const { config: shopConfig } = useShopConfig();
+  const settings = shopConfig.settings;
   const { validateName } = useProfanityFilter();
   const { data } = useQueue(30000);
   const { barbers } = useBarbers();
@@ -320,6 +325,16 @@ export function useJoinForm() {
       }
     }
 
+    // Enforce per-shop settings
+    if (settings.requirePhone && !customerPhone.trim()) {
+      setSubmitError('Telefone é obrigatório.');
+      return;
+    }
+    if (settings.requireBarberChoice && !selectedBarberId) {
+      setSubmitError('Escolha um barbeiro.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     // Use selected service; must be in active list
@@ -340,6 +355,8 @@ export function useJoinForm() {
         customerName: fullName,
         serviceId,
         deviceId, // Include deviceId to prevent multiple active tickets per device
+        ...(customerPhone.trim() ? { customerPhone: customerPhone.trim() } : {}),
+        ...(selectedBarberId ? { preferredBarberId: selectedBarberId } : {}),
       });
 
       // Store ticket ID in localStorage for persistence
@@ -381,6 +398,10 @@ export function useJoinForm() {
     lastName,
     handleFirstNameChange,
     handleLastNameChange,
+    customerPhone,
+    setCustomerPhone,
+    selectedBarberId,
+    setSelectedBarberId,
     validationError,
     isSubmitting,
     submitError,
@@ -397,5 +418,6 @@ export function useJoinForm() {
     activeServices,
     selectedServiceId,
     setSelectedServiceId,
+    settings,
   };
 }

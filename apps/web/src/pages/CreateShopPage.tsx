@@ -2,8 +2,8 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
-import type { ShopTheme, HomeContent } from '@eutonafila/shared';
-import { DEFAULT_THEME, DEFAULT_HOME_CONTENT } from '@eutonafila/shared';
+import type { ShopTheme, HomeContent, ShopSettings } from '@eutonafila/shared';
+import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS } from '@eutonafila/shared';
 import { useModal } from '@/hooks/useModal';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { CompanyNav } from '@/components/CompanyNav';
@@ -36,6 +36,7 @@ interface ShopFormData {
   domain: string;
   theme: ShopTheme;
   homeContent: HomeContent;
+  settings: ShopSettings;
   services: ServiceItem[];
   barbers: BarberItem[];
 }
@@ -50,6 +51,7 @@ const TEMPLATE: ShopFormData = {
   domain: '',
   theme: { ...DEFAULT_THEME },
   homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)),
+  settings: { ...DEFAULT_SETTINGS },
   services: [
     { id: uid(), name: 'Corte de Cabelo', description: 'Corte tradicional', duration: 30, price: 3000 },
     { id: uid(), name: 'Barba', description: 'Aparar e modelar barba', duration: 20, price: 2000 },
@@ -615,6 +617,40 @@ function StepReview({ data }: { data: ShopFormData }) {
           ))}
         </div>
       </div>
+
+      {/* Settings */}
+      <div className="p-5 rounded-xl border border-white/10 bg-white/5 space-y-3">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="material-symbols-outlined text-[#D4AF37]">settings</span>
+          <h3 className="text-lg font-semibold text-white">Configuracoes</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+          <div>
+            <span className="text-white/50">Tamanho maximo da fila:</span>
+            <p className="text-white font-medium">{data.settings.maxQueueSize}</p>
+          </div>
+          <div>
+            <span className="text-white/50">Duracao padrao (min):</span>
+            <p className="text-white font-medium">{data.settings.defaultServiceDuration}</p>
+          </div>
+        </div>
+        <div className="space-y-1 text-sm">
+          {([
+            { key: 'requirePhone' as const, label: 'Exigir telefone' },
+            { key: 'requireBarberChoice' as const, label: 'Exigir escolha de barbeiro' },
+            { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados' },
+            { key: 'deviceDeduplication' as const, label: 'Impedir multiplos tickets por dispositivo' },
+            { key: 'allowCustomerCancelInProgress' as const, label: 'Cancelar atendimento em andamento' },
+          ]).map(({ key, label }) => (
+            <div key={key} className="flex items-center gap-2">
+              <span className={`material-symbols-outlined text-sm ${data.settings[key] ? 'text-green-400' : 'text-white/30'}`}>
+                {data.settings[key] ? 'check_circle' : 'cancel'}
+              </span>
+              <span className="text-white/70">{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -711,6 +747,7 @@ export function CreateShopPage() {
         domain: data.domain || undefined,
         theme: data.theme,
         homeContent: data.homeContent,
+        settings: data.settings,
         services: data.services.map((s) => ({
           name: s.name,
           description: s.description || undefined,

@@ -8,7 +8,7 @@ import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
 import { hashPin } from '../lib/pin.js';
 import { mergeHomeContent } from '../lib/homeContent.js';
 import { DEFAULT_THEME } from '../lib/theme.js';
-import { themeInputSchema, homeContentInputSchema } from '@eutonafila/shared';
+import { themeInputSchema, homeContentInputSchema, shopSettingsInputSchema } from '@eutonafila/shared';
 
 /**
  * Company shop routes.
@@ -197,6 +197,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         apiBase: z.string().url().optional().nullable(),
         theme: themeInputSchema,
         homeContent: homeContentInputSchema,
+        settings: shopSettingsInputSchema,
       });
 
       const body = validateRequest(bodySchema, request.body);
@@ -245,6 +246,11 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         const existing = (shop.homeContent ?? {}) as Record<string, unknown>;
         const merged = mergeHomeContent({ ...existing, ...body.homeContent });
         updatePayload.homeContent = merged;
+      }
+
+      if (body.settings !== undefined) {
+        const existing = (shop.settings ?? {}) as Record<string, unknown>;
+        updatePayload.settings = { ...existing, ...body.settings };
       }
 
       const [updatedShop] = await db
@@ -361,6 +367,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         staffPin: z.string().min(4).max(12).regex(/^\d+$/).optional(),
         theme: themeInputSchema,
         homeContent: homeContentInputSchema,
+        settings: shopSettingsInputSchema,
         services: z.array(z.object({
           name: z.string().min(1).max(200),
           description: z.string().max(500).optional(),
@@ -427,6 +434,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
             apiBase: null,
             theme: JSON.stringify(themeToStore),
             homeContent: homeContentToStore,
+            settings: body.settings ?? null,
             ownerPinHash,
             staffPinHash,
             ownerPinResetRequired: false,

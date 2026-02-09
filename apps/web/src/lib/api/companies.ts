@@ -1,4 +1,4 @@
-import type { ShopTheme, HomeContent, ShopAdminView } from '@eutonafila/shared';
+import type { ShopTheme, HomeContent, ShopAdminView, ShopSettings } from '@eutonafila/shared';
 import type { BaseApiClient } from './client.js';
 
 export interface CompaniesApi {
@@ -7,6 +7,7 @@ export interface CompaniesApi {
   createCompanyShop(companyId: number, data: { name: string; slug?: string; domain?: string; path?: string; apiBase?: string }): Promise<ShopAdminView>;
   createFullShop(companyId: number, data: {
     name: string; slug?: string; domain?: string; theme?: Partial<ShopTheme>; homeContent?: Partial<HomeContent>;
+    settings?: Partial<ShopSettings>;
     services: Array<{ name: string; description?: string; duration: number; price?: number }>;
     barbers: Array<{ name: string; email?: string; phone?: string }>;
   }): Promise<{
@@ -16,7 +17,7 @@ export interface CompaniesApi {
   }>;
   updateCompanyShop(companyId: number, shopId: number, data: {
     name?: string; slug?: string; domain?: string | null; path?: string | null; apiBase?: string | null;
-    theme?: Partial<ShopTheme>; homeContent?: Partial<HomeContent>;
+    theme?: Partial<ShopTheme>; homeContent?: Partial<HomeContent>; settings?: Partial<ShopSettings>;
   }): Promise<ShopAdminView>;
   deleteCompanyShop(companyId: number, shopId: number): Promise<{ success: boolean; message: string }>;
 }

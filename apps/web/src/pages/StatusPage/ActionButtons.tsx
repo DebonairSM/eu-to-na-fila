@@ -6,20 +6,25 @@ import { Button, Stack } from '@/components/design-system';
 interface ActionButtonsProps {
   status: 'waiting' | 'in_progress' | 'completed' | 'cancelled';
   ticketId: number;
+  canCancel: boolean;
   onLeaveQueue: (ticketId: number) => Promise<void>;
   isLeaving: boolean;
+  leaveError?: string | null;
+  onDismissLeaveError?: () => void;
   onShare?: () => void;
 }
 
 export function ActionButtons({
   status,
   ticketId,
+  canCancel,
   onLeaveQueue,
   isLeaving,
+  leaveError,
+  onDismissLeaveError,
   onShare,
 }: ActionButtonsProps) {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
-  const isWaiting = status === 'waiting';
   const isCompleted = status === 'completed';
 
   const handleLeaveClick = () => {
@@ -38,7 +43,24 @@ export function ActionButtons({
   return (
     <>
       <Stack spacing="md">
-        {isWaiting && (
+        {leaveError && (
+          <div className="p-4 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/20 flex items-start gap-3">
+            <span className="material-symbols-outlined text-[#ef4444] text-xl flex-shrink-0">error</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-[#ef4444]">{leaveError}</p>
+              {onDismissLeaveError && (
+                <button
+                  type="button"
+                  onClick={onDismissLeaveError}
+                  className="mt-2 text-xs text-[#ef4444]/80 hover:text-[#ef4444] underline"
+                >
+                  Fechar
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+        {canCancel && (
           <>
             <div className="lg:hidden fixed bottom-6 right-6 z-50">
               <button

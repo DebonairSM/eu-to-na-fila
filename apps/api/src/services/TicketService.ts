@@ -5,6 +5,7 @@ import type { CreateTicket, UpdateTicketStatus, Ticket } from '@eutonafila/share
 import type { QueueService } from './QueueService.js';
 import type { AuditService } from './AuditService.js';
 import { ConflictError, NotFoundError } from '../lib/errors.js';
+import { parseSettings } from '../lib/settings.js';
 
 /**
  * Service for managing ticket operations.
@@ -77,23 +78,27 @@ export class TicketService {
     });
     if (!shop) throw new NotFoundError('Shop not found');
 
+    const settings = parseSettings(shop.settings);
+
     const service = await this.db.query.services.findFirst({
       where: and(eq(schema.services.id, data.serviceId), eq(schema.services.shopId, shopId)),
     });
     if (!service) throw new NotFoundError('Service not found');
     if (!service.isActive) throw new ConflictError('Service is not active');
 
-    if (data.deviceId && data.deviceId.trim().length > 0) {
+    if (settings.deviceDeduplication && data.deviceId && data.deviceId.trim().length > 0) {
       const existingTicketByDevice = await this.findActiveTicketByDevice(shopId, data.deviceId);
       if (existingTicketByDevice) return existingTicketByDevice;
     }
 
-    const existingTicket = await this.findActiveTicketByCustomer(shopId, data.customerName);
-    if (existingTicket) {
-      throw new ConflictError('Este nome já está em uso. Por favor, escolha outro nome.');
+    if (!settings.allowDuplicateNames) {
+      const existingTicket = await this.findActiveTicketByCustomer(shopId, data.customerName);
+      if (existingTicket) {
+        throw new ConflictError('Este nome já está em uso. Por favor, escolha outro nome.');
+      }
     }
 
-    const isQueueFull = await this.queueService.isQueueFull(shopId);
+    const isQueueFull = await this.queueService.isQueueFull(shopId, settings.maxQueueSize);
     if (isQueueFull) throw new ConflictError('Queue is full');
 
     if (data.preferredBarberId) {
@@ -111,10 +116,10 @@ export class TicketService {
 
     if (data.preferredBarberId) {
       position = await this.queueService.calculatePositionForPreferredBarber(shopId, data.preferredBarberId, now);
-      estimatedWaitTime = await this.queueService.calculateWaitTimeForPreferredBarber(shopId, data.preferredBarberId, position, now);
+      estimatedWaitTime = await this.queueService.calculateWaitTimeForPreferredBarber(shopId, data.preferredBarberId, position, now, settings.defaultServiceDuration);
     } else {
       position = await this.queueService.calculatePosition(shopId, now);
-      estimatedWaitTime = await this.queueService.calculateWaitTime(shopId, position);
+      estimatedWaitTime = await this.queueService.calculateWaitTime(shopId, position, settings.defaultServiceDuration);
     }
 
     const [ticket] = await this.db
@@ -282,6 +287,13 @@ export class TicketService {
     const waitingTickets = await this.getByShop(shopId, 'waiting');
     if (waitingTickets.length === 0) return;
 
+    // Load shop settings for defaultServiceDuration
+    const shop = await this.db.query.shops.findFirst({
+      where: eq(schema.shops.id, shopId),
+      columns: { settings: true },
+    });
+    const settings = parseSettings(shop?.settings);
+
     const ticketsForRecalc = waitingTickets.map((t) => ({
       id: t.id,
       serviceId: t.serviceId,
@@ -289,7 +301,7 @@ export class TicketService {
       createdAt: new Date(t.createdAt),
     }));
 
-    const context = await this.queueService.loadContextForRecalc(shopId, ticketsForRecalc);
+    const context = await this.queueService.loadContextForRecalc(shopId, ticketsForRecalc, settings.defaultServiceDuration);
     const computed = this.queueService.computeWaitTimesForWaitingTickets(shopId, context);
 
     const now = new Date();
