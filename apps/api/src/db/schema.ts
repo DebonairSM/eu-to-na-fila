@@ -49,6 +49,7 @@ export const shops = pgTable('shops', {
   staffPinHash: text('staff_pin_hash'), // Hashed staff PIN
   ownerPinResetRequired: boolean('owner_pin_reset_required').notNull().default(true), // Require PIN reset on next login
   staffPinResetRequired: boolean('staff_pin_reset_required').notNull().default(true), // Require PIN reset on next login
+  homeContent: jsonb('home_content'), // Per-shop home page copy: hero, services, about, location
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({

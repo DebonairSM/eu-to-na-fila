@@ -11,6 +11,27 @@ import type {
   GetStatisticsResponse,
 } from '@eutonafila/shared';
 
+/** Per-shop home page content (hero, services, about, location). All elements overridable. */
+export interface HomeContent {
+  hero: { badge: string; subtitle: string; ctaJoin: string; ctaLocation: string };
+  services: { sectionTitle: string };
+  about: {
+    sectionTitle: string;
+    imageUrl: string;
+    features: Array<{ icon: string; text: string }>;
+  };
+  location: {
+    sectionTitle: string;
+    address: string;
+    addressLink: string;
+    hours: string;
+    phone: string;
+    phoneHref: string;
+    languages: string;
+    mapQuery: string;
+  };
+}
+
 /**
  * API client error.
  * Wraps server error responses with additional context.
@@ -318,15 +339,16 @@ class ApiClient {
   }
 
   /**
-   * Get public shop config (name, theme, path). No auth required.
+   * Get public shop config (name, theme, path, homeContent). No auth required.
    *
    * @param shopSlug - Shop identifier
-   * @returns Shop config for branding and theming
+   * @returns Shop config for branding, theming, and home page content
    */
   async getShopConfig(shopSlug: string): Promise<{
     name: string;
     theme: { primary: string; accent: string };
     path: string;
+    homeContent: HomeContent;
   }> {
     return this.get(`/shops/${shopSlug}/config`);
   }

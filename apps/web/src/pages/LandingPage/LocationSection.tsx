@@ -1,65 +1,59 @@
 import { Heading, Text, Section, Stack } from '@/components/design-system';
-
-const locationInfo = [
-  {
-    icon: 'location_on',
-    title: 'Endereço',
-    content: (
-      <>
-        R. João M Silvano, 281 - Morro Grande
-        <br />
-        Sangão - SC, 88717-000
-        <br />
-        <a
-          href="https://www.google.com/maps/search/?api=1&query=R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[#D4AF37] hover:underline"
-        >
-          Ver no Google Maps
-        </a>
-      </>
-    ),
-  },
-  {
-    icon: 'schedule',
-    title: 'Horário de Funcionamento',
-    content: (
-      <>
-        Segunda a Sábado: 9:00 - 19:00
-        <br />
-        Domingo: Fechado
-      </>
-    ),
-  },
-  {
-    icon: 'phone',
-    title: 'Telefone',
-    content: (
-      <a href="tel:+5548998354097" className="text-[#D4AF37] hover:underline">
-        (48) 99835-4097
-      </a>
-    ),
-  },
-  {
-    icon: 'language',
-    title: 'Idiomas',
-    content: 'Português & English',
-  },
-];
+import { useShopConfig } from '@/contexts/ShopConfigContext';
 
 export function LocationSection() {
+  const { config } = useShopConfig();
+  const loc = config.homeContent.location;
+  const accentClass = 'text-[var(--shop-accent,#D4AF37)] hover:underline';
+
+  const locationItems = [
+    {
+      icon: 'location_on' as const,
+      title: 'Endereço',
+      content: (
+        <>
+          <span className="whitespace-pre-line">{loc.address}</span>
+          <br />
+          <a href={loc.addressLink} target="_blank" rel="noopener noreferrer" className={accentClass}>
+            Ver no Google Maps
+          </a>
+        </>
+      ),
+    },
+    {
+      icon: 'schedule' as const,
+      title: 'Horário de Funcionamento',
+      content: <span className="whitespace-pre-line">{loc.hours}</span>,
+    },
+    {
+      icon: 'phone' as const,
+      title: 'Telefone',
+      content: (
+        <a href={loc.phoneHref} className={accentClass}>
+          {loc.phone}
+        </a>
+      ),
+    },
+    {
+      icon: 'language' as const,
+      title: 'Idiomas',
+      content: loc.languages,
+    },
+  ];
+
+  const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(loc.mapQuery)}&output=embed`;
+
   return (
     <Section id="location" variant="secondary">
       <div className="text-center mb-12">
-        <Heading level={2}>Localização</Heading>
+        <Heading level={2}>{loc.sectionTitle}</Heading>
       </div>
 
       <div className="lg:hidden space-y-6">
         <Stack spacing="lg">
-          {locationInfo.map((item) => (
+          {locationItems.map((item) => (
             <div key={item.title} className="flex gap-4">
-              <span className="material-symbols-outlined text-[#D4AF37] text-xl flex-shrink-0">
+              <span className="material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-xl flex-shrink-0">
                 {item.icon}
               </span>
               <div>
@@ -76,7 +70,7 @@ export function LocationSection() {
 
         <div className="rounded-xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
           <iframe
-            src="https://www.google.com/maps?q=R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000&output=embed"
+            src={mapEmbedUrl}
             width="100%"
             height="300"
             style={{ border: 0 }}
@@ -84,16 +78,16 @@ export function LocationSection() {
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             className="grayscale hover:grayscale-0 transition-all"
-            title="Localização da Barbearia Mineiro"
+            title={`Localização ${config.name}`}
           />
         </div>
       </div>
 
       <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-start">
         <Stack spacing="xl">
-          {locationInfo.map((item) => (
+          {locationItems.map((item) => (
             <div key={item.title} className="flex gap-6">
-              <span className="material-symbols-outlined text-[#D4AF37] text-2xl flex-shrink-0">
+              <span className="material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-2xl flex-shrink-0">
                 {item.icon}
               </span>
               <div>
@@ -109,7 +103,7 @@ export function LocationSection() {
         </Stack>
         <div className="rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
           <iframe
-            src="https://www.google.com/maps?q=R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000&output=embed"
+            src={mapEmbedUrl}
             width="100%"
             height="500"
             style={{ border: 0 }}
@@ -117,7 +111,7 @@ export function LocationSection() {
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             className="grayscale hover:grayscale-0 transition-all"
-            title="Localização da Barbearia Mineiro"
+            title={`Localização ${config.name}`}
           />
         </div>
       </div>

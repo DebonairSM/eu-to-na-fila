@@ -6,7 +6,7 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { api } from '@/lib/api';
+import { api, type HomeContent } from '@/lib/api';
 import { useShopSlug } from './ShopSlugContext';
 import { config as appConfig } from '@/lib/config';
 
@@ -15,10 +15,37 @@ export interface ShopTheme {
   accent: string;
 }
 
+/** Default home content when API does not return it (fallback). */
+const defaultHomeContent: HomeContent = {
+  hero: { badge: 'Sangão, Santa Catarina', subtitle: 'Entre na fila online', ctaJoin: 'Entrar na Fila', ctaLocation: 'Como Chegar' },
+  services: { sectionTitle: 'Serviços' },
+  about: {
+    sectionTitle: 'Sobre',
+    imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80',
+    features: [
+      { icon: 'schedule', text: 'Fila online' },
+      { icon: 'workspace_premium', text: 'Produtos premium' },
+      { icon: 'groups', text: 'Equipe experiente' },
+      { icon: 'local_parking', text: 'Estacionamento fácil' },
+    ],
+  },
+  location: {
+    sectionTitle: 'Localização',
+    address: 'R. João M Silvano, 281 - Morro Grande\nSangão - SC, 88717-000',
+    addressLink: 'https://www.google.com/maps/search/?api=1&query=R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000',
+    hours: 'Segunda a Sábado: 9:00 - 19:00\nDomingo: Fechado',
+    phone: '(48) 99835-4097',
+    phoneHref: 'tel:+5548998354097',
+    languages: 'Português & English',
+    mapQuery: 'R.+João+M+Silvano,+281+-+Morro+Grande,+Sangão+-+SC,+88717-000',
+  },
+};
+
 export interface ShopConfig {
   name: string;
   theme: ShopTheme;
   path: string;
+  homeContent: HomeContent;
 }
 
 interface ShopConfigContextValue {
@@ -36,6 +63,7 @@ const defaultConfig: ShopConfig = {
   name: appConfig.name,
   theme: defaultTheme,
   path: appConfig.path,
+  homeContent: defaultHomeContent,
 };
 
 const ShopConfigContext = createContext<ShopConfigContextValue>({
@@ -83,6 +111,7 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
           name: data.name,
           theme: data.theme,
           path: data.path,
+          homeContent: data.homeContent ?? defaultHomeContent,
         };
         cache.set(shopSlug, shopConfig);
         setConfig(shopConfig);

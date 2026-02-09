@@ -1,7 +1,12 @@
 import { Link } from 'react-router-dom';
 import { Button, Heading, Text, FadeIn, SlideIn, Container } from '@/components/design-system';
+import { useShopConfig } from '@/contexts/ShopConfigContext';
 
 export function HeroSection() {
+  const { config } = useShopConfig();
+  const { name, homeContent } = config;
+  const hero = homeContent.hero;
+
   return (
     <section
       id="main-content"
@@ -11,19 +16,19 @@ export function HeroSection() {
         <div className="lg:hidden text-center">
           <FadeIn delay={0}>
             <div className="hero-badge">
-              Sangão, Santa Catarina
+              {hero.badge}
             </div>
           </FadeIn>
           
           <SlideIn direction="up" delay={200}>
             <Heading level={1} className="mb-6">
-              <span className="text-[#D4AF37]">Barbearia Mineiro</span>
+              <span className="text-[var(--shop-accent,#D4AF37)]">{name}</span>
             </Heading>
           </SlideIn>
           
           <SlideIn direction="up" delay={400}>
             <Text size="lg" variant="secondary" className="mb-10 max-w-[600px] mx-auto">
-              Entre na fila online
+              {hero.subtitle}
             </Text>
           </SlideIn>
           
@@ -32,13 +37,13 @@ export function HeroSection() {
               <Link to="/join">
                 <Button size="lg" fullWidth className="sm:w-auto">
                   <span className="material-symbols-outlined text-xl">person_add</span>
-                  Entrar na Fila
+                  {hero.ctaJoin}
                 </Button>
               </Link>
               <a href="#location">
                 <Button variant="outline" size="lg" fullWidth className="sm:w-auto">
                   <span className="material-symbols-outlined text-xl">location_on</span>
-                  Como Chegar
+                  {hero.ctaLocation}
                 </Button>
               </a>
             </div>
@@ -49,25 +54,25 @@ export function HeroSection() {
           <FadeIn delay={200}>
             <div>
               <div className="hero-badge mb-6">
-                Sangão, Santa Catarina
+                {hero.badge}
               </div>
               <Heading level={1} className="mb-6">
-                <span className="text-[#D4AF37]">Barbearia Mineiro</span>
+                <span className="text-[var(--shop-accent,#D4AF37)]">{name}</span>
               </Heading>
               <Text size="xl" variant="secondary" className="mb-12 max-w-[500px]">
-                Entre na fila online
+                {hero.subtitle}
               </Text>
               <div className="flex gap-4">
                 <Link to="/join">
                   <Button size="lg">
                     <span className="material-symbols-outlined text-xl">person_add</span>
-                    Entrar na Fila
+                    {hero.ctaJoin}
                   </Button>
                 </Link>
                 <a href="#location">
                   <Button variant="outline" size="lg">
                     <span className="material-symbols-outlined text-xl">location_on</span>
-                    Como Chegar
+                    {hero.ctaLocation}
                   </Button>
                 </a>
               </div>
@@ -77,7 +82,7 @@ export function HeroSection() {
           <FadeIn delay={400}>
             <div className="flex items-center justify-center">
               <div className="w-full max-w-[200px] aspect-square rounded-2xl border border-[rgba(255,255,255,0.08)] flex items-center justify-center bg-[rgba(255,255,255,0.02)]">
-                <span className="material-symbols-outlined text-5xl text-[#D4AF37]/20">
+                <span className="material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)]/20">
                   content_cut
                 </span>
               </div>
