@@ -6,39 +6,35 @@ import { validateRequest } from '../lib/validation.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { ValidationError } from '../lib/errors.js';
 import { signToken } from '../lib/jwt.js';
-import { verifyPin, validatePin } from '../lib/pin.js';
 import { verifyPassword, validatePassword } from '../lib/password.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { logAuthFailure, logAuthSuccess, getClientIp } from '../middleware/security.js';
 
 /**
  * Auth routes.
- * PIN-based authentication that issues JWT tokens.
+ * Owner/staff: password-based authentication. Barber: username + password.
  */
 export const authRoutes: FastifyPluginAsync = async (fastify) => {
   // Brute force protection: more lenient in development
-  // In development: 100 attempts per 15 minutes (allows for testing)
-  // In production: 30 attempts per 15 minutes (balanced security and usability)
   const isDevelopment = process.env.NODE_ENV === 'development';
   const maxAttempts = isDevelopment ? 100 : 30;
-  
+
   const authRateLimit = createRateLimit({
     max: maxAttempts,
     timeWindow: '15 minutes',
     keyGenerator: (request) => {
       const ip = getClientIp(request);
       const slug = (request.params as { slug?: string })?.slug || 'unknown';
-      return `${ip}:${slug}`; // Rate limit per IP + shop combination
+      return `${ip}:${slug}`;
     },
   });
 
   /**
-   * Verify shop PIN and issue JWT token.
-   * 
+   * Verify shop password (owner or staff) and issue JWT token.
+   *
    * @route POST /api/shops/:slug/auth
-   * @param slug - Shop slug identifier
-   * @body pin - Owner or staff PIN
-   * @returns { valid: boolean, role: string, token?: string, pinResetRequired?: boolean }
+   * @body password - Owner or staff password
+   * @returns { valid, role, token?, pinResetRequired? }
    */
   fastify.post('/shops/:slug/auth', {
     preHandler: [authRateLimit],
@@ -47,70 +43,62 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       slug: z.string().min(1).max(100),
     });
     const bodySchema = z.object({
-      pin: z.string().min(1).max(20),
+      password: z.string().min(1).max(200),
     });
 
     const { slug } = validateRequest(paramsSchema, request.params);
-    const { pin } = validateRequest(bodySchema, request.body);
+    const { password } = validateRequest(bodySchema, request.body);
 
-    // Validate PIN format
-    const pinValidation = validatePin(pin);
-    if (!pinValidation.isValid) {
-      logAuthFailure(request, 'invalid_pin_format', slug);
-      throw new ValidationError(pinValidation.error || 'Invalid PIN format');
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      logAuthFailure(request, 'invalid_password_format', slug);
+      throw new ValidationError(passwordValidation.error || 'Invalid password format');
     }
 
     const shop = await getShopBySlug(slug);
 
     if (!shop) {
-      // Don't reveal that shop doesn't exist - same response as wrong PIN
       logAuthFailure(request, 'shop_not_found', slug);
       return { valid: false, role: null };
     }
 
     let role: 'owner' | 'staff' | null = null;
-    let pinMatches = false;
+    let passwordMatches = false;
     let pinResetRequired = false;
 
-    // Check owner PIN (hashed first, then legacy plain text)
     if (shop.ownerPinHash) {
-      const matches = await verifyPin(pin, shop.ownerPinHash);
+      const matches = await verifyPassword(password, shop.ownerPinHash);
       if (matches) {
         role = 'owner';
-        pinMatches = true;
+        passwordMatches = true;
         pinResetRequired = shop.ownerPinResetRequired || false;
       }
-    } else if (shop.ownerPin === pin) {
-      // Legacy plain text PIN support during migration
+    } else if (shop.ownerPin === password) {
       role = 'owner';
-      pinMatches = true;
-      pinResetRequired = true; // Force reset for legacy PINs
+      passwordMatches = true;
+      pinResetRequired = true;
     }
 
-    // Check staff PIN if owner PIN didn't match
-    if (!pinMatches && shop.staffPinHash) {
-      const matches = await verifyPin(pin, shop.staffPinHash);
+    if (!passwordMatches && shop.staffPinHash) {
+      const matches = await verifyPassword(password, shop.staffPinHash);
       if (matches) {
         role = 'staff';
-        pinMatches = true;
+        passwordMatches = true;
         pinResetRequired = shop.staffPinResetRequired || false;
       }
-    } else if (!pinMatches && shop.staffPin === pin) {
-      // Legacy plain text PIN support during migration
+    } else if (!passwordMatches && shop.staffPin === password) {
       role = 'staff';
-      pinMatches = true;
-      pinResetRequired = true; // Force reset for legacy PINs
+      passwordMatches = true;
+      pinResetRequired = true;
     }
 
-    if (!pinMatches || !role) {
-      logAuthFailure(request, 'invalid_pin', slug);
+    if (!passwordMatches || !role) {
+      logAuthFailure(request, 'invalid_password', slug);
       return { valid: false, role: null };
     }
 
-    // Log successful authentication
     logAuthSuccess(request, shop.id, role);
 
-    // Issue JWT token
     const token = signToken({
       userId: shop.id,
       shopId: shop.id,

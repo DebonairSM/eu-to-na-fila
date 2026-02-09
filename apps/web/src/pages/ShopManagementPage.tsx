@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import type { ShopTheme, HomeContent, ShopAdminView, ShopSettings } from '@eutonafila/shared';
 import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS } from '@eutonafila/shared';
-import type { Service } from '@eutonafila/shared';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useModal } from '@/hooks/useModal';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
@@ -14,7 +13,6 @@ import { RootSiteNav } from '@/components/RootSiteNav';
 import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
 import { Container } from '@/components/design-system/Spacing/Container';
-import { WaitTimeSimulator } from '@/components/WaitTimeSimulator';
 
 // DEFAULT_THEME and DEFAULT_HOME_CONTENT imported from @eutonafila/shared
 
@@ -65,12 +63,7 @@ export function ShopManagementPage() {
   const [error, setError] = useState<Error | null>(null);
   const [shopToDelete, setShopToDelete] = useState<number | null>(null);
   const [editingShop, setEditingShop] = useState<Shop | null>(null);
-  const [editTab, setEditTab] = useState<'info' | 'appearance' | 'content' | 'services' | 'settings'>('info');
-  // -- Services state --
-  const [shopServices, setShopServices] = useState<Service[]>([]);
-  const [editingService, setEditingService] = useState<Service | null>(null);
-  const [serviceForm, setServiceForm] = useState({ name: '', description: '', duration: 30, price: 0 });
-  const [isAddingService, setIsAddingService] = useState(false);
+  const [editTab, setEditTab] = useState<'info' | 'appearance' | 'content' | 'settings'>('info');
   const [formData, setFormData] = useState<{
     name: string;
     slug: string;
@@ -165,70 +158,6 @@ export function ShopManagementPage() {
     }
   }, [shopToDelete, user?.companyId, loadShops, deleteConfirmModal]);
 
-  // Load services for a shop
-  const loadServices = useCallback(async (shopSlug: string) => {
-    try {
-      const svcs = await api.getServices(shopSlug);
-      setShopServices(svcs);
-    } catch {
-      setShopServices([]);
-    }
-  }, []);
-
-  const handleAddService = useCallback(async () => {
-    if (!editingShop || !serviceForm.name.trim()) return;
-    try {
-      await api.createService(editingShop.slug, {
-        name: serviceForm.name,
-        description: serviceForm.description || undefined,
-        duration: serviceForm.duration,
-        price: serviceForm.price > 0 ? serviceForm.price : undefined,
-      });
-      setServiceForm({ name: '', description: '', duration: 30, price: 0 });
-      setIsAddingService(false);
-      await loadServices(editingShop.slug);
-    } catch (err) {
-      setErrorMessage(getErrorMessage(err, 'Erro ao criar servico.'));
-    }
-  }, [editingShop, serviceForm, loadServices]);
-
-  const handleUpdateService = useCallback(async () => {
-    if (!editingShop || !editingService) return;
-    try {
-      await api.updateService(editingService.id, {
-        name: serviceForm.name || undefined,
-        description: serviceForm.description,
-        duration: serviceForm.duration,
-        price: serviceForm.price > 0 ? serviceForm.price : null,
-      });
-      setEditingService(null);
-      setServiceForm({ name: '', description: '', duration: 30, price: 0 });
-      await loadServices(editingShop.slug);
-    } catch (err) {
-      setErrorMessage(getErrorMessage(err, 'Erro ao atualizar servico.'));
-    }
-  }, [editingShop, editingService, serviceForm, loadServices]);
-
-  const handleDeleteService = useCallback(async (serviceId: number) => {
-    if (!editingShop) return;
-    try {
-      await api.deleteService(serviceId);
-      await loadServices(editingShop.slug);
-    } catch (err) {
-      setErrorMessage(getErrorMessage(err, 'Erro ao remover servico.'));
-    }
-  }, [editingShop, loadServices]);
-
-  const handleToggleServiceActive = useCallback(async (service: Service) => {
-    if (!editingShop) return;
-    try {
-      await api.updateService(service.id, { isActive: !service.isActive });
-      await loadServices(editingShop.slug);
-    } catch (err) {
-      setErrorMessage(getErrorMessage(err, 'Erro ao atualizar servico.'));
-    }
-  }, [editingShop, loadServices]);
-
   const openEditModal = (shop: Shop) => {
     setEditingShop(shop);
     setFormData({
@@ -242,10 +171,6 @@ export function ShopManagementPage() {
       settings: mergeSettingsForEdit(shop.settings ?? null),
     });
     setEditTab('info');
-    setShopServices([]);
-    setEditingService(null);
-    setIsAddingService(false);
-    loadServices(shop.slug);
     editModal.open();
   };
 
@@ -379,7 +304,7 @@ export function ShopManagementPage() {
                   Editar Barbearia
                 </h2>
                 <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-                  {(['info', 'appearance', 'content', 'services', 'settings'] as const).map((tab) => (
+                  {(['info', 'appearance', 'content', 'settings'] as const).map((tab) => (
                     <button
                       key={tab}
                       type="button"
@@ -391,15 +316,15 @@ export function ShopManagementPage() {
                       {tab === 'info' && 'Informações'}
                       {tab === 'appearance' && 'Aparência'}
                       {tab === 'content' && 'Conteúdo'}
-                      {tab === 'services' && 'Serviços'}
                       {tab === 'settings' && 'Configurações'}
                     </button>
                   ))}
                 </div>
                 <form onSubmit={(e) => { e.preventDefault(); handleEdit(); }} className="flex-1 overflow-y-auto min-h-0 pr-1">
                   {editTab === 'info' && (
-                    <>
-                      <div className="form-group mb-4 sm:mb-5">
+                    <section className="space-y-5">
+                      <p className="text-white/60 text-sm">Dados básicos da barbearia.</p>
+                      <div>
                         <label htmlFor="editNameRoot" className="block text-white/70 text-sm mb-2">Nome *</label>
                         <input
                           id="editNameRoot"
@@ -410,7 +335,7 @@ export function ShopManagementPage() {
                           className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
                         />
                       </div>
-                      <div className="form-group mb-4 sm:mb-5">
+                      <div>
                         <label htmlFor="editSlugRoot" className="block text-white/70 text-sm mb-2">Slug *</label>
                         <input
                           id="editSlugRoot"
@@ -422,8 +347,8 @@ export function ShopManagementPage() {
                           className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
                         />
                       </div>
-                      <div className="form-group mb-4 sm:mb-5">
-                        <label htmlFor="editDomainRoot" className="block text-white/70 text-sm mb-2">Domínio (opcional)</label>
+                      <div>
+                        <label htmlFor="editDomainRoot" className="block text-white/50 text-sm mb-2">Domínio (opcional)</label>
                         <input
                           id="editDomainRoot"
                           type="text"
@@ -433,8 +358,8 @@ export function ShopManagementPage() {
                           className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
                         />
                       </div>
-                      <div className="form-group mb-4 sm:mb-5">
-                        <label htmlFor="editPathRoot" className="block text-white/70 text-sm mb-2">Caminho (opcional)</label>
+                      <div>
+                        <label htmlFor="editPathRoot" className="block text-white/50 text-sm mb-2">Caminho (opcional)</label>
                         <input
                           id="editPathRoot"
                           type="text"
@@ -444,8 +369,8 @@ export function ShopManagementPage() {
                           className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
                         />
                       </div>
-                      <div className="form-group mb-4 sm:mb-5">
-                        <label htmlFor="editApiBaseRoot" className="block text-white/70 text-sm mb-2">API Base URL (opcional)</label>
+                      <div>
+                        <label htmlFor="editApiBaseRoot" className="block text-white/50 text-sm mb-2">API Base URL (opcional)</label>
                         <input
                           id="editApiBaseRoot"
                           type="url"
@@ -455,181 +380,144 @@ export function ShopManagementPage() {
                           className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
                         />
                       </div>
-                    </>
+                    </section>
                   )}
                   {editTab === 'appearance' && (
-                    <div className="space-y-4">
-                      <p className="text-white/60 text-sm mb-4">Cores do tema da pagina inicial.</p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {(['primary', 'accent', 'background', 'surfacePrimary', 'surfaceSecondary', 'navBg', 'textPrimary', 'textSecondary', 'borderColor'] as const).map((key) => (
-                          <div key={key}>
-                            <label className="block text-white/60 text-xs mb-1">{key}</label>
-                            <input
-                              type="text"
-                              value={formData.theme[key] ?? ''}
-                              onChange={(e) => setFormData({ ...formData, theme: { ...formData.theme, [key]: e.target.value } })}
-                              className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
-                            />
-                          </div>
-                        ))}
+                    <div className="space-y-6">
+                      <p className="text-white/60 text-sm">Cores do tema da página inicial.</p>
+                      <div className="space-y-4">
+                        <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Principal e destaque</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          {(['primary', 'accent'] as const).map((key) => (
+                            <div key={key} className="flex items-center gap-3">
+                              <div className="w-10 h-10 shrink-0 rounded-lg border border-white/20" style={{ backgroundColor: formData.theme[key] || '#333' }} />
+                              <div className="min-w-0 flex-1">
+                                <label className="block text-white/60 text-xs mb-1">{key}</label>
+                                <input type="text" value={formData.theme[key] ?? ''} onChange={(e) => setFormData({ ...formData, theme: { ...formData.theme, [key]: e.target.value } })} className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Fundo e superfícies</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          {(['background', 'surfacePrimary', 'surfaceSecondary'] as const).map((key) => (
+                            <div key={key} className="flex items-center gap-3">
+                              <div className="w-10 h-10 shrink-0 rounded-lg border border-white/20" style={{ backgroundColor: formData.theme[key] || '#333' }} />
+                              <div className="min-w-0 flex-1">
+                                <label className="block text-white/60 text-xs mb-1">{key}</label>
+                                <input type="text" value={formData.theme[key] ?? ''} onChange={(e) => setFormData({ ...formData, theme: { ...formData.theme, [key]: e.target.value } })} className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Navegação e texto</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          {(['navBg', 'textPrimary', 'textSecondary', 'borderColor'] as const).map((key) => (
+                            <div key={key} className="flex items-center gap-3">
+                              <div className="w-10 h-10 shrink-0 rounded-lg border border-white/20" style={{ backgroundColor: formData.theme[key] || '#333' }} />
+                              <div className="min-w-0 flex-1">
+                                <label className="block text-white/60 text-xs mb-1">{key}</label>
+                                <input type="text" value={formData.theme[key] ?? ''} onChange={(e) => setFormData({ ...formData, theme: { ...formData.theme, [key]: e.target.value } })} className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
                   {editTab === 'content' && (
                     <div className="space-y-6 max-h-[50vh] overflow-y-auto">
-                      <p className="text-white/60 text-sm">Textos e conteudo da pagina inicial. Todos opcionais.</p>
-                      <div>
-                        <h4 className="text-white font-medium mb-2">Hero</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div><label className="text-white/50 text-xs">badge</label><input type="text" value={formData.homeContent.hero.badge} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, badge: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="text-white/50 text-xs">subtitle</label><input type="text" value={formData.homeContent.hero.subtitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, subtitle: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="text-white/50 text-xs">ctaJoin</label><input type="text" value={formData.homeContent.hero.ctaJoin} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaJoin: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="text-white/50 text-xs">ctaLocation</label><input type="text" value={formData.homeContent.hero.ctaLocation} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaLocation: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <p className="text-white/60 text-sm">Textos e conteúdo da página inicial. Todos opcionais.</p>
+                      <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                        <h4 className="text-white font-medium">Hero</h4>
+                        <div className="space-y-3">
+                          <div><label className="block text-white/60 text-sm mb-1">Badge do hero</label><input type="text" value={formData.homeContent.hero.badge} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, badge: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">Subtítulo</label><input type="text" value={formData.homeContent.hero.subtitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, subtitle: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">Botão Entrar</label><input type="text" value={formData.homeContent.hero.ctaJoin} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaJoin: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">Botão Localização</label><input type="text" value={formData.homeContent.hero.ctaLocation} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaLocation: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                         </div>
-                      </div>
-                      <div>
-                        <h4 className="text-white font-medium mb-2">Navegacao</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          {(['linkServices', 'linkAbout', 'linkLocation', 'ctaJoin', 'linkBarbers'] as const).map((key) => (
-                            <div key={key}><label className="text-white/50 text-xs">{key}</label><input type="text" value={formData.homeContent.nav[key]} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, nav: { ...formData.homeContent.nav, [key]: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      </section>
+                      <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                        <h4 className="text-white font-medium">Navegação</h4>
+                        <div className="space-y-3">
+                          {([
+                            { key: 'linkServices' as const, label: 'Link Serviços' },
+                            { key: 'linkAbout' as const, label: 'Link Sobre' },
+                            { key: 'linkLocation' as const, label: 'Link Localização' },
+                            { key: 'ctaJoin' as const, label: 'Botão Entrar' },
+                            { key: 'linkBarbers' as const, label: 'Link Barbeiros' },
+                          ]).map(({ key, label }) => (
+                            <div key={key}><label className="block text-white/60 text-sm mb-1">{label}</label><input type="text" value={formData.homeContent.nav[key]} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, nav: { ...formData.homeContent.nav, [key]: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                           ))}
                         </div>
-                      </div>
-                      <div>
-                        <h4 className="text-white font-medium mb-2">Servicos</h4>
-                        <div className="grid grid-cols-3 gap-2">
-                          <div><label className="text-white/50 text-xs">sectionTitle</label><input type="text" value={formData.homeContent.services.sectionTitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, sectionTitle: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="text-white/50 text-xs">loadingText</label><input type="text" value={formData.homeContent.services.loadingText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, loadingText: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="text-white/50 text-xs">emptyText</label><input type="text" value={formData.homeContent.services.emptyText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, emptyText: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      </section>
+                      <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                        <h4 className="text-white font-medium">Seção Serviços</h4>
+                        <div className="space-y-3">
+                          <div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={formData.homeContent.services.sectionTitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, sectionTitle: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">Texto ao carregar</label><input type="text" value={formData.homeContent.services.loadingText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, loadingText: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">Texto quando vazio</label><input type="text" value={formData.homeContent.services.emptyText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, emptyText: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                         </div>
-                      </div>
-                      <div>
-                        <h4 className="text-white font-medium mb-2">Localizacao</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="col-span-2"><label className="text-white/50 text-xs">address</label><textarea value={formData.homeContent.location.address} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, address: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm min-h-[60px]" /></div>
-                          <div><label className="text-white/50 text-xs">hours</label><textarea value={formData.homeContent.location.hours} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, hours: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="text-white/50 text-xs">phone</label><input type="text" value={formData.homeContent.location.phone} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phone: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="text-white/50 text-xs">phoneHref</label><input type="text" value={formData.homeContent.location.phoneHref} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phoneHref: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" placeholder="tel:+55..." /></div>
-                          <div><label className="text-white/50 text-xs">languages</label><input type="text" value={formData.homeContent.location.languages} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, languages: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="text-white/50 text-xs">mapQuery</label><input type="text" value={formData.homeContent.location.mapQuery} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, mapQuery: e.target.value } } })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      </section>
+                      <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                        <h4 className="text-white font-medium">Localização</h4>
+                        <div className="space-y-3">
+                          <div><label className="block text-white/60 text-sm mb-1">Endereço</label><textarea value={formData.homeContent.location.address} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, address: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[60px]" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">Horário</label><textarea value={formData.homeContent.location.hours} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, hours: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">Telefone</label><input type="text" value={formData.homeContent.location.phone} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phone: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">Link do telefone</label><input type="text" value={formData.homeContent.location.phoneHref} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phoneHref: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" placeholder="tel:+55..." /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">Idiomas</label><input type="text" value={formData.homeContent.location.languages} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, languages: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">Consulta do mapa</label><input type="text" value={formData.homeContent.location.mapQuery} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, mapQuery: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                         </div>
-                      </div>
-                    </div>
-                  )}
-                  {editTab === 'services' && (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-white/60 text-sm">Gerencie os servicos e tempos estimados.</p>
-                        {!isAddingService && !editingService && (
-                          <button
-                            type="button"
-                            onClick={() => { setIsAddingService(true); setServiceForm({ name: '', description: '', duration: 30, price: 0 }); }}
-                            className="px-3 py-1.5 bg-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/30 transition-colors"
-                          >
-                            + Adicionar
-                          </button>
-                        )}
-                      </div>
-                      {(isAddingService || editingService) && (
-                        <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="col-span-2">
-                              <label className="text-white/60 text-xs block mb-1">Nome *</label>
-                              <input type="text" value={serviceForm.name} onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" placeholder="Ex: Corte Masculino" />
-                            </div>
-                            <div className="col-span-2">
-                              <label className="text-white/60 text-xs block mb-1">Descricao</label>
-                              <input type="text" value={serviceForm.description} onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" placeholder="Descricao opcional" />
-                            </div>
-                            <div>
-                              <label className="text-white/60 text-xs block mb-1">Duracao (min) *</label>
-                              <input type="number" min={1} value={serviceForm.duration} onChange={(e) => setServiceForm({ ...serviceForm, duration: parseInt(e.target.value) || 1 })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" />
-                            </div>
-                            <div>
-                              <label className="text-white/60 text-xs block mb-1">Preco (centavos)</label>
-                              <input type="number" min={0} value={serviceForm.price} onChange={(e) => setServiceForm({ ...serviceForm, price: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" placeholder="0 = sem preco" />
-                            </div>
-                          </div>
-                          <div className="flex gap-2 pt-2">
-                            <button type="button" onClick={() => { setIsAddingService(false); setEditingService(null); }} className="px-3 py-1.5 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20 transition-colors">Cancelar</button>
-                            <button type="button" onClick={editingService ? handleUpdateService : handleAddService} disabled={!serviceForm.name.trim()} className="px-3 py-1.5 bg-white text-[#0a0a0a] rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors disabled:opacity-50">{editingService ? 'Salvar' : 'Criar'}</button>
-                          </div>
-                        </div>
-                      )}
-                      {shopServices.length === 0 && !isAddingService ? (
-                        <p className="text-white/40 text-sm text-center py-6">Nenhum servico cadastrado.</p>
-                      ) : (
-                        <div className="space-y-2 max-h-[40vh] overflow-y-auto">
-                          {shopServices.map((svc) => (
-                            <div key={svc.id} className={`flex items-center justify-between gap-3 p-3 rounded-lg border transition-colors ${svc.isActive ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5 opacity-60'}`}>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-white text-sm font-medium truncate">{svc.name}</span>
-                                  {!svc.isActive && <span className="text-xs text-white/40 bg-white/10 px-1.5 py-0.5 rounded">inativo</span>}
-                                </div>
-                                <div className="flex gap-3 text-xs text-white/50 mt-0.5">
-                                  <span>{svc.duration} min</span>
-                                  {svc.price != null && svc.price > 0 && <span>R$ {(svc.price / 100).toFixed(2)}</span>}
-                                </div>
-                              </div>
-                              <div className="flex gap-1.5 shrink-0">
-                                <button type="button" onClick={() => handleToggleServiceActive(svc)} className="p-1.5 rounded text-white/40 hover:text-white hover:bg-white/10 transition-colors" title={svc.isActive ? 'Desativar' : 'Ativar'}>
-                                  <span className="material-symbols-outlined text-base">{svc.isActive ? 'toggle_on' : 'toggle_off'}</span>
-                                </button>
-                                <button type="button" onClick={() => { setEditingService(svc); setIsAddingService(false); setServiceForm({ name: svc.name, description: svc.description || '', duration: svc.duration, price: svc.price ?? 0 }); }} className="p-1.5 rounded text-white/40 hover:text-white hover:bg-white/10 transition-colors" title="Editar">
-                                  <span className="material-symbols-outlined text-base">edit</span>
-                                </button>
-                                <button type="button" onClick={() => handleDeleteService(svc.id)} className="p-1.5 rounded text-red-400/60 hover:text-red-400 hover:bg-red-400/10 transition-colors" title="Remover">
-                                  <span className="material-symbols-outlined text-base">delete</span>
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <WaitTimeSimulator services={shopServices} />
+                      </section>
                     </div>
                   )}
                   {editTab === 'settings' && (
                     <div className="space-y-6">
-                      <div>
-                        <h4 className="text-white font-medium mb-3">Fila</h4>
+                      <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <h4 className="text-white font-medium">Fila</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-white/60 text-xs mb-1">Tamanho maximo da fila</label>
-                            <input type="number" min={1} max={500} value={formData.settings.maxQueueSize} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                            <label className="block text-white/60 text-sm mb-2">Tamanho máximo da fila</label>
+                            <input type="number" min={1} max={500} value={formData.settings.maxQueueSize} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
                           </div>
                           <div>
-                            <label className="block text-white/60 text-xs mb-1">Duracao padrao do servico (min)</label>
-                            <input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                            <label className="block text-white/60 text-sm mb-2">Duração padrão do serviço (min)</label>
+                            <input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
                           </div>
                         </div>
-                      </div>
-                      <div>
-                        <h4 className="text-white font-medium mb-3">Regras de Atendimento</h4>
-                        <div className="space-y-3">
+                      </section>
+                      <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <h4 className="text-white font-medium">Regras de atendimento</h4>
+                        <ul className="space-y-4">
                           {([
                             { key: 'requirePhone' as const, label: 'Exigir telefone do cliente' },
                             { key: 'requireBarberChoice' as const, label: 'Exigir escolha de barbeiro' },
                             { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' },
-                            { key: 'deviceDeduplication' as const, label: 'Impedir multiplos tickets por dispositivo' },
+                            { key: 'deviceDeduplication' as const, label: 'Impedir múltiplos tickets por dispositivo' },
                             { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' },
                           ]).map(({ key, label }) => (
-                            <label key={key} className="flex items-center gap-3 cursor-pointer group">
-                              <button
-                                type="button"
-                                role="switch"
-                                aria-checked={formData.settings[key]}
-                                onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })}
-                                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-white' : 'bg-white/20'}`}
-                              >
-                                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-[#0a0a0a]' : 'translate-x-0 bg-white/60'}`} />
-                              </button>
-                              <span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span>
-                            </label>
+                            <li key={key}>
+                              <label className="flex items-center gap-3 cursor-pointer group">
+                                <button
+                                  type="button"
+                                  role="switch"
+                                  aria-checked={formData.settings[key]}
+                                  onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })}
+                                  className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-white' : 'bg-white/20'}`}
+                                >
+                                  <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-[#0a0a0a]' : 'translate-x-0 bg-white/60'}`} />
+                                </button>
+                                <span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span>
+                              </label>
+                            </li>
                           ))}
-                        </div>
-                      </div>
+                        </ul>
+                      </section>
                     </div>
                   )}
                   <div className="flex gap-2 sm:gap-3 mt-5 sm:mt-6 flex-shrink-0 pt-4 border-t border-white/10">
@@ -793,7 +681,7 @@ export function ShopManagementPage() {
               Editar Barbearia
             </h2>
             <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-              {(['info', 'appearance', 'content', 'services', 'settings'] as const).map((tab) => (
+              {(['info', 'appearance', 'content', 'settings'] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -805,332 +693,42 @@ export function ShopManagementPage() {
                   {tab === 'info' && 'Informações'}
                   {tab === 'appearance' && 'Aparência'}
                   {tab === 'content' && 'Conteúdo'}
-                  {tab === 'services' && 'Serviços'}
                   {tab === 'settings' && 'Configurações'}
                 </button>
               ))}
             </div>
             <form onSubmit={(e) => { e.preventDefault(); handleEdit(); }} className="flex-1 overflow-y-auto min-h-0 pr-1">
               {editTab === 'info' && (
-                <>
-              <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="editName" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
-                  Nome *
-                </label>
-                <input
-                  id="editName"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
-                />
-              </div>
-              <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="editSlug" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
-                  Slug *
-                </label>
-                <input
-                  id="editSlug"
-                  type="text"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
-                  required
-                  pattern="[a-z0-9-]+"
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
-                />
-              </div>
-              <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="editDomain" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
-                  Domínio (opcional)
-                </label>
-                <input
-                  id="editDomain"
-                  type="text"
-                  value={formData.domain}
-                  onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                  placeholder="exemplo.com"
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
-                />
-              </div>
-              <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="editPath" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
-                  Caminho (opcional)
-                </label>
-                <input
-                  id="editPath"
-                  type="text"
-                  value={formData.path}
-                  onChange={(e) => setFormData({ ...formData, path: e.target.value })}
-                  placeholder="/caminho"
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
-                />
-              </div>
-              <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="editApiBase" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
-                  API Base URL (opcional)
-                </label>
-                <input
-                  id="editApiBase"
-                  type="url"
-                  value={formData.apiBase}
-                  onChange={(e) => setFormData({ ...formData, apiBase: e.target.value })}
-                  placeholder="https://api.exemplo.com"
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
-                />
-              </div>
-                </>
+                <section className="space-y-5">
+                  <p className="text-white/60 text-sm">Dados básicos da barbearia.</p>
+                  <div><label htmlFor="editName" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">Nome *</label><input id="editName" type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" /></div>
+                  <div><label htmlFor="editSlug" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">Slug *</label><input id="editSlug" type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} required pattern="[a-z0-9-]+" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" /></div>
+                  <div><label htmlFor="editDomain" className="block text-white/50 text-sm mb-2">Domínio (opcional)</label><input id="editDomain" type="text" value={formData.domain} onChange={(e) => setFormData({ ...formData, domain: e.target.value })} placeholder="exemplo.com" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
+                  <div><label htmlFor="editPath" className="block text-white/50 text-sm mb-2">Caminho (opcional)</label><input id="editPath" type="text" value={formData.path} onChange={(e) => setFormData({ ...formData, path: e.target.value })} placeholder="/caminho" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
+                  <div><label htmlFor="editApiBase" className="block text-white/50 text-sm mb-2">API Base URL (opcional)</label><input id="editApiBase" type="url" value={formData.apiBase} onChange={(e) => setFormData({ ...formData, apiBase: e.target.value })} placeholder="https://api.exemplo.com" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
+                </section>
               )}
               {editTab === 'appearance' && (
-                <div className="space-y-4">
-                  <p className="text-white/60 text-sm mb-4">Cores do tema da pagina inicial.</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {(['primary', 'accent', 'background', 'surfacePrimary', 'surfaceSecondary', 'navBg', 'textPrimary', 'textSecondary', 'borderColor'] as const).map((key) => (
-                      <div key={key}>
-                        <label className="block text-white/60 text-xs mb-1">{key}</label>
-                        <input
-                          type="text"
-                          value={formData.theme[key] ?? ''}
-                          onChange={(e) => setFormData({ ...formData, theme: { ...formData.theme, [key]: e.target.value } })}
-                          className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm"
-                        />
-                      </div>
-                    ))}
-                  </div>
+                <div className="space-y-6">
+                  <p className="text-white/60 text-sm">Cores do tema da página inicial.</p>
+                  <div className="space-y-4"><h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Principal e destaque</h4><div className="grid grid-cols-2 gap-4">{(['primary', 'accent'] as const).map((key) => (<div key={key} className="flex items-center gap-3"><div className="w-10 h-10 shrink-0 rounded-lg border border-white/20" style={{ backgroundColor: formData.theme[key] || '#333' }} /><div className="min-w-0 flex-1"><label className="block text-white/60 text-xs mb-1">{key}</label><input type="text" value={formData.theme[key] ?? ''} onChange={(e) => setFormData({ ...formData, theme: { ...formData.theme, [key]: e.target.value } })} className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div></div>))}</div></div>
+                  <div className="space-y-4"><h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Fundo e superfícies</h4><div className="grid grid-cols-2 gap-4">{(['background', 'surfacePrimary', 'surfaceSecondary'] as const).map((key) => (<div key={key} className="flex items-center gap-3"><div className="w-10 h-10 shrink-0 rounded-lg border border-white/20" style={{ backgroundColor: formData.theme[key] || '#333' }} /><div className="min-w-0 flex-1"><label className="block text-white/60 text-xs mb-1">{key}</label><input type="text" value={formData.theme[key] ?? ''} onChange={(e) => setFormData({ ...formData, theme: { ...formData.theme, [key]: e.target.value } })} className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div></div>))}</div></div>
+                  <div className="space-y-4"><h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Navegação e texto</h4><div className="grid grid-cols-2 gap-4">{(['navBg', 'textPrimary', 'textSecondary', 'borderColor'] as const).map((key) => (<div key={key} className="flex items-center gap-3"><div className="w-10 h-10 shrink-0 rounded-lg border border-white/20" style={{ backgroundColor: formData.theme[key] || '#333' }} /><div className="min-w-0 flex-1"><label className="block text-white/60 text-xs mb-1">{key}</label><input type="text" value={formData.theme[key] ?? ''} onChange={(e) => setFormData({ ...formData, theme: { ...formData.theme, [key]: e.target.value } })} className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div></div>))}</div></div>
                 </div>
               )}
               {editTab === 'content' && (
                 <div className="space-y-6 max-h-[50vh] overflow-y-auto">
-                  <p className="text-white/60 text-sm">Textos e conteudo da pagina inicial. Todos opcionais.</p>
-                  <div>
-                    <h4 className="text-white font-medium mb-2">Hero</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div><label className="text-white/50 text-xs">badge</label><input type="text" value={formData.homeContent.hero.badge} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, badge: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="text-white/50 text-xs">subtitle</label><input type="text" value={formData.homeContent.hero.subtitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, subtitle: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="text-white/50 text-xs">ctaJoin</label><input type="text" value={formData.homeContent.hero.ctaJoin} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaJoin: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="text-white/50 text-xs">ctaLocation</label><input type="text" value={formData.homeContent.hero.ctaLocation} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaLocation: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-white font-medium mb-2">Navegacao</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(['linkServices', 'linkAbout', 'linkLocation', 'ctaJoin', 'linkBarbers'] as const).map((key) => (
-                        <div key={key}><label className="text-white/50 text-xs">{key}</label><input type="text" value={formData.homeContent.nav[key]} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, nav: { ...formData.homeContent.nav, [key]: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-white font-medium mb-2">Servicos</h4>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div><label className="text-white/50 text-xs">sectionTitle</label><input type="text" value={formData.homeContent.services.sectionTitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, sectionTitle: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="text-white/50 text-xs">loadingText</label><input type="text" value={formData.homeContent.services.loadingText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, loadingText: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="text-white/50 text-xs">emptyText</label><input type="text" value={formData.homeContent.services.emptyText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, emptyText: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-white font-medium mb-2">Localizacao</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="col-span-2"><label className="text-white/50 text-xs">address</label><textarea value={formData.homeContent.location.address} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, address: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm min-h-[60px]" /></div>
-                      <div><label className="text-white/50 text-xs">hours</label><textarea value={formData.homeContent.location.hours} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, hours: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="text-white/50 text-xs">phone</label><input type="text" value={formData.homeContent.location.phone} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phone: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="text-white/50 text-xs">phoneHref</label><input type="text" value={formData.homeContent.location.phoneHref} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phoneHref: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" placeholder="tel:+55..." /></div>
-                      <div><label className="text-white/50 text-xs">languages</label><input type="text" value={formData.homeContent.location.languages} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, languages: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="text-white/50 text-xs">mapQuery</label><input type="text" value={formData.homeContent.location.mapQuery} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, mapQuery: e.target.value } } })} className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm" /></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {editTab === 'services' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-white/60 text-sm">Gerencie os servicos e tempos estimados.</p>
-                    {!isAddingService && !editingService && (
-                      <button
-                        type="button"
-                        onClick={() => { setIsAddingService(true); setServiceForm({ name: '', description: '', duration: 30, price: 0 }); }}
-                        className="px-3 py-1.5 bg-[#D4AF37]/20 text-[#D4AF37] rounded-lg text-sm font-medium hover:bg-[#D4AF37]/30 transition-colors"
-                      >
-                        + Adicionar
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Add / Edit service form */}
-                  {(isAddingService || editingService) && (
-                    <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="col-span-2">
-                          <label className="text-white/60 text-xs block mb-1">Nome *</label>
-                          <input
-                            type="text"
-                            value={serviceForm.name}
-                            onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })}
-                            className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm"
-                            placeholder="Ex: Corte Masculino"
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <label className="text-white/60 text-xs block mb-1">Descricao</label>
-                          <input
-                            type="text"
-                            value={serviceForm.description}
-                            onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
-                            className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm"
-                            placeholder="Descricao opcional"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-white/60 text-xs block mb-1">Duracao (min) *</label>
-                          <input
-                            type="number"
-                            min={1}
-                            value={serviceForm.duration}
-                            onChange={(e) => setServiceForm({ ...serviceForm, duration: parseInt(e.target.value) || 1 })}
-                            className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-white/60 text-xs block mb-1">Preco (centavos)</label>
-                          <input
-                            type="number"
-                            min={0}
-                            value={serviceForm.price}
-                            onChange={(e) => setServiceForm({ ...serviceForm, price: parseInt(e.target.value) || 0 })}
-                            className="form-input w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm"
-                            placeholder="0 = sem preco"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex gap-2 pt-2">
-                        <button
-                          type="button"
-                          onClick={() => { setIsAddingService(false); setEditingService(null); }}
-                          className="px-3 py-1.5 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20 transition-colors"
-                        >
-                          Cancelar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={editingService ? handleUpdateService : handleAddService}
-                          disabled={!serviceForm.name.trim()}
-                          className="px-3 py-1.5 bg-[#D4AF37] text-[#0a0a0a] rounded-lg text-sm font-medium hover:bg-[#E8C547] transition-colors disabled:opacity-50"
-                        >
-                          {editingService ? 'Salvar' : 'Criar'}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Services list */}
-                  {shopServices.length === 0 && !isAddingService ? (
-                    <p className="text-white/40 text-sm text-center py-6">Nenhum servico cadastrado.</p>
-                  ) : (
-                    <div className="space-y-2 max-h-[40vh] overflow-y-auto">
-                      {shopServices.map((svc) => (
-                        <div
-                          key={svc.id}
-                          className={`flex items-center justify-between gap-3 p-3 rounded-lg border transition-colors ${
-                            svc.isActive
-                              ? 'bg-white/5 border-white/10'
-                              : 'bg-white/[0.02] border-white/5 opacity-60'
-                          }`}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-white text-sm font-medium truncate">{svc.name}</span>
-                              {!svc.isActive && <span className="text-xs text-white/40 bg-white/10 px-1.5 py-0.5 rounded">inativo</span>}
-                            </div>
-                            <div className="flex gap-3 text-xs text-white/50 mt-0.5">
-                              <span>{svc.duration} min</span>
-                              {svc.price != null && svc.price > 0 && <span>R$ {(svc.price / 100).toFixed(2)}</span>}
-                            </div>
-                          </div>
-                          <div className="flex gap-1.5 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleServiceActive(svc)}
-                              className="p-1.5 rounded text-white/40 hover:text-white hover:bg-white/10 transition-colors"
-                              title={svc.isActive ? 'Desativar' : 'Ativar'}
-                            >
-                              <span className="material-symbols-outlined text-base">
-                                {svc.isActive ? 'toggle_on' : 'toggle_off'}
-                              </span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingService(svc);
-                                setIsAddingService(false);
-                                setServiceForm({
-                                  name: svc.name,
-                                  description: svc.description || '',
-                                  duration: svc.duration,
-                                  price: svc.price ?? 0,
-                                });
-                              }}
-                              className="p-1.5 rounded text-white/40 hover:text-white hover:bg-white/10 transition-colors"
-                              title="Editar"
-                            >
-                              <span className="material-symbols-outlined text-base">edit</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteService(svc.id)}
-                              className="p-1.5 rounded text-red-400/60 hover:text-red-400 hover:bg-red-400/10 transition-colors"
-                              title="Remover"
-                            >
-                              <span className="material-symbols-outlined text-base">delete</span>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Wait-time simulator */}
-                  <WaitTimeSimulator services={shopServices} />
+                  <p className="text-white/60 text-sm">Textos e conteúdo da página inicial. Todos opcionais.</p>
+                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10"><h4 className="text-white font-medium">Hero</h4><div className="space-y-3"><div><label className="block text-white/60 text-sm mb-1">Badge do hero</label><input type="text" value={formData.homeContent.hero.badge} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, badge: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Subtítulo</label><input type="text" value={formData.homeContent.hero.subtitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, subtitle: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Botão Entrar</label><input type="text" value={formData.homeContent.hero.ctaJoin} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaJoin: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Botão Localização</label><input type="text" value={formData.homeContent.hero.ctaLocation} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaLocation: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div></div></section>
+                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10"><h4 className="text-white font-medium">Navegação</h4><div className="space-y-3">{[{ key: 'linkServices' as const, label: 'Link Serviços' }, { key: 'linkAbout' as const, label: 'Link Sobre' }, { key: 'linkLocation' as const, label: 'Link Localização' }, { key: 'ctaJoin' as const, label: 'Botão Entrar' }, { key: 'linkBarbers' as const, label: 'Link Barbeiros' }].map(({ key, label }) => (<div key={key}><label className="block text-white/60 text-sm mb-1">{label}</label><input type="text" value={formData.homeContent.nav[key]} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, nav: { ...formData.homeContent.nav, [key]: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>))}</div></section>
+                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10"><h4 className="text-white font-medium">Seção Serviços</h4><div className="space-y-3"><div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={formData.homeContent.services.sectionTitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, sectionTitle: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Texto ao carregar</label><input type="text" value={formData.homeContent.services.loadingText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, loadingText: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Texto quando vazio</label><input type="text" value={formData.homeContent.services.emptyText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, emptyText: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div></div></section>
+                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10"><h4 className="text-white font-medium">Localização</h4><div className="space-y-3"><div><label className="block text-white/60 text-sm mb-1">Endereço</label><textarea value={formData.homeContent.location.address} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, address: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[60px]" /></div><div><label className="block text-white/60 text-sm mb-1">Horário</label><textarea value={formData.homeContent.location.hours} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, hours: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Telefone</label><input type="text" value={formData.homeContent.location.phone} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phone: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Link do telefone</label><input type="text" value={formData.homeContent.location.phoneHref} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phoneHref: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" placeholder="tel:+55..." /></div><div><label className="block text-white/60 text-sm mb-1">Idiomas</label><input type="text" value={formData.homeContent.location.languages} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, languages: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Consulta do mapa</label><input type="text" value={formData.homeContent.location.mapQuery} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, mapQuery: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div></div></section>
                 </div>
               )}
               {editTab === 'settings' && (
                 <div className="space-y-6">
-                  <div>
-                    <h4 className="text-white font-medium mb-3">Fila</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-white/60 text-xs mb-1">Tamanho maximo da fila</label>
-                        <input type="number" min={1} max={500} value={formData.settings.maxQueueSize} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" />
-                      </div>
-                      <div>
-                        <label className="block text-white/60 text-xs mb-1">Duracao padrao do servico (min)</label>
-                        <input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" />
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-white font-medium mb-3">Regras de Atendimento</h4>
-                    <div className="space-y-3">
-                      {([
-                        { key: 'requirePhone' as const, label: 'Exigir telefone do cliente' },
-                        { key: 'requireBarberChoice' as const, label: 'Exigir escolha de barbeiro' },
-                        { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' },
-                        { key: 'deviceDeduplication' as const, label: 'Impedir multiplos tickets por dispositivo' },
-                        { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' },
-                      ]).map(({ key, label }) => (
-                        <label key={key} className="flex items-center gap-3 cursor-pointer group">
-                          <button
-                            type="button"
-                            role="switch"
-                            aria-checked={formData.settings[key]}
-                            onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })}
-                            className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}
-                          >
-                            <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} />
-                          </button>
-                          <span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Fila</h4><div className="grid grid-cols-2 gap-4"><div><label className="block text-white/60 text-sm mb-2">Tamanho máximo da fila</label><input type="number" min={1} max={500} value={formData.settings.maxQueueSize} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-2">Duração padrão do serviço (min)</label><input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div></div></section>
+                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Regras de atendimento</h4><ul className="space-y-4">{[{ key: 'requirePhone' as const, label: 'Exigir telefone do cliente' }, { key: 'requireBarberChoice' as const, label: 'Exigir escolha de barbeiro' }, { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' }, { key: 'deviceDeduplication' as const, label: 'Impedir múltiplos tickets por dispositivo' }, { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' }].map(({ key, label }) => (<li key={key}><label className="flex items-center gap-3 cursor-pointer group"><button type="button" role="switch" aria-checked={formData.settings[key]} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button><span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span></label></li>))}</ul></section>
                 </div>
               )}
               <div className="modal-actions flex gap-2 sm:gap-3 mt-5 sm:mt-6 flex-shrink-0 pt-4 border-t border-white/10">

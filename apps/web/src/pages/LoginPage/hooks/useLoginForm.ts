@@ -42,20 +42,20 @@ export function useLoginForm() {
         }
       }
 
-      // 2) Try owner/staff PIN (password field as PIN, leave username empty for PIN-only)
-      const pinResult = await api.authenticate(shopSlug, password);
-      if (pinResult.valid && pinResult.token) {
+      // 2) Try owner/staff password (leave username empty)
+      const authResult = await api.authenticate(shopSlug, password);
+      if (authResult.valid && authResult.token) {
         login({
           id: 0,
-          username: pinResult.role ?? 'staff',
-          role: pinResult.role === 'owner' ? 'owner' : 'staff',
-          name: pinResult.role === 'owner' ? 'owner' : 'staff',
+          username: authResult.role ?? 'staff',
+          role: authResult.role === 'owner' ? 'owner' : 'staff',
+          name: authResult.role === 'owner' ? 'owner' : 'staff',
         });
-        navigate(pinResult.role === 'owner' ? '/owner' : '/manage');
+        navigate(authResult.role === 'owner' ? '/owner' : '/manage');
         return;
       }
 
-      setError('Credenciais inválidas. Verifique usuário e senha ou PIN.');
+      setError('Credenciais inválidas. Verifique usuário e senha.');
     } catch (err) {
       setError(getErrorMessage(err, 'Erro ao fazer login. Tente novamente.'));
     } finally {

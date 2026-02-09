@@ -1,7 +1,7 @@
 import type { BaseApiClient } from './client.js';
 
 export interface AuthApi {
-  authenticate(shopSlug: string, pin: string): Promise<{ valid: boolean; role: 'owner' | 'staff' | null; token?: string }>;
+  authenticate(shopSlug: string, password: string): Promise<{ valid: boolean; role: 'owner' | 'staff' | null; token?: string }>;
   authenticateBarber(shopSlug: string, username: string, password: string): Promise<{ valid: boolean; role: 'barber' | null; token?: string; barberId?: number; barberName?: string }>;
   companyAuthenticate(username: string, password: string): Promise<{ valid: boolean; role: 'company_admin' | null; token?: string; companyId?: number; userId?: number }>;
 }
@@ -9,8 +9,8 @@ export interface AuthApi {
 export function createAuthApi(client: BaseApiClient): AuthApi {
   const c = client as any;
   return {
-    async authenticate(shopSlug, pin) {
-      const result = await c.post(`/shops/${shopSlug}/auth`, { pin }) as { valid: boolean; role: 'owner' | 'staff' | null; token?: string };
+    async authenticate(shopSlug, password) {
+      const result = await c.post(`/shops/${shopSlug}/auth`, { password }) as { valid: boolean; role: 'owner' | 'staff' | null; token?: string };
       if (result.valid && result.token) client.setAuthToken(result.token);
       return result;
     },

@@ -52,7 +52,7 @@ export function LoginForm() {
           </label>
         </div>
         <p id="username-hint" className="text-xs text-white/40 mt-1 mb-2">
-          Deixe em branco para login com PIN (dono/funcionário)
+          Deixe em branco para login com senha (dono/funcionário)
         </p>
 
         <div className="relative">
@@ -127,11 +127,11 @@ export function LoginForm() {
             <div className="text-xs text-[rgba(255,255,255,0.6)] space-y-2">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-sm text-[#D4AF37]">admin_panel_settings</span>
-                <span>Dono: usuário em branco / PIN 1234</span>
+                <span>Dono: usuário em branco / senha 123456</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-sm text-[#D4AF37]">badge</span>
-                <span>Funcionário: usuário em branco / PIN 0000</span>
+                <span>Funcionário: usuário em branco / senha 000000</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-sm text-[#D4AF37]">content_cut</span>

@@ -183,7 +183,7 @@ function StepBasicInfo({
       </div>
 
       <p className="text-white/40 text-xs mt-4">
-        PINs de acesso (proprietario: 1234, equipe: 0000) serao definidos por padrao. O dono podera alterar depois.
+        Senhas de acesso (proprietário: 123456, equipe: 000000) serão definidas por padrão. O dono poderá alterar depois.
       </p>
     </div>
   );

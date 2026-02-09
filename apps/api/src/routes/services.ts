@@ -203,7 +203,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {401} If not authenticated
    * @throws {403} If not owner
    * @throws {404} If service not found
-   * @throws {409} If service is in use by active tickets
+   * @throws {409} If any tickets (active or past) reference this service
    */
   fastify.delete('/services/:id', {
     preHandler: [requireAuth(), requireRole(['owner'])],
@@ -223,23 +223,19 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Service with ID ${id} not found`);
     }
 
-    // Check if service is in use by any active tickets
-    const activeTickets = await db.query.tickets.findMany({
-      where: (tickets, { eq, and, or }) => and(
-        eq(tickets.serviceId, id),
-        or(
-          eq(tickets.status, 'waiting'),
-          eq(tickets.status, 'in_progress')
-        )
-      ),
+    // Block delete if any tickets (active or historical) reference this service
+    const ticketsUsingService = await db.query.tickets.findMany({
+      where: eq(schema.tickets.serviceId, id),
       limit: 1,
     });
 
-    if (activeTickets.length > 0) {
-      throw new ConflictError('Cannot delete service that is in use by active tickets');
+    if (ticketsUsingService.length > 0) {
+      throw new ConflictError(
+        'Cannot delete a service that has been used by tickets (active or in the past). Deactivate the service instead so it no longer appears for new customers.'
+      );
     }
 
-    // Delete weekday stats (also handled by CASCADE, but explicit for clarity)
+    // Delete weekday stats for this service
     await db
       .delete(schema.barberServiceWeekdayStats)
       .where(eq(schema.barberServiceWeekdayStats.serviceId, id));

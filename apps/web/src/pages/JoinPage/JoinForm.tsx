@@ -109,20 +109,6 @@ export function JoinForm() {
               </div>
             )}
 
-            {!settings.requirePhone && (
-              <div>
-                <InputLabel htmlFor="customerPhone">Telefone</InputLabel>
-                <Input
-                  id="customerPhone"
-                  type="tel"
-                  value={customerPhone}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomerPhone(e.target.value)}
-                  placeholder="(00) 00000-0000"
-                  className="min-w-[200px] sm:min-w-[250px] max-w-[300px]"
-                />
-              </div>
-            )}
-
             {settings.requireBarberChoice && barbers.length > 0 && (
               <div>
                 <InputLabel htmlFor="preferredBarber">Barbeiro *</InputLabel>
@@ -134,26 +120,6 @@ export function JoinForm() {
                     setSelectedBarberId(v ? parseInt(v, 10) : null);
                   }}
                   required
-                  className="flex w-full rounded-lg bg-[#2a2a2a] border border-[rgba(255,255,255,0.2)] px-4 py-3.5 text-white text-base min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] min-w-[200px] sm:min-w-[250px] max-w-[300px]"
-                >
-                  <option value="">Selecione...</option>
-                  {barbers.filter(b => b.isActive).map((b) => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {!settings.requireBarberChoice && barbers.length > 0 && (
-              <div>
-                <InputLabel htmlFor="preferredBarberOptional">Barbeiro (opcional)</InputLabel>
-                <select
-                  id="preferredBarberOptional"
-                  value={selectedBarberId ?? ''}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setSelectedBarberId(v ? parseInt(v, 10) : null);
-                  }}
                   className="flex w-full rounded-lg bg-[#2a2a2a] border border-[rgba(255,255,255,0.2)] px-4 py-3.5 text-white text-base min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] min-w-[200px] sm:min-w-[250px] max-w-[300px]"
                 >
                   <option value="">Selecione...</option>

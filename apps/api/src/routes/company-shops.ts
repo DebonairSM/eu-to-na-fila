@@ -5,7 +5,7 @@ import { eq, and } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
-import { hashPin } from '../lib/pin.js';
+import { hashPassword, validatePassword } from '../lib/password.js';
 import { mergeHomeContent } from '../lib/homeContent.js';
 import { DEFAULT_THEME } from '../lib/theme.js';
 import { themeInputSchema, homeContentInputSchema, shopSettingsInputSchema } from '@eutonafila/shared';
@@ -363,8 +363,8 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         name: z.string().min(1).max(200),
         slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
         domain: z.string().optional(),
-        ownerPin: z.string().min(4).max(12).regex(/^\d+$/).optional(),
-        staffPin: z.string().min(4).max(12).regex(/^\d+$/).optional(),
+        ownerPassword: z.string().min(6).max(200).optional(),
+        staffPassword: z.string().min(6).max(200).optional(),
         theme: themeInputSchema,
         homeContent: homeContentInputSchema,
         settings: shopSettingsInputSchema,
@@ -402,10 +402,14 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
       }
       if (counter > 0) slug = projectSlug;
 
-      const ownerPin = body.ownerPin ?? '1234';
-      const staffPin = body.staffPin ?? '0000';
-      const ownerPinHash = await hashPin(ownerPin);
-      const staffPinHash = await hashPin(staffPin);
+      const ownerPassword = body.ownerPassword ?? '123456';
+      const staffPassword = body.staffPassword ?? '000000';
+      const ownerValidation = validatePassword(ownerPassword);
+      const staffValidation = validatePassword(staffPassword);
+      if (!ownerValidation.isValid) throw new ValidationError(ownerValidation.error ?? 'Invalid owner password');
+      if (!staffValidation.isValid) throw new ValidationError(staffValidation.error ?? 'Invalid staff password');
+      const ownerPinHash = await hashPassword(ownerPassword);
+      const staffPinHash = await hashPassword(staffPassword);
 
       const result = await db.transaction(async (tx) => {
         const [newProject] = await tx
