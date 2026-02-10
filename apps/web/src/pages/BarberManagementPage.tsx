@@ -187,7 +187,7 @@ export function BarberManagementPage() {
 
   return (
     <div 
-      className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]"
+      className="min-h-screen h-full bg-[var(--shop-background)]"
     >
       <Navigation />
       {/* Error Message Toast */}
@@ -219,7 +219,7 @@ export function BarberManagementPage() {
 
         <button
           onClick={addModal.open}
-          className="add-barber-btn flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-[var(--shop-accent)] text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:opacity-90 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(212,175,55,0.4)] min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
+          className="add-barber-btn flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:opacity-90 hover:-translate-y-0.5 hover:-translate-y-0.5 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-background)]"
           aria-label="Adicionar novo barbeiro"
         >
           <span className="material-symbols-outlined text-lg sm:text-xl" aria-hidden="true">add</span>
@@ -251,13 +251,13 @@ export function BarberManagementPage() {
             {barbers.map((barber) => (
               <article
                 key={barber.id}
-                className="barber-card bg-[rgba(36,36,36,0.8)] backdrop-blur-md border border-[rgba(212,175,55,0.2)] rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all hover:border-[#D4AF37] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(212,175,55,0.2)] relative overflow-hidden"
+                className="barber-card bg-[color-mix(in_srgb,var(--shop-surface-secondary)_80%,transparent)] backdrop-blur-md border border-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all hover:border-[var(--shop-accent)] hover:-translate-y-1 hover:-translate-y-1 relative overflow-hidden"
                 aria-labelledby={`barber-name-${barber.id}`}
               >
                 <div className="barber-header flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
                   <button
                     type="button"
-                    className="barber-avatar w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#E8C547] flex items-center justify-center text-xl sm:text-2xl font-semibold text-[#0a0a0a] flex-shrink-0 cursor-pointer transition-all hover:scale-105 hover:shadow-[0_4px_12px_rgba(212,175,55,0.4)] relative focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#242424]"
+                    className="barber-avatar w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[var(--shop-accent)] to-[var(--shop-accent-hover)] flex items-center justify-center text-xl sm:text-2xl font-semibold text-[var(--shop-text-on-accent)] flex-shrink-0 cursor-pointer transition-all hover:scale-105 relative focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
                     onClick={() => openEditModal(barber)}
                     aria-label={`Editar ${barber.name}`}
                   >
@@ -304,7 +304,7 @@ export function BarberManagementPage() {
                 <div className="barber-actions flex gap-2 sm:gap-3">
                   <button
                     onClick={() => openEditModal(barber)}
-                    className="action-btn flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border-none rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(212,175,55,0.2)] hover:text-[#D4AF37] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#242424]"
+                    className="action-btn flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border-none rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:bg-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] hover:text-[var(--shop-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
                     aria-label={`Editar barbeiro ${barber.name}`}
                   >
                     Editar
@@ -314,7 +314,7 @@ export function BarberManagementPage() {
                       setBarberToDelete(barber.id);
                       deleteConfirmModal.open();
                     }}
-                    className="action-btn delete flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-[rgba(239,68,68,0.3)] rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(239,68,68,0.2)] text-[#ef4444] hover:bg-[rgba(239,68,68,0.3)] focus:outline-none focus:ring-2 focus:ring-[#ef4444] focus:ring-offset-2 focus:ring-offset-[#242424]"
+                    className="action-btn delete flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-[rgba(239,68,68,0.3)] rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(239,68,68,0.2)] text-[#ef4444] hover:bg-[rgba(239,68,68,0.3)] focus:outline-none focus:ring-2 focus:ring-[#ef4444] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
                     aria-label={`Remover barbeiro ${barber.name}`}
                   >
                     Remover
@@ -330,7 +330,7 @@ export function BarberManagementPage() {
           <button
             type="button"
             onClick={() => setServicesOpen(!servicesOpen)}
-            className="flex items-center gap-2 text-[var(--shop-accent,#D4AF37)] mb-4 hover:underline"
+            className="flex items-center gap-2 text-[var(--shop-accent)] mb-4 hover:underline"
           >
             <span className="material-symbols-outlined text-base">
               {servicesOpen ? 'expand_less' : 'expand_more'}
@@ -339,14 +339,14 @@ export function BarberManagementPage() {
           </button>
 
           {servicesOpen && (
-            <div className="space-y-4 bg-[rgba(36,36,36,0.6)] backdrop-blur-sm border border-[rgba(212,175,55,0.15)] rounded-xl p-4 sm:p-6">
+            <div className="space-y-4 bg-[color-mix(in_srgb,var(--shop-surface-secondary)_60%,transparent)] backdrop-blur-sm border border-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] rounded-xl p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <p className="text-white/50 text-sm">Gerencie tempos estimados e precos dos servicos.</p>
                 {!isAddingSvc && !editingSvc && (
                   <button
                     type="button"
                     onClick={() => { setIsAddingSvc(true); setSvcForm({ name: '', description: '', duration: 30, price: 0 }); }}
-                    className="px-3 py-1.5 bg-[var(--shop-accent,#D4AF37)]/20 text-[var(--shop-accent,#D4AF37)] rounded-lg text-sm font-medium hover:bg-[var(--shop-accent,#D4AF37)]/30 transition-colors"
+                    className="px-3 py-1.5 bg-[var(--shop-accent)]/20 text-[var(--shop-accent)] rounded-lg text-sm font-medium hover:bg-[var(--shop-accent)]/30 transition-colors"
                   >
                     + Adicionar
                   </button>
@@ -378,7 +378,7 @@ export function BarberManagementPage() {
                     <button type="button" onClick={() => { setIsAddingSvc(false); setEditingSvc(null); }} className="px-3 py-1.5 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20 transition-colors">
                       Cancelar
                     </button>
-                    <button type="button" onClick={editingSvc ? handleUpdateSvc : handleAddSvc} disabled={!svcForm.name.trim()} className="px-3 py-1.5 bg-[var(--shop-accent,#D4AF37)] text-[#0a0a0a] rounded-lg text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-50">
+                    <button type="button" onClick={editingSvc ? handleUpdateSvc : handleAddSvc} disabled={!svcForm.name.trim()} className="px-3 py-1.5 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] rounded-lg text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-50">
                       {editingSvc ? 'Salvar' : 'Criar'}
                     </button>
                   </div>
@@ -439,8 +439,8 @@ export function BarberManagementPage() {
           aria-modal="true"
           aria-labelledby="add-modal-title"
         >
-          <div className="modal-content bg-[#242424] border border-[rgba(212,175,55,0.3)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
-            <h2 id="add-modal-title" className="modal-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-[#D4AF37] mb-5 sm:mb-6">
+          <div className="modal-content bg-[var(--shop-surface-secondary)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
+            <h2 id="add-modal-title" className="modal-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-[var(--shop-accent)] mb-5 sm:mb-6">
               Adicionar Barbeiro
             </h2>
             <form
@@ -459,7 +459,7 @@ export function BarberManagementPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
@@ -472,7 +472,7 @@ export function BarberManagementPage() {
                   value={formData.avatarUrl}
                   onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
                   placeholder="https://example.com/avatar.jpg"
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[rgba(255,255,255,0.3)]"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
@@ -491,7 +491,7 @@ export function BarberManagementPage() {
                       onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                       placeholder="Ex: joao"
                       autoComplete="off"
-                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm min-h-[40px] focus:outline-none focus:border-[#D4AF37]"
+                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-[var(--shop-text-primary)] text-sm min-h-[40px] focus:outline-none focus:border-[var(--shop-accent)]"
                     />
                   </div>
                   <div>
@@ -505,7 +505,7 @@ export function BarberManagementPage() {
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       placeholder="Mín. 6 caracteres"
                       autoComplete="new-password"
-                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm min-h-[40px] focus:outline-none focus:border-[#D4AF37]"
+                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-[var(--shop-text-primary)] text-sm min-h-[40px] focus:outline-none focus:border-[var(--shop-accent)]"
                     />
                   </div>
                 </div>
@@ -523,7 +523,7 @@ export function BarberManagementPage() {
                 </button>
                 <button
                   type="submit"
-                  className="modal-btn primary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#242424]"
+                  className="modal-btn primary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)] text-[var(--shop-text-on-accent)] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
                 >
                   Adicionar
                 </button>
@@ -542,8 +542,8 @@ export function BarberManagementPage() {
           aria-modal="true"
           aria-labelledby="edit-modal-title"
         >
-          <div className="modal-content bg-[#242424] border border-[rgba(212,175,55,0.3)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
-            <h2 id="edit-modal-title" className="modal-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-[#D4AF37] mb-5 sm:mb-6">
+          <div className="modal-content bg-[var(--shop-surface-secondary)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
+            <h2 id="edit-modal-title" className="modal-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-[var(--shop-accent)] mb-5 sm:mb-6">
               Editar Barbeiro
             </h2>
             <form
@@ -562,7 +562,7 @@ export function BarberManagementPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
@@ -575,7 +575,7 @@ export function BarberManagementPage() {
                   value={formData.avatarUrl}
                   onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
                   placeholder="https://example.com/avatar.jpg"
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-[rgba(255,255,255,0.3)]"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[rgba(255,255,255,0.3)]"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
@@ -594,7 +594,7 @@ export function BarberManagementPage() {
                       onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                       placeholder="Deixe vazio para remover login"
                       autoComplete="off"
-                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm min-h-[40px] focus:outline-none focus:border-[#D4AF37]"
+                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-[var(--shop-text-primary)] text-sm min-h-[40px] focus:outline-none focus:border-[var(--shop-accent)]"
                     />
                   </div>
                   <div>
@@ -608,7 +608,7 @@ export function BarberManagementPage() {
                       onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                       placeholder="Deixe em branco para manter a atual"
                       autoComplete="new-password"
-                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm min-h-[40px] focus:outline-none focus:border-[#D4AF37]"
+                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-[var(--shop-text-primary)] text-sm min-h-[40px] focus:outline-none focus:border-[var(--shop-accent)]"
                     />
                   </div>
                 </div>
@@ -627,7 +627,7 @@ export function BarberManagementPage() {
                 </button>
                 <button
                   type="submit"
-                  className="modal-btn primary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#242424]"
+                  className="modal-btn primary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)] text-[var(--shop-text-on-accent)] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
                 >
                   Salvar
                 </button>

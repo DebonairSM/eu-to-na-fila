@@ -53,7 +53,7 @@ export function WaitTimeBanner({ sticky = false }: WaitTimeBannerProps) {
 
   if (waitLoading) {
     return (
-      <div className={`${sticky ? 'sticky top-0 z-40' : ''} bg-[#1a1a1a] border-b border-[rgba(212,175,55,0.2)] py-6 sm:py-8`}>
+      <div className={`${sticky ? 'sticky top-0 z-40' : ''} bg-[var(--shop-surface-secondary)] border-b border-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] py-6 sm:py-8`}>
         <div className="container mx-auto px-4">
           <LoadingSpinner text="Calculando tempo de espera..." size="sm" />
         </div>
@@ -63,7 +63,7 @@ export function WaitTimeBanner({ sticky = false }: WaitTimeBannerProps) {
 
   if (waitError) {
     return (
-      <div className={`${sticky ? 'sticky top-0 z-40' : ''} bg-[#1a1a1a] border-b border-[rgba(212,175,55,0.2)] py-6 sm:py-8`}>
+      <div className={`${sticky ? 'sticky top-0 z-40' : ''} bg-[var(--shop-surface-secondary)] border-b border-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] py-6 sm:py-8`}>
         <div className="container mx-auto px-4">
           <ErrorDisplay 
             error={waitError} 
@@ -75,7 +75,7 @@ export function WaitTimeBanner({ sticky = false }: WaitTimeBannerProps) {
   }
 
   return (
-    <div className={`${sticky ? 'sticky top-0 z-40' : ''} bg-[#1a1a1a] border-b border-[rgba(212,175,55,0.2)] py-6 sm:py-8`}>
+    <div className={`${sticky ? 'sticky top-0 z-40' : ''} bg-[var(--shop-surface-secondary)] border-b border-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] py-6 sm:py-8`}>
       <div className="container mx-auto px-4 max-w-7xl">
         <WaitTimeDisplay minutes={waitEstimate} size="lg" />
       </div>

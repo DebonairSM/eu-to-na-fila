@@ -40,21 +40,21 @@ export function WaitTimeDisplay({
     <div
       className={cn(
         'wait-card text-center p-6 rounded-lg',
-        'bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)]',
-        'border-2 border-[rgba(212,175,55,0.3)]',
+        'bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_5%,transparent)]',
+        'border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)]',
         className
       )}
     >
       <div className="wait-label flex items-center justify-center gap-2 mb-3">
-        <span className="material-symbols-outlined text-[#D4AF37]">schedule</span>
-        <span className="text-sm font-medium text-[rgba(255,255,255,0.7)] uppercase tracking-wide">
+        <span className="material-symbols-outlined text-[var(--shop-accent)]">schedule</span>
+        <span className="text-sm font-medium text-[var(--shop-text-secondary)] uppercase tracking-wide">
           Tempo estimado
         </span>
       </div>
       <div
         className={cn(
           'wait-value font-bold leading-tight',
-          unavailable ? 'text-white/40' : 'text-[#D4AF37]',
+          unavailable ? 'text-[var(--shop-text-secondary)] opacity-70' : 'text-[var(--shop-accent)]',
           typeof displayValue === 'string' && displayValue.length > 5
             ? 'text-2xl sm:text-3xl md:text-4xl'
             : sizeClasses[size]
@@ -62,7 +62,7 @@ export function WaitTimeDisplay({
       >
         {displayValue}
       </div>
-      <div className="wait-unit text-sm text-[rgba(255,255,255,0.5)] mt-1">{unitLabel}</div>
+      <div className="wait-unit text-sm text-[var(--shop-text-secondary)] mt-1">{unitLabel}</div>
     </div>
   );
 }

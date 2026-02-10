@@ -5,7 +5,7 @@ import { getShopBySlug } from '../lib/shop.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 import { mergeHomeContent } from '../lib/homeContent.js';
-import { parseTheme } from '../lib/theme.js';
+import { parseResolvedStyle, parseTheme } from '../lib/theme.js';
 import { parseSettings } from '../lib/settings.js';
 
 /**
@@ -27,6 +27,7 @@ export const shopsRoutes: FastifyPluginAsync = async (fastify) => {
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     const theme = parseTheme(shop.theme);
+    const style = parseResolvedStyle(shop.theme);
     const homeContent = mergeHomeContent(shop.homeContent ?? null);
 
     const settings = parseSettings(shop.settings);
@@ -34,6 +35,7 @@ export const shopsRoutes: FastifyPluginAsync = async (fastify) => {
     return {
       name: shop.name,
       theme,
+      style,
       path: shop.path ?? `/projects/${shop.slug}`,
       homeContent,
       settings,

@@ -26,9 +26,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           'active:scale-[0.98]',
           // Variants
           {
-            'bg-[var(--shop-accent,#D4AF37)] text-[#0a0a0a] hover:opacity-90':
+            'bg-[var(--shop-accent,#D4AF37)] text-[var(--shop-text-on-accent,#0a0a0a)] hover:bg-[var(--shop-accent-hover,#E8C547)]':
               variant === 'default',
-            'bg-transparent text-white border border-[rgba(255,255,255,0.25)] hover:border-[var(--shop-accent,#D4AF37)] hover:text-[var(--shop-accent,#D4AF37)]':
+            'bg-transparent text-white border-[length:var(--shop-border-width,1px)] border-[style:var(--shop-border-style,solid)] border-[rgba(255,255,255,0.25)] hover:border-[var(--shop-accent,#D4AF37)] hover:text-[var(--shop-accent,#D4AF37)]':
               variant === 'outline',
             'bg-transparent text-[rgba(255,255,255,0.7)] hover:text-[var(--shop-accent,#D4AF37)] hover:bg-[color-mix(in_srgb,var(--shop-accent,#D4AF37)_15%,transparent)]':
               variant === 'ghost',

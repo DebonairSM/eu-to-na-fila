@@ -49,32 +49,32 @@ export function ActiveBarbersInfo({
       <CardContent className="p-6 sm:p-8">
         {/* Highlighted estimated time */}
         <div className="text-center mb-6">
-          <p className="text-sm uppercase tracking-wider text-white/60 mb-1">
+          <p className="text-sm uppercase tracking-wider text-[var(--shop-text-secondary)] mb-1">
             Tempo estimado
           </p>
           <p
             className={`font-bold tabular-nums ${
               !hasActiveBarbers
-                ? 'text-2xl sm:text-3xl text-white/40'
-                : 'text-4xl sm:text-5xl text-[#D4AF37]'
+                ? 'text-2xl sm:text-3xl text-[var(--shop-text-secondary)] opacity-70'
+                : 'text-4xl sm:text-5xl text-[var(--shop-accent)]'
             }`}
           >
             {formatWaitTime(standardWaitTime)}
           </p>
           {!hasActiveBarbers && (
-            <p className="text-xs text-white/40 mt-1">Nenhum barbeiro ativo no momento</p>
+            <p className="text-xs text-[var(--shop-text-secondary)] opacity-70 mt-1">Nenhum barbeiro ativo no momento</p>
           )}
         </div>
 
         {/* Available barbers — compact list */}
         <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
           {presentBarbers.length === 0 ? (
-            <p className="text-sm text-white/50">Nenhum barbeiro disponível</p>
+            <p className="text-sm text-[var(--shop-text-secondary)]">Nenhum barbeiro disponível</p>
           ) : (
             presentBarbers.map((barber) => (
               <span
                 key={barber.id}
-                className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-white"
+                className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/5 border border-[var(--shop-border-color)] text-sm text-[var(--shop-text-primary)]"
               >
                 {barber.name}
               </span>

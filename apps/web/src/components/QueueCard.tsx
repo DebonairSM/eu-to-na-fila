@@ -36,10 +36,10 @@ export const QueueCard = memo(function QueueCard({
     <div
       className={cn(
         'queue-item p-6 rounded-md border-2 transition-all cursor-pointer',
-        'focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2',
+        'focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--shop-accent)] focus-visible:ring-offset-2',
         {
-          'border-[#D4AF37] bg-black hover:border-[#D4AF37] hover:bg-black/90': isServing,
-          'border-primary/30 bg-card hover:border-primary hover:bg-primary/5': isWaiting,
+          'border-[var(--shop-accent)] bg-[var(--shop-background)] hover:border-[var(--shop-accent)] hover:bg-[var(--shop-background)]': isServing,
+          'border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] bg-card hover:border-[var(--shop-accent)] hover:bg-[color-mix(in_srgb,var(--shop-accent)_5%,transparent)]': isWaiting,
         },
         className
       )}
@@ -62,11 +62,9 @@ export const QueueCard = memo(function QueueCard({
             <button
               type="button"
               className={cn(
-                'flex-shrink-0 w-[52px] h-[52px] rounded-md flex items-center justify-center font-bold text-lg cursor-pointer transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-0',
-                {
-                  'bg-black text-primary border-2 border-[#D4AF37] hover:text-[#E8C547] hover:border-[#E8C547] focus:ring-primary': isWaiting,
-                  'bg-black text-[#D4AF37] border-2 border-[#D4AF37] hover:bg-black hover:text-[#E8C547] hover:border-[#E8C547] focus:ring-[#D4AF37]': isServing,
-                }
+                'flex-shrink-0 w-[52px] h-[52px] rounded-md flex items-center justify-center font-bold text-lg cursor-pointer transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-0',
+                isWaiting && 'bg-[var(--shop-background)] text-[var(--shop-accent)] border-2 border-[var(--shop-accent)] hover:text-[var(--shop-accent-hover)] hover:border-[var(--shop-accent-hover)]',
+                isServing && 'bg-[var(--shop-background)] text-[var(--shop-accent)] border-2 border-[var(--shop-accent)] hover:text-[var(--shop-accent-hover)] hover:border-[var(--shop-accent-hover)]'
               )}
               onClick={(e) => {
                 e.stopPropagation();
@@ -106,9 +104,9 @@ export const QueueCard = memo(function QueueCard({
 
           {/* Customer Name */}
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-white truncate">{formatNameForDisplay(ticket.customerName)}</p>
+            <p className="font-semibold text-[var(--shop-text-primary)] truncate">{formatNameForDisplay(ticket.customerName)}</p>
             {assignedBarber && (
-              <p className="text-sm text-[rgba(255,255,255,0.7)] truncate">{assignedBarber.name}</p>
+              <p className="text-sm text-[var(--shop-text-secondary)] truncate">{assignedBarber.name}</p>
             )}
           </div>
         </div>
@@ -118,7 +116,7 @@ export const QueueCard = memo(function QueueCard({
           <div className="flex-shrink-0 w-10 h-10 relative">
             {/* Always show placeholder immediately for better perceived performance */}
             <div className={cn(
-              'rounded-md bg-gradient-to-br from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] font-semibold flex items-center justify-center absolute inset-0 transition-opacity duration-200',
+              'rounded-md bg-gradient-to-br from-[var(--shop-accent)] to-[var(--shop-accent-hover)] text-[var(--shop-text-on-accent)] font-semibold flex items-center justify-center absolute inset-0 transition-opacity duration-200',
               barberImageLoaded && 'opacity-0 pointer-events-none'
             )} aria-hidden="true">
               {barberInitials}

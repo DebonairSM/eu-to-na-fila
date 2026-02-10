@@ -238,8 +238,16 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
       };
 
       if (body.theme !== undefined) {
-        const existingTheme = shop.theme ? (JSON.parse(shop.theme) as Record<string, string>) : {};
-        updatePayload.theme = JSON.stringify({ ...existingTheme, ...body.theme });
+        const existingTheme = shop.theme ? (JSON.parse(shop.theme) as Record<string, unknown>) : {};
+        const nextTheme = { ...existingTheme, ...body.theme } as Record<string, unknown>;
+        // Deep-merge nested style config so PATCH can update individual keys.
+        if (existingTheme.style && body.theme.style) {
+          nextTheme.style = {
+            ...(existingTheme.style as Record<string, unknown>),
+            ...(body.theme.style as Record<string, unknown>),
+          };
+        }
+        updatePayload.theme = JSON.stringify(nextTheme);
       }
 
       if (body.homeContent !== undefined) {

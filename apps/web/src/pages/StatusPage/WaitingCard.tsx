@@ -12,17 +12,17 @@ export function WaitingCard({ waitTime, position, total, ahead }: WaitingCardPro
     <StatusTransition status="waiting">
       <Card
         variant="outlined"
-        className="bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border-2 border-[rgba(212,175,55,0.3)] text-center"
+        className="bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_5%,transparent)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] text-center"
       >
         <CardContent className="p-10">
-          <div className="flex items-center justify-center gap-3 mb-6 text-[rgba(255,255,255,0.7)] text-sm uppercase tracking-wider">
-            <span className="material-symbols-outlined text-2xl text-[#D4AF37]">
+          <div className="flex items-center justify-center gap-3 mb-6 text-[var(--shop-text-secondary)] text-sm uppercase tracking-wider">
+            <span className="material-symbols-outlined text-2xl text-[var(--shop-accent)]">
               schedule
             </span>
           </div>
           <Heading
             level={1}
-            className="text-6xl font-semibold text-white mb-3 drop-shadow-[0_4px_20px_rgba(212,175,55,0.3)] leading-tight"
+            className="text-6xl font-semibold text-[var(--shop-text-primary)] mb-3 drop-shadow-[0_4px_20px_color-mix(in_srgb,var(--shop-accent)_30%,transparent)] leading-tight"
           >
             {waitTime === null ? '--' : waitTime <= 0 ? 'Agora' : waitTime}
           </Heading>
@@ -31,11 +31,11 @@ export function WaitingCard({ waitTime, position, total, ahead }: WaitingCardPro
           </Text>
 
           {position !== undefined && total !== undefined && (
-            <div className="mt-6 pt-6 border-t border-[rgba(212,175,55,0.2)]">
+            <div className="mt-6 pt-6 border-t border-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)]">
               <Text size="sm" variant="secondary" className="mb-2">
                 Posição na fila
               </Text>
-              <Text size="xl" className="text-[#D4AF37] font-semibold text-4xl">
+              <Text size="xl" className="text-[var(--shop-accent)] font-semibold text-4xl">
                 {position} de {total}
               </Text>
               {ahead !== undefined && ahead > 0 && (

@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { shopStyleInputSchema } from './shopStyle.js';
+import type { ShopStyleResolved } from './shopStyle.js';
 
 /** Per-shop theme (colors). All elements overridable. */
 export interface ShopTheme {
@@ -11,6 +13,10 @@ export interface ShopTheme {
   textPrimary?: string;
   textSecondary?: string;
   borderColor?: string;
+  /** Text color on accent buttons/backgrounds (e.g. black on gold). */
+  textOnAccent?: string;
+  /** Hover state for accent (e.g. lighter gold). */
+  accentHover?: string;
 }
 
 /** Per-shop home page content (hero, services, about, location, nav, accessibility). All elements overridable. */
@@ -63,6 +69,8 @@ export const themeSchema = z.object({
   textPrimary: z.string().max(100).default('#ffffff'),
   textSecondary: z.string().max(100).default('rgba(255,255,255,0.7)'),
   borderColor: z.string().max(100).default('rgba(255,255,255,0.08)'),
+  textOnAccent: z.string().max(100).default('#0a0a0a'),
+  accentHover: z.string().max(50).default('#E8C547'),
 });
 
 /** Zod schema for partial theme input (all fields optional, used for PATCH). */
@@ -76,6 +84,13 @@ export const themeInputSchema = z.object({
   textPrimary: z.string().max(100).optional(),
   textSecondary: z.string().max(100).optional(),
   borderColor: z.string().max(100).optional(),
+  textOnAccent: z.string().max(100).optional(),
+  accentHover: z.string().max(50).optional(),
+  /**
+   * Style preset configuration, stored inside the theme JSON under `style`.
+   * Parsed separately from colors by the API/frontend.
+   */
+  style: shopStyleInputSchema,
 }).optional();
 
 /** Zod schema for partial home content input (all fields optional, used for PATCH). */
@@ -179,6 +194,8 @@ export const DEFAULT_THEME: Required<ShopTheme> = {
   textPrimary: '#ffffff',
   textSecondary: 'rgba(255,255,255,0.7)',
   borderColor: 'rgba(255,255,255,0.08)',
+  textOnAccent: '#0a0a0a',
+  accentHover: '#E8C547',
 };
 
 /** Default home content. Single source of truth. */
@@ -245,6 +262,7 @@ export const DEFAULT_HOME_CONTENT: HomeContent = {
 export interface ShopPublicConfig {
   name: string;
   theme: Required<ShopTheme>;
+  style: ShopStyleResolved;
   path: string;
   homeContent: HomeContent;
   settings: ShopSettings;

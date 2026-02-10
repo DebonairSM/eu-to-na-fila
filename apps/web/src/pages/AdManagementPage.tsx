@@ -181,7 +181,7 @@ export function AdManagementPage() {
 
   if (useRootTheme) {
     return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[var(--shop-background)] text-[var(--shop-text-primary)]">
       <RootSiteNav />
       <main className="py-20">
         <Container size="2xl">
@@ -368,7 +368,7 @@ export function AdManagementPage() {
       <CompanyNav />
       <main className="container max-w-[800px] mx-auto relative z-10 pt-24 px-4 sm:px-6 lg:px-10 pb-12">
         <div className="text-center mb-10">
-          <h1 className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37]">
+          <h1 className="font-['Playfair_Display',serif] text-2xl font-semibold text-[var(--shop-accent)]">
             Gerenciar Anúncios
           </h1>
           <p className="text-white/60 mt-2 text-sm">
@@ -389,7 +389,7 @@ export function AdManagementPage() {
         )}
 
         {/* Upload Section */}
-        <div className="mb-8 bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-6">
+        <div className="mb-8 bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_12%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_6%,transparent)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-2xl p-6">
           <h2 className="text-xl font-semibold mb-4">Adicionar Novo Anúncio</h2>
               <label className="block">
                 <input
@@ -410,11 +410,11 @@ export function AdManagementPage() {
                 htmlFor="ad-upload"
                     className={`flex-1 px-4 py-3 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
                   uploading !== null
-                        ? 'border-[rgba(212,175,55,0.5)] bg-[rgba(212,175,55,0.1)] cursor-wait'
-                        : 'border-[rgba(212,175,55,0.3)] hover:border-[#D4AF37] hover:bg-[rgba(212,175,55,0.1)]'
+                        ? 'border-[color-mix(in_srgb,var(--shop-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--shop-accent)_10%,transparent)] cursor-wait'
+                        : 'border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] hover:border-[var(--shop-accent)] hover:bg-[color-mix(in_srgb,var(--shop-accent)_10%,transparent)]'
                     }`}
                   >
-                    <div className="flex items-center justify-center gap-2 text-[#D4AF37]">
+                    <div className="flex items-center justify-center gap-2 text-[var(--shop-accent)]">
                   {uploading !== null ? (
                         <>
                           <span className="material-symbols-outlined animate-spin">refresh</span>
@@ -434,7 +434,7 @@ export function AdManagementPage() {
             <div className="mt-4">
               <div className="w-full bg-white/10 rounded-full h-2">
                 <div
-                  className="bg-[#D4AF37] h-2 rounded-full transition-all duration-300"
+                  className="bg-[var(--shop-accent)] h-2 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
@@ -446,8 +446,8 @@ export function AdManagementPage() {
             </div>
 
         {loading ? (
-          <div className="text-center text-white/60 py-12">
-            <div className="inline-block animate-spin text-[#D4AF37] text-4xl mb-4">
+          <div className="text-center text-[var(--shop-text-secondary)] py-12">
+            <div className="inline-block animate-spin text-[var(--shop-accent)] text-4xl mb-4">
               <span className="material-symbols-outlined">refresh</span>
             </div>
             <p>Carregando...</p>
@@ -455,7 +455,7 @@ export function AdManagementPage() {
         ) : (
           <div className="space-y-4">
             {ads.length === 0 ? (
-              <div className="text-center text-white/60 py-12 border border-[rgba(212,175,55,0.3)] rounded-2xl">
+              <div className="text-center text-white/60 py-12 border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-2xl">
                 <p>Nenhum anúncio cadastrado ainda.</p>
                 <p className="text-sm mt-2">Faça upload de um arquivo acima para começar.</p>
                 </div>
@@ -463,7 +463,7 @@ export function AdManagementPage() {
               ads.map((ad) => (
                 <div
                   key={ad.id}
-                  className={`bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-2xl p-6 ${
+                  className={`bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_12%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_6%,transparent)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-2xl p-6 ${
                     !ad.enabled ? 'opacity-60' : ''
                   }`}
                 >
@@ -473,7 +473,7 @@ export function AdManagementPage() {
                         <img
                           src={`/api/ads/${ad.id}/media?v=${ad.version}`}
                           alt={`Anúncio ${ad.position}`}
-                          className="w-32 h-32 object-contain bg-black rounded-lg border border-[rgba(212,175,55,0.3)]"
+                          className="w-32 h-32 object-contain bg-black rounded-lg border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)]"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
@@ -481,7 +481,7 @@ export function AdManagementPage() {
                       ) : (
                         <video
                           src={`/api/ads/${ad.id}/media?v=${ad.version}`}
-                          className="w-32 h-32 object-contain bg-black rounded-lg border border-[rgba(212,175,55,0.3)]"
+                          className="w-32 h-32 object-contain bg-black rounded-lg border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)]"
                           controls={false}
                           muted
                         />
@@ -534,7 +534,7 @@ export function AdManagementPage() {
             <div className="mt-8 text-center">
               <button
                 onClick={() => navigate('/company/dashboard')}
-                className="px-6 py-2.5 bg-transparent text-[rgba(255,255,255,0.6)] border border-[rgba(255,255,255,0.2)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all flex items-center gap-3 mx-auto text-sm"
+                className="px-6 py-2.5 bg-transparent text-[rgba(255,255,255,0.6)] border border-[rgba(255,255,255,0.2)] rounded-lg hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-all flex items-center gap-3 mx-auto text-sm"
               >
                 <span className="material-symbols-outlined text-lg">arrow_back</span>
                 Voltar ao Dashboard

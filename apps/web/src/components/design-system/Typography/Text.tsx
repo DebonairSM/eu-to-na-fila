@@ -26,6 +26,7 @@ const Text = React.forwardRef<HTMLElement, TextProps>(
     return (
       <Component
         ref={ref as any}
+        style={{ fontFamily: "var(--shop-font-body, 'Roboto', sans-serif)" }}
         className={cn(
           colorClasses[variant],
           sizeClasses[size],

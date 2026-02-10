@@ -17,11 +17,11 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           'transition-all',
           // Variants
           {
-            'bg-[rgba(255,255,255,0.02)] border':
+            'bg-[rgba(255,255,255,0.02)] border-[length:var(--shop-border-width,1px)] border-[style:var(--shop-border-style,solid)]':
               variant === 'default',
-            'bg-[rgba(255,255,255,0.02)] border shadow-md':
+            'bg-[rgba(255,255,255,0.02)] border-[length:var(--shop-border-width,1px)] border-[style:var(--shop-border-style,solid)] shadow-md':
               variant === 'elevated',
-            'bg-transparent border border-[rgba(255,255,255,0.15)]':
+            'bg-transparent border-[length:var(--shop-border-width,1px)] border-[style:var(--shop-border-style,solid)] border-[rgba(255,255,255,0.15)]':
               variant === 'outlined',
           },
           variant !== 'outlined' && 'border-[var(--shop-border-color,rgba(255,255,255,0.08))]',
@@ -54,7 +54,7 @@ const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTML
   ({ className, ...props }, ref) => (
     <h3
       ref={ref}
-      className={cn('text-xl sm:text-2xl font-semibold text-white leading-tight', className)}
+      className={cn('text-xl sm:text-2xl font-semibold leading-tight', 'text-[var(--shop-text-primary,#ffffff)]', className)}
       {...props}
     />
   )

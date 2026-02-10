@@ -122,7 +122,7 @@ export function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
+      <div className="min-h-screen h-full bg-gradient-to-br from-[var(--shop-background)] via-[var(--shop-surface-secondary)] to-[var(--shop-surface-secondary)]">
         <Navigation />
         <div className="flex items-center justify-center min-h-screen pt-20 sm:pt-24">
           <LoadingSpinner size="lg" text="Carregando analytics..." />
@@ -133,7 +133,7 @@ export function AnalyticsPage() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
+      <div className="min-h-screen h-full bg-gradient-to-br from-[var(--shop-background)] via-[var(--shop-surface-secondary)] to-[var(--shop-surface-secondary)]">
         <Navigation />
         <div className="flex items-center justify-center min-h-screen pt-20 sm:pt-24">
           <ErrorDisplay error={error || new Error('Failed to load analytics')} />
@@ -145,7 +145,7 @@ export function AnalyticsPage() {
   const stats = data.summary;
 
   return (
-    <div className="min-h-screen h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#2d2416]">
+    <div className="min-h-screen h-full bg-gradient-to-br from-[var(--shop-background)] via-[var(--shop-surface-secondary)] to-[var(--shop-surface-secondary)]">
       <Navigation />
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 pt-24 sm:pt-32 pb-12">
         <div className="mb-10">
@@ -162,7 +162,7 @@ export function AnalyticsPage() {
               <select
                 value={days}
                 onChange={(e) => setDays(Number(e.target.value))}
-                className="px-4 py-2.5 bg-[#1a1a1a] border border-[rgba(255,255,255,0.15)] rounded-xl text-white text-base cursor-pointer focus:outline-none focus:border-[#D4AF37] transition-colors"
+                className="px-4 py-2.5 bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-xl text-white text-base cursor-pointer focus:outline-none focus:border-[var(--shop-accent)] transition-colors"
               >
                 <option value={7}>7 dias</option>
                 <option value={30}>30 dias</option>
@@ -185,7 +185,7 @@ export function AnalyticsPage() {
                     { shopName: shopConfig.name, periodLabel: periodLabel(data.period.days) }
                   );
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D4AF37] text-black font-semibold rounded-xl hover:bg-[#E8C547] transition-colors focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-semibold rounded-xl hover:bg-[var(--shop-accent-hover)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-background)]"
               >
                 <span className="material-symbols-outlined text-xl">download</span>
                 Download PDF
@@ -199,8 +199,8 @@ export function AnalyticsPage() {
               onClick={() => setActiveView('overview')}
               className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                 activeView === 'overview'
-                  ? 'bg-[#D4AF37] text-black'
-                  : 'bg-[#242424] text-white/70 hover:text-white hover:bg-[#2a2a2a] border border-[rgba(255,255,255,0.1)]'
+                  ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]'
+                  : 'bg-[var(--shop-surface-secondary)] text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] hover:bg-[var(--shop-surface-primary)] border border-[rgba(255,255,255,0.1)]'
               }`}
             >
               Visão Geral
@@ -209,8 +209,8 @@ export function AnalyticsPage() {
               onClick={() => setActiveView('time')}
               className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                 activeView === 'time'
-                  ? 'bg-[#D4AF37] text-black'
-                  : 'bg-[#242424] text-white/70 hover:text-white hover:bg-[#2a2a2a] border border-[rgba(255,255,255,0.1)]'
+                  ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]'
+                  : 'bg-[var(--shop-surface-secondary)] text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] hover:bg-[var(--shop-surface-primary)] border border-[rgba(255,255,255,0.1)]'
               }`}
             >
               Análise Temporal
@@ -219,8 +219,8 @@ export function AnalyticsPage() {
               onClick={() => setActiveView('services')}
               className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                 activeView === 'services'
-                  ? 'bg-[#D4AF37] text-black'
-                  : 'bg-[#242424] text-white/70 hover:text-white hover:bg-[#2a2a2a] border border-[rgba(255,255,255,0.1)]'
+                  ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]'
+                  : 'bg-[var(--shop-surface-secondary)] text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] hover:bg-[var(--shop-surface-primary)] border border-[rgba(255,255,255,0.1)]'
               }`}
             >
               Serviços
@@ -229,8 +229,8 @@ export function AnalyticsPage() {
               onClick={() => setActiveView('barbers')}
               className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                 activeView === 'barbers'
-                  ? 'bg-[#D4AF37] text-black'
-                  : 'bg-[#242424] text-white/70 hover:text-white hover:bg-[#2a2a2a] border border-[rgba(255,255,255,0.1)]'
+                  ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]'
+                  : 'bg-[var(--shop-surface-secondary)] text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] hover:bg-[var(--shop-surface-primary)] border border-[rgba(255,255,255,0.1)]'
               }`}
             >
               Barbeiros
@@ -239,8 +239,8 @@ export function AnalyticsPage() {
               onClick={() => setActiveView('cancellations')}
               className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                 activeView === 'cancellations'
-                  ? 'bg-[#D4AF37] text-black'
-                  : 'bg-[#242424] text-white/70 hover:text-white hover:bg-[#2a2a2a] border border-[rgba(255,255,255,0.1)]'
+                  ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]'
+                  : 'bg-[var(--shop-surface-secondary)] text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] hover:bg-[var(--shop-surface-primary)] border border-[rgba(255,255,255,0.1)]'
               }`}
             >
               Cancelamentos
@@ -249,15 +249,15 @@ export function AnalyticsPage() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 mb-10">
-          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
-            <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#D4AF37] mb-2">
+          <div className="bg-[var(--shop-surface-secondary)] border-2 border-transparent rounded-2xl p-6 text-center">
+            <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[var(--shop-accent)] mb-2">
               {stats.total}
             </div>
             <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
               Total
             </div>
           </div>
-          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
+          <div className="bg-[var(--shop-surface-secondary)] border-2 border-transparent rounded-2xl p-6 text-center">
             <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-white mb-2">
               {stats.completed}
             </div>
@@ -265,7 +265,7 @@ export function AnalyticsPage() {
               Concluídos
             </div>
           </div>
-          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
+          <div className="bg-[var(--shop-surface-secondary)] border-2 border-transparent rounded-2xl p-6 text-center">
             <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#ef4444] mb-2">
               {stats.cancelled}
             </div>
@@ -278,18 +278,18 @@ export function AnalyticsPage() {
               </div>
             )}
           </div>
-          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
-            <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#D4AF37] mb-2">
+          <div className="bg-[var(--shop-surface-secondary)] border-2 border-transparent rounded-2xl p-6 text-center">
+            <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[var(--shop-accent)] mb-2">
               {stats.completionRate}%
             </div>
             <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider mb-2">
               Taxa Conclusão
             </div>
             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-[#D4AF37] rounded-full transition-all" style={{ width: `${stats.completionRate}%` }} />
+              <div className="h-full bg-[var(--shop-accent)] rounded-full transition-all" style={{ width: `${stats.completionRate}%` }} />
             </div>
           </div>
-          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
+          <div className="bg-[var(--shop-surface-secondary)] border-2 border-transparent rounded-2xl p-6 text-center">
             <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#3b82f6] mb-2">
               {stats.avgPerDay}
             </div>
@@ -297,7 +297,7 @@ export function AnalyticsPage() {
               Média/Dia
             </div>
           </div>
-          <div className="bg-[#242424] border-2 border-transparent rounded-2xl p-6 text-center">
+          <div className="bg-[var(--shop-surface-secondary)] border-2 border-transparent rounded-2xl p-6 text-center">
             <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[#3b82f6] mb-2">
               {stats.avgServiceTime}m
             </div>
@@ -340,9 +340,9 @@ export function AnalyticsPage() {
                 const busiestName = DAY_NAMES_PT_FULL[busiest[0]] ?? busiest[0];
                 const quietestName = quietest ? (DAY_NAMES_PT_FULL[quietest[0]] ?? quietest[0]) : null;
                 return (
-                  <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-6 flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+                  <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-6 flex flex-wrap items-center justify-center gap-6 sm:gap-10">
                     <div className="flex items-center gap-3">
-                      <span className="material-symbols-outlined text-[#D4AF37] text-2xl">calendar_today</span>
+                      <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">calendar_today</span>
                       <div className="text-left">
                         <p className="text-xs text-white/50 uppercase tracking-wider">Dia mais movimentado</p>
                         <p className="text-lg font-semibold text-white">{busiestName}</p>
@@ -369,10 +369,10 @@ export function AnalyticsPage() {
           {activeView === 'time' && (
             <>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden min-h-[420px] flex flex-col">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden min-h-[420px] flex flex-col">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
                   <div className="mb-6 flex items-center gap-4 flex-shrink-0">
-                    <span className="material-symbols-outlined text-[#D4AF37] text-3xl">bar_chart</span>
+                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">bar_chart</span>
                     <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
                       Atendimentos por Dia
                     </h2>
@@ -382,10 +382,10 @@ export function AnalyticsPage() {
                   </div>
                 </div>
 
-                <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden min-h-[420px] flex flex-col">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden min-h-[420px] flex flex-col">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
                   <div className="mb-6 flex items-center gap-4 flex-shrink-0">
-                    <span className="material-symbols-outlined text-[#D4AF37] text-3xl">schedule</span>
+                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">schedule</span>
                     <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
                       Atendimentos por Hora
                     </h2>
@@ -396,10 +396,10 @@ export function AnalyticsPage() {
                 </div>
               </div>
 
-              <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+              <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
                 <div className="mb-6 flex items-center gap-4">
-                  <span className="material-symbols-outlined text-[#D4AF37] text-3xl">calendar_month</span>
+                  <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">calendar_month</span>
                   <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
                     Padrão Semanal
                   </h2>
@@ -407,10 +407,10 @@ export function AnalyticsPage() {
                 <DayOfWeekChart data={data.dayOfWeekDistribution} />
               </div>
 
-              <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+              <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
                 <div className="mb-6 flex items-center gap-4">
-                  <span className="material-symbols-outlined text-[#D4AF37] text-3xl">trending_up</span>
+                  <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">trending_up</span>
                   <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
                     Tendência de Tempo de Espera
                   </h2>
@@ -419,11 +419,11 @@ export function AnalyticsPage() {
               </div>
 
               {data.peakHour && (
-                <div className="bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border border-[rgba(212,175,55,0.3)] rounded-3xl p-10 text-center">
+                <div className="bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_5%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-3xl p-10 text-center">
                   <p className="text-sm text-white/70 uppercase tracking-wider mb-3">
                     Horário de Pico
                   </p>
-                  <div className="font-['Playfair_Display',serif] text-6xl font-semibold text-[#D4AF37] mb-3">
+                  <div className="font-['Playfair_Display',serif] text-6xl font-semibold text-[var(--shop-accent)] mb-3">
                     {data.peakHour.hour}:00
                   </div>
                   <p className="text-base text-white/70">
@@ -437,10 +437,10 @@ export function AnalyticsPage() {
           {/* Services View */}
           {activeView === 'services' && (
             <>
-              <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+              <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
                 <div className="mb-6 flex items-center gap-4">
-                  <span className="material-symbols-outlined text-[#D4AF37] text-3xl">pie_chart</span>
+                  <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">pie_chart</span>
                   <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
                     Serviços
                   </h2>
@@ -449,10 +449,10 @@ export function AnalyticsPage() {
               </div>
 
               {data.serviceBreakdown.length > 0 && (
-                <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
                   <div className="mb-6 flex items-center gap-4">
-                    <span className="material-symbols-outlined text-[#D4AF37] text-3xl">timer</span>
+                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">timer</span>
                     <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
                       Distribuição de Tempo de Serviço
                     </h2>
@@ -467,10 +467,10 @@ export function AnalyticsPage() {
           {activeView === 'barbers' && (
             <>
               {data.barberEfficiency.length > 0 && (
-                <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
                   <div className="mb-6 flex items-center gap-4">
-                    <span className="material-symbols-outlined text-[#D4AF37] text-3xl">speed</span>
+                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">speed</span>
                     <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
                       Eficiência por Barbeiro
                     </h2>
@@ -481,12 +481,12 @@ export function AnalyticsPage() {
                       return (
                         <div
                           key={barber.id}
-                          className="bg-[rgba(36,36,36,0.8)] border border-[rgba(255,255,255,0.05)] rounded-2xl p-6"
+                          className="bg-[rgba(36,36,36,0.8)] border border-[var(--shop-border-color)] rounded-2xl p-6"
                         >
                           <h4 className="text-xl text-white mb-4 truncate">{barber.name}</h4>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="text-center">
-                              <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37]">
+                              <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-[var(--shop-accent)]">
                                 {barber.ticketsPerDay.toFixed(1)}
                               </div>
                               <div className="text-xs text-white/50 uppercase mt-1">
@@ -503,7 +503,7 @@ export function AnalyticsPage() {
                             </div>
                           </div>
                           {barberInfo && (
-                            <div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.05)]">
+                            <div className="mt-4 pt-4 border-t border-[var(--shop-border-color)]">
                               <div className="flex items-center justify-between text-sm">
                                 <span className="text-white/70">Atendidos:</span>
                                 <span className="text-white font-semibold">{barberInfo.totalServed}</span>
@@ -522,10 +522,10 @@ export function AnalyticsPage() {
               )}
 
               {data.barbers.length > 0 && (
-                <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
                   <div className="mb-6 flex items-center gap-4">
-                    <span className="material-symbols-outlined text-[#D4AF37] text-3xl">content_cut</span>
+                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">content_cut</span>
                     <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
                       Desempenho por Barbeiro
                     </h2>
@@ -534,16 +534,16 @@ export function AnalyticsPage() {
                     {data.barbers.map((barber) => (
                       <div
                         key={barber.id}
-                        className="bg-[rgba(36,36,36,0.8)] border border-[rgba(255,255,255,0.05)] rounded-2xl p-6 flex items-center gap-6"
+                        className="bg-[rgba(36,36,36,0.8)] border border-[var(--shop-border-color)] rounded-2xl p-6 flex items-center gap-6"
                       >
-                        <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#E8C547] rounded-full flex items-center justify-center text-2xl font-semibold text-[#0a0a0a] flex-shrink-0">
+                        <div className="w-16 h-16 bg-gradient-to-br from-[var(--shop-accent)] to-[var(--shop-accent-hover)] rounded-full flex items-center justify-center text-2xl font-semibold text-[var(--shop-text-on-accent)] flex-shrink-0">
                           {barber.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-xl text-white mb-3 truncate">{barber.name}</h4>
                           <div className="flex gap-6">
                             <div className="text-center">
-                              <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37]">
+                              <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-[var(--shop-accent)]">
                                 {barber.totalServed}
                               </div>
                               <div className="text-xs text-white/50 uppercase mt-1">
@@ -551,7 +551,7 @@ export function AnalyticsPage() {
                               </div>
                             </div>
                             <div className="text-center">
-                              <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37]">
+                              <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-[var(--shop-accent)]">
                                 {barber.avgServiceTime}m
                               </div>
                               <div className="text-xs text-white/50 uppercase mt-1">
@@ -570,10 +570,10 @@ export function AnalyticsPage() {
 
           {/* Cancellations View */}
           {activeView === 'cancellations' && (
-            <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+            <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
               <div className="mb-6 flex items-center gap-4">
-                <span className="material-symbols-outlined text-[#D4AF37] text-3xl">cancel</span>
+                <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">cancel</span>
                 <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
                   Análise de Cancelamentos
                 </h2>

@@ -30,11 +30,11 @@ export function NetworkPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
+    <div className="min-h-screen bg-[var(--shop-background)] text-[var(--shop-text-primary)]">
       <CompanyNav />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-10">
         <header className="space-y-3">
-          <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37]">Rede EuToNaFila</p>
+          <p className="text-sm uppercase tracking-[0.25em] text-[var(--shop-accent)]">Rede EuToNaFila</p>
           <h1 className="text-3xl sm:text-4xl font-semibold">Barbearias</h1>
         </header>
 
@@ -56,7 +56,7 @@ export function NetworkPage() {
             {shops.length === 0 ? (
               <Card className="bg-white/5 border-white/10">
                 <CardContent className="p-6 text-center">
-                  <p className="text-white/70">Nenhuma barbearia cadastrada</p>
+                  <p className="text-[var(--shop-text-secondary)]">Nenhuma barbearia cadastrada</p>
                 </CardContent>
               </Card>
             ) : (
@@ -65,21 +65,21 @@ export function NetworkPage() {
                   <CardContent className="p-5 space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-xl font-semibold text-white">{shop.name}</h3>
+                        <h3 className="text-xl font-semibold text-[var(--shop-text-primary)]">{shop.name}</h3>
                         {shop.domain && (
-                          <p className="text-sm text-white/70">{shop.domain}</p>
+                          <p className="text-sm text-[var(--shop-text-secondary)]">{shop.domain}</p>
                         )}
                       </div>
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-bold">
+                      <div className="w-10 h-10 rounded-lg bg-[var(--shop-accent)] flex items-center justify-center text-[var(--shop-text-on-accent)] font-bold">
                         {shop.name.charAt(0)}
                       </div>
                     </div>
-                    <p className="text-sm text-white/70">
+                    <p className="text-sm text-[var(--shop-text-secondary)]">
                       Fila virtual em tempo real. Entre, acompanhe e seja chamado na vez.
                     </p>
                     <div className="flex gap-2 flex-wrap">
                       <Link to={`/join?shop=${encodeURIComponent(shop.slug)}`}>
-                        <Button className="bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#e2c25a]">
+                        <Button className="bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] hover:bg-[var(--shop-accent-hover)]">
                           Cliente
                         </Button>
                       </Link>

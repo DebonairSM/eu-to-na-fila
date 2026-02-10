@@ -66,13 +66,13 @@ export function StatusPage() {
 
   if (!id) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="min-h-screen bg-[var(--shop-background)]">
         <Navigation />
         <Container className="pt-24 pb-12">
           <div className="text-center space-y-4">
-            <p className="text-[rgba(255,255,255,0.7)]">Ticket não encontrado</p>
+            <p className="text-[var(--shop-text-secondary)]">Ticket não encontrado</p>
             <Link to="/home">
-              <button className="px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border border-[rgba(255,255,255,0.25)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-colors min-h-[52px]">
+              <button className="px-4 py-2 bg-transparent text-[var(--shop-text-secondary)] border border-[var(--shop-border-color)] rounded-lg hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-colors min-h-[52px]">
                 Voltar ao Início
               </button>
             </Link>
@@ -84,7 +84,7 @@ export function StatusPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="min-h-screen bg-[var(--shop-background)]">
         <Navigation />
         <Container className="pt-24 pb-12">
           <LoadingSpinner size="lg" text="Carregando..." />
@@ -95,7 +95,7 @@ export function StatusPage() {
 
   if (error || !ticket) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="min-h-screen bg-[var(--shop-background)]">
         <Navigation />
         <Container className="pt-24 pb-12">
           <ErrorDisplay
@@ -110,7 +110,7 @@ export function StatusPage() {
           />
           <div className="mt-4">
             <Link to="/home">
-              <button className="w-full px-4 py-2 bg-transparent text-[rgba(255,255,255,0.7)] border border-[rgba(255,255,255,0.25)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-colors min-h-[52px]">
+              <button className="w-full px-4 py-2 bg-transparent text-[var(--shop-text-secondary)] border border-[var(--shop-border-color)] rounded-lg hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-colors min-h-[52px]">
                 Voltar ao Início
               </button>
             </Link>
@@ -129,7 +129,7 @@ export function StatusPage() {
     (ticket.status === 'in_progress' && shopConfig.settings.allowCustomerCancelInProgress);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-[var(--shop-background)]">
       <Navigation />
 
       <Container className="pt-24 pb-20">

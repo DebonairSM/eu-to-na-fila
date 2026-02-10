@@ -200,7 +200,7 @@ function StepAppearanceContent({
   homeContent: HomeContent;
   onChange: (patch: Partial<ShopFormData>) => void;
 }) {
-  const inputClass = 'w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] text-sm';
+  const inputClass = 'w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] text-sm';
   const labelClass = 'block text-white/70 text-xs mb-1';
 
   return (
@@ -210,7 +210,7 @@ function StepAppearanceContent({
       <div>
         <h3 className="text-lg font-semibold text-white mb-3">Cores (tema)</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {(['primary', 'accent', 'background', 'surfacePrimary', 'surfaceSecondary', 'navBg'] as const).map((key) => (
+          {(['primary', 'accent', 'background', 'surfacePrimary', 'surfaceSecondary', 'navBg', 'textOnAccent', 'accentHover'] as const).map((key) => (
             <div key={key}>
               <label className={labelClass}>{key}</label>
               <input

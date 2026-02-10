@@ -47,12 +47,12 @@ export default {
         },
       },
       borderRadius: {
-        sm: '8px',   // Small buttons, badges
-        md: '12px',  // Cards, inputs, buttons
-        lg: '16px',  // Large cards, headers
-        xl: '24px',  // Modals
-        '2xl': '28px', // Large modals
-        full: '100px', // Pill buttons
+        sm: 'var(--radius-sm)',   // Small buttons, badges
+        md: 'var(--radius-md)',  // Cards, inputs, buttons
+        lg: 'var(--radius-lg)',  // Large cards, headers
+        xl: 'var(--radius-xl)',  // Modals
+        '2xl': 'var(--radius-2xl)', // Large modals
+        full: 'var(--radius-full)', // Pill buttons
         round: '50%',  // Circular badges
       },
       spacing: {

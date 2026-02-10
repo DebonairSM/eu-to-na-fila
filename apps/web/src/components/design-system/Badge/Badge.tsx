@@ -21,13 +21,13 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
           'transition-colors',
           // Variants
           {
-            'bg-[rgba(212,175,55,0.2)] border-[#D4AF37] text-[#D4AF37]':
+            'bg-[color-mix(in_srgb,var(--shop-accent,#D4AF37)_20%,transparent)] border-[var(--shop-accent,#D4AF37)] text-[var(--shop-accent,#D4AF37)]':
               variant === 'waiting',
-            'bg-[rgba(255,255,255,0.2)] border-white text-white':
+            'bg-[rgba(255,255,255,0.2)] border-[var(--shop-text-primary,#fff)] text-[var(--shop-text-primary,#fff)]':
               variant === 'in-progress' || variant === 'completed',
             'bg-[rgba(239,68,68,0.2)] border-[#ef4444] text-[#ef4444]':
               variant === 'error',
-            'bg-[rgba(255,255,255,0.1)] border-[rgba(255,255,255,0.2)] text-[rgba(255,255,255,0.7)]':
+            'bg-[rgba(255,255,255,0.1)] border-[var(--shop-border-color,rgba(255,255,255,0.2))] text-[var(--shop-text-secondary,rgba(255,255,255,0.7))]':
               variant === 'default',
           },
           // Sizes

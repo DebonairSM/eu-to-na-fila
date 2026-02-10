@@ -27,13 +27,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
-    <!-- Google Fonts - Non-blocking link tags instead of @import -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&family=Inter:wght@300;400;500;600&display=swap" />
-    
-    <!-- Prefetch font resource (changed from preload to avoid warnings) -->
-    <!-- Note: Favicons and icons don't need explicit preloading as browsers handle them efficiently -->
-    <link rel="prefetch" href="/projects/mineiro/fonts/MaterialSymbolsOutlined.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
-    
     <!-- Critical CSS to prevent black/white screens -->
     <style>
       html, body, #root {
@@ -43,32 +36,9 @@
         min-height: 100vh;
       }
       body {
-        font-family: 'Roboto', sans-serif;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-      }
-      
-      /* Critical: Inline Material Symbols font-face for immediate discovery */
-      @font-face {
-        font-family: 'Material Symbols Outlined';
-        font-style: normal;
-        font-weight: 400;
-        src: url('/projects/mineiro/fonts/MaterialSymbolsOutlined.ttf') format('truetype');
-        font-display: swap;
-      }
-      
-      .material-symbols-outlined {
-        font-family: 'Material Symbols Outlined';
-        font-weight: normal;
-        font-style: normal;
-        font-size: 24px;
-        line-height: 1;
-        letter-spacing: normal;
-        text-transform: none;
-        display: inline-block;
-        white-space: nowrap;
-        word-wrap: normal;
-        direction: ltr;
       }
       
       /* Recovery UI for stuck app */
@@ -207,9 +177,11 @@
       
       if ('serviceWorker' in navigator && isProduction) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/projects/mineiro/sw.js', {
-            scope: '/projects/mineiro/'
-          })
+          // Use runtime base path so the same build can work across /projects/:slug/
+          const parts = window.location.pathname.split('/').filter(Boolean);
+          const scope = (parts[0] === 'projects' && parts[1]) ? `/projects/${parts[1]}/` : '/';
+
+          navigator.serviceWorker.register(`${scope}sw.js`, { scope })
           .then(registration => {
             console.log('Service Worker registered:', registration.scope);
             

@@ -319,7 +319,7 @@ export function BarberQueueManager() {
         </button>
 
         {/* QR Code - Top right */}
-        <div className="absolute top-6 right-6 z-50 bg-white p-0.5 shadow-2xl border-2 border-[#D4AF37] flex items-center justify-center">
+        <div className="absolute top-6 right-6 z-50 bg-white p-0.5 shadow-2xl border-2 border-[var(--shop-accent)] flex items-center justify-center">
           <QRCode url={joinUrl} size={60} />
         </div>
 
@@ -327,13 +327,13 @@ export function BarberQueueManager() {
         {currentView === 'queue' && (
           <div className="flex-1 flex flex-col h-full">
             {/* Header with Shop Name / Check-in Button */}
-            <header className="flex-shrink-0 pt-8 pb-6 text-center border-b border-[rgba(212,175,55,0.15)]">
+            <header className="flex-shrink-0 pt-8 pb-6 text-center border-b border-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)]">
               <button
                 onClick={() => {
                   checkInModal.open();
                   showQueueView();
                 }}
-                className="inline-flex items-center gap-4 px-10 py-4 bg-[var(--shop-accent)] text-black rounded-2xl font-semibold text-xl hover:opacity-90 hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(212,175,55,0.5)] transition-all"
+                className="inline-flex items-center gap-4 px-10 py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] rounded-2xl font-semibold text-xl hover:opacity-90 hover:-translate-y-1 hover:shadow-[0_8px_32px_color-mix(in_srgb,var(--shop-accent)_50%,transparent)] transition-all"
                 aria-label="Adicionar cliente à fila"
               >
                 <span className="material-symbols-outlined text-2xl">person_add</span>
@@ -363,8 +363,8 @@ export function BarberQueueManager() {
                         className={cn(
                           'w-full px-8 py-6 rounded-2xl border transition-all',
                           {
-                            'bg-black border-[rgba(212,175,55,0.4)]': isServing,
-                            'bg-[rgba(20,20,20,0.8)] border-[rgba(212,175,55,0.2)]': !isServing,
+                            'bg-[var(--shop-background)] border-[color-mix(in_srgb,var(--shop-accent)_40%,transparent)]': isServing,
+                            'bg-[color-mix(in_srgb,var(--shop-surface-secondary)_80%,transparent)] border-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)]': !isServing,
                           }
                         )}
                       >
@@ -374,7 +374,7 @@ export function BarberQueueManager() {
                             <div
                               className={cn(
                                 'w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl flex-shrink-0',
-                                'bg-black text-[#D4AF37] border-2 border-[#D4AF37]'
+                                'bg-[var(--shop-background)] text-[var(--shop-accent)] border-2 border-[var(--shop-accent)]'
                               )}
                               aria-hidden="true"
                             >
@@ -384,7 +384,7 @@ export function BarberQueueManager() {
                             <div
                               className={cn(
                                 'w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl flex-shrink-0',
-                                'bg-black text-[#D4AF37] border-2 border-[#D4AF37]'
+                                'bg-[var(--shop-background)] text-[var(--shop-accent)] border-2 border-[var(--shop-accent)]'
                               )}
                               aria-hidden="true"
                             >
@@ -403,8 +403,8 @@ export function BarberQueueManager() {
                           </div>
                           {/* Status indicator */}
                           {isServing && (
-                            <div className="flex-shrink-0 px-4 py-2 bg-[rgba(212,175,55,0.2)] border border-[rgba(212,175,55,0.4)] rounded-xl">
-                              <span className="text-[#D4AF37] text-sm font-medium uppercase tracking-wider">Atendendo</span>
+                            <div className="flex-shrink-0 px-4 py-2 bg-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_40%,transparent)] rounded-xl">
+                              <span className="text-[var(--shop-accent)] text-sm font-medium uppercase tracking-wider">Atendendo</span>
                             </div>
                           )}
                         </div>
@@ -416,7 +416,7 @@ export function BarberQueueManager() {
             </div>
 
             {/* Bottom Bar - Barber presence (read-only in kiosk) */}
-            <footer className="flex-shrink-0 py-6 px-8 border-t border-[rgba(212,175,55,0.15)] bg-[rgba(10,10,10,0.95)]">
+            <footer className="flex-shrink-0 py-6 px-8 border-t border-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] bg-[color-mix(in_srgb,var(--shop-background)_95%,transparent)]">
               <div className="max-w-4xl mx-auto">
                 <div className="flex items-center justify-center gap-4 flex-wrap">
                   {sortedBarbers.map((barber) => (
@@ -425,8 +425,8 @@ export function BarberQueueManager() {
                       className={cn(
                         'px-6 py-3 rounded-xl border-2 font-medium text-lg',
                         barber.isPresent
-                          ? 'bg-[#D4AF37]/20 border-[#D4AF37]/50 text-[#D4AF37]'
-                          : 'bg-black/50 border-[rgba(212,175,55,0.2)] text-white/50'
+                          ? 'bg-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] border-[color-mix(in_srgb,var(--shop-accent)_50%,transparent)] text-[var(--shop-accent)]'
+                          : 'bg-black/50 border-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] text-[var(--shop-text-secondary)]'
                       )}
                       aria-hidden="true"
                     >
@@ -454,7 +454,7 @@ export function BarberQueueManager() {
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-50">
             <div
               key={`progress-${currentView}`}
-              className="h-full bg-[#D4AF37]"
+              className="h-full bg-[var(--shop-accent)]"
               style={{
                 width: '0%',
                 animation: `progress ${AD_VIEW_DURATION}ms linear forwards`,
@@ -467,8 +467,8 @@ export function BarberQueueManager() {
         {/* Check-in Modal */}
         {checkInModal.isOpen && (
           <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-8">
-            <div className="bg-[#1a1a1a] border-2 border-[#D4AF37]/30 rounded-3xl p-6 sm:p-8 lg:p-10 max-w-2xl w-full min-w-[320px]">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-['Playfair_Display',serif] text-[#D4AF37] mb-6 sm:mb-8 text-center">
+            <div className="bg-[var(--shop-surface-secondary)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-3xl p-6 sm:p-8 lg:p-10 max-w-2xl w-full min-w-[320px]">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-['Playfair_Display',serif] text-[var(--shop-accent)] mb-6 sm:mb-8 text-center">
                 Entrar na Fila
               </h2>
               <form
@@ -494,7 +494,7 @@ export function BarberQueueManager() {
                     spellCheck="false"
                     inputMode="text"
                     required
-                    className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-white/20 text-white min-h-[44px] placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-[var(--shop-border-color)] text-[var(--shop-text-primary)] min-h-[44px] placeholder:text-[var(--shop-text-secondary)] focus:outline-none focus:border-[var(--shop-accent)]"
                   />
                 </div>
                 <div className="flex gap-3 sm:gap-4 mt-6 sm:mt-8">
@@ -508,7 +508,7 @@ export function BarberQueueManager() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl rounded-2xl bg-[#D4AF37] text-black font-semibold hover:bg-[#E8C547] transition-all disabled:opacity-50 min-h-[44px]"
+                    className="flex-1 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl rounded-2xl bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-semibold hover:bg-[var(--shop-accent-hover)] transition-all disabled:opacity-50 min-h-[44px]"
                   >
                     {isSubmitting ? 'Adicionando...' : 'Adicionar'}
                   </button>
@@ -548,10 +548,10 @@ export function BarberQueueManager() {
 
       <div className="container max-w-[600px] mx-auto pt-20 sm:pt-24">
         {/* Stats Header */}
-        <div className="header bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-4 sm:p-6 mb-4 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+        <div className="header bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border-[3px] border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-4 sm:p-6 mb-4 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
           <div className="stats flex gap-4 sm:gap-6">
             <div className="stat-item flex-1 text-center">
-              <div className="stat-value text-2xl sm:text-3xl font-semibold text-[#D4AF37]">{waitingCount}</div>
+              <div className="stat-value text-2xl sm:text-3xl font-semibold text-[var(--shop-accent)]">{waitingCount}</div>
               <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">Aguardando</div>
             </div>
             <div className="stat-item flex-1 text-center">
@@ -562,12 +562,12 @@ export function BarberQueueManager() {
         </div>
 
         {/* Queue Section */}
-        <div className="queue-section bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-4 sm:p-6 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+        <div className="queue-section bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border-[3px] border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-4 sm:p-6 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
           {/* Add Customer Button */}
           <div className="queue-header mb-6">
             <button
               onClick={checkInModal.open}
-              className="checkin-btn flex items-center justify-center gap-3 px-8 py-4 bg-[#D4AF37] text-[#000000] border-2 border-[#D4AF37] rounded-lg font-semibold w-full transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_24px_rgba(212,175,55,0.4)] hover:bg-[rgba(212,175,55,0.9)]"
+              className="checkin-btn flex items-center justify-center gap-3 px-8 py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] border-2 border-[var(--shop-accent)] rounded-lg font-semibold w-full transition-all hover:-translate-y-0.5 hover:bg-[var(--shop-accent-hover)]"
             >
               <span className="material-symbols-outlined text-xl">person_add</span>
               Adicionar Cliente
@@ -627,7 +627,7 @@ export function BarberQueueManager() {
         </div>
 
         {/* Barber Presence Section */}
-        <div className="mt-4 sm:mt-6 bg-[rgba(20,20,20,0.9)] border-[3px] border-[rgba(212,175,55,0.3)] rounded-xl p-4 sm:p-6 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+        <div className="mt-4 sm:mt-6 bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border-[3px] border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-4 sm:p-6 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
           <h2 className="section-header text-xl sm:text-2xl font-semibold text-white mb-4">Barbeiros Presentes</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
             {barbers.map((barber) => (

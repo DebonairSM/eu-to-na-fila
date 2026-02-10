@@ -50,7 +50,7 @@ export function JoinForm() {
                     setSelectedServiceId(v ? parseInt(v, 10) : null);
                   }}
                   required
-                  className="flex w-full rounded-lg bg-[#2a2a2a] border border-[rgba(255,255,255,0.2)] px-4 py-3.5 text-white text-base min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                  className="flex w-full rounded-lg bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] px-4 py-3.5 text-[var(--shop-text-primary)] text-base min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-w-[200px] sm:min-w-[250px] max-w-[300px]"
                 >
                   <option value="">Selecione...</option>
                   {activeServices.map((s) => (
@@ -120,7 +120,7 @@ export function JoinForm() {
                     setSelectedBarberId(v ? parseInt(v, 10) : null);
                   }}
                   required
-                  className="flex w-full rounded-lg bg-[#2a2a2a] border border-[rgba(255,255,255,0.2)] px-4 py-3.5 text-white text-base min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                  className="flex w-full rounded-lg bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] px-4 py-3.5 text-[var(--shop-text-primary)] text-base min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-w-[200px] sm:min-w-[250px] max-w-[300px]"
                 >
                   <option value="">Selecione...</option>
                   {barbers.filter(b => b.isActive).map((b) => (
@@ -143,11 +143,11 @@ export function JoinForm() {
             )}
 
             {isAlreadyInQueue && existingTicketId && (
-              <div className="p-5 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30">
+              <div className="p-5 rounded-lg bg-[color-mix(in_srgb,var(--shop-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)]">
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#D4AF37] text-2xl">info</span>
+                  <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">info</span>
                   <div className="flex-1 space-y-3">
-                    <p className="text-sm font-semibold text-[#D4AF37]">Ticket ativo encontrado</p>
+                    <p className="text-sm font-semibold text-[var(--shop-accent)]">Ticket ativo encontrado</p>
                     <Button
                       type="button"
                       onClick={() => navigate(`/status/${existingTicketId}`)}
@@ -176,7 +176,7 @@ export function JoinForm() {
             />
 
             {!isLoadingServices && !hasServices && (
-              <p className="text-sm text-[rgba(255,255,255,0.7)]">
+              <p className="text-sm text-[var(--shop-text-secondary)]">
                 Nenhum serviço disponível no momento.
               </p>
             )}

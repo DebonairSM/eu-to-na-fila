@@ -12,7 +12,7 @@ function dbg() {}
 
 // Bump this when deploying changes that affect built asset graphs.
 // A stale cached HTML/JS combo is the most common cause of "blank black screen" after deploy.
-const CACHE_VERSION = 'v8';
+const CACHE_VERSION = 'v9';
 
 const STATIC_CACHE_NAME = `eutonafila-static-${CACHE_VERSION}`;
 const PAGE_CACHE_NAME = `eutonafila-pages-${CACHE_VERSION}`;
@@ -24,15 +24,27 @@ const MAX_CACHE_SIZE = 50 * 1024 * 1024; // 50MB total
 const MAX_VIDEO_CACHE_SIZE = 10 * 1024 * 1024; // 10MB for videos
 const MAX_API_CACHE_SIZE = 5 * 1024 * 1024; // 5MB for API responses
 
-// Assets to cache on install
+function getScopePath() {
+  try {
+    // registration.scope is a full URL. We want the pathname.
+    const scopeUrl = new URL(self.registration.scope);
+    return scopeUrl.pathname.endsWith('/') ? scopeUrl.pathname : `${scopeUrl.pathname}/`;
+  } catch {
+    // Fallback for older environments
+    return '/';
+  }
+}
+
+// Assets to cache on install (relative to the SW scope)
+const SCOPE_PATH = getScopePath();
 const STATIC_ASSETS = [
-  '/projects/mineiro/',
-  '/projects/mineiro/index.html',
-  '/projects/mineiro/favicon.svg',
-  '/projects/mineiro/manifest.json',
-  '/projects/mineiro/icon-192.png',
-  '/projects/mineiro/icon-512.png',
-  '/projects/mineiro/fonts/MaterialSymbolsOutlined.ttf'
+  SCOPE_PATH,
+  `${SCOPE_PATH}index.html`,
+  `${SCOPE_PATH}favicon.svg`,
+  `${SCOPE_PATH}manifest.json`,
+  `${SCOPE_PATH}icon-192.png`,
+  `${SCOPE_PATH}icon-512.png`,
+  `${SCOPE_PATH}fonts/MaterialSymbolsOutlined.ttf`,
 ];
 
 // API endpoints to cache (with short TTL)

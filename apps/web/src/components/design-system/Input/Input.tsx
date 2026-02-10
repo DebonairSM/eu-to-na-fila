@@ -15,17 +15,17 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         className={cn(
           // Base styles
           'flex w-full rounded-lg',
-          'bg-[#2a2a2a] border',
+          'bg-[var(--shop-surface-secondary,#1a1a1a)] border',
           'px-4 py-3.5',
-          'text-white placeholder:text-[rgba(255,255,255,0.5)]',
+          'text-[var(--shop-text-primary,#ffffff)] placeholder:text-[var(--shop-text-secondary,rgba(255,255,255,0.5))]',
           'text-base', // 16px minimum for mobile
           'min-h-[52px]', // Touch-friendly height
           'transition-all',
-          'focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37]',
+          'focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent,#D4AF37)] focus:border-[var(--shop-accent,#D4AF37)]',
           // Error state
           error
             ? 'border-[#ef4444] focus:ring-[#ef4444]'
-            : 'border-[rgba(255,255,255,0.2)]',
+            : 'border-[var(--shop-border-color,rgba(255,255,255,0.2))]',
           // Motion: subtle scale on focus
           'focus:scale-[1.01]',
           className
@@ -49,7 +49,8 @@ const InputLabel = React.forwardRef<
     <label
       ref={ref}
       className={cn(
-        'block text-xs font-medium text-[rgba(255,255,255,0.7)] uppercase tracking-wide mb-2',
+        'block text-xs font-medium uppercase tracking-wide mb-2',
+        'text-[var(--shop-text-secondary,rgba(255,255,255,0.7))]',
         className
       )}
       {...props}

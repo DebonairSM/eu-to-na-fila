@@ -61,7 +61,7 @@ export function BarberAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="min-h-screen bg-[var(--shop-background)]">
         <Navigation />
         <div className="flex items-center justify-center min-h-[60vh] pt-24">
           <LoadingSpinner size="lg" text="Carregando seu desempenho..." />
@@ -72,7 +72,7 @@ export function BarberAnalyticsPage() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="min-h-screen bg-[var(--shop-background)]">
         <Navigation />
         <Container className="pt-24 pb-12">
           <ErrorDisplay error={error ?? new Error('Dados não disponíveis')} />
@@ -85,7 +85,7 @@ export function BarberAnalyticsPage() {
   const daysList = Object.entries(ticketsByDay).sort(([a], [b]) => a.localeCompare(b));
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-[var(--shop-background)]">
       <Navigation />
       <Container className="pt-24 pb-16">
         <div className="max-w-4xl mx-auto space-y-8">
@@ -111,7 +111,7 @@ export function BarberAnalyticsPage() {
                 <Text size="sm" variant="secondary" className="uppercase tracking-wider">
                   Atendimentos
                 </Text>
-                <p className="text-2xl font-bold text-[#D4AF37] mt-1">{summary.completed}</p>
+                <p className="text-2xl font-bold text-[var(--shop-accent)] mt-1">{summary.completed}</p>
               </CardContent>
             </Card>
             <Card variant="default" className="bg-white/5 border-white/10">
@@ -119,7 +119,7 @@ export function BarberAnalyticsPage() {
                 <Text size="sm" variant="secondary" className="uppercase tracking-wider">
                   Faturamento
                 </Text>
-                <p className="text-2xl font-bold text-[#D4AF37] mt-1">{formatBRL(summary.revenueCents)}</p>
+                <p className="text-2xl font-bold text-[var(--shop-accent)] mt-1">{formatBRL(summary.revenueCents)}</p>
               </CardContent>
             </Card>
             <Card variant="default" className="bg-white/5 border-white/10">
@@ -158,7 +158,7 @@ export function BarberAnalyticsPage() {
                           year: 'numeric',
                         })}
                       </span>
-                      <span className="text-[#D4AF37] font-medium">{count}</span>
+                      <span className="text-[var(--shop-accent)] font-medium">{count}</span>
                     </li>
                   ))}
                 </ul>
@@ -178,7 +178,7 @@ export function BarberAnalyticsPage() {
                   {serviceBreakdown.map((s) => (
                     <li key={s.serviceId} className="flex justify-between items-center text-sm">
                       <span className="text-white/90">{s.serviceName}</span>
-                      <span className="text-[#D4AF37] font-medium">
+                      <span className="text-[var(--shop-accent)] font-medium">
                         {s.count} ({s.percentage}%)
                       </span>
                     </li>
