@@ -9,7 +9,7 @@ export function InProgressCard({ barberName }: InProgressCardProps) {
     <StatusTransition status="in-progress">
       <Card
         variant="outlined"
-        className="bg-gradient-to-br from-[rgba(255,255,255,0.2)] to-[rgba(255,255,255,0.05)] border-2 border-[var(--shop-border-color)] text-center"
+        className="status-card bg-gradient-to-br from-[rgba(255,255,255,0.2)] to-[rgba(255,255,255,0.05)] border-2 border-[var(--shop-border-color)] text-center"
       >
         <CardContent className="p-8 sm:p-10 lg:p-12">
           <span className="material-symbols-outlined text-5xl sm:text-6xl lg:text-7xl text-[var(--shop-text-primary)] mb-4 sm:mb-6 block">

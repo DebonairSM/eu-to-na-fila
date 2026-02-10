@@ -26,8 +26,6 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           error
             ? 'border-[#ef4444] focus:ring-[#ef4444]'
             : 'border-[var(--shop-border-color,rgba(255,255,255,0.2))]',
-          // Motion: subtle scale on focus
-          'focus:scale-[1.01]',
           className
         )}
         style={{

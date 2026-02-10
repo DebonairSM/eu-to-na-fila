@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { RootSiteNav } from '@/components/RootSiteNav';
@@ -15,6 +15,16 @@ export function ProjectsPage() {
   const [projects, setProjects] = useState<Array<{ id: number; slug: string; name: string; path: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchProjects = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    api
+      .getProjects()
+      .then(setProjects)
+      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar projetos'))
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,6 +45,12 @@ export function ProjectsPage() {
       cancelled = true;
     };
   }, [location.pathname]);
+
+  useEffect(() => {
+    const onFocus = () => fetchProjects();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [fetchProjects]);
 
   const projectCards = projects.map((p) => ({
     id: String(p.id),

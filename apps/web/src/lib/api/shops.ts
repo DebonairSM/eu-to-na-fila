@@ -12,6 +12,6 @@ export function createShopsApi(client: BaseApiClient): ShopsApi {
   return {
     getShopConfig: (shopSlug) => c.get(`/shops/${shopSlug}/config`),
     getAllShops: () => c.get('/shops'),
-    getProjects: () => c.get('/projects'),
+    getProjects: () => c.get(`/projects?_=${Date.now()}`),
   };
 }

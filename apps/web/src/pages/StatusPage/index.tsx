@@ -129,7 +129,7 @@ export function StatusPage() {
     (ticket.status === 'in_progress' && shopConfig.settings.allowCustomerCancelInProgress);
 
   return (
-    <div className="min-h-screen bg-[var(--shop-background)]">
+    <div className="min-h-screen bg-[var(--shop-background)] status-page">
       <Navigation />
 
       <Container className="pt-24 pb-20">

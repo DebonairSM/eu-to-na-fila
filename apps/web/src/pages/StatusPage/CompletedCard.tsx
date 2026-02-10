@@ -9,7 +9,7 @@ export function CompletedCard({ barberName }: CompletedCardProps) {
     <StatusTransition status="completed">
       <Card
         variant="outlined"
-        className="border-[color-mix(in_srgb,var(--shop-accent)_40%,transparent)] bg-[rgba(255,255,255,0.03)] text-center overflow-visible"
+        className="status-card border-[color-mix(in_srgb,var(--shop-accent)_40%,transparent)] bg-[rgba(255,255,255,0.03)] text-center overflow-visible"
       >
         <CardContent className="p-8 sm:p-10 lg:p-12">
           <div className="inline-flex items-center justify-center mb-4 sm:mb-6 animate-checkmark-glow">

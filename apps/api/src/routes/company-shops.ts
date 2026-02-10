@@ -131,31 +131,35 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
       }
       if (counter > 0) slug = projectSlug;
 
-      const [newProject] = await db
-        .insert(schema.projects)
-        .values({
-          slug: projectSlug,
-          name: body.name,
-          path: body.path || `/projects/${projectSlug}`,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
+      const newShop = await db.transaction(async (tx) => {
+        const [newProject] = await tx
+          .insert(schema.projects)
+          .values({
+            slug: projectSlug,
+            name: body.name,
+            path: body.path || `/projects/${projectSlug}`,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .returning();
 
-      const [newShop] = await db
-        .insert(schema.shops)
-        .values({
-          projectId: newProject.id,
-          companyId: id,
-          slug,
-          name: body.name,
-          domain: body.domain || null,
-          path: body.path || `/projects/${projectSlug}`,
-          apiBase: body.apiBase || null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
+        const [shop] = await tx
+          .insert(schema.shops)
+          .values({
+            projectId: newProject.id,
+            companyId: id,
+            slug,
+            name: body.name,
+            domain: body.domain || null,
+            path: body.path || `/projects/${projectSlug}`,
+            apiBase: body.apiBase || null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .returning();
+
+        return shop;
+      });
 
       return reply.status(201).send(newShop);
     }

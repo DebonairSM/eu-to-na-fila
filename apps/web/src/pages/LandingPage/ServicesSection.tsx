@@ -44,15 +44,15 @@ export function ServicesSection() {
           {/* Mobile: stacked, full width */}
           <div className="lg:hidden space-y-4">
             {activeServices.map((service) => (
-              <Card key={service.id} hover className="text-center">
+              <Card key={service.id} hover className="service-card text-center">
                 <CardContent className="p-6">
-                  <span className="material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)] mb-4 block">
+                  <span className="service-card__icon material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)] mb-4 block">
                     content_cut
                   </span>
-                  <Heading level={3} className="mb-2 text-xl">
+                  <Heading level={3} className="service-card__title mb-2 text-xl">
                     {service.name}
                   </Heading>
-                  <Text size="lg" className="text-[var(--shop-accent,#D4AF37)] font-semibold">
+                  <Text size="lg" className="service-card__price text-[var(--shop-accent,#D4AF37)] font-semibold">
                     {formatPrice(service.price)}
                   </Text>
                 </CardContent>
@@ -76,15 +76,15 @@ export function ServicesSection() {
                 )}
               >
                 {activeServices.map((service) => (
-                  <Card key={service.id} hover className="text-center">
+                  <Card key={service.id} hover className="service-card text-center">
                     <CardContent className="p-8">
-                      <span className="material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)] mb-4 block">
+                      <span className="service-card__icon material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)] mb-4 block">
                         content_cut
                       </span>
-                      <Heading level={3} className="mb-4 text-2xl">
+                      <Heading level={3} className="service-card__title mb-4 text-2xl">
                         {service.name}
                       </Heading>
-                      <Text size="xl" className="text-[var(--shop-accent,#D4AF37)] font-semibold text-2xl">
+                      <Text size="xl" className="service-card__price text-[var(--shop-accent,#D4AF37)] font-semibold text-2xl">
                         {formatPrice(service.price)}
                       </Text>
                     </CardContent>

@@ -96,14 +96,13 @@ export function Navigation() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all overflow-x-hidden ${
+      className={`shop-nav fixed top-0 left-0 right-0 z-50 transition-all overflow-x-hidden ${
         isScrolled
           ? 'py-0.5 sm:py-1.5 shadow-[0_1px_0_rgba(255,255,255,0.06)]'
           : 'py-0.5 sm:py-2'
       }`}
       style={{
         backgroundColor: 'var(--shop-nav-bg, #0a0a0a)',
-        borderBottom: '1px solid var(--shop-border-color, rgba(255,255,255,0.08))',
       }}
       role="navigation"
       aria-label="Main navigation"

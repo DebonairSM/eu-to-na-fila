@@ -22,13 +22,16 @@ import { env } from '../src/env.js';
 
 const DEFAULT_NAMES = ["Garry's", "Barbearia Premium"];
 const namesToDelete = process.argv.slice(2).length > 0 ? process.argv.slice(2) : DEFAULT_NAMES;
-const namesLower = namesToDelete.map((n) => n.trim().toLowerCase());
+const searchTerms = namesToDelete.map((n) => n.trim().toLowerCase().replace(/'/g, ''));
 
 async function main() {
   const allShops = await db.query.shops.findMany({
     columns: { id: true, name: true, projectId: true, companyId: true },
   });
-  const shops = allShops.filter((s) => namesLower.includes((s.name || '').trim().toLowerCase()));
+  const shops = allShops.filter((s) => {
+    const nameNorm = (s.name || '').trim().toLowerCase().replace(/'/g, '');
+    return searchTerms.some((term) => nameNorm.includes(term) || nameNorm === term);
+  });
 
   if (shops.length === 0) {
     console.log('No shops found matching (case-insensitive):', namesToDelete.join(', '));

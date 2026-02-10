@@ -35,7 +35,7 @@ export function JoinForm() {
   };
 
   return (
-    <Card variant="default" className="shadow-lg min-w-[320px]">
+    <Card variant="default" className="join-form-card shadow-lg min-w-[320px]">
       <CardContent className="p-6 sm:p-8">
         <form onSubmit={handleSubmit} autoComplete="off">
           <Stack spacing="lg">
@@ -50,7 +50,7 @@ export function JoinForm() {
                     setSelectedServiceId(v ? parseInt(v, 10) : null);
                   }}
                   required
-                  className="flex w-full rounded-lg bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] px-4 py-3.5 text-[var(--shop-text-primary)] text-base min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                  className="form-control-select min-w-[200px] sm:min-w-[250px] max-w-[300px]"
                 >
                   <option value="">Selecione...</option>
                   {activeServices.map((s) => (
@@ -120,7 +120,7 @@ export function JoinForm() {
                     setSelectedBarberId(v ? parseInt(v, 10) : null);
                   }}
                   required
-                  className="flex w-full rounded-lg bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] px-4 py-3.5 text-[var(--shop-text-primary)] text-base min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                  className="form-control-select min-w-[200px] sm:min-w-[250px] max-w-[300px]"
                 >
                   <option value="">Selecione...</option>
                   {barbers.filter(b => b.isActive).map((b) => (

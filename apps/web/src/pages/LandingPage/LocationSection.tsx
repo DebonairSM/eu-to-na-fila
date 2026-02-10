@@ -69,15 +69,15 @@ export function LocationSection() {
       <div className="lg:hidden space-y-6">
         <Stack spacing="lg">
           {locationItems.map((item) => (
-            <div key={item.title} className="flex gap-4">
-              <span className="material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-xl flex-shrink-0">
+            <div key={item.title} className="location-info-card flex gap-4">
+              <span className="location-info-card__icon material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-xl flex-shrink-0">
                 {item.icon}
               </span>
-              <div>
-                <Heading level={4} className="mb-1 text-lg font-semibold">
+              <div className="location-info-card__body min-w-0">
+                <Heading level={4} className="location-info-card__title mb-1 text-lg font-semibold">
                   {item.title}
                 </Heading>
-                <Text size="sm" variant="secondary">
+                <Text size="sm" variant="secondary" className="location-info-card__content">
                   {item.content}
                 </Text>
               </div>
@@ -103,15 +103,15 @@ export function LocationSection() {
       <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-start">
         <Stack spacing="xl">
           {locationItems.map((item) => (
-            <div key={item.title} className="flex gap-6">
-              <span className="material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-2xl flex-shrink-0">
+            <div key={item.title} className="location-info-card flex gap-6">
+              <span className="location-info-card__icon material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-2xl flex-shrink-0">
                 {item.icon}
               </span>
-              <div>
-                <Heading level={4} className="mb-2 text-lg font-semibold">
+              <div className="location-info-card__body min-w-0">
+                <Heading level={4} className="location-info-card__title mb-2 text-lg font-semibold">
                   {item.title}
                 </Heading>
-                <Text size="base" variant="secondary">
+                <Text size="base" variant="secondary" className="location-info-card__content">
                   {item.content}
                 </Text>
               </div>

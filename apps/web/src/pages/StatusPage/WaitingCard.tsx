@@ -12,7 +12,7 @@ export function WaitingCard({ waitTime, position, total, ahead }: WaitingCardPro
     <StatusTransition status="waiting">
       <Card
         variant="outlined"
-        className="bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_5%,transparent)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] text-center"
+        className="status-card bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_5%,transparent)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] text-center"
       >
         <CardContent className="p-10">
           <div className="flex items-center justify-center gap-3 mb-6 text-[var(--shop-text-secondary)] text-sm uppercase tracking-wider">
