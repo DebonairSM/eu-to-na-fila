@@ -26,6 +26,11 @@ function hexOrRgba(value: string): 'hex' | 'other' {
   return 'other';
 }
 
+export interface SavedPalette {
+  label: string;
+  theme: ShopTheme;
+}
+
 export interface AppearanceFormProps {
   formData: {
     theme: ShopTheme;
@@ -35,6 +40,10 @@ export interface AppearanceFormProps {
   variant: 'root' | 'mineiro';
   paletteIndices: [number, number, number];
   onRerollPalettes: () => void;
+  /** Saved palettes for the current preset (user-saved "color presets"). */
+  savedPalettes?: SavedPalette[];
+  /** Save current theme as a named palette for the current preset. */
+  onSaveCurrentPalette?: (label: string) => void;
 }
 
 export function AppearanceForm({
@@ -43,8 +52,12 @@ export function AppearanceForm({
   variant,
   paletteIndices,
   onRerollPalettes,
+  savedPalettes = [],
+  onSaveCurrentPalette,
 }: AppearanceFormProps) {
   const [openPickerKey, setOpenPickerKey] = useState<keyof ShopTheme | null>(null);
+  const [saveLabel, setSaveLabel] = useState('');
+  const [showSaveInput, setShowSaveInput] = useState(false);
   const preset = formData.style.preset ?? 'modern';
   const palettes = PRESET_PALETTES[preset];
   const presetName = PRESET_LABELS[preset];
@@ -54,7 +67,7 @@ export function AppearanceForm({
     .filter(Boolean);
 
   const applyPalette = useCallback(
-    (palette: { theme: PresetPalette['theme'] }) => {
+    (palette: { theme: PresetPalette['theme'] | ShopTheme }) => {
       setFormData((prev) => ({
         ...prev,
         theme: { ...prev.theme, ...palette.theme },
@@ -62,6 +75,15 @@ export function AppearanceForm({
     },
     [setFormData]
   );
+
+  const handleSavePalette = useCallback(() => {
+    const label = (saveLabel || 'Minhas cores').trim();
+    if (label && onSaveCurrentPalette) {
+      onSaveCurrentPalette(label);
+      setSaveLabel('');
+      setShowSaveInput(false);
+    }
+  }, [saveLabel, onSaveCurrentPalette]);
 
   const isRoot = variant === 'root';
   const activeClass = isRoot ? 'bg-white/20 text-white' : 'bg-[#D4AF37]/20 text-[#D4AF37]';
@@ -171,6 +193,21 @@ export function AppearanceForm({
               <span className="text-white/90 text-xs font-medium max-w-[100px] truncate">{palette.label}</span>
             </button>
           ))}
+          {savedPalettes.map((palette, idx) => (
+            <button
+              key={`saved-${palette.label}-${idx}`}
+              type="button"
+              onClick={() => applyPalette(palette)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--shop-accent,#D4AF37)]/40 bg-[var(--shop-accent,#D4AF37)]/5 hover:bg-[var(--shop-accent,#D4AF37)]/10 transition-colors text-left"
+            >
+              <div className="flex rounded overflow-hidden border border-white/10 h-8 w-16 shrink-0">
+                <div className="flex-1" style={{ backgroundColor: palette.theme.background }} title="Fundo" />
+                <div className="flex-1" style={{ backgroundColor: palette.theme.accent }} title="Destaque" />
+                <div className="flex-1" style={{ backgroundColor: palette.theme.surfaceSecondary }} title="Superfície" />
+              </div>
+              <span className="text-white/90 text-xs font-medium max-w-[100px] truncate">{palette.label}</span>
+            </button>
+          ))}
           <button
             type="button"
             onClick={onRerollPalettes}
@@ -178,6 +215,45 @@ export function AppearanceForm({
           >
             Outras sugestões
           </button>
+          {onSaveCurrentPalette && (
+            <>
+              {showSaveInput ? (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <input
+                    type="text"
+                    value={saveLabel}
+                    onChange={(e) => setSaveLabel(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSavePalette()}
+                    placeholder="Nome do conjunto"
+                    className={cn(inputClass, 'min-w-[120px]')}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSavePalette}
+                    className="px-3 py-2 rounded-lg bg-[var(--shop-accent,#D4AF37)]/20 text-[var(--shop-accent,#D4AF37)] text-xs font-medium hover:bg-[var(--shop-accent,#D4AF37)]/30"
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowSaveInput(false); setSaveLabel(''); }}
+                    className="px-3 py-2 rounded-lg text-white/70 text-xs hover:text-white"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowSaveInput(true)}
+                  className="px-3 py-2 rounded-lg border border-white/20 text-white/70 text-xs hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  Salvar cores atuais
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
