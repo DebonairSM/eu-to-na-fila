@@ -3,16 +3,18 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useLocale } from '@/contexts/LocaleContext';
 import { LOGO_URL } from '@/lib/logo';
 
-const links = [
-  { label: 'Home', to: '/home' },
-  { label: 'Sobre', to: '/about' },
-  { label: 'Galeria', to: '/network' },
-  { label: 'Contato', to: '/contact' },
+const linkKeys = [
+  { key: 'companyNav.home' as const, to: '/home' },
+  { key: 'companyNav.about' as const, to: '/about' },
+  { key: 'companyNav.gallery' as const, to: '/network' },
+  { key: 'companyNav.contact' as const, to: '/contact' },
 ];
 
 export function CompanyNav() {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const location = useLocation();
 
@@ -32,7 +34,7 @@ export function CompanyNav() {
             />
           <div>
             <p className="text-xs text-white/70">EuTô NaFila</p>
-            <p className="text-sm font-semibold">Virtual Line Software</p>
+            <p className="text-sm font-semibold">{t('companyNav.tagline')}</p>
           </div>
         </div>
         </div>
@@ -40,7 +42,7 @@ export function CompanyNav() {
         <div className="flex items-center gap-3">
           <LanguageSwitcher />
           <nav className="hidden md:flex items-center gap-2 text-sm">
-            {links.map((link) => {
+            {linkKeys.map((link) => {
               const active = location.pathname === link.to;
               return (
                 <Link
@@ -52,7 +54,7 @@ export function CompanyNav() {
                       : 'text-white/85 hover:text-[#D4AF37] hover:bg-white/5'
                   }`}
                 >
-                  {link.label}
+                  {t(link.key)}
                 </Link>
               );
             })}
@@ -65,16 +67,16 @@ export function CompanyNav() {
               onClick={() => setOpen((v) => !v)}
               aria-haspopup="true"
               aria-expanded={open}
-              aria-label="Abrir menu"
+              aria-label={t('accessibility.openMenu')}
               onKeyDown={(e) => {
                 if (e.key === 'Escape') setOpen(false);
               }}
             >
-              Menu
+              {t('companyNav.menu')}
             </Button>
             {open && (
               <div className="absolute right-0 mt-2 w-52 rounded-lg border border-white/20 bg-[#0b1a33] shadow-lg shadow-black/30 p-2 space-y-1 text-sm z-50">
-                {links.map((item) => (
+                {linkKeys.map((item) => (
                   <Link
                     key={item.to}
                     to={item.to}
@@ -84,7 +86,7 @@ export function CompanyNav() {
                       if (e.key === 'Escape') setOpen(false);
                     }}
                   >
-                    {item.label}
+                    {t(item.key)}
                   </Link>
                 ))}
               </div>

@@ -80,7 +80,7 @@ export function ProjectsPage() {
           <div className="text-center py-12 text-red-400">{error}</div>
         )}
         {!loading && !error && projectCards.length === 0 && (
-          <div className="text-center py-12 text-gray-400">Nenhum projeto cadastrado.</div>
+          <div className="text-center py-12 text-gray-400">{t('projects.noProjects')}</div>
         )}
         <div className="grid grid-cols-1 gap-6">
             {projectCards.map((project) => (

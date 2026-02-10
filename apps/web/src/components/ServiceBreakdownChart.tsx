@@ -1,3 +1,5 @@
+import { useLocale } from '@/contexts/LocaleContext';
+
 interface ServiceBreakdownChartProps {
   data: Array<{ serviceId: number; serviceName: string; count: number; percentage: number }>;
 }
@@ -14,10 +16,11 @@ const colors = [
 ];
 
 export function ServiceBreakdownChart({ data }: ServiceBreakdownChartProps) {
+  const { t } = useLocale();
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center h-[250px] text-white/50">
-        <p>Nenhum dado disponível</p>
+        <p>{t('common.noDataAvailable')}</p>
       </div>
     );
   }

@@ -3,22 +3,23 @@ import { HexColorPicker } from 'react-colorful';
 import type { ShopTheme, ShopStyleConfig, StylePresetId, LayoutId, FontToken, DividerStyle } from '@eutonafila/shared';
 import { PRESET_PALETTES, type PresetPalette } from '@/lib/presetPalettes';
 import { LAYOUT_LABELS, PRESET_RECOMMENDED_LAYOUTS, isLayoutRecommendedForPreset } from '@/lib/layouts';
+import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
 
-const PRESET_LABELS: Record<StylePresetId, string> = {
-  modern: 'Moderno',
-  classical: 'Clássico',
-  vintage: 'Vintage',
-  luxury: 'Luxo',
-  industrial: 'Industrial',
-  minimal: 'Minimal',
+const PRESET_LABEL_KEYS: Record<StylePresetId, string> = {
+  modern: 'appearance.presetModern',
+  classical: 'appearance.presetClassical',
+  vintage: 'appearance.presetVintage',
+  luxury: 'appearance.presetLuxury',
+  industrial: 'appearance.presetIndustrial',
+  minimal: 'appearance.presetMinimal',
 };
 
-const THEME_KEYS_GROUPED: { group: string; keys: (keyof ShopTheme)[] }[] = [
-  { group: 'Principal e destaque', keys: ['primary', 'accent'] },
-  { group: 'Fundo e superfícies', keys: ['background', 'surfacePrimary', 'surfaceSecondary'] },
-  { group: 'Navegação e texto', keys: ['navBg', 'textPrimary', 'textSecondary', 'borderColor'] },
-  { group: 'Destaque (extras)', keys: ['textOnAccent', 'accentHover'] },
+const THEME_KEYS_GROUPED: { groupKey: string; keys: (keyof ShopTheme)[] }[] = [
+  { groupKey: 'appearance.groupPrimary', keys: ['primary', 'accent'] },
+  { groupKey: 'appearance.groupBackground', keys: ['background', 'surfacePrimary', 'surfaceSecondary'] },
+  { groupKey: 'appearance.groupNav', keys: ['navBg', 'textPrimary', 'textSecondary', 'borderColor'] },
+  { groupKey: 'appearance.groupExtras', keys: ['textOnAccent', 'accentHover'] },
 ];
 
 function hexOrRgba(value: string): 'hex' | 'other' {
@@ -56,12 +57,13 @@ export function AppearanceForm({
   savedPalettes = [],
   onSaveCurrentPalette,
 }: AppearanceFormProps) {
+  const { t } = useLocale();
   const [openPickerKey, setOpenPickerKey] = useState<keyof ShopTheme | null>(null);
   const [saveLabel, setSaveLabel] = useState('');
   const [showSaveInput, setShowSaveInput] = useState(false);
   const preset = formData.style.preset ?? 'modern';
   const palettes = PRESET_PALETTES[preset];
-  const presetName = PRESET_LABELS[preset];
+  const presetName = t(PRESET_LABEL_KEYS[preset]);
 
   const suggestedPalettes = paletteIndices
     .map((i) => palettes[i])
@@ -78,13 +80,13 @@ export function AppearanceForm({
   );
 
   const handleSavePalette = useCallback(() => {
-    const label = (saveLabel || 'Minhas cores').trim();
+    const label = (saveLabel || t('appearance.myColorsDefault')).trim();
     if (label && onSaveCurrentPalette) {
       onSaveCurrentPalette(label);
       setSaveLabel('');
       setShowSaveInput(false);
     }
-  }, [saveLabel, onSaveCurrentPalette]);
+  }, [saveLabel, onSaveCurrentPalette, t]);
 
   const isRoot = variant === 'root';
   const activeClass = isRoot ? 'bg-white/20 text-white' : 'bg-[#D4AF37]/20 text-[#D4AF37]';
@@ -95,77 +97,77 @@ export function AppearanceForm({
 
   return (
     <div className="space-y-6">
-      <p className="text-white/60 text-sm">Estilo visual e cores da página inicial.</p>
+      <p className="text-white/60 text-sm">{t('appearance.intro')}</p>
 
       {/* Style preset */}
       <div className="space-y-4">
-        <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Estilo da página</h4>
-        <p className="text-white/50 text-xs">Define fontes, cantos e ícones em todas as páginas da barbearia.</p>
+        <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">{t('appearance.styleSectionTitle')}</h4>
+        <p className="text-white/50 text-xs">{t('appearance.styleSectionDesc')}</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {(Object.entries(PRESET_LABELS) as [StylePresetId, string][]).map(([id, label]) => (
+          {(Object.entries(PRESET_LABEL_KEYS) as [StylePresetId, string][]).map(([id, labelKey]) => (
             <button
               key={id}
               type="button"
               onClick={() => setFormData((prev) => ({ ...prev, style: { ...prev.style, preset: id } }))}
               className={cn('px-3 py-2 rounded-lg text-sm font-medium transition-colors', formData.style.preset === id ? activeClass : inactiveClass)}
             >
-              {label}
+              {t(labelKey)}
             </button>
           ))}
         </div>
         <details className="mt-3">
-          <summary className="text-white/60 text-sm cursor-pointer">Ajustes opcionais</summary>
+          <summary className="text-white/60 text-sm cursor-pointer">{t('appearance.optionalAdjustments')}</summary>
           <div className="mt-3 space-y-3 pl-2 border-l border-white/10">
             <div>
-              <label className="block text-white/50 text-xs mb-1">Fonte dos títulos</label>
+              <label className="block text-white/50 text-xs mb-1">{t('appearance.headingFontLabel')}</label>
               <select
                 value={formData.style.headingFont ?? ''}
                 onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, headingFont: (e.target.value || undefined) as FontToken | undefined } }))}
                 className={inputClass}
               >
-                <option value="">Padrão do estilo</option>
+                <option value="">{t('appearance.defaultStyle')}</option>
                 {(['playfair_display', 'cormorant_garamond', 'lora', 'abril_fatface', 'oswald', 'dm_sans', 'inter', 'crimson_text', 'roboto_condensed', 'montserrat'] as FontToken[]).map((t) => (
                   <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-white/50 text-xs mb-1">Fonte do corpo</label>
+              <label className="block text-white/50 text-xs mb-1">{t('appearance.bodyFontLabel')}</label>
               <select
                 value={formData.style.bodyFont ?? ''}
                 onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, bodyFont: (e.target.value || undefined) as FontToken | undefined } }))}
                 className={inputClass}
               >
-                <option value="">Padrão do estilo</option>
+                <option value="">{t('appearance.defaultStyle')}</option>
                 {(['inter', 'lora', 'crimson_text', 'roboto_condensed', 'dm_sans', 'montserrat', 'playfair_display', 'cormorant_garamond', 'abril_fatface', 'oswald'] as FontToken[]).map((t) => (
                   <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-white/50 text-xs mb-1">Peso dos ícones (100–700)</label>
+              <label className="block text-white/50 text-xs mb-1">{t('appearance.iconWeightLabel')}</label>
               <input
                 type="number"
                 min={100}
                 max={700}
                 value={formData.style.iconWeight ?? ''}
                 onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, iconWeight: e.target.value === '' ? undefined : parseInt(e.target.value, 10) } }))}
-                placeholder="Padrão"
+                placeholder={t('appearance.default')}
                 className={inputClass}
               />
             </div>
             <div>
-              <label className="block text-white/50 text-xs mb-1">Estilo do divisor</label>
+              <label className="block text-white/50 text-xs mb-1">{t('appearance.dividerStyleLabel')}</label>
               <select
                 value={formData.style.dividerStyle ?? ''}
                 onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, dividerStyle: (e.target.value || undefined) as DividerStyle | undefined } }))}
                 className={inputClass}
               >
-                <option value="">Padrão</option>
-                <option value="line">Linha</option>
-                <option value="ornament">Ornamento</option>
-                <option value="dots">Pontos</option>
-                <option value="none">Nenhum</option>
+                <option value="">{t('appearance.default')}</option>
+                <option value="line">{t('appearance.dividerLine')}</option>
+                <option value="ornament">{t('appearance.dividerOrnament')}</option>
+                <option value="dots">{t('appearance.dividerDots')}</option>
+                <option value="none">{t('appearance.none')}</option>
               </select>
             </div>
           </div>
@@ -174,10 +176,10 @@ export function AppearanceForm({
 
       {/* Layout (hero structure, section decoration, independent from preset) */}
       <div className="space-y-4">
-        <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Layout da página</h4>
-        <p className="text-white/50 text-xs">Estrutura do hero, moldura e decoração das seções. Escolha independente do estilo.</p>
+        <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">{t('appearance.layoutSectionTitle')}</h4>
+        <p className="text-white/50 text-xs">{t('appearance.layoutSectionDesc')}</p>
         <p className="text-white/50 text-xs">
-          Recomendados para {presetName}:{' '}
+          {t('appearance.recommendedFor').replace('{preset}', presetName)}:{' '}
           {PRESET_RECOMMENDED_LAYOUTS[preset].map((id) => LAYOUT_LABELS[id]).join(', ')}.
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -195,7 +197,7 @@ export function AppearanceForm({
                 )}
               >
                 <span>{label}</span>
-                {recommended && <span className="text-[10px] uppercase tracking-wider text-white/50">Recomendado</span>}
+                {recommended && <span className="text-[10px] uppercase tracking-wider text-white/50">{t('appearance.recommended')}</span>}
               </button>
             );
           })}
@@ -205,9 +207,9 @@ export function AppearanceForm({
       {/* Color suggestions for current preset */}
       <div className="space-y-3">
         <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">
-          Sugestões de cores para {presetName}
+          {t('appearance.colorSuggestionsTitle').replace('{preset}', presetName)}
         </h4>
-        <p className="text-white/50 text-xs">Clique em um conjunto para aplicar. Use &quot;Outras sugestões&quot; para ver mais.</p>
+        <p className="text-white/50 text-xs">{t('appearance.clickToApply')}</p>
         <div className="flex flex-wrap gap-2">
           {suggestedPalettes.map((palette, idx) => (
             <button
@@ -217,9 +219,9 @@ export function AppearanceForm({
               className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-colors text-left"
             >
               <div className="flex rounded overflow-hidden border border-white/10 h-8 w-16 shrink-0">
-                <div className="flex-1" style={{ backgroundColor: palette.theme.background }} title="Fundo" />
-                <div className="flex-1" style={{ backgroundColor: palette.theme.accent }} title="Destaque" />
-                <div className="flex-1" style={{ backgroundColor: palette.theme.surfaceSecondary }} title="Superfície" />
+                <div className="flex-1" style={{ backgroundColor: palette.theme.background }} title={t('appearance.backgroundTitle')} />
+                <div className="flex-1" style={{ backgroundColor: palette.theme.accent }} title={t('appearance.accentTitle')} />
+                <div className="flex-1" style={{ backgroundColor: palette.theme.surfaceSecondary }} title={t('appearance.surfaceTitle')} />
               </div>
               <span className="text-white/90 text-xs font-medium max-w-[100px] truncate">{palette.label}</span>
             </button>
@@ -232,9 +234,9 @@ export function AppearanceForm({
               className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--shop-accent,#D4AF37)]/40 bg-[var(--shop-accent,#D4AF37)]/5 hover:bg-[var(--shop-accent,#D4AF37)]/10 transition-colors text-left"
             >
               <div className="flex rounded overflow-hidden border border-white/10 h-8 w-16 shrink-0">
-                <div className="flex-1" style={{ backgroundColor: palette.theme.background }} title="Fundo" />
-                <div className="flex-1" style={{ backgroundColor: palette.theme.accent }} title="Destaque" />
-                <div className="flex-1" style={{ backgroundColor: palette.theme.surfaceSecondary }} title="Superfície" />
+                <div className="flex-1" style={{ backgroundColor: palette.theme.background }} title={t('appearance.backgroundTitle')} />
+                <div className="flex-1" style={{ backgroundColor: palette.theme.accent }} title={t('appearance.accentTitle')} />
+                <div className="flex-1" style={{ backgroundColor: palette.theme.surfaceSecondary }} title={t('appearance.surfaceTitle')} />
               </div>
               <span className="text-white/90 text-xs font-medium max-w-[100px] truncate">{palette.label}</span>
             </button>
@@ -244,7 +246,7 @@ export function AppearanceForm({
             onClick={onRerollPalettes}
             className="px-3 py-2 rounded-lg border border-dashed border-white/30 text-white/70 text-xs hover:bg-white/10 hover:text-white transition-colors"
           >
-            Outras sugestões
+            {t('appearance.otherSuggestions')}
           </button>
           {onSaveCurrentPalette && (
             <>
@@ -255,7 +257,7 @@ export function AppearanceForm({
                     value={saveLabel}
                     onChange={(e) => setSaveLabel(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSavePalette()}
-                    placeholder="Nome do conjunto"
+                    placeholder={t('appearance.paletteNamePlaceholder')}
                     className={cn(inputClass, 'min-w-[120px]')}
                     autoFocus
                   />
@@ -264,14 +266,14 @@ export function AppearanceForm({
                     onClick={handleSavePalette}
                     className="px-3 py-2 rounded-lg bg-[var(--shop-accent,#D4AF37)]/20 text-[var(--shop-accent,#D4AF37)] text-xs font-medium hover:bg-[var(--shop-accent,#D4AF37)]/30"
                   >
-                    Salvar
+                    {t('common.save')}
                   </button>
                   <button
                     type="button"
                     onClick={() => { setShowSaveInput(false); setSaveLabel(''); }}
                     className="px-3 py-2 rounded-lg text-white/70 text-xs hover:text-white"
                   >
-                    Cancelar
+                    {t('common.cancel')}
                   </button>
                 </div>
               ) : (
@@ -280,7 +282,7 @@ export function AppearanceForm({
                   onClick={() => setShowSaveInput(true)}
                   className="px-3 py-2 rounded-lg border border-white/20 text-white/70 text-xs hover:bg-white/10 hover:text-white transition-colors"
                 >
-                  Salvar cores atuais
+                  {t('appearance.saveCurrentColors')}
                 </button>
               )}
             </>
@@ -289,9 +291,9 @@ export function AppearanceForm({
       </div>
 
       {/* Color pickers by group */}
-      {THEME_KEYS_GROUPED.map(({ group, keys }) => (
-        <div key={group} className="space-y-4">
-          <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">{group}</h4>
+      {THEME_KEYS_GROUPED.map(({ groupKey, keys }) => (
+        <div key={groupKey} className="space-y-4">
+          <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">{t(groupKey)}</h4>
           <div className="grid grid-cols-2 gap-4">
             {keys.map((key) => {
               const value = formData.theme[key] ?? '';
@@ -306,7 +308,7 @@ export function AppearanceForm({
                       onClick={() => setOpenPickerKey(isOpen ? null : key)}
                       className="w-10 h-10 rounded-lg border border-white/20 shrink-0 block"
                       style={{ backgroundColor: displayColor }}
-                      aria-label={`Escolher cor ${key}`}
+                      aria-label={t('appearance.chooseColorAria').replace('{key}', key)}
                     />
                     {isOpen && (
                       <>
@@ -341,7 +343,7 @@ export function AppearanceForm({
                           theme: { ...prev.theme, [key]: e.target.value },
                         }))
                       }
-                      placeholder="#hex ou rgba()"
+                      placeholder={t('appearance.colorPlaceholder')}
                       className={inputClass}
                     />
                   </div>

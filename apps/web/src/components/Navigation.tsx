@@ -109,7 +109,7 @@ export function Navigation() {
         backgroundColor: 'var(--shop-nav-bg, #0a0a0a)',
       }}
       role="navigation"
-      aria-label="Main navigation"
+      aria-label={t('accessibility.mainNav')}
     >
       <Container className="flex items-center justify-between gap-2 sm:gap-3 w-full max-w-full">
         {/* Logo */}

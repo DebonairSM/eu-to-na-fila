@@ -1,6 +1,7 @@
 {
   "common": {
     "back": "Back",
+    "noDataAvailable": "No data available",
     "confirm": "Confirm",
     "cancel": "Cancel",
     "save": "Save",
@@ -13,7 +14,23 @@
   },
   "accessibility": {
     "skipLink": "Skip to main content",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "mainNav": "Main navigation",
+    "openMenu": "Open menu",
+    "closeModal": "Close modal"
+  },
+  "auth": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
+  },
+  "companyNav": {
+    "home": "Home",
+    "about": "About",
+    "gallery": "Gallery",
+    "contact": "Contact",
+    "menu": "Menu",
+    "openMenu": "Open menu",
+    "tagline": "Virtual Line Software"
   },
   "locale": {
     "pt-BR": "Portuguese",
@@ -300,7 +317,14 @@
     "allowDuplicateNames": "Allow duplicate names in queue",
     "deviceDeduplication": "Prevent multiple tickets per device",
     "allowCustomerCancelInProgress": "Allow customer to cancel in-progress service",
-    "allowAppointments": "Allow appointments (hybrid queue with scheduled time)"
+    "allowAppointments": "Allow appointments (hybrid queue with scheduled time)",
+    "noShopsRegistered": "No shops registered",
+    "noBarbersInShop": "No barbers registered in this shop.",
+    "removeShopTitle": "Remove Shop",
+    "addShopAria": "Add new shop",
+    "closeErrorAria": "Close error message",
+    "leaveBlankToNotChange": "Leave blank to not change",
+    "usernamePlaceholder": "E.g. joao.silva"
   },
   "company": {
     "dashboardTitle": "Company Dashboard",
@@ -311,8 +335,10 @@
     "activeAds": "Active Ads",
     "manageAds": "Manage Ads",
     "manageShops": "Manage Shops",
+    "manageShopsSubtitle": "Add, edit or remove shops from your company",
     "logout": "Log out",
     "newShop": "New Shop",
+    "addShop": "Add Shop",
     "shopsTitle": "Shops"
   },
   "dashboard": {
@@ -365,6 +391,7 @@
     "title": "Projects",
     "subtitle": "Our projects",
     "loadError": "Error loading projects",
+    "noProjects": "No projects registered.",
     "defaultDescription": "Real-time virtual queue for barbershops. Clients join, track and get called in turn. Live position, wait estimate, notifications. Owner panel, analytics and public page per shop. Includes PWA for kiosks."
   },
   "createShop": {
@@ -485,6 +512,11 @@
     "removeButton": "Remove",
     "completeButton": "Complete",
     "editBarber": "Edit Barber",
+    "editAria": "Edit {name}",
+    "editBarberAria": "Edit barber {name}",
+    "removeAria": "Remove {name}",
+    "avatarUrlPlaceholder": "https://example.com/avatar.jpg",
+    "nameExamplePlaceholder": "E.g. joao",
     "loginOptionalHint": "Login for barber to access \"My performance\" (optional)",
     "loginForPerformance": "Login for \"My performance\"",
     "newPassword": "New password",
@@ -493,7 +525,16 @@
     "keepPasswordPlaceholder": "Leave blank to keep current",
     "deleteBarberTitle": "Remove Barber",
     "deleteBarberMessage": "Are you sure you want to remove this barber? All customers assigned to them will be unassigned.",
-    "addButton": "Add"
+    "addButton": "Add",
+    "createAppointment": "Create appointment",
+    "creating": "Creating...",
+    "noAttendanceInPeriod": "No attendance in period.",
+    "noDataInPeriod": "No data in period.",
+    "loadingPerformance": "Loading your performance...",
+    "attendancesByDay": "Attendance by day",
+    "byService": "By service",
+    "dataUnavailable": "Data unavailable",
+    "loadStatsError": "Error loading statistics."
   },
   "staff": {
     "panel": "Panel",
@@ -530,10 +571,52 @@
     "chooseFile": "Choose file",
     "sending": "Sending...",
     "noAdsYet": "No ads uploaded yet.",
+    "noAdsAvailable": "No ads available",
     "backToDashboard": "Back to Dashboard",
     "maxSizeHint": "PNG, JPEG, WebP or MP4. Max 50MB",
     "deleteButton": "Delete",
     "activeShort": "Active",
     "inactiveShort": "Inactive"
+  },
+  "appearance": {
+    "intro": "Visual style and colors for the home page.",
+    "groupPrimary": "Primary and accent",
+    "groupBackground": "Background and surfaces",
+    "groupNav": "Navigation and text",
+    "groupExtras": "Accent (extras)",
+    "defaultStyle": "Style default",
+    "default": "Default",
+    "none": "None",
+    "dividerLine": "Line",
+    "dividerOrnament": "Ornament",
+    "dividerDots": "Dots",
+    "layoutSectionTitle": "Page layout",
+    "layoutSectionDesc": "Hero structure, frame and section decoration. Independent of style.",
+    "recommendedFor": "Recommended for {preset}",
+    "recommended": "Recommended",
+    "colorSuggestionsTitle": "Color suggestions for {preset}",
+    "clickToApply": "Click a set to apply. Use \"Other suggestions\" to see more.",
+    "otherSuggestions": "Other suggestions",
+    "paletteNamePlaceholder": "Set name",
+    "saveCurrentColors": "Save current colors",
+    "myColorsDefault": "My colors",
+    "backgroundTitle": "Background",
+    "accentTitle": "Accent",
+    "surfaceTitle": "Surface",
+    "chooseColorAria": "Choose color {key}",
+    "colorPlaceholder": "#hex or rgba()",
+    "presetModern": "Modern",
+    "presetClassical": "Classical",
+    "presetVintage": "Vintage",
+    "presetLuxury": "Luxury",
+    "presetIndustrial": "Industrial",
+    "presetMinimal": "Minimal",
+    "styleSectionTitle": "Page style",
+    "styleSectionDesc": "Defines fonts, corners and icons across all shop pages.",
+    "optionalAdjustments": "Optional adjustments",
+    "headingFontLabel": "Heading font",
+    "bodyFontLabel": "Body font",
+    "iconWeightLabel": "Icon weight (100–700)",
+    "dividerStyleLabel": "Divider style"
   }
 }

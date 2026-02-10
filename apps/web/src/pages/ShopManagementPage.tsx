@@ -382,7 +382,7 @@ export function ShopManagementPage() {
             <button
               onClick={() => setErrorMessage(null)}
               className="text-white/80 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Fechar mensagem de erro"
+              aria-label={t('management.closeErrorAria')}
             >
               <span className="material-symbols-outlined">close</span>
             </button>
@@ -391,19 +391,19 @@ export function ShopManagementPage() {
         <main className="py-20">
           <Container size="2xl">
           <div className="text-center mb-16">
-            <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Gerenciar Barbearias</h1>
+            <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">{t('company.manageShops')}</h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-              Adicione, edite ou remova barbearias da sua empresa
+              {t('company.manageShopsSubtitle')}
             </p>
           </div>
 
           <button
             onClick={() => navigate('/company/shops/new')}
             className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-white text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-medium transition-all hover:bg-gray-100 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-white/30"
-            aria-label="Adicionar nova barbearia"
+            aria-label={t('management.addShopAria')}
           >
             <span className="material-symbols-outlined text-lg sm:text-xl" aria-hidden="true">add</span>
-            Adicionar Barbearia
+            {t('company.addShop')}
           </button>
 
         {/* Shops Grid */}
@@ -424,7 +424,7 @@ export function ShopManagementPage() {
             <span className="material-symbols-outlined text-[3rem] sm:text-[4rem] text-[rgba(255,255,255,0.5)] mb-3 sm:mb-4 block" aria-hidden="true">
               store
             </span>
-            <p className="text-sm sm:text-base">Nenhuma barbearia cadastrada</p>
+            <p className="text-sm sm:text-base">{t('management.noShopsRegistered')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 sm:mb-10">
@@ -716,7 +716,7 @@ export function ShopManagementPage() {
                               autoComplete="new-password"
                               value={formData.ownerPassword}
                               onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })}
-                              placeholder="Deixe em branco para não alterar"
+                              placeholder={t('management.leaveBlankToNotChange')}
                               className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
                             />
                             <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
@@ -729,7 +729,7 @@ export function ShopManagementPage() {
                               autoComplete="new-password"
                               value={formData.staffPassword}
                               onChange={(e) => setFormData({ ...formData, staffPassword: e.target.value })}
-                              placeholder="Deixe em branco para não alterar"
+                              placeholder={t('management.leaveBlankToNotChange')}
                               className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
                             />
                             <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
@@ -742,7 +742,7 @@ export function ShopManagementPage() {
                         {barberAccessLoading ? (
                           <p className="text-white/50 text-sm">Carregando barbeiros...</p>
                         ) : barberAccess.length === 0 ? (
-                          <p className="text-white/50 text-sm">Nenhum barbeiro cadastrado nesta barbearia.</p>
+                          <p className="text-white/50 text-sm">{t('management.noBarbersInShop')}</p>
                         ) : (
                           <ul className="space-y-4">
                             {barberAccess.map((row) => (
@@ -755,7 +755,7 @@ export function ShopManagementPage() {
                                       type="text"
                                       value={row.username}
                                       onChange={(e) => setBarberAccess((prev) => prev.map((r) => r.barberId === row.barberId ? { ...r, username: e.target.value } : r))}
-                                      placeholder="Ex: joao.silva"
+                                      placeholder={t('management.usernamePlaceholder')}
                                       className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[40px] placeholder:text-white/40"
                                     />
                                   </div>
@@ -766,7 +766,7 @@ export function ShopManagementPage() {
                                       autoComplete="new-password"
                                       value={row.password}
                                       onChange={(e) => setBarberAccess((prev) => prev.map((r) => r.barberId === row.barberId ? { ...r, password: e.target.value } : r))}
-                                      placeholder="Deixe em branco para não alterar"
+                                      placeholder={t('management.leaveBlankToNotChange')}
                                       className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[40px] placeholder:text-white/40"
                                     />
                                   </div>
@@ -800,7 +800,7 @@ export function ShopManagementPage() {
             isOpen={deleteConfirmModal.isOpen}
             onClose={deleteConfirmModal.close}
             onConfirm={handleDelete}
-            title="Remover Barbearia"
+            title={t('management.removeShopTitle')}
             message="Tem certeza que deseja remover esta barbearia? Esta ação não pode ser desfeita."
             confirmText="Remover"
             cancelText="Cancelar"
@@ -829,7 +829,7 @@ export function ShopManagementPage() {
           <button
             onClick={() => setErrorMessage(null)}
             className="text-white/80 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label="Fechar mensagem de erro"
+            aria-label={t('management.closeErrorAria')}
           >
             <span className="material-symbols-outlined">close</span>
           </button>
@@ -838,20 +838,20 @@ export function ShopManagementPage() {
       <main className="container max-w-[1200px] mx-auto px-4 sm:px-6 pt-24 pb-10 relative z-10">
         <div className="text-center mb-8">
           <h1 className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37] mb-3">
-            Gerenciar Barbearias
+            {t('company.manageShops')}
           </h1>
           <p className="text-white/60 mt-2 text-sm">
-            Adicione, edite ou remova barbearias da sua empresa
+            {t('company.manageShopsSubtitle')}
           </p>
         </div>
 
         <button
           onClick={() => navigate('/company/shops/new')}
           className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(212,175,55,0.4)] min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
-          aria-label="Adicionar nova barbearia"
+          aria-label={t('management.addShopAria')}
         >
           <span className="material-symbols-outlined text-lg sm:text-xl" aria-hidden="true">add</span>
-          Adicionar Barbearia
+          {t('company.addShop')}
         </button>
 
         {/* Shops Grid */}
@@ -872,7 +872,7 @@ export function ShopManagementPage() {
             <span className="material-symbols-outlined text-[3rem] sm:text-[4rem] text-[rgba(255,255,255,0.5)] mb-3 sm:mb-4 block" aria-hidden="true">
               store
             </span>
-            <p className="text-sm sm:text-base">Nenhuma barbearia cadastrada</p>
+            <p className="text-sm sm:text-base">{t('management.noShopsRegistered')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
@@ -1059,7 +1059,7 @@ export function ShopManagementPage() {
                           autoComplete="new-password"
                           value={formData.ownerPassword}
                           onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })}
-                          placeholder="Deixe em branco para não alterar"
+                          placeholder={t('management.leaveBlankToNotChange')}
                           className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
                         />
                         <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
@@ -1072,7 +1072,7 @@ export function ShopManagementPage() {
                           autoComplete="new-password"
                           value={formData.staffPassword}
                           onChange={(e) => setFormData({ ...formData, staffPassword: e.target.value })}
-                          placeholder="Deixe em branco para não alterar"
+                          placeholder={t('management.leaveBlankToNotChange')}
                           className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
                         />
                         <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
@@ -1085,7 +1085,7 @@ export function ShopManagementPage() {
                     {barberAccessLoading ? (
                       <p className="text-white/50 text-sm">Carregando barbeiros...</p>
                     ) : barberAccess.length === 0 ? (
-                      <p className="text-white/50 text-sm">Nenhum barbeiro cadastrado nesta barbearia.</p>
+                      <p className="text-white/50 text-sm">{t('management.noBarbersInShop')}</p>
                     ) : (
                       <ul className="space-y-4">
                         {barberAccess.map((row) => (
@@ -1098,7 +1098,7 @@ export function ShopManagementPage() {
                                   type="text"
                                   value={row.username}
                                   onChange={(e) => setBarberAccess((prev) => prev.map((r) => r.barberId === row.barberId ? { ...r, username: e.target.value } : r))}
-                                  placeholder="Ex: joao.silva"
+                                  placeholder={t('management.usernamePlaceholder')}
                                   className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[40px] placeholder:text-white/40"
                                 />
                               </div>
@@ -1109,7 +1109,7 @@ export function ShopManagementPage() {
                                   autoComplete="new-password"
                                   value={row.password}
                                   onChange={(e) => setBarberAccess((prev) => prev.map((r) => r.barberId === row.barberId ? { ...r, password: e.target.value } : r))}
-                                  placeholder="Deixe em branco para não alterar"
+                                  placeholder={t('management.leaveBlankToNotChange')}
                                   className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[40px] placeholder:text-white/40"
                                 />
                               </div>
@@ -1150,7 +1150,7 @@ export function ShopManagementPage() {
         isOpen={deleteConfirmModal.isOpen}
         onClose={deleteConfirmModal.close}
         onConfirm={handleDelete}
-        title="Remover Barbearia"
+        title={t('management.removeShopTitle')}
         message="Tem certeza que deseja remover esta barbearia? Esta ação não pode ser desfeita."
         confirmText="Remover"
         cancelText="Cancelar"

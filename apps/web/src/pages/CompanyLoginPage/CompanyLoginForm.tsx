@@ -130,7 +130,7 @@ export function CompanyLoginForm() {
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgba(255,255,255,0.7)] hover:text-white p-2 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+            aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
           >
             <span className="material-symbols-outlined text-xl">
               {showPassword ? 'visibility_off' : 'visibility'}

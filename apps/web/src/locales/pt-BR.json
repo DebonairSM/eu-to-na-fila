@@ -1,6 +1,7 @@
 {
   "common": {
     "back": "Voltar",
+    "noDataAvailable": "Nenhum dado disponível",
     "confirm": "Confirmar",
     "cancel": "Cancelar",
     "save": "Salvar",
@@ -13,7 +14,23 @@
   },
   "accessibility": {
     "skipLink": "Pular para o conteúdo principal",
-    "loading": "Carregando…"
+    "loading": "Carregando…",
+    "mainNav": "Navegação principal",
+    "openMenu": "Abrir menu",
+    "closeModal": "Fechar modal"
+  },
+  "auth": {
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha"
+  },
+  "companyNav": {
+    "home": "Início",
+    "about": "Sobre",
+    "gallery": "Galeria",
+    "contact": "Contato",
+    "menu": "Menu",
+    "openMenu": "Abrir menu",
+    "tagline": "Virtual Line Software"
   },
   "locale": {
     "pt-BR": "Português",
@@ -300,7 +317,14 @@
     "allowDuplicateNames": "Permitir nomes duplicados na fila",
     "deviceDeduplication": "Impedir múltiplos tickets por dispositivo",
     "allowCustomerCancelInProgress": "Permitir cliente cancelar atendimento em andamento",
-    "allowAppointments": "Permitir agendamentos (fila híbrida com horário marcado)"
+    "allowAppointments": "Permitir agendamentos (fila híbrida com horário marcado)",
+    "noShopsRegistered": "Nenhuma barbearia cadastrada",
+    "noBarbersInShop": "Nenhum barbeiro cadastrado nesta barbearia.",
+    "removeShopTitle": "Remover Barbearia",
+    "addShopAria": "Adicionar nova barbearia",
+    "closeErrorAria": "Fechar mensagem de erro",
+    "leaveBlankToNotChange": "Deixe em branco para não alterar",
+    "usernamePlaceholder": "Ex: joao.silva"
   },
   "company": {
     "dashboardTitle": "Dashboard Empresarial",
@@ -311,8 +335,10 @@
     "activeAds": "Anúncios Ativos",
     "manageAds": "Gerenciar Anúncios",
     "manageShops": "Gerenciar Barbearias",
+    "manageShopsSubtitle": "Adicione, edite ou remova barbearias da sua empresa",
     "logout": "Sair",
     "newShop": "Nova Barbearia",
+    "addShop": "Adicionar Barbearia",
     "shopsTitle": "Barbearias"
   },
   "dashboard": {
@@ -365,6 +391,7 @@
     "title": "Projetos",
     "subtitle": "Nossos projetos",
     "loadError": "Erro ao carregar projetos",
+    "noProjects": "Nenhum projeto cadastrado.",
     "defaultDescription": "Fila virtual em tempo real para barbearias. Clientes entram, acompanham e são chamados na vez. Posição ao vivo, estimativa de espera, notificações. Painel para o dono, analytics e página pública por barbearia. Inclui PWA para totens."
   },
   "createShop": {
@@ -485,6 +512,11 @@
     "removeButton": "Remover",
     "completeButton": "Finalizar",
     "editBarber": "Editar Barbeiro",
+    "editAria": "Editar {name}",
+    "editBarberAria": "Editar barbeiro {name}",
+    "removeAria": "Remover {name}",
+    "avatarUrlPlaceholder": "https://example.com/avatar.jpg",
+    "nameExamplePlaceholder": "Ex: joao",
     "loginOptionalHint": "Login para o barbeiro acessar \"Meu desempenho\" (opcional)",
     "loginForPerformance": "Login para \"Meu desempenho\"",
     "newPassword": "Nova senha",
@@ -493,7 +525,16 @@
     "keepPasswordPlaceholder": "Deixe em branco para manter a atual",
     "deleteBarberTitle": "Remover Barbeiro",
     "deleteBarberMessage": "Tem certeza que deseja remover este barbeiro? Todos os clientes atribuídos a ele serão desatribuídos.",
-    "addButton": "Adicionar"
+    "addButton": "Adicionar",
+    "createAppointment": "Criar agendamento",
+    "creating": "Criando...",
+    "noAttendanceInPeriod": "Nenhum atendimento no período.",
+    "noDataInPeriod": "Nenhum dado no período.",
+    "loadingPerformance": "Carregando seu desempenho...",
+    "attendancesByDay": "Atendimentos por dia",
+    "byService": "Por serviço",
+    "dataUnavailable": "Dados não disponíveis",
+    "loadStatsError": "Erro ao carregar estatísticas."
   },
   "staff": {
     "panel": "Painel",
@@ -530,10 +571,52 @@
     "chooseFile": "Escolher arquivo",
     "sending": "Enviando...",
     "noAdsYet": "Nenhum anúncio cadastrado ainda.",
+    "noAdsAvailable": "Nenhum anúncio disponível",
     "backToDashboard": "Voltar ao Dashboard",
     "maxSizeHint": "PNG, JPEG, WebP ou MP4. Máximo 50MB",
     "deleteButton": "Excluir",
     "activeShort": "Ativo",
     "inactiveShort": "Inativo"
+  },
+  "appearance": {
+    "intro": "Estilo visual e cores da página inicial.",
+    "groupPrimary": "Principal e destaque",
+    "groupBackground": "Fundo e superfícies",
+    "groupNav": "Navegação e texto",
+    "groupExtras": "Destaque (extras)",
+    "defaultStyle": "Padrão do estilo",
+    "default": "Padrão",
+    "none": "Nenhum",
+    "dividerLine": "Linha",
+    "dividerOrnament": "Ornamento",
+    "dividerDots": "Pontos",
+    "layoutSectionTitle": "Layout da página",
+    "layoutSectionDesc": "Estrutura do hero, moldura e decoração das seções. Escolha independente do estilo.",
+    "recommendedFor": "Recomendados para {preset}",
+    "recommended": "Recomendado",
+    "colorSuggestionsTitle": "Sugestões de cores para {preset}",
+    "clickToApply": "Clique em um conjunto para aplicar. Use \"Outras sugestões\" para ver mais.",
+    "otherSuggestions": "Outras sugestões",
+    "paletteNamePlaceholder": "Nome do conjunto",
+    "saveCurrentColors": "Salvar cores atuais",
+    "myColorsDefault": "Minhas cores",
+    "backgroundTitle": "Fundo",
+    "accentTitle": "Destaque",
+    "surfaceTitle": "Superfície",
+    "chooseColorAria": "Escolher cor {key}",
+    "colorPlaceholder": "#hex ou rgba()",
+    "presetModern": "Moderno",
+    "presetClassical": "Clássico",
+    "presetVintage": "Vintage",
+    "presetLuxury": "Luxo",
+    "presetIndustrial": "Industrial",
+    "presetMinimal": "Minimal",
+    "styleSectionTitle": "Estilo da página",
+    "styleSectionDesc": "Define fontes, cantos e ícones em todas as páginas da barbearia.",
+    "optionalAdjustments": "Ajustes opcionais",
+    "headingFontLabel": "Fonte dos títulos",
+    "bodyFontLabel": "Fonte do corpo",
+    "iconWeightLabel": "Peso dos ícones (100–700)",
+    "dividerStyleLabel": "Estilo do divisor"
   }
 }

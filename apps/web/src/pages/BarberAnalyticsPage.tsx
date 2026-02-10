@@ -30,7 +30,7 @@ interface BarberAnalyticsData {
 export function BarberAnalyticsPage() {
   const shopSlug = useShopSlug();
   const { isBarber, user } = useAuthContext();
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const navigate = useNavigate();
   const [days, setDays] = useState(30);
   const [data, setData] = useState<BarberAnalyticsData | null>(null);
@@ -50,20 +50,20 @@ export function BarberAnalyticsPage() {
         const result = await api.getBarberAnalytics(shopSlug, days);
         setData(result);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Erro ao carregar estatísticas.'));
+        setError(err instanceof Error ? err : new Error(t('barber.loadStatsError')));
       } finally {
         setIsLoading(false);
       }
     };
     fetchAnalytics();
-  }, [days, shopSlug]);
+  }, [days, shopSlug, t]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[var(--shop-background)]">
         <Navigation />
         <div className="flex items-center justify-center min-h-[60vh] pt-24">
-          <LoadingSpinner size="lg" text="Carregando seu desempenho..." />
+          <LoadingSpinner size="lg" text={t('barber.loadingPerformance')} />
         </div>
       </div>
     );
@@ -74,7 +74,7 @@ export function BarberAnalyticsPage() {
       <div className="min-h-screen bg-[var(--shop-background)]">
         <Navigation />
         <Container className="pt-24 pb-12">
-          <ErrorDisplay error={error ?? new Error('Dados não disponíveis')} />
+          <ErrorDisplay error={error ?? new Error(t('barber.dataUnavailable'))} />
         </Container>
       </div>
     );
@@ -142,10 +142,10 @@ export function BarberAnalyticsPage() {
           <Card variant="default" className="bg-white/5 border-white/10">
             <CardContent className="p-6">
               <Heading level={2} className="text-lg text-white mb-4">
-                Atendimentos por dia
+                {t('barber.attendancesByDay')}
               </Heading>
               {daysList.length === 0 ? (
-                <Text variant="secondary">Nenhum atendimento no período.</Text>
+                <Text variant="secondary">{t('barber.noAttendanceInPeriod')}</Text>
               ) : (
                 <ul className="space-y-2 max-h-64 overflow-y-auto">
                   {daysList.map(([day, count]) => (
@@ -168,10 +168,10 @@ export function BarberAnalyticsPage() {
           <Card variant="default" className="bg-white/5 border-white/10">
             <CardContent className="p-6">
               <Heading level={2} className="text-lg text-white mb-4">
-                Por serviço
+                {t('barber.byService')}
               </Heading>
               {serviceBreakdown.length === 0 ? (
-                <Text variant="secondary">Nenhum dado no período.</Text>
+                <Text variant="secondary">{t('barber.noDataInPeriod')}</Text>
               ) : (
                 <ul className="space-y-3">
                   {serviceBreakdown.map((s) => (

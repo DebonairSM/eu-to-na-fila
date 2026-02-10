@@ -37,7 +37,7 @@ function Nav() {
           <button
             className="md:hidden p-2 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400"
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Menu"
+            aria-label={t('nav.menu')}
             aria-expanded={mobileOpen}
           >
             <span className="material-symbols-outlined text-xl">{mobileOpen ? 'close' : 'menu'}</span>

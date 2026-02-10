@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export function Modal({
   title,
   showCloseButton = false,
 }: ModalProps) {
+  const { t } = useLocale();
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
@@ -138,7 +140,7 @@ export function Modal({
               <button
                 onClick={onClose}
                 className="ml-auto rounded-md opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                aria-label="Close modal"
+                aria-label={t('accessibility.closeModal')}
               >
                 <span className="material-symbols-outlined text-2xl">close</span>
               </button>

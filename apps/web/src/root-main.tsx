@@ -11,7 +11,7 @@ import { AdManagementPage } from './pages/AdManagementPage';
 import { ShopManagementPage } from './pages/ShopManagementPage';
 import { CreateShopPage } from './pages/CreateShopPage';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
-import { LocaleProvider } from './contexts/LocaleContext';
+import { LocaleProvider, useLocale } from './contexts/LocaleContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Navigate } from 'react-router-dom';
 import './styles/globals.css';
@@ -19,11 +19,20 @@ import './styles/globals.css';
 // Always use dark theme (matching mockups)
 document.documentElement.classList.add('dark');
 
+function LoadingScreen() {
+  const { t } = useLocale();
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+      {t('common.loading')}
+    </div>
+  );
+}
+
 function ProtectedRoute({ children, requireCompanyAdmin = false }: { children: React.ReactNode; requireCompanyAdmin?: boolean }) {
   const { isAuthenticated, isCompanyAdmin, isLoading } = useAuthContext();
 
   if (isLoading) {
-    return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">Loading...</div>;
+    return <LoadingScreen />;
   }
 
   if (!isAuthenticated) {

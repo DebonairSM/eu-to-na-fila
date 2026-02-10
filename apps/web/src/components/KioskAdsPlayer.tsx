@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export interface KioskAd {
   id: number;
@@ -14,6 +15,7 @@ interface KioskAdsPlayerProps {
 }
 
 export function KioskAdsPlayer({ ads, currentAdIndex }: KioskAdsPlayerProps) {
+  const { t } = useLocale();
   const [mediaRetry, setMediaRetry] = useState(0);
   const [mediaError, setMediaError] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -35,7 +37,7 @@ export function KioskAdsPlayer({ ads, currentAdIndex }: KioskAdsPlayerProps) {
   if (!currentAd) {
     return (
       <div className="w-full h-full bg-black flex items-center justify-center">
-        <div className="text-white/50 text-sm">Nenhum anúncio disponível</div>
+        <div className="text-white/50 text-sm">{t('ads.noAdsAvailable')}</div>
       </div>
     );
   }

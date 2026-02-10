@@ -897,7 +897,7 @@ export function BarberQueueManager() {
                 Cancelar
               </Button>
               <Button type="submit" disabled={appointmentSubmitting} className="flex-1">
-                {appointmentSubmitting ? 'Criando...' : 'Criar agendamento'}
+                {appointmentSubmitting ? t('barber.creating') : t('barber.createAppointment')}
               </Button>
             </div>
           </form>

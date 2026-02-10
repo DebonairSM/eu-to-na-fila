@@ -265,7 +265,7 @@ export function BarberManagementPage() {
                     type="button"
                     className="barber-avatar w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[var(--shop-accent)] to-[var(--shop-accent-hover)] flex items-center justify-center text-xl sm:text-2xl font-semibold text-[var(--shop-text-on-accent)] flex-shrink-0 cursor-pointer transition-all hover:scale-105 relative focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
                     onClick={() => openEditModal(barber)}
-                    aria-label={`Editar ${barber.name}`}
+                    aria-label={t('barber.editAria').replace('{name}', barber.name)}
                   >
                     {barber.avatarUrl ? (
                       <img
@@ -334,7 +334,7 @@ export function BarberManagementPage() {
                   <button
                     onClick={() => openEditModal(barber)}
                     className="action-btn flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border-none rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:bg-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] hover:text-[var(--shop-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
-                    aria-label={`Editar barbeiro ${barber.name}`}
+                    aria-label={t('barber.editBarberAria').replace('{name}', barber.name)}
                   >
                     {t('barber.edit')}
                   </button>
@@ -344,7 +344,7 @@ export function BarberManagementPage() {
                       deleteConfirmModal.open();
                     }}
                     className="action-btn delete flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-[rgba(239,68,68,0.3)] rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(239,68,68,0.2)] text-[#ef4444] hover:bg-[rgba(239,68,68,0.3)] focus:outline-none focus:ring-2 focus:ring-[#ef4444] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
-                    aria-label={`${t('barber.remove')} ${barber.name}`}
+                    aria-label={t('barber.removeAria').replace('{name}', barber.name)}
                   >
                     {t('barber.remove')}
                   </button>
@@ -503,7 +503,7 @@ export function BarberManagementPage() {
                   type="url"
                   value={formData.avatarUrl}
                   onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
-                  placeholder="https://example.com/avatar.jpg"
+                  placeholder={t('barber.avatarUrlPlaceholder')}
                   className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[rgba(255,255,255,0.3)]"
                 />
               </div>
@@ -521,7 +521,7 @@ export function BarberManagementPage() {
                       type="text"
                       value={formData.username}
                       onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                      placeholder="Ex: joao"
+                      placeholder={t('barber.nameExamplePlaceholder')}
                       autoComplete="off"
                       className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-[var(--shop-text-primary)] text-sm min-h-[40px] focus:outline-none focus:border-[var(--shop-accent)]"
                     />
@@ -606,7 +606,7 @@ export function BarberManagementPage() {
                   type="url"
                   value={formData.avatarUrl}
                   onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
-                  placeholder="https://example.com/avatar.jpg"
+                  placeholder={t('barber.avatarUrlPlaceholder')}
                   className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[rgba(255,255,255,0.3)]"
                 />
               </div>

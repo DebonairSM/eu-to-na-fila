@@ -208,7 +208,7 @@ export function AdManagementPage() {
 
           {/* Upload Section */}
           <div className="mb-8 border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-6">
-            <h2 className="text-xl font-semibold mb-4">Adicionar Novo Anúncio</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('ads.addNew')}</h2>
               <label className="block">
                 <input
                   type="file"
