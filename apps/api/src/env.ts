@@ -19,6 +19,11 @@ const envSchema = z.object({
     .default(
       `postgresql://${process.env.USER || process.env.USERNAME || 'postgres'}@localhost:5432/eutonafila`
     ),
+  /** Max connections in the DB pool. Keep low (e.g. 3–5) for Supabase Session mode to avoid MaxClientsInSessionMode. */
+  DATABASE_POOL_MAX: z
+    .string()
+    .optional()
+    .transform((s) => (s != null && s !== '' ? Number(s) : undefined)),
   JWT_SECRET: z.string().min(32).default('change_me_in_production_use_a_long_random_string_at_least_32_chars'),
   CORS_ORIGIN: z.string().default('http://localhost:4040'),
   SHOP_SLUG: z.string().default('mineiro'),

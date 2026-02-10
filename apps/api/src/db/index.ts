@@ -7,7 +7,7 @@ const { Pool } = pg;
 
 const pool = new Pool({
   connectionString: env.DATABASE_URL,
-  max: 20,
+  max: env.DATABASE_POOL_MAX ?? 5,
   connectionTimeoutMillis: 10000,
   idleTimeoutMillis: 30000,
 });
