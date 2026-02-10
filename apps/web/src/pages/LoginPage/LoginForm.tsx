@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLoginForm } from './hooks/useLoginForm';
 
@@ -14,8 +13,6 @@ export function LoginForm() {
     error,
     handleSubmit,
   } = useLoginForm();
-
-  const [showDemoCredentials, setShowDemoCredentials] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -39,7 +36,6 @@ export function LoginForm() {
             onChange={(e) => setUsername(e.target.value)}
             placeholder=" "
             autoComplete="username"
-            aria-describedby="username-hint"
             className="w-full px-4 py-4 pt-6 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)] text-base placeholder:text-[var(--shop-text-secondary)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
           />
           <label
@@ -51,9 +47,6 @@ export function LoginForm() {
             Usuário <span className="text-white/40">(barbeiros)</span>
           </label>
         </div>
-        <p id="username-hint" className="text-xs text-white/40 mt-1 mb-2">
-          Deixe em branco para login com senha (dono/funcionário)
-        </p>
 
         <div className="relative">
           <input
@@ -110,38 +103,6 @@ export function LoginForm() {
           )}
         </button>
       </form>
-
-      <div className="border-t border-[var(--shop-border-color)] pt-4">
-        <button
-          type="button"
-          onClick={() => setShowDemoCredentials(!showDemoCredentials)}
-          className="w-full flex items-center justify-between text-xs text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] transition-colors min-h-[44px]"
-        >
-          <span>Credenciais de teste</span>
-          <span className="material-symbols-outlined text-lg transition-transform">
-            {showDemoCredentials ? 'expand_less' : 'expand_more'}
-          </span>
-        </button>
-        {showDemoCredentials && (
-          <div className="mt-3 p-3 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[var(--shop-border-color)]">
-            <div className="text-xs text-[var(--shop-text-secondary)] space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm text-[var(--shop-accent)]">admin_panel_settings</span>
-                <span>Dono: usuário em branco / senha 123456</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm text-[var(--shop-accent)]">badge</span>
-                <span>Funcionário: usuário em branco / senha 000000</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm text-[var(--shop-accent)]">content_cut</span>
-                <span>Barbeiro: barber / barber123</span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
 
       <div className="text-center pt-2">
         <Link 

@@ -25,7 +25,7 @@ export function JoinPage() {
           <JoinForm />
 
           <p className="text-center text-sm text-[rgba(255,255,255,0.7)]">
-            <Link to="/home" className="text-[#D4AF37] hover:underline">
+            <Link to="/home" className="text-[var(--shop-accent)] hover:underline hover:text-[var(--shop-accent-hover)]">
               Ver status
             </Link>
           </p>

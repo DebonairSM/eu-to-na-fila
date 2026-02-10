@@ -1,6 +1,6 @@
 import { useJoinForm } from './hooks/useJoinForm';
 import { ActiveBarbersInfo } from './ActiveBarbersInfo';
-import { Card, CardContent, Input, InputLabel, InputError, Button, Stack } from '@/components/design-system';
+import { Card, CardContent, Input, InputLabel, InputError, Button } from '@/components/design-system';
 
 export function JoinForm() {
   const {
@@ -38,9 +38,9 @@ export function JoinForm() {
     <Card variant="default" className="join-form-card shadow-lg min-w-[320px]">
       <CardContent className="p-6 sm:p-8">
         <form onSubmit={handleSubmit} autoComplete="off">
-          <Stack spacing="lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
             {hasServices && activeServices.length >= 2 && (
-              <div>
+              <div className="min-w-0">
                 <InputLabel htmlFor="service">Serviço *</InputLabel>
                 <select
                   id="service"
@@ -50,7 +50,7 @@ export function JoinForm() {
                     setSelectedServiceId(v ? parseInt(v, 10) : null);
                   }}
                   required
-                  className="form-control-select min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                  className="form-control-select w-full max-w-full"
                 >
                   <option value="">Selecione...</option>
                   {activeServices.map((s) => (
@@ -64,7 +64,7 @@ export function JoinForm() {
               </div>
             )}
 
-            <div>
+            <div className="min-w-0">
               <InputLabel htmlFor="customerName">Nome *</InputLabel>
               <Input
                 id="customerName"
@@ -81,7 +81,7 @@ export function JoinForm() {
                 data-form-type="other"
                 required
                 error={!!validationError}
-                className="min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                className="w-full max-w-full"
                 onFocus={(e) => {
                   // Prevent autofill UI by temporarily making readOnly
                   const input = e.target as HTMLInputElement;
@@ -95,7 +95,7 @@ export function JoinForm() {
             </div>
 
             {settings.requirePhone && (
-              <div>
+              <div className="min-w-0">
                 <InputLabel htmlFor="customerPhone">Telefone *</InputLabel>
                 <Input
                   id="customerPhone"
@@ -104,13 +104,13 @@ export function JoinForm() {
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomerPhone(e.target.value)}
                   placeholder="(00) 00000-0000"
                   required
-                  className="min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                  className="w-full max-w-full"
                 />
               </div>
             )}
 
             {settings.requireBarberChoice && barbers.length > 0 && (
-              <div>
+              <div className="min-w-0">
                 <InputLabel htmlFor="preferredBarber">Barbeiro *</InputLabel>
                 <select
                   id="preferredBarber"
@@ -120,7 +120,7 @@ export function JoinForm() {
                     setSelectedBarberId(v ? parseInt(v, 10) : null);
                   }}
                   required
-                  className="form-control-select min-w-[200px] sm:min-w-[250px] max-w-[300px]"
+                  className="form-control-select w-full max-w-full"
                 >
                   <option value="">Selecione...</option>
                   {barbers.filter(b => b.isActive).map((b) => (
@@ -129,6 +129,9 @@ export function JoinForm() {
                 </select>
               </div>
             )}
+          </div>
+
+          <div className="mt-6 space-y-6">
 
             {nameCollisionError && (
               <div className="p-4 rounded-lg bg-[#ef4444]/20 border-2 border-[#ef4444] flex items-start gap-3">
@@ -209,7 +212,7 @@ export function JoinForm() {
                 </>
               )}
             </Button>
-          </Stack>
+          </div>
         </form>
       </CardContent>
     </Card>

@@ -723,7 +723,7 @@
   border-radius: 0.5rem;
   background: var(--shop-surface-secondary, #1a1a1a);
   border: 1px solid var(--shop-border-color, rgba(255,255,255,0.2));
-  padding: 0.875rem 1rem;
+  padding: 0.875rem 2.5rem 0.875rem 1rem;
   color: var(--shop-text-primary, #fff);
   font-size: 1rem;
   min-height: 52px;
