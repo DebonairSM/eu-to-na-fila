@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { Heading, Text, Section, Stack } from '@/components/design-system';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 
@@ -62,7 +63,7 @@ export function LocationSection() {
   return (
     <Section id="location" variant="secondary">
       <div className="text-center mb-12">
-        <Heading level={2}>{loc.sectionTitle}</Heading>
+        <Heading level={2} className={cn('section-title', 'section-title--preset')}>{loc.sectionTitle}</Heading>
       </div>
 
       <div className="lg:hidden space-y-6">

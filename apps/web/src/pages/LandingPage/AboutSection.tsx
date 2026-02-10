@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { Heading, Text, Section, Grid } from '@/components/design-system';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 
@@ -5,13 +6,22 @@ const fallbackAbout = { sectionTitle: 'Sobre', imageUrl: 'https://images.unsplas
 
 export function AboutSection() {
   const { config } = useShopConfig();
+  const { style } = config;
+  const preset = style?.preset ?? 'modern';
   const { sectionTitle, imageUrl, imageAlt, features } = config.homeContent?.about ?? fallbackAbout;
+  const imageFrameClass = cn(
+    'overflow-hidden',
+    preset === 'classical' && 'rounded-lg border-2 border-[var(--shop-border-color)]',
+    preset === 'vintage' && 'rounded border-[length:var(--shop-border-width,2px)] border-double border-[var(--shop-border-color)]',
+    preset === 'luxury' && 'rounded-2xl shadow-xl',
+    preset === 'industrial' && 'rounded-none border-2 border-[var(--shop-border-color)]'
+  );
 
   return (
     <Section id="about" variant="primary">
       <div className="lg:hidden space-y-8">
         <div>
-          <Heading level={2} className="mb-6">
+          <Heading level={2} className={cn('section-title', 'section-title--preset', 'mb-6')}>
             {sectionTitle}
           </Heading>
           <Grid cols={{ mobile: 2 }} gap="md" className="mb-8">
@@ -27,7 +37,7 @@ export function AboutSection() {
             ))}
           </Grid>
         </div>
-        <div className="aspect-[4/5] rounded-xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
+        <div className={cn('aspect-[4/5] border border-[rgba(255,255,255,0.08)]', imageFrameClass, 'rounded-xl')}>
           <img
             src={imageUrl}
             alt={imageAlt}
@@ -40,7 +50,7 @@ export function AboutSection() {
 
       <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-center">
         <div>
-          <Heading level={2} className="mb-6">
+          <Heading level={2} className={cn('section-title', 'section-title--preset', 'mb-6')}>
             {sectionTitle}
           </Heading>
           <Grid cols={{ mobile: 2 }} gap="lg">
@@ -56,7 +66,7 @@ export function AboutSection() {
             ))}
           </Grid>
         </div>
-        <div className="aspect-[4/5] rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
+        <div className={cn('aspect-[4/5] border border-[rgba(255,255,255,0.08)]', imageFrameClass, 'rounded-2xl')}>
           <img
             src={imageUrl}
             alt={imageAlt}

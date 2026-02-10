@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { Card, CardContent, Heading, Text, Section, Grid } from '@/components/design-system';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useServices } from '@/hooks/useServices';
@@ -31,7 +32,7 @@ export function ServicesSection() {
   return (
     <Section id="services" variant="secondary">
       <div className="text-center mb-12">
-        <Heading level={2}>{sectionTitle}</Heading>
+        <Heading level={2} className={cn('section-title', 'section-title--preset')}>{sectionTitle}</Heading>
       </div>
 
       {activeServices.length === 0 ? (
@@ -40,6 +41,7 @@ export function ServicesSection() {
         </div>
       ) : (
         <>
+          {/* Mobile: stacked, full width */}
           <div className="lg:hidden space-y-4">
             {activeServices.map((service) => (
               <Card key={service.id} hover className="text-center">
@@ -58,27 +60,39 @@ export function ServicesSection() {
             ))}
           </div>
 
-          <Grid
-            cols={{ mobile: 1, tablet: 2, desktop: 3 }}
-            gap="lg"
-            className="hidden lg:grid max-w-6xl mx-auto"
-          >
-            {activeServices.map((service) => (
-              <Card key={service.id} hover className="text-center">
-                <CardContent className="p-8">
-                  <span className="material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)] mb-4 block">
-                    content_cut
-                  </span>
-                  <Heading level={3} className="mb-4 text-2xl">
-                    {service.name}
-                  </Heading>
-                  <Text size="xl" className="text-[var(--shop-accent,#D4AF37)] font-semibold text-2xl">
-                    {formatPrice(service.price)}
-                  </Text>
-                </CardContent>
-              </Card>
-            ))}
-          </Grid>
+          {/* Desktop: columns = min(service count, 4). 1 service = centered single column. */}
+          {(() => {
+            const n = activeServices.length;
+            const desktopCols = Math.min(Math.max(1, n), 4) as 1 | 2 | 3 | 4;
+            const tabletCols = Math.min(desktopCols, 3) as 1 | 2 | 3;
+            const isSingle = n === 1;
+            return (
+              <Grid
+                cols={{ mobile: 1, tablet: tabletCols, desktop: desktopCols }}
+                gap="lg"
+                className={cn(
+                  'hidden lg:grid max-w-6xl mx-auto',
+                  isSingle && 'max-w-md'
+                )}
+              >
+                {activeServices.map((service) => (
+                  <Card key={service.id} hover className="text-center">
+                    <CardContent className="p-8">
+                      <span className="material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)] mb-4 block">
+                        content_cut
+                      </span>
+                      <Heading level={3} className="mb-4 text-2xl">
+                        {service.name}
+                      </Heading>
+                      <Text size="xl" className="text-[var(--shop-accent,#D4AF37)] font-semibold text-2xl">
+                        {formatPrice(service.price)}
+                      </Text>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Grid>
+            );
+          })()}
         </>
       )}
     </Section>

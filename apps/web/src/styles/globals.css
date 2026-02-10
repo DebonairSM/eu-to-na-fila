@@ -553,6 +553,123 @@
   text-transform: var(--shop-heading-transform, none);
 }
 
+/* Hero preset variants */
+.hero-badge--label {
+  border-width: 2px;
+  border-style: double;
+  border-radius: 2px;
+  letter-spacing: 0.08em;
+}
+
+.hero-badge--minimal {
+  border: none;
+  padding: 0;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+}
+
+/* Luxury hero: soft gradient overlay and optional CTA shimmer */
+[data-shop-preset="luxury"] .hero-gradient-overlay {
+  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.15) 50%, transparent 100%);
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-shop-preset="luxury"] .hero .cta-join {
+    position: relative;
+  }
+  [data-shop-preset="luxury"] .hero .cta-join::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.08) 45%, transparent 55%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  [data-shop-preset="luxury"] .hero .cta-join:hover::after {
+    animation: luxury-shimmer 1.5s ease-out;
+  }
+}
+
+@keyframes luxury-shimmer {
+  0% { opacity: 0; }
+  40% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Section divider (line / ornament / dots) */
+.section-divider {
+  margin: 0;
+  padding: 0;
+  height: 0;
+  min-height: 0;
+}
+
+.section-divider--line {
+  height: 1px;
+  min-height: 1px;
+  margin: 0 auto;
+  max-width: 120px;
+  background: var(--shop-border-color, rgba(255,255,255,0.12));
+}
+
+.section-divider--ornament {
+  height: 24px;
+  min-height: 24px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-divider--ornament::before {
+  content: '◆';
+  font-size: 0.5rem;
+  color: var(--shop-accent, #D4AF37);
+  opacity: 0.6;
+}
+
+.section-divider--dots {
+  height: 16px;
+  min-height: 16px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.section-divider--dots::before {
+  content: '• • •';
+  font-size: 0.5rem;
+  letter-spacing: 6px;
+  color: var(--shop-border-color, rgba(255,255,255,0.3));
+}
+
+/* Preset-specific section title rules */
+[data-shop-preset="classical"] .section-title.section-title--preset::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 1px;
+  margin-top: 12px;
+  margin-left: auto;
+  margin-right: auto;
+  background: var(--shop-accent, #D4AF37);
+  opacity: 0.8;
+}
+
+[data-shop-preset="industrial"] .section-title.section-title--preset {
+  border-bottom: 3px solid var(--shop-border-color, rgba(255,255,255,0.2));
+  padding-bottom: 8px;
+  display: inline-block;
+}
+
+[data-shop-preset="minimal"] .section-title.section-title--preset::after {
+  display: none;
+}
+
 /* Material Design Text Field with Floating Label */
 .text-field input:focus + label,
 .text-field input:not(:placeholder-shown) + label {

@@ -29,6 +29,8 @@ export type { StackProps } from './Layout/Stack';
 export { Grid } from './Layout/Grid';
 export type { GridProps } from './Layout/Grid';
 
+export { SectionDivider } from './Divider/SectionDivider';
+
 // Motion Components
 export { FadeIn } from './Motion/FadeIn';
 export type { FadeInProps } from './Motion/FadeIn';

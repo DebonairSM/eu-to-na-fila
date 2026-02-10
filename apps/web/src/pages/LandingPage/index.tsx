@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
+import { SectionDivider } from '@/components/design-system';
 import { HeroSection } from './HeroSection';
 import { ServicesSection } from './ServicesSection';
 import { AboutSection } from './AboutSection';
@@ -32,8 +33,11 @@ export function LandingPage() {
     <div className="min-h-screen" style={{ backgroundColor: 'var(--shop-background, #0a0a0a)' }}>
       <Navigation />
       <HeroSection />
+      <SectionDivider />
       <ServicesSection />
+      <SectionDivider />
       <AboutSection />
+      <SectionDivider />
       <LocationSection />
     </div>
   );
