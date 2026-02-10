@@ -19,8 +19,15 @@ export interface ShopTheme {
   accentHover?: string;
 }
 
+/** Per-shop branding: favicon (browser tab) and header logo. Optional URLs; empty string = use default. */
+export interface HomeContentBranding {
+  faviconUrl: string;
+  headerIconUrl: string;
+}
+
 /** Per-shop home page content (hero, services, about, location, nav, accessibility). All elements overridable. */
 export interface HomeContent {
+  branding: HomeContentBranding;
   hero: { badge: string; subtitle: string; ctaJoin: string; ctaLocation: string };
   nav: {
     linkServices: string;
@@ -95,6 +102,10 @@ export const themeInputSchema = z.object({
 
 /** Zod schema for partial home content input (all fields optional, used for PATCH). */
 export const homeContentInputSchema = z.object({
+  branding: z.object({
+    faviconUrl: z.string().max(2000).optional().or(z.literal('')),
+    headerIconUrl: z.string().max(2000).optional().or(z.literal('')),
+  }).optional(),
   hero: z.object({
     badge: z.string().max(500).optional(),
     subtitle: z.string().max(500).optional(),
@@ -200,6 +211,10 @@ export const DEFAULT_THEME: Required<ShopTheme> = {
 
 /** Default home content. Single source of truth. */
 export const DEFAULT_HOME_CONTENT: HomeContent = {
+  branding: {
+    faviconUrl: '',
+    headerIconUrl: '',
+  },
   hero: {
     badge: 'Sangão, Santa Catarina',
     subtitle: 'Entre na fila online',

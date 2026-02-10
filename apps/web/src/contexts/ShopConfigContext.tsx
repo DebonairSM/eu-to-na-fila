@@ -101,6 +101,17 @@ function applyStyle(style: ShopStyleResolved) {
   document.documentElement.style.setProperty('--shop-divider-style', style.dividerStyle);
 }
 
+function applyFavicon(faviconUrl: string | undefined) {
+  if (typeof document === 'undefined') return;
+  const href = (faviconUrl && faviconUrl.trim()) || null;
+  const base = (import.meta.env.BASE_URL ?? '/').replace(/\/?$/, '/');
+  const defaultHref = `${base}favicon.svg`;
+  const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+  if (link) link.href = href || defaultHref;
+  const appleTouch = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]');
+  if (appleTouch) appleTouch.href = href || `${base}icon-192.png`;
+}
+
 export function ShopConfigProvider({ children }: { children: React.ReactNode }) {
   const shopSlug = useShopSlug();
   const [config, setConfig] = useState<ShopConfig | null>(() =>
@@ -122,6 +133,7 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
       setError(null);
       applyTheme(cached.theme);
       applyStyle(cached.style);
+      applyFavicon(cached.homeContent?.branding?.faviconUrl);
       return;
     }
 
@@ -146,12 +158,14 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
         setError(null);
         applyTheme(shopConfig.theme);
         applyStyle(shopConfig.style);
+        applyFavicon(shopConfig.homeContent?.branding?.faviconUrl);
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : 'Failed to load shop config');
         setConfig(defaultConfig);
         applyTheme(defaultTheme);
         applyStyle(defaultStyle);
+        applyFavicon(undefined);
       })
       .finally(() => {
         setIsLoading(false);

@@ -24,6 +24,7 @@ export function Navigation() {
     labelMenu: 'Menu',
   };
   const shopName = shopConfig.name || appConfig.name;
+  const headerIconUrl = shopConfig.homeContent?.branding?.headerIconUrl?.trim();
 
   useEffect(() => {
     let ticking = false;
@@ -115,9 +116,13 @@ export function Navigation() {
           style={{ color: 'var(--shop-accent, #D4AF37)' }}
           aria-label={`${shopName} - Home`}
         >
-          <span className="material-symbols-outlined text-xl sm:text-2xl leading-none flex items-center justify-center flex-shrink-0">
-            content_cut
-          </span>
+          {headerIconUrl ? (
+            <img src={headerIconUrl} alt="" className="h-8 w-8 sm:h-9 sm:w-9 object-contain flex-shrink-0" />
+          ) : (
+            <span className="material-symbols-outlined text-xl sm:text-2xl leading-none flex items-center justify-center flex-shrink-0">
+              content_cut
+            </span>
+          )}
           <span className="hidden sm:inline truncate">{shopName}</span>
         </Link>
 
@@ -174,6 +179,18 @@ export function Navigation() {
                   {navLabels.labelDashboard}
                 </Link>
               </li>
+              {user.role === 'barber' && (
+              <li>
+                <Link
+                  to="/barbers"
+                  className="text-[0.9rem] font-medium px-3 py-2 rounded min-h-[48px] flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 [&:hover]:[color:var(--shop-accent)]"
+                  style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
+                >
+                  <span className="material-symbols-outlined text-lg">person</span>
+                  Meu cadastro
+                </Link>
+              </li>
+              )}
               <li>
                 <button
                   onClick={handleLogout}
@@ -322,6 +339,20 @@ export function Navigation() {
                       <span className="material-symbols-outlined text-lg">dashboard</span>
                       {navLabels.labelDashboard}
                     </Link>
+                    {user.role === 'barber' && (
+                    <Link
+                      to="/barbers"
+                      className="block w-full text-sm font-medium px-4 py-3 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] [&:hover]:[color:var(--shop-accent)]"
+                      style={{ color: 'rgba(255,255,255,0.85)' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-lg">person</span>
+                      Meu cadastro
+                    </Link>
+                    )}
                     <button
                       onClick={(e) => {
                         e.preventDefault();

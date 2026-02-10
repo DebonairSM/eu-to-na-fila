@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useQueue } from '@/hooks/useQueue';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useKiosk } from '@/hooks/useKiosk';
@@ -44,6 +45,8 @@ export function BarberQueueManager() {
   const barberPollInterval = isKioskMode ? 10000 : 0; // Poll barbers in kiosk mode so presence updates without refresh
   const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval);
   const { barbers, togglePresence } = useBarbers(barberPollInterval);
+  const { isBarber, user } = useAuthContext();
+  const displayBarbers = isBarber && user ? barbers.filter((b) => b.id === user.id) : barbers;
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [customerToRemove, setCustomerToRemove] = useState<number | null>(null);
@@ -135,10 +138,10 @@ export function BarberQueueManager() {
     };
   }, [tickets]);
 
-  // Memoize sorted barbers by ID to maintain consistent order in kiosk display
+  // Memoize sorted barbers by ID (barber role sees only themselves)
   const sortedBarbers = useMemo(() => {
-    return [...barbers].sort((a, b) => a.id - b.id);
-  }, [barbers]);
+    return [...displayBarbers].sort((a, b) => a.id - b.id);
+  }, [displayBarbers]);
 
   // Combined name handler for check-in forms
   const handleCombinedCheckInNameChange = useCallback((value: string) => {
@@ -220,6 +223,7 @@ export function BarberQueueManager() {
 
   const handleSelectBarber = useCallback(async (barberId: number | null) => {
     if (!selectedCustomerId) return;
+    if (isBarber && barberId !== null && user && barberId !== user.id) return;
 
     try {
       if (barberId === null) {
@@ -240,7 +244,7 @@ export function BarberQueueManager() {
       const errorMsg = getErrorMessage(error, 'Erro ao atribuir barbeiro. Tente novamente.');
       setErrorMessage(errorMsg);
     }
-  }, [selectedCustomerId, refetchQueue, barberSelectorModal]);
+  }, [selectedCustomerId, refetchQueue, barberSelectorModal, isBarber, user]);
 
   const handleRemoveCustomer = useCallback(async () => {
     if (!customerToRemove) return;
@@ -604,7 +608,7 @@ export function BarberQueueManager() {
                       key={ticket.id}
                       ticket={ticket}
                       assignedBarber={assignedBarber}
-                      barbers={barbers}
+                      barbers={displayBarbers}
                       displayPosition={displayPosition}
                       onClick={() => {
                         setSelectedCustomerId(ticket.id);
@@ -630,7 +634,7 @@ export function BarberQueueManager() {
         <div className="mt-4 sm:mt-6 bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border-[3px] border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-4 sm:p-6 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
           <h2 className="section-header text-xl sm:text-2xl font-semibold text-white mb-4">Barbeiros Presentes</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-            {barbers.map((barber) => (
+            {displayBarbers.map((barber) => (
               <BarberCard
                 key={barber.id}
                 barber={barber}
@@ -716,7 +720,7 @@ export function BarberQueueManager() {
           <BarberSelector
             isOpen={barberSelectorModal.isOpen}
             onClose={barberSelectorModal.close}
-            barbers={barbers}
+            barbers={displayBarbers}
             selectedBarberId={selectedTicket?.barberId || null}
             onSelect={handleSelectBarber}
             customerName={selectedTicket?.customerName}

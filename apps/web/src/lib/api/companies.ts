@@ -36,6 +36,7 @@ export interface CompaniesApi {
     ownerPassword?: string; staffPassword?: string;
   }): Promise<ShopAdminView>;
   deleteCompanyShop(companyId: number, shopId: number): Promise<{ success: boolean; message: string }>;
+  updateCompanyShopBarber(companyId: number, shopId: number, barberId: number, data: { username?: string | null; password?: string }): Promise<{ id: number; name: string; username: string | null }>;
   lookupPlacesByAddress(companyId: number, address: string): Promise<PlacesLookupResult>;
 }
 
@@ -48,6 +49,8 @@ export function createCompaniesApi(client: BaseApiClient): CompaniesApi {
     createFullShop: (companyId, data) => c.post(`/companies/${companyId}/shops/full`, data),
     updateCompanyShop: (companyId, shopId, data) => c.patch(`/companies/${companyId}/shops/${shopId}`, data),
     deleteCompanyShop: (companyId, shopId) => c.del(`/companies/${companyId}/shops/${shopId}`),
+    updateCompanyShopBarber: (companyId, shopId, barberId, data) =>
+      c.patch(`/companies/${companyId}/shops/${shopId}/barbers/${barberId}`, data),
     lookupPlacesByAddress: (companyId, address) =>
       c.get(`/companies/${companyId}/places-lookup?address=${encodeURIComponent(address)}`),
   };

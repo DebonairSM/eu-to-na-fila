@@ -80,7 +80,7 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {404} If barber not found
    */
   fastify.patch('/barbers/:id/presence', {
-    preHandler: [requireAuth(), requireRole(['owner', 'staff'])],
+    preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
   }, async (request, reply) => {
     const paramsSchema = z.object({
       id: z.coerce.number().int().positive(),
@@ -91,6 +91,10 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
 
     const { id } = validateRequest(paramsSchema, request.params);
     const { isPresent } = validateRequest(bodySchema, request.body);
+
+    if (request.user?.role === 'barber' && request.user.barberId !== id) {
+      throw new ValidationError('Barbers can only update their own presence');
+    }
 
     // Get barber
     const barber = await db.query.barbers.findFirst({
@@ -145,7 +149,7 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {404} If barber not found
    */
   fastify.patch('/barbers/:id/status', {
-    preHandler: [requireAuth(), requireRole(['owner', 'staff'])],
+    preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
   }, async (request, reply) => {
     const paramsSchema = z.object({
       id: z.coerce.number().int().positive(),
@@ -156,6 +160,10 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
 
     const { id } = validateRequest(paramsSchema, request.params);
     const { isActive } = validateRequest(bodySchema, request.body);
+
+    if (request.user?.role === 'barber' && request.user.barberId !== id) {
+      throw new ValidationError('Barbers can only update their own status');
+    }
 
     const barber = await db.query.barbers.findFirst({
       where: eq(schema.barbers.id, id),

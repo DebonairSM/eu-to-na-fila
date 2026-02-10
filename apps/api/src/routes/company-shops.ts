@@ -1,5 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import { join } from 'path';
+import { unlink } from 'fs/promises';
+import { existsSync } from 'fs';
 import { db, schema } from '../db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
@@ -8,6 +11,9 @@ import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
 import { hashPassword, validatePassword } from '../lib/password.js';
 import { mergeHomeContent } from '../lib/homeContent.js';
 import { DEFAULT_THEME } from '../lib/theme.js';
+import { getPublicPath } from '../lib/paths.js';
+import { deleteAdFile } from '../lib/storage.js';
+import { env } from '../env.js';
 import { themeInputSchema, homeContentInputSchema, shopSettingsInputSchema } from '@eutonafila/shared';
 
 /**
@@ -293,6 +299,104 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
     }
   );
 
+  /** Normalize barber username for storage (trim + lowercase). */
+  const normalizeBarberUsername = (u: string) => u.trim().toLowerCase();
+  const barberUsernameRegex = /^[a-zA-Z0-9_.-]+$/;
+
+  /**
+   * Update a barber's login credentials (username and/or password).
+   * Company admin only. Used when setting up barber access in the shop Access tab.
+   *
+   * @route PATCH /api/companies/:id/shops/:shopId/barbers/:barberId
+   * @body username - Optional; set to empty string or omit to clear
+   * @body password - Optional; leave empty to not change
+   */
+  fastify.patch(
+    '/companies/:id/shops/:shopId/barbers/:barberId',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || !request.user.companyId) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+
+      const paramsSchema = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+        shopId: z.string().transform((val) => parseInt(val, 10)),
+        barberId: z.string().transform((val) => parseInt(val, 10)),
+      });
+      const bodySchema = z.object({
+        username: z.string().max(100).optional().nullable(),
+        password: z.string().min(1).max(200).optional(),
+      });
+
+      const { id, shopId, barberId } = validateRequest(paramsSchema, request.params);
+      const body = validateRequest(bodySchema, request.body);
+
+      if (request.user.companyId !== id) {
+        return reply.status(403).send({
+          error: 'Access denied to this company',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+
+      const shop = await db.query.shops.findFirst({
+        where: and(
+          eq(schema.shops.id, shopId),
+          eq(schema.shops.companyId, id)
+        ),
+      });
+      if (!shop) throw new NotFoundError('Shop not found');
+
+      const barber = await db.query.barbers.findFirst({
+        where: and(
+          eq(schema.barbers.id, barberId),
+          eq(schema.barbers.shopId, shopId)
+        ),
+      });
+      if (!barber) throw new NotFoundError('Barber not found');
+
+      const updatePayload: { username?: string | null; passwordHash?: string | null; updatedAt: Date } = {
+        updatedAt: new Date(),
+      };
+
+      if (body.username !== undefined) {
+        if (body.username === null || String(body.username).trim() === '') {
+          updatePayload.username = null;
+          updatePayload.passwordHash = null;
+        } else {
+          const trimmed = String(body.username).trim();
+          if (trimmed.length > 100) throw new ValidationError('Username must be at most 100 characters');
+          if (!barberUsernameRegex.test(trimmed)) throw new ValidationError('Username can only contain letters, numbers, underscore, hyphen and period');
+          updatePayload.username = normalizeBarberUsername(trimmed);
+        }
+      }
+
+      if (body.password !== undefined && body.password !== '') {
+        const pwValidation = validatePassword(body.password);
+        if (!pwValidation.isValid) throw new ValidationError(pwValidation.error ?? 'Invalid password');
+        updatePayload.passwordHash = await hashPassword(body.password);
+      }
+
+      await db
+        .update(schema.barbers)
+        .set(updatePayload as Record<string, unknown>)
+        .where(eq(schema.barbers.id, barberId));
+
+      const [updated] = await db.query.barbers.findMany({
+        where: eq(schema.barbers.id, barberId),
+        columns: { id: true, shopId: true, name: true, username: true, isActive: true, isPresent: true },
+      });
+      return updated ?? { id: barber.id, shopId: barber.shopId, name: barber.name, username: barber.username, isActive: barber.isActive, isPresent: barber.isPresent };
+    }
+  );
+
   /**
    * Delete a shop.
    * 
@@ -341,9 +445,41 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const projectId = shop.projectId;
 
+      const shopAds = await db.query.companyAds.findMany({
+        where: and(
+          eq(schema.companyAds.companyId, id),
+          eq(schema.companyAds.shopId, shopId)
+        ),
+      });
+      const publicPath = getPublicPath();
+      for (const ad of shopAds) {
+        try {
+          if (ad.publicUrl) {
+            if (ad.publicUrl.startsWith('http://') || ad.publicUrl.startsWith('https://')) {
+              if (env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY && ad.mimeType) {
+                await deleteAdFile(ad.companyId, ad.id, ad.mimeType);
+                request.log.info({ adId: ad.id }, 'Deleted ad file from Supabase Storage');
+              }
+            } else {
+              const urlParts = ad.publicUrl.split('/');
+              const filename = urlParts[urlParts.length - 1];
+              const companyId = ad.companyId.toString();
+              const filePath = join(publicPath, 'companies', companyId, 'ads', filename);
+              if (existsSync(filePath)) {
+                await unlink(filePath);
+                request.log.info({ adId: ad.id, filePath }, 'Deleted ad file from filesystem');
+              }
+            }
+          }
+        } catch (fileError) {
+          request.log.warn({ err: fileError, adId: ad.id }, 'Error deleting ad file from storage');
+        }
+      }
+
       await db.transaction(async (tx) => {
         await tx.delete(schema.auditLog).where(eq(schema.auditLog.shopId, shopId));
         await tx.delete(schema.tickets).where(eq(schema.tickets.shopId, shopId));
+        await tx.delete(schema.barberServiceWeekdayStats).where(eq(schema.barberServiceWeekdayStats.shopId, shopId));
         await tx.delete(schema.services).where(eq(schema.services.shopId, shopId));
         await tx.delete(schema.barbers).where(eq(schema.barbers.shopId, shopId));
         await tx.delete(schema.companyAds).where(eq(schema.companyAds.shopId, shopId));

@@ -5,7 +5,7 @@ import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { ticketService, queueService } from '../services/index.js';
 import { validateRequest } from '../lib/validation.js';
-import { NotFoundError, ValidationError } from '../lib/errors.js';
+import { NotFoundError, ValidationError, ForbiddenError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { shapeTicketResponse } from '../lib/ticketResponse.js';
@@ -169,7 +169,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {404} If ticket not found
    */
   fastify.patch('/tickets/:id', {
-    preHandler: [requireAuth(), requireRole(['owner', 'staff'])],
+    preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
   }, async (request, reply) => {
     const paramsSchema = z.object({
       id: z.coerce.number().int().positive(),
@@ -181,6 +181,10 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
 
     const { id } = validateRequest(paramsSchema, request.params);
     const updates = validateRequest(bodySchema, request.body);
+
+    if (request.user?.role === 'barber' && updates.barberId !== undefined && updates.barberId !== null && updates.barberId !== request.user.barberId) {
+      throw new ForbiddenError('Barbers can only assign tickets to themselves');
+    }
 
     const existingTicket = await ticketService.getById(id);
     if (!existingTicket) {

@@ -78,6 +78,7 @@ class ApiClient extends BaseApiClient {
   createFullShop = this._companies.createFullShop;
   updateCompanyShop = this._companies.updateCompanyShop;
   deleteCompanyShop = this._companies.deleteCompanyShop;
+  updateCompanyShopBarber = this._companies.updateCompanyShopBarber;
   lookupPlacesByAddress = this._companies.lookupPlacesByAddress;
 
   // --- Auth ---

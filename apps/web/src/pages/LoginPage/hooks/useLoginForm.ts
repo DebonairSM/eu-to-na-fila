@@ -37,7 +37,7 @@ export function useLoginForm() {
             role: 'barber',
             name: barberResult.barberName ?? username.trim(),
           });
-          navigate('/my-stats');
+          navigate('/manage');
           return;
         }
       }

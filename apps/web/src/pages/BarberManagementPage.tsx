@@ -15,9 +15,10 @@ import type { Barber, Service } from '@eutonafila/shared';
 
 export function BarberManagementPage() {
   const shopSlug = useShopSlug();
-  const { isOwner } = useAuthContext();
+  const { isOwner, isBarber, user } = useAuthContext();
   const navigate = useNavigate();
   const { barbers, isLoading, error, refetch } = useBarbers();
+  const displayBarbers = isBarber && user ? barbers.filter((b) => b.id === user.id) : barbers;
   const addModal = useModal();
   const editModal = useModal();
   const deleteConfirmModal = useModal();
@@ -93,9 +94,9 @@ export function BarberManagementPage() {
     catch (err) { setErrorMessage(getErrorMessage(err, 'Erro ao atualizar servico.')); }
   }, [loadServices]);
 
-  // Redirect if not owner
-  if (!isOwner) {
-    navigate('/staff');
+  // Staff (no owner/barber) goes to queue manager; barber and owner stay
+  if (!isOwner && !isBarber) {
+    navigate('/manage');
     return null;
   }
 
@@ -217,6 +218,7 @@ export function BarberManagementPage() {
           </h1>
         </div>
 
+        {isOwner && (
         <button
           onClick={addModal.open}
           className="add-barber-btn flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:opacity-90 hover:-translate-y-0.5 hover:-translate-y-0.5 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-background)]"
@@ -225,6 +227,7 @@ export function BarberManagementPage() {
           <span className="material-symbols-outlined text-lg sm:text-xl" aria-hidden="true">add</span>
           Adicionar Barbeiro
         </button>
+        )}
 
         {/* Barbers Grid */}
         {isLoading ? (
@@ -239,22 +242,23 @@ export function BarberManagementPage() {
           </div>
         ) : error ? (
           <ErrorDisplay error={error} onRetry={refetch} />
-        ) : barbers.length === 0 ? (
+        ) : displayBarbers.length === 0 ? (
           <div className="empty-state text-center py-12 sm:py-[60px] px-4 sm:px-5 text-[rgba(255,255,255,0.7)]">
             <span className="material-symbols-outlined text-[3rem] sm:text-[4rem] text-[rgba(255,255,255,0.5)] mb-3 sm:mb-4 block" aria-hidden="true">
               content_cut
             </span>
-            <p className="text-sm sm:text-base">Nenhum barbeiro cadastrado</p>
+            <p className="text-sm sm:text-base">{isBarber ? 'Seu cadastro não foi encontrado.' : 'Nenhum barbeiro cadastrado'}</p>
           </div>
         ) : (
           <div className="barbers-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
-            {barbers.map((barber) => (
+            {displayBarbers.map((barber) => (
               <article
                 key={barber.id}
                 className="barber-card bg-[color-mix(in_srgb,var(--shop-surface-secondary)_80%,transparent)] backdrop-blur-md border border-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all hover:border-[var(--shop-accent)] hover:-translate-y-1 hover:-translate-y-1 relative overflow-hidden"
                 aria-labelledby={`barber-name-${barber.id}`}
               >
                 <div className="barber-header flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
+                  {isOwner ? (
                   <button
                     type="button"
                     className="barber-avatar w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[var(--shop-accent)] to-[var(--shop-accent-hover)] flex items-center justify-center text-xl sm:text-2xl font-semibold text-[var(--shop-text-on-accent)] flex-shrink-0 cursor-pointer transition-all hover:scale-105 relative focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
@@ -280,6 +284,28 @@ export function BarberManagementPage() {
                       <span aria-hidden="true">{barber.name.charAt(0).toUpperCase()}</span>
                     )}
                   </button>
+                  ) : (
+                  <div className="barber-avatar w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[var(--shop-accent)] to-[var(--shop-accent-hover)] flex items-center justify-center text-xl sm:text-2xl font-semibold text-[var(--shop-text-on-accent)] flex-shrink-0">
+                    {barber.avatarUrl ? (
+                      <img
+                        src={barber.avatarUrl}
+                        alt=""
+                        aria-hidden="true"
+                        className="w-full h-full rounded-full object-cover"
+                        loading="eager"
+                        decoding="async"
+                        width={64}
+                        height={64}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <span aria-hidden="true">{barber.name.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  )}
                   <div className="barber-info flex-1 min-w-0">
                     <h3 id={`barber-name-${barber.id}`} className="barber-name text-lg sm:text-xl font-semibold text-white mb-1 truncate">
                       {barber.name}
@@ -300,7 +326,8 @@ export function BarberManagementPage() {
                   </div>
                 </div>
 
-                {/* Actions */}
+                {/* Actions: owner only (barber sees read-only card) */}
+                {isOwner && (
                 <div className="barber-actions flex gap-2 sm:gap-3">
                   <button
                     onClick={() => openEditModal(barber)}
@@ -320,12 +347,14 @@ export function BarberManagementPage() {
                     Remover
                   </button>
                 </div>
+                )}
               </article>
             ))}
           </div>
         )}
 
-        {/* Services Section (collapsible) */}
+        {/* Services Section (owner only) */}
+        {isOwner && (
         <section className="mt-8 sm:mt-10">
           <button
             type="button"
@@ -428,6 +457,7 @@ export function BarberManagementPage() {
             </div>
           )}
         </section>
+        )}
       </main>
 
       {/* Add Barber Modal */}

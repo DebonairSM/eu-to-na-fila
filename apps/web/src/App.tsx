@@ -134,7 +134,7 @@ function AppContent() {
       <Route
         path="/barbers"
         element={
-          <ProtectedRoute requireOwner>
+          <ProtectedRoute>
             <BarberManagementPage />
           </ProtectedRoute>
         }

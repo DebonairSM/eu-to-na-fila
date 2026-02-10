@@ -44,6 +44,7 @@ function mergeHomeContentForEdit(stored: HomeContent | Record<string, unknown> |
   if (!stored || typeof stored !== 'object') return JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT));
   const s = stored as Record<string, unknown>;
   return {
+    branding: { ...DEFAULT_HOME_CONTENT.branding, ...(s.branding as object ?? {}) },
     hero: { ...DEFAULT_HOME_CONTENT.hero, ...(s.hero as object ?? {}) },
     nav: { ...DEFAULT_HOME_CONTENT.nav, ...(s.nav as object ?? {}) },
     services: { ...DEFAULT_HOME_CONTENT.services, ...(s.services as object ?? {}) },
@@ -104,6 +105,9 @@ export function ShopManagementPage() {
     ownerPassword: '',
     staffPassword: '',
   });
+  type BarberAccessRow = { barberId: number; name: string; username: string; password: string; initialUsername: string };
+  const [barberAccess, setBarberAccess] = useState<BarberAccessRow[]>([]);
+  const [barberAccessLoading, setBarberAccessLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [paletteIndices, setPaletteIndices] = useState<[number, number, number]>(() => pickThreeRandomPaletteIndices(formData.style.preset));
   const [savedPalettes, setSavedPalettes] = useState<Array<{ label: string; theme: ShopTheme }>>([]);
@@ -147,6 +151,34 @@ export function ShopManagementPage() {
     }
   }, [user?.companyId, loadShops]);
 
+  useEffect(() => {
+    if (editTab !== 'credentials' || !editingShop?.slug) {
+      setBarberAccess([]);
+      return;
+    }
+    let cancelled = false;
+    setBarberAccessLoading(true);
+    api.getBarbers(editingShop.slug)
+      .then((list) => {
+        if (!cancelled) {
+          setBarberAccess(list.map((b) => ({
+            barberId: b.id,
+            name: b.name,
+            username: b.username ?? '',
+            password: '',
+            initialUsername: b.username ?? '',
+          })));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setBarberAccess([]);
+      })
+      .finally(() => {
+        if (!cancelled) setBarberAccessLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [editTab, editingShop?.slug]);
+
   const handleEdit = useCallback(async () => {
     if (!user?.companyId || !editingShop || !formData.name.trim()) {
       setErrorMessage('Nome é obrigatório');
@@ -162,6 +194,16 @@ export function ShopManagementPage() {
       setErrorMessage('Senha do funcionário deve ter no mínimo 6 caracteres.');
       return;
     }
+    for (const row of barberAccess) {
+      if (row.password.trim() && row.username.trim().length < 1) {
+        setErrorMessage(`Barbeiro "${row.name}": informe o usuário para definir senha.`);
+        return;
+      }
+      if (row.password.trim() && row.password.trim().length < 6) {
+        setErrorMessage(`Barbeiro "${row.name}": senha deve ter no mínimo 6 caracteres.`);
+        return;
+      }
+    }
 
     try {
       await api.updateCompanyShop(user.companyId, editingShop.id, {
@@ -176,15 +218,27 @@ export function ShopManagementPage() {
         ...(op && { ownerPassword: op }),
         ...(sp && { staffPassword: sp }),
       });
+      for (const row of barberAccess) {
+        const un = row.username.trim();
+        const pw = row.password.trim();
+        const changed = un !== row.initialUsername || pw.length > 0;
+        if (changed) {
+          await api.updateCompanyShopBarber(user.companyId, editingShop.id, row.barberId, {
+            username: un.length > 0 ? un : null,
+            ...(pw.length > 0 ? { password: pw } : undefined),
+          });
+        }
+      }
       setEditingShop(null);
       setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' });
+      setBarberAccess([]);
       editModal.close();
       await loadShops();
     } catch (error) {
       const errorMsg = getErrorMessage(error, 'Erro ao atualizar barbearia. Tente novamente.');
       setErrorMessage(errorMsg);
     }
-  }, [editingShop, formData, user?.companyId, loadShops, editModal]);
+  }, [editingShop, formData, barberAccess, user?.companyId, loadShops, editModal]);
 
   const handleDelete = useCallback(async () => {
     if (!user?.companyId || !shopToDelete) return;
@@ -500,6 +554,31 @@ export function ShopManagementPage() {
                     <div className="space-y-6 max-h-[50vh] overflow-y-auto">
                       <p className="text-white/60 text-sm">Textos e conteúdo da página inicial. Todos opcionais.</p>
                       <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                        <h4 className="text-white font-medium">Ícones da loja</h4>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-white/60 text-sm mb-1">Favicon (ícone da aba do navegador)</label>
+                            <input
+                              type="url"
+                              value={formData.homeContent.branding.faviconUrl}
+                              onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, branding: { ...formData.homeContent.branding, faviconUrl: e.target.value } } })}
+                              placeholder="https://..."
+                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-white/60 text-sm mb-1">Logo do cabeçalho (ícone no topo da página)</label>
+                            <input
+                              type="url"
+                              value={formData.homeContent.branding.headerIconUrl}
+                              onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, branding: { ...formData.homeContent.branding, headerIconUrl: e.target.value } } })}
+                              placeholder="https://..."
+                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30"
+                            />
+                          </div>
+                        </div>
+                      </section>
+                      <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
                         <h4 className="text-white font-medium">Hero</h4>
                         <div className="space-y-3">
                           <div><label className="block text-white/60 text-sm mb-1">Badge do hero</label><input type="text" value={formData.homeContent.hero.badge} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, badge: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
@@ -646,6 +725,46 @@ export function ShopManagementPage() {
                             <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
                           </div>
                         </div>
+                      </section>
+                      <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <h4 className="text-white font-medium">Login por barbeiro</h4>
+                        <p className="text-white/50 text-xs">Cada barbeiro pode ter usuário e senha para entrar na página da barbearia e ver apenas seu card e atribuir clientes a si.</p>
+                        {barberAccessLoading ? (
+                          <p className="text-white/50 text-sm">Carregando barbeiros...</p>
+                        ) : barberAccess.length === 0 ? (
+                          <p className="text-white/50 text-sm">Nenhum barbeiro cadastrado nesta barbearia.</p>
+                        ) : (
+                          <ul className="space-y-4">
+                            {barberAccess.map((row) => (
+                              <li key={row.barberId} className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-3">
+                                <p className="text-white font-medium text-sm">{row.name}</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-white/50 text-xs mb-1">Usuário</label>
+                                    <input
+                                      type="text"
+                                      value={row.username}
+                                      onChange={(e) => setBarberAccess((prev) => prev.map((r) => r.barberId === row.barberId ? { ...r, username: e.target.value } : r))}
+                                      placeholder="Ex: joao.silva"
+                                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[40px] placeholder:text-white/40"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-white/50 text-xs mb-1">Senha</label>
+                                    <input
+                                      type="password"
+                                      autoComplete="new-password"
+                                      value={row.password}
+                                      onChange={(e) => setBarberAccess((prev) => prev.map((r) => r.barberId === row.barberId ? { ...r, password: e.target.value } : r))}
+                                      placeholder="Deixe em branco para não alterar"
+                                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[40px] placeholder:text-white/40"
+                                    />
+                                  </div>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </section>
                     </div>
                   )}
@@ -854,6 +973,13 @@ export function ShopManagementPage() {
               {editTab === 'content' && (
                 <div className="space-y-6 max-h-[50vh] overflow-y-auto">
                   <p className="text-white/60 text-sm">Textos e conteúdo da página inicial. Todos opcionais.</p>
+                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <h4 className="text-white font-medium">Ícones da loja</h4>
+                    <div className="space-y-3">
+                      <div><label className="block text-white/60 text-sm mb-1">Favicon (ícone da aba do navegador)</label><input type="url" value={formData.homeContent.branding.faviconUrl} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, branding: { ...formData.homeContent.branding, faviconUrl: e.target.value } } })} placeholder="https://..." className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">Logo do cabeçalho (ícone no topo da página)</label><input type="url" value={formData.homeContent.branding.headerIconUrl} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, branding: { ...formData.homeContent.branding, headerIconUrl: e.target.value } } })} placeholder="https://..." className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" /></div>
+                    </div>
+                  </section>
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10"><h4 className="text-white font-medium">Hero</h4><div className="space-y-3"><div><label className="block text-white/60 text-sm mb-1">Badge do hero</label><input type="text" value={formData.homeContent.hero.badge} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, badge: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Subtítulo</label><input type="text" value={formData.homeContent.hero.subtitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, subtitle: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Botão Entrar</label><input type="text" value={formData.homeContent.hero.ctaJoin} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaJoin: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Botão Localização</label><input type="text" value={formData.homeContent.hero.ctaLocation} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaLocation: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div></div></section>
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10"><h4 className="text-white font-medium">Navegação</h4><div className="space-y-3">{[{ key: 'linkServices' as const, label: 'Link Serviços' }, { key: 'linkAbout' as const, label: 'Link Sobre' }, { key: 'linkLocation' as const, label: 'Link Localização' }, { key: 'ctaJoin' as const, label: 'Botão Entrar' }, { key: 'linkBarbers' as const, label: 'Link Barbeiros' }].map(({ key, label }) => (<div key={key}><label className="block text-white/60 text-sm mb-1">{label}</label><input type="text" value={formData.homeContent.nav[key]} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, nav: { ...formData.homeContent.nav, [key]: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>))}</div></section>
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10"><h4 className="text-white font-medium">Seção Serviços</h4><div className="space-y-3"><div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={formData.homeContent.services.sectionTitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, sectionTitle: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Texto ao carregar</label><input type="text" value={formData.homeContent.services.loadingText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, loadingText: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Texto quando vazio</label><input type="text" value={formData.homeContent.services.emptyText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, emptyText: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div></div></section>
@@ -899,6 +1025,46 @@ export function ShopManagementPage() {
                         <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
                       </div>
                     </div>
+                  </section>
+                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <h4 className="text-white font-medium">Login por barbeiro</h4>
+                    <p className="text-white/50 text-xs">Cada barbeiro pode ter usuário e senha para entrar na página da barbearia e ver apenas seu card e atribuir clientes a si.</p>
+                    {barberAccessLoading ? (
+                      <p className="text-white/50 text-sm">Carregando barbeiros...</p>
+                    ) : barberAccess.length === 0 ? (
+                      <p className="text-white/50 text-sm">Nenhum barbeiro cadastrado nesta barbearia.</p>
+                    ) : (
+                      <ul className="space-y-4">
+                        {barberAccess.map((row) => (
+                          <li key={row.barberId} className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-3">
+                            <p className="text-white font-medium text-sm">{row.name}</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-white/50 text-xs mb-1">Usuário</label>
+                                <input
+                                  type="text"
+                                  value={row.username}
+                                  onChange={(e) => setBarberAccess((prev) => prev.map((r) => r.barberId === row.barberId ? { ...r, username: e.target.value } : r))}
+                                  placeholder="Ex: joao.silva"
+                                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[40px] placeholder:text-white/40"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-white/50 text-xs mb-1">Senha</label>
+                                <input
+                                  type="password"
+                                  autoComplete="new-password"
+                                  value={row.password}
+                                  onChange={(e) => setBarberAccess((prev) => prev.map((r) => r.barberId === row.barberId ? { ...r, password: e.target.value } : r))}
+                                  placeholder="Deixe em branco para não alterar"
+                                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[40px] placeholder:text-white/40"
+                                />
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </section>
                 </div>
               )}

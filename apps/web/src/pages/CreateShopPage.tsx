@@ -558,6 +558,13 @@ export function CreateShopPage() {
               <div className="space-y-6 max-h-[50vh] overflow-y-auto">
                 <p className="text-white/60 text-sm">Textos e conteúdo da página inicial. Todos opcionais.</p>
                 <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                  <h4 className="text-white font-medium">Ícones da loja</h4>
+                  <div className="space-y-3">
+                    <div><label className="block text-white/60 text-sm mb-1">Favicon (ícone da aba do navegador)</label><input type="url" value={data.homeContent.branding.faviconUrl} onChange={(e) => onChange({ homeContent: { ...data.homeContent, branding: { ...data.homeContent.branding, faviconUrl: e.target.value } } })} placeholder="https://..." className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">Logo do cabeçalho (ícone no topo da página)</label><input type="url" value={data.homeContent.branding.headerIconUrl} onChange={(e) => onChange({ homeContent: { ...data.homeContent, branding: { ...data.homeContent.branding, headerIconUrl: e.target.value } } })} placeholder="https://..." className={FORM_INPUT} /></div>
+                  </div>
+                </section>
+                <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
                   <h4 className="text-white font-medium">Hero</h4>
                   <div className="space-y-3">
                     <div><label className="block text-white/60 text-sm mb-1">Badge do hero</label><input type="text" value={data.homeContent.hero.badge} onChange={(e) => onChange({ homeContent: { ...data.homeContent, hero: { ...data.homeContent.hero, badge: e.target.value } } })} className={FORM_INPUT} /></div>
