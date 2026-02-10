@@ -14,7 +14,8 @@ export const projectsRoutes: FastifyPluginAsync = async (fastify) => {
    * @route GET /api/projects
    * @returns Array of projects with id, slug, name, path
    */
-  fastify.get('/projects', async () => {
+  fastify.get('/projects', async (request, reply) => {
+    reply.header('Cache-Control', 'no-store, no-cache, must-revalidate');
     const rows = await db
       .select({
         id: schema.projects.id,

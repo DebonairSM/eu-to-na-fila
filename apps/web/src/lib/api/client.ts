@@ -64,6 +64,7 @@ export class BaseApiClient {
         ...options,
         headers,
         signal: controller.signal,
+        cache: method === 'GET' ? 'no-store' : options.cache,
       });
 
       const responseText = await response.text();

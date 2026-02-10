@@ -56,6 +56,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         });
       }
 
+      reply.header('Cache-Control', 'no-store, no-cache, must-revalidate');
       const shops = await db.query.shops.findMany({
         where: eq(schema.shops.companyId, id),
         orderBy: (shops, { asc }) => [asc(shops.name)],
