@@ -1,5 +1,6 @@
 import { Modal } from './Modal';
 import { Button } from './ui/button';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export interface ConfirmationDialogProps {
   isOpen: boolean;
@@ -19,11 +20,14 @@ export function ConfirmationDialog({
   onConfirm,
   title,
   message,
-  confirmText = 'Confirmar',
-  cancelText = 'Cancelar',
+  confirmText,
+  cancelText,
   variant = 'default',
   icon,
 }: ConfirmationDialogProps) {
+  const { t } = useLocale();
+  const confirmLabel = confirmText ?? t('common.confirm');
+  const cancelLabel = cancelText ?? t('common.cancel');
   const handleConfirm = () => {
     onConfirm();
     onClose();
@@ -44,13 +48,13 @@ export function ConfirmationDialog({
 
         <div className="flex gap-3 justify-end">
           <Button variant="outline" onClick={onClose}>
-            {cancelText}
+            {cancelLabel}
           </Button>
           <Button
             onClick={handleConfirm}
             variant={variant === 'destructive' ? 'destructive' : 'default'}
           >
-            {confirmText}
+            {confirmLabel}
           </Button>
         </div>
       </div>

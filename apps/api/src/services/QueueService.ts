@@ -2,6 +2,7 @@ import type { DbClient } from '../db/types.js';
 import { schema } from '../db/index.js';
 import { eq, and, asc, inArray } from 'drizzle-orm';
 import type { AuditService } from './AuditService.js';
+import type { ShopSettings } from '@eutonafila/shared';
 
 /** Minimal ticket shape for wait-time computation. */
 export interface TicketForRecalc {
@@ -350,14 +351,45 @@ export class QueueService {
     return Math.ceil(Math.min(...barberAvailability));
   }
 
-  async recalculatePositions(shopId: number): Promise<number> {
-    const waitingTickets = await this.db.query.tickets.findMany({
+  /**
+   * Weighted order for hybrid mode: (1) appointments due or past by scheduled_time,
+   * (2) future appointments by scheduled_time, (3) walk-ins by check_in_time/created_at.
+   */
+  sortWaitingTicketsByWeighted<T extends { type?: string | null; scheduledTime?: Date | string | null; checkInTime?: Date | string | null; createdAt: Date | string }>(
+    tickets: T[],
+    now: Date = new Date()
+  ): T[] {
+    const t = (d: Date | string | null | undefined) => (d ? new Date(d).getTime() : 0);
+    return [...tickets].sort((a, b) => {
+      const typeA = (a.type ?? 'walkin') as string;
+      const typeB = (b.type ?? 'walkin') as string;
+      const scheduledA = a.scheduledTime ? new Date(a.scheduledTime).getTime() : 0;
+      const scheduledB = b.scheduledTime ? new Date(b.scheduledTime).getTime() : 0;
+      const dueA = typeA === 'appointment' && scheduledA > 0 && scheduledA <= now.getTime();
+      const dueB = typeB === 'appointment' && scheduledB > 0 && scheduledB <= now.getTime();
+      const priorityA = dueA ? 0 : typeA === 'appointment' ? 1 : 2;
+      const priorityB = dueB ? 0 : typeB === 'appointment' ? 1 : 2;
+      if (priorityA !== priorityB) return priorityA - priorityB;
+      if (priorityA === 0 || priorityA === 1) return scheduledA - scheduledB;
+      const timeA = t(a.checkInTime) || t(a.createdAt);
+      const timeB = t(b.checkInTime) || t(b.createdAt);
+      return timeA - timeB;
+    });
+  }
+
+  async recalculatePositions(shopId: number, settings?: ShopSettings): Promise<number> {
+    let waitingTickets = await this.db.query.tickets.findMany({
       where: and(
         eq(schema.tickets.shopId, shopId),
         eq(schema.tickets.status, 'waiting')
       ),
       orderBy: [asc(schema.tickets.createdAt)],
     });
+
+    if (settings?.allowAppointments) {
+      const now = new Date();
+      waitingTickets = this.sortWaitingTicketsByWeighted(waitingTickets as any, now) as typeof waitingTickets;
+    }
 
     let updateCount = 0;
     for (let i = 0; i < waitingTickets.length; i++) {
@@ -427,6 +459,58 @@ export class QueueService {
   async isQueueFull(shopId: number, maxQueueSize: number = 80): Promise<boolean> {
     const { queueLength } = await this.getMetrics(shopId);
     return queueLength >= maxQueueSize;
+  }
+
+  /**
+   * Get the next ticket to serve (first in weighted order when allowAppointments).
+   * When next is a walk-in and an appointment is due soon, returns deadZoneWarning.
+   */
+  async getNextTicket(
+    shopId: number,
+    settings: ShopSettings
+  ): Promise<{
+    next: Record<string, unknown> | null;
+    deadZoneWarning?: { message: string; appointmentTicketNumber?: string };
+  }> {
+    let waitingTickets = await this.db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.status, 'waiting')
+      ),
+      with: { service: true },
+      orderBy: [asc(schema.tickets.createdAt)],
+    });
+
+    if (settings.allowAppointments) {
+      waitingTickets = this.sortWaitingTicketsByWeighted(waitingTickets as any) as typeof waitingTickets;
+    }
+
+    const next = waitingTickets[0] ?? null;
+    if (!next) return { next: null };
+
+    let deadZoneWarning: { message: string; appointmentTicketNumber?: string } | undefined;
+    if (settings.allowAppointments && (next.type ?? 'walkin') === 'walkin') {
+      const now = new Date();
+      const nextAppointment = waitingTickets.find(
+        (t) => (t.type === 'appointment' && t.scheduledTime && new Date(t.scheduledTime) > now)
+      );
+      if (nextAppointment?.scheduledTime) {
+        const scheduledTime = new Date(nextAppointment.scheduledTime);
+        const serviceDuration = next.service?.duration ?? settings.defaultServiceDuration;
+        const endOfService = new Date(now.getTime() + serviceDuration * 60 * 1000);
+        if (endOfService > scheduledTime) {
+          deadZoneWarning = {
+            message: `Aguardando agendamento: ${nextAppointment.ticketNumber ?? `A-${nextAppointment.id}`}`,
+            appointmentTicketNumber: nextAppointment.ticketNumber ?? `A-${nextAppointment.id}`,
+          };
+        }
+      }
+    }
+
+    return {
+      next: next as Record<string, unknown>,
+      deadZoneWarning,
+    };
   }
 
   async calculatePositionForPreferredBarber(

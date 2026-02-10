@@ -1,16 +1,15 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { api } from '@/lib/api';
 import type { ShopTheme, HomeContent, ShopSettings, ShopStyleConfig } from '@eutonafila/shared';
-import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, resolveShopStyle, shopStyleConfigSchema } from '@eutonafila/shared';
+import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, shopStyleConfigSchema } from '@eutonafila/shared';
 import { useModal } from '@/hooks/useModal';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { AppearanceForm } from '@/components/AppearanceForm';
-import { ShopPreview } from '@/components/ShopPreview';
-import type { ShopConfig } from '@/contexts/ShopConfigContext';
 import { pickThreeRandomPaletteIndices } from '@/lib/presetPalettes';
 import { isRootBuild } from '@/lib/build';
 import { getErrorMessage } from '@/lib/utils';
@@ -52,28 +51,30 @@ interface ShopFormData {
 
 const uid = () => Math.random().toString(36).substring(2, 9);
 
-const TEMPLATE: ShopFormData = {
-  name: '',
-  slug: '',
-  domain: '',
-  path: '',
-  apiBase: '',
-  theme: { ...DEFAULT_THEME },
-  style: defaultStyle,
-  homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)),
-  settings: { ...DEFAULT_SETTINGS },
-  services: [
-    { id: uid(), name: 'Corte de Cabelo', description: 'Corte tradicional', duration: 30, price: 3000 },
-    { id: uid(), name: 'Barba', description: 'Aparar e modelar barba', duration: 20, price: 2000 },
-    { id: uid(), name: 'Corte + Barba', description: 'Combo completo', duration: 45, price: 4500 },
-  ],
-  barbers: [
-    { id: uid(), name: '', email: '', phone: '' },
-    { id: uid(), name: '', email: '', phone: '' },
-  ],
-};
+function getDefaultFormData(t: (key: string) => string): ShopFormData {
+  return {
+    name: '',
+    slug: '',
+    domain: '',
+    path: '',
+    apiBase: '',
+    theme: { ...DEFAULT_THEME },
+    style: defaultStyle,
+    homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)),
+    settings: { ...DEFAULT_SETTINGS },
+    services: [
+      { id: uid(), name: t('createShop.serviceNameHaircut'), description: t('createShop.serviceDescHaircut'), duration: 30, price: 3000 },
+      { id: uid(), name: t('createShop.serviceNameBeard'), description: t('createShop.serviceDescBeard'), duration: 20, price: 2000 },
+      { id: uid(), name: t('createShop.serviceNameCombo'), description: t('createShop.serviceDescCombo'), duration: 45, price: 4500 },
+    ],
+    barbers: [
+      { id: uid(), name: '', email: '', phone: '' },
+      { id: uid(), name: '', email: '', phone: '' },
+    ],
+  };
+}
 
-type CreateTab = 'info' | 'appearance' | 'content' | 'preview' | 'settings' | 'services' | 'barbers';
+type CreateTab = 'info' | 'appearance' | 'content' | 'settings' | 'services' | 'barbers';
 
 // --- Helpers ---
 
@@ -98,6 +99,7 @@ function StepServices({
   onChange: (services: ServiceItem[]) => void;
   errors: Record<string, string>;
 }) {
+  const { t } = useLocale();
   const addService = () => {
     onChange([...services, { id: uid(), name: '', description: '', duration: 30, price: 0 }]);
   };
@@ -114,9 +116,9 @@ function StepServices({
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
       <div>
-        <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-2">Servicos</h2>
+        <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-2">{t('createShop.servicesTab')}</h2>
         <p className="text-white/60 text-sm">
-          Personalize os servicos oferecidos. Ja vieram pré-preenchidos como modelo.
+          {t('createShop.servicesIntro')}
         </p>
       </div>
 
@@ -130,14 +132,14 @@ function StepServices({
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-white/40 text-xs font-medium uppercase tracking-wider">
-                Servico {index + 1}
+                {t('createShop.serviceN')} {index + 1}
               </span>
               {services.length > 1 && (
                 <button
                   type="button"
                   onClick={() => removeService(service.id)}
                   className="text-red-400/60 hover:text-red-400 transition-colors p-1"
-                  aria-label="Remover servico"
+                  aria-label={t('createShop.removeService')}
                 >
                   <span className="material-symbols-outlined text-lg">close</span>
                 </button>
@@ -150,7 +152,7 @@ function StepServices({
                   type="text"
                   value={service.name}
                   onChange={(e) => updateService(service.id, { name: e.target.value })}
-                  placeholder="Nome do servico"
+                  placeholder={t('createShop.serviceNamePlaceholder')}
                   className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
                 />
               </div>
@@ -159,12 +161,12 @@ function StepServices({
                   type="text"
                   value={service.description}
                   onChange={(e) => updateService(service.id, { description: e.target.value })}
-                  placeholder="Descricao (opcional)"
+                  placeholder={t('createShop.serviceDescPlaceholder')}
                   className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
                 />
               </div>
               <div>
-                <label className="block text-white/50 text-xs mb-1">Duracao (min)</label>
+                <label className="block text-white/50 text-xs mb-1">{t('createShop.durationMin')}</label>
                 <input
                   type="number"
                   min={1}
@@ -176,7 +178,7 @@ function StepServices({
                 />
               </div>
               <div>
-                <label className="block text-white/50 text-xs mb-1">Preco (R$)</label>
+                <label className="block text-white/50 text-xs mb-1">{t('createShop.priceReais')}</label>
                 <input
                   type="number"
                   min={0}
@@ -201,7 +203,7 @@ function StepServices({
         className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition-all text-sm"
       >
         <span className="material-symbols-outlined text-lg">add</span>
-        Adicionar Servico
+        {t('createShop.addService')}
       </button>
     </div>
   );
@@ -218,6 +220,7 @@ function StepBarbers({
   onChange: (barbers: BarberItem[]) => void;
   errors: Record<string, string>;
 }) {
+  const { t } = useLocale();
   const addBarber = () => {
     onChange([...barbers, { id: uid(), name: '', email: '', phone: '' }]);
   };
@@ -234,9 +237,9 @@ function StepBarbers({
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
       <div>
-        <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-2">Barbeiros</h2>
+        <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-2">{t('createShop.barbersTab')}</h2>
         <p className="text-white/60 text-sm">
-          Adicione os barbeiros da equipe. Voce pode adicionar mais depois.
+          {t('createShop.barbersIntro')}
         </p>
       </div>
 
@@ -253,7 +256,7 @@ function StepBarbers({
                 type="button"
                 onClick={() => removeBarber(barber.id)}
                 className="absolute top-3 right-3 text-red-400/60 hover:text-red-400 transition-colors p-1"
-                aria-label="Remover barbeiro"
+                aria-label={t('createShop.removeBarber')}
               >
                 <span className="material-symbols-outlined text-lg">close</span>
               </button>
@@ -264,7 +267,7 @@ function StepBarbers({
                 <span className="material-symbols-outlined text-[#D4AF37] text-lg">person</span>
               </div>
               <span className="text-white/40 text-xs font-medium uppercase tracking-wider">
-                Barbeiro {index + 1}
+                {t('createShop.barberN')} {index + 1}
               </span>
             </div>
 
@@ -273,21 +276,21 @@ function StepBarbers({
                 type="text"
                 value={barber.name}
                 onChange={(e) => updateBarber(barber.id, { name: e.target.value })}
-                placeholder="Nome *"
+                placeholder={t('createShop.namePlaceholder')}
                 className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
               />
               <input
                 type="email"
                 value={barber.email}
                 onChange={(e) => updateBarber(barber.id, { email: e.target.value })}
-                placeholder="Email (opcional)"
+                placeholder={t('createShop.emailPlaceholder')}
                 className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
               />
               <input
                 type="tel"
                 value={barber.phone}
                 onChange={(e) => updateBarber(barber.id, { phone: e.target.value })}
-                placeholder="Telefone (opcional)"
+                placeholder={t('createShop.phonePlaceholder')}
                 className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
               />
             </div>
@@ -301,7 +304,7 @@ function StepBarbers({
         className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition-all text-sm"
       >
         <span className="material-symbols-outlined text-lg">person_add</span>
-        Adicionar Barbeiro
+        {t('createShop.addBarber')}
       </button>
     </div>
   );
@@ -314,10 +317,11 @@ const FORM_INPUT = 'form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,2
 export function CreateShopPage() {
   const navigate = useNavigate();
   const { user, isCompanyAdmin } = useAuthContext();
+  const { t } = useLocale();
   const cancelModal = useModal();
 
   const [createTab, setCreateTab] = useState<CreateTab>('info');
-  const [data, setData] = useState<ShopFormData>(() => ({ ...TEMPLATE }));
+  const [data, setData] = useState<ShopFormData>(() => getDefaultFormData(t));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -354,16 +358,16 @@ export function CreateShopPage() {
 
   const validateForSubmit = useCallback((): boolean => {
     const errs: Record<string, string> = {};
-    if (!data.name.trim()) errs.name = 'Nome é obrigatório';
+    if (!data.name.trim()) errs.name = t('createShop.nameRequired');
     const hasEmptyService = data.services.some((s) => !s.name.trim());
     if (hasEmptyService || data.services.length === 0)
-      errs.services = data.services.length === 0 ? 'Adicione pelo menos 1 serviço' : 'Todos os serviços precisam de um nome';
+      errs.services = data.services.length === 0 ? t('createShop.addAtLeastOneService') : t('createShop.allServicesNeedName');
     const hasEmptyBarber = data.barbers.some((b) => !b.name.trim());
     if (hasEmptyBarber || data.barbers.length === 0)
-      errs.barbers = data.barbers.length === 0 ? 'Adicione pelo menos 1 barbeiro' : 'Todos os barbeiros precisam de um nome';
+      errs.barbers = data.barbers.length === 0 ? t('createShop.addAtLeastOneBarber') : t('createShop.allBarbersNeedName');
     setErrors(errs);
     return Object.keys(errs).length === 0;
-  }, [data]);
+  }, [data, t]);
 
   const handleSubmit = useCallback(async () => {
     if (!user?.companyId) return;
@@ -377,7 +381,7 @@ export function CreateShopPage() {
         slug: data.slug || undefined,
         domain: data.domain || undefined,
         theme: data.theme,
-        homeContent: data.homeContent,
+        homeContentByLocale: { 'pt-BR': data.homeContent, en: data.homeContent },
         settings: data.settings,
         services: data.services.map((s) => ({
           name: s.name,
@@ -393,11 +397,11 @@ export function CreateShopPage() {
       });
       navigate('/company/dashboard');
     } catch (err) {
-      setSubmitError(getErrorMessage(err, 'Erro ao criar barbearia. Tente novamente.'));
+      setSubmitError(getErrorMessage(err, t('createShop.createError')));
     } finally {
       setIsSubmitting(false);
     }
-  }, [user?.companyId, data, validateForSubmit, navigate]);
+  }, [user?.companyId, data, validateForSubmit, navigate, t]);
 
   if (!isCompanyAdmin || !user?.companyId) {
     return null;
@@ -419,7 +423,7 @@ export function CreateShopPage() {
       const loc = result.location;
       const hasAny = loc.name ?? loc.address ?? loc.phone ?? loc.phoneHref ?? loc.hours ?? loc.mapQuery ?? loc.addressLink;
       if (!hasAny) {
-        setPlacesLookupMessage('Nenhum resultado encontrado para este endereço.');
+        setPlacesLookupMessage(t('management.noResults'));
         return;
       }
       const locationPatch: Partial<ShopFormData['homeContent']['location']> = {};
@@ -440,26 +444,25 @@ export function CreateShopPage() {
       if (typeof loc.name === 'string' && loc.name && !data.name.trim()) {
         handleNameChange(loc.name);
       }
-      setPlacesLookupMessage('Dados preenchidos. Revise e ajuste se necessário.');
+      setPlacesLookupMessage(t('management.lookupSuccess'));
     } catch (err: unknown) {
       const statusCode = err && typeof err === 'object' && 'statusCode' in err ? (err as { statusCode: number }).statusCode : 0;
       const msg = statusCode === 503
-        ? 'Busca por endereço não está configurada.'
-        : getErrorMessage(err, 'Não foi possível buscar o endereço. Tente novamente.');
+        ? t('management.lookupUnavailable')
+        : getErrorMessage(err, t('management.lookupError'));
       setPlacesLookupMessage(msg);
     } finally {
       setPlacesLookupLoading(false);
     }
-  }, [user?.companyId, placesLookupAddress, data.homeContent, data.name, onChange]);
+  }, [user?.companyId, placesLookupAddress, data.homeContent, data.name, onChange, t]);
 
   const tabs: { id: CreateTab; label: string }[] = [
-    { id: 'info', label: 'Informações' },
-    { id: 'appearance', label: 'Aparência' },
-    { id: 'content', label: 'Conteúdo' },
-    { id: 'preview', label: 'Pré-visualização' },
-    { id: 'settings', label: 'Configurações' },
-    { id: 'services', label: 'Serviços' },
-    { id: 'barbers', label: 'Barbeiros' },
+    { id: 'info', label: t('management.infoTab') },
+    { id: 'appearance', label: t('management.appearanceTab') },
+    { id: 'content', label: t('management.contentTab') },
+    { id: 'settings', label: t('management.settingsTab') },
+    { id: 'services', label: t('createShop.servicesTab') },
+    { id: 'barbers', label: t('createShop.barbersTab') },
   ];
 
   return (
@@ -468,8 +471,8 @@ export function CreateShopPage() {
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-16">
         <div className="mb-6">
-          <p className="text-sm uppercase tracking-[0.25em] text-white/60 mb-2">Nova Barbearia</p>
-          <h1 className="text-2xl sm:text-3xl font-semibold text-white">Criar barbearia</h1>
+          <p className="text-sm uppercase tracking-[0.25em] text-white/60 mb-2">{t('createShop.newShop')}</p>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-white">{t('createShop.createShop')}</h1>
         </div>
 
         {submitError && (
@@ -498,9 +501,9 @@ export function CreateShopPage() {
           <div className="min-h-[320px]">
             {createTab === 'info' && (
               <section className="space-y-5">
-                <p className="text-white/60 text-sm">Dados básicos da barbearia.</p>
+                <p className="text-white/60 text-sm">{t('management.infoIntro')}</p>
                 <div>
-                  <label htmlFor="createName" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">Nome *</label>
+                  <label htmlFor="createName" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">{t('management.name')} *</label>
                   <input
                     id="createName"
                     type="text"
@@ -512,7 +515,7 @@ export function CreateShopPage() {
                   {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
                 </div>
                 <div>
-                  <label htmlFor="createSlug" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">Slug *</label>
+                  <label htmlFor="createSlug" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">{t('management.slug')} *</label>
                   <input
                     id="createSlug"
                     type="text"
@@ -524,16 +527,16 @@ export function CreateShopPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="createDomain" className="block text-white/50 text-sm mb-2">Domínio (opcional)</label>
-                  <input id="createDomain" type="text" value={data.domain} onChange={(e) => onChange({ domain: e.target.value })} placeholder="exemplo.com" className={FORM_INPUT} />
+                  <label htmlFor="createDomain" className="block text-white/50 text-sm mb-2">{t('management.domain')}</label>
+                  <input id="createDomain" type="text" value={data.domain} onChange={(e) => onChange({ domain: e.target.value })} placeholder={t('management.domainPlaceholder')} className={FORM_INPUT} />
                 </div>
                 <div>
-                  <label htmlFor="createPath" className="block text-white/50 text-sm mb-2">Caminho (opcional)</label>
-                  <input id="createPath" type="text" value={data.path} onChange={(e) => onChange({ path: e.target.value })} placeholder="/caminho" className={FORM_INPUT} />
+                  <label htmlFor="createPath" className="block text-white/50 text-sm mb-2">{t('management.path')}</label>
+                  <input id="createPath" type="text" value={data.path} onChange={(e) => onChange({ path: e.target.value })} placeholder={t('management.pathPlaceholder')} className={FORM_INPUT} />
                 </div>
                 <div>
-                  <label htmlFor="createApiBase" className="block text-white/50 text-sm mb-2">API Base URL (opcional)</label>
-                  <input id="createApiBase" type="url" value={data.apiBase} onChange={(e) => onChange({ apiBase: e.target.value })} placeholder="https://api.exemplo.com" className={FORM_INPUT} />
+                  <label htmlFor="createApiBase" className="block text-white/50 text-sm mb-2">{t('management.apiBase')}</label>
+                  <input id="createApiBase" type="url" value={data.apiBase} onChange={(e) => onChange({ apiBase: e.target.value })} placeholder={t('management.apiBasePlaceholder')} className={FORM_INPUT} />
                 </div>
               </section>
             )}
@@ -559,48 +562,48 @@ export function CreateShopPage() {
 
             {createTab === 'content' && (
               <div className="space-y-6 max-h-[50vh] overflow-y-auto">
-                <p className="text-white/60 text-sm">Textos e conteúdo da página inicial. Todos opcionais.</p>
+                <p className="text-white/60 text-sm">{t('management.contentIntro')}</p>
                 <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                  <h4 className="text-white font-medium">Ícones da loja</h4>
+                  <h4 className="text-white font-medium">{t('management.storeIcons')}</h4>
                   <div className="space-y-3">
-                    <div><label className="block text-white/60 text-sm mb-1">Favicon (ícone da aba do navegador)</label><input type="url" value={data.homeContent.branding.faviconUrl} onChange={(e) => onChange({ homeContent: { ...data.homeContent, branding: { ...data.homeContent.branding, faviconUrl: e.target.value } } })} placeholder="https://..." className={FORM_INPUT} /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">Logo do cabeçalho (ícone no topo da página)</label><input type="url" value={data.homeContent.branding.headerIconUrl} onChange={(e) => onChange({ homeContent: { ...data.homeContent, branding: { ...data.homeContent.branding, headerIconUrl: e.target.value } } })} placeholder="https://..." className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.favicon')}</label><input type="url" value={data.homeContent.branding.faviconUrl} onChange={(e) => onChange({ homeContent: { ...data.homeContent, branding: { ...data.homeContent.branding, faviconUrl: e.target.value } } })} placeholder="https://..." className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.headerIcon')}</label><input type="url" value={data.homeContent.branding.headerIconUrl} onChange={(e) => onChange({ homeContent: { ...data.homeContent, branding: { ...data.homeContent.branding, headerIconUrl: e.target.value } } })} placeholder="https://..." className={FORM_INPUT} /></div>
                   </div>
                 </section>
                 <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                  <h4 className="text-white font-medium">Hero</h4>
+                  <h4 className="text-white font-medium">{t('management.hero')}</h4>
                   <div className="space-y-3">
-                    <div><label className="block text-white/60 text-sm mb-1">Badge do hero</label><input type="text" value={data.homeContent.hero.badge} onChange={(e) => onChange({ homeContent: { ...data.homeContent, hero: { ...data.homeContent.hero, badge: e.target.value } } })} className={FORM_INPUT} /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">Subtítulo</label><input type="text" value={data.homeContent.hero.subtitle} onChange={(e) => onChange({ homeContent: { ...data.homeContent, hero: { ...data.homeContent.hero, subtitle: e.target.value } } })} className={FORM_INPUT} /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">Botão Entrar</label><input type="text" value={data.homeContent.hero.ctaJoin} onChange={(e) => onChange({ homeContent: { ...data.homeContent, hero: { ...data.homeContent.hero, ctaJoin: e.target.value } } })} className={FORM_INPUT} /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">Botão Localização</label><input type="text" value={data.homeContent.hero.ctaLocation} onChange={(e) => onChange({ homeContent: { ...data.homeContent, hero: { ...data.homeContent.hero, ctaLocation: e.target.value } } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.heroBadge')}</label><input type="text" value={data.homeContent.hero.badge} onChange={(e) => onChange({ homeContent: { ...data.homeContent, hero: { ...data.homeContent.hero, badge: e.target.value } } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.subtitle')}</label><input type="text" value={data.homeContent.hero.subtitle} onChange={(e) => onChange({ homeContent: { ...data.homeContent, hero: { ...data.homeContent.hero, subtitle: e.target.value } } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.ctaJoin')}</label><input type="text" value={data.homeContent.hero.ctaJoin} onChange={(e) => onChange({ homeContent: { ...data.homeContent, hero: { ...data.homeContent.hero, ctaJoin: e.target.value } } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.ctaLocation')}</label><input type="text" value={data.homeContent.hero.ctaLocation} onChange={(e) => onChange({ homeContent: { ...data.homeContent, hero: { ...data.homeContent.hero, ctaLocation: e.target.value } } })} className={FORM_INPUT} /></div>
                   </div>
                 </section>
                 <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                  <h4 className="text-white font-medium">Seção Sobre</h4>
+                  <h4 className="text-white font-medium">{t('management.aboutSection')}</h4>
                   <div className="space-y-3">
-                    <div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={data.homeContent.about.sectionTitle} onChange={(e) => onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, sectionTitle: e.target.value } } })} className={FORM_INPUT} /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">Imagem (URL)</label><input type="url" value={data.homeContent.about.imageUrl} onChange={(e) => onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, imageUrl: e.target.value } } })} placeholder="https://..." className={FORM_INPUT} /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">Texto alternativo da imagem</label><input type="text" value={data.homeContent.about.imageAlt} onChange={(e) => onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, imageAlt: e.target.value } } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.sectionTitle')}</label><input type="text" value={data.homeContent.about.sectionTitle} onChange={(e) => onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, sectionTitle: e.target.value } } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.imageUrl')}</label><input type="url" value={data.homeContent.about.imageUrl} onChange={(e) => onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, imageUrl: e.target.value } } })} placeholder="https://..." className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.imageAlt')}</label><input type="text" value={data.homeContent.about.imageAlt} onChange={(e) => onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, imageAlt: e.target.value } } })} className={FORM_INPUT} /></div>
                   </div>
                 </section>
                 <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                  <h4 className="text-white font-medium">Seção Serviços</h4>
+                  <h4 className="text-white font-medium">{t('management.servicesSection')}</h4>
                   <div className="space-y-3">
-                    <div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={data.homeContent.services.sectionTitle} onChange={(e) => onChange({ homeContent: { ...data.homeContent, services: { ...data.homeContent.services, sectionTitle: e.target.value } } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.sectionTitle')}</label><input type="text" value={data.homeContent.services.sectionTitle} onChange={(e) => onChange({ homeContent: { ...data.homeContent, services: { ...data.homeContent.services, sectionTitle: e.target.value } } })} className={FORM_INPUT} /></div>
                   </div>
                 </section>
                 <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                  <h4 className="text-white font-medium">Localização</h4>
+                  <h4 className="text-white font-medium">{t('management.locationSection')}</h4>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-white/60 text-sm mb-1">Buscar dados pelo endereço</label>
+                      <label className="block text-white/60 text-sm mb-1">{t('management.lookupByAddress')}</label>
                       <div className="flex gap-2 flex-wrap">
                         <input
                           type="text"
                           value={placesLookupAddress}
                           onChange={(e) => setPlacesLookupAddress(e.target.value)}
-                          placeholder="Endereço ou nome do estabelecimento"
+                          placeholder={t('management.addressPlaceholder')}
                           className={FORM_INPUT + ' flex-1 min-w-[200px]'}
                           disabled={placesLookupLoading}
                         />
@@ -610,62 +613,43 @@ export function CreateShopPage() {
                           disabled={placesLookupLoading || !placesLookupAddress.trim()}
                           className="px-4 py-2.5 rounded-lg bg-[#D4AF37] text-[#0a0a0a] font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                         >
-                          {placesLookupLoading ? 'Buscando...' : 'Buscar'}
+                          {placesLookupLoading ? t('management.searching') : t('management.search')}
                         </button>
                       </div>
                       {placesLookupMessage && (
-                        <p className={`text-sm mt-1 ${placesLookupMessage.startsWith('Dados preenchidos') ? 'text-green-400' : 'text-amber-400'}`}>
+                        <p className={`text-sm mt-1 ${placesLookupMessage === t('management.lookupSuccess') ? 'text-green-400' : 'text-amber-400'}`}>
                           {placesLookupMessage}
                         </p>
                       )}
                     </div>
-                    <div><label className="block text-white/60 text-sm mb-1">Endereço</label><textarea value={data.homeContent.location.address} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, address: e.target.value } } })} className={FORM_INPUT + ' min-h-[60px]'} /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">Horário</label><textarea value={data.homeContent.location.hours} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, hours: e.target.value } } })} className={FORM_INPUT} /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">Telefone</label><input type="text" value={data.homeContent.location.phone} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, phone: e.target.value } } })} className={FORM_INPUT} /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">Link do telefone</label><input type="text" value={data.homeContent.location.phoneHref} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, phoneHref: e.target.value } } })} className={FORM_INPUT} placeholder="tel:+55..." /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">Idiomas</label><input type="text" value={data.homeContent.location.languages} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, languages: e.target.value } } })} className={FORM_INPUT} /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">Consulta do mapa</label><input type="text" value={data.homeContent.location.mapQuery} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, mapQuery: e.target.value } } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.address')}</label><textarea value={data.homeContent.location.address} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, address: e.target.value } } })} className={FORM_INPUT + ' min-h-[60px]'} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.hours')}</label><textarea value={data.homeContent.location.hours} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, hours: e.target.value } } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.phone')}</label><input type="text" value={data.homeContent.location.phone} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, phone: e.target.value } } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.phoneLink')}</label><input type="text" value={data.homeContent.location.phoneHref} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, phoneHref: e.target.value } } })} className={FORM_INPUT} placeholder="tel:+55..." /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.languages')}</label><input type="text" value={data.homeContent.location.languages} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, languages: e.target.value } } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">{t('management.mapQuery')}</label><input type="text" value={data.homeContent.location.mapQuery} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, mapQuery: e.target.value } } })} className={FORM_INPUT} /></div>
                   </div>
                 </section>
-              </div>
-            )}
-
-            {createTab === 'preview' && (
-              <div className="flex flex-col min-h-[50vh]">
-                <p className="text-white/60 text-sm mb-3">Visualização da página inicial com os dados atuais do formulário.</p>
-                <ShopPreview
-                  config={
-                    {
-                      name: data.name || 'Nome da barbearia',
-                      theme: data.theme,
-                      style: resolveShopStyle(data.style),
-                      path: data.path || '/',
-                      homeContent: data.homeContent,
-                      settings: data.settings,
-                    } satisfies ShopConfig
-                  }
-                  className="flex-1 min-h-[50vh] overflow-hidden"
-                />
               </div>
             )}
 
             {createTab === 'settings' && (
               <div className="space-y-6">
                 <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                  <h4 className="text-white font-medium">Fila</h4>
+                  <h4 className="text-white font-medium">{t('management.queueSection')}</h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-white/60 text-sm mb-2">Tamanho máximo da fila</label><input type="number" min={1} max={500} value={data.settings.maxQueueSize} onChange={(e) => onChange({ settings: { ...data.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className={FORM_INPUT} /></div>
-                    <div><label className="block text-white/60 text-sm mb-2">Duração padrão do serviço (min)</label><input type="number" min={1} max={480} value={data.settings.defaultServiceDuration} onChange={(e) => onChange({ settings: { ...data.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-2">{t('management.maxQueueSize')}</label><input type="number" min={1} max={500} value={data.settings.maxQueueSize} onChange={(e) => onChange({ settings: { ...data.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-2">{t('management.defaultServiceDuration')}</label><input type="number" min={1} max={480} value={data.settings.defaultServiceDuration} onChange={(e) => onChange({ settings: { ...data.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className={FORM_INPUT} /></div>
                   </div>
                 </section>
                 <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                  <h4 className="text-white font-medium">Regras de atendimento</h4>
+                  <h4 className="text-white font-medium">{t('management.serviceRules')}</h4>
                   <ul className="space-y-4">
-                    {[{ key: 'requirePhone' as const, label: 'Exigir telefone do cliente' }, { key: 'requireBarberChoice' as const, label: 'Exigir escolha de barbeiro' }, { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' }, { key: 'deviceDeduplication' as const, label: 'Impedir múltiplos tickets por dispositivo' }, { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' }].map(({ key, label }) => (
+                    {[{ key: 'requirePhone' as const, labelKey: 'management.requirePhone' }, { key: 'requireBarberChoice' as const, labelKey: 'management.requireBarberChoice' }, { key: 'allowDuplicateNames' as const, labelKey: 'management.allowDuplicateNames' }, { key: 'deviceDeduplication' as const, labelKey: 'management.deviceDeduplication' }, { key: 'allowCustomerCancelInProgress' as const, labelKey: 'management.allowCustomerCancelInProgress' }, { key: 'allowAppointments' as const, labelKey: 'management.allowAppointments' }].map(({ key, labelKey }) => (
                       <li key={key}>
                         <label className="flex items-center gap-3 cursor-pointer group">
                           <button type="button" role="switch" aria-checked={data.settings[key]} onClick={() => onChange({ settings: { ...data.settings, [key]: !data.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${data.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${data.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
-                          <span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span>
+                          <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t(labelKey)}</span>
                         </label>
                       </li>
                     ))}
@@ -691,7 +675,7 @@ export function CreateShopPage() {
 
           <div className="flex gap-2 sm:gap-3 mt-6 pt-4 border-t border-white/10">
             <button type="button" onClick={handleCancel} className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30">
-              Cancelar
+              {t('common.cancel')}
             </button>
             <button
               type="button"
@@ -702,10 +686,10 @@ export function CreateShopPage() {
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-[#0a0a0a]/30 border-t-[#0a0a0a] rounded-full animate-spin inline-block mr-2 align-middle" />
-                  Criando...
+                  {t('createShop.creating')}
                 </>
               ) : (
-                <>Criar Barbearia</>
+                <>{t('createShop.createBarbershop')}</>
               )}
             </button>
           </div>
@@ -716,10 +700,10 @@ export function CreateShopPage() {
         isOpen={cancelModal.isOpen}
         onClose={cancelModal.close}
         onConfirm={() => navigate('/company/dashboard')}
-        title="Descartar alterações?"
-        message="Todos os dados preenchidos serão perdidos. Tem certeza?"
-        confirmText="Descartar"
-        cancelText="Continuar editando"
+        title={t('createShop.cancelConfirmTitle')}
+        message={t('createShop.cancelConfirmMessage')}
+        confirmText={t('createShop.discard')}
+        cancelText={t('createShop.continueEditing')}
         variant="destructive"
         icon="warning"
       />

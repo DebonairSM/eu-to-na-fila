@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Suspense, useEffect } from 'react';
 import { useAuthContext } from './contexts/AuthContext';
-import { useShopConfig } from './contexts/ShopConfigContext';
+import { useShopHomeContent } from './contexts/ShopConfigContext';
 import { useLocale } from './contexts/LocaleContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { api } from './lib/api';
@@ -38,9 +38,9 @@ function ProtectedRoute({
 }) {
   const { isAuthenticated, isOwner, isCompanyAdmin, isBarber, isLoading } = useAuthContext();
 
-  const { config } = useShopConfig();
+  const homeContent = useShopHomeContent();
   const { t } = useLocale();
-  const loadingText = config.homeContent?.accessibility?.loading ?? t('accessibility.loading');
+  const loadingText = homeContent?.accessibility?.loading ?? t('accessibility.loading');
 
   if (isLoading) {
     return (
@@ -172,10 +172,10 @@ function AppContent() {
 }
 
 function App() {
-  const { config } = useShopConfig();
+  const homeContent = useShopHomeContent();
   const { t } = useLocale();
-  const skipLinkText = config.homeContent?.accessibility?.skipLink ?? t('accessibility.skipLink');
-  const loadingText = config.homeContent?.accessibility?.loading ?? t('accessibility.loading');
+  const skipLinkText = homeContent?.accessibility?.skipLink ?? t('accessibility.skipLink');
+  const loadingText = homeContent?.accessibility?.loading ?? t('accessibility.loading');
 
   useEffect(() => {
     const preload = [

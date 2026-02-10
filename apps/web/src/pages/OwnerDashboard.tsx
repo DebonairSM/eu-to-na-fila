@@ -1,9 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { Navigation } from '@/components/Navigation';
 
 export function OwnerDashboard() {
   const { logout } = useAuthContext();
+  const { t } = useLocale();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -17,7 +19,7 @@ export function OwnerDashboard() {
       <main className="container max-w-[800px] mx-auto relative z-10 pt-24 px-4 sm:px-6 lg:px-10 pb-12">
         <div className="text-center mb-10">
           <h1 className="font-['Playfair_Display',serif] text-2xl font-semibold text-[var(--shop-accent)]">
-            Dashboard
+            {t('dashboard.title')}
           </h1>
         </div>
 
@@ -30,7 +32,7 @@ export function OwnerDashboard() {
               <span className="material-symbols-outlined">manage_accounts</span>
             </div>
             <h2 className="text-2xl font-semibold text-[var(--shop-text-primary)] text-center">
-              Gerenciar Fila
+              {t('dashboard.manageQueue')}
             </h2>
             <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">
               arrow_forward
@@ -45,7 +47,7 @@ export function OwnerDashboard() {
               <span className="material-symbols-outlined">analytics</span>
             </div>
             <h2 className="text-2xl font-semibold text-[var(--shop-text-primary)] text-center">
-              Analytics
+              {t('dashboard.analytics')}
             </h2>
             <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">
               arrow_forward
@@ -60,7 +62,7 @@ export function OwnerDashboard() {
               <span className="material-symbols-outlined">content_cut</span>
             </div>
             <h2 className="text-2xl font-semibold text-[var(--shop-text-primary)] text-center">
-              Gerenciar Barbeiros
+              {t('dashboard.manageBarbers')}
             </h2>
             <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">
               arrow_forward
@@ -74,7 +76,7 @@ export function OwnerDashboard() {
             className="px-5 py-2.5 bg-transparent text-[var(--shop-text-secondary)] border border-[var(--shop-border-color)] rounded-lg hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-all flex items-center gap-3 mx-auto text-sm"
           >
             <span className="material-symbols-outlined text-lg">logout</span>
-            Sair
+            {t('dashboard.logout')}
           </button>
         </div>
       </main>

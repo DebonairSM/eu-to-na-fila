@@ -4,7 +4,7 @@ import { eq, and, or, ne, sql } from 'drizzle-orm';
 import type { CreateTicket, UpdateTicketStatus, Ticket } from '@eutonafila/shared';
 import type { QueueService } from './QueueService.js';
 import type { AuditService } from './AuditService.js';
-import { ConflictError, NotFoundError } from '../lib/errors.js';
+import { ConflictError, NotFoundError, ValidationError } from '../lib/errors.js';
 import { parseSettings } from '../lib/settings.js';
 
 /**
@@ -27,18 +27,30 @@ export class TicketService {
 
   async getByShop(
     shopId: number,
-    status?: 'waiting' | 'in_progress' | 'completed' | 'cancelled'
+    status?: 'pending' | 'waiting' | 'in_progress' | 'completed' | 'cancelled',
+    settings?: { allowAppointments?: boolean }
   ): Promise<Ticket[]> {
     const whereClause = status
       ? and(eq(schema.tickets.shopId, shopId), eq(schema.tickets.status, status))
       : eq(schema.tickets.shopId, shopId);
 
     try {
-      const tickets = await this.db.query.tickets.findMany({
+      let tickets = await this.db.query.tickets.findMany({
         where: whereClause,
         with: { service: true, barber: true },
         orderBy: (tickets, { asc }) => [asc(tickets.createdAt)],
       });
+
+      if (!status && settings?.allowAppointments) {
+        const now = new Date();
+        const waiting = tickets.filter((t) => t.status === 'waiting');
+        const others = tickets.filter((t) => t.status !== 'waiting');
+        const sortedWaiting = this.queueService.sortWaitingTicketsByWeighted(waiting as any, now) as typeof waiting;
+        const order = ['in_progress', 'pending', 'completed', 'cancelled'] as const;
+        const sortedOthers = order.flatMap((s) => others.filter((t) => t.status === s));
+        tickets = [...sortedWaiting, ...sortedOthers];
+      }
+
       return tickets as Ticket[];
     } catch (error) {
       throw error;
@@ -122,20 +134,36 @@ export class TicketService {
       estimatedWaitTime = await this.queueService.calculateWaitTime(shopId, position, settings.defaultServiceDuration);
     }
 
+    const insertValues: Record<string, unknown> = {
+      shopId,
+      serviceId: data.serviceId,
+      customerName: data.customerName,
+      customerPhone: data.customerPhone,
+      deviceId: data.deviceId || null,
+      preferredBarberId: data.preferredBarberId,
+      status: 'waiting',
+      position,
+      estimatedWaitTime,
+      type: 'walkin',
+    };
+    if (settings.allowAppointments) {
+      (insertValues as any).checkInTime = now;
+    }
+
     const [ticket] = await this.db
       .insert(schema.tickets)
-      .values({
-        shopId,
-        serviceId: data.serviceId,
-        customerName: data.customerName,
-        customerPhone: data.customerPhone,
-        deviceId: data.deviceId || null,
-        preferredBarberId: data.preferredBarberId,
-        status: 'waiting',
-        position,
-        estimatedWaitTime,
-      })
+      .values(insertValues as any)
       .returning();
+
+    if (settings.allowAppointments && ticket) {
+      const ticketNumber = `W-${ticket.id}`;
+      await this.db
+        .update(schema.tickets)
+        .set({ ticketNumber, updatedAt: now })
+        .where(eq(schema.tickets.id, ticket.id));
+      (ticket as any).ticketNumber = ticketNumber;
+      (ticket as any).checkInTime = now;
+    }
 
     this.auditService.logTicketCreated(ticket.id, shopId, {
       customerName: data.customerName,
@@ -262,12 +290,13 @@ export class TicketService {
     }
 
     const shopIdForRecalc = existingTicket.shopId;
-    void Promise.resolve()
-      .then(() =>
-        this.queueService.recalculatePositions(shopIdForRecalc).then(() =>
-          this.recalculateWaitTimes(shopIdForRecalc)
-        )
-      )
+    this.db.query.shops.findFirst({
+      where: eq(schema.shops.id, shopIdForRecalc),
+      columns: { settings: true },
+    }).then((s) => {
+      const settingsForRecalc = parseSettings(s?.settings);
+      return this.queueService.recalculatePositions(shopIdForRecalc, settingsForRecalc);
+    }).then(() => this.recalculateWaitTimes(shopIdForRecalc))
       .catch((err) => {
         console.error('[TicketService] Deferred recalc failed for shop', shopIdForRecalc, err);
       });
@@ -326,6 +355,7 @@ export class TicketService {
 
   private validateStatusTransition(currentStatus: string, newStatus: string): void {
     const validTransitions: Record<string, string[]> = {
+      pending: ['waiting', 'cancelled'],
       waiting: ['in_progress', 'cancelled'],
       in_progress: ['completed', 'cancelled', 'waiting'],
       completed: [],
@@ -354,7 +384,99 @@ export class TicketService {
   }
 
   async recalculateShopQueue(shopId: number): Promise<void> {
-    await this.queueService.recalculatePositions(shopId);
+    const shop = await this.db.query.shops.findFirst({
+      where: eq(schema.shops.id, shopId),
+      columns: { settings: true },
+    });
+    const settings = parseSettings(shop?.settings);
+    await this.queueService.recalculatePositions(shopId, settings);
     await this.recalculateWaitTimes(shopId);
+  }
+
+  /**
+   * Create an appointment (staff only). Requires shop settings.allowAppointments.
+   * Inserts with type=appointment, status=pending, scheduledTime; ticket_number set to A-{id}.
+   */
+  async createAppointment(
+    shopId: number,
+    data: { serviceId: number; customerName: string; customerPhone?: string; scheduledTime: Date | string }
+  ): Promise<Ticket> {
+    const shop = await this.db.query.shops.findFirst({
+      where: eq(schema.shops.id, shopId),
+    });
+    if (!shop) throw new NotFoundError('Shop not found');
+    const settings = parseSettings(shop.settings);
+    if (!settings.allowAppointments) throw new ConflictError('Appointments are not enabled for this shop');
+
+    const service = await this.db.query.services.findFirst({
+      where: and(eq(schema.services.id, data.serviceId), eq(schema.services.shopId, shopId)),
+    });
+    if (!service) throw new NotFoundError('Service not found');
+    if (!service.isActive) throw new ConflictError('Service is not active');
+
+    const scheduledTime = typeof data.scheduledTime === 'string' ? new Date(data.scheduledTime) : data.scheduledTime;
+    if (isNaN(scheduledTime.getTime())) throw new ValidationError('Invalid scheduledTime');
+
+    const now = new Date();
+    const [ticket] = await this.db
+      .insert(schema.tickets)
+      .values({
+        shopId,
+        serviceId: data.serviceId,
+        customerName: data.customerName,
+        customerPhone: data.customerPhone ?? null,
+        deviceId: null,
+        preferredBarberId: null,
+        status: 'pending',
+        position: 0,
+        estimatedWaitTime: null,
+        type: 'appointment',
+        scheduledTime,
+        checkInTime: null,
+        ticketNumber: null,
+      })
+      .returning();
+
+    const ticketNumber = `A-${ticket.id}`;
+    await this.db
+      .update(schema.tickets)
+      .set({ ticketNumber, updatedAt: now })
+      .where(eq(schema.tickets.id, ticket.id));
+
+    this.auditService.logTicketCreated(ticket.id, shopId, {
+      customerName: data.customerName,
+      serviceId: data.serviceId,
+      preferredBarberId: undefined,
+      actorType: 'staff',
+    });
+
+    return { ...ticket, ticketNumber } as Ticket;
+  }
+
+  /**
+   * Check in an appointment (pending -> waiting, set check_in_time). Staff/owner only.
+   */
+  async checkIn(ticketId: number): Promise<Ticket> {
+    const existingTicket = await this.getById(ticketId);
+    if (!existingTicket) throw new NotFoundError('Ticket not found');
+    if ((existingTicket as any).type !== 'appointment') throw new ConflictError('Only appointments can be checked in');
+    if (existingTicket.status !== 'pending') throw new ConflictError('Ticket is not pending');
+
+    const now = new Date();
+    const [ticket] = await this.db
+      .update(schema.tickets)
+      .set({ status: 'waiting', checkInTime: now, updatedAt: now })
+      .where(eq(schema.tickets.id, ticketId))
+      .returning();
+
+    const shop = await this.db.query.shops.findFirst({
+      where: eq(schema.shops.id, existingTicket.shopId),
+      columns: { settings: true },
+    });
+    const settings = parseSettings(shop?.settings);
+    await this.queueService.recalculatePositions(existingTicket.shopId, settings);
+    await this.recalculateWaitTimes(existingTicket.shopId);
+
+    return ticket as Ticket;
   }
 }

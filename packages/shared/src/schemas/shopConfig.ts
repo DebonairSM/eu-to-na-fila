@@ -65,6 +65,56 @@ export interface HomeContent {
   accessibility: { skipLink: string; loading: string };
 }
 
+/** Per-locale home content. Keys are locale codes (e.g. "pt-BR", "en"). */
+export type HomeContentByLocale = Record<string, HomeContent>;
+
+const DEFAULT_LOCALE = 'pt-BR';
+
+/**
+ * Deep-merge partial home content with DEFAULT_HOME_CONTENT.
+ * Used by getHomeContentForLocale and by API.
+ */
+function mergeHomeContentWithDefaults(partial: unknown): HomeContent {
+  if (!partial || typeof partial !== 'object') return DEFAULT_HOME_CONTENT;
+  const deepMerge = <T>(def: T, from: unknown): T => {
+    if (from == null || typeof from !== 'object') return def;
+    const o = from as Record<string, unknown>;
+    const out = { ...def } as Record<string, unknown>;
+    for (const k of Object.keys(def as object)) {
+      const defVal = (def as Record<string, unknown>)[k];
+      const fromVal = o[k];
+      if (defVal && typeof defVal === 'object' && !Array.isArray(defVal) && fromVal && typeof fromVal === 'object' && !Array.isArray(fromVal)) {
+        out[k] = deepMerge(defVal, fromVal);
+      } else if (fromVal !== undefined) {
+        out[k] = Array.isArray(fromVal) ? [...fromVal] : fromVal;
+      }
+    }
+    return out as T;
+  };
+  return deepMerge(DEFAULT_HOME_CONTENT, partial);
+}
+
+/**
+ * Returns true if the object looks like a locale-keyed record (has a locale as top-level key).
+ * HomeContent has keys like "hero", "nav", "branding" - no locale code.
+ */
+function isLocaleRecord(obj: Record<string, unknown>): boolean {
+  return Object.keys(obj).some((k) => k === 'pt-BR' || k === 'en');
+}
+
+/**
+ * Resolve home content for a given locale from stored value (legacy single object or locale-keyed record).
+ */
+export function getHomeContentForLocale(byLocale: unknown, locale: string): HomeContent {
+  if (!byLocale || typeof byLocale !== 'object') return DEFAULT_HOME_CONTENT;
+  const o = byLocale as Record<string, unknown>;
+  if (isLocaleRecord(o)) {
+    const content = o[locale] ?? o[DEFAULT_LOCALE] ?? o[Object.keys(o)[0]];
+    return mergeHomeContentWithDefaults(content);
+  }
+  return mergeHomeContentWithDefaults(byLocale);
+}
+
 /** Zod schema for theme validation with defaults. Adding a new field here with a .default() is all you need. */
 export const themeSchema = z.object({
   primary: z.string().max(50).default('#3E2723'),
@@ -158,6 +208,9 @@ export const homeContentInputSchema = z.object({
   }).optional(),
 }).optional();
 
+/** PATCH body: home content keyed by locale. Each value is partial (same shape as homeContentInputSchema). */
+export const homeContentByLocaleInputSchema = z.record(z.string(), homeContentInputSchema).optional();
+
 /** Per-shop business rules. All fields have defaults matching current hardcoded behavior. */
 export interface ShopSettings {
   maxQueueSize: number;
@@ -167,6 +220,7 @@ export interface ShopSettings {
   allowDuplicateNames: boolean;
   deviceDeduplication: boolean;
   allowCustomerCancelInProgress: boolean;
+  allowAppointments: boolean;
 }
 
 /** Zod schema for settings validation with defaults. Adding a new field here with a .default() is all you need. */
@@ -178,6 +232,7 @@ export const shopSettingsSchema = z.object({
   allowDuplicateNames: z.boolean().default(false),
   deviceDeduplication: z.boolean().default(true),
   allowCustomerCancelInProgress: z.boolean().default(false),
+  allowAppointments: z.boolean().default(false),
 });
 
 /** Partial input for PATCH (all optional, shallow-merged with existing). */
@@ -189,6 +244,7 @@ export const shopSettingsInputSchema = z.object({
   allowDuplicateNames: z.boolean().optional(),
   deviceDeduplication: z.boolean().optional(),
   allowCustomerCancelInProgress: z.boolean().optional(),
+  allowAppointments: z.boolean().optional(),
 }).optional();
 
 /** Default settings values. Single source of truth. */
@@ -279,6 +335,9 @@ export interface ShopPublicConfig {
   theme: Required<ShopTheme>;
   style: ShopStyleResolved;
   path: string;
+  /** Per-locale content; use getHomeContentForLocale with current locale. */
+  homeContentByLocale?: Record<string, HomeContent>;
+  /** Default locale content for backward compatibility. */
   homeContent: HomeContent;
   settings: ShopSettings;
 }

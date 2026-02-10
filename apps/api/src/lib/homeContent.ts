@@ -27,3 +27,33 @@ export function mergeHomeContent(stored: unknown): HomeContent {
   };
   return deepMerge(DEFAULT_HOME_CONTENT, stored);
 }
+
+/**
+ * Returns true if the stored value is a locale-keyed record (has pt-BR or en as key).
+ */
+function isLocaleRecord(obj: Record<string, unknown>): boolean {
+  return Object.keys(obj).some((k) => k === 'pt-BR' || k === 'en');
+}
+
+/**
+ * Normalize stored home_content to Record<string, HomeContent> for the public API.
+ * Legacy single object becomes { "pt-BR": merged(stored) }.
+ */
+export function normalizeToHomeContentByLocale(stored: unknown): Record<string, HomeContent> {
+  if (!stored || typeof stored !== 'object') {
+    return { 'pt-BR': DEFAULT_HOME_CONTENT };
+  }
+  const o = stored as Record<string, unknown>;
+  if (isLocaleRecord(o)) {
+    const out: Record<string, HomeContent> = {};
+    for (const locale of Object.keys(o)) {
+      const val = o[locale];
+      if (val != null && typeof val === 'object') {
+        out[locale] = mergeHomeContent(val);
+      }
+    }
+    if (Object.keys(out).length === 0) return { 'pt-BR': DEFAULT_HOME_CONTENT };
+    return out;
+  }
+  return { 'pt-BR': mergeHomeContent(stored) };
+}

@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CompanyNav } from '@/components/CompanyNav';
+import { useLocale } from '@/contexts/LocaleContext';
 import { api } from '@/lib/api';
 import type { ShopListItem } from '@eutonafila/shared';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 
 export function NetworkPage() {
+  const { t } = useLocale();
   const [shops, setShops] = useState<ShopListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -21,26 +23,26 @@ export function NetworkPage() {
         const data = await api.getAllShops();
         setShops(data);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Erro ao carregar barbearias'));
+        setError(err instanceof Error ? err : new Error(t('network.loadError')));
       } finally {
         setIsLoading(false);
       }
     };
     fetchShops();
-  }, []);
+  }, [t]);
 
   return (
     <div className="min-h-screen bg-[var(--shop-background)] text-[var(--shop-text-primary)]">
       <CompanyNav />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-10">
         <header className="space-y-3">
-          <p className="text-sm uppercase tracking-[0.25em] text-[var(--shop-accent)]">Rede EuToNaFila</p>
-          <h1 className="text-3xl sm:text-4xl font-semibold">Barbearias</h1>
+          <p className="text-sm uppercase tracking-[0.25em] text-[var(--shop-accent)]">{t('network.networkTitle')}</p>
+          <h1 className="text-3xl sm:text-4xl font-semibold">{t('network.shopsTitle')}</h1>
         </header>
 
         {isLoading && (
           <div className="flex justify-center py-12">
-            <LoadingSpinner size="lg" text="Carregando barbearias..." />
+            <LoadingSpinner size="lg" text={t('network.loadingShops')} />
           </div>
         )}
 
@@ -56,7 +58,7 @@ export function NetworkPage() {
             {shops.length === 0 ? (
               <Card className="bg-white/5 border-white/10">
                 <CardContent className="p-6 text-center">
-                  <p className="text-[var(--shop-text-secondary)]">Nenhuma barbearia cadastrada</p>
+                  <p className="text-[var(--shop-text-secondary)]">{t('network.noShops')}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -75,7 +77,7 @@ export function NetworkPage() {
                       </div>
                     </div>
                     <p className="text-sm text-[var(--shop-text-secondary)]">
-                      Fila virtual em tempo real. Entre, acompanhe e seja chamado na vez.
+                      {t('network.tagline')}
                     </p>
                     <div className="flex gap-2 flex-wrap">
                       <Link to={`/join?shop=${encodeURIComponent(shop.slug)}`}>

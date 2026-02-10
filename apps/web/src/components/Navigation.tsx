@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { config as appConfig } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { useShopConfig, useShopHomeContent } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { Container } from '@/components/design-system';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -12,10 +12,11 @@ export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, logout } = useAuthContext();
   const { config: shopConfig } = useShopConfig();
+  const homeContent = useShopHomeContent();
   const { t } = useLocale();
   const navigate = useNavigate();
   const location = useLocation();
-  const navLabels = shopConfig.homeContent?.nav ?? {
+  const navLabels = homeContent?.nav ?? {
     linkServices: t('nav.services'),
     linkAbout: t('nav.about'),
     linkLocation: t('nav.location'),
@@ -27,7 +28,7 @@ export function Navigation() {
     labelMenu: t('nav.menu'),
   };
   const shopName = shopConfig.name || appConfig.name;
-  const headerIconUrl = shopConfig.homeContent?.branding?.headerIconUrl?.trim();
+  const headerIconUrl = homeContent?.branding?.headerIconUrl?.trim();
 
   useEffect(() => {
     let ticking = false;

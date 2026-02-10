@@ -14,7 +14,7 @@ import { DEFAULT_THEME } from '../lib/theme.js';
 import { getPublicPath } from '../lib/paths.js';
 import { deleteAdFile } from '../lib/storage.js';
 import { env } from '../env.js';
-import { themeInputSchema, homeContentInputSchema, shopSettingsInputSchema } from '@eutonafila/shared';
+import { themeInputSchema, homeContentInputSchema, homeContentByLocaleInputSchema, shopSettingsInputSchema } from '@eutonafila/shared';
 
 /**
  * Company shop routes.
@@ -208,6 +208,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         apiBase: z.string().url().optional().nullable(),
         theme: themeInputSchema,
         homeContent: homeContentInputSchema,
+        homeContentByLocale: homeContentByLocaleInputSchema,
         settings: shopSettingsInputSchema,
         ownerPassword: z.string().min(6).max(200).optional(),
         staffPassword: z.string().min(6).max(200).optional(),
@@ -263,10 +264,21 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         updatePayload.theme = JSON.stringify(nextTheme);
       }
 
-      if (body.homeContent !== undefined) {
+      if (body.homeContentByLocale !== undefined) {
+        const record: Record<string, unknown> = {};
+        for (const [locale, partial] of Object.entries(body.homeContentByLocale)) {
+          if (partial != null && typeof partial === 'object') {
+            const existing = (shop.homeContent as Record<string, unknown>)?.[locale] ?? {};
+            record[locale] = mergeHomeContent({ ...(existing as object), ...partial });
+          }
+        }
+        if (Object.keys(record).length > 0) {
+          updatePayload.homeContent = record;
+        }
+      } else if (body.homeContent !== undefined) {
         const existing = (shop.homeContent ?? {}) as Record<string, unknown>;
         const merged = mergeHomeContent({ ...existing, ...body.homeContent });
-        updatePayload.homeContent = merged;
+        updatePayload.homeContent = { 'pt-BR': merged };
       }
 
       if (body.settings !== undefined) {
@@ -541,6 +553,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         staffPassword: z.string().min(6).max(200).optional(),
         theme: themeInputSchema,
         homeContent: homeContentInputSchema,
+        homeContentByLocale: homeContentByLocaleInputSchema,
         settings: shopSettingsInputSchema,
         services: z.array(z.object({
           name: z.string().min(1).max(200),
@@ -598,7 +611,18 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
           .returning();
 
         const themeToStore = body.theme ? { ...DEFAULT_THEME, ...body.theme } : DEFAULT_THEME;
-        const homeContentToStore = body.homeContent ? mergeHomeContent(body.homeContent) : null;
+        let homeContentToStore: Record<string, unknown> | null = null;
+        if (body.homeContentByLocale !== undefined && Object.keys(body.homeContentByLocale).length > 0) {
+          homeContentToStore = {};
+          for (const [locale, partial] of Object.entries(body.homeContentByLocale)) {
+            if (partial != null && typeof partial === 'object') {
+              homeContentToStore[locale] = mergeHomeContent(partial);
+            }
+          }
+          if (Object.keys(homeContentToStore).length === 0) homeContentToStore = null;
+        } else if (body.homeContent) {
+          homeContentToStore = { 'pt-BR': mergeHomeContent(body.homeContent) };
+        }
 
         const [newShop] = await tx
           .insert(schema.shops)

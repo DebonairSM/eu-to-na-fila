@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { api } from '@/lib/api';
@@ -10,6 +11,7 @@ import { Container } from '@/components/design-system/Spacing/Container';
 
 export function CompanyDashboard() {
   const { logout, user } = useAuthContext();
+  const { t } = useLocale();
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState<{
     totalShops: number;
@@ -34,7 +36,7 @@ export function CompanyDashboard() {
       const data = await api.getCompanyDashboard(user.companyId);
       setDashboardData(data);
     } catch (err) {
-      setError(getErrorMessage(err, 'Erro ao carregar dados do dashboard'));
+      setError(getErrorMessage(err, t('company.loadError')));
     } finally {
       setLoading(false);
     }
@@ -54,9 +56,9 @@ export function CompanyDashboard() {
       <main className="py-20">
         <Container size="2xl">
         <div className="text-center mb-10">
-          <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Dashboard Empresarial</h1>
+          <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">{t('company.dashboardTitle')}</h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-            Gerencie suas barbearias e anúncios
+            {t('company.dashboardSubtitle')}
           </p>
         </div>
 
@@ -65,7 +67,7 @@ export function CompanyDashboard() {
             <div className="inline-block animate-spin text-blue-400 text-4xl mb-4">
               <span className="material-symbols-outlined">refresh</span>
             </div>
-            <p>Carregando...</p>
+            <p>{t('company.loading')}</p>
           </div>
         )}
 
@@ -85,7 +87,7 @@ export function CompanyDashboard() {
                 {dashboardData.totalShops}
               </div>
               <div className="text-sm text-gray-400">
-                Barbearias
+                {t('company.shops')}
               </div>
             </div>
 
@@ -97,7 +99,7 @@ export function CompanyDashboard() {
                 {dashboardData.activeAds}/{dashboardData.totalAds}
               </div>
               <div className="text-sm text-gray-400">
-                Anúncios Ativos
+                {t('company.activeAds')}
               </div>
             </div>
           </div>
@@ -112,7 +114,7 @@ export function CompanyDashboard() {
               <span className="material-symbols-outlined">campaign</span>
             </div>
             <h2 className="text-2xl font-light text-white text-center">
-              Gerenciar Anúncios
+              {t('company.manageAds')}
             </h2>
             <span className="material-symbols-outlined text-blue-400 text-2xl">
               arrow_forward
@@ -127,7 +129,7 @@ export function CompanyDashboard() {
               <span className="material-symbols-outlined">store</span>
             </div>
             <h2 className="text-2xl font-light text-white text-center">
-              Gerenciar Barbearias
+              {t('company.manageShops')}
             </h2>
             <span className="material-symbols-outlined text-blue-400 text-2xl">
               arrow_forward
@@ -141,7 +143,7 @@ export function CompanyDashboard() {
             className="px-5 py-2.5 bg-transparent text-gray-400 border border-white/20 rounded-lg hover:border-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center gap-3 mx-auto text-sm"
           >
             <span className="material-symbols-outlined text-lg">logout</span>
-            Sair
+            {t('company.logout')}
           </button>
         </div>
         </Container>
@@ -157,10 +159,10 @@ export function CompanyDashboard() {
       <main className="container max-w-[800px] mx-auto relative z-10 pt-24 px-4 sm:px-6 lg:px-10 pb-12">
         <div className="text-center mb-10">
           <h1 className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37]">
-            Dashboard Empresarial
+            {t('company.dashboardTitle')}
           </h1>
           <p className="text-white/60 mt-2 text-sm">
-            Gerencie suas barbearias e anúncios
+            {t('company.dashboardSubtitle')}
           </p>
         </div>
 
@@ -169,7 +171,7 @@ export function CompanyDashboard() {
             <div className="inline-block animate-spin text-[#D4AF37] text-4xl mb-4">
               <span className="material-symbols-outlined">refresh</span>
             </div>
-            <p>Carregando...</p>
+            <p>{t('company.loading')}</p>
           </div>
         )}
 
@@ -189,7 +191,7 @@ export function CompanyDashboard() {
                 {dashboardData.totalShops}
               </div>
               <div className="text-sm text-white/60">
-                Barbearias
+                {t('company.shops')}
               </div>
             </div>
 
@@ -201,7 +203,7 @@ export function CompanyDashboard() {
                 {dashboardData.activeAds}/{dashboardData.totalAds}
               </div>
               <div className="text-sm text-white/60">
-                Anúncios Ativos
+                {t('company.activeAds')}
               </div>
             </div>
           </div>
@@ -216,7 +218,7 @@ export function CompanyDashboard() {
               <span className="material-symbols-outlined">campaign</span>
             </div>
             <h2 className="text-2xl font-semibold text-white text-center">
-              Gerenciar Anúncios
+              {t('company.manageAds')}
             </h2>
             <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
               arrow_forward
@@ -231,7 +233,7 @@ export function CompanyDashboard() {
               <span className="material-symbols-outlined">store</span>
             </div>
             <h2 className="text-2xl font-semibold text-white text-center">
-              Gerenciar Barbearias
+              {t('company.manageShops')}
             </h2>
             <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
               arrow_forward
@@ -245,7 +247,7 @@ export function CompanyDashboard() {
             className="px-5 py-2.5 bg-transparent text-[rgba(255,255,255,0.6)] border border-[rgba(255,255,255,0.2)] rounded-lg hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all flex items-center gap-3 mx-auto text-sm"
           >
             <span className="material-symbols-outlined text-lg">logout</span>
-            Sair
+            {t('company.logout')}
           </button>
         </div>
       </main>

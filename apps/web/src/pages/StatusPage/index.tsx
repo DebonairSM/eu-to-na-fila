@@ -136,7 +136,7 @@ export function StatusPage() {
 
       <Container className="pt-24 pb-20">
         <div className="lg:hidden space-y-8">
-          <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} />
+          <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} ticketNumber={(ticket as { ticketNumber?: string | null }).ticketNumber} scheduledTime={(ticket as { scheduledTime?: string | null }).scheduledTime} />
 
           {isWaiting && (
             <WaitingCard
@@ -174,7 +174,7 @@ export function StatusPage() {
 
         <div className="hidden lg:block">
           <div className="max-w-2xl mx-auto space-y-10">
-            <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} />
+            <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} ticketNumber={(ticket as { ticketNumber?: string | null }).ticketNumber} scheduledTime={(ticket as { scheduledTime?: string | null }).scheduledTime} />
 
             {isWaiting && (
               <WaitingCard

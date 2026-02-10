@@ -37,6 +37,7 @@ class ApiClient extends BaseApiClient {
 
   // --- Queue ---
   getQueue = this._queue.getQueue;
+  getQueueNext = this._queue.getQueueNext;
   getMetrics = this._queue.getMetrics;
   getWaitDebug = this._queue.getWaitDebug;
   getWaitTimes = this._queue.getWaitTimes;
@@ -46,6 +47,8 @@ class ApiClient extends BaseApiClient {
   // --- Tickets ---
   getActiveTicketByDevice = this._tickets.getActiveTicketByDevice;
   createTicket = this._tickets.createTicket;
+  createAppointment = this._tickets.createAppointment;
+  checkInAppointment = this._tickets.checkInAppointment;
   getTicket = this._tickets.getTicket;
   updateTicketStatus = this._tickets.updateTicketStatus;
   cancelTicket = this._tickets.cancelTicket;

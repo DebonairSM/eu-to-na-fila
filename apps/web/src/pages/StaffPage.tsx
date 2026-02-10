@@ -1,9 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { Navigation } from '@/components/Navigation';
 
 export function StaffPage() {
   const { logout, isOwner, isBarber } = useAuthContext();
+  const { t } = useLocale();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -17,7 +19,7 @@ export function StaffPage() {
       <main className="container max-w-[800px] mx-auto relative z-10 pt-24 px-4 sm:px-6 pb-12">
         <div className="text-center mb-10">
           <h1 className="font-['Playfair_Display',serif] text-2xl font-semibold text-[var(--shop-accent)]">
-            Painel
+            {t('staff.panel')}
           </h1>
         </div>
 
@@ -30,7 +32,7 @@ export function StaffPage() {
               <span className="material-symbols-outlined">manage_accounts</span>
             </div>
             <h2 className="text-2xl font-semibold text-[var(--shop-text-primary)] text-center">
-              Gerenciar Fila
+              {t('staff.manageQueue')}
             </h2>
             <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">
               arrow_forward
@@ -46,7 +48,7 @@ export function StaffPage() {
                 <span className="material-symbols-outlined">bar_chart</span>
               </div>
               <h2 className="text-2xl font-semibold text-[var(--shop-text-primary)] text-center">
-                Meu desempenho
+                {t('staff.myPerformance')}
               </h2>
               <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">
                 arrow_forward
@@ -63,12 +65,12 @@ export function StaffPage() {
                 <span className="material-symbols-outlined">analytics</span>
               </div>
               <h2 className="text-2xl font-semibold text-[var(--shop-text-primary)] text-center">
-                Analytics
+{t('dashboard.analytics')}
               </h2>
               <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">
-                arrow_forward
-              </span>
-            </Link>
+              arrow_forward
+            </span>
+          </Link>
           )}
 
           {isOwner && (
@@ -80,12 +82,12 @@ export function StaffPage() {
                 <span className="material-symbols-outlined">content_cut</span>
               </div>
               <h2 className="text-2xl font-semibold text-[var(--shop-text-primary)] text-center">
-                Gerenciar Barbeiros
+{t('staff.manageBarbers')}
               </h2>
               <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">
-                arrow_forward
-              </span>
-            </Link>
+              arrow_forward
+            </span>
+          </Link>
           )}
 
           <Link
@@ -96,7 +98,7 @@ export function StaffPage() {
               <span className="material-symbols-outlined">tv</span>
             </div>
             <h2 className="text-2xl font-semibold text-[var(--shop-text-primary)] text-center">
-              Modo Kiosk
+              {t('staff.kioskMode')}
             </h2>
             <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">
               arrow_forward
@@ -110,7 +112,7 @@ export function StaffPage() {
             className="px-5 py-2.5 bg-transparent text-[var(--shop-text-secondary)] border border-[var(--shop-border-color)] rounded-lg hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-all flex items-center gap-3 mx-auto text-sm"
           >
             <span className="material-symbols-outlined text-lg">logout</span>
-            Sair
+            {t('staff.logout')}
           </button>
         </div>
       </main>

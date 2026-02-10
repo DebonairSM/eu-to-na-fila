@@ -2,14 +2,23 @@ import type { Ticket, CreateTicket, UpdateTicketStatus } from '@eutonafila/share
 import type { BaseApiClient } from './client.js';
 import { ApiError } from './errors.js';
 
+export interface CreateAppointmentInput {
+  serviceId: number;
+  customerName: string;
+  customerPhone?: string;
+  scheduledTime: string; // ISO
+}
+
 export interface TicketsApi {
   getActiveTicketByDevice(shopSlug: string, deviceId: string): Promise<Ticket | null>;
   createTicket(shopSlug: string, data: Omit<CreateTicket, 'shopId'>): Promise<Ticket>;
+  createAppointment(shopSlug: string, data: CreateAppointmentInput): Promise<Ticket>;
+  checkInAppointment(shopSlug: string, ticketId: number): Promise<Ticket>;
   getTicket(ticketId: number): Promise<Ticket>;
   updateTicketStatus(ticketId: number, data: UpdateTicketStatus): Promise<Ticket>;
   cancelTicket(ticketId: number): Promise<Ticket>;
   cancelTicketAsStaff(ticketId: number): Promise<Ticket>;
-  updateTicket(ticketId: number, updates: { barberId?: number | null; status?: 'waiting' | 'in_progress' | 'completed' | 'cancelled' }): Promise<Ticket>;
+  updateTicket(ticketId: number, updates: { barberId?: number | null; status?: 'pending' | 'waiting' | 'in_progress' | 'completed' | 'cancelled' }): Promise<Ticket>;
 }
 
 export function createTicketsApi(client: BaseApiClient): TicketsApi {
@@ -24,6 +33,13 @@ export function createTicketsApi(client: BaseApiClient): TicketsApi {
       }
     },
     createTicket: (shopSlug, data) => c.post(`/shops/${shopSlug}/tickets`, data),
+    createAppointment: (shopSlug, data) =>
+      c.post(`/shops/${shopSlug}/tickets/appointment`, {
+        ...data,
+        scheduledTime: data.scheduledTime,
+      }),
+    checkInAppointment: (shopSlug, ticketId) =>
+      c.post(`/shops/${shopSlug}/tickets/${ticketId}/check-in`, {}),
     getTicket: (ticketId) => c.get(`/tickets/${ticketId}`),
     updateTicketStatus: (ticketId, data) =>
       c.patch(`/tickets/${ticketId}/status`, data, 45000),

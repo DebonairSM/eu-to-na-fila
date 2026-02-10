@@ -102,9 +102,22 @@ export const QueueCard = memo(function QueueCard({
             )}
           </div>
 
-          {/* Customer Name */}
+          {/* Customer Name + ticket number / type (hybrid mode) */}
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-[var(--shop-text-primary)] truncate">{formatNameForDisplay(ticket.customerName)}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-semibold text-[var(--shop-text-primary)] truncate">{formatNameForDisplay(ticket.customerName)}</p>
+              {(ticket as { ticketNumber?: string | null }).ticketNumber && (
+                <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-white/10 text-[var(--shop-text-secondary)]">
+                  {(ticket as { ticketNumber?: string | null }).ticketNumber}
+                </span>
+              )}
+              {(ticket as { type?: string }).type === 'appointment' && (
+                <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--shop-accent)]/20 text-[var(--shop-accent)] flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm">event</span>
+                  Agendado
+                </span>
+              )}
+            </div>
             {assignedBarber && (
               <p className="text-sm text-[var(--shop-text-secondary)] truncate">{assignedBarber.name}</p>
             )}

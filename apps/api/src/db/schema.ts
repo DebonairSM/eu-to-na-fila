@@ -97,9 +97,13 @@ export const tickets = pgTable('tickets', {
   customerName: text('customer_name').notNull(),
   customerPhone: text('customer_phone'),
   deviceId: text('device_id'), // Device identifier for preventing multiple active tickets per device
-  status: text('status').notNull().default('waiting'), // waiting, in_progress, completed, cancelled
+  status: text('status').notNull().default('waiting'), // pending, waiting, in_progress, completed, cancelled
   position: integer('position').notNull().default(0),
   estimatedWaitTime: integer('estimated_wait_time'), // in minutes
+  type: text('type').notNull().default('walkin'), // walkin | appointment
+  scheduledTime: timestamp('scheduled_time', { withTimezone: true }), // only for appointments
+  checkInTime: timestamp('check_in_time', { withTimezone: true }), // when they entered the queue
+  ticketNumber: text('ticket_number'), // e.g. A-101, W-205
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   startedAt: timestamp('started_at'), // when service started (status → in_progress)

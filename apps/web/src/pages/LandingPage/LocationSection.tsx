@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Heading, Text, Section, Stack } from '@/components/design-system';
-import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { useShopConfig, useShopHomeContent } from '@/contexts/ShopConfigContext';
 
 const fallbackLocation = {
   sectionTitle: 'Localização',
@@ -20,7 +20,8 @@ const fallbackLocation = {
 
 export function LocationSection() {
   const { config } = useShopConfig();
-  const loc = config.homeContent?.location ?? fallbackLocation;
+  const homeContent = useShopHomeContent();
+  const loc = homeContent?.location ?? fallbackLocation;
   const accentClass = 'text-[var(--shop-accent,#D4AF37)] hover:underline';
 
   const locationItems = [

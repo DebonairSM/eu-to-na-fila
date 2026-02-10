@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
+import { useLocale } from '@/contexts/LocaleContext';
 import { LOGO_URL } from '@/lib/logo';
 
-const navLinks = [
-  { to: '/projects', label: 'Projetos' },
-  { to: '/about', label: 'Sobre' },
-  { to: '/contact', label: 'Contato' },
-];
-
 function Nav() {
+  const { t } = useLocale();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navLinks = [
+    { to: '/projects', label: t('root.projects') },
+    { to: '/about', label: t('root.about') },
+    { to: '/contact', label: t('root.contact') },
+  ];
   return (
     <nav className="border-b border-white/5 bg-[#0a0a0a] sticky top-0 z-50">
       <Container size="2xl">
@@ -62,6 +63,7 @@ function Nav() {
 }
 
 function Footer() {
+  const { t } = useLocale();
   return (
     <footer className="border-t border-white/5 bg-black py-16">
       <Container size="2xl">
@@ -75,40 +77,40 @@ function Footer() {
               />
             </div>
             <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-              Fila virtual ao vivo para barbearias. Simples, local, em tempo real.
+              {t('root.footerTagline')}
             </p>
           </div>
           <div>
-            <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Navegação</h3>
+            <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">{t('root.navigation')}</h3>
             <nav className="space-y-3">
               <Link to="/" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                Início
+                {t('root.home')}
               </Link>
               <Link to="/projects" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                Projetos
+                {t('root.projects')}
               </Link>
               <Link to="/about" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                Sobre
+                {t('root.about')}
               </Link>
               <Link to="/contact" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                Contato
+                {t('root.contact')}
               </Link>
             </nav>
           </div>
           <div>
-            <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Empresa</h3>
-            <p className="text-gray-500 text-sm">Feito para barbearias</p>
+            <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">{t('root.company')}</h3>
+            <p className="text-gray-500 text-sm">{t('root.madeFor')}</p>
           </div>
         </div>
         <div className="pt-8 border-t border-white/5 text-center text-gray-600 text-sm">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
+            <p>&copy; {new Date().getFullYear()} EuToNaFila. {t('root.copyright')}.</p>
             <Link
               to="/company/login"
               className="text-gray-500/60 hover:text-gray-400 transition-colors text-xs flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-sm">lock</span>
-              Admin
+              {t('root.admin')}
             </Link>
           </div>
         </div>
@@ -118,6 +120,7 @@ function Footer() {
 }
 
 export function RootHomePage() {
+  const { t } = useLocale();
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <Nav />
@@ -128,28 +131,28 @@ export function RootHomePage() {
           <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-transparent" />
           <div className="relative max-w-4xl mx-auto text-center space-y-8">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-400 text-xs font-medium uppercase tracking-wider">
-              Fila virtual ao vivo
+              {t('root.heroBadge')}
             </div>
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-light leading-[1.1] tracking-tight">
-              Sua fila de barbearia,
+              {t('root.heroTitle')}
               <br />
-              <span className="text-blue-400">longe da calçada.</span>
+              <span className="text-blue-400">{t('root.heroTitleHighlight')}</span>
             </h1>
             <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-              Clientes entram na fila virtual, acompanham em tempo real e são chamados na vez. Ficam à vontade enquanto esperam. Sem aglomeração, sem caos, sem adivinhar.
+              {t('root.heroSubtitle')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
               <Link
                 to="/contact"
                 className="px-8 py-3.5 bg-white text-[#0a0a0a] font-medium rounded-lg hover:bg-gray-100 transition-all text-sm"
               >
-                Fale Conosco
+                {t('root.talkToUs')}
               </Link>
               <Link
                 to="/projects"
                 className="px-8 py-3.5 border border-white/20 text-white font-medium rounded-lg hover:border-white/40 hover:bg-white/5 transition-all text-sm"
               >
-                Ver Projeto
+                {t('root.viewProject')}
               </Link>
             </div>
           </div>
@@ -160,10 +163,10 @@ export function RootHomePage() {
           <Container size="2xl">
             <div className="max-w-3xl mx-auto text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-light mb-4 tracking-tight">
-                Calçada cheia. Cliente na dúvida.
+                {t('root.problemTitle')}
               </h2>
               <p className="text-lg text-gray-400 leading-relaxed">
-                Quem espera não sabe se vale a pena. Quem desiste você nem vê. O movimento entra e sai e ninguém tem clareza.
+                {t('root.problemDesc')}
               </p>
             </div>
           </Container>
@@ -174,17 +177,17 @@ export function RootHomePage() {
           <Container size="2xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-light mb-4 tracking-tight">
-                Fila virtual em tempo real
+                {t('root.solutionTitle')}
               </h2>
               <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                Não é agendamento. Não é SaaS genérico. É fila ao vivo.
+                {t('root.solutionDesc')}
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {[
-                { icon: 'schedule', title: 'Fila em tempo real', desc: 'Posição e estimativa de espera ao vivo.' },
-                { icon: 'notifications', title: 'Avisos na hora', desc: 'Cliente avisado quando estiver perto da vez.' },
-                { icon: 'group_off', title: 'Sem aglomeração', desc: 'Nada de fila na calçada ou caos na porta.' },
+                { icon: 'schedule', title: t('root.solutionItem1Title'), desc: t('root.solutionItem1Desc') },
+                { icon: 'notifications', title: t('root.solutionItem2Title'), desc: t('root.solutionItem2Desc') },
+                { icon: 'group_off', title: t('root.solutionItem3Title'), desc: t('root.solutionItem3Desc') },
               ].map((item) => (
                 <div
                   key={item.icon}
@@ -206,17 +209,17 @@ export function RootHomePage() {
           <Container size="2xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-light mb-4 tracking-tight">
-                Como funciona
+                {t('root.howItWorksTitle')}
               </h2>
               <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                Entra, acompanha, é chamado. Simples.
+                {t('root.howItWorksDesc')}
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-4xl mx-auto">
               {[
-                { step: '1', title: 'Entra na fila', desc: 'QR code, link ou totem. O cliente entra em segundos.' },
-                { step: '2', title: 'Espera com flexibilidade', desc: 'Acompanha posição e tempo ao vivo. Fica à vontade—café, sinuca, ou onde preferir.' },
-                { step: '3', title: 'É chamado na vez', desc: 'Aviso quando estiver perto. Aparece na hora do atendimento.' },
+                { step: '1', title: t('root.howStep1Title'), desc: t('root.howStep1Desc') },
+                { step: '2', title: t('root.howStep2Title'), desc: t('root.howStep2Desc') },
+                { step: '3', title: t('root.howStep3Title'), desc: t('root.howStep3Desc') },
               ].map((item) => (
                 <div key={item.step} className="text-center">
                   <div className="w-14 h-14 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-xl font-semibold mx-auto mb-4">
@@ -235,10 +238,10 @@ export function RootHomePage() {
           <Container size="2xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-light mb-4 tracking-tight">
-                Para o dono da barbearia
+                {t('root.ownerTitle')}
               </h2>
               <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                Controle do fluxo e clareza operacional.
+                {t('root.ownerDesc')}
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -246,18 +249,18 @@ export function RootHomePage() {
                 <span className="material-symbols-outlined text-blue-400/80 text-3xl mb-4 block">
                   analytics
                 </span>
-                <h3 className="text-xl font-medium mb-3">Controle do fluxo</h3>
+                <h3 className="text-xl font-medium mb-3">{t('root.ownerFlowTitle')}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">
-                  Veja quantos estão esperando em tempo real. Entenda picos e baixas. Menos cliente que desiste por incerteza.
+                  {t('root.ownerFlowDesc')}
                 </p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-8 hover:border-white/20 transition-all">
                 <span className="material-symbols-outlined text-blue-400/80 text-3xl mb-4 block">
                   bar_chart
                 </span>
-                <h3 className="text-xl font-medium mb-3">Painel de dados</h3>
+                <h3 className="text-xl font-medium mb-3">{t('root.ownerPanelTitle')}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">
-                  Fluxo diário, semanal e mensal. Tempo médio de espera, abandono, melhores horários. Dados para decidir, não para enfeite.
+                  {t('root.ownerPanelDesc')}
                 </p>
               </div>
             </div>
@@ -269,33 +272,33 @@ export function RootHomePage() {
           <Container size="2xl">
             <div className="max-w-3xl mx-auto text-center mb-12">
               <h2 className="text-3xl sm:text-4xl font-light mb-4 tracking-tight">
-                IA que ajuda a decidir
+                {t('root.aiTitle')}
               </h2>
               <p className="text-lg text-gray-400 leading-relaxed">
-                Baseada em dados ao vivo e histórico. Um assistente para decisões do dia a dia.
+                {t('root.aiDesc')}
               </p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-8 sm:p-10 max-w-3xl mx-auto">
               <ul className="space-y-4 text-gray-300 text-sm sm:text-base">
                 <li className="flex items-start gap-3">
                   <span className="material-symbols-outlined text-blue-400/80 shrink-0 mt-0.5">lightbulb</span>
-                  <span>“Falta gente para este horário.”</span>
+                  <span>{t('root.aiHint1')}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="material-symbols-outlined text-blue-400/80 shrink-0 mt-0.5">lightbulb</span>
-                  <span>“Boa hora para divulgar uma promoção.”</span>
+                  <span>{t('root.aiHint2')}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="material-symbols-outlined text-blue-400/80 shrink-0 mt-0.5">lightbulb</span>
-                  <span>“Vale colocar mais um barbeiro na sexta às 17h.”</span>
+                  <span>{t('root.aiHint3')}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="material-symbols-outlined text-blue-400/80 shrink-0 mt-0.5">lightbulb</span>
-                  <span>“O tempo de espera hoje está acima da média.”</span>
+                  <span>{t('root.aiHint4')}</span>
                 </li>
               </ul>
               <p className="mt-6 text-gray-500 text-sm">
-                Sem chatbot. Sem hype. Só inteligência útil.
+                {t('root.aiTagline')}
               </p>
             </div>
           </Container>
@@ -309,13 +312,13 @@ export function RootHomePage() {
                 public
               </span>
               <h2 className="text-2xl sm:text-3xl font-medium mb-4">
-                Não é só fila. É sua vitrine.
+                {t('root.showcaseTitle')}
               </h2>
               <p className="text-gray-400 mb-6 max-w-xl mx-auto">
-                Cada barbearia ganha uma <strong className="text-white">página pública</strong> dentro do EuToNaFila: site, entrada na fila e funil de divulgação em um só lugar. Quem não quer montar site do zero, não precisa.
+                {t('root.showcaseDesc')}
               </p>
               <p className="text-gray-500 text-sm">
-                Você não compra só um sistema de fila. Você ganha uma loja digital.
+                {t('root.showcaseTagline')}
               </p>
             </div>
           </Container>
@@ -326,13 +329,13 @@ export function RootHomePage() {
           <Container size="2xl">
             <div className="max-w-2xl mx-auto text-center">
               <h2 className="text-2xl sm:text-3xl font-light mb-4 tracking-tight">
-                Feito para barbearias
+                {t('root.madeForTitle')}
               </h2>
               <p className="text-gray-400 leading-relaxed mb-6">
-                Do bairro que vive de walk-in à barbearia premium com totem na recepção. Um sistema, apresentação flexível.
+                {t('root.madeForDesc')}
               </p>
               <p className="text-blue-400/90 font-medium">
-                Se sua barbearia corre no instinto ou no iPad, o EuToNaFila se encaixa.
+                {t('root.madeForCta')}
               </p>
             </div>
           </Container>
@@ -343,23 +346,23 @@ export function RootHomePage() {
           <Container size="2xl">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-8 sm:p-12 max-w-2xl mx-auto text-center">
               <h2 className="text-2xl sm:text-3xl font-medium mb-4">
-                Pronto para tirar a fila da calçada?
+                {t('root.ctaTitle')}
               </h2>
               <p className="text-gray-400 mb-8">
-                Fale conosco e veja como colocar a fila virtual na sua barbearia.
+                {t('root.ctaDesc')}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
                   to="/contact"
                   className="px-8 py-3.5 bg-white text-[#0a0a0a] font-medium rounded-lg hover:bg-gray-100 transition-all text-sm"
                 >
-                  Fale Conosco
+                  {t('root.talkToUs')}
                 </Link>
                 <Link
                   to="/projects"
                   className="px-8 py-3.5 border border-white/20 text-white font-medium rounded-lg hover:border-white/40 hover:bg-white/5 transition-all text-sm"
                 >
-                  Ver Projeto ao Vivo
+                  {t('root.viewLiveProject')}
                 </Link>
               </div>
             </div>

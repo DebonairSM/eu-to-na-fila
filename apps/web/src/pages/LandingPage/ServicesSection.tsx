@@ -1,15 +1,14 @@
 import { cn } from '@/lib/utils';
 import { Card, CardContent, Heading, Text, Section, Grid } from '@/components/design-system';
-import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { useShopHomeContent } from '@/contexts/ShopConfigContext';
 import { useServices } from '@/hooks/useServices';
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatCurrency } from '@/lib/format';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 export function ServicesSection() {
-  const { config } = useShopConfig();
+  const homeContent = useShopHomeContent();
   const { locale, t } = useLocale();
-  const { homeContent } = config;
   const { activeServices, isLoading } = useServices();
   const sectionTitle = homeContent?.services?.sectionTitle ?? t('nav.services');
 

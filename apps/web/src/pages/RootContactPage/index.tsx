@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { RootSiteNav } from '@/components/RootSiteNav';
+import { useLocale } from '@/contexts/LocaleContext';
 import { LOGO_URL } from '@/lib/logo';
 
 export function RootContactPage() {
+  const { t } = useLocale();
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <RootSiteNav />
@@ -11,17 +13,17 @@ export function RootContactPage() {
       <main className="py-20">
         <Container size="2xl">
         <header className="mb-16 text-center">
-          <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Entre em Contato</h1>
+          <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">{t('root.contactTitle')}</h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-            Quer levar a fila virtual para sua barbearia? Fale conosco.
+            {t('root.contactSubtitle')}
           </p>
         </header>
 
         <section className="mb-16">
           <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-12">
-            <h2 className="text-3xl font-light mb-8">Entre em Contato</h2>
+            <h2 className="text-3xl font-light mb-8">{t('root.contactSectionTitle')}</h2>
             <p className="text-lg text-gray-300 leading-relaxed mb-10">
-              Barbearia com fila na calçada ou cliente que desiste por incerteza? O EuToNaFila resolve. Escreva e conversamos.
+              {t('root.contactBody')}
             </p>
             
             <div className="space-y-8">
@@ -30,8 +32,8 @@ export function RootContactPage() {
                   <span className="material-symbols-outlined text-gray-300 text-xl">email</span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium mb-2">Email</h3>
-                  <p className="text-gray-400 mb-1">Para consultas e discussões de projetos</p>
+                  <h3 className="text-lg font-medium mb-2">{t('root.emailLabel')}</h3>
+                  <p className="text-gray-400 mb-1">{t('root.emailHint')}</p>
                   <p className="text-blue-400">eutonafila@gmail.com</p>
                 </div>
               </div>
@@ -41,11 +43,11 @@ export function RootContactPage() {
                   <span className="material-symbols-outlined text-gray-300 text-xl">business</span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium mb-3">Serviços</h3>
+                  <h3 className="text-lg font-medium mb-3">{t('root.servicesLabel')}</h3>
                   <div className="space-y-1.5 text-gray-400">
-                    <p>Fila virtual ao vivo para barbearias</p>
-                    <p>Painel, analytics e IA para decisões</p>
-                    <p>Página pública por barbearia</p>
+                    <p>{t('root.service1')}</p>
+                    <p>{t('root.service2')}</p>
+                    <p>{t('root.service3')}</p>
                   </div>
                 </div>
               </div>
@@ -58,7 +60,7 @@ export function RootContactPage() {
             to="/projects"
             className="inline-block px-8 py-3.5 border border-white/20 text-white font-medium rounded-lg hover:border-white/40 hover:bg-white/5 transition-all text-sm"
           >
-            Ver Nossos Projetos
+            {t('root.viewOurProjects')}
           </Link>
         </section>
         </Container>
@@ -76,40 +78,40 @@ export function RootContactPage() {
                 />
               </div>
               <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                Fila virtual ao vivo para barbearias. Simples, local, em tempo real.
+                {t('root.footerTagline')}
               </p>
             </div>
             <div>
-              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Navegação</h3>
+              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">{t('root.navigation')}</h3>
               <nav className="space-y-3">
                 <Link to="/" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  Início
+                  {t('root.home')}
                 </Link>
                 <Link to="/projects" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  Projetos
+                  {t('root.projects')}
                 </Link>
                 <Link to="/about" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  Sobre
+                  {t('root.about')}
                 </Link>
                 <Link to="/contact" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  Contato
+                  {t('root.contact')}
                 </Link>
               </nav>
             </div>
             <div>
-              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">Empresa</h3>
-              <p className="text-gray-500 text-sm">Feito para barbearias</p>
+              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">{t('root.company')}</h3>
+              <p className="text-gray-500 text-sm">{t('root.madeFor')}</p>
             </div>
           </div>
           <div className="pt-8 border-t border-white/5 text-center text-gray-600 text-sm">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <p>&copy; {new Date().getFullYear()} EuToNaFila. Todos os direitos reservados.</p>
+              <p>&copy; {new Date().getFullYear()} EuToNaFila. {t('root.copyright')}.</p>
               <Link
                 to="/company/login"
                 className="text-gray-500/60 hover:text-gray-400 transition-colors text-xs flex items-center gap-1"
               >
                 <span className="material-symbols-outlined text-sm">lock</span>
-                Admin
+                {t('root.admin')}
               </Link>
             </div>
           </div>

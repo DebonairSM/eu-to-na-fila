@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { api, ApiError } from '@/lib/api';
@@ -27,6 +28,7 @@ interface Ad {
 
 export function AdManagementPage() {
   const { isCompanyAdmin } = useAuthContext();
+  const { t } = useLocale();
   const navigate = useNavigate();
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +62,7 @@ export function AdManagementPage() {
         // Don't set error state to avoid showing error message before redirect
         return;
       }
-      setError(getErrorMessage(err, 'Erro ao carregar anúncios'));
+      setError(getErrorMessage(err, t('ads.loadError')));
     } finally {
       setLoading(false);
     }
@@ -74,7 +76,7 @@ export function AdManagementPage() {
     const isVideo = file.type.startsWith('video/');
     
     if (!isImage && !isVideo) {
-      setError('Tipo de arquivo inválido. Use imagens (PNG, JPEG, WebP) ou vídeos (MP4).');
+      setError(t('ads.invalidFileType'));
       return;
     }
 
@@ -83,14 +85,14 @@ export function AdManagementPage() {
     const allowedTypes = [...allowedImageTypes, ...allowedVideoTypes];
 
     if (!allowedTypes.includes(file.type)) {
-      setError(`Tipo de arquivo inválido. Use ${allowedTypes.join(', ')}.`);
+      setError(t('ads.invalidFileType'));
       return;
     }
 
     // Validate file size (50MB max)
     const maxSize = 50 * 1024 * 1024;
     if (file.size > maxSize) {
-      setError('Arquivo muito grande. Tamanho máximo: 50MB.');
+      setError(t('ads.fileTooBig'));
       return;
     }
 
@@ -105,7 +107,7 @@ export function AdManagementPage() {
       await api.uploadAd(file, undefined, undefined);
       
       setUploadProgress(100);
-      setSuccess('Anúncio enviado com sucesso!');
+      setSuccess(t('ads.uploadSuccess'));
       
       // Reload ads
       await loadAds();
@@ -125,7 +127,7 @@ export function AdManagementPage() {
         setUploadProgress(0);
         return;
       }
-      setError(getErrorMessage(err, 'Erro ao fazer upload do anúncio'));
+      setError(getErrorMessage(err, t('ads.uploadError')));
       setUploadProgress(0);
       setUploading(null);
     }
@@ -135,7 +137,7 @@ export function AdManagementPage() {
     try {
       setError(null);
       await api.updateAd(adId, { enabled: !currentEnabled });
-      setSuccess(`Anúncio ${!currentEnabled ? 'ativado' : 'desativado'} com sucesso!`);
+      setSuccess(!currentEnabled ? t('ads.toggleSuccess') : t('ads.toggleSuccessOff'));
       await loadAds();
     } catch (err) {
       // Don't show error for auth errors - onAuthError callback will handle redirect
@@ -143,19 +145,19 @@ export function AdManagementPage() {
         // Auth error - onAuthError callback will redirect to login
         return;
       }
-      setError(getErrorMessage(err, 'Erro ao atualizar anúncio'));
+      setError(getErrorMessage(err, t('ads.updateError')));
     }
   };
 
   const handleDelete = async (adId: number) => {
-    if (!confirm('Tem certeza que deseja excluir este anúncio?')) {
+    if (!confirm(t('ads.deleteConfirm'))) {
       return;
     }
 
     try {
       setError(null);
       await api.deleteAd(adId);
-      setSuccess('Anúncio excluído com sucesso!');
+      setSuccess(t('ads.deleteSuccess'));
       await loadAds();
     } catch (err) {
       // Don't show error for auth errors - onAuthError callback will handle redirect
@@ -163,7 +165,7 @@ export function AdManagementPage() {
         // Auth error - onAuthError callback will redirect to login
         return;
       }
-      setError(getErrorMessage(err, 'Erro ao excluir anúncio'));
+      setError(getErrorMessage(err, t('ads.deleteError')));
     }
   };
 
@@ -186,9 +188,9 @@ export function AdManagementPage() {
       <main className="py-20">
         <Container size="2xl">
           <div className="text-center mb-16">
-            <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">Gerenciar Anúncios</h1>
+            <h1 className="text-5xl sm:text-6xl font-light mb-6 tracking-tight">{t('ads.title')}</h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-              Faça upload e gerencie os anúncios exibidos no modo kiosk
+              {t('ads.uploadSubtext')}
             </p>
           </div>
 
@@ -234,12 +236,12 @@ export function AdManagementPage() {
                     {uploading !== null ? (
                         <>
                           <span className="material-symbols-outlined animate-spin">refresh</span>
-                        <span>Enviando... {uploadProgress}%</span>
+                        <span>{t('ads.sending')} {uploadProgress}%</span>
                         </>
                       ) : (
                         <>
                           <span className="material-symbols-outlined">upload</span>
-                          <span>Escolher arquivo</span>
+                          <span>{t('ads.chooseFile')}</span>
                         </>
                       )}
                     </div>
@@ -257,7 +259,7 @@ export function AdManagementPage() {
               </div>
             )}
               <p className="text-xs text-white/40 mt-2">
-              PNG, JPEG, WebP ou MP4. Máximo 50MB
+              {t('ads.maxSizeHint')}
               </p>
             </div>
 
@@ -272,8 +274,8 @@ export function AdManagementPage() {
             <div className="space-y-4">
               {ads.length === 0 ? (
                 <div className="text-center text-gray-400 py-12 border border-white/10 rounded-2xl">
-                  <p>Nenhum anúncio cadastrado ainda.</p>
-                  <p className="text-sm mt-2">Faça upload de um arquivo acima para começar.</p>
+                  <p>{t('ads.noAdsYet')}</p>
+                  <p className="text-sm mt-2">{t('ads.uploadHint')}</p>
                 </div>
               ) : (
                 ads.map((ad) => (
@@ -307,16 +309,16 @@ export function AdManagementPage() {
                         <div className="flex items-center justify-between mb-2">
                           <div>
                             <h3 className="text-lg font-semibold">
-                              Anúncio #{ad.position} ({ad.mediaType === 'image' ? 'Imagem' : 'Vídeo'})
+                              {t('ads.adPosition')}{ad.position} ({ad.mediaType === 'image' ? t('ads.image') : t('ads.video')})
                             </h3>
                             <p className="text-sm text-white/60">
                               {ad.mimeType} • {formatFileSize(ad.bytes)}
                             </p>
                             <p className="text-xs text-white/40 mt-1">
                               {ad.enabled ? (
-                                <span className="text-green-400">✓ Ativo</span>
+                                <span className="text-green-400">✓ {t('ads.active')}</span>
                               ) : (
-                                <span className="text-yellow-400">⚠ Inativo</span>
+                                <span className="text-yellow-400">⚠ {t('ads.inactive')}</span>
                               )}
                             </p>
                           </div>
@@ -330,13 +332,13 @@ export function AdManagementPage() {
                                 : 'bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30'
                             }`}
                           >
-                            {ad.enabled ? 'Desativar' : 'Ativar'}
+                            {ad.enabled ? t('ads.deactivate') : t('ads.activate')}
                           </button>
                           <button
                             onClick={() => handleDelete(ad.id)}
                             className="px-3 py-1.5 rounded-lg text-sm bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 transition-all"
                           >
-                            Excluir
+                            {t('ads.deleteButton')}
                           </button>
                         </div>
                       </div>
@@ -353,7 +355,7 @@ export function AdManagementPage() {
                   className="px-6 py-2.5 bg-transparent text-gray-400 border border-white/20 rounded-lg hover:border-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center gap-3 mx-auto text-sm"
                 >
                   <span className="material-symbols-outlined text-lg">arrow_back</span>
-                  Voltar ao Dashboard
+                  {t('ads.backToDashboard')}
                 </button>
               </div>
         </Container>
@@ -369,10 +371,10 @@ export function AdManagementPage() {
       <main className="container max-w-[800px] mx-auto relative z-10 pt-24 px-4 sm:px-6 lg:px-10 pb-12">
         <div className="text-center mb-10">
           <h1 className="font-['Playfair_Display',serif] text-2xl font-semibold text-[var(--shop-accent)]">
-            Gerenciar Anúncios
+            {t('ads.title')}
           </h1>
           <p className="text-white/60 mt-2 text-sm">
-            Faça upload e gerencie os anúncios exibidos no modo kiosk
+            {t('ads.uploadSubtext')}
           </p>
         </div>
 
@@ -390,7 +392,7 @@ export function AdManagementPage() {
 
         {/* Upload Section */}
         <div className="mb-8 bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_12%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_6%,transparent)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-2xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Adicionar Novo Anúncio</h2>
+          <h2 className="text-xl font-semibold mb-4">{t('ads.addNew')}</h2>
               <label className="block">
                 <input
                   type="file"
@@ -418,12 +420,12 @@ export function AdManagementPage() {
                   {uploading !== null ? (
                         <>
                           <span className="material-symbols-outlined animate-spin">refresh</span>
-                      <span>Enviando... {uploadProgress}%</span>
+                      <span>{t('ads.sending')} {uploadProgress}%</span>
                         </>
                       ) : (
                         <>
                           <span className="material-symbols-outlined">upload</span>
-                          <span>Escolher arquivo</span>
+                          <span>{t('ads.chooseFile')}</span>
                         </>
                       )}
                     </div>
@@ -441,7 +443,7 @@ export function AdManagementPage() {
             </div>
           )}
               <p className="text-xs text-white/40 mt-2">
-            PNG, JPEG, WebP ou MP4. Máximo 50MB
+            {t('ads.maxSizeHint')}
               </p>
             </div>
 
@@ -450,14 +452,14 @@ export function AdManagementPage() {
             <div className="inline-block animate-spin text-[var(--shop-accent)] text-4xl mb-4">
               <span className="material-symbols-outlined">refresh</span>
             </div>
-            <p>Carregando...</p>
+            <p>{t('ads.loading')}</p>
           </div>
         ) : (
           <div className="space-y-4">
             {ads.length === 0 ? (
               <div className="text-center text-white/60 py-12 border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-2xl">
-                <p>Nenhum anúncio cadastrado ainda.</p>
-                <p className="text-sm mt-2">Faça upload de um arquivo acima para começar.</p>
+                <p>{t('ads.noAdsYet')}</p>
+                <p className="text-sm mt-2">{t('ads.uploadHint')}</p>
                 </div>
             ) : (
               ads.map((ad) => (
@@ -472,7 +474,7 @@ export function AdManagementPage() {
                       {ad.mediaType === 'image' ? (
                         <img
                           src={`/api/ads/${ad.id}/media?v=${ad.version}`}
-                          alt={`Anúncio ${ad.position}`}
+                          alt={`${t('ads.adPosition')}${ad.position}`}
                           className="w-32 h-32 object-contain bg-black rounded-lg border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)]"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
@@ -491,16 +493,16 @@ export function AdManagementPage() {
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <h3 className="text-lg font-semibold">
-                            Anúncio #{ad.position} ({ad.mediaType === 'image' ? 'Imagem' : 'Vídeo'})
+                            {t('ads.adPosition')}{ad.position} ({ad.mediaType === 'image' ? t('ads.image') : t('ads.video')})
                           </h3>
                           <p className="text-sm text-white/60">
                             {ad.mimeType} • {formatFileSize(ad.bytes)}
                           </p>
                           <p className="text-xs text-white/40 mt-1">
                             {ad.enabled ? (
-                              <span className="text-green-400">✓ Ativo</span>
+                              <span className="text-green-400">✓ {t('ads.active')}</span>
                             ) : (
-                              <span className="text-yellow-400">⚠ Inativo</span>
+                              <span className="text-yellow-400">⚠ {t('ads.inactive')}</span>
                             )}
                           </p>
                         </div>
@@ -514,13 +516,13 @@ export function AdManagementPage() {
                               : 'bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30'
                           }`}
                         >
-                          {ad.enabled ? 'Desativar' : 'Ativar'}
+                          {ad.enabled ? t('ads.deactivate') : t('ads.activate')}
                         </button>
                         <button
                           onClick={() => handleDelete(ad.id)}
                           className="px-3 py-1.5 rounded-lg text-sm bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 transition-all"
                         >
-                          Excluir
+                          {t('ads.deleteButton')}
                         </button>
                       </div>
                     </div>
@@ -537,7 +539,7 @@ export function AdManagementPage() {
                 className="px-6 py-2.5 bg-transparent text-[rgba(255,255,255,0.6)] border border-[rgba(255,255,255,0.2)] rounded-lg hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-all flex items-center gap-3 mx-auto text-sm"
               >
                 <span className="material-symbols-outlined text-lg">arrow_back</span>
-                Voltar ao Dashboard
+                {t('ads.backToDashboard')}
               </button>
             </div>
       </main>

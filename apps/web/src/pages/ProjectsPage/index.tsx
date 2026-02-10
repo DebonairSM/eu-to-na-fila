@@ -2,15 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { RootSiteNav } from '@/components/RootSiteNav';
+import { useLocale } from '@/contexts/LocaleContext';
 import { LOGO_URL } from '@/lib/logo';
 import { api } from '@/lib/api';
-
-const DEFAULT_DESCRIPTION =
-  'Fila virtual em tempo real para barbearias. Clientes entram, acompanham e são chamados na vez. Posição ao vivo, estimativa de espera, notificações. Painel para o dono, analytics e página pública por barbearia. Inclui PWA para totens.';
 
 const DEFAULT_TECHNOLOGIES = ['React', 'TypeScript', 'Fastify', 'PostgreSQL', 'WebSockets', 'PWA'];
 
 export function ProjectsPage() {
+  const { t } = useLocale();
   const location = useLocation();
   const [projects, setProjects] = useState<Array<{ id: number; slug: string; name: string; path: string }>>([]);
   const [loading, setLoading] = useState(true);
@@ -22,9 +21,9 @@ export function ProjectsPage() {
     api
       .getProjects()
       .then(setProjects)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar projetos'))
+      .catch((err) => setError(err instanceof Error ? err.message : t('projects.loadError')))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,7 +35,7 @@ export function ProjectsPage() {
         if (!cancelled) setProjects(data);
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Erro ao carregar projetos');
+        if (!cancelled) setError(err instanceof Error ? err.message : t('projects.loadError'));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -44,7 +43,7 @@ export function ProjectsPage() {
     return () => {
       cancelled = true;
     };
-  }, [location.pathname]);
+  }, [location.pathname, t]);
 
   useEffect(() => {
     const onFocus = () => fetchProjects();
@@ -55,7 +54,7 @@ export function ProjectsPage() {
   const projectCards = projects.map((p) => ({
     id: String(p.id),
     title: p.name,
-    description: DEFAULT_DESCRIPTION,
+    description: t('projects.defaultDescription'),
     technologies: DEFAULT_TECHNOLOGIES,
     link: p.path.endsWith('/') ? p.path : `${p.path}/`,
     status: 'Ativo' as const,

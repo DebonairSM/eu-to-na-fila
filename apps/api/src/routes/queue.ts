@@ -8,6 +8,7 @@ import { NotFoundError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { shapeTicketResponse } from '../lib/ticketResponse.js';
+import { parseSettings } from '../lib/settings.js';
 
 /**
  * Queue routes.
@@ -32,12 +33,31 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    // Get tickets using service (includes service relation for display)
-    const tickets = await ticketService.getByShop(shop.id);
+    const settings = parseSettings(shop.settings);
+    const tickets = await ticketService.getByShop(shop.id, undefined, settings);
 
     return {
       shop,
       tickets: tickets.map((t) => shapeTicketResponse(t as Record<string, unknown>)),
+    };
+  });
+
+  /**
+   * Get next ticket to serve (weighted order when allowAppointments). Auth optional for public lobby.
+   * @route GET /api/shops/:slug/queue/next
+   */
+  fastify.get('/shops/:slug/queue/next', async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    const settings = parseSettings(shop.settings);
+    const { next, deadZoneWarning } = await queueService.getNextTicket(shop.id, settings);
+
+    return {
+      next: next ? shapeTicketResponse(next) : null,
+      deadZoneWarning: deadZoneWarning ?? undefined,
     };
   });
 

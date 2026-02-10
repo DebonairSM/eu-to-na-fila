@@ -4,7 +4,7 @@ import { db, schema } from '../db/index.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
-import { mergeHomeContent } from '../lib/homeContent.js';
+import { normalizeToHomeContentByLocale } from '../lib/homeContent.js';
 import { parseResolvedStyle, parseTheme } from '../lib/theme.js';
 import { parseSettings } from '../lib/settings.js';
 
@@ -28,7 +28,8 @@ export const shopsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const theme = parseTheme(shop.theme);
     const style = parseResolvedStyle(shop.theme);
-    const homeContent = mergeHomeContent(shop.homeContent ?? null);
+    const homeContentByLocale = normalizeToHomeContentByLocale(shop.homeContent ?? null);
+    const defaultLocale = homeContentByLocale['pt-BR'] ?? Object.values(homeContentByLocale)[0];
 
     const settings = parseSettings(shop.settings);
 
@@ -37,7 +38,8 @@ export const shopsRoutes: FastifyPluginAsync = async (fastify) => {
       theme,
       style,
       path: shop.path ?? `/projects/${shop.slug}`,
-      homeContent,
+      homeContentByLocale,
+      homeContent: defaultLocale,
       settings,
     };
   });

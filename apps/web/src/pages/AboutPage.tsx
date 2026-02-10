@@ -1,25 +1,25 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { CompanyNav } from '@/components/CompanyNav';
-
-const values = [
-  { title: 'Hospitalidade', desc: 'Fila sem fricção' },
-  { title: 'Confiabilidade', desc: 'Infra monitorada, tempo real' },
-  { title: 'Personalização', desc: 'Ajustado por unidade' },
-];
-
-const milestones = [
-  { year: '2024', label: 'Piloto', detail: 'Rollout com Barbearia Mineiro' },
-  { year: '2025', label: 'Expansão', detail: 'Múltiplas unidades' },
-];
+import { useLocale } from '@/contexts/LocaleContext';
 
 export function AboutPage() {
+  const { t } = useLocale();
+  const values = [
+    { title: t('about.value1Title'), desc: t('about.value1Desc') },
+    { title: t('about.value2Title'), desc: t('about.value2Desc') },
+    { title: t('about.value3Title'), desc: t('about.value3Desc') },
+  ];
+  const milestones = [
+    { year: '2024', label: t('about.milestone1Label'), detail: t('about.milestone1Detail') },
+    { year: '2025', label: t('about.milestone2Label'), detail: t('about.milestone2Detail') },
+  ];
   return (
     <div className="min-h-screen bg-[var(--shop-background)] text-[var(--shop-text-primary)]">
       <CompanyNav />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-10">
         <header className="space-y-3">
-          <p className="text-sm uppercase tracking-[0.25em] text-[var(--shop-accent)]">Sobre nós</p>
-          <h1 className="text-3xl sm:text-4xl font-semibold">EuToNaFila</h1>
+          <p className="text-sm uppercase tracking-[0.25em] text-[var(--shop-accent)]">{t('about.aboutUs')}</p>
+          <h1 className="text-3xl sm:text-4xl font-semibold">{t('about.brandName')}</h1>
         </header>
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -34,7 +34,7 @@ export function AboutPage() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl font-semibold">Linha do tempo</h2>
+          <h2 className="text-2xl font-semibold">{t('about.timeline')}</h2>
           <div className="space-y-3">
             {milestones.map((m) => (
               <div key={m.year} className="flex items-start gap-3 border border-white/10 bg-white/5 rounded-lg p-4">

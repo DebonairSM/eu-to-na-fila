@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import type { UpdateTicketStatus } from '@eutonafila/shared';
+import { createAppointmentSchema } from '@eutonafila/shared';
 import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { ticketService, queueService } from '../services/index.js';
@@ -99,6 +100,48 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
+   * Create an appointment (staff/owner/barber only). Requires shop settings.allowAppointments.
+   * @route POST /api/shops/:slug/tickets/appointment
+   */
+  fastify.post('/shops/:slug/tickets/appointment', {
+    preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    const bodySchema = createAppointmentSchema.omit({ shopId: true });
+    const data = validateRequest(bodySchema, request.body);
+    const scheduledTime = typeof data.scheduledTime === 'string' ? new Date(data.scheduledTime) : data.scheduledTime;
+    const ticket = await ticketService.createAppointment(shop.id, {
+      serviceId: data.serviceId,
+      customerName: data.customerName,
+      customerPhone: data.customerPhone,
+      scheduledTime,
+    });
+    return reply.status(201).send(shapeTicketResponse(ticket as Record<string, unknown>));
+  });
+
+  /**
+   * Check in an appointment (pending -> waiting). Staff/owner/barber only.
+   * @route POST /api/shops/:slug/tickets/:id/check-in
+   */
+  fastify.post('/shops/:slug/tickets/:id/check-in', {
+    preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+      id: z.coerce.number().int().positive(),
+    });
+    const { slug, id } = validateRequest(paramsSchema, request.params);
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    const ticket = await ticketService.checkIn(id);
+    if (ticket.shopId !== shop.id) throw new NotFoundError(`Ticket with ID ${id} not found`);
+    return reply.send(shapeTicketResponse(ticket as Record<string, unknown>));
+  });
+
+  /**
    * Get active ticket for a device.
    * Used to check if device already has an active ticket before attempting to create one.
    * 
@@ -176,7 +219,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const bodySchema = z.object({
       barberId: z.number().int().positive().nullable().optional(),
-      status: z.enum(['waiting', 'in_progress', 'completed', 'cancelled']).optional(),
+      status: z.enum(['pending', 'waiting', 'in_progress', 'completed', 'cancelled']).optional(),
     });
 
     const { id } = validateRequest(paramsSchema, request.params);

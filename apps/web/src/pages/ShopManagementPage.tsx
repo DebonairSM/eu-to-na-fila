@@ -2,8 +2,9 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import type { ShopTheme, HomeContent, ShopAdminView, ShopSettings, ShopStyleConfig } from '@eutonafila/shared';
-import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, resolveShopStyle, shopStyleConfigSchema } from '@eutonafila/shared';
+import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, shopStyleConfigSchema } from '@eutonafila/shared';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { useModal } from '@/hooks/useModal';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
@@ -12,10 +13,9 @@ import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
+import { SUPPORTED_LOCALES } from '@/lib/constants';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { AppearanceForm } from '@/components/AppearanceForm';
-import { ShopPreview } from '@/components/ShopPreview';
-import type { ShopConfig } from '@/contexts/ShopConfigContext';
 import { pickThreeRandomPaletteIndices } from '@/lib/presetPalettes';
 
 // DEFAULT_THEME and DEFAULT_HOME_CONTENT imported from @eutonafila/shared
@@ -62,6 +62,29 @@ function mergeHomeContentForEdit(stored: HomeContent | Record<string, unknown> |
   };
 }
 
+function isLocaleRecord(obj: Record<string, unknown>): boolean {
+  return Object.keys(obj).some((k) => k === 'pt-BR' || k === 'en');
+}
+
+/** Normalize API homeContent (legacy single object or locale record) to Record<string, HomeContent>. */
+function normalizeToHomeContentByLocaleForEdit(stored: HomeContent | Record<string, unknown> | null): Record<string, HomeContent> {
+  if (!stored || typeof stored !== 'object') {
+    const def = JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT));
+    return Object.fromEntries(SUPPORTED_LOCALES.map((loc) => [loc, def]));
+  }
+  const s = stored as Record<string, unknown>;
+  if (isLocaleRecord(s)) {
+    const out: Record<string, HomeContent> = {};
+    for (const loc of SUPPORTED_LOCALES) {
+      const val = s[loc];
+      out[loc] = mergeHomeContentForEdit(val as Record<string, unknown> | null);
+    }
+    return out;
+  }
+  const merged = mergeHomeContentForEdit(s);
+  return Object.fromEntries(SUPPORTED_LOCALES.map((loc) => [loc, JSON.parse(JSON.stringify(merged))]));
+}
+
 function mergeSettingsForEdit(stored: ShopSettings | Record<string, unknown> | null | undefined): ShopSettings {
   if (!stored || typeof stored !== 'object') return { ...DEFAULT_SETTINGS };
   return { ...DEFAULT_SETTINGS, ...(stored as Partial<ShopSettings>) };
@@ -71,6 +94,7 @@ type Shop = ShopAdminView;
 
 export function ShopManagementPage() {
   const { user, isCompanyAdmin } = useAuthContext();
+  const { t } = useLocale();
   const navigate = useNavigate();
   const editModal = useModal();
   const deleteConfirmModal = useModal();
@@ -80,8 +104,10 @@ export function ShopManagementPage() {
   const [error, setError] = useState<Error | null>(null);
   const [shopToDelete, setShopToDelete] = useState<number | null>(null);
   const [editingShop, setEditingShop] = useState<Shop | null>(null);
-  const [editTab, setEditTab] = useState<'info' | 'appearance' | 'content' | 'preview' | 'settings' | 'credentials'>('info');
+  const [editTab, setEditTab] = useState<'info' | 'appearance' | 'content' | 'settings' | 'credentials'>('info');
   const defaultStyle = shopStyleConfigSchema.parse({});
+  const defaultHomeByLocale = (): Record<string, HomeContent> =>
+    Object.fromEntries(SUPPORTED_LOCALES.map((loc) => [loc, JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT))]));
   const [formData, setFormData] = useState<{
     name: string;
     slug: string;
@@ -90,7 +116,7 @@ export function ShopManagementPage() {
     apiBase: string;
     theme: ShopTheme;
     style: ShopStyleConfig;
-    homeContent: HomeContent;
+    homeContentByLocale: Record<string, HomeContent>;
     settings: ShopSettings;
     ownerPassword: string;
     staffPassword: string;
@@ -102,11 +128,12 @@ export function ShopManagementPage() {
     apiBase: '',
     theme: { ...DEFAULT_THEME },
     style: defaultStyle,
-    homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)),
+    homeContentByLocale: defaultHomeByLocale(),
     settings: { ...DEFAULT_SETTINGS },
     ownerPassword: '',
     staffPassword: '',
   });
+  const [contentLocale, setContentLocale] = useState<string>('pt-BR');
   type BarberAccessRow = { barberId: number; name: string; username: string; password: string; initialUsername: string };
   const [barberAccess, setBarberAccess] = useState<BarberAccessRow[]>([]);
   const [barberAccessLoading, setBarberAccessLoading] = useState(false);
@@ -141,11 +168,11 @@ export function ShopManagementPage() {
       const data = await api.getCompanyShops(user.companyId);
       setShops(data);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Erro ao carregar barbearias'));
+      setError(err instanceof Error ? err : new Error(t('management.loadShopsError')));
     } finally {
       setIsLoading(false);
     }
-  }, [user?.companyId]);
+  }, [user?.companyId, t]);
 
   useEffect(() => {
     if (user?.companyId) {
@@ -183,26 +210,26 @@ export function ShopManagementPage() {
 
   const handleEdit = useCallback(async () => {
     if (!user?.companyId || !editingShop || !formData.name.trim()) {
-      setErrorMessage('Nome é obrigatório');
+      setErrorMessage(t('management.nameRequired'));
       return;
     }
     const op = formData.ownerPassword.trim();
     const sp = formData.staffPassword.trim();
     if (op && op.length < 6) {
-      setErrorMessage('Senha do dono deve ter no mínimo 6 caracteres.');
+      setErrorMessage(t('management.ownerPasswordMin'));
       return;
     }
     if (sp && sp.length < 6) {
-      setErrorMessage('Senha do funcionário deve ter no mínimo 6 caracteres.');
+      setErrorMessage(t('management.staffPasswordMin'));
       return;
     }
     for (const row of barberAccess) {
       if (row.password.trim() && row.username.trim().length < 1) {
-        setErrorMessage(`Barbeiro "${row.name}": informe o usuário para definir senha.`);
+        setErrorMessage(`Barbeiro "${row.name}": ${t('management.barberUserRequired')}`);
         return;
       }
       if (row.password.trim() && row.password.trim().length < 6) {
-        setErrorMessage(`Barbeiro "${row.name}": senha deve ter no mínimo 6 caracteres.`);
+        setErrorMessage(`Barbeiro "${row.name}": ${t('management.barberPasswordMin')}`);
         return;
       }
     }
@@ -215,7 +242,7 @@ export function ShopManagementPage() {
         path: formData.path || null,
         apiBase: formData.apiBase || null,
         theme: { ...formData.theme, style: formData.style },
-        homeContent: formData.homeContent,
+        homeContentByLocale: formData.homeContentByLocale,
         settings: formData.settings,
         ...(op && { ownerPassword: op }),
         ...(sp && { staffPassword: sp }),
@@ -232,12 +259,13 @@ export function ShopManagementPage() {
         }
       }
       setEditingShop(null);
-      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' });
+      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' });
       setBarberAccess([]);
+      setContentLocale('pt-BR');
       editModal.close();
       await loadShops();
     } catch (error) {
-      const errorMsg = getErrorMessage(error, 'Erro ao atualizar barbearia. Tente novamente.');
+      const errorMsg = getErrorMessage(error, t('management.updateError'));
       setErrorMessage(errorMsg);
     }
   }, [editingShop, formData, barberAccess, user?.companyId, loadShops, editModal]);
@@ -255,7 +283,7 @@ export function ShopManagementPage() {
       const data = await api.getCompanyShops(user.companyId);
       setShops(data);
     } catch (error) {
-      const errorMsg = getErrorMessage(error, 'Erro ao remover barbearia. Tente novamente.');
+      const errorMsg = getErrorMessage(error, t('management.deleteError'));
       setErrorMessage(errorMsg);
       const data = await api.getCompanyShops(user.companyId);
       setShops(data);
@@ -272,7 +300,7 @@ export function ShopManagementPage() {
       const loc = result.location;
       const hasAny = loc.name ?? loc.address ?? loc.phone ?? loc.phoneHref ?? loc.hours ?? loc.mapQuery ?? loc.addressLink;
       if (!hasAny) {
-        setPlacesLookupMessage('Nenhum resultado encontrado para este endereço.');
+        setPlacesLookupMessage(t('management.noResults'));
         return;
       }
       setFormData((prev) => {
@@ -286,26 +314,27 @@ export function ShopManagementPage() {
         const namePatch = typeof loc.name === 'string' && loc.name && !prev.name.trim()
           ? { name: loc.name }
           : {};
+        const cur = prev.homeContentByLocale[contentLocale] ?? JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT));
         return {
           ...prev,
           ...namePatch,
-          homeContent: {
-            ...prev.homeContent,
-            location: { ...prev.homeContent.location, ...updates },
+          homeContentByLocale: {
+            ...prev.homeContentByLocale,
+            [contentLocale]: { ...cur, location: { ...cur.location, ...updates } },
           },
         };
       });
-      setPlacesLookupMessage('Dados preenchidos. Revise e ajuste se necessário.');
+      setPlacesLookupMessage('success:' + t('management.lookupSuccess'));
     } catch (err: unknown) {
       const statusCode = err && typeof err === 'object' && 'statusCode' in err ? (err as { statusCode: number }).statusCode : 0;
       const msg = statusCode === 503
-        ? 'Busca por endereço não está configurada.'
-        : getErrorMessage(err, 'Não foi possível buscar o endereço. Tente novamente.');
+        ? t('management.lookupUnavailable')
+        : getErrorMessage(err, t('management.lookupError'));
       setPlacesLookupMessage(msg);
     } finally {
       setPlacesLookupLoading(false);
     }
-  }, [user?.companyId, placesLookupAddress]);
+  }, [user?.companyId, placesLookupAddress, contentLocale]);
 
   const openEditModal = (shop: Shop) => {
     setEditingShop(shop);
@@ -318,11 +347,12 @@ export function ShopManagementPage() {
       apiBase: shop.apiBase || '',
       theme: mergeTheme(shop.theme ?? null),
       style: nextStyle,
-      homeContent: mergeHomeContentForEdit(shop.homeContent ?? null),
+      homeContentByLocale: normalizeToHomeContentByLocaleForEdit(shop.homeContent ?? null),
       settings: mergeSettingsForEdit(shop.settings ?? null),
       ownerPassword: '',
       staffPassword: '',
     });
+    setContentLocale('pt-BR');
     setPaletteIndices(pickThreeRandomPaletteIndices(nextStyle.preset));
     setEditTab('info');
     setPlacesLookupAddress('');
@@ -460,7 +490,7 @@ export function ShopManagementPage() {
                   Editar Barbearia
                 </h2>
                 <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-                  {(['info', 'appearance', 'content', 'preview', 'settings', 'credentials'] as const).map((tab) => (
+                  {(['info', 'appearance', 'content', 'settings', 'credentials'] as const).map((tab) => (
                     <button
                       key={tab}
                       type="button"
@@ -469,21 +499,20 @@ export function ShopManagementPage() {
                         editTab === tab ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white'
                       }`}
                     >
-                      {tab === 'info' && 'Informações'}
-                      {tab === 'appearance' && 'Aparência'}
-                      {tab === 'content' && 'Conteúdo'}
-                      {tab === 'preview' && 'Pré-visualização'}
-                      {tab === 'settings' && 'Configurações'}
-                      {tab === 'credentials' && 'Acesso'}
+                      {tab === 'info' && t('management.infoTab')}
+                      {tab === 'appearance' && t('management.appearanceTab')}
+                      {tab === 'content' && t('management.contentTab')}
+                      {tab === 'settings' && t('management.settingsTab')}
+                      {tab === 'credentials' && t('management.credentialsTab')}
                     </button>
                   ))}
                 </div>
                 <form onSubmit={(e) => { e.preventDefault(); handleEdit(); }} className="flex-1 overflow-y-auto min-h-0 pr-1">
                   {editTab === 'info' && (
                     <section className="space-y-5">
-                      <p className="text-white/60 text-sm">Dados básicos da barbearia.</p>
+                      <p className="text-white/60 text-sm">{t('management.infoIntro')}</p>
                       <div>
-                        <label htmlFor="editNameRoot" className="block text-white/70 text-sm mb-2">Nome *</label>
+                        <label htmlFor="editNameRoot" className="block text-white/70 text-sm mb-2">{t('management.name')} *</label>
                         <input
                           id="editNameRoot"
                           type="text"
@@ -494,7 +523,7 @@ export function ShopManagementPage() {
                         />
                       </div>
                       <div>
-                        <label htmlFor="editSlugRoot" className="block text-white/70 text-sm mb-2">Slug *</label>
+                        <label htmlFor="editSlugRoot" className="block text-white/70 text-sm mb-2">{t('management.slug')} *</label>
                         <input
                           id="editSlugRoot"
                           type="text"
@@ -506,35 +535,35 @@ export function ShopManagementPage() {
                         />
                       </div>
                       <div>
-                        <label htmlFor="editDomainRoot" className="block text-white/50 text-sm mb-2">Domínio (opcional)</label>
+                        <label htmlFor="editDomainRoot" className="block text-white/50 text-sm mb-2">{t('management.domain')}</label>
                         <input
                           id="editDomainRoot"
                           type="text"
                           value={formData.domain}
                           onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                          placeholder="exemplo.com"
+                          placeholder={t('management.domainPlaceholder')}
                           className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
                         />
                       </div>
                       <div>
-                        <label htmlFor="editPathRoot" className="block text-white/50 text-sm mb-2">Caminho (opcional)</label>
+                        <label htmlFor="editPathRoot" className="block text-white/50 text-sm mb-2">{t('management.path')}</label>
                         <input
                           id="editPathRoot"
                           type="text"
                           value={formData.path}
                           onChange={(e) => setFormData({ ...formData, path: e.target.value })}
-                          placeholder="/caminho"
+                          placeholder={t('management.pathPlaceholder')}
                           className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
                         />
                       </div>
                       <div>
-                        <label htmlFor="editApiBaseRoot" className="block text-white/50 text-sm mb-2">API Base URL (opcional)</label>
+                        <label htmlFor="editApiBaseRoot" className="block text-white/50 text-sm mb-2">{t('management.apiBase')}</label>
                         <input
                           id="editApiBaseRoot"
                           type="url"
                           value={formData.apiBase}
                           onChange={(e) => setFormData({ ...formData, apiBase: e.target.value })}
-                          placeholder="https://api.exemplo.com"
+                          placeholder={t('management.apiBasePlaceholder')}
                           className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
                         />
                       </div>
@@ -553,122 +582,81 @@ export function ShopManagementPage() {
                       }
                     />
                   )}
-                  {editTab === 'content' && (
+                  {editTab === 'content' && (() => {
+                    const contentForm = formData.homeContentByLocale[contentLocale] ?? JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT));
+                    const setContentForm = (patch: Partial<HomeContent> | ((prev: HomeContent) => HomeContent)) => setFormData((prev) => {
+                      const cur = prev.homeContentByLocale[contentLocale] ?? JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT));
+                      const next = typeof patch === 'function' ? patch(cur) : { ...cur, ...patch };
+                      return { ...prev, homeContentByLocale: { ...prev.homeContentByLocale, [contentLocale]: next } };
+                    });
+                    return (
                     <div className="space-y-6 max-h-[50vh] overflow-y-auto">
-                      <p className="text-white/60 text-sm">Textos e conteúdo da página inicial. Todos opcionais.</p>
+                      <p className="text-white/60 text-sm">{t('management.contentIntro')}</p>
+                      <div className="flex gap-2 border-b border-white/10 pb-2">
+                        {SUPPORTED_LOCALES.map((loc) => (
+                          <button key={loc} type="button" onClick={() => setContentLocale(loc)} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${contentLocale === loc ? 'bg-[#D4AF37] text-[#0a0a0a]' : 'bg-white/10 text-white/80 hover:bg-white/15'}`}>{t(`locale.${loc}`)}</button>
+                        ))}
+                      </div>
                       <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                        <h4 className="text-white font-medium">Ícones da loja</h4>
+                        <h4 className="text-white font-medium">{t('management.storeIcons')}</h4>
                         <div className="space-y-3">
                           <div>
-                            <label className="block text-white/60 text-sm mb-1">Favicon (ícone da aba do navegador)</label>
-                            <input
-                              type="url"
-                              value={formData.homeContent.branding.faviconUrl}
-                              onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, branding: { ...formData.homeContent.branding, faviconUrl: e.target.value } } })}
-                              placeholder="https://..."
-                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30"
-                            />
+                            <label className="block text-white/60 text-sm mb-1">{t('management.favicon')}</label>
+                            <input type="url" value={contentForm.branding.faviconUrl} onChange={(e) => setContentForm({ branding: { ...contentForm.branding, faviconUrl: e.target.value } })} placeholder="https://..." className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" />
                           </div>
                           <div>
-                            <label className="block text-white/60 text-sm mb-1">Logo do cabeçalho (ícone no topo da página)</label>
-                            <input
-                              type="url"
-                              value={formData.homeContent.branding.headerIconUrl}
-                              onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, branding: { ...formData.homeContent.branding, headerIconUrl: e.target.value } } })}
-                              placeholder="https://..."
-                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30"
-                            />
+                            <label className="block text-white/60 text-sm mb-1">{t('management.headerIcon')}</label>
+                            <input type="url" value={contentForm.branding.headerIconUrl} onChange={(e) => setContentForm({ branding: { ...contentForm.branding, headerIconUrl: e.target.value } })} placeholder="https://..." className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" />
                           </div>
                         </div>
                       </section>
                       <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
                         <h4 className="text-white font-medium">Hero</h4>
                         <div className="space-y-3">
-                          <div><label className="block text-white/60 text-sm mb-1">Badge do hero</label><input type="text" value={formData.homeContent.hero.badge} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, badge: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="block text-white/60 text-sm mb-1">Subtítulo</label><input type="text" value={formData.homeContent.hero.subtitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, subtitle: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="block text-white/60 text-sm mb-1">Botão Entrar</label><input type="text" value={formData.homeContent.hero.ctaJoin} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaJoin: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="block text-white/60 text-sm mb-1">Botão Localização</label><input type="text" value={formData.homeContent.hero.ctaLocation} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaLocation: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.heroBadge')}</label><input type="text" value={contentForm.hero.badge} onChange={(e) => setContentForm({ hero: { ...contentForm.hero, badge: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.subtitle')}</label><input type="text" value={contentForm.hero.subtitle} onChange={(e) => setContentForm({ hero: { ...contentForm.hero, subtitle: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.ctaJoin')}</label><input type="text" value={contentForm.hero.ctaJoin} onChange={(e) => setContentForm({ hero: { ...contentForm.hero, ctaJoin: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.ctaLocation')}</label><input type="text" value={contentForm.hero.ctaLocation} onChange={(e) => setContentForm({ hero: { ...contentForm.hero, ctaLocation: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                         </div>
                       </section>
                       <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                        <h4 className="text-white font-medium">Navegação</h4>
+                        <h4 className="text-white font-medium">{t('management.navSection')}</h4>
                         <div className="space-y-3">
-                          {([
-                            { key: 'linkServices' as const, label: 'Link Serviços' },
-                            { key: 'linkAbout' as const, label: 'Link Sobre' },
-                            { key: 'linkLocation' as const, label: 'Link Localização' },
-                            { key: 'ctaJoin' as const, label: 'Botão Entrar' },
-                            { key: 'linkBarbers' as const, label: 'Link Barbeiros' },
-                          ]).map(({ key, label }) => (
-                            <div key={key}><label className="block text-white/60 text-sm mb-1">{label}</label><input type="text" value={formData.homeContent.nav[key]} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, nav: { ...formData.homeContent.nav, [key]: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          {([{ key: 'linkServices' as const, label: t('management.linkServices') }, { key: 'linkAbout' as const, label: t('management.linkAbout') }, { key: 'linkLocation' as const, label: t('management.linkLocation') }, { key: 'ctaJoin' as const, label: t('management.ctaJoinLabel') }, { key: 'linkBarbers' as const, label: t('management.linkBarbers') }]).map(({ key, label }) => (
+                            <div key={key}><label className="block text-white/60 text-sm mb-1">{label}</label><input type="text" value={contentForm.nav[key]} onChange={(e) => setContentForm({ nav: { ...contentForm.nav, [key]: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                           ))}
                         </div>
                       </section>
                       <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                        <h4 className="text-white font-medium">Seção Serviços</h4>
+                        <h4 className="text-white font-medium">{t('management.servicesSection')}</h4>
                         <div className="space-y-3">
-                          <div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={formData.homeContent.services.sectionTitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, sectionTitle: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="block text-white/60 text-sm mb-1">Texto ao carregar</label><input type="text" value={formData.homeContent.services.loadingText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, loadingText: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="block text-white/60 text-sm mb-1">Texto quando vazio</label><input type="text" value={formData.homeContent.services.emptyText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, emptyText: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.sectionTitle')}</label><input type="text" value={contentForm.services.sectionTitle} onChange={(e) => setContentForm({ services: { ...contentForm.services, sectionTitle: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.loadingText')}</label><input type="text" value={contentForm.services.loadingText} onChange={(e) => setContentForm({ services: { ...contentForm.services, loadingText: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.emptyText')}</label><input type="text" value={contentForm.services.emptyText} onChange={(e) => setContentForm({ services: { ...contentForm.services, emptyText: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                         </div>
                       </section>
                       <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                        <h4 className="text-white font-medium">Localização</h4>
+                        <h4 className="text-white font-medium">{t('management.locationSection')}</h4>
                         <div className="space-y-3">
                           <div>
-                            <label className="block text-white/60 text-sm mb-1">Buscar dados pelo endereço</label>
+                            <label className="block text-white/60 text-sm mb-1">{t('management.lookupByAddress')}</label>
                             <div className="flex gap-2 flex-wrap">
-                              <input
-                                type="text"
-                                value={placesLookupAddress}
-                                onChange={(e) => setPlacesLookupAddress(e.target.value)}
-                                placeholder="Endereço ou nome do estabelecimento"
-                                className="flex-1 min-w-[200px] w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
-                                disabled={placesLookupLoading}
-                              />
-                              <button
-                                type="button"
-                                onClick={handlePlacesLookup}
-                                disabled={placesLookupLoading || !placesLookupAddress.trim()}
-                                className="px-4 py-2.5 rounded-lg bg-[#D4AF37] text-[#0a0a0a] font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-                              >
-                                {placesLookupLoading ? 'Buscando...' : 'Buscar'}
-                              </button>
+                              <input type="text" value={placesLookupAddress} onChange={(e) => setPlacesLookupAddress(e.target.value)} placeholder={t('management.addressPlaceholder')} className="flex-1 min-w-[200px] w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" disabled={placesLookupLoading} />
+                              <button type="button" onClick={handlePlacesLookup} disabled={placesLookupLoading || !placesLookupAddress.trim()} className="px-4 py-2.5 rounded-lg bg-[#D4AF37] text-[#0a0a0a] font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]">{placesLookupLoading ? t('management.searching') : t('management.search')}</button>
                             </div>
-                            {placesLookupMessage && (
-                              <p className={`text-sm mt-1 ${placesLookupMessage.startsWith('Dados preenchidos') ? 'text-green-400' : 'text-amber-400'}`}>
-                                {placesLookupMessage}
-                              </p>
-                            )}
+                            {placesLookupMessage && <p className={`text-sm mt-1 ${placesLookupMessage.startsWith('success:') ? 'text-green-400' : 'text-amber-400'}`}>{placesLookupMessage.startsWith('success:') ? placesLookupMessage.slice(8) : placesLookupMessage}</p>}
                           </div>
-                          <div><label className="block text-white/60 text-sm mb-1">Endereço</label><textarea value={formData.homeContent.location.address} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, address: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[60px]" /></div>
-                          <div><label className="block text-white/60 text-sm mb-1">Horário</label><textarea value={formData.homeContent.location.hours} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, hours: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="block text-white/60 text-sm mb-1">Telefone</label><input type="text" value={formData.homeContent.location.phone} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phone: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="block text-white/60 text-sm mb-1">Link do telefone</label><input type="text" value={formData.homeContent.location.phoneHref} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phoneHref: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" placeholder="tel:+55..." /></div>
-                          <div><label className="block text-white/60 text-sm mb-1">Idiomas</label><input type="text" value={formData.homeContent.location.languages} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, languages: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                          <div><label className="block text-white/60 text-sm mb-1">Consulta do mapa</label><input type="text" value={formData.homeContent.location.mapQuery} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, mapQuery: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.address')}</label><textarea value={contentForm.location.address} onChange={(e) => setContentForm({ location: { ...contentForm.location, address: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[60px]" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.hours')}</label><textarea value={contentForm.location.hours} onChange={(e) => setContentForm({ location: { ...contentForm.location, hours: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.phone')}</label><input type="text" value={contentForm.location.phone} onChange={(e) => setContentForm({ location: { ...contentForm.location, phone: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.phoneLink')}</label><input type="text" value={contentForm.location.phoneHref} onChange={(e) => setContentForm({ location: { ...contentForm.location, phoneHref: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" placeholder="tel:+55..." /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.languages')}</label><input type="text" value={contentForm.location.languages} onChange={(e) => setContentForm({ location: { ...contentForm.location, languages: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.mapQuery')}</label><input type="text" value={contentForm.location.mapQuery} onChange={(e) => setContentForm({ location: { ...contentForm.location, mapQuery: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                         </div>
                       </section>
                     </div>
-                  )}
-                  {editTab === 'preview' && editingShop && (
-                    <div className="flex-1 min-h-0 flex flex-col">
-                      <p className="text-white/60 text-sm mb-3">Visualização da página inicial com os dados atuais do formulário.</p>
-                      <ShopPreview
-                        config={
-                          {
-                            name: formData.name,
-                            theme: formData.theme,
-                            style: resolveShopStyle(formData.style),
-                            path: editingShop.path ?? '/',
-                            homeContent: formData.homeContent,
-                            settings: formData.settings,
-                          } satisfies ShopConfig
-                        }
-                        className="flex-1 min-h-[50vh] overflow-hidden"
-                      />
-                    </div>
-                  )}
+                    );
+                  })()}
                   {editTab === 'settings' && (
                     <div className="space-y-6">
                       <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
@@ -693,6 +681,7 @@ export function ShopManagementPage() {
                             { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' },
                             { key: 'deviceDeduplication' as const, label: 'Impedir múltiplos tickets por dispositivo' },
                             { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' },
+                            { key: 'allowAppointments' as const, label: 'Permitir agendamentos (fila híbrida com horário marcado)' },
                           ]).map(({ key, label }) => (
                             <li key={key}>
                               <label className="flex items-center gap-3 cursor-pointer group">
@@ -792,7 +781,7 @@ export function ShopManagementPage() {
                   <div className="flex gap-2 sm:gap-3 mt-5 sm:mt-6 flex-shrink-0 pt-4 border-t border-white/10">
                     <button
                       type="button"
-                      onClick={() => { editModal.close(); setEditingShop(null); setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' }); }}
+                      onClick={() => { editModal.close(); setEditingShop(null); setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' }); setContentLocale('pt-BR'); }}
                       className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-medium cursor-pointer transition-all min-h-[44px] bg-white/10 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                     >
                       Cancelar
@@ -950,7 +939,7 @@ export function ShopManagementPage() {
               Editar Barbearia
             </h2>
             <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-              {(['info', 'appearance', 'content', 'preview', 'settings', 'credentials'] as const).map((tab) => (
+              {(['info', 'appearance', 'content', 'settings', 'credentials'] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -959,24 +948,23 @@ export function ShopManagementPage() {
                     editTab === tab ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'text-white/60 hover:text-white'
                   }`}
                 >
-                  {tab === 'info' && 'Informações'}
-                  {tab === 'appearance' && 'Aparência'}
-                  {tab === 'content' && 'Conteúdo'}
-                  {tab === 'preview' && 'Pré-visualização'}
-                  {tab === 'settings' && 'Configurações'}
-                  {tab === 'credentials' && 'Acesso'}
+                  {tab === 'info' && t('management.infoTab')}
+                  {tab === 'appearance' && t('management.appearanceTab')}
+                  {tab === 'content' && t('management.contentTab')}
+                  {tab === 'settings' && t('management.settingsTab')}
+                  {tab === 'credentials' && t('management.credentialsTab')}
                 </button>
               ))}
             </div>
             <form onSubmit={(e) => { e.preventDefault(); handleEdit(); }} className="flex-1 overflow-y-auto min-h-0 pr-1">
               {editTab === 'info' && (
                 <section className="space-y-5">
-                  <p className="text-white/60 text-sm">Dados básicos da barbearia.</p>
-                  <div><label htmlFor="editName" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">Nome *</label><input id="editName" type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" /></div>
-                  <div><label htmlFor="editSlug" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">Slug *</label><input id="editSlug" type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} required pattern="[a-z0-9-]+" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" /></div>
-                  <div><label htmlFor="editDomain" className="block text-white/50 text-sm mb-2">Domínio (opcional)</label><input id="editDomain" type="text" value={formData.domain} onChange={(e) => setFormData({ ...formData, domain: e.target.value })} placeholder="exemplo.com" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
-                  <div><label htmlFor="editPath" className="block text-white/50 text-sm mb-2">Caminho (opcional)</label><input id="editPath" type="text" value={formData.path} onChange={(e) => setFormData({ ...formData, path: e.target.value })} placeholder="/caminho" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
-                  <div><label htmlFor="editApiBase" className="block text-white/50 text-sm mb-2">API Base URL (opcional)</label><input id="editApiBase" type="url" value={formData.apiBase} onChange={(e) => setFormData({ ...formData, apiBase: e.target.value })} placeholder="https://api.exemplo.com" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
+                  <p className="text-white/60 text-sm">{t('management.infoIntro')}</p>
+                  <div><label htmlFor="editName" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">{t('management.name')} *</label><input id="editName" type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" /></div>
+                  <div><label htmlFor="editSlug" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">{t('management.slug')} *</label><input id="editSlug" type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} required pattern="[a-z0-9-]+" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" /></div>
+                  <div><label htmlFor="editDomain" className="block text-white/50 text-sm mb-2">{t('management.domain')}</label><input id="editDomain" type="text" value={formData.domain} onChange={(e) => setFormData({ ...formData, domain: e.target.value })} placeholder={t('management.domainPlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
+                  <div><label htmlFor="editPath" className="block text-white/50 text-sm mb-2">{t('management.path')}</label><input id="editPath" type="text" value={formData.path} onChange={(e) => setFormData({ ...formData, path: e.target.value })} placeholder={t('management.pathPlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
+                  <div><label htmlFor="editApiBase" className="block text-white/50 text-sm mb-2">{t('management.apiBase')}</label><input id="editApiBase" type="url" value={formData.apiBase} onChange={(e) => setFormData({ ...formData, apiBase: e.target.value })} placeholder={t('management.apiBasePlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
                 </section>
               )}
               {editTab === 'appearance' && (
@@ -992,74 +980,69 @@ export function ShopManagementPage() {
                   }
                 />
               )}
-              {editTab === 'content' && (
+              {editTab === 'content' && (() => {
+                const contentForm = formData.homeContentByLocale[contentLocale] ?? JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT));
+                const setContentForm = (patch: Partial<HomeContent> | ((prev: HomeContent) => HomeContent)) => setFormData((prev) => {
+                  const cur = prev.homeContentByLocale[contentLocale] ?? JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT));
+                  const next = typeof patch === 'function' ? patch(cur) : { ...cur, ...patch };
+                  return { ...prev, homeContentByLocale: { ...prev.homeContentByLocale, [contentLocale]: next } };
+                });
+                return (
                 <div className="space-y-6 max-h-[50vh] overflow-y-auto">
-                  <p className="text-white/60 text-sm">Textos e conteúdo da página inicial. Todos opcionais.</p>
+                  <p className="text-white/60 text-sm">{t('management.contentIntro')}</p>
+                  <div className="flex gap-2 border-b border-white/10 pb-2">
+                    {SUPPORTED_LOCALES.map((loc) => (
+                      <button key={loc} type="button" onClick={() => setContentLocale(loc)} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${contentLocale === loc ? 'bg-[#D4AF37] text-[#0a0a0a]' : 'bg-white/10 text-white/80 hover:bg-white/15'}`}>{t(`locale.${loc}`)}</button>
+                    ))}
+                  </div>
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                    <h4 className="text-white font-medium">Ícones da loja</h4>
+                    <h4 className="text-white font-medium">{t('management.storeIcons')}</h4>
                     <div className="space-y-3">
-                      <div><label className="block text-white/60 text-sm mb-1">Favicon (ícone da aba do navegador)</label><input type="url" value={formData.homeContent.branding.faviconUrl} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, branding: { ...formData.homeContent.branding, faviconUrl: e.target.value } } })} placeholder="https://..." className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" /></div>
-                      <div><label className="block text-white/60 text-sm mb-1">Logo do cabeçalho (ícone no topo da página)</label><input type="url" value={formData.homeContent.branding.headerIconUrl} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, branding: { ...formData.homeContent.branding, headerIconUrl: e.target.value } } })} placeholder="https://..." className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.favicon')}</label><input type="url" value={contentForm.branding.faviconUrl} onChange={(e) => setContentForm({ branding: { ...contentForm.branding, faviconUrl: e.target.value } })} placeholder="https://..." className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.headerIcon')}</label><input type="url" value={contentForm.branding.headerIconUrl} onChange={(e) => setContentForm({ branding: { ...contentForm.branding, headerIconUrl: e.target.value } })} placeholder="https://..." className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" /></div>
                     </div>
                   </section>
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
                     <h4 className="text-white font-medium">Hero</h4>
                     <div className="space-y-3">
-                      <div><label className="block text-white/60 text-sm mb-1">Badge do hero</label><input type="text" value={formData.homeContent.hero.badge} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, badge: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="block text-white/60 text-sm mb-1">Subtítulo</label><input type="text" value={formData.homeContent.hero.subtitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, subtitle: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="block text-white/60 text-sm mb-1">Botão Entrar</label><input type="text" value={formData.homeContent.hero.ctaJoin} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaJoin: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="block text-white/60 text-sm mb-1">Botão Localização</label><input type="text" value={formData.homeContent.hero.ctaLocation} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaLocation: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.heroBadge')}</label><input type="text" value={contentForm.hero.badge} onChange={(e) => setContentForm({ hero: { ...contentForm.hero, badge: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.subtitle')}</label><input type="text" value={contentForm.hero.subtitle} onChange={(e) => setContentForm({ hero: { ...contentForm.hero, subtitle: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.ctaJoin')}</label><input type="text" value={contentForm.hero.ctaJoin} onChange={(e) => setContentForm({ hero: { ...contentForm.hero, ctaJoin: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.ctaLocation')}</label><input type="text" value={contentForm.hero.ctaLocation} onChange={(e) => setContentForm({ hero: { ...contentForm.hero, ctaLocation: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                     </div>
                   </section>
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                    <h4 className="text-white font-medium">Seção Sobre</h4>
+                    <h4 className="text-white font-medium">{t('management.aboutSection')}</h4>
                     <div className="space-y-3">
-                      <div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={formData.homeContent.about.sectionTitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, about: { ...formData.homeContent.about, sectionTitle: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="block text-white/60 text-sm mb-1">Imagem (URL)</label><input type="url" value={formData.homeContent.about.imageUrl} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, about: { ...formData.homeContent.about, imageUrl: e.target.value } } })} placeholder="https://..." className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" /></div>
-                      <div><label className="block text-white/60 text-sm mb-1">Texto alternativo da imagem</label><input type="text" value={formData.homeContent.about.imageAlt} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, about: { ...formData.homeContent.about, imageAlt: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.sectionTitle')}</label><input type="text" value={contentForm.about.sectionTitle} onChange={(e) => setContentForm({ about: { ...contentForm.about, sectionTitle: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.imageUrl')}</label><input type="url" value={contentForm.about.imageUrl} onChange={(e) => setContentForm({ about: { ...contentForm.about, imageUrl: e.target.value } })} placeholder="https://..." className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.imageAlt')}</label><input type="text" value={contentForm.about.imageAlt} onChange={(e) => setContentForm({ about: { ...contentForm.about, imageAlt: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                     </div>
                   </section>
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
                     <h4 className="text-white font-medium">Seção Serviços</h4>
                     <div className="space-y-3">
-                      <div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={formData.homeContent.services.sectionTitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, sectionTitle: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={contentForm.services.sectionTitle} onChange={(e) => setContentForm({ services: { ...contentForm.services, sectionTitle: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                     </div>
                   </section>
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
                     <h4 className="text-white font-medium">Localização</h4>
                     <div className="space-y-3">
-                      <div><label className="block text-white/60 text-sm mb-1">Endereço</label><textarea value={formData.homeContent.location.address} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, address: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[60px]" /></div>
-                      <div><label className="block text-white/60 text-sm mb-1">Horário</label><textarea value={formData.homeContent.location.hours} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, hours: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="block text-white/60 text-sm mb-1">Telefone</label><input type="text" value={formData.homeContent.location.phone} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phone: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="block text-white/60 text-sm mb-1">Link do telefone</label><input type="text" value={formData.homeContent.location.phoneHref} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phoneHref: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" placeholder="tel:+55..." /></div>
-                      <div><label className="block text-white/60 text-sm mb-1">Idiomas</label><input type="text" value={formData.homeContent.location.languages} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, languages: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="block text-white/60 text-sm mb-1">Consulta do mapa</label><input type="text" value={formData.homeContent.location.mapQuery} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, mapQuery: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.address')}</label><textarea value={contentForm.location.address} onChange={(e) => setContentForm({ location: { ...contentForm.location, address: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[60px]" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.hours')}</label><textarea value={contentForm.location.hours} onChange={(e) => setContentForm({ location: { ...contentForm.location, hours: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.phone')}</label><input type="text" value={contentForm.location.phone} onChange={(e) => setContentForm({ location: { ...contentForm.location, phone: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.phoneLink')}</label><input type="text" value={contentForm.location.phoneHref} onChange={(e) => setContentForm({ location: { ...contentForm.location, phoneHref: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" placeholder="tel:+55..." /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.languages')}</label><input type="text" value={contentForm.location.languages} onChange={(e) => setContentForm({ location: { ...contentForm.location, languages: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.mapQuery')}</label><input type="text" value={contentForm.location.mapQuery} onChange={(e) => setContentForm({ location: { ...contentForm.location, mapQuery: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                     </div>
                   </section>
                 </div>
-              )}
-              {editTab === 'preview' && editingShop && (
-                <div className="flex-1 min-h-0 flex flex-col">
-                  <p className="text-white/60 text-sm mb-3">Visualização da página inicial com os dados atuais do formulário.</p>
-                  <ShopPreview
-                    config={
-                      {
-                        name: formData.name,
-                        theme: formData.theme,
-                        style: resolveShopStyle(formData.style),
-                        path: editingShop.path ?? '/',
-                        homeContent: formData.homeContent,
-                        settings: formData.settings,
-                      } satisfies ShopConfig
-                    }
-                    className="flex-1 min-h-[50vh] overflow-hidden"
-                  />
-                </div>
-              )}
+                );
+              })()}
               {editTab === 'settings' && (
                 <div className="space-y-6">
                   <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Fila</h4><div className="grid grid-cols-2 gap-4"><div><label className="block text-white/60 text-sm mb-2">Tamanho máximo da fila</label><input type="number" min={1} max={500} value={formData.settings.maxQueueSize} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-2">Duração padrão do serviço (min)</label><input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div></div></section>
-                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Regras de atendimento</h4><ul className="space-y-4">{[{ key: 'requirePhone' as const, label: 'Exigir telefone do cliente' }, { key: 'requireBarberChoice' as const, label: 'Exigir escolha de barbeiro' }, { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' }, { key: 'deviceDeduplication' as const, label: 'Impedir múltiplos tickets por dispositivo' }, { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' }].map(({ key, label }) => (<li key={key}><label className="flex items-center gap-3 cursor-pointer group"><button type="button" role="switch" aria-checked={formData.settings[key]} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button><span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span></label></li>))}</ul></section>
+                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Regras de atendimento</h4><ul className="space-y-4">{[{ key: 'requirePhone' as const, label: 'Exigir telefone do cliente' }, { key: 'requireBarberChoice' as const, label: 'Exigir escolha de barbeiro' }, { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' }, { key: 'deviceDeduplication' as const, label: 'Impedir múltiplos tickets por dispositivo' }, { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' }, { key: 'allowAppointments' as const, label: 'Permitir agendamentos (fila híbrida com horário marcado)' }].map(({ key, label }) => (<li key={key}><label className="flex items-center gap-3 cursor-pointer group"><button type="button" role="switch" aria-checked={formData.settings[key]} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button><span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span></label></li>))}</ul></section>
                 </div>
               )}
               {editTab === 'credentials' && (
@@ -1144,7 +1127,7 @@ export function ShopManagementPage() {
                   onClick={() => {
                     editModal.close();
                     setEditingShop(null);
-                    setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' });
+                    setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' }); setContentLocale('pt-BR');
                   }}
                   className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >

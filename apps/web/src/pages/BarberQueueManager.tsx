@@ -6,6 +6,7 @@ import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useQueue } from '@/hooks/useQueue';
 import { useBarbers } from '@/hooks/useBarbers';
+import { useServices } from '@/hooks/useServices';
 import { useKiosk } from '@/hooks/useKiosk';
 import { useModal } from '@/hooks/useModal';
 import { Navigation } from '@/components/Navigation';
@@ -20,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { KioskAdsPlayer } from '@/components/KioskAdsPlayer';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
+import { useLocale } from '@/contexts/LocaleContext';
 import { cn, getErrorMessage, formatName, formatNameForDisplay } from '@/lib/utils';
 
 const AD_VIEW_DURATION = 15000; // 15 seconds
@@ -45,7 +47,9 @@ export function BarberQueueManager() {
   const barberPollInterval = isKioskMode ? 10000 : 0; // Poll barbers in kiosk mode so presence updates without refresh
   const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval);
   const { barbers, togglePresence } = useBarbers(barberPollInterval);
+  const { activeServices } = useServices();
   const { isBarber, user } = useAuthContext();
+  const { t } = useLocale();
   const displayBarbers = isBarber && user ? barbers.filter((b) => b.id === user.id) : barbers;
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
@@ -55,6 +59,11 @@ export function BarberQueueManager() {
   const [combinedCheckInName, setCombinedCheckInName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [deadZoneWarning, setDeadZoneWarning] = useState<string | null>(null);
+  const [nextTicketLoading, setNextTicketLoading] = useState(false);
+  const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
+  const [appointmentForm, setAppointmentForm] = useState({ customerName: '', serviceId: 0, scheduledTime: '' });
+  const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
   const firstNameInputRef = useRef<HTMLInputElement>(null);
 
   const checkInModal = useModal(false);
@@ -115,26 +124,22 @@ export function BarberQueueManager() {
   }, [barbers]);
 
   const tickets = queueData?.tickets || [];
-  
-  // Memoize sorted tickets and counts to avoid recalculation on every render
-  const { sortedTickets, waitingCount, servingCount } = useMemo(() => {
+  const allowAppointments = shopConfig.settings?.allowAppointments ?? false;
+
+  // Memoize sorted tickets and counts (API returns weighted order when allowAppointments)
+  const { sortedTickets, waitingCount, servingCount, pendingTickets } = useMemo(() => {
     const waitingTickets = tickets.filter((t) => t.status === 'waiting');
     const inProgressTickets = tickets.filter((t) => t.status === 'in_progress');
-    
-    // Sort waiting tickets by position (or createdAt as fallback) to ensure correct order
+    const pending = tickets.filter((t) => t.status === 'pending');
     const sortedWaitingTickets = [...waitingTickets].sort((a, b) => {
-      // First try to sort by position
-      if (a.position !== b.position) {
-        return a.position - b.position;
-      }
-      // If positions are equal or invalid, sort by creation time
+      if (a.position !== b.position) return a.position - b.position;
       return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
     });
-    
     return {
       sortedTickets: [...sortedWaitingTickets, ...inProgressTickets],
       waitingCount: waitingTickets.length,
       servingCount: inProgressTickets.length,
+      pendingTickets: pending,
     };
   }, [tickets]);
 
@@ -194,7 +199,7 @@ export function BarberQueueManager() {
   const handleAddCustomer = useCallback(async () => {
     const validation = validateName(checkInName.first, checkInName.last);
     if (!validation.isValid) {
-      setErrorMessage(validation.error || 'Nome inválido');
+      setErrorMessage(validation.error || t('barber.invalidName'));
       return;
     }
 
@@ -214,12 +219,12 @@ export function BarberQueueManager() {
       checkInModal.close();
       await refetchQueue();
     } catch (error) {
-      const errorMsg = getErrorMessage(error, 'Erro ao adicionar cliente. Tente novamente.');
+      const errorMsg = getErrorMessage(error, t('barber.addCustomerError'));
       setErrorMessage(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
-  }, [checkInName, validateName, refetchQueue, checkInModal, shopSlug]);
+  }, [checkInName, validateName, refetchQueue, checkInModal, shopSlug, t]);
 
   const handleSelectBarber = useCallback(async (barberId: number | null) => {
     if (!selectedCustomerId) return;
@@ -240,11 +245,63 @@ export function BarberQueueManager() {
       await refetchQueue();
       barberSelectorModal.close();
       setSelectedCustomerId(null);
+      setDeadZoneWarning(null);
     } catch (error) {
-      const errorMsg = getErrorMessage(error, 'Erro ao atribuir barbeiro. Tente novamente.');
+      const errorMsg = getErrorMessage(error, t('barber.assignBarberError'));
       setErrorMessage(errorMsg);
     }
-  }, [selectedCustomerId, refetchQueue, barberSelectorModal, isBarber, user]);
+  }, [selectedCustomerId, refetchQueue, barberSelectorModal, isBarber, user, t]);
+
+  const handleCallNext = useCallback(async () => {
+    setNextTicketLoading(true);
+    setErrorMessage(null);
+    setDeadZoneWarning(null);
+    try {
+      const { next, deadZoneWarning: dw } = await api.getQueueNext(shopSlug);
+      if (dw?.message) setDeadZoneWarning(dw.message);
+      if (next?.id) {
+        setSelectedCustomerId(next.id);
+        barberSelectorModal.open();
+      }
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, t('barber.nextError')));
+    } finally {
+      setNextTicketLoading(false);
+    }
+  }, [shopSlug, barberSelectorModal, t]);
+
+  const handleCheckInAppointment = useCallback(async (ticketId: number) => {
+    try {
+      await api.checkInAppointment(shopSlug, ticketId);
+      await refetchQueue();
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, t('barber.checkInError')));
+    }
+  }, [shopSlug, refetchQueue, t]);
+
+  const handleCreateAppointment = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!appointmentForm.serviceId || !appointmentForm.customerName.trim() || !appointmentForm.scheduledTime) {
+      setErrorMessage(t('barber.fillNameServiceDateTime'));
+      return;
+    }
+    setAppointmentSubmitting(true);
+    setErrorMessage(null);
+    try {
+      await api.createAppointment(shopSlug, {
+        customerName: appointmentForm.customerName.trim(),
+        serviceId: appointmentForm.serviceId,
+        scheduledTime: new Date(appointmentForm.scheduledTime).toISOString(),
+      });
+      setAppointmentForm({ customerName: '', serviceId: 0, scheduledTime: '' });
+      setAppointmentModalOpen(false);
+      await refetchQueue();
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, t('barber.appointmentError')));
+    } finally {
+      setAppointmentSubmitting(false);
+    }
+  }, [shopSlug, appointmentForm, refetchQueue, t]);
 
   const handleRemoveCustomer = useCallback(async () => {
     if (!customerToRemove) return;
@@ -255,11 +312,11 @@ export function BarberQueueManager() {
       removeConfirmModal.close();
       setCustomerToRemove(null);
     } catch (error) {
-      const errorMsg = getErrorMessage(error, 'Erro ao remover cliente. Tente novamente.');
+      const errorMsg = getErrorMessage(error, t('barber.removeCustomerError'));
       setErrorMessage(errorMsg);
       removeConfirmModal.close();
     }
-  }, [customerToRemove, refetchQueue, removeConfirmModal]);
+  }, [customerToRemove, refetchQueue, removeConfirmModal, t]);
 
   const handleCompleteService = useCallback(async () => {
     if (!customerToComplete) return;
@@ -272,11 +329,11 @@ export function BarberQueueManager() {
       completeConfirmModal.close();
       setCustomerToComplete(null);
     } catch (error) {
-      const errorMsg = getErrorMessage(error, 'Erro ao finalizar atendimento. Tente novamente.');
+      const errorMsg = getErrorMessage(error, t('barber.completeError'));
       setErrorMessage(errorMsg);
       completeConfirmModal.close();
     }
-  }, [customerToComplete, refetchQueue, completeConfirmModal]);
+  }, [customerToComplete, refetchQueue, completeConfirmModal, t]);
 
   const getAssignedBarber = useCallback((ticket: { barberId?: number | null }) => {
     if (!ticket.barberId) return null;
@@ -304,7 +361,7 @@ export function BarberQueueManager() {
             <button
               onClick={() => setErrorMessage(null)}
               className="text-white/80 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Fechar mensagem de erro"
+              aria-label={t('barber.closeError')}
             >
               <span className="material-symbols-outlined">close</span>
             </button>
@@ -315,7 +372,7 @@ export function BarberQueueManager() {
         <button
           onClick={() => void toggleFullscreen()}
           className="absolute top-6 left-6 z-50 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all"
-          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+          aria-label={isFullscreen ? t('barber.exitFullscreen') : t('barber.enterFullscreen')}
         >
           <span className="material-symbols-outlined text-white/50 text-base">
             {isFullscreen ? 'close_fullscreen' : 'open_in_full'}
@@ -338,7 +395,7 @@ export function BarberQueueManager() {
                   showQueueView();
                 }}
                 className="inline-flex items-center gap-4 px-10 py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] rounded-2xl font-semibold text-xl hover:opacity-90 hover:-translate-y-1 hover:shadow-[0_8px_32px_color-mix(in_srgb,var(--shop-accent)_50%,transparent)] transition-all"
-                aria-label="Adicionar cliente à fila"
+                aria-label={t('barber.addClientAria')}
               >
                 <span className="material-symbols-outlined text-2xl">person_add</span>
                 <span className="font-['Playfair_Display',serif] text-2xl tracking-wide uppercase">{queueData?.shop?.name ?? shopConfig.name}</span>
@@ -351,8 +408,8 @@ export function BarberQueueManager() {
                 {sortedTickets.length === 0 ? (
                   <div className="text-center py-20">
                     <span className="material-symbols-outlined text-7xl text-white/20 mb-6 block">groups</span>
-                    <p className="text-2xl text-white/40 font-light">Nenhum cliente na fila</p>
-                    <p className="text-lg text-white/30 mt-2">Toque no botão acima para adicionar</p>
+                    <p className="text-2xl text-white/40 font-light">{t('barber.noClientInQueue')}</p>
+                    <p className="text-lg text-white/30 mt-2">{t('barber.tapToAdd')}</p>
                   </div>
                 ) : (
                   sortedTickets.map((ticket, index) => {
@@ -397,7 +454,20 @@ export function BarberQueueManager() {
                           )}
                           {/* Customer info (read-only in kiosk) */}
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-2xl text-white truncate">{formatNameForDisplay(ticket.customerName)}</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold text-2xl text-white truncate">{formatNameForDisplay(ticket.customerName)}</p>
+                              {(ticket as { ticketNumber?: string | null }).ticketNumber && (
+                                <span className="text-lg font-mono px-2 py-0.5 rounded bg-white/10 text-[var(--shop-accent)]">
+                                  {(ticket as { ticketNumber?: string | null }).ticketNumber}
+                                </span>
+                              )}
+                              {(ticket as { type?: string }).type === 'appointment' && (
+                                <span className="text-sm px-2 py-0.5 rounded bg-[var(--shop-accent)]/20 text-[var(--shop-accent)] flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-base">event</span>
+                                  Agendado
+                                </span>
+                              )}
+                            </div>
                             {assignedBarber && (
                               <p className="text-lg text-white/60 mt-1 truncate flex items-center gap-2">
                                 <span className="material-symbols-outlined text-lg">content_cut</span>
@@ -408,7 +478,7 @@ export function BarberQueueManager() {
                           {/* Status indicator */}
                           {isServing && (
                             <div className="flex-shrink-0 px-4 py-2 bg-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_40%,transparent)] rounded-xl">
-                              <span className="text-[var(--shop-accent)] text-sm font-medium uppercase tracking-wider">Atendendo</span>
+                              <span className="text-[var(--shop-accent)] text-sm font-medium uppercase tracking-wider">{t('barber.serving')}</span>
                             </div>
                           )}
                         </div>
@@ -473,7 +543,7 @@ export function BarberQueueManager() {
           <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-8">
             <div className="bg-[var(--shop-surface-secondary)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-3xl p-6 sm:p-8 lg:p-10 max-w-2xl w-full min-w-[320px]">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-['Playfair_Display',serif] text-[var(--shop-accent)] mb-6 sm:mb-8 text-center">
-                Entrar na Fila
+                {t('barber.joinQueue')}
               </h2>
               <form
                 onSubmit={(e) => {
@@ -484,7 +554,7 @@ export function BarberQueueManager() {
               >
                 <div>
                   <label htmlFor="kioskGuestName" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
-                    Nome *
+                    {t('barber.nameLabel')}
                   </label>
                   <input
                     ref={firstNameInputRef}
@@ -492,7 +562,7 @@ export function BarberQueueManager() {
                     type="text"
                     value={combinedCheckInName}
                     onChange={(e) => handleCombinedCheckInNameChange(e.target.value)}
-                    placeholder="Nome e inicial"
+                    placeholder={t('barber.namePlaceholder')}
                     autoCapitalize="words"
                     autoCorrect="off"
                     spellCheck="false"
@@ -507,14 +577,14 @@ export function BarberQueueManager() {
                     onClick={checkInModal.close}
                     className="flex-1 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all min-h-[44px]"
                   >
-                    Cancelar
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
                     className="flex-1 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl rounded-2xl bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-semibold hover:bg-[var(--shop-accent-hover)] transition-all disabled:opacity-50 min-h-[44px]"
                   >
-                    {isSubmitting ? 'Adicionando...' : 'Adicionar'}
+                    {isSubmitting ? t('barber.adding') : t('barber.add')}
                   </button>
                 </div>
               </form>
@@ -543,7 +613,7 @@ export function BarberQueueManager() {
           <button
             onClick={() => setErrorMessage(null)}
             className="text-white/80 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label="Fechar mensagem de erro"
+            aria-label={t('barber.closeError')}
           >
             <span className="material-symbols-outlined">close</span>
           </button>
@@ -556,27 +626,90 @@ export function BarberQueueManager() {
           <div className="stats flex gap-4 sm:gap-6">
             <div className="stat-item flex-1 text-center">
               <div className="stat-value text-2xl sm:text-3xl font-semibold text-[var(--shop-accent)]">{waitingCount}</div>
-              <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">Aguardando</div>
+              <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">{t('barber.waiting')}</div>
             </div>
             <div className="stat-item flex-1 text-center">
               <div className="stat-value text-2xl sm:text-3xl font-semibold text-white">{servingCount}</div>
-              <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">Atendendo</div>
+              <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">{t('barber.serving')}</div>
             </div>
           </div>
         </div>
 
         {/* Queue Section */}
         <div className="queue-section bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border-[3px] border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-4 sm:p-6 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
-          {/* Add Customer Button */}
-          <div className="queue-header mb-6">
+          {/* Add Customer / Call Next / Add Appointment */}
+          <div className="queue-header mb-6 flex flex-col sm:flex-row gap-3">
             <button
               onClick={checkInModal.open}
-              className="checkin-btn flex items-center justify-center gap-3 px-8 py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] border-2 border-[var(--shop-accent)] rounded-lg font-semibold w-full transition-all hover:-translate-y-0.5 hover:bg-[var(--shop-accent-hover)]"
+              className="checkin-btn flex items-center justify-center gap-3 px-8 py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] border-2 border-[var(--shop-accent)] rounded-lg font-semibold flex-1 transition-all hover:-translate-y-0.5 hover:bg-[var(--shop-accent-hover)]"
             >
               <span className="material-symbols-outlined text-xl">person_add</span>
-              Adicionar Cliente
+              {t('barber.addClient')}
             </button>
+            {allowAppointments && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleCallNext}
+                  disabled={nextTicketLoading || sortedTickets.length === 0}
+                  className="flex items-center justify-center gap-2 px-6 py-4 bg-[color-mix(in_srgb,var(--shop-accent)_80%,transparent)] text-[var(--shop-text-on-accent)] border-2 border-[var(--shop-accent)] rounded-lg font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {nextTicketLoading ? (
+                    <span className="material-symbols-outlined animate-spin">hourglass_empty</span>
+                  ) : (
+                    <span className="material-symbols-outlined">next_plan</span>
+                  )}
+                  {t('barber.callNext')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAppointmentModalOpen(true)}
+                  className="flex items-center justify-center gap-2 px-6 py-4 bg-white/10 border-2 border-white/20 rounded-lg font-semibold text-white hover:bg-white/15 transition-all"
+                >
+                  <span className="material-symbols-outlined">event</span>
+                  {t('barber.appointment')}
+                </button>
+              </>
+            )}
           </div>
+          {allowAppointments && deadZoneWarning && (
+            <div className="mb-4 px-4 py-3 rounded-lg bg-amber-500/20 border border-amber-500/50 text-amber-200 text-sm flex items-center gap-2">
+              <span className="material-symbols-outlined text-lg">schedule</span>
+              {deadZoneWarning}
+            </div>
+          )}
+
+          {/* Pending appointments (check-in) */}
+          {allowAppointments && pendingTickets.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-white/70 mb-2">{t('barber.scheduledAwaitingCheckIn')}</h3>
+              <ul className="space-y-2">
+                {pendingTickets.map((ticket) => (
+                  <li
+                    key={ticket.id}
+                    className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-white/5 border border-white/10"
+                  >
+                    <div>
+                      <span className="font-medium text-white">{(ticket as any).ticketNumber ?? `A-${ticket.id}`}</span>
+                      <span className="text-white/70 ml-2">{formatNameForDisplay(ticket.customerName)}</span>
+                      {(ticket as any).scheduledTime && (
+                        <span className="text-white/50 text-sm ml-2">
+                          {new Date((ticket as any).scheduledTime).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCheckInAppointment(ticket.id)}
+                      className="px-3 py-1.5 rounded-lg bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] text-sm font-medium hover:opacity-90"
+                    >
+                      {t('barber.checkIn')}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Queue List */}
           {queueLoading ? (
@@ -595,7 +728,7 @@ export function BarberQueueManager() {
             <div className="space-y-3" aria-live="polite">
               {sortedTickets.length === 0 ? (
                 <div className="text-center py-12 text-[rgba(255,255,255,0.7)]">
-                  Nenhum cliente na fila
+                  {t('barber.noClientInQueue')}
                 </div>
               ) : (
                 sortedTickets.map((ticket, index) => {
@@ -632,7 +765,7 @@ export function BarberQueueManager() {
 
         {/* Barber Presence Section */}
         <div className="mt-4 sm:mt-6 bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border-[3px] border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-4 sm:p-6 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
-          <h2 className="section-header text-xl sm:text-2xl font-semibold text-white mb-4">Barbeiros Presentes</h2>
+          <h2 className="section-header text-xl sm:text-2xl font-semibold text-white mb-4">{t('barber.barbersPresent')}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
             {displayBarbers.map((barber) => (
               <BarberCard
@@ -644,7 +777,7 @@ export function BarberQueueManager() {
                     await togglePresence(barber.id, !barber.isPresent);
                     await refetchQueue();
                       } catch (error) {
-                        let errorMsg = 'Erro ao alterar presença do barbeiro. Tente novamente.';
+                        let errorMsg = t('barber.togglePresenceError');
                         if (error instanceof Error) {
                           errorMsg = error.message;
                         } else if (error && typeof error === 'object' && 'error' in error) {
@@ -663,7 +796,7 @@ export function BarberQueueManager() {
       <Modal
         isOpen={checkInModal.isOpen}
         onClose={checkInModal.close}
-        title="Entrar na Fila"
+        title={t('barber.joinQueue')}
       >
         <form
           onSubmit={(e) => {
@@ -675,14 +808,14 @@ export function BarberQueueManager() {
         >
           <div>
             <label htmlFor="guestName" className="block text-sm font-medium mb-2">
-              Nome *
+              {t('barber.nameLabel')}
             </label>
             <input
               id="guestName"
               type="text"
               value={combinedCheckInName}
               onChange={(e) => handleCombinedCheckInNameChange(e.target.value)}
-              placeholder="Nome e inicial"
+              placeholder={t('barber.namePlaceholder')}
               autoComplete="one-time-code"
               autoCapitalize="words"
               autoCorrect="off"
@@ -704,14 +837,72 @@ export function BarberQueueManager() {
           </div>
           <div className="flex gap-3">
             <Button type="button" variant="outline" onClick={checkInModal.close} className="flex-1">
-              Cancelar
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting} className="flex-1">
-              {isSubmitting ? 'Adicionando...' : 'Adicionar'}
+              {isSubmitting ? t('barber.adding') : t('barber.add')}
             </Button>
           </div>
         </form>
       </Modal>
+
+      {/* Appointment Modal (when allowAppointments) */}
+      {allowAppointments && (
+        <Modal
+          isOpen={appointmentModalOpen}
+          onClose={() => { setAppointmentModalOpen(false); setErrorMessage(null); }}
+          title={t('barber.addAppointmentTitle')}
+        >
+          <form onSubmit={handleCreateAppointment} className="space-y-4">
+            <div>
+              <label htmlFor="appointmentName" className="block text-sm font-medium mb-1">{t('barber.nameLabel')}</label>
+              <input
+                id="appointmentName"
+                type="text"
+                value={appointmentForm.customerName}
+                onChange={(e) => setAppointmentForm((f) => ({ ...f, customerName: e.target.value }))}
+                placeholder={t('barber.customerNamePlaceholder')}
+                required
+                className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+              />
+            </div>
+            <div>
+              <label htmlFor="appointmentService" className="block text-sm font-medium mb-1">{t('join.serviceLabel')}</label>
+              <select
+                id="appointmentService"
+                value={appointmentForm.serviceId || ''}
+                onChange={(e) => setAppointmentForm((f) => ({ ...f, serviceId: Number(e.target.value) }))}
+                required
+                className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+              >
+                <option value="">Selecione</option>
+                {activeServices.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="appointmentTime" className="block text-sm font-medium mb-1">Data e hora *</label>
+              <input
+                id="appointmentTime"
+                type="datetime-local"
+                value={appointmentForm.scheduledTime}
+                onChange={(e) => setAppointmentForm((f) => ({ ...f, scheduledTime: e.target.value }))}
+                required
+                className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={() => setAppointmentModalOpen(false)} className="flex-1">
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={appointmentSubmitting} className="flex-1">
+                {appointmentSubmitting ? 'Criando...' : 'Criar agendamento'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
 
       {/* Barber Selector Modal */}
       {barberSelectorModal.isOpen && selectedCustomerId && (() => {
@@ -719,7 +910,7 @@ export function BarberQueueManager() {
         return (
           <BarberSelector
             isOpen={barberSelectorModal.isOpen}
-            onClose={barberSelectorModal.close}
+            onClose={() => { barberSelectorModal.close(); setSelectedCustomerId(null); setDeadZoneWarning(null); }}
             barbers={displayBarbers}
             selectedBarberId={selectedTicket?.barberId || null}
             onSelect={handleSelectBarber}
@@ -735,14 +926,15 @@ export function BarberQueueManager() {
         isOpen={removeConfirmModal.isOpen}
         onClose={removeConfirmModal.close}
         onConfirm={handleRemoveCustomer}
-        title="Remover da Fila"
-        message={`Tem certeza que deseja remover ${
+        title={t('barber.removeFromQueueTitle')}
+        message={t('barber.removeFromQueueMessage').replace(
+          '{name}',
           customerToRemove
-            ? tickets.find((t) => t.id === customerToRemove)?.customerName
-            : 'este cliente'
-        } da fila?`}
-        confirmText="Remover"
-        cancelText="Cancelar"
+            ? tickets.find((tkt) => tkt.id === customerToRemove)?.customerName ?? t('barber.thisClient')
+            : t('barber.thisClient')
+        )}
+        confirmText={t('barber.removeButton')}
+        cancelText={t('common.cancel')}
         variant="destructive"
         icon="delete"
       />
@@ -752,14 +944,15 @@ export function BarberQueueManager() {
         isOpen={completeConfirmModal.isOpen}
         onClose={completeConfirmModal.close}
         onConfirm={handleCompleteService}
-        title="Finalizar Atendimento"
-        message={`Tem certeza que deseja finalizar o atendimento de ${
+        title={t('barber.completeTitle')}
+        message={t('barber.completeMessage').replace(
+          '{name}',
           customerToComplete
-            ? tickets.find((t) => t.id === customerToComplete)?.customerName
-            : 'este cliente'
-        }?`}
-        confirmText="Finalizar"
-        cancelText="Cancelar"
+            ? tickets.find((tkt) => tkt.id === customerToComplete)?.customerName ?? t('barber.thisClient')
+            : t('barber.thisClient')
+        )}
+        confirmText={t('barber.completeButton')}
+        cancelText={t('common.cancel')}
         icon="check_circle"
       />
     </div>

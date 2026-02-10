@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
 
@@ -13,6 +14,7 @@ export function CompanyLoginForm() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { login } = useAuthContext();
+  const { t } = useLocale();
   const useRootTheme = isRootBuild();
   
   const isSubmittingRef = useRef(false);
@@ -42,10 +44,10 @@ export function CompanyLoginForm() {
 
         navigate('/company/dashboard');
       } else {
-        setError('Credenciais inválidas. Verifique usuário e senha.');
+        setError(t('companyLogin.invalidCredentials'));
       }
     } catch (err) {
-      setError(getErrorMessage(err, 'Erro ao fazer login. Tente novamente.'));
+      setError(getErrorMessage(err, t('companyLogin.loginError')));
     } finally {
       setIsLoading(false);
       isSubmittingRef.current = false;
@@ -77,7 +79,7 @@ export function CompanyLoginForm() {
             business
           </span>
         </div>
-        <h1 className="text-2xl font-semibold text-white">Acesso Empresarial</h1>
+        <h1 className="text-2xl font-semibold text-white">{t('companyLogin.title')}</h1>
         <p className="text-sm text-[rgba(255,255,255,0.7)]">
           Login para administradores da empresa
         </p>

@@ -5,7 +5,7 @@ import { Button, Stack } from '@/components/design-system';
 import { useLocale } from '@/contexts/LocaleContext';
 
 interface ActionButtonsProps {
-  status: 'waiting' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'pending' | 'waiting' | 'in_progress' | 'completed' | 'cancelled';
   ticketId: number;
   canCancel: boolean;
   onLeaveQueue: (ticketId: number) => Promise<void>;

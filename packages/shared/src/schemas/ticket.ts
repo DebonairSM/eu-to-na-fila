@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
-export const ticketStatusSchema = z.enum(['waiting', 'in_progress', 'completed', 'cancelled']);
+export const ticketStatusSchema = z.enum(['pending', 'waiting', 'in_progress', 'completed', 'cancelled']);
 export type TicketStatus = z.infer<typeof ticketStatusSchema>;
+
+export const ticketTypeSchema = z.enum(['walkin', 'appointment']);
+export type TicketType = z.infer<typeof ticketTypeSchema>;
 
 /** Optional service info included in ticket API responses for display. */
 export const ticketServiceSchema = z.object({
@@ -22,6 +25,10 @@ export const ticketSchema = z.object({
   status: ticketStatusSchema,
   position: z.number().int().nonnegative(),
   estimatedWaitTime: z.number().int().nonnegative().optional(),
+  type: ticketTypeSchema.optional(), // walkin | appointment; default walkin for existing/legacy
+  scheduledTime: z.date().or(z.string()).optional().nullable(), // only for appointments
+  checkInTime: z.date().or(z.string()).optional().nullable(), // when they entered the queue
+  ticketNumber: z.string().optional().nullable(), // e.g. A-101, W-205
   createdAt: z.date().or(z.string()),
   updatedAt: z.date().or(z.string()),
   startedAt: z.date().or(z.string()).optional(),
@@ -41,6 +48,16 @@ export const createTicketSchema = z.object({
   deviceId: z.string().optional(), // Device identifier for preventing multiple active tickets per device
 });
 export type CreateTicket = z.infer<typeof createTicketSchema>;
+
+/** Staff-only: create an appointment (type=appointment, status=pending). */
+export const createAppointmentSchema = z.object({
+  shopId: z.number(),
+  serviceId: z.number(),
+  customerName: z.string().min(1).max(200),
+  customerPhone: z.string().optional(),
+  scheduledTime: z.union([z.string(), z.date()]), // ISO string or Date
+});
+export type CreateAppointment = z.infer<typeof createAppointmentSchema>;
 
 export const updateTicketStatusSchema = z.object({
   status: ticketStatusSchema,
