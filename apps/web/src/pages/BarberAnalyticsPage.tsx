@@ -7,6 +7,8 @@ import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Container, Heading, Text, Card, CardContent } from '@/components/design-system';
+import { useLocale } from '@/contexts/LocaleContext';
+import { formatCurrency, formatDate } from '@/lib/format';
 
 interface BarberAnalyticsData {
   period: { days: number; since: string; until: string };
@@ -25,13 +27,10 @@ interface BarberAnalyticsData {
   dayOfWeekDistribution: Record<string, number>;
 }
 
-function formatBRL(cents: number): string {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
-}
-
 export function BarberAnalyticsPage() {
   const shopSlug = useShopSlug();
   const { isBarber, user } = useAuthContext();
+  const { locale } = useLocale();
   const navigate = useNavigate();
   const [days, setDays] = useState(30);
   const [data, setData] = useState<BarberAnalyticsData | null>(null);
@@ -119,7 +118,7 @@ export function BarberAnalyticsPage() {
                 <Text size="sm" variant="secondary" className="uppercase tracking-wider">
                   Faturamento
                 </Text>
-                <p className="text-2xl font-bold text-[var(--shop-accent)] mt-1">{formatBRL(summary.revenueCents)}</p>
+                <p className="text-2xl font-bold text-[var(--shop-accent)] mt-1">{formatCurrency(summary.revenueCents, locale)}</p>
               </CardContent>
             </Card>
             <Card variant="default" className="bg-white/5 border-white/10">
@@ -152,7 +151,7 @@ export function BarberAnalyticsPage() {
                   {daysList.map(([day, count]) => (
                     <li key={day} className="flex justify-between text-sm">
                       <span className="text-white/80">
-                        {new Date(day + 'T12:00:00').toLocaleDateString('pt-BR', {
+                        {formatDate(new Date(day + 'T12:00:00'), locale, {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric',

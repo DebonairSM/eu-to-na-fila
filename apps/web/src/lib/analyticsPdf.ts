@@ -1,15 +1,29 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const DAY_NAMES_PT: Record<string, string> = {
-  Monday: 'Segunda',
-  Tuesday: 'Terça',
-  Wednesday: 'Quarta',
-  Thursday: 'Quinta',
-  Friday: 'Sexta',
-  Saturday: 'Sábado',
-  Sunday: 'Domingo',
+const DAY_TO_ISO: Record<string, string> = {
+  Sunday: '2024-01-07',
+  Monday: '2024-01-01',
+  Tuesday: '2024-01-02',
+  Wednesday: '2024-01-03',
+  Thursday: '2024-01-04',
+  Friday: '2024-01-05',
+  Saturday: '2024-01-06',
 };
+
+function formatDateForPdf(iso: string, locale: string): string {
+  return new Date(iso).toLocaleDateString(locale, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function dayNameForPdf(dayKey: string, locale: string): string {
+  const iso = DAY_TO_ISO[dayKey];
+  if (!iso) return dayKey;
+  return new Date(iso).toLocaleDateString(locale, { weekday: 'long' });
+}
 
 export interface AnalyticsDataForPdf {
   period: { days: number; since: string; until: string };
@@ -29,18 +43,11 @@ export interface AnalyticsDataForPdf {
   barberEfficiency: Array<{ name: string; ticketsPerDay: number; completionRate: number }>;
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
 export function downloadAnalyticsPdf(
   data: AnalyticsDataForPdf,
-  options: { shopName?: string; periodLabel: string }
+  options: { shopName?: string; periodLabel: string; locale?: string }
 ): void {
+  const locale = options.locale ?? 'pt-BR';
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   let y = 20;
   const margin = 20;
@@ -63,7 +70,7 @@ export function downloadAnalyticsPdf(
   doc.text(`Período: ${options.periodLabel}`, margin, y);
   if (data.period.days > 0) {
     doc.text(
-      `${formatDate(data.period.since)} – ${formatDate(data.period.until)}`,
+      `${formatDateForPdf(data.period.since, locale)} – ${formatDateForPdf(data.period.until, locale)}`,
       margin + 60,
       y
     );
@@ -155,7 +162,7 @@ export function downloadAnalyticsPdf(
     autoTable(doc, {
       startY: y,
       head: [['Dia', 'Atendimentos']],
-      body: dayEntries.map(([day, n]) => [DAY_NAMES_PT[day] ?? day, String(n)]),
+      body: dayEntries.map(([day, n]) => [dayNameForPdf(day, locale), String(n)]),
       theme: 'grid',
       headStyles: { fillColor: [60, 60, 60], textColor: [255, 255, 255] },
       margin: { left: margin, right: margin },

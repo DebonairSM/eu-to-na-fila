@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -11,6 +12,7 @@ export function LoadingSpinner({
   className,
   text,
 }: LoadingSpinnerProps) {
+  const { t } = useLocale();
   const sizeClasses = {
     sm: 'w-4 h-4',
     md: 'w-8 h-8',
@@ -25,9 +27,9 @@ export function LoadingSpinner({
           sizeClasses[size]
         )}
         role="status"
-        aria-label="Loading"
+        aria-label={t('common.loading')}
       >
-        <span className="sr-only">Loading...</span>
+        <span className="sr-only">{t('common.loading')}</span>
       </div>
       {text && <p className="text-sm text-[var(--shop-text-secondary,rgba(255,255,255,0.7))]">{text}</p>}
     </div>

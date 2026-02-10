@@ -3,25 +3,28 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { config as appConfig } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { Container } from '@/components/design-system';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, logout } = useAuthContext();
   const { config: shopConfig } = useShopConfig();
+  const { t } = useLocale();
   const navigate = useNavigate();
   const location = useLocation();
   const navLabels = shopConfig.homeContent?.nav ?? {
-    linkServices: 'Serviços',
-    linkAbout: 'Sobre',
-    linkLocation: 'Localização',
-    ctaJoin: 'Entrar na Fila',
-    linkBarbers: 'Barbeiros',
-    labelDashboard: 'Dashboard',
-    labelDashboardCompany: 'Dashboard Empresarial',
-    labelLogout: 'Sair',
-    labelMenu: 'Menu',
+    linkServices: t('nav.services'),
+    linkAbout: t('nav.about'),
+    linkLocation: t('nav.location'),
+    ctaJoin: t('nav.ctaJoin'),
+    linkBarbers: t('nav.barbers'),
+    labelDashboard: t('nav.dashboard'),
+    labelDashboardCompany: t('nav.dashboardCompany'),
+    labelLogout: t('nav.logout'),
+    labelMenu: t('nav.menu'),
   };
   const shopName = shopConfig.name || appConfig.name;
   const headerIconUrl = shopConfig.homeContent?.branding?.headerIconUrl?.trim();
@@ -113,7 +116,7 @@ export function Navigation() {
           to="/home"
           className="font-['Playfair_Display',serif] text-base sm:text-2xl font-semibold flex items-center justify-center gap-1 sm:gap-3 min-h-[48px] min-w-[48px] px-1 sm:px-2 py-0 rounded transition-all flex-shrink-0 [&:hover]:opacity-90"
           style={{ color: 'var(--shop-accent, #D4AF37)' }}
-          aria-label={`${shopName} - Home`}
+          aria-label={`${shopName} - ${t('nav.home')}`}
         >
           {headerIconUrl ? (
             <img src={headerIconUrl} alt="" className="h-8 w-8 sm:h-9 sm:w-9 object-contain flex-shrink-0" />
@@ -186,7 +189,7 @@ export function Navigation() {
                   style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
                 >
                   <span className="material-symbols-outlined text-lg">person</span>
-                  Meu cadastro
+                  {t('nav.myProfile')}
                 </Link>
               </li>
               )}
@@ -230,6 +233,9 @@ export function Navigation() {
               </li>
             </>
           )}
+          <li>
+            <LanguageSwitcher />
+          </li>
         </ul>
 
         {/* Mobile Menu Button */}
@@ -237,7 +243,7 @@ export function Navigation() {
           className="lg:hidden bg-transparent border-0 cursor-pointer p-0 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 flex-shrink-0"
           style={{ color: 'var(--shop-text-primary, #fff)' }}
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label="Toggle menu"
+          aria-label={t('nav.toggleMenu')}
           aria-expanded={isMobileMenuOpen}
         >
           <span className="material-symbols-outlined text-xl leading-none flex items-center justify-center">
@@ -258,7 +264,7 @@ export function Navigation() {
             className="fixed top-0 left-0 w-64 max-w-[70vw] h-full z-[101] p-4 flex flex-col overflow-y-auto lg:hidden shadow-2xl animate-in slide-in-from-left-4"
             role="dialog"
             aria-modal="true"
-            aria-label="Menu de navegação"
+            aria-label={t('nav.menu')}
             onClick={(e) => e.stopPropagation()}
             style={{
               animationDuration: '250ms',
@@ -276,7 +282,7 @@ export function Navigation() {
                     e.stopPropagation();
                     setIsMobileMenuOpen(false);
                   }}
-                  aria-label="Fechar menu de navegação"
+                  aria-label={t('nav.closeMenu')}
                   type="button"
                 >
                   <span className="material-symbols-outlined text-lg">close</span>
@@ -349,7 +355,7 @@ export function Navigation() {
                       }}
                     >
                       <span className="material-symbols-outlined text-lg">person</span>
-                      Meu cadastro
+                      {t('nav.myProfile')}
                     </Link>
                     )}
                     <button
@@ -392,6 +398,9 @@ export function Navigation() {
                     </Link>
                   </>
                 )}
+                <div className="relative z-10 mt-4 pt-4 border-t border-[rgba(255,255,255,0.1)]">
+                  <LanguageSwitcher />
+                </div>
               </div>
             </div>
         </>

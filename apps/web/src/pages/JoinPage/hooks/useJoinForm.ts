@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api, ApiError } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useQueue } from '@/hooks/useQueue';
 import { useBarbers } from '@/hooks/useBarbers';
@@ -40,6 +41,7 @@ export function useJoinForm() {
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
   const { config: shopConfig } = useShopConfig();
+  const { t } = useLocale();
   const settings = shopConfig.settings;
   const { validateName } = useProfanityFilter();
   const { data } = useQueue(30000);
@@ -158,7 +160,7 @@ export function useJoinForm() {
 
     const validation = validateName(firstName, lastName);
     if (!validation.isValid) {
-      setValidationError(validation.error || 'Nome inválido');
+      setValidationError(validation.error || t('join.invalidName'));
     } else {
       setValidationError(null);
     }
@@ -239,7 +241,7 @@ export function useJoinForm() {
 
     const validation = validateName(firstName, lastName);
     if (!validation.isValid) {
-      setValidationError(validation.error || 'Nome inválido');
+      setValidationError(validation.error || t('join.invalidName'));
       return;
     }
 
@@ -320,18 +322,18 @@ export function useJoinForm() {
       );
       if (nameMatchTicket && nameMatchTicket.id !== deviceTicketId) {
         // Name matches but it's not this device's ticket - ask for different name
-        setNameCollisionError('Este nome já está na fila. Por favor, use um nome diferente.');
+        setNameCollisionError(t('join.nameAlreadyInQueue'));
         return;
       }
     }
 
     // Enforce per-shop settings
     if (settings.requirePhone && !customerPhone.trim()) {
-      setSubmitError('Telefone é obrigatório.');
+      setSubmitError(t('join.phoneRequired'));
       return;
     }
     if (settings.requireBarberChoice && !selectedBarberId) {
-      setSubmitError('Escolha um barbeiro.');
+      setSubmitError(t('join.chooseBarber'));
       return;
     }
 
@@ -343,7 +345,7 @@ export function useJoinForm() {
       ? selectedServiceId
       : null;
     if (serviceId == null) {
-      setSubmitError('Selecione um serviço.');
+      setSubmitError(t('join.selectService'));
       setIsSubmitting(false);
       return;
     }
@@ -381,10 +383,10 @@ export function useJoinForm() {
         if (errorMessage.includes('nome') && (errorMessage.includes('uso') || errorMessage.includes('já está'))) {
           setNameCollisionError(errorMessage);
         } else {
-          setSubmitError(errorMessage || 'Erro ao entrar na fila. Tente novamente.');
+          setSubmitError(errorMessage || t('join.submitErrorDefault'));
         }
       } else {
-        setSubmitError(getErrorMessage(error, 'Erro ao entrar na fila. Tente novamente.'));
+        setSubmitError(getErrorMessage(error, t('join.submitErrorDefault')));
       }
     } finally {
       setIsSubmitting(false);

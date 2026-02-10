@@ -1,13 +1,17 @@
+import { useLocale } from '@/contexts/LocaleContext';
+import { formatDate } from '@/lib/format';
+
 interface WaitTimeTrendChartProps {
   data: Record<string, number>;
 }
 
 export function WaitTimeTrendChart({ data }: WaitTimeTrendChartProps) {
+  const { locale, t } = useLocale();
   const days = Object.keys(data).sort();
   if (days.length === 0) {
     return (
       <div className="flex items-center justify-center h-[250px] text-white/50">
-        <p>Nenhum dado disponível</p>
+        <p>{t('chart.noData')}</p>
       </div>
     );
   }
@@ -85,15 +89,15 @@ export function WaitTimeTrendChart({ data }: WaitTimeTrendChartProps) {
               textAnchor="middle"
               className="text-[0.65rem] fill-white/50"
             >
-              {new Date(point.day).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+              {formatDate(new Date(point.day), locale, { day: '2-digit', month: '2-digit' })}
             </text>
           ))}
         </svg>
       </div>
       <div className="mt-4 text-center">
         <p className="text-sm text-white/70">
-          Tempo médio de espera: <span className="text-[#3b82f6] font-semibold">
-            {Math.round(Object.values(data).reduce((a, b) => a + b, 0) / days.length)} minutos
+          {t('chart.averageWaitTime')}: <span className="text-[#3b82f6] font-semibold">
+            {Math.round(Object.values(data).reduce((a, b) => a + b, 0) / days.length)} {t('common.minutes')}
           </span>
         </p>
       </div>

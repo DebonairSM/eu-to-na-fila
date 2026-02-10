@@ -1,0 +1,129 @@
+{
+  "common": {
+    "back": "Back",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "selectPlaceholder": "Select...",
+    "loading": "Loading…",
+    "minutes": "minutes",
+    "error": "Error",
+    "retry": "Try again"
+  },
+  "accessibility": {
+    "skipLink": "Skip to main content",
+    "loading": "Loading…"
+  },
+  "nav": {
+    "services": "Services",
+    "about": "About",
+    "location": "Location",
+    "ctaJoin": "Join Queue",
+    "barbers": "Barbers",
+    "dashboard": "Dashboard",
+    "dashboardCompany": "Company Dashboard",
+    "logout": "Log out",
+    "menu": "Menu",
+    "closeMenu": "Close navigation menu",
+    "toggleMenu": "Open or close menu",
+    "myProfile": "My profile",
+    "home": "Home",
+    "chooseLanguage": "Choose language"
+  },
+  "join": {
+    "serviceLabel": "Service *",
+    "nameLabel": "Name *",
+    "namePlaceholder": "Name and initial",
+    "phoneLabel": "Phone *",
+    "phonePlaceholder": "(00) 00000-0000",
+    "barberLabel": "Barber *",
+    "selectOption": "Select...",
+    "nameInUse": "Name is already in use",
+    "activeTicketFound": "Active ticket found",
+    "viewStatus": "View status",
+    "noServicesAvailable": "No services available at the moment.",
+    "entering": "Joining...",
+    "confirmEntry": "Confirm entry",
+    "checkingStatus": "Checking your status...",
+    "calculatingWait": "Calculating wait time...",
+    "waitError": "Error getting wait time",
+    "estimatedTime": "Estimated time",
+    "noBarberActive": "No barber active at the moment",
+    "noBarberAvailable": "No barber available",
+    "unavailable": "Unavailable",
+    "invalidName": "Invalid name",
+    "nameAlreadyInQueue": "This name is already in the queue. Please use a different name.",
+    "phoneRequired": "Phone is required.",
+    "chooseBarber": "Choose a barber.",
+    "selectService": "Select a service.",
+    "submitErrorDefault": "Error joining the queue. Please try again."
+  },
+  "status": {
+    "ticketNotFound": "Ticket not found",
+    "backHome": "Back to Home",
+    "now": "Now",
+    "minutes": "minutes",
+    "yourTurn": "your turn",
+    "positionInQueue": "Position in queue",
+    "personAhead": "person ahead",
+    "peopleAhead": "people ahead",
+    "completed": "Completed",
+    "completedBy": "Served by",
+    "inProgress": "In progress",
+    "yourBarber": "Your barber",
+    "leaveQueue": "Leave Queue",
+    "leaveQueueAria": "Leave queue",
+    "leaving": "Leaving...",
+    "shareTicket": "Share Link",
+    "shareSuccess": "Link copied!",
+    "close": "Close",
+    "confirmLeaveTitle": "Leave Queue?",
+    "confirmLeaveMessage": "Are you sure you want to leave the queue? You will lose your position.",
+    "confirmLeaveConfirm": "Leave",
+    "confirmLeaveCancel": "Cancel",
+    "backHomeButton": "Back to Home",
+    "leaveErrorFailed": "Could not leave the queue.",
+    "badgeWaiting": "Waiting",
+    "badgeInProgress": "In Progress",
+    "badgeCompleted": "Completed",
+    "serviceLabel": "Service"
+  },
+  "auth": {
+    "login": "Log in",
+    "logout": "Log out",
+    "email": "Email",
+    "password": "Password",
+    "pin": "PIN",
+    "loginWithPin": "Log in with PIN",
+    "companyLogin": "Company access",
+    "restrictedAccess": "Restricted access",
+    "username": "Username",
+    "usernameBarbers": "(barbers)",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "loginButton": "Log in",
+    "entering": "Logging in..."
+  },
+  "root": {
+    "projects": "Projects",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "services": {
+    "emptyText": "No services registered."
+  },
+  "analytics": {
+    "periodAll": "Full period",
+    "days": "days"
+  },
+  "chart": {
+    "noData": "No data available",
+    "averageWaitTime": "Average wait time"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "loadFailed": "Failed to load.",
+    "reloadPage": "Reload Page"
+  }
+}

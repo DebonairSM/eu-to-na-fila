@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export interface ErrorDisplayProps {
   error: Error | string;
@@ -8,9 +9,10 @@ export interface ErrorDisplayProps {
 }
 
 export function ErrorDisplay({ error, onRetry, className }: ErrorDisplayProps) {
+  const { t } = useLocale();
   const errorMessage = typeof error === 'string' ? error : error.message;
-  const isChunkError = 
-    typeof error === 'object' && 
+  const isChunkError =
+    typeof error === 'object' &&
     error instanceof Error &&
     (error.message.includes('Failed to fetch dynamically imported module') ||
      error.message.includes('Loading chunk') ||
@@ -32,18 +34,18 @@ export function ErrorDisplay({ error, onRetry, className }: ErrorDisplayProps) {
         error
       </span>
       <div>
-        <h3 className="font-semibold mb-1">Erro</h3>
+        <h3 className="font-semibold mb-1">{t('common.error')}</h3>
         <p className="text-sm text-muted-foreground">{errorMessage}</p>
       </div>
       <div className="flex gap-2">
         {onRetry && (
           <Button onClick={onRetry} variant="outline" size="sm">
-            Tentar Novamente
+            {t('common.retry')}
           </Button>
         )}
         {isChunkError && (
           <Button onClick={handleReload} variant="default" size="sm">
-            Recarregar Página
+            {t('errors.reloadPage')}
           </Button>
         )}
       </div>

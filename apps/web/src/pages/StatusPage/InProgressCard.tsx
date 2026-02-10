@@ -1,10 +1,12 @@
 import { Card, CardContent, Heading, Text, StatusTransition } from '@/components/design-system';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface InProgressCardProps {
   barberName?: string;
 }
 
 export function InProgressCard({ barberName }: InProgressCardProps) {
+  const { t } = useLocale();
   return (
     <StatusTransition status="in-progress">
       <Card
@@ -16,12 +18,12 @@ export function InProgressCard({ barberName }: InProgressCardProps) {
             content_cut
           </span>
           <Heading level={2} className="mb-4 sm:mb-6 text-xl sm:text-2xl lg:text-3xl">
-            Em atendimento
+            {t('status.inProgress')}
           </Heading>
           {barberName && (
             <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-[var(--shop-border-color)]">
               <Text size="sm" variant="secondary" className="mb-3 sm:mb-4 text-sm sm:text-base">
-                Seu barbeiro
+                {t('status.yourBarber')}
               </Text>
               <Text
                 size="xl"

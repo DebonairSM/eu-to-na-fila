@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import type { ShopTheme, HomeContent, ShopSettings, ShopStyleConfig } from '@eutonafila/shared';
-import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, shopStyleConfigSchema } from '@eutonafila/shared';
+import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, resolveShopStyle, shopStyleConfigSchema } from '@eutonafila/shared';
 import { useModal } from '@/hooks/useModal';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { AppearanceForm } from '@/components/AppearanceForm';
+import { ShopPreview } from '@/components/ShopPreview';
+import type { ShopConfig } from '@/contexts/ShopConfigContext';
 import { pickThreeRandomPaletteIndices } from '@/lib/presetPalettes';
 import { isRootBuild } from '@/lib/build';
 import { getErrorMessage } from '@/lib/utils';
@@ -71,7 +73,7 @@ const TEMPLATE: ShopFormData = {
   ],
 };
 
-type CreateTab = 'info' | 'appearance' | 'content' | 'settings' | 'services' | 'barbers';
+type CreateTab = 'info' | 'appearance' | 'content' | 'preview' | 'settings' | 'services' | 'barbers';
 
 // --- Helpers ---
 
@@ -454,6 +456,7 @@ export function CreateShopPage() {
     { id: 'info', label: 'Informações' },
     { id: 'appearance', label: 'Aparência' },
     { id: 'content', label: 'Conteúdo' },
+    { id: 'preview', label: 'Pré-visualização' },
     { id: 'settings', label: 'Configurações' },
     { id: 'services', label: 'Serviços' },
     { id: 'barbers', label: 'Barbeiros' },
@@ -574,19 +577,17 @@ export function CreateShopPage() {
                   </div>
                 </section>
                 <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                  <h4 className="text-white font-medium">Navegação</h4>
+                  <h4 className="text-white font-medium">Seção Sobre</h4>
                   <div className="space-y-3">
-                    {[{ key: 'linkServices' as const, label: 'Link Serviços' }, { key: 'linkAbout' as const, label: 'Link Sobre' }, { key: 'linkLocation' as const, label: 'Link Localização' }, { key: 'ctaJoin' as const, label: 'Botão Entrar' }, { key: 'linkBarbers' as const, label: 'Link Barbeiros' }].map(({ key, label }) => (
-                      <div key={key}><label className="block text-white/60 text-sm mb-1">{label}</label><input type="text" value={data.homeContent.nav[key]} onChange={(e) => onChange({ homeContent: { ...data.homeContent, nav: { ...data.homeContent.nav, [key]: e.target.value } } })} className={FORM_INPUT} /></div>
-                    ))}
+                    <div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={data.homeContent.about.sectionTitle} onChange={(e) => onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, sectionTitle: e.target.value } } })} className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">Imagem (URL)</label><input type="url" value={data.homeContent.about.imageUrl} onChange={(e) => onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, imageUrl: e.target.value } } })} placeholder="https://..." className={FORM_INPUT} /></div>
+                    <div><label className="block text-white/60 text-sm mb-1">Texto alternativo da imagem</label><input type="text" value={data.homeContent.about.imageAlt} onChange={(e) => onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, imageAlt: e.target.value } } })} className={FORM_INPUT} /></div>
                   </div>
                 </section>
                 <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
                   <h4 className="text-white font-medium">Seção Serviços</h4>
                   <div className="space-y-3">
                     <div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={data.homeContent.services.sectionTitle} onChange={(e) => onChange({ homeContent: { ...data.homeContent, services: { ...data.homeContent.services, sectionTitle: e.target.value } } })} className={FORM_INPUT} /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">Texto ao carregar</label><input type="text" value={data.homeContent.services.loadingText} onChange={(e) => onChange({ homeContent: { ...data.homeContent, services: { ...data.homeContent.services, loadingText: e.target.value } } })} className={FORM_INPUT} /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">Texto quando vazio</label><input type="text" value={data.homeContent.services.emptyText} onChange={(e) => onChange({ homeContent: { ...data.homeContent, services: { ...data.homeContent.services, emptyText: e.target.value } } })} className={FORM_INPUT} /></div>
                   </div>
                 </section>
                 <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
@@ -626,6 +627,25 @@ export function CreateShopPage() {
                     <div><label className="block text-white/60 text-sm mb-1">Consulta do mapa</label><input type="text" value={data.homeContent.location.mapQuery} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, mapQuery: e.target.value } } })} className={FORM_INPUT} /></div>
                   </div>
                 </section>
+              </div>
+            )}
+
+            {createTab === 'preview' && (
+              <div className="flex flex-col min-h-[50vh]">
+                <p className="text-white/60 text-sm mb-3">Visualização da página inicial com os dados atuais do formulário.</p>
+                <ShopPreview
+                  config={
+                    {
+                      name: data.name || 'Nome da barbearia',
+                      theme: data.theme,
+                      style: resolveShopStyle(data.style),
+                      path: data.path || '/',
+                      homeContent: data.homeContent,
+                      settings: data.settings,
+                    } satisfies ShopConfig
+                  }
+                  className="flex-1 min-h-[50vh] overflow-hidden"
+                />
               </div>
             )}
 

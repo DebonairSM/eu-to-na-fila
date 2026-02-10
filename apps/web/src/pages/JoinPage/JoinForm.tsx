@@ -1,6 +1,8 @@
 import { useJoinForm } from './hooks/useJoinForm';
 import { ActiveBarbersInfo } from './ActiveBarbersInfo';
 import { Card, CardContent, Input, InputLabel, InputError, Button } from '@/components/design-system';
+import { useLocale } from '@/contexts/LocaleContext';
+import { formatCurrency } from '@/lib/format';
 
 export function JoinForm() {
   const {
@@ -28,11 +30,7 @@ export function JoinForm() {
     setSelectedServiceId,
     settings,
   } = useJoinForm();
-
-  const formatPrice = (cents: number | undefined): string => {
-    if (cents == null) return '';
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
-  };
+  const { locale, t } = useLocale();
 
   return (
     <Card variant="default" className="join-form-card shadow-lg min-w-[320px]">
@@ -41,7 +39,7 @@ export function JoinForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
             {hasServices && activeServices.length >= 2 && (
               <div className="min-w-0">
-                <InputLabel htmlFor="service">Serviço *</InputLabel>
+                <InputLabel htmlFor="service">{t('join.serviceLabel')}</InputLabel>
                 <select
                   id="service"
                   value={selectedServiceId ?? ''}
@@ -52,12 +50,12 @@ export function JoinForm() {
                   required
                   className="form-control-select w-full max-w-full"
                 >
-                  <option value="">Selecione...</option>
+                  <option value="">{t('join.selectOption')}</option>
                   {activeServices.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
-                      {s.duration ? ` (${s.duration} min)` : ''}
-                      {s.price != null && s.price > 0 ? ` – ${formatPrice(s.price)}` : ''}
+                      {s.duration ? ` (${s.duration} ${t('common.minutes')})` : ''}
+                      {s.price != null && s.price > 0 ? ` – ${formatCurrency(s.price, locale)}` : ''}
                     </option>
                   ))}
                 </select>
@@ -65,13 +63,13 @@ export function JoinForm() {
             )}
 
             <div className="min-w-0">
-              <InputLabel htmlFor="customerName">Nome *</InputLabel>
+              <InputLabel htmlFor="customerName">{t('join.nameLabel')}</InputLabel>
               <Input
                 id="customerName"
                 type="text"
                 value={combinedName}
                 onChange={handleCombinedNameChange}
-                placeholder="Nome e inicial"
+                placeholder={t('join.namePlaceholder')}
                 autoComplete="one-time-code"
                 autoCapitalize="words"
                 autoCorrect="off"
@@ -96,13 +94,13 @@ export function JoinForm() {
 
             {settings.requirePhone && (
               <div className="min-w-0">
-                <InputLabel htmlFor="customerPhone">Telefone *</InputLabel>
+                <InputLabel htmlFor="customerPhone">{t('join.phoneLabel')}</InputLabel>
                 <Input
                   id="customerPhone"
                   type="tel"
                   value={customerPhone}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomerPhone(e.target.value)}
-                  placeholder="(00) 00000-0000"
+                  placeholder={t('join.phonePlaceholder')}
                   required
                   className="w-full max-w-full"
                 />
@@ -111,7 +109,7 @@ export function JoinForm() {
 
             {settings.requireBarberChoice && barbers.length > 0 && (
               <div className="min-w-0">
-                <InputLabel htmlFor="preferredBarber">Barbeiro *</InputLabel>
+                <InputLabel htmlFor="preferredBarber">{t('join.barberLabel')}</InputLabel>
                 <select
                   id="preferredBarber"
                   value={selectedBarberId ?? ''}
@@ -122,7 +120,7 @@ export function JoinForm() {
                   required
                   className="form-control-select w-full max-w-full"
                 >
-                  <option value="">Selecione...</option>
+                  <option value="">{t('join.selectOption')}</option>
                   {barbers.filter(b => b.isActive).map((b) => (
                     <option key={b.id} value={b.id}>{b.name}</option>
                   ))}
@@ -139,7 +137,7 @@ export function JoinForm() {
                   warning
                 </span>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-[#ef4444] mb-1">Nome já está em uso</p>
+                  <p className="text-sm font-semibold text-[#ef4444] mb-1">{t('join.nameInUse')}</p>
                   <p className="text-sm text-[#ef4444]/90">{nameCollisionError}</p>
                 </div>
               </div>
@@ -150,13 +148,13 @@ export function JoinForm() {
                 <div className="flex items-start gap-3">
                   <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">info</span>
                   <div className="flex-1 space-y-3">
-                    <p className="text-sm font-semibold text-[var(--shop-accent)]">Ticket ativo encontrado</p>
+                    <p className="text-sm font-semibold text-[var(--shop-accent)]">{t('join.activeTicketFound')}</p>
                     <Button
                       type="button"
                       onClick={() => navigate(`/status/${existingTicketId}`)}
                       fullWidth
                     >
-                      Ver status
+                      {t('join.viewStatus')}
                     </Button>
                   </div>
                 </div>
@@ -180,7 +178,7 @@ export function JoinForm() {
 
             {!isLoadingServices && !hasServices && (
               <p className="text-sm text-[var(--shop-text-secondary)]">
-                Nenhum serviço disponível no momento.
+                {t('join.noServicesAvailable')}
               </p>
             )}
 
@@ -203,12 +201,12 @@ export function JoinForm() {
               {isSubmitting ? (
                 <>
                   <span className="material-symbols-outlined animate-spin text-xl">hourglass_top</span>
-                  Entrando...
+                  {t('join.entering')}
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined text-xl">check</span>
-                  Confirmar entrada
+                  {t('join.confirmEntry')}
                 </>
               )}
             </Button>

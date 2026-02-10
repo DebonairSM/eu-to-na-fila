@@ -11,6 +11,7 @@ import { AdManagementPage } from './pages/AdManagementPage';
 import { ShopManagementPage } from './pages/ShopManagementPage';
 import { CreateShopPage } from './pages/CreateShopPage';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
+import { LocaleProvider } from './contexts/LocaleContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Navigate } from 'react-router-dom';
 import './styles/globals.css';
@@ -40,7 +41,8 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <Routes>
+        <LocaleProvider>
+          <Routes>
           <Route path="/" element={<RootHomePage />} />
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/about" element={<RootAboutPage />} />
@@ -51,6 +53,7 @@ function App() {
           <Route path="/company/shops" element={<ProtectedRoute requireCompanyAdmin><ShopManagementPage /></ProtectedRoute>} />
           <Route path="/company/shops/new" element={<ProtectedRoute requireCompanyAdmin><CreateShopPage /></ProtectedRoute>} />
         </Routes>
+        </LocaleProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

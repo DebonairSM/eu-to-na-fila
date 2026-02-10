@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ShopSlugProvider } from './contexts/ShopSlugContext';
 import { ShopConfigProvider } from './contexts/ShopConfigContext';
+import { LocaleProvider } from './contexts/LocaleContext';
 import App from './App';
 import './styles/globals.css';
 
@@ -81,7 +82,9 @@ root.render(
       <AuthProvider>
         <ShopSlugProvider>
           <ShopConfigProvider>
-            <App />
+            <LocaleProvider>
+              <App />
+            </LocaleProvider>
           </ShopConfigProvider>
         </ShopSlugProvider>
       </AuthProvider>

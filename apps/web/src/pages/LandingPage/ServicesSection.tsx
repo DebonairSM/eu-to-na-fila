@@ -2,22 +2,19 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent, Heading, Text, Section, Grid } from '@/components/design-system';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useServices } from '@/hooks/useServices';
+import { useLocale } from '@/contexts/LocaleContext';
+import { formatCurrency } from '@/lib/format';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-
-/** Format price (stored in cents) for display. */
-function formatPrice(cents: number | undefined): string {
-  if (cents == null) return '—';
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
-}
 
 export function ServicesSection() {
   const { config } = useShopConfig();
+  const { locale, t } = useLocale();
   const { homeContent } = config;
   const { activeServices, isLoading } = useServices();
-  const sectionTitle = homeContent?.services?.sectionTitle ?? 'Serviços';
+  const sectionTitle = homeContent?.services?.sectionTitle ?? t('nav.services');
 
-  const loadingText = homeContent?.services?.loadingText ?? 'Carregando serviços...';
-  const emptyText = homeContent?.services?.emptyText ?? 'Nenhum serviço cadastrado.';
+  const loadingText = homeContent?.services?.loadingText ?? t('common.loading');
+  const emptyText = homeContent?.services?.emptyText ?? t('services.emptyText');
 
   if (isLoading) {
     return (
@@ -53,7 +50,7 @@ export function ServicesSection() {
                     {service.name}
                   </Heading>
                   <Text size="lg" className="service-card__price text-[var(--shop-accent,#D4AF37)] font-semibold">
-                    {formatPrice(service.price)}
+                    {formatCurrency(service.price, locale)}
                   </Text>
                 </CardContent>
               </Card>
@@ -85,7 +82,7 @@ export function ServicesSection() {
                         {service.name}
                       </Heading>
                       <Text size="xl" className="service-card__price text-[var(--shop-accent,#D4AF37)] font-semibold text-2xl">
-                        {formatPrice(service.price)}
+                        {formatCurrency(service.price, locale)}
                       </Text>
                     </CardContent>
                   </Card>

@@ -2,15 +2,18 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { LOGO_URL } from '@/lib/logo';
+import { useLocale } from '@/contexts/LocaleContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export function RootSiteNav() {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { t } = useLocale();
 
   const navLinks = [
-    { to: '/projects', label: 'Projetos' },
-    { to: '/about', label: 'Sobre' },
-    { to: '/contact', label: 'Contato' },
+    { to: '/projects', label: t('root.projects') },
+    { to: '/about', label: t('root.about') },
+    { to: '/contact', label: t('root.contact') },
   ];
 
   return (
@@ -43,13 +46,14 @@ export function RootSiteNav() {
                 </Link>
               );
             })}
+            <LanguageSwitcher />
           </div>
 
           {/* Mobile Menu Button */}
           <button
             className="md:hidden bg-transparent border-0 text-white cursor-pointer p-2 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center transition-all hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle menu"
+            aria-label={t('nav.toggleMenu')}
             aria-expanded={isMobileMenuOpen}
           >
             <span className="material-symbols-outlined text-xl">
@@ -61,6 +65,9 @@ export function RootSiteNav() {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden mt-4 pt-4 border-t border-white/5 space-y-2">
+            <div className="mb-3">
+              <LanguageSwitcher />
+            </div>
             {navLinks.map((link) => {
               const isActive = location.pathname === link.to;
               return (

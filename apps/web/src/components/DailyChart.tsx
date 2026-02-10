@@ -1,10 +1,12 @@
-import { DAY_NAMES_PT, DAY_ORDER_API } from '@/lib/constants';
+import { useLocale } from '@/contexts/LocaleContext';
+import { formatDayShort } from '@/lib/format';
 
 interface DailyChartProps {
   data: Record<string, number>;
 }
 
 export function DailyChart({ data }: DailyChartProps) {
+  const { locale } = useLocale();
   // Get last 7 days
   const days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
@@ -22,7 +24,7 @@ export function DailyChart({ data }: DailyChartProps) {
         const value = data[day] || 0;
         const heightPx = maxValue > 0 ? (value / maxValue) * barAreaHeight : 0;
         const date = new Date(day);
-        const dayName = DAY_NAMES_PT[DAY_ORDER_API[date.getDay()]] ?? date.toLocaleDateString('pt-BR', { weekday: 'short' });
+        const dayName = formatDayShort(date, locale);
         const dayNum = date.getDate();
 
         return (

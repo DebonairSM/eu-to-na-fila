@@ -17,19 +17,8 @@ import { CancellationChart } from '@/components/CancellationChart';
 import { ServiceTimeDistributionChart } from '@/components/ServiceTimeDistributionChart';
 import { DAY_NAMES_PT_FULL } from '@/lib/constants';
 import { downloadAnalyticsPdf } from '@/lib/analyticsPdf';
-
-function formatPeriodRange(since: string, until: string, days: number): string {
-  if (days === 0) return 'Todo o período';
-  const s = new Date(since);
-  const u = new Date(until);
-  const fmt = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
-  return `${fmt(s)} – ${fmt(u)}`;
-}
-
-function periodLabel(days: number): string {
-  if (days === 0) return 'Todo o período';
-  return `${days} dias`;
-}
+import { useLocale } from '@/contexts/LocaleContext';
+import { formatDate } from '@/lib/format';
 
 interface AnalyticsData {
   period: {
@@ -85,12 +74,25 @@ export function AnalyticsPage() {
   const shopSlug = useShopSlug();
   const { config: shopConfig } = useShopConfig();
   const { isOwner } = useAuthContext();
+  const { locale, t } = useLocale();
   const navigate = useNavigate();
   const [days, setDays] = useState(30);
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [activeView, setActiveView] = useState<AnalyticsView>('overview');
+
+  const formatPeriodRange = (since: string, until: string, periodDays: number): string => {
+    if (periodDays === 0) return t('analytics.periodAll');
+    const s = new Date(since);
+    const u = new Date(until);
+    return `${formatDate(s, locale)} – ${formatDate(u, locale)}`;
+  };
+
+  const periodLabel = (periodDays: number): string => {
+    if (periodDays === 0) return t('analytics.periodAll');
+    return `${periodDays} ${t('analytics.days')}`;
+  };
 
   // Redirect if not owner
   if (!isOwner) {
@@ -164,10 +166,10 @@ export function AnalyticsPage() {
                 onChange={(e) => setDays(Number(e.target.value))}
                 className="px-4 py-2.5 bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-xl text-white text-base cursor-pointer focus:outline-none focus:border-[var(--shop-accent)] transition-colors"
               >
-                <option value={7}>7 dias</option>
-                <option value={30}>30 dias</option>
-                <option value={90}>90 dias</option>
-                <option value={0}>Todo o período</option>
+                <option value={7}>{periodLabel(7)}</option>
+                <option value={30}>{periodLabel(30)}</option>
+                <option value={90}>{periodLabel(90)}</option>
+                <option value={0}>{t('analytics.periodAll')}</option>
               </select>
               <button
                 type="button"
@@ -182,7 +184,7 @@ export function AnalyticsPage() {
                       cancellationAnalysis: data.cancellationAnalysis,
                       barberEfficiency: data.barberEfficiency,
                     },
-                    { shopName: shopConfig.name, periodLabel: periodLabel(data.period.days) }
+                    { shopName: shopConfig.name, periodLabel: periodLabel(data.period.days), locale }
                   );
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-semibold rounded-xl hover:bg-[var(--shop-accent-hover)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-background)]"

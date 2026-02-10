@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import {
   createContext,
   useContext,
@@ -192,3 +193,40 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
 export function useShopConfig(): ShopConfigContextValue {
   return useContext(ShopConfigContext);
 }
+
+/** CSS custom properties for preview only (scoped to a div so the rest of the page is unchanged). */
+export function getPreviewScopedStyles(config: ShopConfig): CSSProperties {
+  const t = { ...defaultTheme, ...config.theme };
+  const s = config.style;
+  ensureGoogleFontsLoaded([s.headingFont, s.bodyFont]);
+  return {
+    ['--shop-primary' as string]: t.primary,
+    ['--shop-accent' as string]: t.accent,
+    ['--shop-background' as string]: t.background ?? '#0a0a0a',
+    ['--shop-surface-primary' as string]: t.surfacePrimary ?? '#0a0a0a',
+    ['--shop-surface-secondary' as string]: t.surfaceSecondary ?? '#1a1a1a',
+    ['--shop-nav-bg' as string]: t.navBg ?? '#0a0a0a',
+    ['--shop-text-primary' as string]: t.textPrimary ?? '#ffffff',
+    ['--shop-text-secondary' as string]: t.textSecondary ?? 'rgba(255,255,255,0.7)',
+    ['--shop-border-color' as string]: t.borderColor ?? 'rgba(255,255,255,0.08)',
+    ['--shop-text-on-accent' as string]: t.textOnAccent ?? '#0a0a0a',
+    ['--shop-accent-hover' as string]: t.accentHover ?? '#E8C547',
+    ['--shop-font-heading' as string]: fontTokenToStack(s.headingFont),
+    ['--shop-font-body' as string]: fontTokenToStack(s.bodyFont),
+    ['--shop-heading-weight' as string]: String(s.headingWeight),
+    ['--shop-heading-letter-spacing' as string]: s.headingLetterSpacing,
+    ['--shop-heading-transform' as string]: s.headingTransform,
+    ['--radius-sm' as string]: s.radius.sm,
+    ['--radius-md' as string]: s.radius.md,
+    ['--radius-lg' as string]: s.radius.lg,
+    ['--radius-xl' as string]: s.radius.xl,
+    ['--radius-2xl' as string]: s.radius['2xl'],
+    ['--radius-full' as string]: s.radius.full,
+    ['--shop-border-width' as string]: s.borderWidth,
+    ['--shop-border-style' as string]: s.borderStyle,
+    ['--shop-icon-weight' as string]: String(s.iconWeight),
+    ['--shop-divider-style' as string]: s.dividerStyle,
+  };
+}
+
+export { ShopConfigContext };

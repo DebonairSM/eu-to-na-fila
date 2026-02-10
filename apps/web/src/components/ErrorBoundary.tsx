@@ -4,6 +4,8 @@ import { ErrorDisplay } from './ErrorDisplay';
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
+  /** Message used when rendering the default error state (passed from parent with t('errors.generic')). */
+  fallbackErrorMessage?: string;
 }
 
 interface ErrorBoundaryState {
@@ -62,7 +64,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
           <ErrorDisplay
-            error={this.state.error || new Error('Algo deu errado')}
+            error={this.state.error || new Error(this.props.fallbackErrorMessage ?? 'Error')}
             onRetry={this.handleReset}
           />
         </div>

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useLoginForm } from './hooks/useLoginForm';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export function LoginForm() {
   const {
@@ -13,6 +14,7 @@ export function LoginForm() {
     error,
     handleSubmit,
   } = useLoginForm();
+  const { t } = useLocale();
 
   return (
     <div className="space-y-6">
@@ -23,7 +25,7 @@ export function LoginForm() {
           </span>
         </div>
         <p className="text-sm text-[var(--shop-text-secondary)]">
-          Acesso restrito
+          {t('auth.restrictedAccess')}
         </p>
       </div>
 
@@ -44,7 +46,7 @@ export function LoginForm() {
               username ? 'top-2 text-xs text-[var(--shop-accent)]' : 'top-4'
             }`}
           >
-            Usuário <span className="text-white/40">(barbeiros)</span>
+            {t('auth.username')} <span className="text-white/40">{t('auth.usernameBarbers')}</span>
           </label>
         </div>
 
@@ -65,13 +67,13 @@ export function LoginForm() {
               password ? 'top-2 text-xs text-[var(--shop-accent)]' : 'top-4'
             }`}
           >
-            Senha
+            {t('auth.password')}
           </label>
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] p-2 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+            aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
           >
             <span className="material-symbols-outlined text-xl">
               {showPassword ? 'visibility_off' : 'visibility'}
@@ -96,7 +98,7 @@ export function LoginForm() {
           {isLoading ? (
             <>
               <span className="material-symbols-outlined animate-spin text-xl">hourglass_top</span>
-              Entrando...
+              {t('auth.entering')}
             </>
           ) : (
             <span className="material-symbols-outlined text-xl">login</span>
@@ -110,7 +112,7 @@ export function LoginForm() {
           className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
-          Voltar
+          {t('common.back')}
         </Link>
       </div>
     </div>

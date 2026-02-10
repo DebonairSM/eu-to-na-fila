@@ -1,10 +1,12 @@
 import { Card, CardContent, Heading, Text, StatusTransition } from '@/components/design-system';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface CompletedCardProps {
   barberName?: string;
 }
 
 export function CompletedCard({ barberName }: CompletedCardProps) {
+  const { t } = useLocale();
   return (
     <StatusTransition status="completed">
       <Card
@@ -40,12 +42,12 @@ export function CompletedCard({ barberName }: CompletedCardProps) {
             </svg>
           </div>
           <Heading level={2} className="mb-4 sm:mb-6 text-[var(--shop-text-primary)] text-xl sm:text-2xl lg:text-3xl">
-            Concluído
+            {t('status.completed')}
           </Heading>
           {barberName && (
             <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-[var(--shop-border-color)]">
               <Text size="sm" variant="secondary" className="mb-3 sm:mb-4 text-sm sm:text-base">
-                Atendido por
+                {t('status.completedBy')}
               </Text>
               <Text
                 size="xl"

@@ -4,6 +4,7 @@ import { useTicketStatus } from '@/hooks/useTicketStatus';
 import { useQueue } from '@/hooks/useQueue';
 import { useServices } from '@/hooks/useServices';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
@@ -18,6 +19,7 @@ import { Container, SlideIn } from '@/components/design-system';
 export function StatusPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLocale();
   const ticketIdFromParams = id ? parseInt(id, 10) : null;
   const { ticket, isLoading, error, refetch } = useTicketStatus(ticketIdFromParams);
   const { data: queueData } = useQueue(3000);
@@ -70,10 +72,10 @@ export function StatusPage() {
         <Navigation />
         <Container className="pt-24 pb-12">
           <div className="text-center space-y-4">
-            <p className="text-[var(--shop-text-secondary)]">Ticket não encontrado</p>
+            <p className="text-[var(--shop-text-secondary)]">{t('status.ticketNotFound')}</p>
             <Link to="/home">
               <button className="px-4 py-2 bg-transparent text-[var(--shop-text-secondary)] border border-[var(--shop-border-color)] rounded-lg hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-colors min-h-[52px]">
-                Voltar ao Início
+                {t('status.backHome')}
               </button>
             </Link>
           </div>
@@ -87,7 +89,7 @@ export function StatusPage() {
       <div className="min-h-screen bg-[var(--shop-background)]">
         <Navigation />
         <Container className="pt-24 pb-12">
-          <LoadingSpinner size="lg" text="Carregando..." />
+          <LoadingSpinner size="lg" text={t('common.loading')} />
         </Container>
       </div>
     );
@@ -99,7 +101,7 @@ export function StatusPage() {
         <Navigation />
         <Container className="pt-24 pb-12">
           <ErrorDisplay
-            error={error || new Error('Ticket não encontrado')}
+            error={error || new Error(t('status.ticketNotFound'))}
             onRetry={() => {
               if (ticketIdFromParams) {
                 refetch();
@@ -111,7 +113,7 @@ export function StatusPage() {
           <div className="mt-4">
             <Link to="/home">
               <button className="w-full px-4 py-2 bg-transparent text-[var(--shop-text-secondary)] border border-[var(--shop-border-color)] rounded-lg hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-colors min-h-[52px]">
-                Voltar ao Início
+                {t('status.backHome')}
               </button>
             </Link>
           </div>
@@ -164,7 +166,7 @@ export function StatusPage() {
             <SlideIn direction="up">
               <div className="fixed bottom-24 left-4 right-4 bg-white text-black px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50">
                 <span className="material-symbols-outlined">check_circle</span>
-                <span>Link copiado</span>
+                <span>{t('status.shareSuccess')}</span>
               </div>
             </SlideIn>
           )}
@@ -204,7 +206,7 @@ export function StatusPage() {
           <SlideIn direction="up">
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white text-black px-6 py-4 rounded-lg shadow-lg flex items-center gap-2 z-50">
               <span className="material-symbols-outlined">check_circle</span>
-              <span>Link copiado</span>
+              <span>{t('status.shareSuccess')}</span>
             </div>
           </SlideIn>
         )}

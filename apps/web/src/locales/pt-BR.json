@@ -1,0 +1,129 @@
+{
+  "common": {
+    "back": "Voltar",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "close": "Fechar",
+    "selectPlaceholder": "Selecione...",
+    "loading": "Carregando…",
+    "minutes": "minutos",
+    "error": "Erro",
+    "retry": "Tentar novamente"
+  },
+  "accessibility": {
+    "skipLink": "Pular para o conteúdo principal",
+    "loading": "Carregando…"
+  },
+  "nav": {
+    "services": "Serviços",
+    "about": "Sobre",
+    "location": "Localização",
+    "ctaJoin": "Entrar na Fila",
+    "barbers": "Barbeiros",
+    "dashboard": "Dashboard",
+    "dashboardCompany": "Dashboard Empresarial",
+    "logout": "Sair",
+    "menu": "Menu",
+    "closeMenu": "Fechar menu de navegação",
+    "toggleMenu": "Abrir ou fechar menu",
+    "myProfile": "Meu cadastro",
+    "home": "Início",
+    "chooseLanguage": "Escolher idioma"
+  },
+  "join": {
+    "serviceLabel": "Serviço *",
+    "nameLabel": "Nome *",
+    "namePlaceholder": "Nome e inicial",
+    "phoneLabel": "Telefone *",
+    "phonePlaceholder": "(00) 00000-0000",
+    "barberLabel": "Barbeiro *",
+    "selectOption": "Selecione...",
+    "nameInUse": "Nome já está em uso",
+    "activeTicketFound": "Ticket ativo encontrado",
+    "viewStatus": "Ver status",
+    "noServicesAvailable": "Nenhum serviço disponível no momento.",
+    "entering": "Entrando...",
+    "confirmEntry": "Confirmar entrada",
+    "checkingStatus": "Verificando seu status...",
+    "calculatingWait": "Calculando tempo de espera...",
+    "waitError": "Erro ao obter tempo de espera",
+    "estimatedTime": "Tempo estimado",
+    "noBarberActive": "Nenhum barbeiro ativo no momento",
+    "noBarberAvailable": "Nenhum barbeiro disponível",
+    "unavailable": "Indisponível",
+    "invalidName": "Nome inválido",
+    "nameAlreadyInQueue": "Este nome já está na fila. Por favor, use um nome diferente.",
+    "phoneRequired": "Telefone é obrigatório.",
+    "chooseBarber": "Escolha um barbeiro.",
+    "selectService": "Selecione um serviço.",
+    "submitErrorDefault": "Erro ao entrar na fila. Tente novamente."
+  },
+  "status": {
+    "ticketNotFound": "Ticket não encontrado",
+    "backHome": "Voltar ao Início",
+    "now": "Agora",
+    "minutes": "minutos",
+    "yourTurn": "sua vez chegou",
+    "positionInQueue": "Posição na fila",
+    "personAhead": "pessoa à frente",
+    "peopleAhead": "pessoas à frente",
+    "completed": "Concluído",
+    "completedBy": "Atendido por",
+    "inProgress": "Em atendimento",
+    "yourBarber": "Seu barbeiro",
+    "leaveQueue": "Sair da Fila",
+    "leaveQueueAria": "Sair da Fila",
+    "leaving": "Saindo...",
+    "shareTicket": "Compartilhar Link",
+    "shareSuccess": "Link copiado!",
+    "close": "Fechar",
+    "confirmLeaveTitle": "Sair da Fila?",
+    "confirmLeaveMessage": "Tem certeza que deseja sair da fila? Você perderá sua posição.",
+    "confirmLeaveConfirm": "Sair",
+    "confirmLeaveCancel": "Cancelar",
+    "backHomeButton": "Voltar ao Início",
+    "leaveErrorFailed": "Não foi possível sair da fila.",
+    "badgeWaiting": "Aguardando",
+    "badgeInProgress": "Em Atendimento",
+    "badgeCompleted": "Concluído",
+    "serviceLabel": "Serviço"
+  },
+  "auth": {
+    "login": "Entrar",
+    "logout": "Sair",
+    "email": "E-mail",
+    "password": "Senha",
+    "pin": "PIN",
+    "loginWithPin": "Entrar com PIN",
+    "companyLogin": "Acesso empresarial",
+    "restrictedAccess": "Acesso restrito",
+    "username": "Usuário",
+    "usernameBarbers": "(barbeiros)",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha",
+    "loginButton": "Entrar",
+    "entering": "Entrando..."
+  },
+  "root": {
+    "projects": "Projetos",
+    "about": "Sobre",
+    "contact": "Contato"
+  },
+  "services": {
+    "emptyText": "Nenhum serviço cadastrado."
+  },
+  "analytics": {
+    "periodAll": "Todo o período",
+    "days": "dias"
+  },
+  "chart": {
+    "noData": "Nenhum dado disponível",
+    "averageWaitTime": "Tempo médio de espera"
+  },
+  "errors": {
+    "generic": "Algo deu errado. Tente novamente.",
+    "loadFailed": "Falha ao carregar.",
+    "reloadPage": "Recarregar Página"
+  }
+}

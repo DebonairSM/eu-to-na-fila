@@ -1,4 +1,5 @@
 import { Badge, Heading, Text } from '@/components/design-system';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface StatusHeaderProps {
   customerName: string;
@@ -7,6 +8,7 @@ interface StatusHeaderProps {
 }
 
 export function StatusHeader({ customerName, status, serviceName }: StatusHeaderProps) {
+  const { t } = useLocale();
   const isWaiting = status === 'waiting';
   const isInProgress = status === 'in_progress';
   const isCompleted = status === 'completed';
@@ -25,10 +27,10 @@ export function StatusHeader({ customerName, status, serviceName }: StatusHeader
     : 'check_circle';
 
   const badgeText = isWaiting
-    ? 'Aguardando'
+    ? t('status.badgeWaiting')
     : isInProgress
-    ? 'Em Atendimento'
-    : 'Concluído';
+    ? t('status.badgeInProgress')
+    : t('status.badgeCompleted');
 
   return (
     <div className="text-center mt-8 sm:mt-0 mb-6 sm:mb-8 lg:mb-10">
@@ -36,7 +38,7 @@ export function StatusHeader({ customerName, status, serviceName }: StatusHeader
         {customerName}
       </Heading>
       <Text size="sm" variant="secondary" className="mb-2">
-        Serviço: {serviceName ?? '—'}
+        {t('status.serviceLabel')}: {serviceName ?? '—'}
       </Text>
       <Badge variant={badgeVariant} size="default">
         <span className="material-symbols-outlined text-xl sm:text-2xl">{badgeIcon}</span>

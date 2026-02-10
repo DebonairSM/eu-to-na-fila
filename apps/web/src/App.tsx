@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Suspense, useEffect } from 'react';
 import { useAuthContext } from './contexts/AuthContext';
 import { useShopConfig } from './contexts/ShopConfigContext';
+import { useLocale } from './contexts/LocaleContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { api } from './lib/api';
 import { lazyWithRetry } from './lib/lazyWithRetry';
@@ -38,7 +39,8 @@ function ProtectedRoute({
   const { isAuthenticated, isOwner, isCompanyAdmin, isBarber, isLoading } = useAuthContext();
 
   const { config } = useShopConfig();
-  const loadingText = config.homeContent?.accessibility?.loading ?? 'Carregando…';
+  const { t } = useLocale();
+  const loadingText = config.homeContent?.accessibility?.loading ?? t('accessibility.loading');
 
   if (isLoading) {
     return (
@@ -171,8 +173,9 @@ function AppContent() {
 
 function App() {
   const { config } = useShopConfig();
-  const skipLinkText = config.homeContent?.accessibility?.skipLink ?? 'Pular para o conteúdo principal';
-  const loadingText = config.homeContent?.accessibility?.loading ?? 'Carregando…';
+  const { t } = useLocale();
+  const skipLinkText = config.homeContent?.accessibility?.skipLink ?? t('accessibility.skipLink');
+  const loadingText = config.homeContent?.accessibility?.loading ?? t('accessibility.loading');
 
   useEffect(() => {
     const preload = [
@@ -191,7 +194,7 @@ function App() {
   }, []);
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary fallbackErrorMessage={t('errors.generic')}>
       <a href="#main-content" className="skip-link">
         {skipLinkText}
       </a>

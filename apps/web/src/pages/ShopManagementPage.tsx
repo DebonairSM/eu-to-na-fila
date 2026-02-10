@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import type { ShopTheme, HomeContent, ShopAdminView, ShopSettings, ShopStyleConfig } from '@eutonafila/shared';
-import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, shopStyleConfigSchema } from '@eutonafila/shared';
+import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, resolveShopStyle, shopStyleConfigSchema } from '@eutonafila/shared';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useModal } from '@/hooks/useModal';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
@@ -14,6 +14,8 @@ import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { AppearanceForm } from '@/components/AppearanceForm';
+import { ShopPreview } from '@/components/ShopPreview';
+import type { ShopConfig } from '@/contexts/ShopConfigContext';
 import { pickThreeRandomPaletteIndices } from '@/lib/presetPalettes';
 
 // DEFAULT_THEME and DEFAULT_HOME_CONTENT imported from @eutonafila/shared
@@ -78,7 +80,7 @@ export function ShopManagementPage() {
   const [error, setError] = useState<Error | null>(null);
   const [shopToDelete, setShopToDelete] = useState<number | null>(null);
   const [editingShop, setEditingShop] = useState<Shop | null>(null);
-  const [editTab, setEditTab] = useState<'info' | 'appearance' | 'content' | 'settings' | 'credentials'>('info');
+  const [editTab, setEditTab] = useState<'info' | 'appearance' | 'content' | 'preview' | 'settings' | 'credentials'>('info');
   const defaultStyle = shopStyleConfigSchema.parse({});
   const [formData, setFormData] = useState<{
     name: string;
@@ -458,7 +460,7 @@ export function ShopManagementPage() {
                   Editar Barbearia
                 </h2>
                 <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-                  {(['info', 'appearance', 'content', 'settings', 'credentials'] as const).map((tab) => (
+                  {(['info', 'appearance', 'content', 'preview', 'settings', 'credentials'] as const).map((tab) => (
                     <button
                       key={tab}
                       type="button"
@@ -470,6 +472,7 @@ export function ShopManagementPage() {
                       {tab === 'info' && 'Informações'}
                       {tab === 'appearance' && 'Aparência'}
                       {tab === 'content' && 'Conteúdo'}
+                      {tab === 'preview' && 'Pré-visualização'}
                       {tab === 'settings' && 'Configurações'}
                       {tab === 'credentials' && 'Acesso'}
                     </button>
@@ -646,6 +649,24 @@ export function ShopManagementPage() {
                           <div><label className="block text-white/60 text-sm mb-1">Consulta do mapa</label><input type="text" value={formData.homeContent.location.mapQuery} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, mapQuery: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                         </div>
                       </section>
+                    </div>
+                  )}
+                  {editTab === 'preview' && editingShop && (
+                    <div className="flex-1 min-h-0 flex flex-col">
+                      <p className="text-white/60 text-sm mb-3">Visualização da página inicial com os dados atuais do formulário.</p>
+                      <ShopPreview
+                        config={
+                          {
+                            name: formData.name,
+                            theme: formData.theme,
+                            style: resolveShopStyle(formData.style),
+                            path: editingShop.path ?? '/',
+                            homeContent: formData.homeContent,
+                            settings: formData.settings,
+                          } satisfies ShopConfig
+                        }
+                        className="flex-1 min-h-[50vh] overflow-hidden"
+                      />
                     </div>
                   )}
                   {editTab === 'settings' && (
@@ -929,7 +950,7 @@ export function ShopManagementPage() {
               Editar Barbearia
             </h2>
             <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-              {(['info', 'appearance', 'content', 'settings', 'credentials'] as const).map((tab) => (
+              {(['info', 'appearance', 'content', 'preview', 'settings', 'credentials'] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -941,6 +962,7 @@ export function ShopManagementPage() {
                   {tab === 'info' && 'Informações'}
                   {tab === 'appearance' && 'Aparência'}
                   {tab === 'content' && 'Conteúdo'}
+                  {tab === 'preview' && 'Pré-visualização'}
                   {tab === 'settings' && 'Configurações'}
                   {tab === 'credentials' && 'Acesso'}
                 </button>
@@ -980,10 +1002,58 @@ export function ShopManagementPage() {
                       <div><label className="block text-white/60 text-sm mb-1">Logo do cabeçalho (ícone no topo da página)</label><input type="url" value={formData.homeContent.branding.headerIconUrl} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, branding: { ...formData.homeContent.branding, headerIconUrl: e.target.value } } })} placeholder="https://..." className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" /></div>
                     </div>
                   </section>
-                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10"><h4 className="text-white font-medium">Hero</h4><div className="space-y-3"><div><label className="block text-white/60 text-sm mb-1">Badge do hero</label><input type="text" value={formData.homeContent.hero.badge} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, badge: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Subtítulo</label><input type="text" value={formData.homeContent.hero.subtitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, subtitle: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Botão Entrar</label><input type="text" value={formData.homeContent.hero.ctaJoin} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaJoin: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Botão Localização</label><input type="text" value={formData.homeContent.hero.ctaLocation} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaLocation: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div></div></section>
-                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10"><h4 className="text-white font-medium">Navegação</h4><div className="space-y-3">{[{ key: 'linkServices' as const, label: 'Link Serviços' }, { key: 'linkAbout' as const, label: 'Link Sobre' }, { key: 'linkLocation' as const, label: 'Link Localização' }, { key: 'ctaJoin' as const, label: 'Botão Entrar' }, { key: 'linkBarbers' as const, label: 'Link Barbeiros' }].map(({ key, label }) => (<div key={key}><label className="block text-white/60 text-sm mb-1">{label}</label><input type="text" value={formData.homeContent.nav[key]} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, nav: { ...formData.homeContent.nav, [key]: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>))}</div></section>
-                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10"><h4 className="text-white font-medium">Seção Serviços</h4><div className="space-y-3"><div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={formData.homeContent.services.sectionTitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, sectionTitle: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Texto ao carregar</label><input type="text" value={formData.homeContent.services.loadingText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, loadingText: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Texto quando vazio</label><input type="text" value={formData.homeContent.services.emptyText} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, emptyText: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div></div></section>
-                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10"><h4 className="text-white font-medium">Localização</h4><div className="space-y-3"><div><label className="block text-white/60 text-sm mb-1">Endereço</label><textarea value={formData.homeContent.location.address} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, address: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[60px]" /></div><div><label className="block text-white/60 text-sm mb-1">Horário</label><textarea value={formData.homeContent.location.hours} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, hours: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Telefone</label><input type="text" value={formData.homeContent.location.phone} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phone: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Link do telefone</label><input type="text" value={formData.homeContent.location.phoneHref} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phoneHref: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" placeholder="tel:+55..." /></div><div><label className="block text-white/60 text-sm mb-1">Idiomas</label><input type="text" value={formData.homeContent.location.languages} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, languages: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-1">Consulta do mapa</label><input type="text" value={formData.homeContent.location.mapQuery} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, mapQuery: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div></div></section>
+                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <h4 className="text-white font-medium">Hero</h4>
+                    <div className="space-y-3">
+                      <div><label className="block text-white/60 text-sm mb-1">Badge do hero</label><input type="text" value={formData.homeContent.hero.badge} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, badge: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">Subtítulo</label><input type="text" value={formData.homeContent.hero.subtitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, subtitle: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">Botão Entrar</label><input type="text" value={formData.homeContent.hero.ctaJoin} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaJoin: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">Botão Localização</label><input type="text" value={formData.homeContent.hero.ctaLocation} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, hero: { ...formData.homeContent.hero, ctaLocation: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                    </div>
+                  </section>
+                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <h4 className="text-white font-medium">Seção Sobre</h4>
+                    <div className="space-y-3">
+                      <div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={formData.homeContent.about.sectionTitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, about: { ...formData.homeContent.about, sectionTitle: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">Imagem (URL)</label><input type="url" value={formData.homeContent.about.imageUrl} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, about: { ...formData.homeContent.about, imageUrl: e.target.value } } })} placeholder="https://..." className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">Texto alternativo da imagem</label><input type="text" value={formData.homeContent.about.imageAlt} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, about: { ...formData.homeContent.about, imageAlt: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                    </div>
+                  </section>
+                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <h4 className="text-white font-medium">Seção Serviços</h4>
+                    <div className="space-y-3">
+                      <div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={formData.homeContent.services.sectionTitle} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, services: { ...formData.homeContent.services, sectionTitle: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                    </div>
+                  </section>
+                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <h4 className="text-white font-medium">Localização</h4>
+                    <div className="space-y-3">
+                      <div><label className="block text-white/60 text-sm mb-1">Endereço</label><textarea value={formData.homeContent.location.address} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, address: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[60px]" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">Horário</label><textarea value={formData.homeContent.location.hours} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, hours: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">Telefone</label><input type="text" value={formData.homeContent.location.phone} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phone: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">Link do telefone</label><input type="text" value={formData.homeContent.location.phoneHref} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phoneHref: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" placeholder="tel:+55..." /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">Idiomas</label><input type="text" value={formData.homeContent.location.languages} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, languages: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">Consulta do mapa</label><input type="text" value={formData.homeContent.location.mapQuery} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, mapQuery: e.target.value } } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                    </div>
+                  </section>
+                </div>
+              )}
+              {editTab === 'preview' && editingShop && (
+                <div className="flex-1 min-h-0 flex flex-col">
+                  <p className="text-white/60 text-sm mb-3">Visualização da página inicial com os dados atuais do formulário.</p>
+                  <ShopPreview
+                    config={
+                      {
+                        name: formData.name,
+                        theme: formData.theme,
+                        style: resolveShopStyle(formData.style),
+                        path: editingShop.path ?? '/',
+                        homeContent: formData.homeContent,
+                        settings: formData.settings,
+                      } satisfies ShopConfig
+                    }
+                    className="flex-1 min-h-[50vh] overflow-hidden"
+                  />
                 </div>
               )}
               {editTab === 'settings' && (

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { Button, Stack } from '@/components/design-system';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface ActionButtonsProps {
   status: 'waiting' | 'in_progress' | 'completed' | 'cancelled';
@@ -24,6 +25,7 @@ export function ActionButtons({
   onDismissLeaveError,
   onShare,
 }: ActionButtonsProps) {
+  const { t } = useLocale();
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const isCompleted = status === 'completed';
 
@@ -54,7 +56,7 @@ export function ActionButtons({
                   onClick={onDismissLeaveError}
                   className="mt-2 text-xs text-[#ef4444]/80 hover:text-[#ef4444] underline"
                 >
-                  Fechar
+                  {t('status.close')}
                 </button>
               )}
             </div>
@@ -67,7 +69,7 @@ export function ActionButtons({
                 className="w-14 h-14 rounded-full bg-[#ef4444] text-white shadow-lg hover:bg-[#dc2626] transition-all flex items-center justify-center min-h-[56px] min-w-[56px]"
                 onClick={handleLeaveClick}
                 disabled={isLeaving}
-                aria-label="Sair da Fila"
+                aria-label={t('status.leaveQueueAria')}
               >
                 {isLeaving ? (
                   <span className="material-symbols-outlined animate-spin text-2xl">
@@ -92,12 +94,12 @@ export function ActionButtons({
                     <span className="material-symbols-outlined animate-spin text-xl">
                       hourglass_top
                     </span>
-                    Saindo...
+                    {t('status.leaving')}
                   </>
                 ) : (
                   <>
                     <span className="material-symbols-outlined text-xl">exit_to_app</span>
-                    Sair da Fila
+                    {t('status.leaveQueue')}
                   </>
                 )}
               </Button>
@@ -109,7 +111,7 @@ export function ActionButtons({
           <Link to="/home">
             <Button size="lg" fullWidth>
               <span className="material-symbols-outlined text-xl">home</span>
-              Voltar ao Início
+              {t('status.backHomeButton')}
             </Button>
           </Link>
         )}
@@ -117,7 +119,7 @@ export function ActionButtons({
         {onShare && (
           <Button variant="outline" fullWidth onClick={onShare}>
             <span className="material-symbols-outlined text-xl">share</span>
-            Compartilhar Link
+            {t('status.shareTicket')}
           </Button>
         )}
       </Stack>
@@ -126,10 +128,10 @@ export function ActionButtons({
         isOpen={showLeaveConfirm}
         onClose={() => setShowLeaveConfirm(false)}
         onConfirm={handleConfirmLeave}
-        title="Sair da Fila?"
-        message="Tem certeza que deseja sair da fila? Você perderá sua posição."
-        confirmText="Sair"
-        cancelText="Cancelar"
+        title={t('status.confirmLeaveTitle')}
+        message={t('status.confirmLeaveMessage')}
+        confirmText={t('status.confirmLeaveConfirm')}
+        cancelText={t('status.confirmLeaveCancel')}
         variant="destructive"
         icon="exit_to_app"
       />

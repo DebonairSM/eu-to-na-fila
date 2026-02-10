@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/design-system';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { Barber } from '@eutonafila/shared';
 
 interface BarberWaitTime {
@@ -23,22 +24,23 @@ export function ActiveBarbersInfo({
   waitTimes,
   isLoading = false,
 }: ActiveBarbersInfoProps) {
+  const { t } = useLocale();
   const presentBarbers = barbers.filter((b) => b.isActive && b.isPresent);
   const standardWaitTime = waitTimes?.standardWaitTime ?? null;
   const hasActiveBarbers = presentBarbers.length > 0;
 
   const formatWaitTime = (minutes: number | null): string => {
-    if (!hasActiveBarbers) return 'Indisponível';
+    if (!hasActiveBarbers) return t('join.unavailable');
     if (minutes === null) return '--';
-    if (minutes <= 0) return 'Agora';
-    return `${minutes} min`;
+    if (minutes <= 0) return t('status.now');
+    return `${minutes} ${t('common.minutes')}`;
   };
 
   if (isLoading) {
     return (
       <Card variant="default">
         <CardContent className="p-6">
-          <LoadingSpinner text="Carregando..." size="sm" />
+          <LoadingSpinner text={t('common.loading')} size="sm" />
         </CardContent>
       </Card>
     );
@@ -50,7 +52,7 @@ export function ActiveBarbersInfo({
         {/* Highlighted estimated time */}
         <div className="text-center mb-6">
           <p className="text-sm uppercase tracking-wider text-[var(--shop-text-secondary)] mb-1">
-            Tempo estimado
+            {t('join.estimatedTime')}
           </p>
           <p
             className={`font-bold tabular-nums ${
@@ -62,14 +64,14 @@ export function ActiveBarbersInfo({
             {formatWaitTime(standardWaitTime)}
           </p>
           {!hasActiveBarbers && (
-            <p className="text-xs text-[var(--shop-text-secondary)] opacity-70 mt-1">Nenhum barbeiro ativo no momento</p>
+            <p className="text-xs text-[var(--shop-text-secondary)] opacity-70 mt-1">{t('join.noBarberActive')}</p>
           )}
         </div>
 
         {/* Available barbers — compact list */}
         <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
           {presentBarbers.length === 0 ? (
-            <p className="text-sm text-[var(--shop-text-secondary)]">Nenhum barbeiro disponível</p>
+            <p className="text-sm text-[var(--shop-text-secondary)]">{t('join.noBarberAvailable')}</p>
           ) : (
             presentBarbers.map((barber) => (
               <span

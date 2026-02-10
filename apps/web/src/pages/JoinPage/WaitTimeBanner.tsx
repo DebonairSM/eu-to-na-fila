@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { WaitTimeDisplay } from '@/components/WaitTimeDisplay';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
@@ -11,6 +12,7 @@ interface WaitTimeBannerProps {
 
 export function WaitTimeBanner({ sticky = false }: WaitTimeBannerProps) {
   const shopSlug = useShopSlug();
+  const { t } = useLocale();
   const [waitEstimate, setWaitEstimate] = useState<number | null>(null);
   const [waitLoading, setWaitLoading] = useState(true);
   const [waitError, setWaitError] = useState<Error | null>(null);
@@ -27,7 +29,7 @@ export function WaitTimeBanner({ sticky = false }: WaitTimeBannerProps) {
       setWaitEstimate(nextWait);
       setWaitLoading(false);
     } catch (err) {
-      setWaitError(err instanceof Error ? err : new Error('Erro ao obter tempo de espera'));
+      setWaitError(err instanceof Error ? err : new Error(t('join.waitError')));
       setWaitLoading(false);
     }
   };
@@ -55,7 +57,7 @@ export function WaitTimeBanner({ sticky = false }: WaitTimeBannerProps) {
     return (
       <div className={`${sticky ? 'sticky top-0 z-40' : ''} bg-[var(--shop-surface-secondary)] border-b border-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] py-6 sm:py-8`}>
         <div className="container mx-auto px-4">
-          <LoadingSpinner text="Calculando tempo de espera..." size="sm" />
+          <LoadingSpinner text={t('join.calculatingWait')} size="sm" />
         </div>
       </div>
     );

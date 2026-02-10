@@ -54,7 +54,19 @@ export const STORAGE_KEYS = {
   ACTIVE_TICKET_ID: 'eutonafila_active_ticket_id',
   /** Device ID storage key - persistent identifier for device-based ticket blocking */
   DEVICE_ID: 'eutonafila_device_id',
+  /** UI locale (e.g. pt-BR, en) for i18n */
+  LOCALE: 'eutonafila_locale',
 } as const;
+
+/**
+ * Supported UI locales for i18n
+ */
+export const SUPPORTED_LOCALES = ['pt-BR', 'en'] as const;
+
+/**
+ * Default UI locale
+ */
+export const DEFAULT_LOCALE = 'pt-BR';
 
 /**
  * Default service ID

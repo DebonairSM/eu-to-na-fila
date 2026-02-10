@@ -7,6 +7,7 @@ import { Container } from '@/components/design-system';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { getOrCreateDeviceId } from '@/lib/utils';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { JoinPage } from './index';
 
 const STORAGE_KEY = STORAGE_KEYS.ACTIVE_TICKET_ID;
@@ -23,6 +24,7 @@ export function JoinPageGuard() {
   const [shouldRenderJoinPage, setShouldRenderJoinPage] = useState(false);
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
+  const { t } = useLocale();
 
   useEffect(() => {
     const checkActiveTicket = async () => {
@@ -104,7 +106,7 @@ export function JoinPageGuard() {
       <div className="min-h-screen bg-[var(--shop-background)]">
         <Navigation />
         <Container className="pt-20 sm:pt-[100px] pb-12">
-          <LoadingSpinner text="Verificando seu status..." />
+          <LoadingSpinner text={t('join.checkingStatus')} />
         </Container>
       </div>
     );
