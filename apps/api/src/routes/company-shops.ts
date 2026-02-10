@@ -198,6 +198,8 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         theme: themeInputSchema,
         homeContent: homeContentInputSchema,
         settings: shopSettingsInputSchema,
+        ownerPassword: z.string().min(6).max(200).optional(),
+        staffPassword: z.string().min(6).max(200).optional(),
       });
 
       const body = validateRequest(bodySchema, request.body);
@@ -259,6 +261,26 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.settings !== undefined) {
         const existing = (shop.settings ?? {}) as Record<string, unknown>;
         updatePayload.settings = { ...existing, ...body.settings };
+      }
+
+      if (body.ownerPassword !== undefined) {
+        const ownerValidation = validatePassword(body.ownerPassword);
+        if (!ownerValidation.isValid) {
+          throw new ValidationError(ownerValidation.error ?? 'Invalid owner password');
+        }
+        updatePayload.ownerPinHash = await hashPassword(body.ownerPassword);
+        updatePayload.ownerPin = null;
+        updatePayload.ownerPinResetRequired = false;
+      }
+
+      if (body.staffPassword !== undefined) {
+        const staffValidation = validatePassword(body.staffPassword);
+        if (!staffValidation.isValid) {
+          throw new ValidationError(staffValidation.error ?? 'Invalid staff password');
+        }
+        updatePayload.staffPinHash = await hashPassword(body.staffPassword);
+        updatePayload.staffPin = null;
+        updatePayload.staffPinResetRequired = false;
       }
 
       const [updatedShop] = await db

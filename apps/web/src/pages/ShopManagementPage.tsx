@@ -63,7 +63,7 @@ export function ShopManagementPage() {
   const [error, setError] = useState<Error | null>(null);
   const [shopToDelete, setShopToDelete] = useState<number | null>(null);
   const [editingShop, setEditingShop] = useState<Shop | null>(null);
-  const [editTab, setEditTab] = useState<'info' | 'appearance' | 'content' | 'settings'>('info');
+  const [editTab, setEditTab] = useState<'info' | 'appearance' | 'content' | 'settings' | 'credentials'>('info');
   const [formData, setFormData] = useState<{
     name: string;
     slug: string;
@@ -73,6 +73,8 @@ export function ShopManagementPage() {
     theme: ShopTheme;
     homeContent: HomeContent;
     settings: ShopSettings;
+    ownerPassword: string;
+    staffPassword: string;
   }>({
     name: '',
     slug: '',
@@ -82,6 +84,8 @@ export function ShopManagementPage() {
     theme: { ...DEFAULT_THEME },
     homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)),
     settings: { ...DEFAULT_SETTINGS },
+    ownerPassword: '',
+    staffPassword: '',
   });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -121,6 +125,16 @@ export function ShopManagementPage() {
       setErrorMessage('Nome é obrigatório');
       return;
     }
+    const op = formData.ownerPassword.trim();
+    const sp = formData.staffPassword.trim();
+    if (op && op.length < 6) {
+      setErrorMessage('Senha do dono deve ter no mínimo 6 caracteres.');
+      return;
+    }
+    if (sp && sp.length < 6) {
+      setErrorMessage('Senha do funcionário deve ter no mínimo 6 caracteres.');
+      return;
+    }
 
     try {
       await api.updateCompanyShop(user.companyId, editingShop.id, {
@@ -132,9 +146,11 @@ export function ShopManagementPage() {
         theme: formData.theme,
         homeContent: formData.homeContent,
         settings: formData.settings,
+        ...(op && { ownerPassword: op }),
+        ...(sp && { staffPassword: sp }),
       });
       setEditingShop(null);
-      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS } });
+      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' });
       editModal.close();
       await loadShops();
     } catch (error) {
@@ -169,6 +185,8 @@ export function ShopManagementPage() {
       theme: mergeTheme(shop.theme ?? null),
       homeContent: mergeHomeContentForEdit(shop.homeContent ?? null),
       settings: mergeSettingsForEdit(shop.settings ?? null),
+      ownerPassword: '',
+      staffPassword: '',
     });
     setEditTab('info');
     editModal.open();
@@ -304,7 +322,7 @@ export function ShopManagementPage() {
                   Editar Barbearia
                 </h2>
                 <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-                  {(['info', 'appearance', 'content', 'settings'] as const).map((tab) => (
+                  {(['info', 'appearance', 'content', 'settings', 'credentials'] as const).map((tab) => (
                     <button
                       key={tab}
                       type="button"
@@ -317,6 +335,7 @@ export function ShopManagementPage() {
                       {tab === 'appearance' && 'Aparência'}
                       {tab === 'content' && 'Conteúdo'}
                       {tab === 'settings' && 'Configurações'}
+                      {tab === 'credentials' && 'Acesso'}
                     </button>
                   ))}
                 </div>
@@ -534,10 +553,46 @@ export function ShopManagementPage() {
                       </section>
                     </div>
                   )}
+                  {editTab === 'credentials' && (
+                    <div className="space-y-6">
+                      <p className="text-white/60 text-sm">Senhas para login na barbearia. Deixe em branco para não alterar. Mínimo 6 caracteres.</p>
+                      <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <h4 className="text-white font-medium">Credenciais de acesso</h4>
+                        <div className="space-y-4">
+                          <div>
+                            <label htmlFor="editOwnerPassword" className="block text-white/60 text-sm mb-2">Senha do dono (owner)</label>
+                            <input
+                              id="editOwnerPassword"
+                              type="password"
+                              autoComplete="new-password"
+                              value={formData.ownerPassword}
+                              onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })}
+                              placeholder="Deixe em branco para não alterar"
+                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
+                            />
+                            <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
+                          </div>
+                          <div>
+                            <label htmlFor="editStaffPassword" className="block text-white/60 text-sm mb-2">Senha do funcionário (staff)</label>
+                            <input
+                              id="editStaffPassword"
+                              type="password"
+                              autoComplete="new-password"
+                              value={formData.staffPassword}
+                              onChange={(e) => setFormData({ ...formData, staffPassword: e.target.value })}
+                              placeholder="Deixe em branco para não alterar"
+                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
+                            />
+                            <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
+                          </div>
+                        </div>
+                      </section>
+                    </div>
+                  )}
                   <div className="flex gap-2 sm:gap-3 mt-5 sm:mt-6 flex-shrink-0 pt-4 border-t border-white/10">
                     <button
                       type="button"
-                      onClick={() => { editModal.close(); setEditingShop(null); setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS } }); }}
+                      onClick={() => { editModal.close(); setEditingShop(null); setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' }); }}
                       className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-medium cursor-pointer transition-all min-h-[44px] bg-white/10 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                     >
                       Cancelar
@@ -695,7 +750,7 @@ export function ShopManagementPage() {
               Editar Barbearia
             </h2>
             <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-              {(['info', 'appearance', 'content', 'settings'] as const).map((tab) => (
+              {(['info', 'appearance', 'content', 'settings', 'credentials'] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -708,6 +763,7 @@ export function ShopManagementPage() {
                   {tab === 'appearance' && 'Aparência'}
                   {tab === 'content' && 'Conteúdo'}
                   {tab === 'settings' && 'Configurações'}
+                  {tab === 'credentials' && 'Acesso'}
                 </button>
               ))}
             </div>
@@ -746,13 +802,49 @@ export function ShopManagementPage() {
                   <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Regras de atendimento</h4><ul className="space-y-4">{[{ key: 'requirePhone' as const, label: 'Exigir telefone do cliente' }, { key: 'requireBarberChoice' as const, label: 'Exigir escolha de barbeiro' }, { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' }, { key: 'deviceDeduplication' as const, label: 'Impedir múltiplos tickets por dispositivo' }, { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' }].map(({ key, label }) => (<li key={key}><label className="flex items-center gap-3 cursor-pointer group"><button type="button" role="switch" aria-checked={formData.settings[key]} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button><span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span></label></li>))}</ul></section>
                 </div>
               )}
+              {editTab === 'credentials' && (
+                <div className="space-y-6">
+                  <p className="text-white/60 text-sm">Senhas para login na barbearia. Deixe em branco para não alterar. Mínimo 6 caracteres.</p>
+                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <h4 className="text-white font-medium">Credenciais de acesso</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <label htmlFor="editOwnerPasswordMineiro" className="block text-white/60 text-sm mb-2">Senha do dono (owner)</label>
+                        <input
+                          id="editOwnerPasswordMineiro"
+                          type="password"
+                          autoComplete="new-password"
+                          value={formData.ownerPassword}
+                          onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })}
+                          placeholder="Deixe em branco para não alterar"
+                          className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
+                        />
+                        <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
+                      </div>
+                      <div>
+                        <label htmlFor="editStaffPasswordMineiro" className="block text-white/60 text-sm mb-2">Senha do funcionário (staff)</label>
+                        <input
+                          id="editStaffPasswordMineiro"
+                          type="password"
+                          autoComplete="new-password"
+                          value={formData.staffPassword}
+                          onChange={(e) => setFormData({ ...formData, staffPassword: e.target.value })}
+                          placeholder="Deixe em branco para não alterar"
+                          className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
+                        />
+                        <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              )}
               <div className="modal-actions flex gap-2 sm:gap-3 mt-5 sm:mt-6 flex-shrink-0 pt-4 border-t border-white/10">
                 <button
                   type="button"
                   onClick={() => {
                     editModal.close();
                     setEditingShop(null);
-                    setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS } });
+                    setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' });
                   }}
                   className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
