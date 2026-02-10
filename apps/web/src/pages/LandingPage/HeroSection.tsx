@@ -30,7 +30,7 @@ export function HeroSection() {
       <Heading level={1} className="mb-6">
         <span className="text-[var(--shop-accent,#D4AF37)]">{name}</span>
       </Heading>
-      <Text size="xl" variant="secondary" className={cn('mb-12', useSplitLayout ? '' : 'max-w-[500px]')}>
+      <Text size="xl" variant="secondary" className={cn('mb-12', useSplitLayout ? '' : 'max-w-[500px] mx-auto text-center')}>
         {hero.subtitle}
       </Text>
       <div className={useSplitLayout ? 'flex gap-4' : 'flex gap-4 justify-center'}>
@@ -72,7 +72,7 @@ export function HeroSection() {
             </Heading>
           </SlideIn>
           <SlideIn direction="up" delay={400}>
-            <Text size="lg" variant="secondary" className="mb-10 max-w-[600px] mx-auto">
+            <Text size="lg" variant="secondary" className="mb-10 max-w-[600px] mx-auto text-center">
               {hero.subtitle}
             </Text>
           </SlideIn>

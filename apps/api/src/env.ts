@@ -36,6 +36,8 @@ const envSchema = z.object({
   STORAGE_ACCESS_KEY_ID: z.string().optional(),
   STORAGE_SECRET_ACCESS_KEY: z.string().optional(),
   STORAGE_PUBLIC_BASE_URL: z.string().optional(), // Public base URL for accessing files (CDN or storage public URL)
+  /** Google Places API key for address lookup when creating/editing barbershops. Requires Places API enabled in Google Cloud. */
+  GOOGLE_PLACES_API_KEY: z.string().optional(),
 });
 
 let env: z.infer<typeof envSchema>;

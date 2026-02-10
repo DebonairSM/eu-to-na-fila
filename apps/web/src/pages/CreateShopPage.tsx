@@ -323,6 +323,9 @@ export function CreateShopPage() {
     pickThreeRandomPaletteIndices(data.style.preset)
   );
   const [savedPalettes, setSavedPalettes] = useState<Array<{ label: string; theme: ShopTheme }>>([]);
+  const [placesLookupAddress, setPlacesLookupAddress] = useState('');
+  const [placesLookupLoading, setPlacesLookupLoading] = useState(false);
+  const [placesLookupMessage, setPlacesLookupMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setPaletteIndices(pickThreeRandomPaletteIndices(data.style.preset));
@@ -404,6 +407,49 @@ export function CreateShopPage() {
     onChange(patch);
   };
 
+  const handlePlacesLookup = useCallback(async () => {
+    const address = placesLookupAddress.trim();
+    if (!address || !user?.companyId) return;
+    setPlacesLookupMessage(null);
+    setPlacesLookupLoading(true);
+    try {
+      const result = await api.lookupPlacesByAddress(user.companyId, address);
+      const loc = result.location;
+      const hasAny = loc.name ?? loc.address ?? loc.phone ?? loc.phoneHref ?? loc.hours ?? loc.mapQuery ?? loc.addressLink;
+      if (!hasAny) {
+        setPlacesLookupMessage('Nenhum resultado encontrado para este endereço.');
+        return;
+      }
+      const locationPatch: Partial<ShopFormData['homeContent']['location']> = {};
+      if (typeof loc.address === 'string' && loc.address) locationPatch.address = loc.address;
+      if (typeof loc.addressLink === 'string' && loc.addressLink) locationPatch.addressLink = loc.addressLink;
+      if (typeof loc.mapQuery === 'string' && loc.mapQuery) locationPatch.mapQuery = loc.mapQuery;
+      if (typeof loc.phone === 'string' && loc.phone) locationPatch.phone = loc.phone;
+      if (typeof loc.phoneHref === 'string' && loc.phoneHref) locationPatch.phoneHref = loc.phoneHref;
+      if (typeof loc.hours === 'string' && loc.hours) locationPatch.hours = loc.hours;
+      if (Object.keys(locationPatch).length > 0) {
+        onChange({
+          homeContent: {
+            ...data.homeContent,
+            location: { ...data.homeContent.location, ...locationPatch },
+          },
+        });
+      }
+      if (typeof loc.name === 'string' && loc.name && !data.name.trim()) {
+        handleNameChange(loc.name);
+      }
+      setPlacesLookupMessage('Dados preenchidos. Revise e ajuste se necessário.');
+    } catch (err: unknown) {
+      const statusCode = err && typeof err === 'object' && 'statusCode' in err ? (err as { statusCode: number }).statusCode : 0;
+      const msg = statusCode === 503
+        ? 'Busca por endereço não está configurada.'
+        : getErrorMessage(err, 'Não foi possível buscar o endereço. Tente novamente.');
+      setPlacesLookupMessage(msg);
+    } finally {
+      setPlacesLookupLoading(false);
+    }
+  }, [user?.companyId, placesLookupAddress, data.homeContent, data.name, onChange]);
+
   const tabs: { id: CreateTab; label: string }[] = [
     { id: 'info', label: 'Informações' },
     { id: 'appearance', label: 'Aparência' },
@@ -414,12 +460,12 @@ export function CreateShopPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
       <Nav />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-16">
         <div className="mb-6">
-          <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37] mb-2">Nova Barbearia</p>
+          <p className="text-sm uppercase tracking-[0.25em] text-white/60 mb-2">Nova Barbearia</p>
           <h1 className="text-2xl sm:text-3xl font-semibold text-white">Criar barbearia</h1>
         </div>
 
@@ -430,7 +476,7 @@ export function CreateShopPage() {
           </div>
         )}
 
-        <div className="bg-[#242424] border border-[rgba(212,175,55,0.3)] rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden">
+        <div className="bg-[#242424] border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden">
           <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
             {tabs.map(({ id, label }) => (
               <button
@@ -438,7 +484,7 @@ export function CreateShopPage() {
                 type="button"
                 onClick={() => setCreateTab(id)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                  createTab === id ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'text-white/60 hover:text-white'
+                  createTab === id ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white'
                 }`}
               >
                 {label}
@@ -498,7 +544,7 @@ export function CreateShopPage() {
                     return { ...prev, theme: next.theme, style: next.style };
                   })
                 }
-                variant="mineiro"
+                variant="root"
                 paletteIndices={paletteIndices}
                 onRerollPalettes={() => setPaletteIndices(pickThreeRandomPaletteIndices(data.style.preset))}
                 savedPalettes={savedPalettes}
@@ -539,6 +585,32 @@ export function CreateShopPage() {
                 <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
                   <h4 className="text-white font-medium">Localização</h4>
                   <div className="space-y-3">
+                    <div>
+                      <label className="block text-white/60 text-sm mb-1">Buscar dados pelo endereço</label>
+                      <div className="flex gap-2 flex-wrap">
+                        <input
+                          type="text"
+                          value={placesLookupAddress}
+                          onChange={(e) => setPlacesLookupAddress(e.target.value)}
+                          placeholder="Endereço ou nome do estabelecimento"
+                          className={FORM_INPUT + ' flex-1 min-w-[200px]'}
+                          disabled={placesLookupLoading}
+                        />
+                        <button
+                          type="button"
+                          onClick={handlePlacesLookup}
+                          disabled={placesLookupLoading || !placesLookupAddress.trim()}
+                          className="px-4 py-2.5 rounded-lg bg-[#D4AF37] text-[#0a0a0a] font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                        >
+                          {placesLookupLoading ? 'Buscando...' : 'Buscar'}
+                        </button>
+                      </div>
+                      {placesLookupMessage && (
+                        <p className={`text-sm mt-1 ${placesLookupMessage.startsWith('Dados preenchidos') ? 'text-green-400' : 'text-amber-400'}`}>
+                          {placesLookupMessage}
+                        </p>
+                      )}
+                    </div>
                     <div><label className="block text-white/60 text-sm mb-1">Endereço</label><textarea value={data.homeContent.location.address} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, address: e.target.value } } })} className={FORM_INPUT + ' min-h-[60px]'} /></div>
                     <div><label className="block text-white/60 text-sm mb-1">Horário</label><textarea value={data.homeContent.location.hours} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, hours: e.target.value } } })} className={FORM_INPUT} /></div>
                     <div><label className="block text-white/60 text-sm mb-1">Telefone</label><input type="text" value={data.homeContent.location.phone} onChange={(e) => onChange({ homeContent: { ...data.homeContent, location: { ...data.homeContent.location, phone: e.target.value } } })} className={FORM_INPUT} /></div>

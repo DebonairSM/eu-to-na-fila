@@ -20,6 +20,7 @@ import { createAdsApi } from './ads';
 import { createAnalyticsApi } from './analytics';
 
 export type { ShopTheme, HomeContent, ShopPublicConfig, ShopListItem, ShopAdminView } from '@eutonafila/shared';
+export type { PlacesLookupResult, PlacesLookupLocation } from './companies';
 export { ApiError };
 
 class ApiClient extends BaseApiClient {
@@ -77,6 +78,7 @@ class ApiClient extends BaseApiClient {
   createFullShop = this._companies.createFullShop;
   updateCompanyShop = this._companies.updateCompanyShop;
   deleteCompanyShop = this._companies.deleteCompanyShop;
+  lookupPlacesByAddress = this._companies.lookupPlacesByAddress;
 
   // --- Auth ---
   authenticate = this._auth.authenticate;

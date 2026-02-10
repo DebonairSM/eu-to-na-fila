@@ -107,6 +107,9 @@ export function ShopManagementPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [paletteIndices, setPaletteIndices] = useState<[number, number, number]>(() => pickThreeRandomPaletteIndices(formData.style.preset));
   const [savedPalettes, setSavedPalettes] = useState<Array<{ label: string; theme: ShopTheme }>>([]);
+  const [placesLookupAddress, setPlacesLookupAddress] = useState('');
+  const [placesLookupLoading, setPlacesLookupLoading] = useState(false);
+  const [placesLookupMessage, setPlacesLookupMessage] = useState<string | null>(null);
 
   // Re-roll suggested palettes when preset changes
   useEffect(() => {
@@ -203,6 +206,51 @@ export function ShopManagementPage() {
     }
   }, [shopToDelete, user?.companyId, deleteConfirmModal]);
 
+  const handlePlacesLookup = useCallback(async () => {
+    const address = placesLookupAddress.trim();
+    if (!address || !user?.companyId) return;
+    setPlacesLookupMessage(null);
+    setPlacesLookupLoading(true);
+    try {
+      const result = await api.lookupPlacesByAddress(user.companyId, address);
+      const loc = result.location;
+      const hasAny = loc.name ?? loc.address ?? loc.phone ?? loc.phoneHref ?? loc.hours ?? loc.mapQuery ?? loc.addressLink;
+      if (!hasAny) {
+        setPlacesLookupMessage('Nenhum resultado encontrado para este endereço.');
+        return;
+      }
+      setFormData((prev) => {
+        const updates: Partial<HomeContent['location']> = {};
+        if (typeof loc.address === 'string' && loc.address) updates.address = loc.address;
+        if (typeof loc.addressLink === 'string' && loc.addressLink) updates.addressLink = loc.addressLink;
+        if (typeof loc.mapQuery === 'string' && loc.mapQuery) updates.mapQuery = loc.mapQuery;
+        if (typeof loc.phone === 'string' && loc.phone) updates.phone = loc.phone;
+        if (typeof loc.phoneHref === 'string' && loc.phoneHref) updates.phoneHref = loc.phoneHref;
+        if (typeof loc.hours === 'string' && loc.hours) updates.hours = loc.hours;
+        const namePatch = typeof loc.name === 'string' && loc.name && !prev.name.trim()
+          ? { name: loc.name }
+          : {};
+        return {
+          ...prev,
+          ...namePatch,
+          homeContent: {
+            ...prev.homeContent,
+            location: { ...prev.homeContent.location, ...updates },
+          },
+        };
+      });
+      setPlacesLookupMessage('Dados preenchidos. Revise e ajuste se necessário.');
+    } catch (err: unknown) {
+      const statusCode = err && typeof err === 'object' && 'statusCode' in err ? (err as { statusCode: number }).statusCode : 0;
+      const msg = statusCode === 503
+        ? 'Busca por endereço não está configurada.'
+        : getErrorMessage(err, 'Não foi possível buscar o endereço. Tente novamente.');
+      setPlacesLookupMessage(msg);
+    } finally {
+      setPlacesLookupLoading(false);
+    }
+  }, [user?.companyId, placesLookupAddress]);
+
   const openEditModal = (shop: Shop) => {
     setEditingShop(shop);
     const nextStyle = mergeStyleForEdit(shop.theme ?? null);
@@ -221,6 +269,8 @@ export function ShopManagementPage() {
     });
     setPaletteIndices(pickThreeRandomPaletteIndices(nextStyle.preset));
     setEditTab('info');
+    setPlacesLookupAddress('');
+    setPlacesLookupMessage(null);
     editModal.open();
   };
 
@@ -483,6 +533,32 @@ export function ShopManagementPage() {
                       <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
                         <h4 className="text-white font-medium">Localização</h4>
                         <div className="space-y-3">
+                          <div>
+                            <label className="block text-white/60 text-sm mb-1">Buscar dados pelo endereço</label>
+                            <div className="flex gap-2 flex-wrap">
+                              <input
+                                type="text"
+                                value={placesLookupAddress}
+                                onChange={(e) => setPlacesLookupAddress(e.target.value)}
+                                placeholder="Endereço ou nome do estabelecimento"
+                                className="flex-1 min-w-[200px] w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
+                                disabled={placesLookupLoading}
+                              />
+                              <button
+                                type="button"
+                                onClick={handlePlacesLookup}
+                                disabled={placesLookupLoading || !placesLookupAddress.trim()}
+                                className="px-4 py-2.5 rounded-lg bg-[#D4AF37] text-[#0a0a0a] font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                              >
+                                {placesLookupLoading ? 'Buscando...' : 'Buscar'}
+                              </button>
+                            </div>
+                            {placesLookupMessage && (
+                              <p className={`text-sm mt-1 ${placesLookupMessage.startsWith('Dados preenchidos') ? 'text-green-400' : 'text-amber-400'}`}>
+                                {placesLookupMessage}
+                              </p>
+                            )}
+                          </div>
                           <div><label className="block text-white/60 text-sm mb-1">Endereço</label><textarea value={formData.homeContent.location.address} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, address: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[60px]" /></div>
                           <div><label className="block text-white/60 text-sm mb-1">Horário</label><textarea value={formData.homeContent.location.hours} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, hours: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                           <div><label className="block text-white/60 text-sm mb-1">Telefone</label><input type="text" value={formData.homeContent.location.phone} onChange={(e) => setFormData({ ...formData, homeContent: { ...formData.homeContent, location: { ...formData.homeContent.location, phone: e.target.value } } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
