@@ -144,13 +144,13 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * Get active ticket for a device.
    * Used to check if device already has an active ticket before attempting to create one.
-   * 
+   *
    * @route GET /api/shops/:slug/tickets/active
    * @param slug - Shop slug identifier
    * @query deviceId - Device identifier (required)
-   * @returns Active ticket if found (status 200), or 404 if not found
+   * @returns 200 with active ticket if found, or 200 with null if none (avoids 404 noise in console)
    * @throws {400} If deviceId is missing
-   * @throws {404} If shop not found or no active ticket for device
+   * @throws {404} If shop not found
    */
   fastify.get('/shops/:slug/tickets/active', async (request, reply) => {
     const paramsSchema = z.object({
@@ -166,14 +166,8 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    // Find active ticket for device
     const ticket = await ticketService.findActiveTicketByDevice(shop.id, deviceId);
-
-    if (!ticket) {
-      throw new NotFoundError('No active ticket found for this device');
-    }
-
-    return ticket;
+    return ticket ?? null;
   });
 
   /**
