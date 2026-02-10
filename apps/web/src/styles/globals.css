@@ -1,3 +1,12 @@
+/* Material Symbols Outlined - load from origin root so it works in dev and prod */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 100 700;
+  src: url('/fonts/MaterialSymbolsOutlined.ttf') format('truetype');
+  font-display: swap;
+}
+
 .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';
   font-weight: normal;

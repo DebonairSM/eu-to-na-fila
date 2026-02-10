@@ -1,17 +1,17 @@
 /**
  * Material Symbols font-face injection.
- *
- * We inject this at runtime to ensure the font URL respects Vite's base URL
- * (`import.meta.env.BASE_URL`) instead of hardcoding a specific shop path.
+ * In dev, Vite serves public from root so we use /fonts/... In production, we use BASE_URL
+ * so the font is found when the app is deployed under a path (e.g. /projects/mineiro/).
  */
 export function ensureMaterialSymbolsFontFace(): void {
   if (typeof document === 'undefined') return;
   const id = 'material-symbols-font-face';
   if (document.getElementById(id)) return;
 
-  const parts = window.location.pathname.split('/').filter(Boolean);
-  const scope = (parts[0] === 'projects' && parts[1]) ? `/projects/${parts[1]}/` : ((import.meta as any).env?.BASE_URL ?? '/');
-  const url = `${String(scope).endsWith('/') ? scope : `${scope}/`}fonts/MaterialSymbolsOutlined.ttf`;
+  const base = (import.meta as any).env?.BASE_URL ?? '/';
+  const fontPath = (import.meta as any).env?.DEV
+    ? '/fonts/MaterialSymbolsOutlined.ttf'
+    : `${base.endsWith('/') ? base : `${base}/`}fonts/MaterialSymbolsOutlined.ttf`;
 
   const style = document.createElement('style');
   style.id = id;
@@ -20,7 +20,7 @@ export function ensureMaterialSymbolsFontFace(): void {
   font-family: 'Material Symbols Outlined';
   font-style: normal;
   font-weight: 100 700;
-  src: url('${url}') format('truetype');
+  src: url('${fontPath}') format('truetype');
   font-display: swap;
 }
   `.trim();

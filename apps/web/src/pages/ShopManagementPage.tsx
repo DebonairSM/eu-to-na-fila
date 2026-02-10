@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
-import type { ShopTheme, HomeContent, ShopAdminView, ShopSettings } from '@eutonafila/shared';
-import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS } from '@eutonafila/shared';
+import type { ShopTheme, HomeContent, ShopAdminView, ShopSettings, ShopStyleConfig, StylePresetId, FontToken, DividerStyle } from '@eutonafila/shared';
+import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, shopStyleConfigSchema } from '@eutonafila/shared';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useModal } from '@/hooks/useModal';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
@@ -19,10 +19,22 @@ import { Container } from '@/components/design-system/Spacing/Container';
 function mergeTheme(stored: string | null): ShopTheme {
   if (!stored) return { ...DEFAULT_THEME };
   try {
-    const parsed = JSON.parse(stored) as Record<string, string>;
-    return { ...DEFAULT_THEME, ...parsed };
+    const parsed = JSON.parse(stored) as Record<string, unknown>;
+    const { style: _style, ...colors } = parsed;
+    return { ...DEFAULT_THEME, ...colors } as ShopTheme;
   } catch {
     return { ...DEFAULT_THEME };
+  }
+}
+
+function mergeStyleForEdit(stored: string | null): ShopStyleConfig {
+  if (!stored) return shopStyleConfigSchema.parse({});
+  try {
+    const parsed = JSON.parse(stored) as Record<string, unknown>;
+    const raw = parsed?.style ?? {};
+    return shopStyleConfigSchema.parse(raw);
+  } catch {
+    return shopStyleConfigSchema.parse({});
   }
 }
 
@@ -64,6 +76,7 @@ export function ShopManagementPage() {
   const [shopToDelete, setShopToDelete] = useState<number | null>(null);
   const [editingShop, setEditingShop] = useState<Shop | null>(null);
   const [editTab, setEditTab] = useState<'info' | 'appearance' | 'content' | 'settings' | 'credentials'>('info');
+  const defaultStyle = shopStyleConfigSchema.parse({});
   const [formData, setFormData] = useState<{
     name: string;
     slug: string;
@@ -71,6 +84,7 @@ export function ShopManagementPage() {
     path: string;
     apiBase: string;
     theme: ShopTheme;
+    style: ShopStyleConfig;
     homeContent: HomeContent;
     settings: ShopSettings;
     ownerPassword: string;
@@ -82,6 +96,7 @@ export function ShopManagementPage() {
     path: '',
     apiBase: '',
     theme: { ...DEFAULT_THEME },
+    style: defaultStyle,
     homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)),
     settings: { ...DEFAULT_SETTINGS },
     ownerPassword: '',
@@ -143,14 +158,14 @@ export function ShopManagementPage() {
         domain: formData.domain || null,
         path: formData.path || null,
         apiBase: formData.apiBase || null,
-        theme: formData.theme,
+        theme: { ...formData.theme, style: formData.style },
         homeContent: formData.homeContent,
         settings: formData.settings,
         ...(op && { ownerPassword: op }),
         ...(sp && { staffPassword: sp }),
       });
       setEditingShop(null);
-      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' });
+      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' });
       editModal.close();
       await loadShops();
     } catch (error) {
@@ -183,6 +198,7 @@ export function ShopManagementPage() {
       path: shop.path || '',
       apiBase: shop.apiBase || '',
       theme: mergeTheme(shop.theme ?? null),
+      style: mergeStyleForEdit(shop.theme ?? null),
       homeContent: mergeHomeContentForEdit(shop.homeContent ?? null),
       settings: mergeSettingsForEdit(shop.settings ?? null),
       ownerPassword: '',
@@ -403,7 +419,89 @@ export function ShopManagementPage() {
                   )}
                   {editTab === 'appearance' && (
                     <div className="space-y-6">
-                      <p className="text-white/60 text-sm">Cores do tema da página inicial.</p>
+                      <p className="text-white/60 text-sm">Estilo visual e cores da página inicial.</p>
+                      <div className="space-y-4">
+                        <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Estilo da página</h4>
+                        <p className="text-white/50 text-xs">Define fontes, cantos e ícones em todas as páginas da barbearia.</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {([
+                            { id: 'modern' as StylePresetId, label: 'Moderno' },
+                            { id: 'classical' as StylePresetId, label: 'Clássico' },
+                            { id: 'vintage' as StylePresetId, label: 'Vintage' },
+                            { id: 'luxury' as StylePresetId, label: 'Luxo' },
+                            { id: 'industrial' as StylePresetId, label: 'Industrial' },
+                            { id: 'minimal' as StylePresetId, label: 'Minimal' },
+                          ]).map(({ id, label }) => (
+                            <button
+                              key={id}
+                              type="button"
+                              onClick={() => setFormData((prev) => ({ ...prev, style: { ...prev.style, preset: id } }))}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                formData.style.preset === id ? 'bg-white/20 text-white' : 'bg-white/10 text-white/70 hover:text-white'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        <details className="mt-3">
+                          <summary className="text-white/60 text-sm cursor-pointer">Ajustes opcionais</summary>
+                          <div className="mt-3 space-y-3 pl-2 border-l border-white/10">
+                            <div>
+                              <label className="block text-white/50 text-xs mb-1">Fonte dos títulos</label>
+                              <select
+                                value={formData.style.headingFont ?? ''}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, headingFont: (e.target.value || undefined) as FontToken | undefined } }))}
+                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                              >
+                                <option value="">Padrão do estilo</option>
+                                {(['playfair_display', 'cormorant_garamond', 'lora', 'abril_fatface', 'oswald', 'dm_sans', 'inter', 'crimson_text', 'roboto_condensed', 'montserrat'] as FontToken[]).map((t) => (
+                                  <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-white/50 text-xs mb-1">Fonte do corpo</label>
+                              <select
+                                value={formData.style.bodyFont ?? ''}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, bodyFont: (e.target.value || undefined) as FontToken | undefined } }))}
+                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                              >
+                                <option value="">Padrão do estilo</option>
+                                {(['inter', 'lora', 'crimson_text', 'roboto_condensed', 'dm_sans', 'montserrat', 'playfair_display', 'cormorant_garamond', 'abril_fatface', 'oswald'] as FontToken[]).map((t) => (
+                                  <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-white/50 text-xs mb-1">Peso dos ícones (100–700)</label>
+                              <input
+                                type="number"
+                                min={100}
+                                max={700}
+                                value={formData.style.iconWeight ?? ''}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, iconWeight: e.target.value === '' ? undefined : parseInt(e.target.value, 10) } }))}
+                                placeholder="Padrão"
+                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-white/50 text-xs mb-1">Estilo do divisor</label>
+                              <select
+                                value={formData.style.dividerStyle ?? ''}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, dividerStyle: (e.target.value || undefined) as DividerStyle | undefined } }))}
+                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                              >
+                                <option value="">Padrão</option>
+                                <option value="line">Linha</option>
+                                <option value="ornament">Ornamento</option>
+                                <option value="dots">Pontos</option>
+                                <option value="none">Nenhum</option>
+                              </select>
+                            </div>
+                          </div>
+                        </details>
+                      </div>
                       <div className="space-y-4">
                         <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Principal e destaque</h4>
                         <div className="grid grid-cols-2 gap-4">
@@ -592,7 +690,7 @@ export function ShopManagementPage() {
                   <div className="flex gap-2 sm:gap-3 mt-5 sm:mt-6 flex-shrink-0 pt-4 border-t border-white/10">
                     <button
                       type="button"
-                      onClick={() => { editModal.close(); setEditingShop(null); setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' }); }}
+                      onClick={() => { editModal.close(); setEditingShop(null); setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' }); }}
                       className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-medium cursor-pointer transition-all min-h-[44px] bg-white/10 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                     >
                       Cancelar
@@ -780,7 +878,89 @@ export function ShopManagementPage() {
               )}
               {editTab === 'appearance' && (
                 <div className="space-y-6">
-                  <p className="text-white/60 text-sm">Cores do tema da página inicial.</p>
+                  <p className="text-white/60 text-sm">Estilo visual e cores da página inicial.</p>
+                  <div className="space-y-4">
+                    <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Estilo da página</h4>
+                    <p className="text-white/50 text-xs">Define fontes, cantos e ícones em todas as páginas da barbearia.</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {([
+                        { id: 'modern' as StylePresetId, label: 'Moderno' },
+                        { id: 'classical' as StylePresetId, label: 'Clássico' },
+                        { id: 'vintage' as StylePresetId, label: 'Vintage' },
+                        { id: 'luxury' as StylePresetId, label: 'Luxo' },
+                        { id: 'industrial' as StylePresetId, label: 'Industrial' },
+                        { id: 'minimal' as StylePresetId, label: 'Minimal' },
+                      ]).map(({ id, label }) => (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ ...prev, style: { ...prev.style, preset: id } }))}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            formData.style.preset === id ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'bg-white/10 text-white/70 hover:text-white'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <details className="mt-3">
+                      <summary className="text-white/60 text-sm cursor-pointer">Ajustes opcionais</summary>
+                      <div className="mt-3 space-y-3 pl-2 border-l border-white/10">
+                        <div>
+                          <label className="block text-white/50 text-xs mb-1">Fonte dos títulos</label>
+                          <select
+                            value={formData.style.headingFont ?? ''}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, headingFont: (e.target.value || undefined) as FontToken | undefined } }))}
+                            className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                          >
+                            <option value="">Padrão do estilo</option>
+                            {(['playfair_display', 'cormorant_garamond', 'lora', 'abril_fatface', 'oswald', 'dm_sans', 'inter', 'crimson_text', 'roboto_condensed', 'montserrat'] as FontToken[]).map((t) => (
+                              <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-white/50 text-xs mb-1">Fonte do corpo</label>
+                          <select
+                            value={formData.style.bodyFont ?? ''}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, bodyFont: (e.target.value || undefined) as FontToken | undefined } }))}
+                            className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                          >
+                            <option value="">Padrão do estilo</option>
+                            {(['inter', 'lora', 'crimson_text', 'roboto_condensed', 'dm_sans', 'montserrat', 'playfair_display', 'cormorant_garamond', 'abril_fatface', 'oswald'] as FontToken[]).map((t) => (
+                              <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-white/50 text-xs mb-1">Peso dos ícones (100–700)</label>
+                          <input
+                            type="number"
+                            min={100}
+                            max={700}
+                            value={formData.style.iconWeight ?? ''}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, iconWeight: e.target.value === '' ? undefined : parseInt(e.target.value, 10) } }))}
+                            placeholder="Padrão"
+                            className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-white/50 text-xs mb-1">Estilo do divisor</label>
+                          <select
+                            value={formData.style.dividerStyle ?? ''}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, dividerStyle: (e.target.value || undefined) as DividerStyle | undefined } }))}
+                            className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                          >
+                            <option value="">Padrão</option>
+                            <option value="line">Linha</option>
+                            <option value="ornament">Ornamento</option>
+                            <option value="dots">Pontos</option>
+                            <option value="none">Nenhum</option>
+                          </select>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
                   <div className="space-y-4"><h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Principal e destaque</h4><div className="grid grid-cols-2 gap-4">{(['primary', 'accent'] as const).map((key) => (<div key={key} className="flex items-center gap-3"><div className="w-10 h-10 shrink-0 rounded-lg border border-white/20" style={{ backgroundColor: formData.theme[key] || '#333' }} /><div className="min-w-0 flex-1"><label className="block text-white/60 text-xs mb-1">{key}</label><input type="text" value={formData.theme[key] ?? ''} onChange={(e) => setFormData({ ...formData, theme: { ...formData.theme, [key]: e.target.value } })} className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div></div>))}</div></div>
                   <div className="space-y-4"><h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Fundo e superfícies</h4><div className="grid grid-cols-2 gap-4">{(['background', 'surfacePrimary', 'surfaceSecondary'] as const).map((key) => (<div key={key} className="flex items-center gap-3"><div className="w-10 h-10 shrink-0 rounded-lg border border-white/20" style={{ backgroundColor: formData.theme[key] || '#333' }} /><div className="min-w-0 flex-1"><label className="block text-white/60 text-xs mb-1">{key}</label><input type="text" value={formData.theme[key] ?? ''} onChange={(e) => setFormData({ ...formData, theme: { ...formData.theme, [key]: e.target.value } })} className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div></div>))}</div></div>
                   <div className="space-y-4"><h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Navegação e texto</h4><div className="grid grid-cols-2 gap-4">{(['navBg', 'textPrimary', 'textSecondary', 'borderColor'] as const).map((key) => (<div key={key} className="flex items-center gap-3"><div className="w-10 h-10 shrink-0 rounded-lg border border-white/20" style={{ backgroundColor: formData.theme[key] || '#333' }} /><div className="min-w-0 flex-1"><label className="block text-white/60 text-xs mb-1">{key}</label><input type="text" value={formData.theme[key] ?? ''} onChange={(e) => setFormData({ ...formData, theme: { ...formData.theme, [key]: e.target.value } })} className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div></div>))}</div></div>
@@ -844,7 +1024,7 @@ export function ShopManagementPage() {
                   onClick={() => {
                     editModal.close();
                     setEditingShop(null);
-                    setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' });
+                    setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' });
                   }}
                   className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
