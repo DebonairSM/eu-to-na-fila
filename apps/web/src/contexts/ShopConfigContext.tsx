@@ -73,8 +73,8 @@ function applyTheme(theme: ShopTheme) {
 function applyStyle(style: ShopStyleResolved) {
   if (typeof document === 'undefined') return;
 
-  // Make preset available to CSS for bounded layout variants.
   document.documentElement.dataset.shopPreset = style.preset;
+  document.documentElement.dataset.shopLayout = style.layout;
 
   // Fonts: load and apply stacks.
   ensureGoogleFontsLoaded([style.headingFont, style.bodyFont]);

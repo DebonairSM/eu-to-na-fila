@@ -21,7 +21,7 @@ export function LoadingSpinner({
     <div className={cn('flex flex-col items-center justify-center gap-4', className)}>
       <div
         className={cn(
-          'border-2 border-muted border-t-primary rounded-full animate-spin',
+          'rounded-full animate-spin border-2 border-[var(--shop-border-color,rgba(255,255,255,0.08))] border-t-[var(--shop-accent,#D4AF37)]',
           sizeClasses[size]
         )}
         role="status"
@@ -29,7 +29,7 @@ export function LoadingSpinner({
       >
         <span className="sr-only">Loading...</span>
       </div>
-      {text && <p className="text-sm text-muted-foreground">{text}</p>}
+      {text && <p className="text-sm text-[var(--shop-text-secondary,rgba(255,255,255,0.7))]">{text}</p>}
     </div>
   );
 }

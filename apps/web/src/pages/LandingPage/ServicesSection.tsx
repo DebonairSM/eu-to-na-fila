@@ -32,7 +32,7 @@ export function ServicesSection() {
   return (
     <Section id="services" variant="secondary">
       <div className="text-center mb-12">
-        <Heading level={2} className={cn('section-title', 'section-title--preset')}>{sectionTitle}</Heading>
+        <Heading level={2} className={cn('section-title', 'section-title--layout')}>{sectionTitle}</Heading>
       </div>
 
       {activeServices.length === 0 ? (

@@ -1,9 +1,8 @@
 import { z } from 'zod';
 
 /**
- * Style presets control typography, shapes, borders, icon weight and some layout
- * choices across a shop. The preset is the primary selector; optional overrides
- * allow limited tweaks without letting arbitrary CSS through.
+ * Style presets control typography, shapes, borders, icon weight and color
+ * suggestions. Layout is chosen separately via layoutIdSchema.
  */
 export const stylePresetIdSchema = z.enum([
   'modern',
@@ -15,6 +14,23 @@ export const stylePresetIdSchema = z.enum([
 ]);
 
 export type StylePresetId = z.infer<typeof stylePresetIdSchema>;
+
+/**
+ * Layout controls hero structure, badge style, section title decoration and
+ * decorative elements. Independent from preset (which drives fonts and colors).
+ */
+export const layoutIdSchema = z.enum([
+  'centered',        // Single column, pill badge, no frame
+  'centered_frame',  // Single column with bordered frame, thin section rule
+  'split',           // Two columns with decorative icon block
+  'minimal',         // Single column, minimal badge, text-only CTAs
+  'luxury',          // Single column, gradient overlay, optional CTA shimmer
+  'bold',            // Strong typography, thick section underlines
+  'classic',         // Label-style badge, ornament feel, thin section rule
+  'editorial',       // Generous whitespace, thin rules, minimal decoration
+]);
+
+export type LayoutId = z.infer<typeof layoutIdSchema>;
 
 /**
  * Font tokens. We intentionally use tokens (not raw font-family strings) so the
@@ -44,6 +60,7 @@ export type DividerStyle = z.infer<typeof dividerStyleSchema>;
 
 export interface ShopStyleResolved {
   preset: StylePresetId;
+  layout: LayoutId;
   headingFont: FontToken;
   bodyFont: FontToken;
   headingWeight: number;
@@ -70,6 +87,7 @@ export interface ShopStyleResolved {
  */
 export const shopStyleConfigSchema = z.object({
   preset: stylePresetIdSchema.default('modern'),
+  layout: layoutIdSchema.optional(),
   headingFont: fontTokenSchema.optional(),
   bodyFont: fontTokenSchema.optional(),
   headingWeight: z.number().int().min(300).max(900).optional(),
@@ -84,6 +102,7 @@ export type ShopStyleConfig = z.infer<typeof shopStyleConfigSchema>;
 /** Partial input for PATCH (all optional, used as `theme.style`). */
 export const shopStyleInputSchema = z.object({
   preset: stylePresetIdSchema.optional(),
+  layout: layoutIdSchema.optional(),
   headingFont: fontTokenSchema.optional(),
   bodyFont: fontTokenSchema.optional(),
   headingWeight: z.number().int().min(300).max(900).optional(),
@@ -93,7 +112,7 @@ export const shopStyleInputSchema = z.object({
   dividerStyle: dividerStyleSchema.optional(),
 }).optional();
 
-export const DEFAULT_STYLE_PRESETS: Record<StylePresetId, Omit<ShopStyleResolved, 'preset'>> = {
+export const DEFAULT_STYLE_PRESETS: Record<StylePresetId, Omit<ShopStyleResolved, 'preset' | 'layout'>> = {
   modern: {
     headingFont: 'playfair_display',
     bodyFont: 'inter',
@@ -170,9 +189,11 @@ export const DEFAULT_STYLE_PRESETS: Record<StylePresetId, Omit<ShopStyleResolved
 
 export function resolveShopStyle(config: ShopStyleConfig): ShopStyleResolved {
   const preset = config.preset ?? 'modern';
+  const layout = config.layout ?? 'centered';
   const base = DEFAULT_STYLE_PRESETS[preset];
   return {
     preset,
+    layout,
     headingFont: config.headingFont ?? base.headingFont,
     bodyFont: config.bodyFont ?? base.bodyFont,
     headingWeight: config.headingWeight ?? base.headingWeight,

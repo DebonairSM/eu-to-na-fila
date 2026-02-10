@@ -1,27 +1,39 @@
 import { cn } from '@/lib/utils';
 import { Heading, Text, Section, Grid } from '@/components/design-system';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { getLayoutBehavior } from '@/lib/layouts';
 
 const fallbackAbout = { sectionTitle: 'Sobre', imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80', imageAlt: 'Interior da barbearia', features: [] as Array<{ icon: string; text: string }> };
+
+function imageFrameClassFor(frame: 'none' | 'border' | 'double' | 'shadow' | 'sharp'): string {
+  const base = 'overflow-hidden';
+  switch (frame) {
+    case 'border':
+      return cn(base, 'rounded-lg border-2 border-[var(--shop-border-color)]');
+    case 'double':
+      return cn(base, 'rounded border-[length:var(--shop-border-width,2px)] border-double border-[var(--shop-border-color)]');
+    case 'shadow':
+      return cn(base, 'rounded-2xl shadow-xl');
+    case 'sharp':
+      return cn(base, 'rounded-none border-2 border-[var(--shop-border-color)]');
+    default:
+      return base;
+  }
+}
 
 export function AboutSection() {
   const { config } = useShopConfig();
   const { style } = config;
-  const preset = style?.preset ?? 'modern';
+  const layout = style?.layout ?? 'centered';
+  const behavior = getLayoutBehavior(layout);
   const { sectionTitle, imageUrl, imageAlt, features } = config.homeContent?.about ?? fallbackAbout;
-  const imageFrameClass = cn(
-    'overflow-hidden',
-    preset === 'classical' && 'rounded-lg border-2 border-[var(--shop-border-color)]',
-    preset === 'vintage' && 'rounded border-[length:var(--shop-border-width,2px)] border-double border-[var(--shop-border-color)]',
-    preset === 'luxury' && 'rounded-2xl shadow-xl',
-    preset === 'industrial' && 'rounded-none border-2 border-[var(--shop-border-color)]'
-  );
+  const imageFrameClass = imageFrameClassFor(behavior.aboutImageFrame);
 
   return (
     <Section id="about" variant="primary">
       <div className="lg:hidden space-y-8">
         <div>
-          <Heading level={2} className={cn('section-title', 'section-title--preset', 'mb-6')}>
+          <Heading level={2} className={cn('section-title', 'section-title--layout', 'mb-6')}>
             {sectionTitle}
           </Heading>
           <Grid cols={{ mobile: 2 }} gap="md" className="mb-8">
@@ -50,7 +62,7 @@ export function AboutSection() {
 
       <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-center">
         <div>
-          <Heading level={2} className={cn('section-title', 'section-title--preset', 'mb-6')}>
+          <Heading level={2} className={cn('section-title', 'section-title--layout', 'mb-6')}>
             {sectionTitle}
           </Heading>
           <Grid cols={{ mobile: 2 }} gap="lg">

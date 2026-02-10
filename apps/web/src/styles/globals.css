@@ -568,17 +568,17 @@
   font-size: 0.75rem;
 }
 
-/* Luxury hero: soft gradient overlay and optional CTA shimmer */
-[data-shop-preset="luxury"] .hero-gradient-overlay {
+/* Layout: luxury – soft gradient overlay and optional CTA shimmer */
+[data-shop-layout="luxury"] .hero-gradient-overlay {
   background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.15) 50%, transparent 100%);
   opacity: 0.6;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  [data-shop-preset="luxury"] .hero .cta-join {
+  [data-shop-layout="luxury"] .hero .cta-join {
     position: relative;
   }
-  [data-shop-preset="luxury"] .hero .cta-join::after {
+  [data-shop-layout="luxury"] .hero .cta-join::after {
     content: '';
     position: absolute;
     inset: -1px;
@@ -587,7 +587,7 @@
     opacity: 0;
     pointer-events: none;
   }
-  [data-shop-preset="luxury"] .hero .cta-join:hover::after {
+  [data-shop-layout="luxury"] .hero .cta-join:hover::after {
     animation: luxury-shimmer 1.5s ease-out;
   }
 }
@@ -647,8 +647,11 @@
   color: var(--shop-border-color, rgba(255,255,255,0.3));
 }
 
-/* Preset-specific section title rules */
-[data-shop-preset="classical"] .section-title.section-title--preset::after {
+/* Layout-specific section title rules */
+[data-shop-layout="centered_frame"] .section-title.section-title--layout::after,
+[data-shop-layout="luxury"] .section-title.section-title--layout::after,
+[data-shop-layout="classic"] .section-title.section-title--layout::after,
+[data-shop-layout="editorial"] .section-title.section-title--layout::after {
   content: '';
   display: block;
   width: 48px;
@@ -660,13 +663,13 @@
   opacity: 0.8;
 }
 
-[data-shop-preset="industrial"] .section-title.section-title--preset {
+[data-shop-layout="bold"] .section-title.section-title--layout {
   border-bottom: 3px solid var(--shop-border-color, rgba(255,255,255,0.2));
   padding-bottom: 8px;
   display: inline-block;
 }
 
-[data-shop-preset="minimal"] .section-title.section-title--preset::after {
+[data-shop-layout="minimal"] .section-title.section-title--layout::after {
   display: none;
 }
 

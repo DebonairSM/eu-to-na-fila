@@ -63,7 +63,7 @@ export function LocationSection() {
   return (
     <Section id="location" variant="secondary">
       <div className="text-center mb-12">
-        <Heading level={2} className={cn('section-title', 'section-title--preset')}>{loc.sectionTitle}</Heading>
+        <Heading level={2} className={cn('section-title', 'section-title--layout')}>{loc.sectionTitle}</Heading>
       </div>
 
       <div className="lg:hidden space-y-6">

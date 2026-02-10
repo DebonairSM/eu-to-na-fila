@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
-import type { ShopTheme, HomeContent, ShopAdminView, ShopSettings, ShopStyleConfig, StylePresetId } from '@eutonafila/shared';
+import type { ShopTheme, HomeContent, ShopAdminView, ShopSettings, ShopStyleConfig } from '@eutonafila/shared';
 import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, shopStyleConfigSchema } from '@eutonafila/shared';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useModal } from '@/hooks/useModal';
@@ -106,7 +106,7 @@ export function ShopManagementPage() {
   });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [paletteIndices, setPaletteIndices] = useState<[number, number, number]>(() => pickThreeRandomPaletteIndices(formData.style.preset));
-  const [savedPalettesByPreset, setSavedPalettesByPreset] = useState<Partial<Record<StylePresetId, Array<{ label: string; theme: ShopTheme }>>>>({});
+  const [savedPalettes, setSavedPalettes] = useState<Array<{ label: string; theme: ShopTheme }>>([]);
 
   // Re-roll suggested palettes when preset changes
   useEffect(() => {
@@ -440,12 +440,9 @@ export function ShopManagementPage() {
                       variant="root"
                       paletteIndices={paletteIndices}
                       onRerollPalettes={() => setPaletteIndices(pickThreeRandomPaletteIndices(formData.style.preset))}
-                      savedPalettes={savedPalettesByPreset[formData.style.preset] ?? []}
+                      savedPalettes={savedPalettes}
                       onSaveCurrentPalette={(label) =>
-                        setSavedPalettesByPreset((prev) => ({
-                          ...prev,
-                          [formData.style.preset]: [...(prev[formData.style.preset] ?? []), { label, theme: { ...formData.theme } }],
-                        }))
+                        setSavedPalettes((prev) => [...prev, { label, theme: { ...formData.theme } }])
                       }
                     />
                   )}
@@ -772,12 +769,9 @@ export function ShopManagementPage() {
                   variant="mineiro"
                   paletteIndices={paletteIndices}
                   onRerollPalettes={() => setPaletteIndices(pickThreeRandomPaletteIndices(formData.style.preset))}
-                  savedPalettes={savedPalettesByPreset[formData.style.preset] ?? []}
+                  savedPalettes={savedPalettes}
                   onSaveCurrentPalette={(label) =>
-                    setSavedPalettesByPreset((prev) => ({
-                      ...prev,
-                      [formData.style.preset]: [...(prev[formData.style.preset] ?? []), { label, theme: { ...formData.theme } }],
-                    }))
+                    setSavedPalettes((prev) => [...prev, { label, theme: { ...formData.theme } }])
                   }
                 />
               )}

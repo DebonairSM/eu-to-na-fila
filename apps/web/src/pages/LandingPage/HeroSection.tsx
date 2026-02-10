@@ -1,27 +1,28 @@
 import { Link } from 'react-router-dom';
 import { Button, Heading, Text, FadeIn, SlideIn, Container } from '@/components/design-system';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { getLayoutBehavior } from '@/lib/layouts';
 import { cn } from '@/lib/utils';
 
 export function HeroSection() {
   const { config } = useShopConfig();
   const { name, homeContent, style } = config;
-  const preset = style.preset ?? 'modern';
+  const layout = style.layout ?? 'centered';
+  const behavior = getLayoutBehavior(layout);
   const hero = homeContent?.hero ?? { badge: '', subtitle: '', ctaJoin: 'Entrar na Fila', ctaLocation: 'Como Chegar' };
-  const useSplitLayout = preset === 'industrial' || preset === 'vintage';
-  const isClassical = preset === 'classical';
-  const isMinimal = preset === 'minimal';
-  const isLuxury = preset === 'luxury';
-  const showDecorativeBlock = useSplitLayout;
+  const useSplitLayout = behavior.heroSplit;
+  const showDecorativeBlock = behavior.showDecorativeBlock;
   const badgeClass = cn(
     'hero-badge mb-6',
-    preset === 'vintage' && 'hero-badge--label',
-    isMinimal && 'hero-badge--minimal'
+    behavior.badgeStyle === 'label' && 'hero-badge--label',
+    behavior.badgeStyle === 'minimal' && 'hero-badge--minimal'
   );
+  const showBadge = (behavior.badgeStyle !== 'minimal' || hero.badge);
+  const ctaTextOnly = behavior.ctaTextOnly;
 
   const innerContent = (
     <>
-      {(!isMinimal || hero.badge) && (
+      {showBadge && (
         <div className={badgeClass}>
           {hero.badge}
         </div>
@@ -34,14 +35,14 @@ export function HeroSection() {
       </Text>
       <div className={useSplitLayout ? 'flex gap-4' : 'flex gap-4 justify-center'}>
         <Link to="/join">
-          <Button size="lg" className={isMinimal ? 'cta-join' : ''}>
-            {!isMinimal && <span className="material-symbols-outlined text-xl">person_add</span>}
+          <Button size="lg" className={behavior.heroOverlay ? 'cta-join' : ''}>
+            {!ctaTextOnly && <span className="material-symbols-outlined text-xl">person_add</span>}
             {hero.ctaJoin}
           </Button>
         </Link>
         <a href="#location">
-          <Button variant="outline" size="lg" className={isMinimal ? 'cta-location' : ''}>
-            {!isMinimal && <span className="material-symbols-outlined text-xl">location_on</span>}
+          <Button variant="outline" size="lg" className={behavior.heroOverlay ? 'cta-location' : ''}>
+            {!ctaTextOnly && <span className="material-symbols-outlined text-xl">location_on</span>}
             {hero.ctaLocation}
           </Button>
         </a>
@@ -55,12 +56,12 @@ export function HeroSection() {
       className="hero relative min-h-screen flex items-start justify-center pt-16 lg:items-center lg:pt-0 overflow-hidden"
       style={{ backgroundColor: 'var(--shop-background, #0a0a0a)' }}
     >
-      {isLuxury && <div className="hero-gradient-overlay absolute inset-0 pointer-events-none z-[1]" aria-hidden />}
+      {behavior.heroOverlay && <div className="hero-gradient-overlay absolute inset-0 pointer-events-none z-[1]" aria-hidden />}
       <Container size="2xl" className="relative z-10 w-full">
         <div className="lg:hidden text-center">
           <FadeIn delay={0}>
-            {(!isMinimal || hero.badge) && (
-              <div className={cn('hero-badge', preset === 'vintage' && 'hero-badge--label', isMinimal && 'hero-badge--minimal')}>
+            {showBadge && (
+              <div className={badgeClass}>
                 {hero.badge}
               </div>
             )}
@@ -79,13 +80,13 @@ export function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/join">
                 <Button size="lg" fullWidth className="sm:w-auto">
-                  {!isMinimal && <span className="material-symbols-outlined text-xl">person_add</span>}
+                  {!ctaTextOnly && <span className="material-symbols-outlined text-xl">person_add</span>}
                   {hero.ctaJoin}
                 </Button>
               </Link>
               <a href="#location">
                 <Button variant="outline" size="lg" fullWidth className="sm:w-auto">
-                  {!isMinimal && <span className="material-symbols-outlined text-xl">location_on</span>}
+                  {!ctaTextOnly && <span className="material-symbols-outlined text-xl">location_on</span>}
                   {hero.ctaLocation}
                 </Button>
               </a>
@@ -104,7 +105,7 @@ export function HeroSection() {
               className={cn(
                 useSplitLayout && 'max-w-[560px]',
                 !useSplitLayout && 'text-center mx-auto max-w-[760px]',
-                isClassical && 'hero-frame max-w-3xl mx-auto border border-[var(--shop-border-color,rgba(255,255,255,0.12))] rounded-lg px-8 py-10'
+                behavior.heroFrame && 'hero-frame max-w-3xl mx-auto border border-[var(--shop-border-color,rgba(255,255,255,0.12))] rounded-lg px-8 py-10'
               )}
             >
               {innerContent}

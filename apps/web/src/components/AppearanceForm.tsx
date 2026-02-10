@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { HexColorPicker } from 'react-colorful';
-import type { ShopTheme, ShopStyleConfig, StylePresetId, FontToken, DividerStyle } from '@eutonafila/shared';
+import type { ShopTheme, ShopStyleConfig, StylePresetId, LayoutId, FontToken, DividerStyle } from '@eutonafila/shared';
 import { PRESET_PALETTES, type PresetPalette } from '@/lib/presetPalettes';
+import { LAYOUT_LABELS, PRESET_RECOMMENDED_LAYOUTS, isLayoutRecommendedForPreset } from '@/lib/layouts';
 import { cn } from '@/lib/utils';
 
 const PRESET_LABELS: Record<StylePresetId, string> = {
@@ -40,9 +41,9 @@ export interface AppearanceFormProps {
   variant: 'root' | 'mineiro';
   paletteIndices: [number, number, number];
   onRerollPalettes: () => void;
-  /** Saved palettes for the current preset (user-saved "color presets"). */
+  /** All user-saved color palettes (shown regardless of current preset). */
   savedPalettes?: SavedPalette[];
-  /** Save current theme as a named palette for the current preset. */
+  /** Save current theme as a named palette. */
   onSaveCurrentPalette?: (label: string) => void;
 }
 
@@ -169,6 +170,36 @@ export function AppearanceForm({
             </div>
           </div>
         </details>
+      </div>
+
+      {/* Layout (hero structure, section decoration, independent from preset) */}
+      <div className="space-y-4">
+        <h4 className="text-white/80 text-sm font-medium border-b border-white/10 pb-2">Layout da página</h4>
+        <p className="text-white/50 text-xs">Estrutura do hero, moldura e decoração das seções. Escolha independente do estilo.</p>
+        <p className="text-white/50 text-xs">
+          Recomendados para {presetName}:{' '}
+          {PRESET_RECOMMENDED_LAYOUTS[preset].map((id) => LAYOUT_LABELS[id]).join(', ')}.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {(Object.entries(LAYOUT_LABELS) as [LayoutId, string][]).map(([id, label]) => {
+            const recommended = isLayoutRecommendedForPreset(preset, id);
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, style: { ...prev.style, layout: id } }))}
+                className={cn(
+                  'px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left flex flex-col items-start gap-0.5',
+                  (formData.style.layout ?? 'centered') === id ? activeClass : inactiveClass,
+                  recommended && 'ring-1 ring-white/30'
+                )}
+              >
+                <span>{label}</span>
+                {recommended && <span className="text-[10px] uppercase tracking-wider text-white/50">Recomendado</span>}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Color suggestions for current preset */}
