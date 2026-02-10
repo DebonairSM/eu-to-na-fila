@@ -36,8 +36,12 @@ const envSchema = z.object({
   STORAGE_ACCESS_KEY_ID: z.string().optional(),
   STORAGE_SECRET_ACCESS_KEY: z.string().optional(),
   STORAGE_PUBLIC_BASE_URL: z.string().optional(), // Public base URL for accessing files (CDN or storage public URL)
-  /** Google Places API key for address lookup when creating/editing barbershops. Requires Places API enabled in Google Cloud. */
+  /** Google Places API key for address lookup. If set, Google Places is used; otherwise Nominatim (OpenStreetMap) is used for free. */
   GOOGLE_PLACES_API_KEY: z.string().optional(),
+  /** Nominatim base URL (e.g. self-hosted). Defaults to https://nominatim.openstreetmap.org. Only used when GOOGLE_PLACES_API_KEY is not set. */
+  NOMINATIM_BASE_URL: z.string().url().optional(),
+  /** User-Agent for Nominatim requests (required by usage policy). Defaults to app identifier. */
+  NOMINATIM_USER_AGENT: z.string().optional(),
 });
 
 let env: z.infer<typeof envSchema>;

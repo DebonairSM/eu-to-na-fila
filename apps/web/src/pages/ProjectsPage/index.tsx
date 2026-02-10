@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { LOGO_URL } from '@/lib/logo';
@@ -11,17 +11,30 @@ const DEFAULT_DESCRIPTION =
 const DEFAULT_TECHNOLOGIES = ['React', 'TypeScript', 'Fastify', 'PostgreSQL', 'WebSockets', 'PWA'];
 
 export function ProjectsPage() {
+  const location = useLocation();
   const [projects, setProjects] = useState<Array<{ id: number; slug: string; name: string; path: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
     api
       .getProjects()
-      .then(setProjects)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar projetos'))
-      .finally(() => setLoading(false));
-  }, []);
+      .then((data) => {
+        if (!cancelled) setProjects(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Erro ao carregar projetos');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [location.pathname]);
 
   const projectCards = projects.map((p) => ({
     id: String(p.id),

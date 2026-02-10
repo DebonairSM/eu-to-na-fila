@@ -339,6 +339,8 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         throw new NotFoundError('Shop not found');
       }
 
+      const projectId = shop.projectId;
+
       await db.transaction(async (tx) => {
         await tx.delete(schema.auditLog).where(eq(schema.auditLog.shopId, shopId));
         await tx.delete(schema.tickets).where(eq(schema.tickets.shopId, shopId));
@@ -346,6 +348,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         await tx.delete(schema.barbers).where(eq(schema.barbers.shopId, shopId));
         await tx.delete(schema.companyAds).where(eq(schema.companyAds.shopId, shopId));
         await tx.delete(schema.shops).where(eq(schema.shops.id, shopId));
+        await tx.delete(schema.projects).where(eq(schema.projects.id, projectId));
       });
 
       return reply.status(200).send({
