@@ -222,15 +222,16 @@ export function Navigation() {
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/shop/login"
-                  className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 [&:hover]:[color:var(--shop-accent)]"
+                <button
+                  type="button"
+                  onClick={() => navigate('/shop/login')}
+                  className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center w-full text-left bg-transparent border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 [&:hover]:[color:var(--shop-accent)]"
                   style={{
                     color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
                   }}
                 >
                   {navLabels.linkBarbers}
-                </Link>
+                </button>
               </li>
             </>
           )}
@@ -386,17 +387,18 @@ export function Navigation() {
                       <span className="material-symbols-outlined text-lg" aria-hidden>queue</span>
                       {navLabels.ctaJoin}
                     </Link>
-                    <Link
-                      to="/shop/login"
-                      className="block text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)]"
-                      style={{ color: 'rgba(255,255,255,0.85)' }}
+                    <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsMobileMenuOpen(false);
+                        navigate('/shop/login');
                       }}
+                      className="block w-full text-left text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)] bg-transparent border-0 cursor-pointer"
+                      style={{ color: 'rgba(255,255,255,0.85)' }}
                     >
                       {navLabels.linkBarbers}
-                    </Link>
+                    </button>
                   </>
                 )}
                 <div className="relative z-10 mt-4 pt-4 border-t border-[rgba(255,255,255,0.1)]">
