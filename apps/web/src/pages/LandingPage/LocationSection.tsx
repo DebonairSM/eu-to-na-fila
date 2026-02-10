@@ -1,51 +1,52 @@
 import { cn } from '@/lib/utils';
 import { Heading, Text, Section, Stack } from '@/components/design-system';
 import { useShopConfig, useShopHomeContent } from '@/contexts/ShopConfigContext';
-
-const fallbackLocation = {
-  sectionTitle: 'Localização',
-  labelAddress: 'Endereço',
-  labelHours: 'Horário de Funcionamento',
-  labelPhone: 'Telefone',
-  labelLanguages: 'Idiomas',
-  linkMaps: 'Ver no Google Maps',
-  address: '',
-  addressLink: '#',
-  hours: '',
-  phone: '',
-  phoneHref: '#',
-  languages: '',
-  mapQuery: '',
-};
+import { useLocale } from '@/contexts/LocaleContext';
 
 export function LocationSection() {
+  const { t } = useLocale();
   const { config } = useShopConfig();
   const homeContent = useShopHomeContent();
+  const fallbackLocation = {
+    sectionTitle: t('management.locationSection'),
+    labelAddress: t('management.address'),
+    labelHours: t('management.hours'),
+    labelPhone: t('management.phone'),
+    labelLanguages: t('management.languages'),
+    linkMaps: t('management.viewOnGoogleMaps'),
+    address: '',
+    addressLink: '#',
+    hours: '',
+    phone: '',
+    phoneHref: '#',
+    languages: '',
+    mapQuery: '',
+  };
   const loc = homeContent?.location ?? fallbackLocation;
   const accentClass = 'text-[var(--shop-accent,#D4AF37)] hover:underline';
 
   const locationItems = [
     {
       icon: 'location_on' as const,
-      title: loc.labelAddress ?? 'Endereço',
+      title: loc.labelAddress ?? t('management.address'),
       content: (
         <>
           <span className="whitespace-pre-line">{loc.address}</span>
           <br />
           <a href={loc.addressLink} target="_blank" rel="noopener noreferrer" className={accentClass}>
-            {loc.linkMaps ?? 'Ver no Google Maps'}
+            {loc.linkMaps ?? t('management.viewOnGoogleMaps')}
           </a>
         </>
       ),
     },
     {
       icon: 'schedule' as const,
-      title: loc.labelHours ?? 'Horário de Funcionamento',
+      title: loc.labelHours ?? t('management.hours'),
       content: <span className="whitespace-pre-line">{loc.hours}</span>,
     },
     {
       icon: 'phone' as const,
-      title: loc.labelPhone ?? 'Telefone',
+      title: loc.labelPhone ?? t('management.phone'),
       content: (
         <a href={loc.phoneHref} className={accentClass}>
           {loc.phone}
@@ -54,7 +55,7 @@ export function LocationSection() {
     },
     {
       icon: 'language' as const,
-      title: loc.labelLanguages ?? 'Idiomas',
+      title: loc.labelLanguages ?? t('management.languages'),
       content: loc.languages,
     },
   ];
@@ -96,7 +97,7 @@ export function LocationSection() {
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             className="grayscale hover:grayscale-0 transition-all"
-            title={`Localização ${config.name}`}
+            title={`${t('shop.locationTitle')} ${config.name}`}
           />
         </div>
       </div>
@@ -129,7 +130,7 @@ export function LocationSection() {
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             className="grayscale hover:grayscale-0 transition-all"
-            title={`Localização ${config.name}`}
+            title={`${t('shop.locationTitle')} ${config.name}`}
           />
         </div>
       </div>

@@ -1,16 +1,23 @@
 import { Link } from 'react-router-dom';
 import { Button, Heading, Text, FadeIn, SlideIn, Container } from '@/components/design-system';
 import { useShopConfig, useShopHomeContent } from '@/contexts/ShopConfigContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { getLayoutBehavior } from '@/lib/layouts';
 import { cn } from '@/lib/utils';
 
 export function HeroSection() {
+  const { t } = useLocale();
   const { config } = useShopConfig();
   const homeContent = useShopHomeContent();
   const { name, style } = config;
   const layout = style.layout ?? 'centered';
   const behavior = getLayoutBehavior(layout);
-  const hero = homeContent?.hero ?? { badge: '', subtitle: '', ctaJoin: 'Entrar na Fila', ctaLocation: 'Como Chegar' };
+  const hero = homeContent?.hero ?? {
+    badge: '',
+    subtitle: '',
+    ctaJoin: t('shop.heroCtaJoinDefault'),
+    ctaLocation: t('shop.heroCtaLocationDefault'),
+  };
   const useSplitLayout = behavior.heroSplit;
   const showDecorativeBlock = behavior.showDecorativeBlock;
   const badgeClass = cn(

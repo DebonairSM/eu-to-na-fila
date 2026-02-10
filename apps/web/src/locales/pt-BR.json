@@ -36,6 +36,7 @@
     "chooseLanguage": "Escolher idioma"
   },
   "join": {
+    "joinTitle": "Entrar na Fila",
     "serviceLabel": "Serviço *",
     "nameLabel": "Nome *",
     "namePlaceholder": "Nome e inicial",
@@ -200,6 +201,22 @@
   "services": {
     "emptyText": "Nenhum serviço cadastrado."
   },
+  "shops": {
+    "title": "Barbearias",
+    "subtitle": "Todas as barbearias do sistema",
+    "loading": "Carregando barbearias...",
+    "noShops": "Nenhuma barbearia encontrada",
+    "slugLabel": "Slug",
+    "domainLabel": "Domínio",
+    "loadError": "Falha ao carregar barbearias"
+  },
+  "shop": {
+    "heroCtaJoinDefault": "Entrar na Fila",
+    "heroCtaLocationDefault": "Como Chegar",
+    "aboutSectionTitleDefault": "Sobre",
+    "aboutImageAltDefault": "Interior da barbearia",
+    "locationTitle": "Localização"
+  },
   "analytics": {
     "periodAll": "Todo o período",
     "days": "dias"
@@ -272,6 +289,7 @@
     "domainPlaceholder": "exemplo.com",
     "pathPlaceholder": "/caminho",
     "apiBasePlaceholder": "https://api.exemplo.com",
+    "viewOnGoogleMaps": "Ver no Google Maps",
     "hero": "Hero",
     "queueSection": "Fila",
     "maxQueueSize": "Tamanho máximo da fila",

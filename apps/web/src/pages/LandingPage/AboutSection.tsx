@@ -1,9 +1,10 @@
 import { cn } from '@/lib/utils';
 import { Heading, Text, Section, Grid } from '@/components/design-system';
 import { useShopConfig, useShopHomeContent } from '@/contexts/ShopConfigContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { getLayoutBehavior } from '@/lib/layouts';
 
-const fallbackAbout = { sectionTitle: 'Sobre', imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80', imageAlt: 'Interior da barbearia', features: [] as Array<{ icon: string; text: string }> };
+const DEFAULT_ABOUT_IMAGE = 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=1000&fit=crop&q=80';
 
 function imageFrameClassFor(frame: 'none' | 'border' | 'double' | 'shadow' | 'sharp'): string {
   const base = 'overflow-hidden';
@@ -22,11 +23,18 @@ function imageFrameClassFor(frame: 'none' | 'border' | 'double' | 'shadow' | 'sh
 }
 
 export function AboutSection() {
+  const { t } = useLocale();
   const { config } = useShopConfig();
   const homeContent = useShopHomeContent();
   const { style } = config;
   const layout = style?.layout ?? 'centered';
   const behavior = getLayoutBehavior(layout);
+  const fallbackAbout = {
+    sectionTitle: t('shop.aboutSectionTitleDefault'),
+    imageUrl: DEFAULT_ABOUT_IMAGE,
+    imageAlt: t('shop.aboutImageAltDefault'),
+    features: [] as Array<{ icon: string; text: string }>,
+  };
   const { sectionTitle, imageUrl, imageAlt, features } = homeContent?.about ?? fallbackAbout;
   const imageFrameClass = imageFrameClassFor(behavior.aboutImageFrame);
 

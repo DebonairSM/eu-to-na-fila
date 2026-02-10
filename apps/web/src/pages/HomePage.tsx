@@ -5,8 +5,10 @@ import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Card, CardContent } from '@/components/ui/card';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export function HomePage() {
+  const { t } = useLocale();
   const [shops, setShops] = useState<ShopListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -19,27 +21,27 @@ export function HomePage() {
         const data = await api.getAllShops();
         setShops(data);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to load shops'));
+        setError(err instanceof Error ? err : new Error(t('shops.loadError')));
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchShops();
-  }, []);
+  }, [t]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
       <Navigation />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
         <header className="space-y-3 mb-10">
-          <h1 className="text-3xl sm:text-4xl font-semibold">Shops</h1>
-          <p className="text-sm text-white/70">All shops in the system</p>
+          <h1 className="text-3xl sm:text-4xl font-semibold">{t('shops.title')}</h1>
+          <p className="text-sm text-white/70">{t('shops.subtitle')}</p>
         </header>
 
         {isLoading && (
           <div className="flex justify-center py-12">
-            <LoadingSpinner size="lg" text="Loading shops..." />
+            <LoadingSpinner size="lg" text={t('shops.loading')} />
           </div>
         )}
 
@@ -57,7 +59,7 @@ export function HomePage() {
             {shops.length === 0 ? (
               <Card className="bg-white/5 border-white/10">
                 <CardContent className="p-6 text-center">
-                  <p className="text-white/70">No shops found</p>
+                  <p className="text-white/70">{t('shops.noShops')}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -67,9 +69,9 @@ export function HomePage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-xl font-semibold text-white">{shop.name}</h3>
-                        <p className="text-sm text-white/70">Slug: {shop.slug}</p>
+                        <p className="text-sm text-white/70">{t('shops.slugLabel')}: {shop.slug}</p>
                         {shop.domain && (
-                          <p className="text-sm text-white/70">Domain: {shop.domain}</p>
+                          <p className="text-sm text-white/70">{t('shops.domainLabel')}: {shop.domain}</p>
                         )}
                       </div>
                       <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#0f3d2e] flex items-center justify-center text-[#0a0a0a] font-bold">

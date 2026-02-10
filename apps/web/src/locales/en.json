@@ -36,6 +36,7 @@
     "chooseLanguage": "Choose language"
   },
   "join": {
+    "joinTitle": "Join Queue",
     "serviceLabel": "Service *",
     "nameLabel": "Name *",
     "namePlaceholder": "Name and initial",
@@ -200,6 +201,22 @@
   "services": {
     "emptyText": "No services registered."
   },
+  "shops": {
+    "title": "Shops",
+    "subtitle": "All shops in the system",
+    "loading": "Loading shops...",
+    "noShops": "No shops found",
+    "slugLabel": "Slug",
+    "domainLabel": "Domain",
+    "loadError": "Failed to load shops"
+  },
+  "shop": {
+    "heroCtaJoinDefault": "Join Queue",
+    "heroCtaLocationDefault": "Get Directions",
+    "aboutSectionTitleDefault": "About",
+    "aboutImageAltDefault": "Barbershop interior",
+    "locationTitle": "Location"
+  },
   "analytics": {
     "periodAll": "Full period",
     "days": "days"
@@ -272,6 +289,7 @@
     "domainPlaceholder": "example.com",
     "pathPlaceholder": "/path",
     "apiBasePlaceholder": "https://api.example.com",
+    "viewOnGoogleMaps": "View on Google Maps",
     "hero": "Hero",
     "queueSection": "Queue",
     "maxQueueSize": "Maximum queue size",

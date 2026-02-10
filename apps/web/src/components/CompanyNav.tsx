@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/design-system/Spacing/Container';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { LOGO_URL } from '@/lib/logo';
 
 const links = [
@@ -37,6 +38,7 @@ export function CompanyNav() {
         </div>
 
         <div className="flex items-center gap-3">
+          <LanguageSwitcher />
           <nav className="hidden md:flex items-center gap-2 text-sm">
             {links.map((link) => {
               const active = location.pathname === link.to;
