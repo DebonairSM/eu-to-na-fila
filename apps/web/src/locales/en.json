@@ -544,6 +544,7 @@
     "appointment": "Appointment",
     "scheduledAwaitingCheckIn": "Scheduled (awaiting check-in)",
     "checkIn": "Check-in",
+    "checkingIn": "Checking in...",
     "barbersPresent": "Barbers present",
     "customerNamePlaceholder": "Customer name",
     "removeFromQueueTitle": "Remove from Queue",

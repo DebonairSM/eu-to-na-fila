@@ -544,6 +544,7 @@
     "appointment": "Agendamento",
     "scheduledAwaitingCheckIn": "Agendados (aguardando check-in)",
     "checkIn": "Check-in",
+    "checkingIn": "Fazendo check-in...",
     "barbersPresent": "Barbeiros Presentes",
     "customerNamePlaceholder": "Nome do cliente",
     "removeFromQueueTitle": "Remover da Fila",

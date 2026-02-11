@@ -57,12 +57,15 @@ export function BarberQueueManager() {
   const [customerToComplete, setCustomerToComplete] = useState<number | null>(null);
   const [checkInName, setCheckInName] = useState({ first: '', last: '' });
   const [combinedCheckInName, setCombinedCheckInName] = useState('');
+  const [checkInServiceId, setCheckInServiceId] = useState<number | null>(null);
+  const [checkInBarberId, setCheckInBarberId] = useState<number | null>(null);
+  const [checkInProgressTicketId, setCheckInProgressTicketId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [deadZoneWarning, setDeadZoneWarning] = useState<string | null>(null);
   const [nextTicketLoading, setNextTicketLoading] = useState(false);
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
-  const [appointmentForm, setAppointmentForm] = useState({ customerName: '', serviceId: 0, scheduledTime: '' });
+  const [appointmentForm, setAppointmentForm] = useState({ customerName: '', serviceId: 0, scheduledTime: '', preferredBarberId: null as number | null });
   const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
   const firstNameInputRef = useRef<HTMLInputElement>(null);
 
@@ -87,6 +90,34 @@ export function BarberQueueManager() {
     }
   }, [searchParams, isKioskMode, enterKioskMode]);
 
+  const settings = shopConfig.settings;
+  const requireBarberChoice = settings?.requireBarberChoice ?? false;
+
+  // Sync checkInServiceId to first active service when activeServices loads (like JoinForm)
+  useEffect(() => {
+    if (activeServices.length === 0) {
+      setCheckInServiceId(null);
+      return;
+    }
+    const validIds = new Set(activeServices.map((s) => s.id));
+    if (checkInServiceId !== null && validIds.has(checkInServiceId)) return;
+    setCheckInServiceId(activeServices[0].id);
+  }, [activeServices, checkInServiceId]);
+
+  // Auto-set checkInBarberId when single barber and requireBarberChoice
+  useEffect(() => {
+    if (requireBarberChoice && displayBarbers.length === 1 && checkInModal.isOpen) {
+      setCheckInBarberId(displayBarbers[0].id);
+    }
+  }, [requireBarberChoice, displayBarbers, checkInModal.isOpen]);
+
+  // Auto-set preferredBarberId in appointment form when single barber and modal opens
+  useEffect(() => {
+    if (requireBarberChoice && displayBarbers.length === 1 && appointmentModalOpen) {
+      setAppointmentForm((f) => ({ ...f, preferredBarberId: displayBarbers[0].id }));
+    }
+  }, [requireBarberChoice, displayBarbers, appointmentModalOpen]);
+
   // Auto-focus first name input when check-in modal opens
   useEffect(() => {
     if (checkInModal.isOpen && firstNameInputRef.current) {
@@ -98,8 +129,10 @@ export function BarberQueueManager() {
       // Reset form when modal closes
       setCheckInName({ first: '', last: '' });
       setCombinedCheckInName('');
+      setCheckInBarberId(null);
+      setCheckInServiceId(activeServices[0]?.id ?? null);
     }
-  }, [checkInModal.isOpen]);
+  }, [checkInModal.isOpen, activeServices]);
 
   // Preload barber avatar images when barbers data is available
   useEffect(() => {
@@ -218,12 +251,17 @@ export function BarberQueueManager() {
     setIsSubmitting(true);
     setErrorMessage(null);
     try {
+      const serviceId = checkInServiceId ?? activeServices[0]?.id ?? 1;
+      const preferredBarberId = requireBarberChoice ? (checkInBarberId ?? undefined) : undefined;
       await api.createTicket(shopSlug, {
         customerName: fullName,
-        serviceId: 1,
+        serviceId,
+        preferredBarberId,
       });
       setCheckInName({ first: '', last: '' });
       setCombinedCheckInName('');
+      setCheckInBarberId(null);
+      setCheckInServiceId(activeServices[0]?.id ?? null);
       checkInModal.close();
       await refetchQueue();
     } catch (error) {
@@ -232,7 +270,7 @@ export function BarberQueueManager() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [checkInName, validateName, refetchQueue, checkInModal, shopSlug, t]);
+  }, [checkInName, validateName, refetchQueue, checkInModal, shopSlug, t, checkInServiceId, checkInBarberId, activeServices, requireBarberChoice]);
 
   const handleSelectBarber = useCallback(async (barberId: number | null) => {
     if (!selectedCustomerId) return;
@@ -279,17 +317,24 @@ export function BarberQueueManager() {
   }, [shopSlug, barberSelectorModal, t]);
 
   const handleCheckInAppointment = useCallback(async (ticketId: number) => {
+    setCheckInProgressTicketId(ticketId);
     try {
       await api.checkInAppointment(shopSlug, ticketId);
       await refetchQueue();
     } catch (error) {
       setErrorMessage(getErrorMessage(error, t('barber.checkInError')));
+    } finally {
+      setCheckInProgressTicketId(null);
     }
   }, [shopSlug, refetchQueue, t]);
 
   const handleCreateAppointment = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!appointmentForm.serviceId || !appointmentForm.customerName.trim() || !appointmentForm.scheduledTime) {
+      setErrorMessage(t('barber.fillNameServiceDateTime'));
+      return;
+    }
+    if (requireBarberChoice && !appointmentForm.preferredBarberId) {
       setErrorMessage(t('barber.fillNameServiceDateTime'));
       return;
     }
@@ -300,8 +345,9 @@ export function BarberQueueManager() {
         customerName: appointmentForm.customerName.trim(),
         serviceId: appointmentForm.serviceId,
         scheduledTime: new Date(appointmentForm.scheduledTime).toISOString(),
+        preferredBarberId: appointmentForm.preferredBarberId ?? undefined,
       });
-      setAppointmentForm({ customerName: '', serviceId: 0, scheduledTime: '' });
+      setAppointmentForm({ customerName: '', serviceId: 0, scheduledTime: '', preferredBarberId: null });
       setAppointmentModalOpen(false);
       await refetchQueue();
     } catch (error) {
@@ -309,7 +355,7 @@ export function BarberQueueManager() {
     } finally {
       setAppointmentSubmitting(false);
     }
-  }, [shopSlug, appointmentForm, refetchQueue, t]);
+  }, [shopSlug, appointmentForm, refetchQueue, t, requireBarberChoice]);
 
   const handleRemoveCustomer = useCallback(async () => {
     if (!customerToRemove) return;
@@ -710,9 +756,17 @@ export function BarberQueueManager() {
                     <button
                       type="button"
                       onClick={() => handleCheckInAppointment(ticket.id)}
-                      className="px-3 py-1.5 rounded-lg bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] text-sm font-medium hover:opacity-90"
+                      disabled={checkInProgressTicketId === ticket.id}
+                      className="px-3 py-1.5 rounded-lg bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {t('barber.checkIn')}
+                      {checkInProgressTicketId === ticket.id ? (
+                        <>
+                          <span className="material-symbols-outlined animate-spin text-base align-middle mr-1">hourglass_empty</span>
+                          {t('barber.checkingIn')}
+                        </>
+                      ) : (
+                        t('barber.checkIn')
+                      )}
                     </button>
                   </li>
                 ))}
@@ -850,11 +904,53 @@ export function BarberQueueManager() {
               }}
             />
           </div>
+          {activeServices.length >= 2 && (
+            <div>
+              <label htmlFor="checkInService" className="block text-sm font-medium mb-2">{t('join.serviceLabel')}</label>
+              <select
+                id="checkInService"
+                value={checkInServiceId ?? ''}
+                onChange={(e) => setCheckInServiceId(e.target.value ? parseInt(e.target.value, 10) : null)}
+                required
+                className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">{t('join.selectOption')}</option>
+                {activeServices.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {requireBarberChoice && barbers.length > 0 && (
+            <div>
+              <label htmlFor="checkInBarber" className="block text-sm font-medium mb-2">{t('join.barberLabel')}</label>
+              <select
+                id="checkInBarber"
+                value={checkInBarberId ?? ''}
+                onChange={(e) => setCheckInBarberId(e.target.value ? parseInt(e.target.value, 10) : null)}
+                required
+                className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">{t('join.selectOption')}</option>
+                {barbers.filter((b) => b.isActive).map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="flex gap-3">
             <Button type="button" variant="outline" onClick={checkInModal.close} className="flex-1">
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="flex-1">
+            <Button
+              type="submit"
+              disabled={
+                isSubmitting ||
+                (requireBarberChoice && !checkInBarberId) ||
+                (activeServices.length >= 2 && !checkInServiceId)
+              }
+              className="flex-1"
+            >
               {isSubmitting ? t('barber.adding') : t('barber.add')}
             </Button>
           </div>
@@ -865,7 +961,11 @@ export function BarberQueueManager() {
       {allowAppointments && (
         <Modal
           isOpen={appointmentModalOpen}
-          onClose={() => { setAppointmentModalOpen(false); setErrorMessage(null); }}
+          onClose={() => {
+            setAppointmentModalOpen(false);
+            setErrorMessage(null);
+            setAppointmentForm((f) => ({ ...f, preferredBarberId: null }));
+          }}
           title={t('barber.addAppointmentTitle')}
         >
           <form onSubmit={handleCreateAppointment} className="space-y-4">
@@ -907,11 +1007,35 @@ export function BarberQueueManager() {
                 className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
               />
             </div>
+            {requireBarberChoice && barbers.length > 0 && (
+              <div>
+                <label htmlFor="appointmentBarber" className="block text-sm font-medium mb-1">{t('join.barberLabel')}</label>
+                <select
+                  id="appointmentBarber"
+                  value={appointmentForm.preferredBarberId ?? ''}
+                  onChange={(e) => setAppointmentForm((f) => ({ ...f, preferredBarberId: e.target.value ? parseInt(e.target.value, 10) : null }))}
+                  required
+                  className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+                >
+                  <option value="">{t('join.selectOption')}</option>
+                  {barbers.filter((b) => b.isActive).map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="flex gap-3 pt-2">
               <Button type="button" variant="outline" onClick={() => setAppointmentModalOpen(false)} className="flex-1">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={appointmentSubmitting} className="flex-1">
+              <Button
+                type="submit"
+                disabled={
+                  appointmentSubmitting ||
+                  (requireBarberChoice && !appointmentForm.preferredBarberId)
+                }
+                className="flex-1"
+              >
                 {appointmentSubmitting ? t('barber.creating') : t('barber.createAppointment')}
               </Button>
             </div>

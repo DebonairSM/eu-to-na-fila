@@ -460,6 +460,7 @@ export class TicketService {
     const existingTicket = await this.getById(ticketId);
     if (!existingTicket) throw new NotFoundError('Ticket not found');
     if ((existingTicket as any).type !== 'appointment') throw new ConflictError('Only appointments can be checked in');
+    if (existingTicket.status === 'waiting') return existingTicket as Ticket;
     if (existingTicket.status !== 'pending') throw new ConflictError('Ticket is not pending');
 
     const now = new Date();

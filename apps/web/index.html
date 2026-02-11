@@ -185,13 +185,19 @@
           .then(registration => {
             console.log('Service Worker registered:', registration.scope);
             
-            // Check for updates more frequently and force update on page load
-            registration.update();
+            function safeUpdate() {
+              try {
+                registration.update();
+              } catch (e) {
+                if (e.name !== 'InvalidStateError') console.warn('Service Worker update failed:', e);
+              }
+            }
+            
+            // Delay initial update to avoid InvalidStateError while SW is installing/activating
+            setTimeout(safeUpdate, 3000);
             
             // Check for updates every 5 minutes
-            setInterval(() => {
-              registration.update();
-            }, 300000);
+            setInterval(safeUpdate, 300000);
             
             // Listen for updates and reload if new version available
             registration.addEventListener('updatefound', () => {
