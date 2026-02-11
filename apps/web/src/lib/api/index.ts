@@ -81,6 +81,8 @@ class ApiClient extends BaseApiClient {
   getCompanyDashboard = this._companies.getCompanyDashboard;
   getCompanyShops = this._companies.getCompanyShops;
   createCompanyShop = this._companies.createCompanyShop;
+  uploadShopHomeImage = this._companies.uploadShopHomeImage;
+  uploadDraftHomeImage = this._companies.uploadDraftHomeImage;
   createFullShop = this._companies.createFullShop;
   updateCompanyShop = this._companies.updateCompanyShop;
   deleteCompanyShop = this._companies.deleteCompanyShop;

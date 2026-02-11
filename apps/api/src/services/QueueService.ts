@@ -483,6 +483,14 @@ export class QueueService {
 
     if (settings.allowAppointments) {
       waitingTickets = this.sortWaitingTicketsByWeighted(waitingTickets as any) as typeof waitingTickets;
+      // Exclude appointments that are not yet selectable (barber cannot select until 1h before)
+      const now = new Date();
+      const oneHourMs = 60 * 60 * 1000;
+      waitingTickets = waitingTickets.filter((t) => {
+        if ((t.type ?? 'walkin') !== 'appointment') return true;
+        const scheduled = t.scheduledTime ? new Date(t.scheduledTime).getTime() : 0;
+        return scheduled === 0 || now.getTime() >= scheduled - oneHourMs;
+      }) as typeof waitingTickets;
     }
 
     const next = waitingTickets[0] ?? null;

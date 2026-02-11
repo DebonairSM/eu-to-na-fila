@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -332,6 +332,9 @@ export function CreateShopPage() {
   const [placesLookupAddress, setPlacesLookupAddress] = useState('');
   const [placesLookupLoading, setPlacesLookupLoading] = useState(false);
   const [placesLookupMessage, setPlacesLookupMessage] = useState<string | null>(null);
+  const [homeImageUploading, setHomeImageUploading] = useState(false);
+  const [homeImageError, setHomeImageError] = useState<string | null>(null);
+  const homeImageInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setPaletteIndices(pickThreeRandomPaletteIndices(data.style.preset));
@@ -583,7 +586,29 @@ export function CreateShopPage() {
                   <h4 className="text-white font-medium">{t('management.aboutSection')}</h4>
                   <div className="space-y-3">
                     <div><label className="block text-white/60 text-sm mb-1">{t('management.sectionTitle')}</label><input type="text" value={data.homeContent.about.sectionTitle} onChange={(e) => onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, sectionTitle: e.target.value } } })} className={FORM_INPUT} /></div>
-                    <div><label className="block text-white/60 text-sm mb-1">{t('management.imageUrl')}</label><input type="url" value={data.homeContent.about.imageUrl} onChange={(e) => onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, imageUrl: e.target.value } } })} placeholder="https://..." className={FORM_INPUT} /></div>
+                    <div>
+                      <label className="block text-white/60 text-sm mb-1">{t('management.imageUrl')}</label>
+                      <div className="flex flex-wrap gap-2 items-center">
+                        <input type="url" value={data.homeContent.about.imageUrl} onChange={(e) => { setHomeImageError(null); onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, imageUrl: e.target.value } } }); }} placeholder="https://..." className={FORM_INPUT + ' flex-1 min-w-[200px]'} />
+                        <input ref={homeImageInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file || !user?.companyId) return;
+                          setHomeImageError(null);
+                          setHomeImageUploading(true);
+                          try {
+                            const { url } = await api.uploadDraftHomeImage(user.companyId, file);
+                            onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, imageUrl: url } } });
+                          } catch (err) {
+                            setHomeImageError(getErrorMessage(err, t('management.uploadError')));
+                          } finally {
+                            setHomeImageUploading(false);
+                            e.target.value = '';
+                          }
+                        }} />
+                        <button type="button" onClick={() => homeImageInputRef.current?.click()} disabled={homeImageUploading} className="px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium disabled:opacity-50 min-h-[44px]">{homeImageUploading ? t('common.loading') : t('management.uploadImage')}</button>
+                      </div>
+                      {homeImageError && <p className="text-sm text-[#ef4444] mt-1">{homeImageError}</p>}
+                    </div>
                     <div><label className="block text-white/60 text-sm mb-1">{t('management.imageAlt')}</label><input type="text" value={data.homeContent.about.imageAlt} onChange={(e) => onChange({ homeContent: { ...data.homeContent, about: { ...data.homeContent.about, imageAlt: e.target.value } } })} className={FORM_INPUT} /></div>
                   </div>
                 </section>

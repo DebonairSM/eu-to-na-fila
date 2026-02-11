@@ -105,6 +105,9 @@ export function ShopManagementPage() {
   const [shopToDelete, setShopToDelete] = useState<number | null>(null);
   const [editingShop, setEditingShop] = useState<Shop | null>(null);
   const [editTab, setEditTab] = useState<'info' | 'appearance' | 'content' | 'settings' | 'credentials'>('info');
+  const [homeImageUploading, setHomeImageUploading] = useState(false);
+  const [homeImageError, setHomeImageError] = useState<string | null>(null);
+  const homeImageInputRef = React.useRef<HTMLInputElement>(null);
   const defaultStyle = shopStyleConfigSchema.parse({});
   const defaultHomeByLocale = (): Record<string, HomeContent> =>
     Object.fromEntries(SUPPORTED_LOCALES.map((loc) => [loc, JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT))]));
@@ -1088,7 +1091,29 @@ export function ShopManagementPage() {
                     <h4 className="text-white font-medium">{t('management.aboutSection')}</h4>
                     <div className="space-y-3">
                       <div><label className="block text-white/60 text-sm mb-1">{t('management.sectionTitle')}</label><input type="text" value={contentForm.about.sectionTitle} onChange={(e) => setContentForm({ about: { ...contentForm.about, sectionTitle: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
-                      <div><label className="block text-white/60 text-sm mb-1">{t('management.imageUrl')}</label><input type="url" value={contentForm.about.imageUrl} onChange={(e) => setContentForm({ about: { ...contentForm.about, imageUrl: e.target.value } })} placeholder="https://..." className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" /></div>
+                      <div>
+                        <label className="block text-white/60 text-sm mb-1">{t('management.imageUrl')}</label>
+                        <div className="flex flex-wrap gap-2 items-center">
+                          <input type="url" value={contentForm.about.imageUrl} onChange={(e) => { setHomeImageError(null); setContentForm({ about: { ...contentForm.about, imageUrl: e.target.value } }); }} placeholder="https://..." className="form-input flex-1 min-w-[200px] w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" />
+                          <input ref={homeImageInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file || !user?.companyId || !editingShop) return;
+                            setHomeImageError(null);
+                            setHomeImageUploading(true);
+                            try {
+                              const { url } = await api.uploadShopHomeImage(user.companyId, editingShop.id, file);
+                              setContentForm({ about: { ...contentForm.about, imageUrl: url } });
+                            } catch (err) {
+                              setHomeImageError(getErrorMessage(err, t('management.uploadError')));
+                            } finally {
+                              setHomeImageUploading(false);
+                              e.target.value = '';
+                            }
+                          }} />
+                          <button type="button" onClick={() => homeImageInputRef.current?.click()} disabled={homeImageUploading} className="px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium disabled:opacity-50 min-h-[44px]">{homeImageUploading ? t('common.loading') : t('management.uploadImage')}</button>
+                        </div>
+                        {homeImageError && <p className="text-sm text-[#ef4444] mt-1">{homeImageError}</p>}
+                      </div>
                       <div><label className="block text-white/60 text-sm mb-1">{t('management.imageAlt')}</label><input type="text" value={contentForm.about.imageAlt} onChange={(e) => setContentForm({ about: { ...contentForm.about, imageAlt: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                     </div>
                   </section>

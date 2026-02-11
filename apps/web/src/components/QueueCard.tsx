@@ -11,6 +11,10 @@ export interface QueueCardProps {
   onClick?: () => void;
   onRemove?: () => void;
   onComplete?: () => void;
+  /** When true, card is dimmed and onClick is no-op (e.g. appointment not yet selectable) */
+  disabled?: boolean;
+  /** Shown as tooltip when disabled */
+  disabledReason?: string;
   className?: string;
 }
 
@@ -21,6 +25,8 @@ export const QueueCard = memo(function QueueCard({
   onClick,
   onRemove,
   onComplete,
+  disabled = false,
+  disabledReason,
   className,
 }: QueueCardProps) {
   const [barberAvatarFailed, setBarberAvatarFailed] = useState(false);
@@ -35,24 +41,27 @@ export const QueueCard = memo(function QueueCard({
   return (
     <div
       className={cn(
-        'queue-item p-6 rounded-md border-2 transition-all cursor-pointer',
+        'queue-item p-6 rounded-md border-2 transition-all',
         'focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--shop-accent)] focus-visible:ring-offset-2',
         {
           'border-[var(--shop-accent)] bg-[var(--shop-background)] hover:border-[var(--shop-accent)] hover:bg-[var(--shop-background)]': isServing,
-          'border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] bg-card hover:border-[var(--shop-accent)] hover:bg-[color-mix(in_srgb,var(--shop-accent)_5%,transparent)]': isWaiting,
+          'border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] bg-card hover:border-[var(--shop-accent)] hover:bg-[color-mix(in_srgb,var(--shop-accent)_5%,transparent)]': isWaiting && !disabled,
+          'opacity-60 cursor-not-allowed': disabled,
+          'cursor-pointer': !disabled && onClick,
         },
         className
       )}
-      onClick={onClick}
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onKeyDown={onClick ? (e) => {
+      onClick={disabled ? undefined : onClick}
+      role={!disabled && onClick ? 'button' : undefined}
+      tabIndex={!disabled && onClick ? 0 : undefined}
+      onKeyDown={!disabled && onClick ? (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           onClick();
         }
       } : undefined}
-      aria-label={onClick ? `Cliente ${ticket.customerName}, posição ${displayPosition !== null && displayPosition !== undefined ? displayPosition : ticket.position}${assignedBarber ? `, atendido por ${assignedBarber.name}` : ''}` : undefined}
+      aria-label={!disabled && onClick ? `Cliente ${ticket.customerName}, posição ${displayPosition !== null && displayPosition !== undefined ? displayPosition : ticket.position}${assignedBarber ? `, atendido por ${assignedBarber.name}` : ''}` : undefined}
+      title={disabled && disabledReason ? disabledReason : undefined}
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">

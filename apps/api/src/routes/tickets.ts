@@ -355,6 +355,20 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Ticket with ID ${id} not found`);
     }
 
+    // Appointments: barbers cannot select/assign until at least 1 hour before the scheduled time
+    const isAssigningBarber = updates.barberId !== undefined && updates.barberId !== null;
+    const isStartingService = (updates.status ?? existingTicket.status) === 'in_progress';
+    if (isAssigningBarber && isStartingService && (existingTicket as { type?: string }).type === 'appointment') {
+      const scheduledTime = (existingTicket as { scheduledTime?: Date | string | null }).scheduledTime;
+      if (scheduledTime) {
+        const scheduled = new Date(scheduledTime).getTime();
+        const oneHourBefore = scheduled - 60 * 60 * 1000;
+        if (Date.now() < oneHourBefore) {
+          throw new ValidationError('Cannot select this appointment yet. You can select it starting 1 hour before the scheduled time.');
+        }
+      }
+    }
+
     // Use TicketService.updateStatus to ensure timestamps and audit logging are handled
     // If status is not provided, use existing status (allows updating just barberId)
     const updateData: UpdateTicketStatus = {

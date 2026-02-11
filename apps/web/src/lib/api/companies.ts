@@ -19,6 +19,8 @@ export interface CompaniesApi {
   getCompanyDashboard(companyId: number): Promise<{ totalShops: number; activeAds: number; totalAds: number }>;
   getCompanyShops(companyId: number): Promise<ShopAdminView[]>;
   createCompanyShop(companyId: number, data: { name: string; slug?: string; domain?: string; path?: string; apiBase?: string }): Promise<ShopAdminView>;
+  uploadShopHomeImage(companyId: number, shopId: number, file: File): Promise<{ url: string }>;
+  uploadDraftHomeImage(companyId: number, file: File): Promise<{ url: string }>;
   createFullShop(companyId: number, data: {
     name: string; slug?: string; domain?: string; theme?: Partial<ShopTheme>; homeContent?: Partial<HomeContent>;
     homeContentByLocale?: Record<string, Partial<HomeContent>>;
@@ -45,10 +47,41 @@ export interface CompaniesApi {
 
 export function createCompaniesApi(client: BaseApiClient): CompaniesApi {
   const c = client as any;
+  const baseUrl = c.baseUrl as string;
   return {
     getCompanyDashboard: (companyId) => c.get(`/companies/${companyId}/dashboard`),
     getCompanyShops: (companyId) => c.get(`/companies/${companyId}/shops`),
     createCompanyShop: (companyId, data) => c.post(`/companies/${companyId}/shops`, data),
+    async uploadShopHomeImage(companyId, shopId, file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = c.authToken;
+      const res = await fetch(`${baseUrl}/companies/${companyId}/shops/${shopId}/home-image`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Upload failed: ${res.statusText}`);
+      }
+      return res.json();
+    },
+    async uploadDraftHomeImage(companyId, file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = c.authToken;
+      const res = await fetch(`${baseUrl}/companies/${companyId}/uploads/home-about`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Upload failed: ${res.statusText}`);
+      }
+      return res.json();
+    },
     createFullShop: (companyId, data) => c.post(`/companies/${companyId}/shops/full`, data),
     updateCompanyShop: (companyId, shopId, data) => c.patch(`/companies/${companyId}/shops/${shopId}`, data),
     deleteCompanyShop: (companyId, shopId) => c.del(`/companies/${companyId}/shops/${shopId}`),

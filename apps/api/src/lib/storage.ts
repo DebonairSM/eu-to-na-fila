@@ -145,3 +145,52 @@ export async function deleteAdFile(
     console.warn(`Failed to delete ad file from Supabase Storage: ${error.message}`);
   }
 }
+
+const MIME_TO_EXT: Record<string, string> = {
+  'image/png': '.png',
+  'image/jpeg': '.jpg',
+  'image/jpg': '.jpg',
+  'image/webp': '.webp',
+};
+
+/**
+ * Upload shop home about image (for edit flow). Path: companies/{companyId}/shops/{shopId}/home-about.{ext}
+ */
+export async function uploadShopHomeImage(
+  companyId: number,
+  shopId: number,
+  fileBuffer: Buffer,
+  mimeType: string
+): Promise<string> {
+  const supabase = getSupabaseClient();
+  const extension = MIME_TO_EXT[mimeType] || '.jpg';
+  const storagePath = `companies/${companyId}/shops/${shopId}/home-about${extension}`;
+  const { error } = await supabase.storage
+    .from(BUCKET_NAME)
+    .upload(storagePath, fileBuffer, { contentType: mimeType, upsert: true });
+  if (error) throw new Error(`Failed to upload home image: ${error.message}`);
+  const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(storagePath);
+  if (!data?.publicUrl) throw new Error('Failed to get public URL for home image');
+  return data.publicUrl;
+}
+
+/**
+ * Upload draft home about image (for create flow, no shop yet). Path: companies/{companyId}/drafts/home-about-{uuid}.{ext}
+ */
+export async function uploadDraftHomeImage(
+  companyId: number,
+  fileBuffer: Buffer,
+  mimeType: string
+): Promise<string> {
+  const supabase = getSupabaseClient();
+  const extension = MIME_TO_EXT[mimeType] || '.jpg';
+  const uuid = crypto.randomUUID();
+  const storagePath = `companies/${companyId}/drafts/home-about-${uuid}${extension}`;
+  const { error } = await supabase.storage
+    .from(BUCKET_NAME)
+    .upload(storagePath, fileBuffer, { contentType: mimeType, upsert: true });
+  if (error) throw new Error(`Failed to upload draft home image: ${error.message}`);
+  const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(storagePath);
+  if (!data?.publicUrl) throw new Error('Failed to get public URL for draft home image');
+  return data.publicUrl;
+}

@@ -1,8 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { join } from 'path';
-import { unlink } from 'fs/promises';
-import { existsSync } from 'fs';
+import { unlink, writeFile, mkdir } from 'fs/promises';
+import { existsSync, readFileSync } from 'fs';
 import { db, schema } from '../db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
@@ -12,9 +12,12 @@ import { hashPassword, validatePassword } from '../lib/password.js';
 import { mergeHomeContent } from '../lib/homeContent.js';
 import { DEFAULT_THEME } from '../lib/theme.js';
 import { getPublicPath } from '../lib/paths.js';
-import { deleteAdFile } from '../lib/storage.js';
+import { deleteAdFile, uploadShopHomeImage, uploadDraftHomeImage } from '../lib/storage.js';
 import { env } from '../env.js';
 import { themeInputSchema, homeContentInputSchema, homeContentByLocaleInputSchema, shopSettingsInputSchema } from '@eutonafila/shared';
+
+const ALLOWED_IMAGE_MIME = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+const MAX_HOME_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 /**
  * Company shop routes.
@@ -313,6 +316,195 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         .returning();
 
       return updatedShop;
+    }
+  );
+
+  /**
+   * Upload home page about image for an existing shop.
+   * @route POST /api/companies/:id/shops/:shopId/home-image
+   * @returns { url: string } Public URL for the image
+   */
+  fastify.post(
+    '/companies/:id/shops/:shopId/home-image',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || request.user.companyId == null) {
+        return reply.status(403).send({ error: 'Company admin access required', statusCode: 403, code: 'FORBIDDEN' });
+      }
+      const paramsSchema = z.object({
+        id: z.string().transform((v) => parseInt(v, 10)),
+        shopId: z.string().transform((v) => parseInt(v, 10)),
+      });
+      const { id, shopId } = validateRequest(paramsSchema, request.params);
+      if (request.user.companyId !== id) {
+        return reply.status(403).send({ error: 'Access denied to this company', statusCode: 403, code: 'FORBIDDEN' });
+      }
+      const shop = await db.query.shops.findFirst({
+        where: and(eq(schema.shops.id, shopId), eq(schema.shops.companyId, id)),
+      });
+      if (!shop) throw new NotFoundError('Shop not found');
+
+      let fileBuffer: Buffer | null = null;
+      let fileMimetype: string | null = null;
+      let fileBytesRead = 0;
+      try {
+        const parts = request.parts();
+        for await (const part of parts) {
+          if (part.type === 'file' && part.fieldname === 'file') {
+            fileBuffer = await part.toBuffer();
+            fileMimetype = part.mimetype ?? null;
+            fileBytesRead = part.file.bytesRead;
+          }
+        }
+      } catch (err) {
+        request.log.error({ err }, 'Error parsing multipart');
+        throw new ValidationError('Invalid upload data', [{ field: 'file', message: 'File is required' }]);
+      }
+      if (!fileBuffer || !fileMimetype || !ALLOWED_IMAGE_MIME.includes(fileMimetype)) {
+        throw new ValidationError('A valid image file (PNG, JPEG, WebP) is required', [{ field: 'file', message: 'Invalid file type' }]);
+      }
+      if (fileBytesRead > MAX_HOME_IMAGE_SIZE) {
+        throw new ValidationError('File too large. Maximum size: 5MB', [{ field: 'file', message: 'File too large' }]);
+      }
+      const mimeToExt: Record<string, string> = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/jpg': '.jpg', 'image/webp': '.webp' };
+      const extension = mimeToExt[fileMimetype] || '.jpg';
+
+      let url: string;
+      if (env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY) {
+        url = await uploadShopHomeImage(id, shopId, fileBuffer, fileMimetype);
+      } else {
+        const publicPath = getPublicPath();
+        const dir = join(publicPath, 'companies', id.toString(), 'shops', shopId.toString());
+        if (!existsSync(dir)) await mkdir(dir, { recursive: true });
+        const filePath = join(dir, `home-about${extension}`);
+        await writeFile(filePath, fileBuffer);
+        const host = request.headers['host'] ?? 'localhost';
+        const protocol = request.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+        const base = `${protocol}://${host}`;
+        url = `${base}/api/companies/${id}/shops/${shopId}/home-image`;
+      }
+      return reply.send({ url });
+    }
+  );
+
+  /**
+   * Serve uploaded home about image (local storage fallback).
+   * @route GET /api/companies/:id/shops/:shopId/home-image
+   */
+  fastify.get(
+    '/companies/:id/shops/:shopId/home-image',
+    async (request, reply) => {
+      const getParamsSchema = z.object({
+        id: z.string().transform((v) => parseInt(v, 10)),
+        shopId: z.string().transform((v) => parseInt(v, 10)),
+      });
+      const { id, shopId } = validateRequest(getParamsSchema, request.params);
+      const publicPath = getPublicPath();
+      const dir = join(publicPath, 'companies', id.toString(), 'shops', shopId.toString());
+      const exts = ['.png', '.jpg', '.jpeg', '.webp'];
+      let content: Buffer | null = null;
+      let contentType = 'image/jpeg';
+      for (const ext of exts) {
+        const filePath = join(dir, `home-about${ext}`);
+        if (existsSync(filePath)) {
+          content = readFileSync(filePath);
+          contentType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+          break;
+        }
+      }
+      if (!content) return reply.code(404).send({ error: 'Not found' });
+      return reply.type(contentType).send(content);
+    }
+  );
+
+  /**
+   * Upload draft home about image (for create-shop flow; no shop yet).
+   * @route POST /api/companies/:id/uploads/home-about
+   * @returns { url: string } Public URL for the image
+   */
+  fastify.post(
+    '/companies/:id/uploads/home-about',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || request.user.companyId == null) {
+        return reply.status(403).send({ error: 'Company admin access required', statusCode: 403, code: 'FORBIDDEN' });
+      }
+      const draftParamsSchema = z.object({ id: z.string().transform((v) => parseInt(v, 10)) });
+      const { id } = validateRequest(draftParamsSchema, request.params);
+      if (request.user.companyId !== id) {
+        return reply.status(403).send({ error: 'Access denied to this company', statusCode: 403, code: 'FORBIDDEN' });
+      }
+      let fileBuffer: Buffer | null = null;
+      let fileMimetype: string | null = null;
+      let fileBytesRead = 0;
+      try {
+        const parts = request.parts();
+        for await (const part of parts) {
+          if (part.type === 'file' && part.fieldname === 'file') {
+            fileBuffer = await part.toBuffer();
+            fileMimetype = part.mimetype ?? null;
+            fileBytesRead = part.file.bytesRead;
+          }
+        }
+      } catch (err) {
+        request.log.error({ err }, 'Error parsing multipart');
+        throw new ValidationError('Invalid upload data', [{ field: 'file', message: 'File is required' }]);
+      }
+      if (!fileBuffer || !fileMimetype || !ALLOWED_IMAGE_MIME.includes(fileMimetype)) {
+        throw new ValidationError('A valid image file (PNG, JPEG, WebP) is required', [{ field: 'file', message: 'Invalid file type' }]);
+      }
+      if (fileBytesRead > MAX_HOME_IMAGE_SIZE) {
+        throw new ValidationError('File too large. Maximum size: 5MB', [{ field: 'file', message: 'File too large' }]);
+      }
+      const mimeToExt: Record<string, string> = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/jpg': '.jpg', 'image/webp': '.webp' };
+      const extension = mimeToExt[fileMimetype] || '.jpg';
+
+      let url: string;
+      if (env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY) {
+        url = await uploadDraftHomeImage(id, fileBuffer, fileMimetype);
+      } else {
+        const publicPath = getPublicPath();
+        const dir = join(publicPath, 'companies', id.toString(), 'drafts');
+        if (!existsSync(dir)) await mkdir(dir, { recursive: true });
+        const uuid = crypto.randomUUID();
+        const filename = `home-about-${uuid}${extension}`;
+        const filePath = join(dir, filename);
+        await writeFile(filePath, fileBuffer);
+        const host = request.headers['host'] ?? 'localhost';
+        const protocol = request.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+        const base = `${protocol}://${host}`;
+        url = `${base}/api/companies/${id}/drafts/home-about/${filename}`;
+      }
+      return reply.send({ url });
+    }
+  );
+
+  /**
+   * Serve draft home about image (local storage fallback for create flow).
+   * @route GET /api/companies/:id/drafts/home-about/:filename
+   */
+  fastify.get(
+    '/companies/:id/drafts/home-about/:filename',
+    async (request, reply) => {
+      const draftGetParamsSchema = z.object({
+        id: z.string().transform((v) => parseInt(v, 10)),
+        filename: z.string().min(1).max(200),
+      });
+      const { id, filename } = validateRequest(draftGetParamsSchema, request.params);
+      if (!/^home-about-[a-f0-9-]+\.(png|jpg|jpeg|webp)$/i.test(filename)) {
+        return reply.code(404).send({ error: 'Not found' });
+      }
+      const publicPath = getPublicPath();
+      const filePath = join(publicPath, 'companies', id.toString(), 'drafts', filename);
+      if (!existsSync(filePath)) return reply.code(404).send({ error: 'Not found' });
+      const content = readFileSync(filePath);
+      const ext = filename.split('.').pop()?.toLowerCase();
+      const contentType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+      return reply.type(contentType).send(content);
     }
   );
 

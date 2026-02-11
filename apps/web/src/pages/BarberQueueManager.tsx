@@ -72,6 +72,14 @@ export function BarberQueueManager() {
   const completeConfirmModal = useModal(false);
   const { validateName } = useProfanityFilter();
 
+  const isAppointmentSelectable = useCallback((ticket: { type?: string; scheduledTime?: string | Date | null }) => {
+    if ((ticket.type ?? 'walkin') !== 'appointment') return true;
+    const scheduled = ticket.scheduledTime ? new Date(ticket.scheduledTime).getTime() : 0;
+    if (scheduled === 0) return true;
+    const oneHourMs = 60 * 60 * 1000;
+    return Date.now() >= scheduled - oneHourMs;
+  }, []);
+
   // Enter kiosk mode if ?kiosk=true in URL
   useEffect(() => {
     if (searchParams.get('kiosk') === 'true' && !isKioskMode) {
@@ -743,7 +751,13 @@ export function BarberQueueManager() {
                       assignedBarber={assignedBarber}
                       barbers={displayBarbers}
                       displayPosition={displayPosition}
+                      disabled={ticket.status === 'waiting' && !isAppointmentSelectable(ticket)}
+                      disabledReason={ticket.status === 'waiting' && !isAppointmentSelectable(ticket) ? t('barber.appointmentTooEarly') : undefined}
                       onClick={() => {
+                        if (!isAppointmentSelectable(ticket)) {
+                          setErrorMessage(t('barber.appointmentTooEarly'));
+                          return;
+                        }
                         setSelectedCustomerId(ticket.id);
                         barberSelectorModal.open();
                       }}
