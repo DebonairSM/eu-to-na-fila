@@ -18,6 +18,8 @@ import { dirname, join } from 'node:path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, '../../../.env') });
 dotenv.config({ path: join(__dirname, '../.env') });
+dotenv.config({ path: join(process.cwd(), '.env') });
+dotenv.config({ path: join(process.cwd(), '../.env') });
 
 const REDIRECT_URI = 'http://localhost:3000/oauth2callback';
 const PORT = 3000;

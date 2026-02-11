@@ -33,7 +33,10 @@ export function BarberManagementPage() {
     username: '',
     password: '',
     newPassword: '',
+    revenueSharePercent: 100,
   });
+  const [applyToAllPercent, setApplyToAllPercent] = useState(50);
+  const [applyingToAll, setApplyingToAll] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // -- Services state --
@@ -124,7 +127,7 @@ export function BarberManagementPage() {
           ? { username: formData.username.trim(), password: formData.password }
           : {}),
       });
-      setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '' });
+      setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
       addModal.close();
       await refetch();
     } catch (error) {
@@ -140,7 +143,7 @@ export function BarberManagementPage() {
     }
 
     try {
-      const payload: { name: string; avatarUrl: string | null; username?: string | null; password?: string } = {
+      const payload: { name: string; avatarUrl: string | null; username?: string | null; password?: string; revenueSharePercent?: number | null } = {
         name: formData.name,
         avatarUrl: formData.avatarUrl || null,
       };
@@ -150,9 +153,12 @@ export function BarberManagementPage() {
       if (formData.newPassword.trim()) {
         payload.password = formData.newPassword;
       }
+      if (formData.revenueSharePercent !== undefined) {
+        payload.revenueSharePercent = formData.revenueSharePercent;
+      }
       await api.updateBarber(editingBarber.id, payload);
       setEditingBarber(null);
-      setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '' });
+      setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
       editModal.close();
       await refetch();
     } catch (error) {
@@ -184,9 +190,26 @@ export function BarberManagementPage() {
       username: barber.username ?? '',
       password: '',
       newPassword: '',
+      revenueSharePercent: barber.revenueSharePercent ?? 100,
     });
     editModal.open();
   };
+
+  const handleApplyRevenueToAll = useCallback(async () => {
+    if (displayBarbers.length === 0) return;
+    setApplyingToAll(true);
+    setErrorMessage(null);
+    try {
+      for (const barber of displayBarbers) {
+        await api.updateBarber(barber.id, { revenueSharePercent: applyToAllPercent });
+      }
+      await refetch();
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, t('barber.updateBarberError')));
+    } finally {
+      setApplyingToAll(false);
+    }
+  }, [displayBarbers, applyToAllPercent, refetch, t]);
 
   return (
     <div 
@@ -219,6 +242,32 @@ export function BarberManagementPage() {
             {t('dashboard.manageBarbers')}
           </h1>
         </div>
+
+        {isOwner && displayBarbers.length > 0 && (
+          <section className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
+            <h2 className="text-white font-medium mb-3">{t('barber.applyRevenueShareToAll')}</h2>
+            <p className="text-white/60 text-sm mb-3">{t('barber.applyRevenueShareHint')}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={applyToAllPercent}
+                onChange={(e) => setApplyToAllPercent(Number(e.target.value))}
+                className="flex-1 min-w-[120px] max-w-[200px] h-2 rounded-lg appearance-none bg-white/20 accent-[var(--shop-accent)]"
+              />
+              <span className="text-white font-medium w-10">{applyToAllPercent}%</span>
+              <button
+                type="button"
+                onClick={handleApplyRevenueToAll}
+                disabled={applyingToAll}
+                className="px-4 py-2 rounded-lg bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] text-sm font-medium hover:opacity-90 disabled:opacity-50"
+              >
+                {applyingToAll ? t('common.saving') : t('barber.applyToAllBarbers')}
+              </button>
+            </div>
+          </section>
+        )}
 
         {isOwner && (
         <button
@@ -312,18 +361,25 @@ export function BarberManagementPage() {
                     <h3 id={`barber-name-${barber.id}`} className="barber-name text-lg sm:text-xl font-semibold text-white mb-1 truncate">
                       {barber.name}
                     </h3>
-                    <div
-                      className={`barber-status inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-xl text-[10px] sm:text-xs font-medium ${
-                        barber.isPresent
-                          ? 'bg-[rgba(255,255,255,0.2)] text-white'
-                          : 'bg-[rgba(255,255,255,0.1)] text-[rgba(255,255,255,0.5)]'
-                      }`}
-                      aria-label={barber.isPresent ? t('barber.statusPresent') : t('barber.statusAbsent')}
-                    >
-                      <span className="material-symbols-outlined text-xs sm:text-sm" aria-hidden="true">
-                        {barber.isPresent ? 'check_circle' : 'cancel'}
-                      </span>
-                      {barber.isPresent ? t('barber.present') : t('barber.absent')}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <div
+                        className={`barber-status inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-xl text-[10px] sm:text-xs font-medium ${
+                          barber.isPresent
+                            ? 'bg-[rgba(255,255,255,0.2)] text-white'
+                            : 'bg-[rgba(255,255,255,0.1)] text-[rgba(255,255,255,0.5)]'
+                        }`}
+                        aria-label={barber.isPresent ? t('barber.statusPresent') : t('barber.statusAbsent')}
+                      >
+                        <span className="material-symbols-outlined text-xs sm:text-sm" aria-hidden="true">
+                          {barber.isPresent ? 'check_circle' : 'cancel'}
+                        </span>
+                        {barber.isPresent ? t('barber.present') : t('barber.absent')}
+                      </div>
+                      {isOwner && (
+                        <span className="text-[10px] sm:text-xs text-white/50">
+                          {(barber.revenueSharePercent ?? 100)}% {t('barber.revenueShareShort')}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -547,7 +603,7 @@ export function BarberManagementPage() {
                   type="button"
                   onClick={() => {
                     addModal.close();
-                    setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '' });
+                    setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
                   }}
                   className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
@@ -645,13 +701,33 @@ export function BarberManagementPage() {
                   </div>
                 </div>
               </div>
+              {isOwner && (
+                <div className="form-group mb-4 sm:mb-5">
+                  <label htmlFor="editRevenueShare" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                    {t('barber.revenueSharePercent')}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      id="editRevenueShare"
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={formData.revenueSharePercent}
+                      onChange={(e) => setFormData({ ...formData, revenueSharePercent: Number(e.target.value) })}
+                      className="flex-1 h-2 rounded-lg appearance-none bg-white/20 accent-[var(--shop-accent)]"
+                    />
+                    <span className="text-white font-medium w-10 text-right">{formData.revenueSharePercent}%</span>
+                  </div>
+                  <p className="text-[rgba(255,255,255,0.5)] text-xs mt-1">{t('barber.revenueShareHint')}</p>
+                </div>
+              )}
               <div className="modal-actions flex gap-2 sm:gap-3 mt-5 sm:mt-6">
                 <button
                   type="button"
                   onClick={() => {
                     editModal.close();
                     setEditingBarber(null);
-                    setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '' });
+                    setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
                   }}
                   className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >

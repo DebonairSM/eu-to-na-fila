@@ -59,6 +59,7 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
         username: true,
         isActive: true,
         isPresent: true,
+        revenueSharePercent: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -209,6 +210,7 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
       avatarUrl: z.string().url().optional().nullable(),
       username: z.string().min(1).max(100).optional().nullable(),
       password: z.string().min(1).max(200).optional(),
+      revenueSharePercent: z.number().int().min(0).max(100).nullable().optional(),
     });
 
     const { id } = validateRequest(paramsSchema, request.params);
@@ -229,6 +231,7 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
       avatarUrl?: string | null;
       username?: string | null;
       passwordHash?: string | null;
+      revenueSharePercent?: number | null;
       updatedAt: Date;
     } = {
       updatedAt: new Date(),
@@ -238,6 +241,9 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     }
     if (body.avatarUrl !== undefined) {
       updateData.avatarUrl = body.avatarUrl;
+    }
+    if (body.revenueSharePercent !== undefined) {
+      updateData.revenueSharePercent = body.revenueSharePercent;
     }
     if (body.username !== undefined) {
       if (body.username === null || body.username === '') {

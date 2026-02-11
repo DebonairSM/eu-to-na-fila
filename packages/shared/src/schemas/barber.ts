@@ -10,6 +10,7 @@ export const barberSchema = z.object({
   username: z.string().nullable().optional(),
   isActive: z.boolean().default(true),
   isPresent: z.boolean().default(true),
+  revenueSharePercent: z.number().int().min(0).max(100).nullable().optional(),
   createdAt: z.date().or(z.string()),
   updatedAt: z.date().or(z.string()),
 });

@@ -470,6 +470,13 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       since.setTime(0);
     }
 
+    const barber = await db.query.barbers.findFirst({
+      where: and(eq(schema.barbers.id, barberId), eq(schema.barbers.shopId, shop.id)),
+      columns: { revenueSharePercent: true },
+    });
+    const revenueSharePercent = barber?.revenueSharePercent != null ? barber.revenueSharePercent : 100;
+    const shareMultiplier = revenueSharePercent / 100;
+
     const tickets = await db.query.tickets.findMany({
       where: and(
         eq(schema.tickets.shopId, shop.id),
@@ -509,7 +516,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     let revenueCents = 0;
     completed.forEach(ticket => {
       const svc = serviceMap.get(ticket.serviceId);
-      if (svc?.price != null) revenueCents += svc.price;
+      if (svc?.price != null) revenueCents += Math.round(svc.price * shareMultiplier);
     });
 
     const ticketsByDay: Record<string, number> = {};
@@ -519,16 +526,27 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     });
 
     const serviceCounts: Record<number, number> = {};
-    tickets.forEach(t => {
-      serviceCounts[t.serviceId] = (serviceCounts[t.serviceId] || 0) + 1;
+    const serviceRevenueCents: Record<number, number> = {};
+    completed.forEach(ticket => {
+      serviceCounts[ticket.serviceId] = (serviceCounts[ticket.serviceId] || 0) + 1;
+      const svc = serviceMap.get(ticket.serviceId);
+      if (svc?.price != null) {
+        serviceRevenueCents[ticket.serviceId] = (serviceRevenueCents[ticket.serviceId] || 0) + Math.round(svc.price * shareMultiplier);
+      }
     });
     const serviceBreakdown = Object.entries(serviceCounts)
-      .map(([serviceId, count]) => ({
-        serviceId: parseInt(serviceId),
-        serviceName: serviceNameMap.get(parseInt(serviceId)) || `Service ${serviceId}`,
-        count,
-        percentage: total > 0 ? Math.round((count / total) * 100) : 0,
-      }))
+      .map(([serviceId, count]) => {
+        const sid = parseInt(serviceId);
+        const price = serviceMap.get(sid)?.price;
+        const amountCents = price != null ? (serviceRevenueCents[sid] ?? Math.round(price * count * shareMultiplier)) : 0;
+        return {
+          serviceId: sid,
+          serviceName: serviceNameMap.get(sid) || `Service ${serviceId}`,
+          count,
+          percentage: total > 0 ? Math.round((count / total) * 100) : 0,
+          revenueCents: amountCents,
+        };
+      })
       .sort((a, b) => b.count - a.count);
 
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

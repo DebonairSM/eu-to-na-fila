@@ -5,6 +5,7 @@
     "confirm": "Confirmar",
     "cancel": "Cancelar",
     "save": "Salvar",
+    "saving": "Salvando…",
     "close": "Fechar",
     "selectPlaceholder": "Selecione...",
     "loading": "Carregando…",
@@ -595,7 +596,13 @@
     "attendancesByDay": "Atendimentos por dia",
     "byService": "Por serviço",
     "dataUnavailable": "Dados não disponíveis",
-    "loadStatsError": "Erro ao carregar estatísticas."
+    "loadStatsError": "Erro ao carregar estatísticas.",
+    "revenueSharePercent": "Participação do barbeiro na receita do serviço (%)",
+    "revenueShareHint": "Percentual do valor do serviço que fica com o barbeiro (o restante fica com a barbearia).",
+    "applyRevenueShareToAll": "Aplicar participação na receita a todos os barbeiros",
+    "applyRevenueShareHint": "Defina o mesmo percentual para todos de uma vez.",
+    "applyToAllBarbers": "Aplicar a todos",
+    "revenueShareShort": "participação"
   },
   "staff": {
     "panel": "Painel",

@@ -82,6 +82,7 @@ export const barbers = pgTable('barbers', {
   passwordHash: text('password_hash'),
   isActive: boolean('is_active').notNull().default(true),
   isPresent: boolean('is_present').notNull().default(true),
+  revenueSharePercent: integer('revenue_share_percent'), // 0-100, barber's share of service revenue; null = use shop default or 100
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({

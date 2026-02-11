@@ -23,7 +23,7 @@ interface BarberAnalyticsData {
     revenueCents: number;
   };
   ticketsByDay: Record<string, number>;
-  serviceBreakdown: Array<{ serviceId: number; serviceName: string; count: number; percentage: number }>;
+  serviceBreakdown: Array<{ serviceId: number; serviceName: string; count: number; percentage: number; revenueCents?: number }>;
   dayOfWeekDistribution: Record<string, number>;
 }
 
@@ -175,10 +175,15 @@ export function BarberAnalyticsPage() {
               ) : (
                 <ul className="space-y-3">
                   {serviceBreakdown.map((s) => (
-                    <li key={s.serviceId} className="flex justify-between items-center text-sm">
+                    <li key={s.serviceId} className="flex justify-between items-center gap-3 text-sm flex-wrap">
                       <span className="text-white/90">{s.serviceName}</span>
-                      <span className="text-[var(--shop-accent)] font-medium">
+                      <span className="text-[var(--shop-accent)] font-medium flex items-center gap-2">
                         {s.count} ({s.percentage}%)
+                        {s.revenueCents != null && s.revenueCents > 0 && (
+                          <span className="text-white/80 font-normal">
+                            {formatCurrency(s.revenueCents, locale)}
+                          </span>
+                        )}
                       </span>
                     </li>
                   ))}
