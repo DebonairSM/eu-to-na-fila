@@ -5,7 +5,7 @@ services:
     plan: starter
     region: oregon
     buildCommand: pnpm install --frozen-lockfile && pnpm build:render && test -f apps/api/dist/server.js || (echo "Build failed: apps/api/dist/server.js not found" && exit 1)
-    preDeployCommand: pnpm db:migrate && pnpm db:seed
+    preDeployCommand: pnpm db:migrate
     startCommand: pnpm db:migrate && cd apps/api && node dist/server.js
     envVars:
       - key: NODE_ENV
