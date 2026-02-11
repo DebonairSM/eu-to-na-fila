@@ -16,7 +16,9 @@ export function ErrorDisplay({ error, onRetry, className }: ErrorDisplayProps) {
     error instanceof Error &&
     (error.message.includes('Failed to fetch dynamically imported module') ||
      error.message.includes('Loading chunk') ||
-     error.message.includes('ChunkLoadError'));
+     error.message.includes('ChunkLoadError') ||
+     error.message.includes('Erro de conexão ao carregar a página') ||
+     error.message.includes('Erro ao carregar a página'));
 
   const handleReload = () => {
     window.location.reload();

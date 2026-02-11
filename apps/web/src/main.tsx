@@ -17,36 +17,36 @@ if (typeof window !== 'undefined') {
   window.addEventListener('unhandledrejection', (event) => {
     const error = event.reason;
     const errorMessage = error?.message || String(error);
-    
-    // Check if it's a chunk loading error
-    if (
+    const isChunkOrConnectionError =
       errorMessage.includes('Failed to fetch dynamically imported module') ||
       errorMessage.includes('Loading chunk') ||
       errorMessage.includes('ChunkLoadError') ||
-      errorMessage.includes('Failed to fetch')
-    ) {
-      // Log the error but don't prevent default handling
-      // The ErrorBoundary and lazyWithRetry will handle it
+      errorMessage.includes('Failed to fetch') ||
+      errorMessage.includes('Erro de conexão ao carregar a página') ||
+      errorMessage.includes('Erro ao carregar a página');
+
+    if (isChunkOrConnectionError) {
+      event.preventDefault();
       if (import.meta.env.DEV) {
-        console.warn('Chunk loading error detected:', errorMessage);
+        console.warn('Chunk/connection loading error (handled by ErrorBoundary):', errorMessage);
       }
-      
-      // Optionally, you could show a toast notification here
-      // For now, we let the ErrorBoundary handle it
     }
   });
 
   // Handle general errors
   window.addEventListener('error', (event) => {
     const errorMessage = event.message || '';
-    
-    if (
+    const isChunkOrConnectionError =
       errorMessage.includes('Failed to fetch dynamically imported module') ||
       errorMessage.includes('Loading chunk') ||
-      errorMessage.includes('ChunkLoadError')
-    ) {
+      errorMessage.includes('ChunkLoadError') ||
+      errorMessage.includes('Erro de conexão ao carregar a página') ||
+      errorMessage.includes('Erro ao carregar a página');
+
+    if (isChunkOrConnectionError) {
+      event.preventDefault();
       if (import.meta.env.DEV) {
-        console.warn('Chunk loading error detected:', errorMessage);
+        console.warn('Chunk/connection loading error (handled by ErrorBoundary):', errorMessage);
       }
     }
   });

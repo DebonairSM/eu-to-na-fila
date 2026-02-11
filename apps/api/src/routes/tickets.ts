@@ -6,7 +6,7 @@ import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { ticketService, queueService } from '../services/index.js';
 import { validateRequest } from '../lib/validation.js';
-import { NotFoundError, ValidationError, ForbiddenError } from '../lib/errors.js';
+import { NotFoundError, ValidationError, ForbiddenError, InternalError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { shapeTicketResponse } from '../lib/ticketResponse.js';
@@ -302,18 +302,26 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {404} If ticket not found
    */
   fastify.get('/tickets/:id', async (request, reply) => {
-    const paramsSchema = z.object({
-      id: z.coerce.number().int().positive(),
-    });
-    const { id } = validateRequest(paramsSchema, request.params);
+    try {
+      const paramsSchema = z.object({
+        id: z.coerce.number().int().positive(),
+      });
+      const { id } = validateRequest(paramsSchema, request.params);
 
-    const ticket = await ticketService.getById(id);
+      const ticket = await ticketService.getById(id);
 
-    if (!ticket) {
-      throw new NotFoundError(`Ticket with ID ${id} not found`);
+      if (!ticket) {
+        throw new NotFoundError(`Ticket with ID ${id} not found`);
+      }
+
+      return shapeTicketResponse(ticket as Record<string, unknown>);
+    } catch (err) {
+      if (err instanceof NotFoundError || err instanceof ValidationError) {
+        throw err;
+      }
+      request.log.error({ err, ticketId: request.params?.id }, 'GET /tickets/:id failed');
+      throw new InternalError('Failed to load ticket. Please try again.');
     }
-
-    return shapeTicketResponse(ticket as Record<string, unknown>);
   });
 
   /**

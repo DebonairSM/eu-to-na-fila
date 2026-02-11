@@ -756,26 +756,26 @@ export function BarberQueueManager() {
             </div>
           )}
 
-          {/* Pending appointments (collapsible) */}
+          {/* Future appointments (compact detail, collapsed by default) */}
           {allowAppointments && pendingTickets.length > 0 && (
-            <div className="mb-4">
+            <div className="mb-2 mt-1">
               <button
                 type="button"
                 onClick={() => setScheduledSectionOpen((open) => !open)}
-                className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-left hover:bg-white/10 transition-colors"
+                className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded text-left text-white/50 hover:text-white/70 hover:bg-white/5 transition-colors"
                 aria-expanded={scheduledSectionOpen}
               >
-                <span className="flex items-center gap-2 text-sm font-medium text-white/80">
-                  <span className="material-symbols-outlined text-lg">event</span>
+                <span className="flex items-center gap-1.5 text-xs">
+                  <span className="material-symbols-outlined text-sm">event</span>
                   {t('barber.scheduledAwaitingCheckIn')}
-                  <span className="text-white/50 font-normal">({pendingTickets.length})</span>
+                  <span className="text-white/40">({pendingTickets.length})</span>
                 </span>
-                <span className="material-symbols-outlined text-white/60">
+                <span className="material-symbols-outlined text-sm">
                   {scheduledSectionOpen ? 'expand_less' : 'expand_more'}
                 </span>
               </button>
               {scheduledSectionOpen && (
-                <ul className="mt-2 space-y-2">
+                <ul className="mt-1 space-y-1">
                   {pendingTickets.map((ticket) => {
                     const scheduledTime = (ticket as any).scheduledTime;
                     const scheduledStr = scheduledTime
@@ -792,27 +792,27 @@ export function BarberQueueManager() {
                     return (
                       <li
                         key={ticket.id}
-                        className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 rounded-lg bg-white/5 border border-white/10"
+                        className="flex flex-wrap items-center justify-between gap-2 px-2 py-2 rounded bg-white/5 border border-white/10"
                       >
-                        <div className="min-w-0">
-                          <span className="font-medium text-white">{(ticket as any).ticketNumber ?? `A-${ticket.id}`}</span>
-                          <span className="text-white/70 ml-2">{formatNameForDisplay(ticket.customerName)}</span>
+                        <div className="min-w-0 text-xs">
+                          <span className="text-white/70">{(ticket as any).ticketNumber ?? `A-${ticket.id}`}</span>
+                          <span className="text-white/60 ml-1.5">{formatNameForDisplay(ticket.customerName)}</span>
                           {scheduledTime && (
-                            <span className="text-white/50 text-sm ml-2 block sm:inline">
+                            <span className="text-white/45 ml-1.5">
                               {new Date(scheduledTime).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           <button
                             type="button"
                             onClick={() => handleCheckInAppointment(ticket.id)}
                             disabled={checkInProgressTicketId === ticket.id}
-                            className="px-3 py-1.5 rounded-lg bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-2 py-1 rounded text-xs bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {checkInProgressTicketId === ticket.id ? (
                               <>
-                                <span className="material-symbols-outlined animate-spin text-base align-middle mr-1">hourglass_empty</span>
+                                <span className="material-symbols-outlined animate-spin text-sm align-middle mr-0.5">hourglass_empty</span>
                                 {t('barber.checkingIn')}
                               </>
                             ) : (
@@ -825,11 +825,11 @@ export function BarberQueueManager() {
                               setEditAppointmentTicketId(ticket.id);
                               setEditAppointmentTime(scheduledStr);
                             }}
-                            className="p-2 rounded-lg bg-white/10 text-white/80 hover:bg-white/15 hover:text-white border border-white/20"
+                            className="p-1.5 rounded bg-white/10 text-white/60 hover:text-white/80"
                             title={t('barber.rescheduleAppointment')}
                             aria-label={t('barber.rescheduleAppointment')}
                           >
-                            <span className="material-symbols-outlined text-lg">edit_calendar</span>
+                            <span className="material-symbols-outlined text-sm">edit_calendar</span>
                           </button>
                           <button
                             type="button"
@@ -837,11 +837,11 @@ export function BarberQueueManager() {
                               setCustomerToRemove(ticket.id);
                               removeConfirmModal.open();
                             }}
-                            className="p-2 rounded-lg bg-white/10 text-white/80 hover:bg-red-400/20 hover:text-red-300 border border-white/20"
+                            className="p-1.5 rounded bg-white/10 text-white/60 hover:text-red-300"
                             title={t('barber.cancelAppointment')}
                             aria-label={t('barber.cancelAppointmentAria').replace('{name}', ticket.customerName)}
                           >
-                            <span className="material-symbols-outlined text-lg">delete</span>
+                            <span className="material-symbols-outlined text-sm">delete</span>
                           </button>
                         </div>
                       </li>
