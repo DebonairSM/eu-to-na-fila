@@ -782,7 +782,7 @@ export function ShopManagementPage() {
                         {tab === 'services' && t('createShop.servicesTab')}
                         {tab === 'barbers' && t('createShop.barbersTab')}
                         {editTab === tab && (
-                          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full" aria-hidden="true" />
+                          <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-white rounded-full min-w-[4px]" aria-hidden="true" />
                         )}
                       </button>
                     ))}
@@ -879,7 +879,7 @@ export function ShopManagementPage() {
                             {createErrors.staffPassword && <p className="text-red-400 text-xs mt-1">{createErrors.staffPassword}</p>}
                           </div>
                           <div className="pt-4 border-t border-white/10">
-                            <h4 className="text-white font-medium mb-2">{t('management.kioskAccess')}</h4>
+                            <h4 className="text-sm font-medium text-white/90 uppercase tracking-wider mb-2">{t('management.kioskAccess')}</h4>
                             <p className="text-white/60 text-sm mb-3">{t('management.kioskAccessHint')}</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
@@ -897,13 +897,13 @@ export function ShopManagementPage() {
                     </section>
                   )}
                   {editTab === 'services' && !editingShop && (
-                    <div id="create-services-section">
+                    <div id="create-services-section" className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
                       {createErrors.services && <p className="text-red-400 text-sm mb-4">{createErrors.services}</p>}
                       <StepServices services={createServices} onChange={setCreateServices} errors={createErrors} />
                     </div>
                   )}
                   {editTab === 'barbers' && !editingShop && (
-                    <div id="create-barbers-section">
+                    <div id="create-barbers-section" className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
                       {createErrors.barbers && <p className="text-red-400 text-sm mb-4">{createErrors.barbers}</p>}
                       <StepBarbers barbers={createBarbers} onChange={setCreateBarbers} errors={createErrors} />
                     </div>
@@ -1082,8 +1082,8 @@ export function ShopManagementPage() {
                   })()}
                   {editTab === 'settings' && (
                     <div className="space-y-6">
-                      <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                        <h4 className="text-white font-medium">{t('management.queueSection')}</h4>
+                      <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.queueSection')}</h3>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="block text-white/60 text-sm mb-2">{t('management.maxQueueSize')}</label>
@@ -1095,8 +1095,8 @@ export function ShopManagementPage() {
                           </div>
                         </div>
                       </section>
-                      <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                        <h4 className="text-white font-medium">{t('management.serviceRules')}</h4>
+                      <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.serviceRules')}</h3>
                         <ul className="space-y-4">
                           {([
                             { key: 'requirePhone' as const, labelKey: 'management.requirePhone' },
@@ -1125,8 +1125,8 @@ export function ShopManagementPage() {
                           ))}
                         </ul>
                       </section>
-                      <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                        <h4 className="text-white font-medium">{t('management.operatingHours')}</h4>
+                      <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.operatingHours')}</h3>
                         <p className="text-white/60 text-sm">{t('management.operatingHoursHint')}</p>
                         {formData.settings.allowAppointments && (
                           <div className="flex flex-wrap items-end gap-2">
@@ -1259,9 +1259,9 @@ export function ShopManagementPage() {
                   )}
                   {editTab === 'credentials' && (
                     <div className="space-y-6">
-                      <p className="text-white/60 text-sm">Senhas para login na barbearia. Deixe em branco para não alterar. Mínimo 6 caracteres.</p>
-                      <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                        <h4 className="text-white font-medium">Credenciais de acesso</h4>
+                      <p className="text-white/55 text-sm">{t('management.credentialsIntro')}</p>
+                      <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.accessCredentials')}</h3>
                         <div className="space-y-4">
                           <div>
                             <label htmlFor="editOwnerPassword" className="block text-white/60 text-sm mb-2">Senha do dono (owner)</label>
@@ -1291,9 +1291,9 @@ export function ShopManagementPage() {
                           </div>
                         </div>
                       </section>
-                      <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                        <h4 className="text-white font-medium">Login por barbeiro</h4>
-                        <p className="text-white/50 text-xs">Cada barbeiro pode ter usuário e senha para entrar na página da barbearia e ver apenas seu card e atribuir clientes a si.</p>
+                      <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.barberLogin')}</h3>
+                        <p className="text-white/50 text-xs">{t('management.barberLoginHint')}</p>
                         {barberAccessLoading ? (
                           <p className="text-white/50 text-sm">Carregando barbeiros...</p>
                         ) : barberAccess.length === 0 ? (
@@ -1331,8 +1331,8 @@ export function ShopManagementPage() {
                           </ul>
                         )}
                       </section>
-                      <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                        <h4 className="text-white font-medium">{t('management.kioskAccess')}</h4>
+                      <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.kioskAccess')}</h3>
                         <p className="text-white/60 text-sm">{t('management.kioskAccessHint')}</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
@@ -1519,14 +1519,14 @@ export function ShopManagementPage() {
         >
           <div className="modal-content bg-[#242424] border border-white/10 rounded-2xl p-5 sm:p-6 lg:p-8 max-w-[min(90vw,720px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 shadow-2xl">
             <header className="flex-shrink-0 mb-6">
-              <h2 id="edit-modal-title" className="modal-title text-xl sm:text-2xl font-semibold text-white tracking-tight">
-                {editingShop ? t('management.editShop') ?? 'Editar Barbearia' : t('createShop.createShop')}
-              </h2>
-              <p className="text-white/50 text-sm mt-1">
-                {editingShop ? t('management.infoIntro') : t('createShop.newShop')}
-              </p>
-            </header>
-            <nav className="flex-shrink-0 border-b border-white/15 overflow-x-auto -mx-1 px-1" aria-label={t('management.settingsTab')}>
+            <h2 id="edit-modal-title" className="modal-title text-xl sm:text-2xl font-semibold text-white tracking-tight">
+              {editingShop ? t('management.editShop') ?? 'Editar Barbearia' : t('createShop.createShop')}
+            </h2>
+            <p className="text-white/50 text-sm mt-1">
+              {editingShop ? t('management.infoIntro') : t('createShop.newShop')}
+            </p>
+          </header>
+          <nav className="flex-shrink-0 border-b border-white/15 overflow-x-auto -mx-1 px-1" aria-label={t('management.settingsTab')}>
               <div className="flex gap-0 min-w-max">
                 {(editingShop ? ['info', 'appearance', 'content', 'settings', 'credentials'] : ['info', 'appearance', 'content', 'settings', 'services', 'barbers']).map((tab) => (
                   <button
@@ -1546,7 +1546,7 @@ export function ShopManagementPage() {
                     {tab === 'services' && t('createShop.servicesTab')}
                     {tab === 'barbers' && t('createShop.barbersTab')}
                     {editTab === tab && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#D4AF37] rounded-full" aria-hidden="true" />
+                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#D4AF37] rounded-full min-w-[4px]" aria-hidden="true" />
                     )}
                   </button>
                 ))}
@@ -1610,7 +1610,7 @@ export function ShopManagementPage() {
                         {createErrors.staffPassword && <p className="text-red-400 text-xs mt-1">{createErrors.staffPassword}</p>}
                       </div>
                       <div className="pt-4 border-t border-white/10">
-                        <h4 className="text-white font-medium mb-2">{t('management.kioskAccess')}</h4>
+                        <h4 className="text-sm font-medium text-white/90 uppercase tracking-wider mb-2">{t('management.kioskAccess')}</h4>
                         <p className="text-white/60 text-sm mb-3">{t('management.kioskAccessHint')}</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
@@ -1628,13 +1628,13 @@ export function ShopManagementPage() {
                 </section>
               )}
               {editTab === 'services' && !editingShop && (
-                <div id="create-services-section">
+                <div id="create-services-section" className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
                   {createErrors.services && <p className="text-red-400 text-sm mb-4">{createErrors.services}</p>}
                   <StepServices services={createServices} onChange={setCreateServices} errors={createErrors} />
                 </div>
               )}
               {editTab === 'barbers' && !editingShop && (
-                <div id="create-barbers-section">
+                <div id="create-barbers-section" className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
                   {createErrors.barbers && <p className="text-red-400 text-sm mb-4">{createErrors.barbers}</p>}
                   <StepBarbers barbers={createBarbers} onChange={setCreateBarbers} errors={createErrors} />
                 </div>
@@ -1884,8 +1884,8 @@ export function ShopManagementPage() {
               })()}
               {editTab === 'settings' && (
                 <div className="space-y-6">
-                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                    <h4 className="text-white font-medium">{t('management.queueSection')}</h4>
+                  <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.queueSection')}</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-white/60 text-sm mb-2">{t('management.maxQueueSize')}</label>
@@ -1897,8 +1897,8 @@ export function ShopManagementPage() {
                       </div>
                     </div>
                   </section>
-                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                    <h4 className="text-white font-medium">{t('management.serviceRules')}</h4>
+                  <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.serviceRules')}</h3>
                     <ul className="space-y-4">
                       {[{ key: 'requirePhone' as const, labelKey: 'management.requirePhone' }, { key: 'allowBarberPreference' as const, labelKey: 'management.allowBarberPreference' }, { key: 'requireBarberChoice' as const, labelKey: 'management.requireBarberChoice' }, { key: 'allowDuplicateNames' as const, labelKey: 'management.allowDuplicateNames' }, { key: 'deviceDeduplication' as const, labelKey: 'management.deviceDeduplication' }, { key: 'allowCustomerCancelInProgress' as const, labelKey: 'management.allowCustomerCancelInProgress' }, { key: 'allowAppointments' as const, labelKey: 'management.allowAppointments' }, { key: 'allowQueueBeforeOpen' as const, labelKey: 'management.allowQueueBeforeOpen' }].map(({ key, labelKey }) => (
                         <li key={key}>
@@ -1910,8 +1910,8 @@ export function ShopManagementPage() {
                       ))}
                     </ul>
                   </section>
-                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                    <h4 className="text-white font-medium">{t('management.operatingHours')}</h4>
+                  <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.operatingHours')}</h3>
                     <p className="text-white/60 text-sm">{t('management.operatingHoursHint')}</p>
                     {formData.settings.allowAppointments && (
                       <div className="flex flex-wrap items-end gap-2">
@@ -2113,9 +2113,9 @@ export function ShopManagementPage() {
               )}
               {editTab === 'credentials' && (
                 <div className="space-y-6">
-                  <p className="text-white/60 text-sm">Senhas para login na barbearia. Deixe em branco para não alterar. Mínimo 6 caracteres.</p>
-                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                    <h4 className="text-white font-medium">Credenciais de acesso</h4>
+                  <p className="text-white/55 text-sm">{t('management.credentialsIntro')}</p>
+                  <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.accessCredentials')}</h3>
                     <div className="space-y-4">
                       <div>
                         <label htmlFor="editOwnerPasswordMineiro" className="block text-white/60 text-sm mb-2">Senha do dono (owner)</label>
@@ -2145,9 +2145,9 @@ export function ShopManagementPage() {
                       </div>
                     </div>
                   </section>
-                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                    <h4 className="text-white font-medium">Login por barbeiro</h4>
-                    <p className="text-white/50 text-xs">Cada barbeiro pode ter usuário e senha para entrar na página da barbearia e ver apenas seu card e atribuir clientes a si.</p>
+                  <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.barberLogin')}</h3>
+                    <p className="text-white/50 text-xs">{t('management.barberLoginHint')}</p>
                     {barberAccessLoading ? (
                       <p className="text-white/50 text-sm">Carregando barbeiros...</p>
                     ) : barberAccess.length === 0 ? (
@@ -2185,8 +2185,8 @@ export function ShopManagementPage() {
                       </ul>
                     )}
                   </section>
-                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                    <h4 className="text-white font-medium">{t('management.kioskAccess')}</h4>
+                  <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.kioskAccess')}</h3>
                     <p className="text-white/60 text-sm">{t('management.kioskAccessHint')}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>

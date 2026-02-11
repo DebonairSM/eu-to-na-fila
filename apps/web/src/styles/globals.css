@@ -700,6 +700,10 @@
 [data-shop-layout="magazine"] .section-title.section-title--layout {
   text-align: left;
 }
+[data-shop-layout="magazine"] #services > div:first-child,
+[data-shop-layout="magazine"] #location > div:first-child {
+  text-align: left;
+}
 [data-shop-layout="magazine"] .section-title.section-title--layout::after {
   content: '';
   display: block;

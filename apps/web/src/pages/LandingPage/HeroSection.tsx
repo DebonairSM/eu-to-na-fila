@@ -93,7 +93,7 @@ export function HeroSection() {
     >
       {behavior.heroOverlay && <div className="hero-gradient-overlay absolute inset-0 pointer-events-none z-[1]" aria-hidden />}
       <Container size="2xl" className={cn('relative z-10 w-full', heroBanner && 'hero-banner-container')}>
-        <div className="lg:hidden text-center">
+        <div className={cn('lg:hidden text-center', heroBanner && 'hero-band')}>
           <FadeIn delay={0}>
             {showBadge && (
               <div className={badgeClass}>
