@@ -94,6 +94,7 @@ class ApiClient extends BaseApiClient {
   // --- Auth ---
   authenticate = this._auth.authenticate;
   authenticateBarber = this._auth.authenticateBarber;
+  authenticateKiosk = this._auth.authenticateKiosk;
   companyAuthenticate = this._auth.companyAuthenticate;
 
   // --- Ads ---

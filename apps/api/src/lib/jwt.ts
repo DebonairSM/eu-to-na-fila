@@ -9,7 +9,7 @@ export interface JWTPayload {
   userId: number;
   shopId?: number;
   companyId?: number;
-  role: 'owner' | 'staff' | 'company_admin' | 'barber';
+  role: 'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk';
   barberId?: number;
   iat?: number;
   exp?: number;
@@ -25,7 +25,7 @@ export function signToken(user: {
   userId: number;
   shopId?: number;
   companyId?: number;
-  role: 'owner' | 'staff' | 'company_admin' | 'barber';
+  role: 'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk';
   barberId?: number;
 }): string {
   const payload: JWTPayload = {

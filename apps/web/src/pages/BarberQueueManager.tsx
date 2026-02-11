@@ -105,12 +105,13 @@ export function BarberQueueManager() {
     return Date.now() >= scheduled - oneHourMs;
   }, []);
 
-  // Enter kiosk mode if ?kiosk=true in URL
+  // Enter kiosk mode if ?kiosk=true in URL or user logged in as kiosk-only
+  const isKioskOnly = user?.role === 'kiosk';
   useEffect(() => {
-    if (searchParams.get('kiosk') === 'true' && !isKioskMode) {
+    if (!isKioskMode && (searchParams.get('kiosk') === 'true' || isKioskOnly)) {
       enterKioskMode();
     }
-  }, [searchParams, isKioskMode, enterKioskMode]);
+  }, [searchParams, isKioskMode, isKioskOnly, enterKioskMode]);
 
   // Sync checkInServiceId to first active service when activeServices loads (like JoinForm). Use primitives to avoid loop.
   const firstActiveServiceId = activeServices[0]?.id ?? null;

@@ -7,6 +7,7 @@ import { getShopBySlug } from '../lib/shop.js';
 import { ValidationError } from '../lib/errors.js';
 import { signToken } from '../lib/jwt.js';
 import { verifyPassword, validatePassword } from '../lib/password.js';
+import { getKioskPasswordHash } from '../lib/settings.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { logAuthFailure, logAuthSuccess, getClientIp } from '../middleware/security.js';
 
@@ -182,6 +183,73 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       barberId: barber.id,
       barberName: barber.name,
       pinResetRequired: false,
+    };
+  });
+
+  /**
+   * Kiosk-only login: username + password from shop settings.
+   * Issues JWT with role 'kiosk' for display-only queue/barber view.
+   *
+   * @route POST /api/shops/:slug/auth/kiosk
+   * @body username - Kiosk username (from shop settings)
+   * @body password - Kiosk password
+   * @returns { valid, role: 'kiosk', token? }
+   */
+  fastify.post('/shops/:slug/auth/kiosk', {
+    preHandler: [authRateLimit],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1).max(100),
+    });
+    const bodySchema = z.object({
+      username: z.string().min(1).max(100),
+      password: z.string().min(1).max(200),
+    });
+
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { username, password } = validateRequest(bodySchema, request.body);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) {
+      logAuthFailure(request, 'shop_not_found', slug);
+      return { valid: false, role: null };
+    }
+
+    const settings = shop.settings as Record<string, unknown> | null;
+    const kioskUsername = settings?.kioskUsername;
+    const kioskPasswordHash = getKioskPasswordHash(shop.settings);
+    const kioskPasswordPlain = typeof settings?.kioskPassword === 'string' ? settings.kioskPassword : null;
+
+    if (typeof kioskUsername !== 'string' || !kioskUsername.trim()) {
+      logAuthFailure(request, 'invalid_kiosk_login', slug);
+      return { valid: false, role: null };
+    }
+
+    const usernameMatch = username.trim() === kioskUsername.trim();
+    let passwordMatches = false;
+    if (kioskPasswordHash) {
+      passwordMatches = await verifyPassword(password, kioskPasswordHash);
+    } else if (kioskPasswordPlain) {
+      passwordMatches = password === kioskPasswordPlain;
+    }
+
+    if (!usernameMatch || !passwordMatches) {
+      logAuthFailure(request, 'invalid_kiosk_login', slug);
+      return { valid: false, role: null };
+    }
+
+    logAuthSuccess(request, shop.id, 'kiosk');
+
+    const token = signToken({
+      userId: shop.id,
+      shopId: shop.id,
+      role: 'kiosk',
+    });
+
+    return {
+      valid: true,
+      role: 'kiosk' as const,
+      token,
     };
   });
 };

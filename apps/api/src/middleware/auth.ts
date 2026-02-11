@@ -9,7 +9,7 @@ export interface AuthUser {
   id: number;
   shopId?: number;
   companyId?: number;
-  role: 'owner' | 'staff' | 'company_admin' | 'barber';
+  role: 'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk';
   barberId?: number;
 }
 
@@ -94,7 +94,7 @@ export function requireAuth(): preHandlerHookHandler {
  * ```
  */
 export function requireRole(
-  allowedRoles: Array<'owner' | 'staff' | 'company_admin' | 'barber'>
+  allowedRoles: Array<'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk'>
 ): preHandlerHookHandler {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     if (!request.user) {

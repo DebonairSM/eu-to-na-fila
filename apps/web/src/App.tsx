@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Suspense, useEffect } from 'react';
 import { useAuthContext } from './contexts/AuthContext';
 import { useShopHomeContent } from './contexts/ShopConfigContext';
@@ -16,6 +16,7 @@ const AboutPage = lazyWithRetry(() => import('./pages/AboutPage').then((m) => ({
 const JoinPageGuard = lazyWithRetry(() => import('./pages/JoinPage/JoinPageGuard').then((m) => ({ default: m.JoinPageGuard })));
 const StatusPage = lazyWithRetry(() => import('./pages/StatusPage').then((m) => ({ default: m.StatusPage })));
 const LoginPage = lazyWithRetry(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
+const KioskLoginPage = lazyWithRetry(() => import('./pages/KioskLoginPage').then((m) => ({ default: m.KioskLoginPage })));
 const OwnerDashboard = lazyWithRetry(() => import('./pages/OwnerDashboard').then((m) => ({ default: m.OwnerDashboard })));
 const StaffPage = lazyWithRetry(() => import('./pages/StaffPage').then((m) => ({ default: m.StaffPage })));
 const BarberQueueManager = lazyWithRetry(() => import('./pages/BarberQueueManager').then((m) => ({ default: m.BarberQueueManager })));
@@ -41,7 +42,9 @@ function ProtectedRoute({
   requireCompanyAdmin?: boolean;
   requireBarber?: boolean;
 }) {
-  const { isAuthenticated, isOwner, isCompanyAdmin, isBarber, isLoading } = useAuthContext();
+  const { isAuthenticated, isOwner, isCompanyAdmin, isBarber, isKioskOnly, isLoading } = useAuthContext();
+  const location = useLocation();
+  const pathname = location.pathname.replace(/^\/projects\/[^/]+/, '') || '/';
 
   const homeContent = useShopHomeContent();
   const { t } = useLocale();
@@ -57,6 +60,10 @@ function ProtectedRoute({
 
   if (!isAuthenticated) {
     return <Navigate to="/shop/login" replace />;
+  }
+
+  if (isKioskOnly && pathname !== '/manage') {
+    return <Navigate to="/manage?kiosk=true" replace />;
   }
 
   if (requireOwner && !isOwner) {
@@ -101,6 +108,7 @@ function AppContent() {
       <Route path="/appointment/:id/confirm" element={<AppointmentConfirmPage />} />
       <Route path="/status/:id" element={<StatusPage />} />
       <Route path="/shop/login" element={<LoginPage />} />
+      <Route path="/kiosk-login" element={<KioskLoginPage />} />
 
       <Route
         path="/staff"

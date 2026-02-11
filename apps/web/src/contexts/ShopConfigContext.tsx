@@ -36,6 +36,8 @@ interface ShopConfigContextValue {
   config: ShopConfig;
   isLoading: boolean;
   error: string | null;
+  /** Clear cached config for the given slug (or current shop) and refetch so UI updates immediately. */
+  invalidateConfig: (slug?: string) => void;
 }
 
 const defaultTheme: Required<ShopTheme> = DEFAULT_THEME;
@@ -54,6 +56,7 @@ const ShopConfigContext = createContext<ShopConfigContextValue>({
   config: defaultConfig,
   isLoading: false,
   error: null,
+  invalidateConfig: () => {},
 });
 
 const cache = new Map<string, ShopConfig>();
@@ -124,12 +127,31 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
   );
   const [isLoading, setIsLoading] = useState(!cache.has(shopSlug));
   const [error, setError] = useState<string | null>(null);
+  const [refetchKey, setRefetchKey] = useState(0);
   const fetchingRef = useRef<string | null>(null);
   const isMountedRef = useRef(true);
+
+  const invalidateConfig = useMemo(
+    () => (slug?: string) => {
+      if (slug) cache.delete(slug);
+      if (slug === undefined || slug === shopSlug) setRefetchKey((k) => k + 1);
+    },
+    [shopSlug]
+  );
 
   useEffect(() => {
     ensureMaterialSymbolsFontFace();
   }, []);
+
+  // Refetch when tab becomes visible and cache was cleared (e.g. after admin changed settings) so join page updates
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && !cache.has(shopSlug))
+        setRefetchKey((k) => k + 1);
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [shopSlug]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -193,15 +215,16 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
     return () => {
       isMountedRef.current = false;
     };
-  }, [shopSlug]);
+  }, [shopSlug, refetchKey]);
 
   const value = useMemo<ShopConfigContextValue>(
     () => ({
       config: config ?? defaultConfig,
       isLoading,
       error,
+      invalidateConfig,
     }),
-    [config, isLoading, error]
+    [config, isLoading, error, invalidateConfig]
   );
 
   return (

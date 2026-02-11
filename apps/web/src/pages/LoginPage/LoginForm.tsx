@@ -106,9 +106,16 @@ export function LoginForm() {
         </button>
       </form>
 
-      <div className="text-center pt-2">
-        <Link 
-          to="/home" 
+      <div className="text-center space-y-2 pt-2">
+        <Link
+          to="/kiosk-login"
+          className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors block"
+        >
+          <span className="material-symbols-outlined text-base">tv</span>
+          {t('auth.kioskModeOnly') ?? 'Modo quiosque (só exibição)'}
+        </Link>
+        <Link
+          to="/home"
           className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>

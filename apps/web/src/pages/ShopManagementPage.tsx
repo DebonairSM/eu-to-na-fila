@@ -4,6 +4,7 @@ import { api } from '@/lib/api';
 import type { ShopTheme, HomeContent, ShopAdminView, ShopSettings, ShopStyleConfig, OperatingHours } from '@eutonafila/shared';
 import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, shopStyleConfigSchema, BARBERSHOP_FEATURES } from '@eutonafila/shared';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useModal } from '@/hooks/useModal';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
@@ -96,6 +97,7 @@ type Shop = ShopAdminView;
 
 export function ShopManagementPage() {
   const { user, isCompanyAdmin } = useAuthContext();
+  const { invalidateConfig } = useShopConfig();
   const { t } = useLocale();
   const navigate = useNavigate();
   const editModal = useModal();
@@ -270,12 +272,13 @@ export function ShopManagementPage() {
       setBarberAccess([]);
       setContentLocale('pt-BR');
       editModal.close();
+      invalidateConfig(editingShop.slug);
       await loadShops();
     } catch (error) {
       const errorMsg = getErrorMessage(error, t('management.updateError'));
       setErrorMessage(errorMsg);
     }
-  }, [editingShop, formData, barberAccess, user?.companyId, loadShops, editModal]);
+  }, [editingShop, formData, barberAccess, user?.companyId, loadShops, editModal, invalidateConfig]);
 
   const handleDelete = useCallback(async () => {
     if (!user?.companyId || !shopToDelete) return;

@@ -59,6 +59,11 @@ export function useJoinForm() {
     setSelectedServiceId(activeServices[0].id);
   }, [activeServices, selectedServiceId]);
 
+  // Clear preferred barber when shop no longer allows it so UI updates immediately
+  useEffect(() => {
+    if (!settings.allowBarberPreference) setSelectedBarberId(null);
+  }, [settings.allowBarberPreference]);
+
   // Fetch wait times on mount and periodically (with Page Visibility API support)
   useEffect(() => {
     let mounted = true;

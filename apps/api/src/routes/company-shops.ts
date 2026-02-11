@@ -13,6 +13,7 @@ import { mergeHomeContent } from '../lib/homeContent.js';
 import { DEFAULT_THEME } from '../lib/theme.js';
 import { getPublicPath } from '../lib/paths.js';
 import { deleteAdFile, uploadShopHomeImage, uploadDraftHomeImage } from '../lib/storage.js';
+import { prepareSettingsForStorage, sanitizeSettingsForClient } from '../lib/settings.js';
 import { env } from '../env.js';
 import { themeInputSchema, homeContentInputSchema, homeContentByLocaleInputSchema, shopSettingsInputSchema } from '@eutonafila/shared';
 
@@ -65,7 +66,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         orderBy: (shops, { asc }) => [asc(shops.name)],
       });
 
-      return shops;
+      return shops.map((s) => ({ ...s, settings: sanitizeSettingsForClient(s.settings) }));
     }
   );
 
@@ -286,7 +287,8 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (body.settings !== undefined) {
         const existing = (shop.settings ?? {}) as Record<string, unknown>;
-        updatePayload.settings = { ...existing, ...body.settings };
+        const merged = { ...existing, ...body.settings };
+        updatePayload.settings = await prepareSettingsForStorage(merged, hashPassword);
       }
 
       if (body.ownerPassword !== undefined) {
@@ -315,7 +317,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         .where(eq(schema.shops.id, shopId))
         .returning();
 
-      return updatedShop;
+      return { ...updatedShop, settings: sanitizeSettingsForClient(updatedShop.settings) };
     }
   );
 
@@ -741,8 +743,8 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         name: z.string().min(1).max(200),
         slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
         domain: z.string().optional(),
-        ownerPassword: z.string().min(6).max(200).optional(),
-        staffPassword: z.string().min(6).max(200).optional(),
+        ownerPassword: z.string().min(6).max(200),
+        staffPassword: z.string().min(6).max(200),
         theme: themeInputSchema,
         homeContent: homeContentInputSchema,
         homeContentByLocale: homeContentByLocaleInputSchema,
@@ -781,14 +783,16 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
       }
       if (counter > 0) slug = projectSlug;
 
-      const ownerPassword = body.ownerPassword ?? '123456';
-      const staffPassword = body.staffPassword ?? '000000';
-      const ownerValidation = validatePassword(ownerPassword);
-      const staffValidation = validatePassword(staffPassword);
+      const ownerValidation = validatePassword(body.ownerPassword);
+      const staffValidation = validatePassword(body.staffPassword);
       if (!ownerValidation.isValid) throw new ValidationError(ownerValidation.error ?? 'Invalid owner password');
       if (!staffValidation.isValid) throw new ValidationError(staffValidation.error ?? 'Invalid staff password');
-      const ownerPinHash = await hashPassword(ownerPassword);
-      const staffPinHash = await hashPassword(staffPassword);
+      const ownerPinHash = await hashPassword(body.ownerPassword);
+      const staffPinHash = await hashPassword(body.staffPassword);
+
+      const settingsToStore = body.settings && typeof body.settings === 'object'
+        ? await prepareSettingsForStorage(body.settings as Record<string, unknown>, hashPassword)
+        : null;
 
       const result = await db.transaction(async (tx) => {
         const [newProject] = await tx
@@ -828,7 +832,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
             apiBase: null,
             theme: JSON.stringify(themeToStore),
             homeContent: homeContentToStore,
-            settings: body.settings ?? null,
+            settings: settingsToStore,
             ownerPinHash,
             staffPinHash,
             ownerPinResetRequired: false,
@@ -869,7 +873,11 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         return { shop: newShop, services: newServices, barbers: newBarbers };
       });
 
-      return reply.status(201).send(result);
+      return reply.status(201).send({
+        shop: { ...result.shop, settings: sanitizeSettingsForClient(result.shop.settings) },
+        services: result.services,
+        barbers: result.barbers,
+      });
     }
   );
 };

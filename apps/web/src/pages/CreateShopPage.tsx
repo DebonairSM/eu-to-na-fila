@@ -40,6 +40,8 @@ interface ShopFormData {
   domain: string;
   path: string;
   apiBase: string;
+  ownerPassword: string;
+  staffPassword: string;
   theme: ShopTheme;
   style: ShopStyleConfig;
   homeContent: HomeContent;
@@ -59,6 +61,8 @@ function getDefaultFormData(t: (key: string) => string): ShopFormData {
     domain: '',
     path: '',
     apiBase: '',
+    ownerPassword: '',
+    staffPassword: '',
     theme: { ...DEFAULT_THEME },
     style: defaultStyle,
     homeContent: JSON.parse(JSON.stringify(DEFAULT_HOME_CONTENT)),
@@ -363,6 +367,10 @@ export function CreateShopPage() {
   const validateForSubmit = useCallback((): boolean => {
     const errs: Record<string, string> = {};
     if (!data.name.trim()) errs.name = t('createShop.nameRequired');
+    if (!data.ownerPassword.trim()) errs.ownerPassword = t('management.ownerPasswordRequired');
+    else if (data.ownerPassword.length < 6) errs.ownerPassword = t('management.ownerPasswordMin');
+    if (!data.staffPassword.trim()) errs.staffPassword = t('management.staffPasswordRequired');
+    else if (data.staffPassword.length < 6) errs.staffPassword = t('management.staffPasswordMin');
     const hasEmptyService = data.services.some((s) => !s.name.trim());
     if (hasEmptyService || data.services.length === 0)
       errs.services = data.services.length === 0 ? t('createShop.addAtLeastOneService') : t('createShop.allServicesNeedName');
@@ -384,6 +392,8 @@ export function CreateShopPage() {
         name: data.name,
         slug: data.slug || undefined,
         domain: data.domain || undefined,
+        ownerPassword: data.ownerPassword,
+        staffPassword: data.staffPassword,
         theme: data.theme,
         homeContentByLocale: { 'pt-BR': data.homeContent, en: data.homeContent },
         settings: data.settings,
@@ -561,6 +571,41 @@ export function CreateShopPage() {
                 <div>
                   <label htmlFor="createApiBase" className="block text-white/50 text-sm mb-2">{t('management.apiBase')}</label>
                   <input id="createApiBase" type="url" value={data.apiBase} onChange={(e) => onChange({ apiBase: e.target.value })} placeholder={t('management.apiBasePlaceholder')} className={FORM_INPUT} />
+                </div>
+                
+                {/* Access Credentials */}
+                <div className="pt-4 border-t border-white/10">
+                  <h3 className="text-white font-medium mb-4">{t('management.accessCredentials')}</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="createOwnerPassword" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">{t('management.ownerPassword')} *</label>
+                      <input
+                        id="createOwnerPassword"
+                        type="password"
+                        value={data.ownerPassword}
+                        onChange={(e) => onChange({ ownerPassword: e.target.value })}
+                        required
+                        minLength={6}
+                        placeholder={t('management.ownerPasswordPlaceholder')}
+                        className={FORM_INPUT}
+                      />
+                      {errors.ownerPassword && <p className="text-red-400 text-xs mt-1">{errors.ownerPassword}</p>}
+                    </div>
+                    <div>
+                      <label htmlFor="createStaffPassword" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">{t('management.staffPassword')} *</label>
+                      <input
+                        id="createStaffPassword"
+                        type="password"
+                        value={data.staffPassword}
+                        onChange={(e) => onChange({ staffPassword: e.target.value })}
+                        required
+                        minLength={6}
+                        placeholder={t('management.staffPasswordPlaceholder')}
+                        className={FORM_INPUT}
+                      />
+                      {errors.staffPassword && <p className="text-red-400 text-xs mt-1">{errors.staffPassword}</p>}
+                    </div>
+                  </div>
                 </div>
               </section>
             )}
