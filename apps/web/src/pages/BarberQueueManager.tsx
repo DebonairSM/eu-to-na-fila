@@ -660,14 +660,15 @@ export function BarberQueueManager() {
                   type="button"
                   onClick={handleCallNext}
                   disabled={nextTicketLoading || sortedTickets.length === 0}
-                  className="flex items-center justify-center gap-2 px-6 py-4 bg-[color-mix(in_srgb,var(--shop-accent)_80%,transparent)] text-[var(--shop-text-on-accent)] border-2 border-[var(--shop-accent)] rounded-lg font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={t('barber.callNext')}
+                  title={t('barber.callNext')}
+                  className="flex items-center justify-center gap-2 px-4 py-4 min-w-[44px] bg-[color-mix(in_srgb,var(--shop-accent)_80%,transparent)] text-[var(--shop-text-on-accent)] border-2 border-[var(--shop-accent)] rounded-lg font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {nextTicketLoading ? (
                     <span className="material-symbols-outlined animate-spin">hourglass_empty</span>
                   ) : (
                     <span className="material-symbols-outlined">next_plan</span>
                   )}
-                  {t('barber.callNext')}
                 </button>
                 <button
                   type="button"
