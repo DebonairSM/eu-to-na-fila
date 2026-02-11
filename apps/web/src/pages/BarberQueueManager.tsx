@@ -46,8 +46,8 @@ export function BarberQueueManager() {
     toggleFullscreen,
   } = useKiosk();
 
-  // Use longer polling interval in kiosk mode to improve performance
-  const pollInterval = 2000; // 2s polling for queue updates
+  // Poll queue frequently for real-time updates in management interface
+  const pollInterval = 1000; // 1s polling for queue updates (critical for barbers managing queue)
   const barberPollInterval = isKioskMode ? 2000 : 0; // Poll barbers in kiosk mode so presence updates without refresh
   const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval);
   const { barbers, togglePresence } = useBarbers(barberPollInterval);

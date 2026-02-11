@@ -41,7 +41,7 @@ export function ShopStatusBanner() {
       );
     };
     
-    const interval = setInterval(updateStatus, 2000);
+    const interval = setInterval(updateStatus, 5000); // 5s for status banner (not critical)
     return () => clearInterval(interval);
   }, [settingsKey]);
 

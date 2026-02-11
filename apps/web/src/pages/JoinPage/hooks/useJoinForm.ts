@@ -44,7 +44,7 @@ export function useJoinForm() {
   const { t } = useLocale();
   const settings = shopConfig.settings;
   const { validateName } = useProfanityFilter();
-  const { data } = useQueue(2000);
+  const { data } = useQueue(5000); // 5s for join page (less critical, just for wait time estimates)
   const { barbers } = useBarbers();
   const { activeServices, isLoading: isLoadingServices } = useServices();
 
