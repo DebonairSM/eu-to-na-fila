@@ -95,9 +95,6 @@ export function BarberQueueManager() {
     }
   }, [searchParams, isKioskMode, enterKioskMode]);
 
-  const settings = shopConfig.settings;
-  // Barber selection is always optional (preferred barber only); never required for clients or staff.
-
   // Sync checkInServiceId to first active service when activeServices loads (like JoinForm). Use primitives to avoid loop.
   const firstActiveServiceId = activeServices[0]?.id ?? null;
   const activeServiceIdsStr = activeServices.map((s) => s.id).join(',');
