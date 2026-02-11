@@ -319,7 +319,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       if (err instanceof NotFoundError || err instanceof ValidationError) {
         throw err;
       }
-      request.log.error({ err, ticketId: request.params?.id }, 'GET /tickets/:id failed');
+      request.log.error({ err, ticketId: (request.params as { id?: string })?.id }, 'GET /tickets/:id failed');
       throw new InternalError('Failed to load ticket. Please try again.');
     }
   });
