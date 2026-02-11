@@ -352,6 +352,7 @@
     "usernamePlaceholder": "E.g. joao.silva",
     "operatingHours": "Operating hours",
     "operatingHoursHint": "Used for appointments. Leave closed for days with no service.",
+    "timezone": "Timezone (IANA, e.g. America/Sao_Paulo)",
     "day": "Day",
     "open": "Open",
     "opensAt": "Opens at",

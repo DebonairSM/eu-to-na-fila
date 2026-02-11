@@ -703,6 +703,19 @@ export function ShopManagementPage() {
                       <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
                         <h4 className="text-white font-medium">Horário de funcionamento</h4>
                         <p className="text-white/60 text-sm">Usado para agendamentos. Deixe fechado os dias sem atendimento.</p>
+                        {formData.settings.allowAppointments && (
+                          <div>
+                            <label htmlFor="editTimezone" className="block text-white/60 text-sm mb-1">{t('management.timezone')}</label>
+                            <input
+                              id="editTimezone"
+                              type="text"
+                              value={formData.settings.timezone ?? 'America/Sao_Paulo'}
+                              onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, timezone: e.target.value || undefined } })}
+                              placeholder="America/Sao_Paulo"
+                              className="w-full max-w-[280px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/40"
+                            />
+                          </div>
+                        )}
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>

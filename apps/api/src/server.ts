@@ -210,6 +210,26 @@ fastify.register(fastifyStatic, {
   },
 });
 
+// Serve static assets for all /projects/:slug/ paths (sw.js, favicon, manifest, etc.)
+// Same SPA build is used for all project slugs; assets live in projects/mineiro
+const STATIC_ASSET_FILES = ['sw.js', 'favicon.svg', 'favicon.png', 'manifest.json', 'icon-192.png', 'icon-512.png'];
+for (const filename of STATIC_ASSET_FILES) {
+  fastify.get(`/projects/:slug/${filename}`, async (request, reply) => {
+    const filePath = join(projectsMineiroPath, filename);
+    if (!existsSync(filePath)) return reply.code(404).send({ error: 'Not found' });
+    const content = readFileSync(filePath);
+    const mime: Record<string, string> = {
+      'sw.js': 'application/javascript',
+      'favicon.svg': 'image/svg+xml',
+      'favicon.png': 'image/png',
+      'manifest.json': 'application/json',
+      'icon-192.png': 'image/png',
+      'icon-512.png': 'image/png',
+    };
+    return reply.type(mime[filename] ?? 'application/octet-stream').send(content);
+  });
+}
+
 // Company ad files are now served through API endpoint /api/ads/:id/media
 // No need for static file serving - this simplifies the architecture and eliminates CORS issues
 // Create companies directory if it doesn't exist (for file storage, not serving)

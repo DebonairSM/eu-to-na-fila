@@ -65,6 +65,7 @@ export interface ShopStyleResolved {
   bodyFont: FontToken;
   headingWeight: number;
   headingLetterSpacing: string;
+  headingLineHeight: string;
   headingTransform: HeadingTransform;
   /** Radii are applied through existing global tokens: --radius-sm/md/lg/xl/2xl/full */
   radius: {
@@ -92,6 +93,7 @@ export const shopStyleConfigSchema = z.object({
   bodyFont: fontTokenSchema.optional(),
   headingWeight: z.number().int().min(300).max(900).optional(),
   headingLetterSpacing: z.string().max(20).optional(),
+  headingLineHeight: z.string().max(10).optional(),
   headingTransform: headingTransformSchema.optional(),
   iconWeight: z.number().int().min(100).max(700).optional(),
   dividerStyle: dividerStyleSchema.optional(),
@@ -107,6 +109,7 @@ export const shopStyleInputSchema = z.object({
   bodyFont: fontTokenSchema.optional(),
   headingWeight: z.number().int().min(300).max(900).optional(),
   headingLetterSpacing: z.string().max(20).optional(),
+  headingLineHeight: z.string().max(10).optional(),
   headingTransform: headingTransformSchema.optional(),
   iconWeight: z.number().int().min(100).max(700).optional(),
   dividerStyle: dividerStyleSchema.optional(),
@@ -118,6 +121,7 @@ export const DEFAULT_STYLE_PRESETS: Record<StylePresetId, Omit<ShopStyleResolved
     bodyFont: 'inter',
     headingWeight: 600,
     headingLetterSpacing: '0em',
+    headingLineHeight: '1.2',
     headingTransform: 'none',
     radius: { sm: '8px', md: '12px', lg: '16px', xl: '24px', '2xl': '28px', full: '100px' },
     borderWidth: '1px',
@@ -129,7 +133,8 @@ export const DEFAULT_STYLE_PRESETS: Record<StylePresetId, Omit<ShopStyleResolved
     headingFont: 'cormorant_garamond',
     bodyFont: 'lora',
     headingWeight: 600,
-    headingLetterSpacing: '0.02em',
+    headingLetterSpacing: '0.03em',
+    headingLineHeight: '1.25',
     headingTransform: 'small-caps',
     radius: { sm: '6px', md: '10px', lg: '14px', xl: '20px', '2xl': '24px', full: '100px' },
     borderWidth: '1px',
@@ -140,8 +145,9 @@ export const DEFAULT_STYLE_PRESETS: Record<StylePresetId, Omit<ShopStyleResolved
   vintage: {
     headingFont: 'abril_fatface',
     bodyFont: 'crimson_text',
-    headingWeight: 700,
+    headingWeight: 600,
     headingLetterSpacing: '0.08em',
+    headingLineHeight: '1.25',
     headingTransform: 'uppercase',
     radius: { sm: '0px', md: '0px', lg: '0px', xl: '0px', '2xl': '0px', full: '100px' },
     borderWidth: '2px',
@@ -154,6 +160,7 @@ export const DEFAULT_STYLE_PRESETS: Record<StylePresetId, Omit<ShopStyleResolved
     bodyFont: 'montserrat',
     headingWeight: 600,
     headingLetterSpacing: '0.06em',
+    headingLineHeight: '1.2',
     headingTransform: 'uppercase',
     radius: { sm: '2px', md: '4px', lg: '6px', xl: '10px', '2xl': '14px', full: '100px' },
     borderWidth: '1px',
@@ -164,8 +171,9 @@ export const DEFAULT_STYLE_PRESETS: Record<StylePresetId, Omit<ShopStyleResolved
   industrial: {
     headingFont: 'oswald',
     bodyFont: 'roboto_condensed',
-    headingWeight: 700,
-    headingLetterSpacing: '0.04em',
+    headingWeight: 600,
+    headingLetterSpacing: '0.06em',
+    headingLineHeight: '1.25',
     headingTransform: 'uppercase',
     radius: { sm: '0px', md: '0px', lg: '2px', xl: '6px', '2xl': '10px', full: '100px' },
     borderWidth: '2px',
@@ -178,6 +186,7 @@ export const DEFAULT_STYLE_PRESETS: Record<StylePresetId, Omit<ShopStyleResolved
     bodyFont: 'dm_sans',
     headingWeight: 600,
     headingLetterSpacing: '0.01em',
+    headingLineHeight: '1.2',
     headingTransform: 'none',
     radius: { sm: '10px', md: '14px', lg: '18px', xl: '26px', '2xl': '32px', full: '100px' },
     borderWidth: '1px',
@@ -198,6 +207,7 @@ export function resolveShopStyle(config: ShopStyleConfig): ShopStyleResolved {
     bodyFont: config.bodyFont ?? base.bodyFont,
     headingWeight: config.headingWeight ?? base.headingWeight,
     headingLetterSpacing: config.headingLetterSpacing ?? base.headingLetterSpacing,
+    headingLineHeight: config.headingLineHeight ?? base.headingLineHeight,
     headingTransform: config.headingTransform ?? base.headingTransform,
     radius: base.radius,
     borderWidth: base.borderWidth,

@@ -88,6 +88,7 @@ function applyStyle(style: ShopStyleResolved) {
   // Typography tokens.
   document.documentElement.style.setProperty('--shop-heading-weight', String(style.headingWeight));
   document.documentElement.style.setProperty('--shop-heading-letter-spacing', style.headingLetterSpacing);
+  document.documentElement.style.setProperty('--shop-heading-line-height', style.headingLineHeight);
   document.documentElement.style.setProperty('--shop-heading-transform', style.headingTransform);
 
   // Shape tokens: reuse existing radius variables already defined in globals.css.

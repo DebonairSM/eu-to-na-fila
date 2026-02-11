@@ -352,6 +352,7 @@
     "usernamePlaceholder": "Ex: joao.silva",
     "operatingHours": "Horário de funcionamento",
     "operatingHoursHint": "Usado para agendamentos. Deixe fechado os dias sem atendimento.",
+    "timezone": "Fuso horário (IANA, ex: America/Sao_Paulo)",
     "day": "Dia",
     "open": "Aberto",
     "opensAt": "Abertura",

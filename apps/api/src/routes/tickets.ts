@@ -11,7 +11,7 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { shapeTicketResponse } from '../lib/ticketResponse.js';
 import { parseSettings } from '../lib/settings.js';
-import { getAppointmentSlots } from '../lib/appointmentSlots.js';
+import { getAppointmentSlots, utcToShopLocal } from '../lib/appointmentSlots.js';
 import { sendAppointmentReminder } from '../services/EmailService.js';
 import { getHomeContentForLocale } from '@eutonafila/shared';
 
@@ -150,11 +150,8 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const settings = parseSettings(shop.settings);
     if (!settings.allowAppointments) throw new ValidationError('Appointments not enabled for this shop');
 
-    const scheduledTime = new Date(data.scheduledTime);
-    if (isNaN(scheduledTime.getTime())) throw new ValidationError('Invalid scheduledTime');
-
-    const dateStr = scheduledTime.getUTCFullYear() + '-' + String(scheduledTime.getUTCMonth() + 1).padStart(2, '0') + '-' + String(scheduledTime.getUTCDate()).padStart(2, '0');
-    const timeStr = String(scheduledTime.getUTCHours()).padStart(2, '0') + ':' + String(scheduledTime.getUTCMinutes()).padStart(2, '0');
+    const timezone = settings.timezone ?? 'America/Sao_Paulo';
+    const { dateStr, timeStr } = utcToShopLocal(data.scheduledTime, timezone);
 
     const { slots } = await getAppointmentSlots(shop, dateStr, data.serviceId, data.preferredBarberId ?? undefined);
     const slot = slots.find((sl) => sl.time === timeStr);

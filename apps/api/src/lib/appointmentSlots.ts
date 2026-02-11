@@ -1,7 +1,10 @@
 import { db, schema as s } from '../db/index.js';
 import { eq, and, or, gte, lt, inArray } from 'drizzle-orm';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { parseSettings } from './settings.js';
 import { NotFoundError, ValidationError } from './errors.js';
+
+const DEFAULT_TIMEZONE = 'America/Sao_Paulo';
 
 export async function getAppointmentSlots(
   shop: { id: number; settings: unknown },
@@ -12,16 +15,21 @@ export async function getAppointmentSlots(
   const settings = parseSettings(shop.settings);
   if (!settings.allowAppointments) throw new NotFoundError('Appointments not enabled');
 
+  const timezone = settings.timezone ?? DEFAULT_TIMEZONE;
+
   const service = await db.query.services.findFirst({
     where: and(eq(s.services.id, serviceId), eq(s.services.shopId, shop.id)),
   });
   if (!service) throw new NotFoundError('Service not found');
   if (!service.isActive) throw new ValidationError('Service is not active');
 
-  const date = new Date(dateStr + 'T12:00:00.000Z');
-  if (isNaN(date.getTime())) throw new ValidationError('Invalid date');
+  const [y, mo, d] = dateStr.split('-').map(Number);
+  if (!y || !mo || !d) throw new ValidationError('Invalid date');
+  const localDate = new Date(y, mo - 1, d, 12, 0, 0);
+  if (isNaN(localDate.getTime())) throw new ValidationError('Invalid date');
+
   const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
-  const dayKey = dayKeys[date.getUTCDay()];
+  const dayKey = dayKeys[localDate.getDay()];
   const hours = settings.operatingHours?.[dayKey];
   if (!hours || typeof hours !== 'object') return { slots: [] };
 
@@ -37,9 +45,10 @@ export async function getAppointmentSlots(
     slotStarts.push(t);
   }
 
-  const dayStart = new Date(dateStr + 'T00:00:00.000Z');
-  const dayEnd = new Date(dayStart);
-  dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
+  const dayStartLocal = new Date(y, mo - 1, d, 0, 0, 0);
+  const dayEndLocal = new Date(y, mo - 1, d + 1, 0, 0, 0);
+  const dayStart = fromZonedTime(dayStartLocal, timezone);
+  const dayEnd = fromZonedTime(dayEndLocal, timezone);
 
   const barbersList = await db.query.barbers.findMany({
     where: and(eq(s.barbers.shopId, shop.id), eq(s.barbers.isActive, true)),
@@ -99,8 +108,9 @@ export async function getAppointmentSlots(
   for (const t of ticketsOnDay) {
     const start = t.scheduledTime ?? t.startedAt;
     if (!start) continue;
-    const startDate = new Date(start);
-    const startMin = startDate.getUTCHours() * 60 + startDate.getUTCMinutes();
+    const startUtc = new Date(start);
+    const startZoned = toZonedTime(startUtc, timezone);
+    const startMin = startZoned.getHours() * 60 + startZoned.getMinutes();
     const dur = durationByServiceId[t.serviceId] ?? settings.defaultServiceDuration;
     const endMin = startMin + dur;
     const bid = t.barberId ?? t.preferredBarberId;
@@ -120,4 +130,20 @@ export async function getAppointmentSlots(
   });
 
   return { slots };
+}
+
+/** Convert UTC ISO string to shop-local dateStr and timeStr for slot validation. */
+export function utcToShopLocal(utcIso: string, timezone: string): { dateStr: string; timeStr: string } {
+  const tz = timezone || DEFAULT_TIMEZONE;
+  const utc = new Date(utcIso);
+  if (isNaN(utc.getTime())) throw new ValidationError('Invalid scheduledTime');
+  const zoned = toZonedTime(utc, tz);
+  const y = zoned.getFullYear();
+  const mo = zoned.getMonth() + 1;
+  const d = zoned.getDate();
+  const h = zoned.getHours();
+  const m = zoned.getMinutes();
+  const dateStr = `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  return { dateStr, timeStr };
 }

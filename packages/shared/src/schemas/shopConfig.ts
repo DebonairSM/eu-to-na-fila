@@ -256,6 +256,8 @@ export interface ShopSettings {
   allowCustomerCancelInProgress: boolean;
   allowAppointments: boolean;
   operatingHours?: OperatingHours;
+  /** IANA timezone (e.g. America/Sao_Paulo) for operating hours and appointment slots. */
+  timezone?: string;
 }
 
 /** Zod schema for settings validation with defaults. Adding a new field here with a .default() is all you need. */
@@ -269,6 +271,7 @@ export const shopSettingsSchema = z.object({
   allowCustomerCancelInProgress: z.boolean().default(false),
   allowAppointments: z.boolean().default(false),
   operatingHours: operatingHoursSchema,
+  timezone: z.string().max(100).default('America/Sao_Paulo'),
 });
 
 /** Partial input for PATCH (all optional, shallow-merged with existing). */
@@ -282,6 +285,7 @@ export const shopSettingsInputSchema = z.object({
   allowCustomerCancelInProgress: z.boolean().optional(),
   allowAppointments: z.boolean().optional(),
   operatingHours: operatingHoursSchema.optional(),
+  timezone: z.string().max(100).optional(),
 }).optional();
 
 /** Default settings values. Single source of truth. */
