@@ -13,6 +13,7 @@ import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
+import { getTimezoneOptions, getBrowserTimezone } from '@/lib/timezones';
 import { SUPPORTED_LOCALES } from '@/lib/constants';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { AppearanceForm } from '@/components/AppearanceForm';
@@ -706,16 +707,37 @@ export function ShopManagementPage() {
                         <h4 className="text-white font-medium">Horário de funcionamento</h4>
                         <p className="text-white/60 text-sm">Usado para agendamentos. Deixe fechado os dias sem atendimento.</p>
                         {formData.settings.allowAppointments && (
-                          <div>
-                            <label htmlFor="editTimezone" className="block text-white/60 text-sm mb-1">{t('management.timezone')}</label>
-                            <input
-                              id="editTimezone"
-                              type="text"
-                              value={formData.settings.timezone ?? 'America/Sao_Paulo'}
-                              onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, timezone: e.target.value || undefined } })}
-                              placeholder="America/Sao_Paulo"
-                              className="w-full max-w-[280px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/40"
-                            />
+                          <div className="flex flex-wrap items-end gap-2">
+                            <div className="min-w-[200px]">
+                              <label htmlFor="editTimezone" className="block text-white/60 text-sm mb-1">{t('management.timezone')}</label>
+                              <select
+                                id="editTimezone"
+                                value={formData.settings.timezone ?? 'America/Sao_Paulo'}
+                                onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, timezone: e.target.value || undefined } })}
+                                className="w-full max-w-[280px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                              >
+                                {(() => {
+                                  const value = formData.settings.timezone ?? 'America/Sao_Paulo';
+                                  const options = getTimezoneOptions();
+                                  const list = options.includes(value) ? options : [value, ...options];
+                                  return list.map((tz) => (
+                                    <option key={tz} value={tz}>
+                                      {tz}
+                                    </option>
+                                  ));
+                                })()}
+                              </select>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const tz = getBrowserTimezone();
+                                setFormData({ ...formData, settings: { ...formData.settings, timezone: tz } });
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/20 text-white text-sm hover:bg-white/15"
+                            >
+                              {t('management.useMyTimezone')}
+                            </button>
                           </div>
                         )}
                         <div className="overflow-x-auto">

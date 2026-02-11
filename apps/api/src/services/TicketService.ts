@@ -1,6 +1,6 @@
 import type { DbClient } from '../db/types.js';
 import { schema } from '../db/index.js';
-import { eq, and, or, ne, sql } from 'drizzle-orm';
+import { eq, and, or, ne, sql, gt, asc } from 'drizzle-orm';
 import type { CreateTicket, UpdateTicketStatus, Ticket } from '@eutonafila/shared';
 import type { QueueService } from './QueueService.js';
 import type { AuditService } from './AuditService.js';
@@ -491,6 +491,75 @@ export class TicketService {
     });
 
     return { ...ticket, ticketNumber } as Ticket;
+  }
+
+  /**
+   * Promote pending appointments to waiting when:
+   * (1) Time until appointment <= current estimated wait time (general or preferred barber line), or
+   * (2) Time until appointment <= 30 minutes.
+   * Respects preferred barber: uses that barber's line for position/wait when set.
+   * Called periodically (e.g. by queue countdown job).
+   */
+  async promoteDueAppointments(shopId: number): Promise<number> {
+    const shop = await this.db.query.shops.findFirst({
+      where: eq(schema.shops.id, shopId),
+      columns: { settings: true },
+    });
+    const settings = parseSettings(shop?.settings);
+    if (!settings.allowAppointments) return 0;
+
+    const now = new Date();
+    const pendingAppointments = await this.db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.status, 'pending'),
+        eq(schema.tickets.type, 'appointment'),
+        gt(schema.tickets.scheduledTime, now)
+      ),
+      orderBy: [asc(schema.tickets.scheduledTime)],
+    });
+
+    const toPromote: number[] = [];
+    for (const ticket of pendingAppointments) {
+      const scheduled = ticket.scheduledTime ? new Date(ticket.scheduledTime) : null;
+      if (!scheduled || scheduled.getTime() <= now.getTime()) continue;
+
+      const minutesUntil = (scheduled.getTime() - now.getTime()) / 60_000;
+
+      let estimatedWaitMinutes: number;
+      if (ticket.preferredBarberId != null) {
+        const position = await this.queueService.calculatePositionForPreferredBarber(shopId, ticket.preferredBarberId, now);
+        const wait = await this.queueService.calculateWaitTimeForPreferredBarber(
+          shopId,
+          ticket.preferredBarberId,
+          position,
+          now,
+          settings.defaultServiceDuration
+        );
+        estimatedWaitMinutes = wait ?? 0;
+      } else {
+        const position = await this.queueService.calculatePosition(shopId, now);
+        const wait = await this.queueService.calculateWaitTime(shopId, position, settings.defaultServiceDuration);
+        estimatedWaitMinutes = wait ?? 0;
+      }
+
+      if (minutesUntil <= estimatedWaitMinutes || minutesUntil <= 30) {
+        toPromote.push(ticket.id);
+      }
+    }
+
+    if (toPromote.length === 0) return 0;
+
+    for (const ticketId of toPromote) {
+      await this.db
+        .update(schema.tickets)
+        .set({ status: 'waiting', checkInTime: now, updatedAt: now })
+        .where(eq(schema.tickets.id, ticketId));
+    }
+
+    await this.queueService.recalculatePositions(shopId, settings);
+    await this.recalculateWaitTimes(shopId);
+    return toPromote.length;
   }
 
   /**

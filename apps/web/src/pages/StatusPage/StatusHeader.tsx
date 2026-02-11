@@ -1,5 +1,6 @@
 import { Badge, Heading, Text } from '@/components/design-system';
 import { useLocale } from '@/contexts/LocaleContext';
+import { formatInClientTimezone } from '@/lib/timezones';
 
 interface StatusHeaderProps {
   customerName: string;
@@ -10,7 +11,7 @@ interface StatusHeaderProps {
 }
 
 export function StatusHeader({ customerName, status, serviceName, ticketNumber, scheduledTime }: StatusHeaderProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const isWaiting = status === 'waiting' || status === 'pending';
   const isInProgress = status === 'in_progress';
   const isCompleted = status === 'completed';
@@ -39,7 +40,7 @@ export function StatusHeader({ customerName, status, serviceName, ticketNumber, 
     : t('status.badgeCompleted');
 
   const scheduledStr = scheduledTime
-    ? new Date(scheduledTime).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+    ? formatInClientTimezone(scheduledTime, locale)
     : null;
 
   return (

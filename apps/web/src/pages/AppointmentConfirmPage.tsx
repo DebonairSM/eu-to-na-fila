@@ -8,6 +8,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { useBarbers } from '@/hooks/useBarbers';
 import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/utils';
+import { formatInClientTimezone } from '@/lib/timezones';
 
 interface TicketWithDetails {
   id: number;
@@ -68,7 +69,7 @@ export function AppointmentConfirmPage() {
   const shopSlug = useShopSlug();
   const effectiveSlug = shopSlugFromQuery || shopSlug;
   const { config } = useShopConfig();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { barbers } = useBarbers();
 
   const [ticket, setTicket] = useState<TicketWithDetails | null>(null);
@@ -166,7 +167,7 @@ export function AppointmentConfirmPage() {
   }
 
   const scheduledStr = scheduledTime
-    ? scheduledTime.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+    ? formatInClientTimezone(scheduledTime, locale)
     : '';
 
   return (

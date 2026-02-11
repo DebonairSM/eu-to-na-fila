@@ -1,5 +1,5 @@
 import { db, schema } from '../db/index.js';
-import { eq, or } from 'drizzle-orm';
+import { eq, or, and } from 'drizzle-orm';
 import { ticketService } from '../services/index.js';
 
 const RECALC_INTERVAL_MS = 60_000; // 60 seconds
@@ -7,16 +7,20 @@ let intervalId: ReturnType<typeof setInterval> | null = null;
 
 /**
  * Recalculate wait times for every shop that has active tickets.
- * Runs on an interval so stored wait times tick down as time passes,
- * instead of jumping from e.g. 20 to 0 only on status-change events.
+ * Also promotes pending appointments to waiting when:
+ * - time until appointment <= estimated wait (general or preferred barber line), or
+ * - time until appointment <= 30 minutes.
  */
 async function recalculateActiveShops(): Promise<void> {
   try {
-    // Find distinct shopIds that have at least one waiting or in_progress ticket
     const activeTickets = await db.query.tickets.findMany({
       where: or(
         eq(schema.tickets.status, 'waiting'),
-        eq(schema.tickets.status, 'in_progress')
+        eq(schema.tickets.status, 'in_progress'),
+        and(
+          eq(schema.tickets.status, 'pending'),
+          eq(schema.tickets.type, 'appointment')
+        )
       ),
       columns: { shopId: true },
     });
@@ -25,9 +29,9 @@ async function recalculateActiveShops(): Promise<void> {
 
     for (const shopId of shopIds) {
       try {
+        await ticketService.promoteDueAppointments(shopId);
         await ticketService.recalculateShopQueue(shopId);
       } catch (err) {
-        // Log but don't crash the interval if one shop fails
         console.error(`[queueCountdown] Failed to recalculate shop ${shopId}:`, err);
       }
     }

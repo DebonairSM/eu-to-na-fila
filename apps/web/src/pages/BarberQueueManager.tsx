@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/dist/style.css';
+import { fromZonedTime } from 'date-fns-tz';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
@@ -23,6 +26,7 @@ import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { useLocale } from '@/contexts/LocaleContext';
 import { cn, getErrorMessage, formatName, formatNameForDisplay } from '@/lib/utils';
+import { hasHoursForDay, hasAnyOperatingHours } from '@/lib/operatingHours';
 
 const AD_VIEW_DURATION = 15000; // 15 seconds
 
@@ -72,7 +76,20 @@ export function BarberQueueManager() {
   const [editAppointmentTicketId, setEditAppointmentTicketId] = useState<number | null>(null);
   const [editAppointmentTime, setEditAppointmentTime] = useState('');
   const [rescheduleSubmitting, setRescheduleSubmitting] = useState(false);
+  const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
+  const [appointmentSlotTime, setAppointmentSlotTime] = useState<string | null>(null);
+  const [appointmentSlots, setAppointmentSlots] = useState<Array<{ time: string; available: boolean }>>([]);
+  const [appointmentSlotsLoading, setAppointmentSlotsLoading] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState<Date | undefined>(undefined);
+  const [rescheduleSlotTime, setRescheduleSlotTime] = useState<string | null>(null);
+  const [rescheduleSlots, setRescheduleSlots] = useState<Array<{ time: string; available: boolean }>>([]);
+  const [rescheduleSlotsLoading, setRescheduleSlotsLoading] = useState(false);
   const firstNameInputRef = useRef<HTMLInputElement>(null);
+
+  const settings = shopConfig.settings;
+  const operatingHours = settings?.operatingHours as Record<string, { open?: string; close?: string } | null> | undefined;
+  const timezone = settings?.timezone ?? 'America/Sao_Paulo';
+  const useSlotsForAppointment = hasAnyOperatingHours(operatingHours);
 
   const checkInModal = useModal(false);
   const barberSelectorModal = useModal(false);
@@ -121,6 +138,70 @@ export function BarberQueueManager() {
       setAppointmentForm((f) => ({ ...f, preferredBarberId: singleBarberId }));
     }
   }, [singleBarberId, appointmentModalOpen]);
+
+  const appointmentDateStr = appointmentDate
+    ? `${appointmentDate.getFullYear()}-${String(appointmentDate.getMonth() + 1).padStart(2, '0')}-${String(appointmentDate.getDate()).padStart(2, '0')}`
+    : '';
+  useEffect(() => {
+    if (!appointmentModalOpen || !appointmentDateStr || !appointmentForm.serviceId || !useSlotsForAppointment) {
+      setAppointmentSlots([]);
+      return;
+    }
+    setAppointmentSlotsLoading(true);
+    api
+      .getAppointmentSlots(shopSlug, appointmentDateStr, appointmentForm.serviceId, appointmentForm.preferredBarberId ?? undefined)
+      .then((res) => setAppointmentSlots(res.slots))
+      .catch(() => setAppointmentSlots([]))
+      .finally(() => setAppointmentSlotsLoading(false));
+  }, [appointmentModalOpen, appointmentDateStr, appointmentForm.serviceId, appointmentForm.preferredBarberId, shopSlug, useSlotsForAppointment]);
+
+  useEffect(() => {
+    if (!appointmentModalOpen) {
+      setAppointmentDate(undefined);
+      setAppointmentSlotTime(null);
+      setAppointmentSlots([]);
+    }
+  }, [appointmentModalOpen]);
+
+  const rescheduleDateStr = rescheduleDate
+    ? `${rescheduleDate.getFullYear()}-${String(rescheduleDate.getMonth() + 1).padStart(2, '0')}-${String(rescheduleDate.getDate()).padStart(2, '0')}`
+    : '';
+  const editTicket = editAppointmentTicketId != null ? pendingTickets.find((t) => t.id === editAppointmentTicketId) : undefined;
+  useEffect(() => {
+    if (!editAppointmentTicketId || !rescheduleDateStr || !editTicket?.serviceId || !useSlotsForAppointment) {
+      setRescheduleSlots([]);
+      return;
+    }
+    setRescheduleSlotsLoading(true);
+    api
+      .getAppointmentSlots(shopSlug, rescheduleDateStr, editTicket.serviceId, (editTicket as { preferredBarberId?: number }).preferredBarberId ?? undefined)
+      .then((res) => setRescheduleSlots(res.slots))
+      .catch(() => setRescheduleSlots([]))
+      .finally(() => setRescheduleSlotsLoading(false));
+  }, [editAppointmentTicketId, rescheduleDateStr, editTicket?.serviceId, editTicket?.preferredBarberId, shopSlug, useSlotsForAppointment]);
+
+  useEffect(() => {
+    if (editAppointmentTicketId != null && editAppointmentTime.trim()) {
+      const d = new Date(editAppointmentTime);
+      if (!isNaN(d.getTime())) {
+        setRescheduleDate(d);
+        const h = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        setRescheduleSlotTime(`${h}:${min}`);
+      }
+    } else if (editAppointmentTicketId == null) {
+      setRescheduleDate(undefined);
+      setRescheduleSlotTime(null);
+      setRescheduleSlots([]);
+    }
+  }, [editAppointmentTicketId, editAppointmentTime]);
+
+  const disabledDaysForCalendar = useCallback((date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (date < today) return true;
+    return !hasHoursForDay(operatingHours, date);
+  }, [operatingHours]);
 
   // Auto-focus first name input when check-in modal opens; reset form only when modal closes (transition)
   const checkInModalWasOpenRef = useRef(false);
@@ -337,9 +418,21 @@ export function BarberQueueManager() {
 
   const handleCreateAppointment = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!appointmentForm.serviceId || !appointmentForm.customerName.trim() || !appointmentForm.scheduledTime) {
-      setErrorMessage(t('barber.fillNameServiceDateTime'));
-      return;
+    let scheduledTimeIso: string;
+    if (useSlotsForAppointment) {
+      if (!appointmentForm.serviceId || !appointmentForm.customerName.trim() || !appointmentDate || !appointmentSlotTime) {
+        setErrorMessage(t('barber.fillNameServiceDateTime'));
+        return;
+      }
+      const dateStr = `${appointmentDate.getFullYear()}-${String(appointmentDate.getMonth() + 1).padStart(2, '0')}-${String(appointmentDate.getDate()).padStart(2, '0')}`;
+      const localDateTime = `${dateStr}T${appointmentSlotTime}:00`;
+      scheduledTimeIso = fromZonedTime(localDateTime, timezone).toISOString();
+    } else {
+      if (!appointmentForm.serviceId || !appointmentForm.customerName.trim() || !appointmentForm.scheduledTime) {
+        setErrorMessage(t('barber.fillNameServiceDateTime'));
+        return;
+      }
+      scheduledTimeIso = new Date(appointmentForm.scheduledTime).toISOString();
     }
     setAppointmentSubmitting(true);
     setErrorMessage(null);
@@ -347,37 +440,51 @@ export function BarberQueueManager() {
       await api.createAppointment(shopSlug, {
         customerName: appointmentForm.customerName.trim(),
         serviceId: appointmentForm.serviceId,
-        scheduledTime: new Date(appointmentForm.scheduledTime).toISOString(),
+        scheduledTime: scheduledTimeIso,
         preferredBarberId: appointmentForm.preferredBarberId ?? undefined,
       });
       setAppointmentForm({ customerName: '', serviceId: 0, scheduledTime: '', preferredBarberId: null });
       setAppointmentModalOpen(false);
+      setAppointmentDate(undefined);
+      setAppointmentSlotTime(null);
       await refetchQueue();
     } catch (error) {
       setErrorMessage(getErrorMessage(error, t('barber.appointmentError')));
     } finally {
       setAppointmentSubmitting(false);
     }
-  }, [shopSlug, appointmentForm, refetchQueue, t]);
+  }, [shopSlug, appointmentForm, appointmentDate, appointmentSlotTime, useSlotsForAppointment, timezone, refetchQueue, t]);
 
   const handleRescheduleAppointment = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editAppointmentTicketId || !editAppointmentTime.trim()) return;
+    let scheduledTimeIso: string;
+    if (useSlotsForAppointment && rescheduleDate && rescheduleSlotTime) {
+      const dateStr = `${rescheduleDate.getFullYear()}-${String(rescheduleDate.getMonth() + 1).padStart(2, '0')}-${String(rescheduleDate.getDate()).padStart(2, '0')}`;
+      const localDateTime = `${dateStr}T${rescheduleSlotTime}:00`;
+      scheduledTimeIso = fromZonedTime(localDateTime, timezone).toISOString();
+    } else if (!useSlotsForAppointment && editAppointmentTime.trim()) {
+      scheduledTimeIso = new Date(editAppointmentTime).toISOString();
+    } else {
+      return;
+    }
+    if (!editAppointmentTicketId) return;
     setRescheduleSubmitting(true);
     setErrorMessage(null);
     try {
       await api.updateTicket(editAppointmentTicketId, {
-        scheduledTime: new Date(editAppointmentTime).toISOString(),
+        scheduledTime: scheduledTimeIso,
       });
       setEditAppointmentTicketId(null);
       setEditAppointmentTime('');
+      setRescheduleDate(undefined);
+      setRescheduleSlotTime(null);
       await refetchQueue();
     } catch (error) {
       setErrorMessage(getErrorMessage(error, t('barber.appointmentRescheduleError')));
     } finally {
       setRescheduleSubmitting(false);
     }
-  }, [editAppointmentTicketId, editAppointmentTime, refetchQueue, t]);
+  }, [editAppointmentTicketId, editAppointmentTime, rescheduleDate, rescheduleSlotTime, useSlotsForAppointment, timezone, refetchQueue, t]);
 
   const handleRemoveCustomer = useCallback(async () => {
     if (!customerToRemove) return;
@@ -1040,7 +1147,7 @@ export function BarberQueueManager() {
           onClose={() => {
             setAppointmentModalOpen(false);
             setErrorMessage(null);
-            setAppointmentForm((f) => ({ ...f, preferredBarberId: null }));
+            setAppointmentForm((f) => ({ ...f, scheduledTime: '', preferredBarberId: null }));
           }}
           title={t('barber.addAppointmentTitle')}
         >
@@ -1062,7 +1169,12 @@ export function BarberQueueManager() {
               <select
                 id="appointmentService"
                 value={appointmentForm.serviceId || ''}
-                onChange={(e) => setAppointmentForm((f) => ({ ...f, serviceId: Number(e.target.value) }))}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setAppointmentForm((f) => ({ ...f, serviceId: v }));
+                  setAppointmentDate(undefined);
+                  setAppointmentSlotTime(null);
+                }}
                 required
                 className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
               >
@@ -1072,17 +1184,68 @@ export function BarberQueueManager() {
                 ))}
               </select>
             </div>
-            <div>
-              <label htmlFor="appointmentTime" className="block text-sm font-medium mb-1">Data e hora *</label>
-              <input
-                id="appointmentTime"
-                type="datetime-local"
-                value={appointmentForm.scheduledTime}
-                onChange={(e) => setAppointmentForm((f) => ({ ...f, scheduledTime: e.target.value }))}
-                required
-                className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
-              />
-            </div>
+            {useSlotsForAppointment ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Data *</label>
+                  <div className="schedule-calendar-wrap w-full overflow-x-auto">
+                    <DayPicker
+                      mode="single"
+                      selected={appointmentDate}
+                      onSelect={(d) => {
+                        setAppointmentDate(d);
+                        setAppointmentSlotTime(null);
+                      }}
+                      disabled={disabledDaysForCalendar}
+                      className="rdp-default w-full bg-muted/30 rounded-lg p-2 [--rdp-accent-color:var(--shop-accent)]"
+                    />
+                  </div>
+                </div>
+                {appointmentDateStr && appointmentForm.serviceId && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Horário *</label>
+                    {appointmentSlotsLoading ? (
+                      <p className="text-sm text-muted-foreground">Carregando horários...</p>
+                    ) : appointmentSlots.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Nenhum horário disponível neste dia.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {appointmentSlots.map((slot) => (
+                          <button
+                            key={slot.time}
+                            type="button"
+                            disabled={!slot.available}
+                            onClick={() => setAppointmentSlotTime(slot.time)}
+                            className={cn(
+                              'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                              appointmentSlotTime === slot.time
+                                ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]'
+                                : slot.available
+                                  ? 'bg-muted/50 hover:bg-muted text-foreground'
+                                  : 'bg-muted/30 text-muted-foreground cursor-not-allowed'
+                            )}
+                          >
+                            {slot.time}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div>
+                <label htmlFor="appointmentTime" className="block text-sm font-medium mb-1">Data e hora *</label>
+                <input
+                  id="appointmentTime"
+                  type="datetime-local"
+                  value={appointmentForm.scheduledTime}
+                  onChange={(e) => setAppointmentForm((f) => ({ ...f, scheduledTime: e.target.value }))}
+                  required
+                  className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+                />
+              </div>
+            )}
             {barbers.length > 0 && (
               <div>
                 <label htmlFor="appointmentBarber" className="block text-sm font-medium mb-1">{t('join.barberLabelOptional')}</label>
@@ -1105,7 +1268,12 @@ export function BarberQueueManager() {
               </Button>
               <Button
                 type="submit"
-                disabled={appointmentSubmitting}
+                disabled={
+                  appointmentSubmitting ||
+                  !appointmentForm.customerName.trim() ||
+                  !appointmentForm.serviceId ||
+                  (useSlotsForAppointment ? !appointmentDate || !appointmentSlotTime : !appointmentForm.scheduledTime)
+                }
                 className="flex-1"
               >
                 {appointmentSubmitting ? t('barber.creating') : t('barber.createAppointment')}
@@ -1122,22 +1290,75 @@ export function BarberQueueManager() {
           onClose={() => {
             setEditAppointmentTicketId(null);
             setEditAppointmentTime('');
+            setRescheduleDate(undefined);
+            setRescheduleSlotTime(null);
             setErrorMessage(null);
           }}
           title={t('barber.rescheduleAppointment')}
         >
           <form onSubmit={handleRescheduleAppointment} className="space-y-4">
-            <div>
-              <label htmlFor="editAppointmentTime" className="block text-sm font-medium mb-1">Data e hora</label>
-              <input
-                id="editAppointmentTime"
-                type="datetime-local"
-                value={editAppointmentTime}
-                onChange={(e) => setEditAppointmentTime(e.target.value)}
-                required
-                className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
-              />
-            </div>
+            {useSlotsForAppointment ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Data</label>
+                  <div className="schedule-calendar-wrap w-full overflow-x-auto">
+                    <DayPicker
+                      mode="single"
+                      selected={rescheduleDate}
+                      onSelect={(d) => {
+                        setRescheduleDate(d);
+                        setRescheduleSlotTime(null);
+                      }}
+                      disabled={disabledDaysForCalendar}
+                      className="rdp-default w-full bg-muted/30 rounded-lg p-2 [--rdp-accent-color:var(--shop-accent)]"
+                    />
+                  </div>
+                </div>
+                {rescheduleDateStr && editTicket?.serviceId && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Horário</label>
+                    {rescheduleSlotsLoading ? (
+                      <p className="text-sm text-muted-foreground">Carregando horários...</p>
+                    ) : rescheduleSlots.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Nenhum horário disponível neste dia.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {rescheduleSlots.map((slot) => (
+                          <button
+                            key={slot.time}
+                            type="button"
+                            disabled={!slot.available}
+                            onClick={() => setRescheduleSlotTime(slot.time)}
+                            className={cn(
+                              'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                              rescheduleSlotTime === slot.time
+                                ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]'
+                                : slot.available
+                                  ? 'bg-muted/50 hover:bg-muted text-foreground'
+                                  : 'bg-muted/30 text-muted-foreground cursor-not-allowed'
+                            )}
+                          >
+                            {slot.time}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div>
+                <label htmlFor="editAppointmentTime" className="block text-sm font-medium mb-1">Data e hora</label>
+                <input
+                  id="editAppointmentTime"
+                  type="datetime-local"
+                  value={editAppointmentTime}
+                  onChange={(e) => setEditAppointmentTime(e.target.value)}
+                  required
+                  className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+                />
+              </div>
+            )}
             <div className="flex gap-3 pt-2">
               <Button
                 type="button"
@@ -1145,12 +1366,21 @@ export function BarberQueueManager() {
                 onClick={() => {
                   setEditAppointmentTicketId(null);
                   setEditAppointmentTime('');
+                  setRescheduleDate(undefined);
+                  setRescheduleSlotTime(null);
                 }}
                 className="flex-1"
               >
                 {t('common.cancel')}
               </Button>
-              <Button type="submit" disabled={rescheduleSubmitting || !editAppointmentTime.trim()} className="flex-1">
+              <Button
+                type="submit"
+                disabled={
+                  rescheduleSubmitting ||
+                  (useSlotsForAppointment ? !rescheduleDate || !rescheduleSlotTime : !editAppointmentTime.trim())
+                }
+                className="flex-1"
+              >
                 {rescheduleSubmitting ? t('barber.rescheduling') : t('barber.reschedule')}
               </Button>
             </div>

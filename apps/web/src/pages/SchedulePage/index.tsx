@@ -15,15 +15,7 @@ import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { api } from '@/lib/api';
 import { getErrorMessage, formatName, getOrCreateDeviceId } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
-
-const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
-
-function hasHoursForDay(operatingHours: Record<string, { open?: string; close?: string } | null | undefined> | undefined, date: Date): boolean {
-  if (!operatingHours) return false;
-  const dayKey = DAY_KEYS[date.getDay()];
-  const hours = operatingHours[dayKey];
-  return hours != null && typeof hours === 'object' && hours.open != null && hours.close != null;
-}
+import { hasHoursForDay } from '@/lib/operatingHours';
 
 export function SchedulePage() {
   const navigate = useNavigate();
