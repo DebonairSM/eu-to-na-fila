@@ -107,7 +107,7 @@ export function JoinForm() {
               </div>
             )}
 
-            {(barbers.length > 0 || settings.requireBarberChoice) && (
+            {settings.allowBarberPreference && (barbers.length > 0 || settings.requireBarberChoice) && (
               <div className="min-w-0">
                 <InputLabel htmlFor="preferredBarber">
                   {settings.requireBarberChoice ? t('join.barberLabel') : t('join.barberLabelOptional')}
@@ -178,6 +178,7 @@ export function JoinForm() {
             <ActiveBarbersInfo
               barbers={barbers}
               waitTimes={waitTimes}
+              selectedBarberId={selectedBarberId}
               isLoading={isLoadingWaitTimes}
             />
 

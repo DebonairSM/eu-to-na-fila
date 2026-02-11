@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Modal } from './Modal';
 import { BarberCard } from './BarberCard';
 import { Button } from './ui/button';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { Barber, Ticket } from '@eutonafila/shared';
 
 export interface BarberSelectorProps {
@@ -14,6 +15,12 @@ export interface BarberSelectorProps {
   tickets?: Ticket[];
   currentTicketId?: number | null;
   showAllBarbers?: boolean; // If true, show all barbers (not just present ones)
+  /** Customer's preferred barber id (for preference messaging). */
+  preferredBarberId?: number | null;
+  /** Resolved name of preferred barber. */
+  preferredBarberName?: string | null;
+  /** When in exclusive barber login, the logged-in barber's id (for "prefers you" vs "different barber"). */
+  currentBarberId?: number | null;
 }
 
 export function BarberSelector({
@@ -26,7 +33,11 @@ export function BarberSelector({
   tickets = [],
   currentTicketId,
   showAllBarbers = false,
+  preferredBarberId = null,
+  preferredBarberName = null,
+  currentBarberId = null,
 }: BarberSelectorProps) {
+  const { t } = useLocale();
   const sortedDisplayedBarbers = useMemo(() => {
     const displayedBarbers = showAllBarbers ? barbers : barbers.filter((b) => b.isPresent);
     return [...displayedBarbers];
@@ -71,6 +82,17 @@ export function BarberSelector({
           className="sr-only focus:outline-none focus:ring-0"
           aria-hidden="true"
         />
+        {preferredBarberId != null && (
+          <p className="text-sm text-[var(--shop-text-secondary)]">
+            {currentBarberId != null
+              ? preferredBarberId === currentBarberId
+                ? t('barber.preferredByCustomer')
+                : t('barber.prefersDifferentBarber')
+              : preferredBarberName
+                ? `${t('barber.customerPrefers')} ${preferredBarberName}.`
+                : t('barber.prefersDifferentBarber')}
+          </p>
+        )}
         {sortedDisplayedBarbers.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">
             {showAllBarbers ? 'Nenhum barbeiro disponível' : 'Nenhum barbeiro presente no momento'}

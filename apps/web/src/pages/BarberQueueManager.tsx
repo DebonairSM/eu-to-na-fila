@@ -991,12 +991,15 @@ export function BarberQueueManager() {
                   const isServing = ticket.status === 'in_progress';
                   // Calculate display position based on index in sorted waiting tickets
                   const displayPosition = isServing ? null : index + 1;
+                  const preferredBarberId = (ticket as { preferredBarberId?: number }).preferredBarberId;
+                  const preferredBarberName = preferredBarberId != null ? barbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
                   return (
                     <QueueCard
                       key={ticket.id}
                       ticket={ticket}
                       assignedBarber={assignedBarber}
                       barbers={displayBarbers}
+                      preferredBarberName={preferredBarberName}
                       displayPosition={displayPosition}
                       disabled={ticket.status === 'waiting' && !isAppointmentSelectable(ticket)}
                       disabledReason={ticket.status === 'waiting' && !isAppointmentSelectable(ticket) ? t('barber.appointmentTooEarly') : undefined}
@@ -1398,6 +1401,8 @@ export function BarberQueueManager() {
       {/* Barber Selector Modal */}
       {barberSelectorModal.isOpen && selectedCustomerId && (() => {
         const selectedTicket = tickets.find((t) => t.id === selectedCustomerId);
+        const preferredBarberId = (selectedTicket as { preferredBarberId?: number } | undefined)?.preferredBarberId ?? null;
+        const preferredBarberName = preferredBarberId != null ? barbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
         return (
           <BarberSelector
             isOpen={barberSelectorModal.isOpen}
@@ -1408,6 +1413,9 @@ export function BarberQueueManager() {
             customerName={selectedTicket?.customerName}
             tickets={tickets}
             currentTicketId={selectedCustomerId}
+            preferredBarberId={preferredBarberId}
+            preferredBarberName={preferredBarberName}
+            currentBarberId={isBarber && user ? user.id : null}
           />
         );
       })()}

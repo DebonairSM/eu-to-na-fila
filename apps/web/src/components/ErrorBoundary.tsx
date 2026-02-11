@@ -46,6 +46,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       // Could send to Sentry, LogRocket, etc.
       console.error('Error caught by boundary:', error, errorInfo);
     }
+    // Show index.html recovery UI when chunk/load fails so user can reload
+    const msg = error?.message ?? '';
+    const isChunkError =
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('Loading chunk') ||
+      msg.includes('ChunkLoadError') ||
+      msg.includes('Erro de conexão ao carregar a página') ||
+      msg.includes('Erro ao carregar a página');
+    if (isChunkError && typeof window !== 'undefined' && window.__showRecoveryUI) {
+      window.__showRecoveryUI();
+    }
   }
 
   handleReset = () => {

@@ -364,184 +364,182 @@ export function AdManagementPage() {
     );
   }
 
-  // Mineiro build - keep existing styling
+  // Mineiro build
   return (
     <div className="min-h-screen h-full bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
       <CompanyNav />
-      <main className="container max-w-[800px] mx-auto relative z-10 pt-24 px-4 sm:px-6 lg:px-10 pb-12">
-        <div className="text-center mb-10">
-          <h1 className="font-['Playfair_Display',serif] text-2xl font-semibold text-[var(--shop-accent)]">
-            {t('ads.title')}
-          </h1>
-          <p className="text-white/60 mt-2 text-sm">
-            {t('ads.uploadSubtext')}
-          </p>
-        </div>
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
-            {error}
+      <main className="relative z-10 pt-20 sm:pt-24 pb-12 sm:pb-16 lg:pb-20">
+        <Container size="2xl">
+          <div className="text-center mb-12">
+            <h1 className="text-3xl sm:text-4xl font-light tracking-tight text-white">
+              {t('ads.title')}
+            </h1>
+            <p className="text-white/70 text-base max-w-2xl mx-auto mt-2">
+              {t('ads.uploadSubtext')}
+            </p>
           </div>
-        )}
 
-        {success && (
-          <div className="mb-6 p-4 bg-green-500/20 border border-green-500/50 rounded-lg text-green-200 text-sm">
-            {success}
-          </div>
-        )}
-
-        {/* Upload Section */}
-        <div className="mb-8 bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_12%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_6%,transparent)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-2xl p-6">
-          <h2 className="text-xl font-semibold mb-4">{t('ads.addNew')}</h2>
-              <label className="block">
-                <input
-                  type="file"
-              accept="image/png,image/jpeg,image/jpg,image/webp,video/mp4"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                  handleFileUpload(file);
-                    }
-                  }}
-              disabled={uploading !== null}
-                  className="hidden"
-              id="ad-upload"
-                />
-                <div className="flex items-center gap-3">
-                  <label
-                htmlFor="ad-upload"
-                    className={`flex-1 px-4 py-3 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
-                  uploading !== null
-                        ? 'border-[color-mix(in_srgb,var(--shop-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--shop-accent)_10%,transparent)] cursor-wait'
-                        : 'border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] hover:border-[var(--shop-accent)] hover:bg-[color-mix(in_srgb,var(--shop-accent)_10%,transparent)]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2 text-[var(--shop-accent)]">
-                  {uploading !== null ? (
-                        <>
-                          <span className="material-symbols-outlined animate-spin">refresh</span>
-                      <span>{t('ads.sending')} {uploadProgress}%</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="material-symbols-outlined">upload</span>
-                          <span>{t('ads.chooseFile')}</span>
-                        </>
-                      )}
-                    </div>
-                  </label>
-                </div>
-              </label>
-          {uploading !== null && uploadProgress > 0 && (
-            <div className="mt-4">
-              <div className="w-full bg-white/10 rounded-full h-2">
-                <div
-                  className="bg-[var(--shop-accent)] h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
+              {error}
             </div>
           )}
-              <p className="text-xs text-white/40 mt-2">
-            {t('ads.maxSizeHint')}
-              </p>
-            </div>
 
-        {loading ? (
-          <div className="text-center text-[var(--shop-text-secondary)] py-12">
-            <div className="inline-block animate-spin text-[var(--shop-accent)] text-4xl mb-4">
-              <span className="material-symbols-outlined">refresh</span>
+          {success && (
+            <div className="mb-6 p-4 bg-green-500/20 border border-green-500/50 rounded-lg text-green-200 text-sm">
+              {success}
             </div>
-            <p>{t('ads.loading')}</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {ads.length === 0 ? (
-              <div className="text-center text-white/60 py-12 border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-2xl">
-                <p>{t('ads.noAdsYet')}</p>
-                <p className="text-sm mt-2">{t('ads.uploadHint')}</p>
-                </div>
-            ) : (
-              ads.map((ad) => (
-                <div
-                  key={ad.id}
-                  className={`bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_12%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_6%,transparent)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-2xl p-6 ${
-                    !ad.enabled ? 'opacity-60' : ''
+          )}
+
+          {/* Upload Section */}
+          <div className="mb-8 border border-white/10 bg-white/5 rounded-2xl p-6">
+            <h2 className="text-xl font-semibold mb-4">{t('ads.addNew')}</h2>
+            <label className="block">
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp,video/mp4"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFileUpload(file);
+                }}
+                disabled={uploading !== null}
+                className="hidden"
+                id="ad-upload"
+              />
+              <div className="flex items-center gap-3">
+                <label
+                  htmlFor="ad-upload"
+                  className={`flex-1 px-4 py-3 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
+                    uploading !== null
+                      ? 'border-white/30 bg-white/10 cursor-wait'
+                      : 'border-white/20 hover:border-white/30 hover:bg-white/5'
                   }`}
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0">
-                      {ad.mediaType === 'image' ? (
-                        <img
-                          src={`/api/ads/${ad.id}/media?v=${ad.version}`}
-                          alt={`${t('ads.adPosition')}${ad.position}`}
-                          className="w-32 h-32 object-contain bg-black rounded-lg border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)]"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
+                  <div className="flex items-center justify-center gap-2 text-[#D4AF37]">
+                    {uploading !== null ? (
+                      <>
+                        <span className="material-symbols-outlined animate-spin">refresh</span>
+                        <span>{t('ads.sending')} {uploadProgress}%</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined">upload</span>
+                        <span>{t('ads.chooseFile')}</span>
+                      </>
+                    )}
+                  </div>
+                </label>
+              </div>
+            </label>
+            {uploading !== null && uploadProgress > 0 && (
+              <div className="mt-4">
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <div
+                    className="bg-[#D4AF37] h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
                   />
-                      ) : (
-                        <video
-                          src={`/api/ads/${ad.id}/media?v=${ad.version}`}
-                          className="w-32 h-32 object-contain bg-black rounded-lg border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)]"
-                          controls={false}
-                          muted
-                        />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <h3 className="text-lg font-semibold">
-                            {t('ads.adPosition')}{ad.position} ({ad.mediaType === 'image' ? t('ads.image') : t('ads.video')})
-                          </h3>
-                          <p className="text-sm text-white/60">
-                            {ad.mimeType} • {formatFileSize(ad.bytes)}
-                          </p>
-                          <p className="text-xs text-white/40 mt-1">
-                            {ad.enabled ? (
-                              <span className="text-green-400">✓ {t('ads.active')}</span>
-                            ) : (
-                              <span className="text-yellow-400">⚠ {t('ads.inactive')}</span>
-                            )}
-                          </p>
-                        </div>
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-white/40 mt-2">
+              {t('ads.maxSizeHint')}
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="text-center text-white/60 py-12">
+              <div className="inline-block animate-spin text-[#D4AF37] text-4xl mb-4">
+                <span className="material-symbols-outlined">refresh</span>
+              </div>
+              <p>{t('ads.loading')}</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {ads.length === 0 ? (
+                <div className="text-center text-white/60 py-12 border border-white/10 bg-white/5 rounded-2xl">
+                  <p>{t('ads.noAdsYet')}</p>
+                  <p className="text-sm mt-2">{t('ads.uploadHint')}</p>
+                </div>
+              ) : (
+                ads.map((ad) => (
+                  <div
+                    key={ad.id}
+                    className={`border border-white/10 bg-white/5 rounded-2xl p-6 ${!ad.enabled ? 'opacity-60' : ''}`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0">
+                        {ad.mediaType === 'image' ? (
+                          <img
+                            src={`/api/ads/${ad.id}/media?v=${ad.version}`}
+                            alt={`${t('ads.adPosition')}${ad.position}`}
+                            className="w-32 h-32 object-contain bg-black rounded-lg border border-white/10"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <video
+                            src={`/api/ads/${ad.id}/media?v=${ad.version}`}
+                            className="w-32 h-32 object-contain bg-black rounded-lg border border-white/10"
+                            controls={false}
+                            muted
+                          />
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 mt-4">
-                        <button
-                          onClick={() => handleToggleEnabled(ad.id, ad.enabled)}
-                          className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
-                            ad.enabled
-                              ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 hover:bg-yellow-500/30'
-                              : 'bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30'
-                          }`}
-                        >
-                          {ad.enabled ? t('ads.deactivate') : t('ads.activate')}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(ad.id)}
-                          className="px-3 py-1.5 rounded-lg text-sm bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 transition-all"
-                        >
-                          {t('ads.deleteButton')}
-                        </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <h3 className="text-lg font-semibold">
+                              {t('ads.adPosition')}{ad.position} ({ad.mediaType === 'image' ? t('ads.image') : t('ads.video')})
+                            </h3>
+                            <p className="text-sm text-white/60">
+                              {ad.mimeType} • {formatFileSize(ad.bytes)}
+                            </p>
+                            <p className="text-xs text-white/40 mt-1">
+                              {ad.enabled ? (
+                                <span className="text-green-400">✓ {t('ads.active')}</span>
+                              ) : (
+                                <span className="text-yellow-400">⚠ {t('ads.inactive')}</span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-4">
+                          <button
+                            onClick={() => handleToggleEnabled(ad.id, ad.enabled)}
+                            className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                              ad.enabled
+                                ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 hover:bg-yellow-500/30'
+                                : 'bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30'
+                            }`}
+                          >
+                            {ad.enabled ? t('ads.deactivate') : t('ads.activate')}
+                          </button>
+                          <button
+                            onClick={() => handleDelete(ad.id)}
+                            className="px-3 py-1.5 rounded-lg text-sm bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 transition-all"
+                          >
+                            {t('ads.deleteButton')}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
             </div>
-        )}
+          )}
 
-            <div className="mt-8 text-center">
-              <button
-                onClick={() => navigate('/company/dashboard')}
-                className="px-6 py-2.5 bg-transparent text-[rgba(255,255,255,0.6)] border border-[rgba(255,255,255,0.2)] rounded-lg hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-all flex items-center gap-3 mx-auto text-sm"
-              >
-                <span className="material-symbols-outlined text-lg">arrow_back</span>
-                {t('ads.backToDashboard')}
-              </button>
-            </div>
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => navigate('/company/dashboard')}
+              className="px-6 py-2.5 border border-white/20 text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-all flex items-center gap-3 mx-auto text-sm"
+            >
+              <span className="material-symbols-outlined text-lg">arrow_back</span>
+              {t('ads.backToDashboard')}
+            </button>
+          </div>
+        </Container>
       </main>
     </div>
   );

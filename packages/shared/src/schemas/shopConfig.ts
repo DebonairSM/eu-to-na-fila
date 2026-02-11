@@ -255,6 +255,7 @@ export interface ShopSettings {
   defaultServiceDuration: number;
   requirePhone: boolean;
   requireBarberChoice: boolean;
+  allowBarberPreference: boolean;
   allowDuplicateNames: boolean;
   deviceDeduplication: boolean;
   allowCustomerCancelInProgress: boolean;
@@ -270,6 +271,9 @@ export interface ShopSettings {
     until: string;
     reason?: string;
   } | null;
+  /** Kiosk mode access credentials */
+  kioskUsername?: string;
+  kioskPassword?: string;
 }
 
 /** Zod schema for settings validation with defaults. Adding a new field here with a .default() is all you need. */
@@ -278,6 +282,7 @@ export const shopSettingsSchema = z.object({
   defaultServiceDuration: z.number().int().min(1).max(480).default(20),
   requirePhone: z.boolean().default(false),
   requireBarberChoice: z.boolean().default(false),
+  allowBarberPreference: z.boolean().default(true),
   allowDuplicateNames: z.boolean().default(false),
   deviceDeduplication: z.boolean().default(true),
   allowCustomerCancelInProgress: z.boolean().default(false),
@@ -290,6 +295,8 @@ export const shopSettingsSchema = z.object({
     until: z.string(),
     reason: z.string().optional(),
   }).nullable().optional(),
+  kioskUsername: z.string().max(100).optional(),
+  kioskPassword: z.string().max(100).optional(),
 });
 
 /** Partial input for PATCH (all optional, shallow-merged with existing). */
@@ -298,6 +305,7 @@ export const shopSettingsInputSchema = z.object({
   defaultServiceDuration: z.number().int().min(1).max(480).optional(),
   requirePhone: z.boolean().optional(),
   requireBarberChoice: z.boolean().optional(),
+  allowBarberPreference: z.boolean().optional(),
   allowDuplicateNames: z.boolean().optional(),
   deviceDeduplication: z.boolean().optional(),
   allowCustomerCancelInProgress: z.boolean().optional(),
@@ -305,6 +313,8 @@ export const shopSettingsInputSchema = z.object({
   operatingHours: operatingHoursSchema.optional(),
   timezone: z.string().max(100).optional(),
   allowQueueBeforeOpen: z.boolean().optional(),
+  kioskUsername: z.string().max(100).optional(),
+  kioskPassword: z.string().max(100).optional(),
   temporaryStatusOverride: z.object({
     isOpen: z.boolean(),
     until: z.string(),

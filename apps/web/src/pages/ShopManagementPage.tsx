@@ -932,94 +932,96 @@ export function ShopManagementPage() {
           </button>
         </div>
       )}
-      <main className="container max-w-[1200px] mx-auto px-4 sm:px-6 pt-24 pb-10 relative z-10">
-        <div className="text-center mb-8">
-          <h1 className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#D4AF37] mb-3">
-            {t('company.manageShops')}
-          </h1>
-          <p className="text-white/60 mt-2 text-sm">
-            {t('company.manageShopsSubtitle')}
-          </p>
-        </div>
-
-        <button
-          onClick={() => navigate('/company/shops/new')}
-          className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(212,175,55,0.4)] min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0a0a0a]"
-          aria-label={t('management.addShopAria')}
-        >
-          <span className="material-symbols-outlined text-lg sm:text-xl" aria-hidden="true">add</span>
-          {t('company.addShop')}
-        </button>
-
-        {/* Shops Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10" aria-busy="true" aria-live="polite">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
-                key={i}
-                className="h-[200px] rounded-xl bg-white/5 border border-white/10 animate-pulse"
-                aria-hidden="true"
-              />
-            ))}
+      <main className="relative z-10 pt-20 sm:pt-24 pb-12 sm:pb-16 lg:pb-20">
+        <Container size="2xl">
+          <div className="text-center mb-12">
+            <h1 className="text-3xl sm:text-4xl font-light tracking-tight text-white">
+              {t('company.manageShops')}
+            </h1>
+            <p className="text-white/70 text-base max-w-2xl mx-auto mt-2">
+              {t('company.manageShopsSubtitle')}
+            </p>
           </div>
-        ) : error ? (
-          <ErrorDisplay error={error} onRetry={loadShops} />
-        ) : shops.length === 0 ? (
-          <div className="empty-state text-center py-12 sm:py-[60px] px-4 sm:px-5 text-[rgba(255,255,255,0.7)]">
-            <span className="material-symbols-outlined text-[3rem] sm:text-[4rem] text-[rgba(255,255,255,0.5)] mb-3 sm:mb-4 block" aria-hidden="true">
-              store
-            </span>
-            <p className="text-sm sm:text-base">{t('management.noShopsRegistered')}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
-            {shops.map((shop) => (
-              <article
-                key={shop.id}
-                className="bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.06)] border-2 border-[rgba(212,175,55,0.3)] rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all hover:border-[#D4AF37] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(212,175,55,0.2)] relative overflow-hidden"
-                aria-labelledby={`shop-name-${shop.id}`}
-              >
-                <div className="shop-header mb-4 sm:mb-5">
-                  <div className="text-3xl text-[#D4AF37] mb-2">
-                    <span className="material-symbols-outlined">store</span>
-                  </div>
-                  <h3 id={`shop-name-${shop.id}`} className="text-lg sm:text-xl font-semibold text-white mb-2">
-                    {shop.name}
-                  </h3>
-                  <div className="text-xs sm:text-sm text-white/60 mb-1">
-                    <span className="font-medium">Slug:</span> {shop.slug}
-                  </div>
-                  {shop.domain && (
-                    <div className="text-xs sm:text-sm text-white/60 mb-1">
-                      <span className="font-medium">Domínio:</span> {shop.domain}
+
+          <button
+            onClick={() => navigate('/company/shops/new')}
+            className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-[#D4AF37] text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:bg-[#E8C547] min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0b1a33]"
+            aria-label={t('management.addShopAria')}
+          >
+            <span className="material-symbols-outlined text-lg sm:text-xl" aria-hidden="true">add</span>
+            {t('company.addShop')}
+          </button>
+
+          {/* Shops Grid */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10" aria-busy="true" aria-live="polite">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="h-[200px] rounded-xl bg-white/5 border border-white/10 animate-pulse"
+                  aria-hidden="true"
+                />
+              ))}
+            </div>
+          ) : error ? (
+            <ErrorDisplay error={error} onRetry={loadShops} />
+          ) : shops.length === 0 ? (
+            <div className="empty-state text-center py-12 sm:py-[60px] px-4 sm:px-5 text-white/70">
+              <span className="material-symbols-outlined text-[3rem] sm:text-[4rem] text-white/50 mb-3 sm:mb-4 block" aria-hidden="true">
+                store
+              </span>
+              <p className="text-sm sm:text-base">{t('management.noShopsRegistered')}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
+              {shops.map((shop) => (
+                <article
+                  key={shop.id}
+                  className="border border-white/10 bg-white/5 rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all hover:border-white/20 hover:bg-white/[0.07] relative overflow-hidden"
+                  aria-labelledby={`shop-name-${shop.id}`}
+                >
+                  <div className="shop-header mb-4 sm:mb-5">
+                    <div className="text-3xl text-[#D4AF37] mb-2">
+                      <span className="material-symbols-outlined">store</span>
                     </div>
-                  )}
-                </div>
+                    <h3 id={`shop-name-${shop.id}`} className="text-lg sm:text-xl font-semibold text-white mb-2">
+                      {shop.name}
+                    </h3>
+                    <div className="text-xs sm:text-sm text-white/60 mb-1">
+                      <span className="font-medium">Slug:</span> {shop.slug}
+                    </div>
+                    {shop.domain && (
+                      <div className="text-xs sm:text-sm text-white/60 mb-1">
+                        <span className="font-medium">Domínio:</span> {shop.domain}
+                      </div>
+                    )}
+                  </div>
 
-                {/* Actions */}
-                <div className="flex gap-2 sm:gap-3">
-                  <button
-                    onClick={() => openEditModal(shop)}
-                    className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border-none rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(212,175,55,0.2)] hover:text-[#D4AF37] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#242424]"
-                    aria-label={`Editar barbearia ${shop.name}`}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShopToDelete(shop.id);
-                      deleteConfirmModal.open();
-                    }}
-                    className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-[rgba(239,68,68,0.3)] rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(239,68,68,0.2)] text-[#ef4444] hover:bg-[rgba(239,68,68,0.3)] focus:outline-none focus:ring-2 focus:ring-[#ef4444] focus:ring-offset-2 focus:ring-offset-[#242424]"
-                    aria-label={`Remover barbearia ${shop.name}`}
-                  >
-                    Remover
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+                  {/* Actions */}
+                  <div className="flex gap-2 sm:gap-3">
+                    <button
+                      onClick={() => openEditModal(shop)}
+                      className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-white/20 rounded-lg text-xs sm:text-sm font-medium cursor-pointer transition-all min-h-[44px] bg-white/5 text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#242424]"
+                      aria-label={`Editar barbearia ${shop.name}`}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShopToDelete(shop.id);
+                        deleteConfirmModal.open();
+                      }}
+                      className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-red-500/50 rounded-lg text-xs sm:text-sm font-medium cursor-pointer transition-all min-h-[44px] bg-red-500/20 text-[#ef4444] hover:bg-red-500/30 focus:outline-none focus:ring-2 focus:ring-[#ef4444] focus:ring-offset-2 focus:ring-offset-[#242424]"
+                      aria-label={`Remover barbearia ${shop.name}`}
+                    >
+                      Remover
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </Container>
       </main>
 
       {/* Edit Shop Modal */}
@@ -1031,8 +1033,8 @@ export function ShopManagementPage() {
           aria-modal="true"
           aria-labelledby="edit-modal-title"
         >
-          <div className="modal-content bg-[#242424] border border-[rgba(212,175,55,0.3)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[min(90vw,700px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4">
-            <h2 id="edit-modal-title" className="modal-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-[#D4AF37] mb-4">
+          <div className="modal-content bg-[#242424] border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[min(90vw,700px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4">
+            <h2 id="edit-modal-title" className="modal-title text-xl sm:text-2xl text-white mb-4">
               Editar Barbearia
             </h2>
             <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
@@ -1042,7 +1044,7 @@ export function ShopManagementPage() {
                   type="button"
                   onClick={() => setEditTab(tab)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                    editTab === tab ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'text-white/60 hover:text-white'
+                    editTab === tab ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white'
                   }`}
                 >
                   {tab === 'info' && t('management.infoTab')}
@@ -1161,7 +1163,33 @@ export function ShopManagementPage() {
               {editTab === 'settings' && (
                 <div className="space-y-6">
                   <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Fila</h4><div className="grid grid-cols-2 gap-4"><div><label className="block text-white/60 text-sm mb-2">Tamanho máximo da fila</label><input type="number" min={1} max={500} value={formData.settings.maxQueueSize} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-2">Duração padrão do serviço (min)</label><input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div></div></section>
-                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Regras de atendimento</h4><ul className="space-y-4">{[{ key: 'requirePhone' as const, label: 'Exigir telefone do cliente' }, { key: 'requireBarberChoice' as const, label: 'Exigir escolha de barbeiro' }, { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' }, { key: 'deviceDeduplication' as const, label: 'Impedir múltiplos tickets por dispositivo' }, { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' }, { key: 'allowAppointments' as const, label: 'Permitir agendamentos (fila híbrida com horário marcado)' }, { key: 'allowQueueBeforeOpen' as const, label: 'Permitir entrada na fila antes do horário de abertura' }].map(({ key, label }) => (<li key={key}><label className="flex items-center gap-3 cursor-pointer group"><button type="button" role="switch" aria-checked={formData.settings[key]} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button><span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span></label></li>))}</ul></section>
+                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Regras de atendimento</h4><ul className="space-y-4">{[{ key: 'requirePhone' as const, label: 'Exigir telefone do cliente' }, { key: 'allowBarberPreference' as const, label: 'Permitir cliente escolher barbeiro preferido' }, { key: 'requireBarberChoice' as const, label: 'Exigir escolha de barbeiro' }, { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' }, { key: 'deviceDeduplication' as const, label: 'Impedir múltiplos tickets por dispositivo' }, { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' }, { key: 'allowAppointments' as const, label: 'Permitir agendamentos (fila híbrida com horário marcado)' }, { key: 'allowQueueBeforeOpen' as const, label: 'Permitir entrada na fila antes do horário de abertura' }].map(({ key, label }) => (<li key={key}><label className="flex items-center gap-3 cursor-pointer group"><button type="button" role="switch" aria-checked={formData.settings[key]} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button><span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span></label></li>))}</ul></section>
+                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <h4 className="text-white font-medium">Acesso ao Modo Quiosque</h4>
+                    <p className="text-white/60 text-sm">Credenciais para acessar o modo quiosque (tela de exibição)</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-white/60 text-sm mb-2">Usuário</label>
+                        <input
+                          type="text"
+                          value={formData.settings.kioskUsername || ''}
+                          onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskUsername: e.target.value || undefined } })}
+                          placeholder="Ex: quiosque"
+                          className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white/60 text-sm mb-2">Senha</label>
+                        <input
+                          type="password"
+                          value={formData.settings.kioskPassword || ''}
+                          onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskPassword: e.target.value || undefined } })}
+                          placeholder="Digite uma senha"
+                          className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm"
+                        />
+                      </div>
+                    </div>
+                  </section>
                   <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
                     <h4 className="text-white font-medium">Horário de funcionamento</h4>
                     <p className="text-white/60 text-sm">Usado para agendamentos. Deixe fechado os dias sem atendimento.</p>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { config as appConfig } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useLogout } from '@/hooks/useLogout';
 import { useShopConfig, useShopHomeContent } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { Container } from '@/components/design-system';
@@ -10,7 +11,8 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user, logout } = useAuthContext();
+  const { user } = useAuthContext();
+  const { logoutAndGoHome } = useLogout();
   const { config: shopConfig } = useShopConfig();
   const homeContent = useShopHomeContent();
   const { t } = useLocale();
@@ -60,9 +62,8 @@ export function Navigation() {
   }, [isMobileMenuOpen]);
 
   const handleLogout = () => {
-    logout();
-    navigate('/home');
     setIsMobileMenuOpen(false);
+    logoutAndGoHome();
   };
 
   const scrollToSection = (targetId: string) => {

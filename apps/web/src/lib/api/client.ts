@@ -10,6 +10,8 @@ export class BaseApiClient {
   protected authToken?: string;
   protected readonly TOKEN_STORAGE_KEY = 'eutonafila_auth_token';
   protected onAuthError?: () => void;
+  protected onNetworkFailure?: () => void;
+  protected onNetworkSuccess?: () => void;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
@@ -27,6 +29,11 @@ export class BaseApiClient {
     this.onAuthError = callback;
   }
 
+  setOnNetworkStatus(callbacks: { onFailure?: () => void; onSuccess?: () => void }): void {
+    this.onNetworkFailure = callbacks.onFailure;
+    this.onNetworkSuccess = callbacks.onSuccess;
+  }
+
   setAuthToken(token: string): void {
     this.authToken = token;
     sessionStorage.setItem(this.TOKEN_STORAGE_KEY, token);
@@ -37,10 +44,14 @@ export class BaseApiClient {
     sessionStorage.removeItem(this.TOKEN_STORAGE_KEY);
   }
 
+  private static readonly RETRY_DELAY_MS = 1000;
+  private static readonly RETRYABLE_STATUSES = [502, 503, 504];
+
   protected async request<T>(
     path: string,
     options: RequestInit = {},
-    timeoutMs = 30000
+    timeoutMs = 30000,
+    isRetry = false
   ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     const headers: Record<string, string> = {};
@@ -106,12 +117,27 @@ export class BaseApiClient {
             ? (error as { errors: Array<{ field: string; message: string }> }).errors
             : undefined
         );
+        const retryable =
+          !isRetry &&
+          BaseApiClient.RETRYABLE_STATUSES.includes(response.status);
+        if (retryable) {
+          clearTimeout(timeoutId);
+          await new Promise((r) => setTimeout(r, BaseApiClient.RETRY_DELAY_MS));
+          return this.request<T>(path, options, timeoutMs, true);
+        }
         if (apiError.isAuthError() && this.onAuthError) {
           this.onAuthError();
+        }
+        const isNetworkLikeError =
+          response.status === 408 ||
+          (response.status >= 500 && response.status < 600);
+        if (isNetworkLikeError) {
+          this.onNetworkFailure?.();
         }
         throw apiError;
       }
 
+      this.onNetworkSuccess?.();
       return data as T;
     } catch (error) {
       clearTimeout(timeoutId);
@@ -121,10 +147,18 @@ export class BaseApiClient {
         }
         throw error;
       }
-      if (error instanceof Error && error.name === 'AbortError') {
+      const isAbort = error instanceof Error && error.name === 'AbortError';
+      const isNetwork = error instanceof TypeError;
+      const retryable = !isRetry && (isAbort || isNetwork);
+      if (retryable) {
+        await new Promise((r) => setTimeout(r, BaseApiClient.RETRY_DELAY_MS));
+        return this.request<T>(path, options, timeoutMs, true);
+      }
+      this.onNetworkFailure?.();
+      if (isAbort) {
         throw new ApiError('Request timed out - please check your connection', 408, 'TIMEOUT_ERROR');
       }
-      if (error instanceof TypeError) {
+      if (isNetwork) {
         throw new ApiError('Network error - please check your connection', 0, 'NETWORK_ERROR');
       }
       throw new ApiError(

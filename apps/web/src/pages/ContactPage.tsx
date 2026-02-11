@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CompanyNav } from '@/components/CompanyNav';
+import { Container } from '@/components/design-system/Spacing/Container';
 import { useLocale } from '@/contexts/LocaleContext';
 
 export function ContactPage() {
@@ -8,14 +9,14 @@ export function ContactPage() {
   return (
     <div className="min-h-screen bg-[var(--shop-background)] text-[var(--shop-text-primary)]">
       <CompanyNav />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-10">
+      <Container size="2xl" className="py-12 sm:py-16 lg:py-20 space-y-10">
         <header className="space-y-3 text-center">
           <p className="text-sm uppercase tracking-[0.25em] text-[var(--shop-accent)]">{t('contact.title')}</p>
           <h1 className="text-3xl sm:text-4xl font-semibold">{t('contact.subtitle')}</h1>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2 bg-white/5 border-[var(--shop-border-color)] min-w-[320px]">
+          <Card className="lg:col-span-2 bg-white/5 border border-white/10 rounded-xl min-w-[320px]">
             <CardContent className="p-4 sm:p-6 space-y-4">
               <h2 className="text-xl font-semibold">{t('contact.message')}</h2>
               <form className="space-y-4">
@@ -53,21 +54,21 @@ export function ContactPage() {
           </Card>
 
           <div className="space-y-4">
-            <Card className="bg-white/5 border-[var(--shop-border-color)]">
+            <Card className="bg-white/5 border border-white/10 rounded-xl">
               <CardContent className="p-5 space-y-2">
                 <p className="text-sm text-[var(--shop-accent)] uppercase tracking-[0.15em]">{t('contact.callNow')}</p>
                 <h3 className="text-lg font-semibold">{t('contact.commercial')}</h3>
                 <p className="text-[var(--shop-text-primary)]">eutonafila@gmail.com</p>
               </CardContent>
             </Card>
-            <Card className="bg-white/5 border-[var(--shop-border-color)]">
+            <Card className="bg-white/5 border border-white/10 rounded-xl">
               <CardContent className="p-5 space-y-2">
                 <p className="text-sm text-[#8ad6b0] uppercase tracking-[0.15em]">Suporte</p>
                 <h3 className="text-lg font-semibold">Técnico</h3>
                 <p className="text-[var(--shop-text-primary)]">eutonafila@gmail.com</p>
               </CardContent>
             </Card>
-            <Card className="bg-white/5 border-[var(--shop-border-color)]">
+            <Card className="bg-white/5 border border-white/10 rounded-xl">
               <CardContent className="p-5 space-y-2">
                 <p className="text-sm text-[var(--shop-text-secondary)] uppercase tracking-[0.15em]">Base</p>
                 <h3 className="text-lg font-semibold">Florianópolis, SC</h3>
@@ -75,7 +76,7 @@ export function ContactPage() {
             </Card>
           </div>
         </div>
-      </div>
+      </Container>
     </div>
   );
 }

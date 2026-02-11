@@ -191,7 +191,7 @@ export function SchedulePage() {
                   </select>
                 </div>
 
-                {(barbers.length > 0 || settings?.requireBarberChoice) && (
+                {settings?.allowBarberPreference && (barbers.length > 0 || settings?.requireBarberChoice) && (
                   <div>
                     <InputLabel htmlFor="schedule-barber">
                       {settings?.requireBarberChoice ? t('join.barberLabel') : t('join.barberLabelOptional')}

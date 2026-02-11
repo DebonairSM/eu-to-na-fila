@@ -4,6 +4,8 @@ import { useAuthContext } from './contexts/AuthContext';
 import { useShopHomeContent } from './contexts/ShopConfigContext';
 import { useLocale } from './contexts/LocaleContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { SuspenseWithTimeoutFallback } from './components/SuspenseWithTimeout';
+import { NetworkStatusBanner } from './components/NetworkStatusBanner';
 import { api } from './lib/api';
 import { lazyWithRetry } from './lib/lazyWithRetry';
 
@@ -76,11 +78,13 @@ function AppContent() {
   const { logout } = useAuthContext();
   const navigate = useNavigate();
 
-  // Set up global auth error handler
+  // Set up global auth error handler (defer navigation to avoid black screen)
   useEffect(() => {
     api.setOnAuthError(() => {
       logout();
-      navigate('/shop/login', { replace: true });
+      setTimeout(() => {
+        navigate('/shop/login', { replace: true });
+      }, 0);
     });
   }, [logout, navigate]);
 
@@ -188,7 +192,6 @@ function App() {
   const homeContent = useShopHomeContent();
   const { t } = useLocale();
   const skipLinkText = homeContent?.accessibility?.skipLink ?? t('accessibility.skipLink');
-  const loadingText = homeContent?.accessibility?.loading ?? t('accessibility.loading');
 
   useEffect(() => {
     const preload = [
@@ -208,19 +211,11 @@ function App() {
 
   return (
     <ErrorBoundary fallbackErrorMessage={t('errors.generic')}>
+      <NetworkStatusBanner />
       <a href="#main-content" className="skip-link">
         {skipLinkText}
       </a>
-      <Suspense
-        fallback={
-          <div className="min-h-screen text-white flex flex-col" style={{ backgroundColor: 'var(--shop-background, #0a0a0a)' }}>
-            <div className="h-1 w-full animate-pulse shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--shop-accent, #D4AF37) 40%, transparent)' }} />
-            <div className="flex-1 flex items-center justify-center p-6">
-              <p className="text-sm" style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.6))' }}>{loadingText}</p>
-            </div>
-          </div>
-        }
-      >
+      <Suspense fallback={<SuspenseWithTimeoutFallback />}>
         <AppContent />
       </Suspense>
     </ErrorBoundary>

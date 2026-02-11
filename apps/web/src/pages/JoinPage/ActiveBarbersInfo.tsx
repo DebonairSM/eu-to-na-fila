@@ -16,18 +16,32 @@ interface ActiveBarbersInfoProps {
     standardWaitTime: number | null;
     barberWaitTimes: BarberWaitTime[];
   } | null;
+  selectedBarberId?: number | null;
   isLoading?: boolean;
 }
 
 export function ActiveBarbersInfo({
   barbers,
   waitTimes,
+  selectedBarberId = null,
   isLoading = false,
 }: ActiveBarbersInfoProps) {
   const { t } = useLocale();
   const presentBarbers = barbers.filter((b) => b.isActive && b.isPresent);
   const standardWaitTime = waitTimes?.standardWaitTime ?? null;
+  const barberWaitTimes = waitTimes?.barberWaitTimes ?? [];
+  const selectedBarber = selectedBarberId ? barbers.find((b) => b.id === selectedBarberId) : null;
+  const selectedBarberWait = selectedBarberId
+    ? barberWaitTimes.find((b) => b.barberId === selectedBarberId)?.waitTime ?? null
+    : null;
+  const displayWaitTime = selectedBarberId != null ? selectedBarberWait : standardWaitTime;
   const hasActiveBarbers = presentBarbers.length > 0;
+  const generalLineFaster =
+    hasActiveBarbers &&
+    selectedBarberId != null &&
+    standardWaitTime != null &&
+    displayWaitTime != null &&
+    standardWaitTime < displayWaitTime;
 
   const formatWaitTime = (minutes: number | null): string => {
     if (!hasActiveBarbers) return t('join.unavailable');
@@ -52,7 +66,9 @@ export function ActiveBarbersInfo({
         {/* Highlighted estimated time */}
         <div className="text-center mb-6">
           <p className="text-sm uppercase tracking-wider text-[var(--shop-text-secondary)] mb-1">
-            {t('join.estimatedTime')}
+            {selectedBarberId != null && selectedBarber
+              ? `${t('join.estimateFor')} ${selectedBarber.name}`
+              : t('join.estimatedTime')}
           </p>
           <p
             className={`font-bold tabular-nums ${
@@ -61,8 +77,18 @@ export function ActiveBarbersInfo({
                 : 'text-4xl sm:text-5xl text-[var(--shop-accent)]'
             }`}
           >
-            {formatWaitTime(standardWaitTime)}
+            {formatWaitTime(displayWaitTime)}
           </p>
+          {selectedBarberId != null && selectedBarber && (
+            <p className="text-xs text-[var(--shop-text-secondary)] mt-1">
+              {t('join.clearBarberForGeneralLine')}
+            </p>
+          )}
+          {generalLineFaster && (
+            <p className="text-xs text-[var(--shop-accent)] font-medium mt-1.5">
+              {t('join.generalLine')}: {formatWaitTime(standardWaitTime)} — {t('join.faster')}
+            </p>
+          )}
           {!hasActiveBarbers && (
             <p className="text-xs text-[var(--shop-text-secondary)] opacity-70 mt-1">{t('join.noBarberActive')}</p>
           )}

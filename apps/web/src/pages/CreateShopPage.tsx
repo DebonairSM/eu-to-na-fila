@@ -13,6 +13,7 @@ import { AppearanceForm } from '@/components/AppearanceForm';
 import { pickThreeRandomPaletteIndices } from '@/lib/presetPalettes';
 import { isRootBuild } from '@/lib/build';
 import { getErrorMessage } from '@/lib/utils';
+import { Container } from '@/components/design-system/Spacing/Container';
 
 // --- Types ---
 
@@ -468,25 +469,45 @@ export function CreateShopPage() {
     { id: 'barbers', label: t('createShop.barbersTab') },
   ];
 
+  const isMineiro = !useRootTheme;
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div
+      className={
+        isMineiro
+          ? 'min-h-screen text-white bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d]'
+          : 'min-h-screen bg-[#0a0a0a] text-white'
+      }
+    >
       <Nav />
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-16">
-        <div className="mb-6">
-          <p className="text-sm uppercase tracking-[0.25em] text-white/60 mb-2">{t('createShop.newShop')}</p>
-          <h1 className="text-2xl sm:text-3xl font-semibold text-white">{t('createShop.createShop')}</h1>
-        </div>
+      <main
+        className={
+          isMineiro
+            ? 'pt-20 sm:pt-24 pb-12 sm:pb-16 lg:pb-20'
+            : 'max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-16'
+        }
+      >
+        {isMineiro ? (
+          <Container size="2xl">
+            <div className="text-center mb-12">
+              <h1 className="text-3xl sm:text-4xl font-light tracking-tight text-white">
+                {t('createShop.createShop')}
+              </h1>
+              <p className="text-white/70 text-base max-w-2xl mx-auto mt-2">
+                {t('createShop.newShop')}
+              </p>
+            </div>
 
-        {submitError && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2">
-            <span className="material-symbols-outlined text-lg">error</span>
-            {submitError}
-          </div>
-        )}
+            {submitError && (
+              <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2">
+                <span className="material-symbols-outlined text-lg">error</span>
+                {submitError}
+              </div>
+            )}
 
-        <div className="bg-[#242424] border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden">
-          <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
+            <div className="border border-white/10 bg-white/5 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden">
+              <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
             {tabs.map(({ id, label }) => (
               <button
                 key={id}
@@ -670,7 +691,7 @@ export function CreateShopPage() {
                 <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
                   <h4 className="text-white font-medium">{t('management.serviceRules')}</h4>
                   <ul className="space-y-4">
-                    {[{ key: 'requirePhone' as const, labelKey: 'management.requirePhone' }, { key: 'requireBarberChoice' as const, labelKey: 'management.requireBarberChoice' }, { key: 'allowDuplicateNames' as const, labelKey: 'management.allowDuplicateNames' }, { key: 'deviceDeduplication' as const, labelKey: 'management.deviceDeduplication' }, { key: 'allowCustomerCancelInProgress' as const, labelKey: 'management.allowCustomerCancelInProgress' }, { key: 'allowAppointments' as const, labelKey: 'management.allowAppointments' }, { key: 'allowQueueBeforeOpen' as const, labelKey: 'management.allowQueueBeforeOpen' }].map(({ key, labelKey }) => (
+                    {[{ key: 'requirePhone' as const, labelKey: 'management.requirePhone' }, { key: 'allowBarberPreference' as const, labelKey: 'management.allowBarberPreference' }, { key: 'requireBarberChoice' as const, labelKey: 'management.requireBarberChoice' }, { key: 'allowDuplicateNames' as const, labelKey: 'management.allowDuplicateNames' }, { key: 'deviceDeduplication' as const, labelKey: 'management.deviceDeduplication' }, { key: 'allowCustomerCancelInProgress' as const, labelKey: 'management.allowCustomerCancelInProgress' }, { key: 'allowAppointments' as const, labelKey: 'management.allowAppointments' }, { key: 'allowQueueBeforeOpen' as const, labelKey: 'management.allowQueueBeforeOpen' }].map(({ key, labelKey }) => (
                       <li key={key}>
                         <label className="flex items-center gap-3 cursor-pointer group">
                           <button type="button" role="switch" aria-checked={data.settings[key]} onClick={() => onChange({ settings: { ...data.settings, [key]: !data.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${data.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${data.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
@@ -679,6 +700,32 @@ export function CreateShopPage() {
                       </li>
                     ))}
                   </ul>
+                </section>
+                <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                  <h4 className="text-white font-medium">{t('management.kioskAccess')}</h4>
+                  <p className="text-white/60 text-sm">{t('management.kioskAccessHint')}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
+                      <input
+                        type="text"
+                        value={data.settings.kioskUsername || ''}
+                        onChange={(e) => onChange({ settings: { ...data.settings, kioskUsername: e.target.value || undefined } })}
+                        placeholder={t('management.kioskUsernamePlaceholder')}
+                        className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
+                      <input
+                        type="password"
+                        value={data.settings.kioskPassword || ''}
+                        onChange={(e) => onChange({ settings: { ...data.settings, kioskPassword: e.target.value || undefined } })}
+                        placeholder={t('management.kioskPasswordPlaceholder')}
+                        className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm"
+                      />
+                    </div>
+                  </div>
                 </section>
                 <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
                   <h4 className="text-white font-medium">{t('management.operatingHours')}</h4>
@@ -816,6 +863,157 @@ export function CreateShopPage() {
             </button>
           </div>
         </div>
+          </Container>
+        ) : (
+          <>
+            <div className="mb-6">
+              <p className="text-sm uppercase tracking-[0.25em] text-white/60 mb-2">{t('createShop.newShop')}</p>
+              <h1 className="text-2xl sm:text-3xl font-semibold text-white">{t('createShop.createShop')}</h1>
+            </div>
+
+            {submitError && (
+              <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2">
+                <span className="material-symbols-outlined text-lg">error</span>
+                {submitError}
+              </div>
+            )}
+
+            <div className="bg-[#242424] border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden">
+              <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
+                {tabs.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setCreateTab(id)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                      createTab === id ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="min-h-[320px]">
+                {createTab === 'info' && (
+                  <section className="space-y-5">
+                    <p className="text-white/60 text-sm">{t('management.infoIntro')}</p>
+                    <div>
+                      <label htmlFor="createName" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">{t('management.name')} *</label>
+                      <input
+                        id="createName"
+                        type="text"
+                        value={data.name}
+                        onChange={(e) => handleNameChange(e.target.value)}
+                        required
+                        className={FORM_INPUT}
+                      />
+                      {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+                    </div>
+                    <div>
+                      <label htmlFor="createSlug" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">{t('management.slug')} *</label>
+                      <input
+                        id="createSlug"
+                        type="text"
+                        value={data.slug}
+                        onChange={(e) => onChange({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+                        required
+                        pattern="[a-z0-9-]+"
+                        className={FORM_INPUT}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="createDomain" className="block text-white/50 text-sm mb-2">{t('management.domain')}</label>
+                      <input id="createDomain" type="text" value={data.domain} onChange={(e) => onChange({ domain: e.target.value })} placeholder={t('management.domainPlaceholder')} className={FORM_INPUT} />
+                    </div>
+                    <div>
+                      <label htmlFor="createPath" className="block text-white/50 text-sm mb-2">{t('management.path')}</label>
+                      <input id="createPath" type="text" value={data.path} onChange={(e) => onChange({ path: e.target.value })} placeholder={t('management.pathPlaceholder')} className={FORM_INPUT} />
+                    </div>
+                    <div>
+                      <label htmlFor="createApiBase" className="block text-white/50 text-sm mb-2">{t('management.apiBase')}</label>
+                      <input id="createApiBase" type="url" value={data.apiBase} onChange={(e) => onChange({ apiBase: e.target.value })} placeholder={t('management.apiBasePlaceholder')} className={FORM_INPUT} />
+                    </div>
+                  </section>
+                )}
+
+                {createTab === 'appearance' && (
+                  <AppearanceForm
+                    formData={{ theme: data.theme, style: data.style }}
+                    setFormData={(updater) =>
+                      setData((prev) => {
+                        const next = typeof updater === 'function' ? updater({ theme: prev.theme, style: prev.style }) : updater;
+                        return { ...prev, theme: next.theme, style: next.style };
+                      })
+                    }
+                    variant="root"
+                    paletteIndices={paletteIndices}
+                    onRerollPalettes={() => setPaletteIndices(pickThreeRandomPaletteIndices(data.style.preset))}
+                    savedPalettes={savedPalettes}
+                    onSaveCurrentPalette={(label) =>
+                      setSavedPalettes((prev) => [...prev, { label, theme: { ...data.theme } }])
+                    }
+                  />
+                )}
+
+                {createTab === 'content' && (
+                  <div className="space-y-6 max-h-[50vh] overflow-y-auto">
+                    <p className="text-white/60 text-sm">{t('management.contentIntro')}</p>
+                    <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                      <h4 className="text-white font-medium">{t('management.storeIcons')}</h4>
+                      <div className="space-y-3">
+                        <div><label className="block text-white/60 text-sm mb-1">{t('management.favicon')}</label><input type="url" value={data.homeContent.branding.faviconUrl} onChange={(e) => onChange({ homeContent: { ...data.homeContent, branding: { ...data.homeContent.branding, faviconUrl: e.target.value } } })} placeholder="https://..." className={FORM_INPUT} /></div>
+                        <div><label className="block text-white/60 text-sm mb-1">{t('management.headerIcon')}</label><input type="url" value={data.homeContent.branding.headerIconUrl} onChange={(e) => onChange({ homeContent: { ...data.homeContent, branding: { ...data.homeContent.branding, headerIconUrl: e.target.value } } })} placeholder="https://..." className={FORM_INPUT} /></div>
+                      </div>
+                    </section>
+                  </div>
+                )}
+
+                {createTab === 'settings' && (
+                  <section className="space-y-4">
+                    <p className="text-white/60 text-sm">{t('management.settingsIntro')}</p>
+                    <OperatingHoursForm value={data.settings.operatingHours} onChange={(oh) => onChange({ settings: { ...data.settings, operatingHours: oh } })} />
+                  </section>
+                )}
+
+                {createTab === 'services' && (
+                  <>
+                    {errors.services && <p className="text-red-400 text-sm mb-4">{errors.services}</p>}
+                    <StepServices services={data.services} onChange={(services) => onChange({ services })} errors={errors} />
+                  </>
+                )}
+
+                {createTab === 'barbers' && (
+                  <>
+                    {errors.barbers && <p className="text-red-400 text-sm mb-4">{errors.barbers}</p>}
+                    <StepBarbers barbers={data.barbers} onChange={(barbers) => onChange({ barbers })} errors={errors} />
+                  </>
+                )}
+              </div>
+
+              <div className="flex gap-2 sm:gap-3 mt-6 pt-4 border-t border-white/10">
+                <button type="button" onClick={handleCancel} className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30">
+                  {t('common.cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="modal-btn primary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#242424] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-[#0a0a0a]/30 border-t-[#0a0a0a] rounded-full animate-spin inline-block mr-2 align-middle" />
+                      {t('createShop.creating')}
+                    </>
+                  ) : (
+                    <>{t('createShop.createBarbershop')}</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </main>
 
       <ConfirmationDialog

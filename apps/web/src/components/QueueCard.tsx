@@ -1,12 +1,15 @@
 import { useState, memo } from 'react';
 import { cn, formatNameForDisplay } from '@/lib/utils';
 import { getBarberAvatarUrl } from '@/lib/avatar';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { Ticket, Barber } from '@eutonafila/shared';
 
 export interface QueueCardProps {
   ticket: Ticket;
   assignedBarber?: Barber | null;
   barbers?: Barber[];
+  /** When set, show "Prefers [Name]" under customer name (waiting tickets). */
+  preferredBarberName?: string | null;
   displayPosition?: number | null;
   onClick?: () => void;
   onRemove?: () => void;
@@ -21,6 +24,7 @@ export interface QueueCardProps {
 export const QueueCard = memo(function QueueCard({
   ticket,
   assignedBarber,
+  preferredBarberName = null,
   displayPosition,
   onClick,
   onRemove,
@@ -29,6 +33,7 @@ export const QueueCard = memo(function QueueCard({
   disabledReason,
   className,
 }: QueueCardProps) {
+  const { t } = useLocale();
   const [barberAvatarFailed, setBarberAvatarFailed] = useState(false);
   const [barberImageLoaded, setBarberImageLoaded] = useState(false);
   const isServing = ticket.status === 'in_progress';
@@ -129,6 +134,11 @@ export const QueueCard = memo(function QueueCard({
             </div>
             {assignedBarber && (
               <p className="text-sm text-[var(--shop-text-secondary)] truncate">{assignedBarber.name}</p>
+            )}
+            {isWaiting && preferredBarberName && (
+              <p className="text-sm text-[var(--shop-text-secondary)] truncate">
+                {t('status.prefersBarber')} {preferredBarberName}
+              </p>
             )}
           </div>
         </div>

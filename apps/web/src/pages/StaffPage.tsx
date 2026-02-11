@@ -1,21 +1,17 @@
-import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useLogout } from '@/hooks/useLogout';
 import { useLocale } from '@/contexts/LocaleContext';
 import { Navigation } from '@/components/Navigation';
 
 export function StaffPage() {
-  const { logout, isOwner, isBarber } = useAuthContext();
+  const { isOwner, isBarber } = useAuthContext();
+  const { logoutAndGoHome } = useLogout();
   const { t } = useLocale();
-  const navigate = useNavigate();
 
   if (isBarber) {
     return <Navigate to="/barber" replace />;
   }
-
-  const handleLogout = () => {
-    logout();
-    navigate('/home');
-  };
 
   return (
     <div className="min-h-screen h-full bg-[var(--shop-background)]">
@@ -112,7 +108,7 @@ export function StaffPage() {
 
         <div className="text-center">
           <button
-            onClick={handleLogout}
+            onClick={logoutAndGoHome}
             className="px-5 py-2.5 bg-transparent text-[var(--shop-text-secondary)] border border-[var(--shop-border-color)] rounded-lg hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-all flex items-center gap-3 mx-auto text-sm"
           >
             <span className="material-symbols-outlined text-lg">logout</span>

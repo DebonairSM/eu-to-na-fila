@@ -1,17 +1,11 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuthContext } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
+import { useLogout } from '@/hooks/useLogout';
 import { useLocale } from '@/contexts/LocaleContext';
 import { Navigation } from '@/components/Navigation';
 
 export function BarberDashboard() {
-  const { logout } = useAuthContext();
+  const { logoutAndGoHome } = useLogout();
   const { t } = useLocale();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/home');
-  };
 
   return (
     <div className="min-h-screen h-full bg-[var(--shop-background)]">
@@ -57,7 +51,7 @@ export function BarberDashboard() {
 
         <div className="text-center mt-8">
           <button
-            onClick={handleLogout}
+            onClick={logoutAndGoHome}
             className="px-5 py-2.5 bg-transparent text-[var(--shop-text-secondary)] border border-[var(--shop-border-color)] rounded-lg hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-all flex items-center gap-3 mx-auto text-sm"
           >
             <span className="material-symbols-outlined text-lg">logout</span>

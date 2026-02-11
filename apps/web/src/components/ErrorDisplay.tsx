@@ -8,6 +8,13 @@ export interface ErrorDisplayProps {
   className?: string;
 }
 
+function getHomeHref(): string {
+  if (typeof window === 'undefined') return '/';
+  const match = window.location.pathname.match(/^\/projects\/[^/]+/);
+  const base = match ? match[0] : (import.meta.env.BASE_URL ?? '/').replace(/\/$/, '') || '/';
+  return `${window.location.origin}${base === '/' ? '' : base}/home`;
+}
+
 export function ErrorDisplay({ error, onRetry, className }: ErrorDisplayProps) {
   const { t } = useLocale();
   const errorMessage = typeof error === 'string' ? error : error.message;
@@ -21,7 +28,15 @@ export function ErrorDisplay({ error, onRetry, className }: ErrorDisplayProps) {
      error.message.includes('Erro ao carregar a página'));
 
   const handleReload = () => {
-    window.location.reload();
+    if (typeof window !== 'undefined' && window.__clearCacheAndReload) {
+      window.__clearCacheAndReload();
+    } else {
+      window.location.reload();
+    }
+  };
+
+  const handleGoHome = () => {
+    window.location.href = getHomeHref();
   };
 
   return (
@@ -39,18 +54,37 @@ export function ErrorDisplay({ error, onRetry, className }: ErrorDisplayProps) {
         <h3 className="font-semibold mb-1">{t('common.error')}</h3>
         <p className="text-sm text-muted-foreground">{errorMessage}</p>
       </div>
-      <div className="flex gap-2">
-        {onRetry && (
-          <Button onClick={onRetry} variant="outline" size="sm">
-            {t('common.retry')}
-          </Button>
+      <div className="flex gap-2 flex-wrap justify-center">
+        {isChunkError ? (
+          <>
+            <Button onClick={handleReload} variant="default" size="sm">
+              {t('errors.reloadPage')}
+            </Button>
+            <Button onClick={handleGoHome} variant="outline" size="sm">
+              {t('errors.goHome')}
+            </Button>
+          </>
+        ) : (
+          onRetry && (
+            <Button onClick={onRetry} variant="outline" size="sm">
+              {t('common.retry')}
+            </Button>
+          )
         )}
-        {isChunkError && (
-          <Button onClick={handleReload} variant="default" size="sm">
+        {!isChunkError && isReloadableError(errorMessage) && (
+          <Button onClick={handleReload} variant="outline" size="sm">
             {t('errors.reloadPage')}
           </Button>
         )}
       </div>
     </div>
+  );
+}
+
+function isReloadableError(message: string): boolean {
+  return (
+    message.includes('Failed to fetch') ||
+    message.includes('Network error') ||
+    message.includes('NetworkError')
   );
 }

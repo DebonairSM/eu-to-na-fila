@@ -104,6 +104,11 @@
           appMounted = true;
           recoveryEl.classList.remove('visible');
         };
+
+        // Show recovery UI (called from React when navigation/lazy load is stuck)
+        window.__showRecoveryUI = function() {
+          if (recoveryEl) recoveryEl.classList.add('visible');
+        };
         
         // Clear all caches and reload
         window.__clearCacheAndReload = function() {

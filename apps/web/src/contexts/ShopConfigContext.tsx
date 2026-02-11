@@ -125,12 +125,15 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
   const [isLoading, setIsLoading] = useState(!cache.has(shopSlug));
   const [error, setError] = useState<string | null>(null);
   const fetchingRef = useRef<string | null>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
     ensureMaterialSymbolsFontFace();
   }, []);
 
   useEffect(() => {
+    isMountedRef.current = true;
+
     const cached = cache.get(shopSlug);
     if (cached) {
       setConfig(cached);
@@ -139,10 +142,16 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
       applyTheme(cached.theme);
       applyStyle(cached.style);
       applyFavicon(cached.homeContent?.branding?.faviconUrl);
-      return;
+      return () => {
+        isMountedRef.current = false;
+      };
     }
 
-    if (fetchingRef.current === shopSlug) return;
+    if (fetchingRef.current === shopSlug) {
+      return () => {
+        isMountedRef.current = false;
+      };
+    }
     fetchingRef.current = shopSlug;
     setIsLoading(true);
     setError(null);
@@ -150,6 +159,7 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
     api
       .getShopConfig(shopSlug)
       .then((data) => {
+        if (!isMountedRef.current) return;
         const shopConfig: ShopConfig = {
           name: data.name,
           theme: data.theme,
@@ -167,6 +177,7 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
         applyFavicon(shopConfig.homeContent?.branding?.faviconUrl);
       })
       .catch((err) => {
+        if (!isMountedRef.current) return;
         setError(err instanceof Error ? err.message : 'Failed to load shop config');
         setConfig(defaultConfig);
         applyTheme(defaultTheme);
@@ -174,9 +185,14 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
         applyFavicon(undefined);
       })
       .finally(() => {
+        if (!isMountedRef.current) return;
         setIsLoading(false);
         fetchingRef.current = null;
       });
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [shopSlug]);
 
   const value = useMemo<ShopConfigContextValue>(

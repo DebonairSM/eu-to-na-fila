@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CompanyNav } from '@/components/CompanyNav';
+import { Container } from '@/components/design-system/Spacing/Container';
 import { useLocale } from '@/contexts/LocaleContext';
 import { api } from '@/lib/api';
 import type { ShopListItem } from '@eutonafila/shared';
@@ -34,7 +35,7 @@ export function NetworkPage() {
   return (
     <div className="min-h-screen bg-[var(--shop-background)] text-[var(--shop-text-primary)]">
       <CompanyNav />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-10">
+      <Container size="2xl" className="py-12 sm:py-16 lg:py-20 space-y-10">
         <header className="space-y-3">
           <p className="text-sm uppercase tracking-[0.25em] text-[var(--shop-accent)]">{t('network.networkTitle')}</p>
           <h1 className="text-3xl sm:text-4xl font-semibold">{t('network.shopsTitle')}</h1>
@@ -56,14 +57,14 @@ export function NetworkPage() {
         {!isLoading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {shops.length === 0 ? (
-              <Card className="bg-white/5 border-white/10">
+              <Card className="bg-white/5 border border-white/10 rounded-xl">
                 <CardContent className="p-6 text-center">
                   <p className="text-[var(--shop-text-secondary)]">{t('network.noShops')}</p>
                 </CardContent>
               </Card>
             ) : (
               shops.map((shop) => (
-                <Card key={shop.id} className="bg-white/5 border-white/10">
+                <Card key={shop.id} className="bg-white/5 border border-white/10 rounded-xl">
                   <CardContent className="p-5 space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
@@ -101,7 +102,7 @@ export function NetworkPage() {
           </div>
         )}
 
-        <Card className="bg-white/5 border-white/10">
+        <Card className="bg-white/5 border border-white/10 rounded-xl">
           <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <p className="text-sm uppercase tracking-[0.2em] text-[#8ad6b0]">Expansão</p>
@@ -112,7 +113,7 @@ export function NetworkPage() {
             </Link>
           </CardContent>
         </Card>
-      </div>
+      </Container>
     </div>
   );
 }

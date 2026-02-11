@@ -886,7 +886,7 @@ export function BarberManagementPage() {
               <button
                 onClick={handleSetOverride}
                 disabled={overrideSubmitting}
-                className="flex-1 px-4 py-2 bg-[#D4AF37] hover:bg-[#E8C547] text-[#0a0a0a] rounded-lg font-medium transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-[var(--shop-accent)] hover:bg-[var(--shop-accent-hover)] text-[var(--shop-text-on-accent)] rounded-lg font-medium transition-colors disabled:opacity-50"
               >
                 {overrideSubmitting ? 'Aplicando...' : 'Aplicar'}
               </button>

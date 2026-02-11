@@ -1,10 +1,13 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTicketStatus } from '@/hooks/useTicketStatus';
 import { useQueue } from '@/hooks/useQueue';
 import { useServices } from '@/hooks/useServices';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useBarbers } from '@/hooks/useBarbers';
+import { api } from '@/lib/api';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
@@ -20,13 +23,33 @@ export function StatusPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useLocale();
+  const shopSlug = useShopSlug();
   const ticketIdFromParams = id ? parseInt(id, 10) : null;
   const { ticket, isLoading, error, refetch } = useTicketStatus(ticketIdFromParams);
   const { data: queueData } = useQueue(2500); // 2.5s for customers waiting for their turn
   const { getServiceById } = useServices();
+  const { barbers } = useBarbers();
   const [shareSuccess, setShareSuccess] = useState(false);
+  const [generalLineWaitTime, setGeneralLineWaitTime] = useState<number | null>(null);
   const { config: shopConfig } = useShopConfig();
   const { barber, isLeaving, handleLeaveQueue, handleShareTicket, leaveError, clearLeaveError } = useStatusDisplay(ticket);
+
+  const preferredBarberId = (ticket as { preferredBarberId?: number | null } | null)?.preferredBarberId ?? null;
+  const preferredBarberName = preferredBarberId != null ? barbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
+
+  useEffect(() => {
+    if (!shopSlug || ticket?.status !== 'waiting' || preferredBarberId == null) {
+      setGeneralLineWaitTime(null);
+      return;
+    }
+    let cancelled = false;
+    api.getWaitTimes(shopSlug).then((res) => {
+      if (!cancelled) setGeneralLineWaitTime(res.standardWaitTime ?? null);
+    }).catch(() => {
+      if (!cancelled) setGeneralLineWaitTime(null);
+    });
+    return () => { cancelled = true; };
+  }, [shopSlug, ticket?.status, preferredBarberId]);
 
   const serviceName =
     ticket?.service?.name ??
@@ -126,6 +149,11 @@ export function StatusPage() {
   const isInProgress = ticket.status === 'in_progress';
   const isCompleted = ticket.status === 'completed';
   const waitTime = ticket.estimatedWaitTime ?? null;
+  const generalLineFaster =
+    isWaiting &&
+    waitTime != null &&
+    generalLineWaitTime != null &&
+    generalLineWaitTime < waitTime;
   const canCancel =
     ticket.status === 'waiting' ||
     (ticket.status === 'in_progress' && shopConfig.settings.allowCustomerCancelInProgress);
@@ -144,6 +172,8 @@ export function StatusPage() {
               position={positionInfo?.position}
               total={positionInfo?.total}
               ahead={positionInfo?.ahead}
+              preferredBarberName={preferredBarberName ?? undefined}
+              generalLineWaitTime={generalLineFaster ? generalLineWaitTime ?? undefined : undefined}
             />
           )}
 
@@ -182,6 +212,8 @@ export function StatusPage() {
                 position={positionInfo?.position}
                 total={positionInfo?.total}
                 ahead={positionInfo?.ahead}
+                preferredBarberName={preferredBarberName ?? undefined}
+                generalLineWaitTime={generalLineFaster ? generalLineWaitTime ?? undefined : undefined}
               />
             )}
 

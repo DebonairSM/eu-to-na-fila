@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ShopSlugProvider } from './contexts/ShopSlugContext';
 import { ShopConfigProvider } from './contexts/ShopConfigContext';
 import { LocaleProvider } from './contexts/LocaleContext';
+import { NetworkStatusProvider } from './contexts/NetworkStatusContext';
 import App from './App';
 import './styles/globals.css';
 
@@ -65,6 +66,7 @@ declare global {
   interface Window {
     __markAppMounted?: () => void;
     __clearCacheAndReload?: () => void;
+    __showRecoveryUI?: () => void;
   }
 }
 
@@ -83,7 +85,9 @@ root.render(
         <ShopSlugProvider>
           <ShopConfigProvider>
             <LocaleProvider>
-              <App />
+              <NetworkStatusProvider>
+                <App />
+              </NetworkStatusProvider>
             </LocaleProvider>
           </ShopConfigProvider>
         </ShopSlugProvider>
