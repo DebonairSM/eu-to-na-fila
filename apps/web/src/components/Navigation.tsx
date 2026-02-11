@@ -171,7 +171,7 @@ export function Navigation() {
             <>
               <li>
                 <Link
-                  to={user.role === 'owner' ? '/owner' : '/manage'}
+                  to={user.role === 'owner' ? '/owner' : '/barber'}
                   className="font-semibold text-[0.9rem] px-4 py-2.5 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
                   style={{
                     backgroundColor: 'var(--shop-accent, #D4AF37)',
@@ -182,18 +182,6 @@ export function Navigation() {
                   {navLabels.labelDashboard}
                 </Link>
               </li>
-              {user.role === 'barber' && (
-              <li>
-                <Link
-                  to="/barbers"
-                  className="text-[0.9rem] font-medium px-3 py-2 rounded min-h-[48px] flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 [&:hover]:[color:var(--shop-accent)]"
-                  style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
-                >
-                  <span className="material-symbols-outlined text-lg">person</span>
-                  {t('nav.myProfile')}
-                </Link>
-              </li>
-              )}
               <li>
                 <button
                   onClick={handleLogout}
@@ -335,7 +323,7 @@ export function Navigation() {
                 {user && (user.role === 'owner' || user.role === 'barber') ? (
                   <>
                     <Link
-                      to={user.role === 'owner' ? '/owner' : '/manage'}
+                      to={user.role === 'owner' ? '/owner' : '/barber'}
                       className="block w-full font-semibold text-sm px-4 py-3 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
                       style={{ backgroundColor: 'var(--shop-accent)', color: '#0a0a0a' }}
                       onClick={(e) => {
@@ -346,20 +334,6 @@ export function Navigation() {
                       <span className="material-symbols-outlined text-lg">dashboard</span>
                       {navLabels.labelDashboard}
                     </Link>
-                    {user.role === 'barber' && (
-                    <Link
-                      to="/barbers"
-                      className="block w-full text-sm font-medium px-4 py-3 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] [&:hover]:[color:var(--shop-accent)]"
-                      style={{ color: 'rgba(255,255,255,0.85)' }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      <span className="material-symbols-outlined text-lg">person</span>
-                      {t('nav.myProfile')}
-                    </Link>
-                    )}
                     <button
                       onClick={(e) => {
                         e.preventDefault();

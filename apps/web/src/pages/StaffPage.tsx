@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { Navigation } from '@/components/Navigation';
@@ -7,6 +7,10 @@ export function StaffPage() {
   const { logout, isOwner, isBarber } = useAuthContext();
   const { t } = useLocale();
   const navigate = useNavigate();
+
+  if (isBarber) {
+    return <Navigate to="/barber" replace />;
+  }
 
   const handleLogout = () => {
     logout();

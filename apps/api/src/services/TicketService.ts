@@ -312,6 +312,46 @@ export class TicketService {
     return ticket;
   }
 
+  /**
+   * Cancel using an already-fetched ticket. Avoids a second getById for the public cancel route.
+   */
+  async cancelWithExisting(
+    existingTicket: { id: number; shopId: number; status: string },
+    reason?: string,
+    actorType: 'customer' | 'staff' | 'owner' = 'customer'
+  ): Promise<Ticket> {
+    this.validateStatusTransition(existingTicket.status, 'cancelled');
+    const now = new Date();
+    const [ticket] = await this.db
+      .update(schema.tickets)
+      .set({
+        status: 'cancelled',
+        cancelledAt: now,
+        updatedAt: now,
+        position: 0,
+        estimatedWaitTime: null,
+      })
+      .where(eq(schema.tickets.id, existingTicket.id))
+      .returning();
+
+    if (reason) {
+      this.auditService.logTicketCancelled(existingTicket.id, existingTicket.shopId, { reason, actorType });
+    }
+
+    this.db.query.shops.findFirst({
+      where: eq(schema.shops.id, existingTicket.shopId),
+      columns: { settings: true },
+    }).then((s) => {
+      const settingsForRecalc = parseSettings(s?.settings);
+      return this.queueService.recalculatePositions(existingTicket.shopId, settingsForRecalc);
+    }).then(() => this.recalculateWaitTimes(existingTicket.shopId))
+      .catch((err) => {
+        console.error('[TicketService] Deferred recalc failed for shop', existingTicket.shopId, err);
+      });
+
+    return ticket as Ticket;
+  }
+
   private async recalculateWaitTimes(shopId: number): Promise<void> {
     const waitingTickets = await this.getByShop(shopId, 'waiting');
     if (waitingTickets.length === 0) return;
@@ -477,6 +517,28 @@ export class TicketService {
     const settings = parseSettings(shop?.settings);
     await this.queueService.recalculatePositions(existingTicket.shopId, settings);
     await this.recalculateWaitTimes(existingTicket.shopId);
+
+    return ticket as Ticket;
+  }
+
+  /**
+   * Reschedule a pending appointment. Staff/owner/barber only.
+   */
+  async rescheduleAppointment(ticketId: number, scheduledTime: Date | string): Promise<Ticket> {
+    const existingTicket = await this.getById(ticketId);
+    if (!existingTicket) throw new NotFoundError('Ticket not found');
+    if ((existingTicket as any).type !== 'appointment') throw new ConflictError('Only appointments can be rescheduled');
+    if (existingTicket.status !== 'pending') throw new ConflictError('Only pending appointments can be rescheduled');
+
+    const scheduled = typeof scheduledTime === 'string' ? new Date(scheduledTime) : scheduledTime;
+    if (isNaN(scheduled.getTime())) throw new ValidationError('Invalid scheduledTime');
+
+    const now = new Date();
+    const [ticket] = await this.db
+      .update(schema.tickets)
+      .set({ scheduledTime: scheduled, updatedAt: now })
+      .where(eq(schema.tickets.id, ticketId))
+      .returning();
 
     return ticket as Ticket;
   }

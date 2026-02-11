@@ -113,10 +113,7 @@ export function SchedulePage() {
       setSubmitError(t('join.phoneRequired'));
       return;
     }
-    if (settings?.requireBarberChoice && !selectedBarberId) {
-      setSubmitError(t('join.chooseBarber'));
-      return;
-    }
+    // Barber is optional (preferred barber only).
 
     setIsSubmitting(true);
     try {
@@ -166,15 +163,17 @@ export function SchedulePage() {
           <Card variant="default" className="shadow-lg">
             <CardContent className="p-6 sm:p-8">
               <form onSubmit={handleSubmit} autoComplete="off" className="space-y-6">
-                <div>
+                <div className="w-full">
                   <InputLabel className="mb-2 block">{t('schedule.selectDate')}</InputLabel>
-                  <DayPicker
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    disabled={disabledDays}
-                    className="rdp-default mx-auto bg-white/5 rounded-lg p-4 [--rdp-accent-color:var(--shop-accent)]"
-                  />
+                  <div className="schedule-calendar-wrap w-full">
+                    <DayPicker
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      disabled={disabledDays}
+                      className="rdp-default w-full bg-white/5 rounded-lg p-4 [--rdp-accent-color:var(--shop-accent)]"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -197,14 +196,13 @@ export function SchedulePage() {
                   </select>
                 </div>
 
-                {settings?.requireBarberChoice && barbers.length > 0 && (
+                {barbers.length > 0 && (
                   <div>
-                    <InputLabel htmlFor="schedule-barber">{t('schedule.selectBarber')}</InputLabel>
+                    <InputLabel htmlFor="schedule-barber">{t('join.barberLabelOptional')}</InputLabel>
                     <select
                       id="schedule-barber"
                       value={selectedBarberId ?? ''}
                       onChange={(e) => setSelectedBarberId(e.target.value ? parseInt(e.target.value, 10) : null)}
-                      required
                       className="form-control-select w-full mt-1"
                     >
                       <option value="">{t('join.selectOption')}</option>
@@ -296,8 +294,7 @@ export function SchedulePage() {
                     !selectedServiceId ||
                     !selectedTime ||
                     !combinedName.trim() ||
-                    (settings?.requirePhone && !customerPhone.trim()) ||
-                    (settings?.requireBarberChoice && !selectedBarberId)
+                    (settings?.requirePhone && !customerPhone.trim())
                   }
                 >
                   {isSubmitting ? (

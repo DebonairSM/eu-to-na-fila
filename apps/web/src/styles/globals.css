@@ -753,6 +753,45 @@
   color: var(--shop-text-primary, #fff);
 }
 
+/* Schedule page: DayPicker uses full container width */
+.schedule-calendar-wrap {
+  width: 100%;
+}
+.schedule-calendar-wrap .rdp {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+.schedule-calendar-wrap .rdp-months {
+  width: 100%;
+}
+.schedule-calendar-wrap .rdp-month {
+  width: 100%;
+}
+.schedule-calendar-wrap .rdp-month_grid,
+.schedule-calendar-wrap .rdp-month-grid,
+.schedule-calendar-wrap .rdp-weekday,
+.schedule-calendar-wrap .rdp-day {
+  width: 100%;
+}
+.schedule-calendar-wrap .rdp-month_caption,
+.schedule-calendar-wrap .rdp-month-caption {
+  width: 100%;
+  justify-content: center;
+}
+.schedule-calendar-wrap .rdp-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  width: 100%;
+}
+.schedule-calendar-wrap .rdp-day_button,
+.schedule-calendar-wrap .rdp-day-button {
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 2.75rem;
+  margin: 0 auto;
+}
+
 /* Join form card – base */
 .join-form-card {
   border-radius: var(--radius-xl, 16px);

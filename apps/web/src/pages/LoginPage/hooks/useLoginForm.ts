@@ -37,7 +37,7 @@ export function useLoginForm() {
             role: 'barber',
             name: barberResult.barberName ?? username.trim(),
           });
-          navigate('/manage');
+          navigate('/barber');
           return;
         }
       }

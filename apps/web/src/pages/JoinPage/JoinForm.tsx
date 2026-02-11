@@ -107,9 +107,9 @@ export function JoinForm() {
               </div>
             )}
 
-            {settings.requireBarberChoice && barbers.length > 0 && (
+            {barbers.length > 0 && (
               <div className="min-w-0">
-                <InputLabel htmlFor="preferredBarber">{t('join.barberLabel')}</InputLabel>
+                <InputLabel htmlFor="preferredBarber">{t('join.barberLabelOptional')}</InputLabel>
                 <select
                   id="preferredBarber"
                   value={selectedBarberId ?? ''}
@@ -117,7 +117,6 @@ export function JoinForm() {
                     const v = e.target.value;
                     setSelectedBarberId(v ? parseInt(v, 10) : null);
                   }}
-                  required
                   className="form-control-select w-full max-w-full"
                 >
                   <option value="">{t('join.selectOption')}</option>
@@ -194,8 +193,7 @@ export function JoinForm() {
                 isLoadingServices ||
                 !hasServices ||
                 (hasServices && selectedServiceId == null) ||
-                (settings.requirePhone && !customerPhone.trim()) ||
-                (settings.requireBarberChoice && !selectedBarberId)
+                (settings.requirePhone && !customerPhone.trim())
               }
             >
               {isSubmitting ? (

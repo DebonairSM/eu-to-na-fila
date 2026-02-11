@@ -67,6 +67,10 @@ export function BarberQueueManager() {
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
   const [appointmentForm, setAppointmentForm] = useState({ customerName: '', serviceId: 0, scheduledTime: '', preferredBarberId: null as number | null });
   const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
+  const [scheduledSectionOpen, setScheduledSectionOpen] = useState(false);
+  const [editAppointmentTicketId, setEditAppointmentTicketId] = useState<number | null>(null);
+  const [editAppointmentTime, setEditAppointmentTime] = useState('');
+  const [rescheduleSubmitting, setRescheduleSubmitting] = useState(false);
   const firstNameInputRef = useRef<HTMLInputElement>(null);
 
   const checkInModal = useModal(false);
@@ -91,7 +95,7 @@ export function BarberQueueManager() {
   }, [searchParams, isKioskMode, enterKioskMode]);
 
   const settings = shopConfig.settings;
-  const requireBarberChoice = settings?.requireBarberChoice ?? false;
+  // Barber selection is always optional (preferred barber only); never required for clients or staff.
 
   // Sync checkInServiceId to first active service when activeServices loads (like JoinForm)
   useEffect(() => {
@@ -104,19 +108,19 @@ export function BarberQueueManager() {
     setCheckInServiceId(activeServices[0].id);
   }, [activeServices, checkInServiceId]);
 
-  // Auto-set checkInBarberId when single barber and requireBarberChoice
+  // Auto-set checkInBarberId when single barber (convenience default)
   useEffect(() => {
-    if (requireBarberChoice && displayBarbers.length === 1 && checkInModal.isOpen) {
+    if (displayBarbers.length === 1 && checkInModal.isOpen) {
       setCheckInBarberId(displayBarbers[0].id);
     }
-  }, [requireBarberChoice, displayBarbers, checkInModal.isOpen]);
+  }, [displayBarbers, checkInModal.isOpen]);
 
   // Auto-set preferredBarberId in appointment form when single barber and modal opens
   useEffect(() => {
-    if (requireBarberChoice && displayBarbers.length === 1 && appointmentModalOpen) {
+    if (displayBarbers.length === 1 && appointmentModalOpen) {
       setAppointmentForm((f) => ({ ...f, preferredBarberId: displayBarbers[0].id }));
     }
-  }, [requireBarberChoice, displayBarbers, appointmentModalOpen]);
+  }, [displayBarbers, appointmentModalOpen]);
 
   // Auto-focus first name input when check-in modal opens
   useEffect(() => {
@@ -252,11 +256,10 @@ export function BarberQueueManager() {
     setErrorMessage(null);
     try {
       const serviceId = checkInServiceId ?? activeServices[0]?.id ?? 1;
-      const preferredBarberId = requireBarberChoice ? (checkInBarberId ?? undefined) : undefined;
       await api.createTicket(shopSlug, {
         customerName: fullName,
         serviceId,
-        preferredBarberId,
+        preferredBarberId: checkInBarberId ?? undefined,
       });
       setCheckInName({ first: '', last: '' });
       setCombinedCheckInName('');
@@ -270,7 +273,7 @@ export function BarberQueueManager() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [checkInName, validateName, refetchQueue, checkInModal, shopSlug, t, checkInServiceId, checkInBarberId, activeServices, requireBarberChoice]);
+  }, [checkInName, validateName, refetchQueue, checkInModal, shopSlug, t, checkInServiceId, checkInBarberId, activeServices]);
 
   const handleSelectBarber = useCallback(async (barberId: number | null) => {
     if (!selectedCustomerId) return;
@@ -334,10 +337,6 @@ export function BarberQueueManager() {
       setErrorMessage(t('barber.fillNameServiceDateTime'));
       return;
     }
-    if (requireBarberChoice && !appointmentForm.preferredBarberId) {
-      setErrorMessage(t('barber.fillNameServiceDateTime'));
-      return;
-    }
     setAppointmentSubmitting(true);
     setErrorMessage(null);
     try {
@@ -355,7 +354,26 @@ export function BarberQueueManager() {
     } finally {
       setAppointmentSubmitting(false);
     }
-  }, [shopSlug, appointmentForm, refetchQueue, t, requireBarberChoice]);
+  }, [shopSlug, appointmentForm, refetchQueue, t]);
+
+  const handleRescheduleAppointment = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editAppointmentTicketId || !editAppointmentTime.trim()) return;
+    setRescheduleSubmitting(true);
+    setErrorMessage(null);
+    try {
+      await api.updateTicket(editAppointmentTicketId, {
+        scheduledTime: new Date(editAppointmentTime).toISOString(),
+      });
+      setEditAppointmentTicketId(null);
+      setEditAppointmentTime('');
+      await refetchQueue();
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, t('barber.appointmentRescheduleError')));
+    } finally {
+      setRescheduleSubmitting(false);
+    }
+  }, [editAppointmentTicketId, editAppointmentTime, refetchQueue, t]);
 
   const handleRemoveCustomer = useCallback(async () => {
     if (!customerToRemove) return;
@@ -734,43 +752,99 @@ export function BarberQueueManager() {
             </div>
           )}
 
-          {/* Pending appointments (check-in) */}
+          {/* Pending appointments (collapsible) */}
           {allowAppointments && pendingTickets.length > 0 && (
             <div className="mb-4">
-              <h3 className="text-sm font-medium text-white/70 mb-2">{t('barber.scheduledAwaitingCheckIn')}</h3>
-              <ul className="space-y-2">
-                {pendingTickets.map((ticket) => (
-                  <li
-                    key={ticket.id}
-                    className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-white/5 border border-white/10"
-                  >
-                    <div>
-                      <span className="font-medium text-white">{(ticket as any).ticketNumber ?? `A-${ticket.id}`}</span>
-                      <span className="text-white/70 ml-2">{formatNameForDisplay(ticket.customerName)}</span>
-                      {(ticket as any).scheduledTime && (
-                        <span className="text-white/50 text-sm ml-2">
-                          {new Date((ticket as any).scheduledTime).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCheckInAppointment(ticket.id)}
-                      disabled={checkInProgressTicketId === ticket.id}
-                      className="px-3 py-1.5 rounded-lg bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {checkInProgressTicketId === ticket.id ? (
-                        <>
-                          <span className="material-symbols-outlined animate-spin text-base align-middle mr-1">hourglass_empty</span>
-                          {t('barber.checkingIn')}
-                        </>
-                      ) : (
-                        t('barber.checkIn')
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <button
+                type="button"
+                onClick={() => setScheduledSectionOpen((open) => !open)}
+                className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-left hover:bg-white/10 transition-colors"
+                aria-expanded={scheduledSectionOpen}
+              >
+                <span className="flex items-center gap-2 text-sm font-medium text-white/80">
+                  <span className="material-symbols-outlined text-lg">event</span>
+                  {t('barber.scheduledAwaitingCheckIn')}
+                  <span className="text-white/50 font-normal">({pendingTickets.length})</span>
+                </span>
+                <span className="material-symbols-outlined text-white/60">
+                  {scheduledSectionOpen ? 'expand_less' : 'expand_more'}
+                </span>
+              </button>
+              {scheduledSectionOpen && (
+                <ul className="mt-2 space-y-2">
+                  {pendingTickets.map((ticket) => {
+                    const scheduledTime = (ticket as any).scheduledTime;
+                    const scheduledStr = scheduledTime
+                      ? (() => {
+                          const d = new Date(scheduledTime);
+                          const y = d.getFullYear();
+                          const m = String(d.getMonth() + 1).padStart(2, '0');
+                          const day = String(d.getDate()).padStart(2, '0');
+                          const h = String(d.getHours()).padStart(2, '0');
+                          const min = String(d.getMinutes()).padStart(2, '0');
+                          return `${y}-${m}-${day}T${h}:${min}`;
+                        })()
+                      : '';
+                    return (
+                      <li
+                        key={ticket.id}
+                        className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 rounded-lg bg-white/5 border border-white/10"
+                      >
+                        <div className="min-w-0">
+                          <span className="font-medium text-white">{(ticket as any).ticketNumber ?? `A-${ticket.id}`}</span>
+                          <span className="text-white/70 ml-2">{formatNameForDisplay(ticket.customerName)}</span>
+                          {scheduledTime && (
+                            <span className="text-white/50 text-sm ml-2 block sm:inline">
+                              {new Date(scheduledTime).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleCheckInAppointment(ticket.id)}
+                            disabled={checkInProgressTicketId === ticket.id}
+                            className="px-3 py-1.5 rounded-lg bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {checkInProgressTicketId === ticket.id ? (
+                              <>
+                                <span className="material-symbols-outlined animate-spin text-base align-middle mr-1">hourglass_empty</span>
+                                {t('barber.checkingIn')}
+                              </>
+                            ) : (
+                              t('barber.checkIn')
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditAppointmentTicketId(ticket.id);
+                              setEditAppointmentTime(scheduledStr);
+                            }}
+                            className="p-2 rounded-lg bg-white/10 text-white/80 hover:bg-white/15 hover:text-white border border-white/20"
+                            title={t('barber.rescheduleAppointment')}
+                            aria-label={t('barber.rescheduleAppointment')}
+                          >
+                            <span className="material-symbols-outlined text-lg">edit_calendar</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCustomerToRemove(ticket.id);
+                              removeConfirmModal.open();
+                            }}
+                            className="p-2 rounded-lg bg-white/10 text-white/80 hover:bg-red-400/20 hover:text-red-300 border border-white/20"
+                            title={t('barber.cancelAppointment')}
+                            aria-label={t('barber.cancelAppointmentAria').replace('{name}', ticket.customerName)}
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           )}
 
@@ -921,14 +995,13 @@ export function BarberQueueManager() {
               </select>
             </div>
           )}
-          {requireBarberChoice && barbers.length > 0 && (
+          {barbers.length > 0 && (
             <div>
-              <label htmlFor="checkInBarber" className="block text-sm font-medium mb-2">{t('join.barberLabel')}</label>
+              <label htmlFor="checkInBarber" className="block text-sm font-medium mb-2">{t('join.barberLabelOptional')}</label>
               <select
                 id="checkInBarber"
                 value={checkInBarberId ?? ''}
                 onChange={(e) => setCheckInBarberId(e.target.value ? parseInt(e.target.value, 10) : null)}
-                required
                 className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">{t('join.selectOption')}</option>
@@ -946,7 +1019,6 @@ export function BarberQueueManager() {
               type="submit"
               disabled={
                 isSubmitting ||
-                (requireBarberChoice && !checkInBarberId) ||
                 (activeServices.length >= 2 && !checkInServiceId)
               }
               className="flex-1"
@@ -1007,14 +1079,13 @@ export function BarberQueueManager() {
                 className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
               />
             </div>
-            {requireBarberChoice && barbers.length > 0 && (
+            {barbers.length > 0 && (
               <div>
-                <label htmlFor="appointmentBarber" className="block text-sm font-medium mb-1">{t('join.barberLabel')}</label>
+                <label htmlFor="appointmentBarber" className="block text-sm font-medium mb-1">{t('join.barberLabelOptional')}</label>
                 <select
                   id="appointmentBarber"
                   value={appointmentForm.preferredBarberId ?? ''}
                   onChange={(e) => setAppointmentForm((f) => ({ ...f, preferredBarberId: e.target.value ? parseInt(e.target.value, 10) : null }))}
-                  required
                   className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
                 >
                   <option value="">{t('join.selectOption')}</option>
@@ -1030,13 +1101,53 @@ export function BarberQueueManager() {
               </Button>
               <Button
                 type="submit"
-                disabled={
-                  appointmentSubmitting ||
-                  (requireBarberChoice && !appointmentForm.preferredBarberId)
-                }
+                disabled={appointmentSubmitting}
                 className="flex-1"
               >
                 {appointmentSubmitting ? t('barber.creating') : t('barber.createAppointment')}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Reschedule appointment modal */}
+      {allowAppointments && editAppointmentTicketId !== null && (
+        <Modal
+          isOpen={true}
+          onClose={() => {
+            setEditAppointmentTicketId(null);
+            setEditAppointmentTime('');
+            setErrorMessage(null);
+          }}
+          title={t('barber.rescheduleAppointment')}
+        >
+          <form onSubmit={handleRescheduleAppointment} className="space-y-4">
+            <div>
+              <label htmlFor="editAppointmentTime" className="block text-sm font-medium mb-1">Data e hora</label>
+              <input
+                id="editAppointmentTime"
+                type="datetime-local"
+                value={editAppointmentTime}
+                onChange={(e) => setEditAppointmentTime(e.target.value)}
+                required
+                className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setEditAppointmentTicketId(null);
+                  setEditAppointmentTime('');
+                }}
+                className="flex-1"
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" disabled={rescheduleSubmitting || !editAppointmentTime.trim()} className="flex-1">
+                {rescheduleSubmitting ? t('barber.rescheduling') : t('barber.reschedule')}
               </Button>
             </div>
           </form>
@@ -1060,23 +1171,29 @@ export function BarberQueueManager() {
         );
       })()}
 
-      {/* Remove Confirmation */}
-      <ConfirmationDialog
-        isOpen={removeConfirmModal.isOpen}
-        onClose={removeConfirmModal.close}
-        onConfirm={handleRemoveCustomer}
-        title={t('barber.removeFromQueueTitle')}
-        message={t('barber.removeFromQueueMessage').replace(
-          '{name}',
-          customerToRemove
-            ? tickets.find((tkt) => tkt.id === customerToRemove)?.customerName ?? t('barber.thisClient')
-            : t('barber.thisClient')
-        )}
-        confirmText={t('barber.removeButton')}
-        cancelText={t('common.cancel')}
-        variant="destructive"
-        icon="delete"
-      />
+      {/* Remove / Cancel appointment Confirmation */}
+      {(() => {
+        const ticketToRemove = customerToRemove ? tickets.find((tkt) => tkt.id === customerToRemove) : null;
+        const isPendingAppointment = ticketToRemove?.status === 'pending';
+        const displayName = ticketToRemove?.customerName ?? t('barber.thisClient');
+        return (
+          <ConfirmationDialog
+            isOpen={removeConfirmModal.isOpen}
+            onClose={removeConfirmModal.close}
+            onConfirm={handleRemoveCustomer}
+            title={isPendingAppointment ? t('barber.cancelAppointmentTitle') : t('barber.removeFromQueueTitle')}
+            message={
+              isPendingAppointment
+                ? t('barber.cancelAppointmentMessage').replace('{name}', displayName)
+                : t('barber.removeFromQueueMessage').replace('{name}', displayName)
+            }
+            confirmText={isPendingAppointment ? t('barber.cancelAppointmentConfirm') : t('barber.removeButton')}
+            cancelText={t('common.cancel')}
+            variant="destructive"
+            icon="delete"
+          />
+        );
+      })()}
 
       {/* Complete Confirmation */}
       <ConfirmationDialog

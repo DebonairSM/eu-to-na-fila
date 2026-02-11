@@ -332,10 +332,7 @@ export function useJoinForm() {
       setSubmitError(t('join.phoneRequired'));
       return;
     }
-    if (settings.requireBarberChoice && !selectedBarberId) {
-      setSubmitError(t('join.chooseBarber'));
-      return;
-    }
+    // Barber is optional (preferred barber only).
 
     setIsSubmitting(true);
 

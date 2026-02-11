@@ -141,8 +141,8 @@ export class BaseApiClient {
     return this.request<T>(path, { method: 'GET' }, timeoutMs ?? 30000);
   }
 
-  protected async post<T>(path: string, body: unknown): Promise<T> {
-    return this.request<T>(path, { method: 'POST', body: JSON.stringify(body) });
+  protected async post<T>(path: string, body: unknown, timeoutMs?: number): Promise<T> {
+    return this.request<T>(path, { method: 'POST', body: JSON.stringify(body) }, timeoutMs ?? 30000);
   }
 
   protected async patch<T>(path: string, body: unknown, timeoutMs?: number): Promise<T> {

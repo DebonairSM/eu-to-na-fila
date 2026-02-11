@@ -64,11 +64,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
         { field: 'customerPhone', message: 'Este campo é obrigatório' },
       ]);
     }
-    if (settings.requireBarberChoice && !data.preferredBarberId) {
-      throw new ValidationError('Barber selection is required', [
-        { field: 'preferredBarberId', message: 'Escolha um barbeiro' },
-      ]);
-    }
+    // Barber is always optional (preferred barber); never required for clients.
 
     // Check for existing active ticket by device FIRST (before creating)
     // Device-based check takes priority to prevent multiple tickets from same device
@@ -341,18 +337,25 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const bodySchema = z.object({
       barberId: z.number().int().positive().nullable().optional(),
       status: z.enum(['pending', 'waiting', 'in_progress', 'completed', 'cancelled']).optional(),
+      scheduledTime: z.string().datetime().optional(),
     });
 
     const { id } = validateRequest(paramsSchema, request.params);
     const updates = validateRequest(bodySchema, request.body);
 
-    if (request.user?.role === 'barber' && updates.barberId !== undefined && updates.barberId !== null && updates.barberId !== request.user.barberId) {
-      throw new ForbiddenError('Barbers can only assign tickets to themselves');
-    }
-
     const existingTicket = await ticketService.getById(id);
     if (!existingTicket) {
       throw new NotFoundError(`Ticket with ID ${id} not found`);
+    }
+
+    // Reschedule appointment (pending only)
+    if (updates.scheduledTime !== undefined) {
+      const updated = await ticketService.rescheduleAppointment(id, updates.scheduledTime);
+      return updated;
+    }
+
+    if (request.user?.role === 'barber' && updates.barberId !== undefined && updates.barberId !== null && updates.barberId !== request.user.barberId) {
+      throw new ForbiddenError('Barbers can only assign tickets to themselves');
     }
 
     // Appointments: barbers cannot select/assign until at least 1 hour before the scheduled time
@@ -370,17 +373,13 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     // Use TicketService.updateStatus to ensure timestamps and audit logging are handled
-    // If status is not provided, use existing status (allows updating just barberId)
     const updateData: UpdateTicketStatus = {
       status: updates.status ?? existingTicket.status,
     };
-    
     if (updates.barberId !== undefined) {
-      // Pass null directly to unassign barber (don't convert to undefined)
       updateData.barberId = updates.barberId;
     }
 
-    // Update via service to get proper timestamp handling and audit logging
     const updatedTicket = await ticketService.updateStatus(id, updateData);
 
     return updatedTicket;
@@ -401,19 +400,15 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const { id } = validateRequest(paramsSchema, request.params);
 
-    // Get ticket before cancelling
     const existingTicket = await ticketService.getById(id);
     if (!existingTicket) {
       throw new NotFoundError(`Ticket with ID ${id} not found`);
     }
 
-    // Load shop settings for cancellation rules
-    const shop = await db.query.shops.findFirst({
-      where: eq(schema.shops.id, existingTicket.shopId),
-    });
-    const settings = parseSettings(shop?.settings);
+    // Use shop already loaded by getById (with: { shop: true }) to avoid extra query
+    const shopSettings = (existingTicket as { shop?: { settings: unknown } }).shop?.settings;
+    const settings = parseSettings(shopSettings);
 
-    // Check if customer is allowed to cancel this ticket
     const canCancel = existingTicket.status === 'waiting'
       || (settings.allowCustomerCancelInProgress && existingTicket.status === 'in_progress');
 
@@ -421,37 +416,38 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       throw new Error('Only waiting tickets can be cancelled by customers');
     }
 
-    // Cancel ticket (customer cancellation)
-    const ticket = await ticketService.cancel(id, 'Customer cancelled', 'customer');
-
+    const ticket = await ticketService.cancelWithExisting(existingTicket, 'Customer cancelled', 'customer');
     return ticket;
   });
 
   /**
-   * Cancel a ticket (staff/owner endpoint).
-   * Requires staff or owner authentication.
-   * 
+   * Cancel a ticket (staff/owner/barber endpoint).
+   * Barbers can cancel scheduled appointments (and any ticket) for their shop.
+   *
    * @route DELETE /api/tickets/:id
    * @param id - Ticket ID
    * @returns Cancelled ticket
    * @throws {401} If not authenticated
+   * @throws {403} If barber and ticket is from another shop
    * @throws {404} If ticket not found
    */
   fastify.delete('/tickets/:id', {
-    preHandler: [requireAuth(), requireRole(['owner', 'staff'])],
+    preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
   }, async (request, reply) => {
     const paramsSchema = z.object({
       id: z.coerce.number().int().positive(),
     });
     const { id } = validateRequest(paramsSchema, request.params);
 
-    // Get ticket before cancelling (for shop slug)
     const existingTicket = await ticketService.getById(id);
     if (!existingTicket) {
       throw new NotFoundError(`Ticket with ID ${id} not found`);
     }
 
-    // Cancel ticket (staff/owner cancellation)
+    if (request.user?.role === 'barber' && request.user.shopId != null && existingTicket.shopId !== request.user.shopId) {
+      throw new ForbiddenError('Access denied to this ticket');
+    }
+
     const ticket = await ticketService.cancel(id, 'Cancelled by staff/owner', 'staff');
 
     return ticket;
