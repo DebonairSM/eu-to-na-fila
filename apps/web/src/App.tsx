@@ -26,7 +26,7 @@ const BarberDashboard = lazyWithRetry(() => import('./pages/BarberDashboard').th
 const BarberManagementPage = lazyWithRetry(() => import('./pages/BarberManagementPage').then((m) => ({ default: m.BarberManagementPage })));
 const AdManagementPage = lazyWithRetry(() => import('./pages/AdManagementPage').then((m) => ({ default: m.AdManagementPage })));
 const CompanyDashboard = lazyWithRetry(() => import('./pages/CompanyDashboard').then((m) => ({ default: m.CompanyDashboard })));
-const CreateShopPage = lazyWithRetry(() => import('./pages/CreateShopPage').then((m) => ({ default: m.CreateShopPage })));
+const ShopManagementPage = lazyWithRetry(() => import('./pages/ShopManagementPage').then((m) => ({ default: m.ShopManagementPage })));
 const SchedulePage = lazyWithRetry(() => import('./pages/SchedulePage').then((m) => ({ default: m.SchedulePage })));
 const AppointmentConfirmPage = lazyWithRetry(() => import('./pages/AppointmentConfirmPage').then((m) => ({ default: m.AppointmentConfirmPage })));
 
@@ -174,11 +174,12 @@ function AppContent() {
           </ProtectedRoute>
         }
       />
+      <Route path="/company/shops/new" element={<Navigate to="/company/shops" replace />} />
       <Route
-        path="/company/shops/new"
+        path="/company/shops"
         element={
           <ProtectedRoute requireCompanyAdmin>
-            <CreateShopPage />
+            <ShopManagementPage />
           </ProtectedRoute>
         }
       />

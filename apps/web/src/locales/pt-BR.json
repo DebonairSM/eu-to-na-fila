@@ -396,6 +396,7 @@
     "customFeature": "Personalizado",
     "customFeatureIcon": "Ícone (Material Symbol)",
     "customFeatureText": "Texto",
+    "addCustomFeature": "Adicionar personalizado",
     "noShopsRegistered": "Nenhuma barbearia cadastrada",
     "noBarbersInShop": "Nenhum barbeiro cadastrado nesta barbearia.",
     "removeShopTitle": "Remover Barbearia",

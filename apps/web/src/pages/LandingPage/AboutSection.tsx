@@ -48,7 +48,7 @@ export function AboutSection() {
           <Grid cols={{ mobile: 2 }} gap="md" className="mb-8">
             {features.map((feature) => (
               <div key={feature.text} className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-xl">
+                <span className="material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-xl" style={{ fontWeight: style?.iconWeight ?? 300 }}>
                   {feature.icon}
                 </span>
                 <Text size="sm" variant="secondary">
@@ -77,7 +77,7 @@ export function AboutSection() {
           <Grid cols={{ mobile: 2 }} gap="lg">
             {features.map((feature) => (
               <div key={feature.text} className="flex items-center gap-4">
-                <span className="material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-2xl">
+                <span className="material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-2xl" style={{ fontWeight: style?.iconWeight ?? 300 }}>
                   {feature.icon}
                 </span>
                 <Text size="base" variant="secondary">

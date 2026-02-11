@@ -396,6 +396,7 @@
     "customFeature": "Custom",
     "customFeatureIcon": "Icon (Material Symbol)",
     "customFeatureText": "Text",
+    "addCustomFeature": "Add custom",
     "noShopsRegistered": "No shops registered",
     "noBarbersInShop": "No barbers registered in this shop.",
     "removeShopTitle": "Remove Shop",

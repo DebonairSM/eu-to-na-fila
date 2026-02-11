@@ -92,10 +92,9 @@ export const shopsRoutes: FastifyPluginAsync = async (fastify) => {
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     const until = new Date(Date.now() + body.durationMinutes * 60 * 1000);
-    const settings = parseSettings(shop.settings);
-    
+    const raw = (shop.settings && typeof shop.settings === 'object') ? { ...(shop.settings as Record<string, unknown>) } : {};
     const updatedSettings = {
-      ...settings,
+      ...raw,
       temporaryStatusOverride: {
         isOpen: body.isOpen,
         until: until.toISOString(),
@@ -128,11 +127,8 @@ export const shopsRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    const settings = parseSettings(shop.settings);
-    const updatedSettings = {
-      ...settings,
-      temporaryStatusOverride: null,
-    };
+    const raw = (shop.settings && typeof shop.settings === 'object') ? { ...(shop.settings as Record<string, unknown>) } : {};
+    const updatedSettings = { ...raw, temporaryStatusOverride: null };
 
     await db.update(schema.shops)
       .set({ 

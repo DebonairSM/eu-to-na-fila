@@ -93,6 +93,156 @@ function mergeSettingsForEdit(stored: ShopSettings | Record<string, unknown> | n
   return { ...DEFAULT_SETTINGS, ...(stored as Partial<ShopSettings>) };
 }
 
+// --- Create shop: types and helpers ---
+interface ServiceItem {
+  id: string;
+  name: string;
+  description: string;
+  duration: number;
+  price: number;
+}
+interface BarberItem {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+}
+const uid = () => Math.random().toString(36).substring(2, 9);
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .substring(0, 50);
+}
+function getDefaultServices(t: (key: string) => string): ServiceItem[] {
+  return [
+    { id: uid(), name: t('createShop.serviceNameHaircut'), description: t('createShop.serviceDescHaircut'), duration: 30, price: 3000 },
+    { id: uid(), name: t('createShop.serviceNameBeard'), description: t('createShop.serviceDescBeard'), duration: 20, price: 2000 },
+    { id: uid(), name: t('createShop.serviceNameCombo'), description: t('createShop.serviceDescCombo'), duration: 45, price: 4500 },
+  ];
+}
+function getDefaultBarbers(_t: (key: string) => string): BarberItem[] {
+  return [
+    { id: uid(), name: '', email: '', phone: '' },
+    { id: uid(), name: '', email: '', phone: '' },
+  ];
+}
+
+// --- Step: Services (create mode) ---
+function StepServices({
+  services,
+  onChange,
+  errors,
+}: {
+  services: ServiceItem[];
+  onChange: (services: ServiceItem[]) => void;
+  errors: Record<string, string>;
+}) {
+  const { t } = useLocale();
+  const addService = () => {
+    onChange([...services, { id: uid(), name: '', description: '', duration: 30, price: 0 }]);
+  };
+  const removeService = (id: string) => {
+    if (services.length <= 1) return;
+    onChange(services.filter((s) => s.id !== id));
+  };
+  const updateService = (id: string, patch: Partial<ServiceItem>) => {
+    onChange(services.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+  };
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+      <div>
+        <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-2">{t('createShop.servicesTab')}</h2>
+        <p className="text-white/60 text-sm">{t('createShop.servicesIntro')}</p>
+      </div>
+      {errors.services && <p className="text-red-400 text-sm">{errors.services}</p>}
+      <div className="space-y-4">
+        {services.map((service, index) => (
+          <div key={service.id} className="p-4 sm:p-5 rounded-xl border border-white/10 bg-white/5 hover:border-white/20 transition-all group">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.serviceN')} {index + 1}</span>
+              {services.length > 1 && (
+                <button type="button" onClick={() => removeService(service.id)} className="text-red-400/60 hover:text-red-400 transition-colors p-1" aria-label={t('createShop.removeService')}>
+                  <span className="material-symbols-outlined text-lg">close</span>
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
+                <input type="text" value={service.name} onChange={(e) => updateService(service.id, { name: e.target.value })} placeholder={t('createShop.serviceNamePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
+              </div>
+              <div className="sm:col-span-2">
+                <input type="text" value={service.description} onChange={(e) => updateService(service.id, { description: e.target.value })} placeholder={t('createShop.serviceDescPlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
+              </div>
+              <div>
+                <label className="block text-white/50 text-xs mb-1">{t('createShop.durationMin')}</label>
+                <input type="number" min={1} value={service.duration} onChange={(e) => updateService(service.id, { duration: parseInt(e.target.value) || 1 })} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
+              </div>
+              <div>
+                <label className="block text-white/50 text-xs mb-1">{t('createShop.priceReais')}</label>
+                <input type="number" min={0} step="0.01" value={(service.price / 100).toFixed(2)} onChange={(e) => updateService(service.id, { price: Math.round(parseFloat(e.target.value || '0') * 100) })} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={addService} className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition-all text-sm">
+        <span className="material-symbols-outlined text-lg">add</span>
+        {t('createShop.addService')}
+      </button>
+    </div>
+  );
+}
+
+// --- Step: Barbers (create mode) ---
+function StepBarbers({ barbers, onChange, errors }: { barbers: BarberItem[]; onChange: (barbers: BarberItem[]) => void; errors: Record<string, string> }) {
+  const { t } = useLocale();
+  const addBarber = () => onChange([...barbers, { id: uid(), name: '', email: '', phone: '' }]);
+  const removeBarber = (id: string) => {
+    if (barbers.length <= 1) return;
+    onChange(barbers.filter((b) => b.id !== id));
+  };
+  const updateBarber = (id: string, patch: Partial<BarberItem>) => onChange(barbers.map((b) => (b.id === id ? { ...b, ...patch } : b)));
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+      <div>
+        <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-2">{t('createShop.barbersTab')}</h2>
+        <p className="text-white/60 text-sm">{t('createShop.barbersIntro')}</p>
+      </div>
+      {errors.barbers && <p className="text-red-400 text-sm">{errors.barbers}</p>}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {barbers.map((barber, index) => (
+          <div key={barber.id} className="p-4 rounded-xl border border-white/10 bg-white/5 hover:border-white/20 transition-all relative">
+            {barbers.length > 1 && (
+              <button type="button" onClick={() => removeBarber(barber.id)} className="absolute top-3 right-3 text-red-400/60 hover:text-red-400 transition-colors p-1" aria-label={t('createShop.removeBarber')}>
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            )}
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37]/30 to-[#D4AF37]/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[#D4AF37] text-lg">person</span>
+              </div>
+              <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.barberN')} {index + 1}</span>
+            </div>
+            <div className="space-y-3">
+              <input type="text" value={barber.name} onChange={(e) => updateBarber(barber.id, { name: e.target.value })} placeholder={t('createShop.namePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
+              <input type="email" value={barber.email} onChange={(e) => updateBarber(barber.id, { email: e.target.value })} placeholder={t('createShop.emailPlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
+              <input type="tel" value={barber.phone} onChange={(e) => updateBarber(barber.id, { phone: e.target.value })} placeholder={t('createShop.phonePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={addBarber} className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition-all text-sm">
+        <span className="material-symbols-outlined text-lg">person_add</span>
+        {t('createShop.addBarber')}
+      </button>
+    </div>
+  );
+}
+
 type Shop = ShopAdminView;
 
 export function ShopManagementPage() {
@@ -108,7 +258,12 @@ export function ShopManagementPage() {
   const [error, setError] = useState<Error | null>(null);
   const [shopToDelete, setShopToDelete] = useState<number | null>(null);
   const [editingShop, setEditingShop] = useState<Shop | null>(null);
-  const [editTab, setEditTab] = useState<'info' | 'appearance' | 'content' | 'settings' | 'credentials'>('info');
+  type EditTab = 'info' | 'appearance' | 'content' | 'settings' | 'credentials' | 'services' | 'barbers';
+  const [editTab, setEditTab] = useState<EditTab>('info');
+  const [createServices, setCreateServices] = useState<ServiceItem[]>([]);
+  const [createBarbers, setCreateBarbers] = useState<BarberItem[]>([]);
+  const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
+  const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
   const [homeImageUploading, setHomeImageUploading] = useState(false);
   const [homeImageError, setHomeImageError] = useState<string | null>(null);
   const homeImageInputRef = React.useRef<HTMLInputElement>(null);
@@ -216,6 +371,89 @@ export function ShopManagementPage() {
       });
     return () => { cancelled = true; };
   }, [editTab, editingShop?.slug]);
+
+  const openCreateModal = useCallback(() => {
+    setEditingShop(null);
+    setFormData({
+      name: '',
+      slug: '',
+      domain: '',
+      path: '',
+      apiBase: '',
+      theme: { ...DEFAULT_THEME },
+      style: defaultStyle,
+      homeContentByLocale: defaultHomeByLocale(),
+      settings: { ...DEFAULT_SETTINGS },
+      ownerPassword: '',
+      staffPassword: '',
+    });
+    setCreateServices(getDefaultServices(t));
+    setCreateBarbers(getDefaultBarbers(t));
+    setCreateErrors({});
+    setEditTab('info');
+    setPlacesLookupAddress('');
+    setPlacesLookupMessage(null);
+    setErrorMessage(null);
+    editModal.open();
+  }, [t, editModal]);
+
+  const handleCreate = useCallback(async () => {
+    if (!user?.companyId) return;
+    const errs: Record<string, string> = {};
+    if (!formData.name.trim()) errs.name = t('createShop.nameRequired') || t('management.nameRequired');
+    if (!formData.ownerPassword.trim()) errs.ownerPassword = t('management.ownerPasswordRequired');
+    else if (formData.ownerPassword.length < 6) errs.ownerPassword = t('management.ownerPasswordMin');
+    if (!formData.staffPassword.trim()) errs.staffPassword = t('management.staffPasswordRequired');
+    else if (formData.staffPassword.length < 6) errs.staffPassword = t('management.staffPasswordMin');
+    const hasEmptyService = createServices.some((s) => !s.name.trim());
+    if (hasEmptyService || createServices.length === 0) {
+      errs.services = createServices.length === 0 ? t('createShop.addAtLeastOneService') : t('createShop.allServicesNeedName');
+    }
+    const hasEmptyBarber = createBarbers.some((b) => !b.name.trim());
+    if (hasEmptyBarber || createBarbers.length === 0) {
+      errs.barbers = createBarbers.length === 0 ? t('createShop.addAtLeastOneBarber') : t('createShop.allBarbersNeedName');
+    }
+    setCreateErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+    setIsSubmittingCreate(true);
+    setErrorMessage(null);
+    try {
+      await api.createFullShop(user.companyId, {
+        name: formData.name,
+        slug: formData.slug || undefined,
+        domain: formData.domain || undefined,
+        path: formData.path || undefined,
+        apiBase: formData.apiBase || undefined,
+        ownerPassword: formData.ownerPassword,
+        staffPassword: formData.staffPassword,
+        theme: formData.theme,
+        homeContentByLocale: formData.homeContentByLocale,
+        settings: formData.settings,
+        services: createServices.map((s) => ({
+          name: s.name,
+          description: s.description || undefined,
+          duration: s.duration,
+          price: s.price || undefined,
+        })),
+        barbers: createBarbers.map((b) => ({
+          name: b.name,
+          email: b.email || undefined,
+          phone: b.phone || undefined,
+        })),
+      });
+      setEditingShop(null);
+      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' });
+      setCreateServices(getDefaultServices(t));
+      setCreateBarbers(getDefaultBarbers(t));
+      setCreateErrors({});
+      editModal.close();
+      await loadShops();
+    } catch (err) {
+      setErrorMessage(getErrorMessage(err, t('createShop.createError')));
+    } finally {
+      setIsSubmittingCreate(false);
+    }
+  }, [user?.companyId, formData, createServices, createBarbers, t, loadShops, editModal]);
 
   const handleEdit = useCallback(async () => {
     if (!user?.companyId || !editingShop || !formData.name.trim()) {
@@ -408,7 +646,7 @@ export function ShopManagementPage() {
           </div>
 
           <button
-            onClick={() => navigate('/company/shops/new')}
+            onClick={openCreateModal}
             className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-white text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-medium transition-all hover:bg-gray-100 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-white/30"
             aria-label={t('management.addShopAria')}
           >
@@ -497,14 +735,14 @@ export function ShopManagementPage() {
             >
               <div className="modal-content bg-[#242424] border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[min(90vw,700px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4">
                 <h2 id="edit-modal-title-root" className="text-xl sm:text-2xl text-white mb-4">
-                  Editar Barbearia
+                  {editingShop ? t('management.editShop') ?? 'Editar Barbearia' : t('createShop.createShop')}
                 </h2>
                 <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-                  {(['info', 'appearance', 'content', 'settings', 'credentials'] as const).map((tab) => (
+                  {(editingShop ? ['info', 'appearance', 'content', 'settings', 'credentials'] : ['info', 'appearance', 'content', 'settings', 'services', 'barbers']).map((tab) => (
                     <button
                       key={tab}
                       type="button"
-                      onClick={() => setEditTab(tab)}
+                      onClick={() => setEditTab(tab as EditTab)}
                       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                         editTab === tab ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white'
                       }`}
@@ -514,10 +752,12 @@ export function ShopManagementPage() {
                       {tab === 'content' && t('management.contentTab')}
                       {tab === 'settings' && t('management.settingsTab')}
                       {tab === 'credentials' && t('management.credentialsTab')}
+                      {tab === 'services' && t('createShop.servicesTab')}
+                      {tab === 'barbers' && t('createShop.barbersTab')}
                     </button>
                   ))}
                 </div>
-                <form onSubmit={(e) => { e.preventDefault(); handleEdit(); }} className="flex-1 overflow-y-auto min-h-0 pr-1">
+                <form onSubmit={(e) => { e.preventDefault(); editingShop ? handleEdit() : handleCreate(); }} className="flex-1 overflow-y-auto min-h-0 pr-1">
                   {editTab === 'info' && (
                     <section className="space-y-5">
                       <p className="text-white/60 text-sm">{t('management.infoIntro')}</p>
@@ -527,10 +767,18 @@ export function ShopManagementPage() {
                           id="editNameRoot"
                           type="text"
                           value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          onChange={(e) => {
+                            const name = e.target.value;
+                            setFormData((prev) => ({
+                              ...prev,
+                              name,
+                              ...(!editingShop && (!prev.slug || prev.slug === generateSlug(prev.name)) ? { slug: generateSlug(name) } : {}),
+                            }));
+                          }}
                           required
                           className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
                         />
+                        {!editingShop && createErrors.name && <p className="text-red-400 text-xs mt-1">{createErrors.name}</p>}
                       </div>
                       <div>
                         <label htmlFor="editSlugRoot" className="block text-white/70 text-sm mb-2">{t('management.slug')} *</label>
@@ -577,7 +825,48 @@ export function ShopManagementPage() {
                           className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
                         />
                       </div>
+                      {!editingShop && (
+                        <div className="pt-4 border-t border-white/10 space-y-4">
+                          <h4 className="text-white font-medium">{t('management.accessCredentials')}</h4>
+                          <div>
+                            <label htmlFor="createOwnerPasswordRoot" className="block text-white/70 text-sm mb-2">{t('management.ownerPassword')} *</label>
+                            <input id="createOwnerPasswordRoot" type="password" value={formData.ownerPassword} onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })} required minLength={6} placeholder={t('management.ownerPasswordPlaceholder')} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] placeholder:text-white/30" />
+                            {createErrors.ownerPassword && <p className="text-red-400 text-xs mt-1">{createErrors.ownerPassword}</p>}
+                          </div>
+                          <div>
+                            <label htmlFor="createStaffPasswordRoot" className="block text-white/70 text-sm mb-2">{t('management.staffPassword')} *</label>
+                            <input id="createStaffPasswordRoot" type="password" value={formData.staffPassword} onChange={(e) => setFormData({ ...formData, staffPassword: e.target.value })} required minLength={6} placeholder={t('management.staffPasswordPlaceholder')} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] placeholder:text-white/30" />
+                            {createErrors.staffPassword && <p className="text-red-400 text-xs mt-1">{createErrors.staffPassword}</p>}
+                          </div>
+                          <div className="pt-4 border-t border-white/10">
+                            <h4 className="text-white font-medium mb-2">{t('management.kioskAccess')}</h4>
+                            <p className="text-white/60 text-sm mb-3">{t('management.kioskAccessHint')}</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
+                                <input type="text" value={formData.settings.kioskUsername || ''} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskUsername: e.target.value || undefined } })} placeholder={t('management.kioskUsernamePlaceholder')} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                              </div>
+                              <div>
+                                <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
+                                <input type="password" value={formData.settings.kioskPassword || ''} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskPassword: e.target.value || undefined } })} placeholder={t('management.kioskPasswordPlaceholder')} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </section>
+                  )}
+                  {editTab === 'services' && !editingShop && (
+                    <>
+                      {createErrors.services && <p className="text-red-400 text-sm mb-4">{createErrors.services}</p>}
+                      <StepServices services={createServices} onChange={setCreateServices} errors={createErrors} />
+                    </>
+                  )}
+                  {editTab === 'barbers' && !editingShop && (
+                    <>
+                      {createErrors.barbers && <p className="text-red-400 text-sm mb-4">{createErrors.barbers}</p>}
+                      <StepBarbers barbers={createBarbers} onChange={setCreateBarbers} errors={createErrors} />
+                    </>
                   )}
                   {editTab === 'appearance' && (
                     <AppearanceForm
@@ -638,6 +927,52 @@ export function ShopManagementPage() {
                         </div>
                       </section>
                       <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                        <h4 className="text-white font-medium">{t('management.aboutSection')}</h4>
+                        <div className="space-y-3">
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.sectionTitle')}</label><input type="text" value={contentForm.about.sectionTitle} onChange={(e) => setContentForm({ about: { ...contentForm.about, sectionTitle: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div>
+                            <label className="block text-white/60 text-sm mb-1">{t('management.imageUrl')}</label>
+                            <div className="flex flex-wrap gap-2 items-center">
+                              <input type="url" value={contentForm.about.imageUrl} onChange={(e) => { setHomeImageError(null); setContentForm({ about: { ...contentForm.about, imageUrl: e.target.value } }); }} placeholder="https://..." className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm flex-1 min-w-[200px] placeholder:text-white/30" />
+                              <input ref={homeImageInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file || !user?.companyId) return;
+                                setHomeImageError(null);
+                                setHomeImageUploading(true);
+                                try {
+                                  const { url } = editingShop ? await api.uploadShopHomeImage(user.companyId, editingShop.id, file) : await api.uploadDraftHomeImage(user.companyId, file);
+                                  setContentForm({ about: { ...contentForm.about, imageUrl: url } });
+                                } catch (err) {
+                                  setHomeImageError(getErrorMessage(err, t('management.uploadError')));
+                                } finally {
+                                  setHomeImageUploading(false);
+                                  e.target.value = '';
+                                }
+                              }} />
+                              <button type="button" onClick={() => homeImageInputRef.current?.click()} disabled={homeImageUploading} className="px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium disabled:opacity-50 min-h-[44px]">{homeImageUploading ? t('common.loading') : t('management.uploadImage')}</button>
+                            </div>
+                            {homeImageError && <p className="text-sm text-red-400 mt-1">{homeImageError}</p>}
+                          </div>
+                          <div><label className="block text-white/60 text-sm mb-1">{t('management.imageAlt')}</label><input type="text" value={contentForm.about.imageAlt} onChange={(e) => setContentForm({ about: { ...contentForm.about, imageAlt: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                          <div>
+                            <label className="block text-white/60 text-sm mb-2">{t('management.features')}</label>
+                            <div className="space-y-2">
+                              {contentForm.about.features.map((feature, idx) => (
+                                <div key={idx} className="flex gap-2 items-start">
+                                  <span className="material-symbols-outlined text-white/60 text-xl mt-2">{feature.icon}</span>
+                                  <input type="text" value={feature.text} readOnly className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm" />
+                                  <button type="button" onClick={() => { const newFeatures = contentForm.about.features.filter((_, i) => i !== idx); setContentForm({ about: { ...contentForm.about, features: newFeatures } }); }} className="px-3 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-sm"><span className="material-symbols-outlined text-base">delete</span></button>
+                                </div>
+                              ))}
+                              <button type="button" onClick={() => { setCustomFeatureForm({ icon: '', text: '' }); setFeatureSelectorOpen(true); }} className="w-full py-2 border border-dashed border-white/20 rounded-lg text-white/60 hover:text-white hover:border-white/40 transition-colors text-sm flex items-center justify-center gap-2">
+                                <span className="material-symbols-outlined text-base">add</span>
+                                {t('management.addFeature')}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </section>
+                      <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
                         <h4 className="text-white font-medium">{t('management.servicesSection')}</h4>
                         <div className="space-y-3">
                           <div><label className="block text-white/60 text-sm mb-1">{t('management.sectionTitle')}</label><input type="text" value={contentForm.services.sectionTitle} onChange={(e) => setContentForm({ services: { ...contentForm.services, sectionTitle: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
@@ -664,6 +999,44 @@ export function ShopManagementPage() {
                           <div><label className="block text-white/60 text-sm mb-1">{t('management.mapQuery')}</label><input type="text" value={contentForm.location.mapQuery} onChange={(e) => setContentForm({ location: { ...contentForm.location, mapQuery: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                         </div>
                       </section>
+                      <Modal isOpen={featureSelectorOpen} onClose={() => setFeatureSelectorOpen(false)} title={t('management.selectFeature')} className="max-w-2xl">
+                        <div className="space-y-4">
+                          {['service', 'amenity', 'payment', 'special'].map((category) => {
+                            const categoryFeatures = BARBERSHOP_FEATURES.filter(f => f.category === category);
+                            const categoryLabels: Record<string, { pt: string; en: string }> = { service: { pt: 'Serviços', en: 'Services' }, amenity: { pt: 'Comodidades', en: 'Amenities' }, payment: { pt: 'Pagamento', en: 'Payment' }, special: { pt: 'Especiais', en: 'Special' } };
+                            const categoryLabel = contentLocale === 'pt-BR' ? categoryLabels[category]?.pt : categoryLabels[category]?.en;
+                            return (
+                              <div key={category}>
+                                <h5 className="text-white/80 font-medium text-sm mb-2">{categoryLabel}</h5>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {categoryFeatures.map((feature) => (
+                                    <button key={feature.id} type="button" onClick={() => { const text = contentLocale === 'pt-BR' ? feature.labelPtBR : feature.labelEn; setContentForm({ about: { ...contentForm.about, features: [...contentForm.about.features, { icon: feature.icon, text }] } }); setFeatureSelectorOpen(false); }} className="flex items-center gap-3 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-left transition-colors">
+                                      <span className="material-symbols-outlined text-white/80">{feature.icon}</span>
+                                      <span className="text-white text-sm">{contentLocale === 'pt-BR' ? feature.labelPtBR : feature.labelEn}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          <div className="pt-4 border-t border-white/10">
+                            <h5 className="text-white/80 font-medium text-sm mb-3">{t('management.customFeature')}</h5>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="block text-white/60 text-sm mb-1">{t('management.customFeatureIcon')}</label>
+                                <input type="text" value={customFeatureForm.icon} onChange={(e) => setCustomFeatureForm({ ...customFeatureForm, icon: e.target.value })} placeholder="star" className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                              </div>
+                              <div>
+                                <label className="block text-white/60 text-sm mb-1">{t('management.customFeatureText')}</label>
+                                <input type="text" value={customFeatureForm.text} onChange={(e) => setCustomFeatureForm({ ...customFeatureForm, text: e.target.value })} placeholder="Ex: Ambiente familiar" className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                              </div>
+                              <button type="button" onClick={() => { if (customFeatureForm.icon.trim() && customFeatureForm.text.trim()) { setContentForm({ about: { ...contentForm.about, features: [...contentForm.about.features, { icon: customFeatureForm.icon.trim(), text: customFeatureForm.text.trim() }] } }); setCustomFeatureForm({ icon: '', text: '' }); setFeatureSelectorOpen(false); } }} disabled={!customFeatureForm.icon.trim() || !customFeatureForm.text.trim()} className="w-full px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                {t('management.addCustomFeature')}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </Modal>
                     </div>
                     );
                   })()}
@@ -711,32 +1084,6 @@ export function ShopManagementPage() {
                             </li>
                           ))}
                         </ul>
-                      </section>
-                      <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                        <h4 className="text-white font-medium">{t('management.kioskAccess')}</h4>
-                        <p className="text-white/60 text-sm">{t('management.kioskAccessHint')}</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
-                            <input
-                              type="text"
-                              value={formData.settings.kioskUsername || ''}
-                              onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskUsername: e.target.value || undefined } })}
-                              placeholder={t('management.kioskUsernamePlaceholder')}
-                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
-                            <input
-                              type="password"
-                              value={formData.settings.kioskPassword || ''}
-                              onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskPassword: e.target.value || undefined } })}
-                              placeholder={t('management.kioskPasswordPlaceholder')}
-                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
-                            />
-                          </div>
-                        </div>
                       </section>
                       <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
                         <h4 className="text-white font-medium">{t('management.operatingHours')}</h4>
@@ -944,6 +1291,32 @@ export function ShopManagementPage() {
                           </ul>
                         )}
                       </section>
+                      <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <h4 className="text-white font-medium">{t('management.kioskAccess')}</h4>
+                        <p className="text-white/60 text-sm">{t('management.kioskAccessHint')}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
+                            <input
+                              type="text"
+                              value={formData.settings.kioskUsername || ''}
+                              onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskUsername: e.target.value || undefined } })}
+                              placeholder={t('management.kioskUsernamePlaceholder')}
+                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
+                            <input
+                              type="password"
+                              value={formData.settings.kioskPassword || ''}
+                              onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskPassword: e.target.value || undefined } })}
+                              placeholder={t('management.kioskPasswordPlaceholder')}
+                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                            />
+                          </div>
+                        </div>
+                      </section>
                     </div>
                   )}
                   <div className="flex gap-2 sm:gap-3 mt-5 sm:mt-6 flex-shrink-0 pt-4 border-t border-white/10">
@@ -952,10 +1325,10 @@ export function ShopManagementPage() {
                       onClick={() => { editModal.close(); setEditingShop(null); setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' }); setContentLocale('pt-BR'); }}
                       className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-medium cursor-pointer transition-all min-h-[44px] bg-white/10 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                     >
-                      Cancelar
+                      {t('common.cancel')}
                     </button>
-                    <button type="submit" className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-medium cursor-pointer transition-all min-h-[44px] bg-white text-[#0a0a0a] hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white/50">
-                      Salvar
+                    <button type="submit" disabled={!editingShop && isSubmittingCreate} className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-medium cursor-pointer transition-all min-h-[44px] bg-white text-[#0a0a0a] hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-50 disabled:cursor-not-allowed">
+                      {!editingShop ? (isSubmittingCreate ? t('createShop.creating') : t('createShop.createBarbershop')) : (t('common.save') ?? 'Salvar')}
                     </button>
                   </div>
                 </form>
@@ -1015,7 +1388,7 @@ export function ShopManagementPage() {
           </div>
 
           <button
-            onClick={() => navigate('/company/shops/new')}
+            onClick={openCreateModal}
             className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-[#D4AF37] text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:bg-[#E8C547] min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0b1a33]"
             aria-label={t('management.addShopAria')}
           >
@@ -1106,14 +1479,14 @@ export function ShopManagementPage() {
         >
           <div className="modal-content bg-[#242424] border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[min(90vw,700px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4">
             <h2 id="edit-modal-title" className="modal-title text-xl sm:text-2xl text-white mb-4">
-              Editar Barbearia
+              {editingShop ? t('management.editShop') ?? 'Editar Barbearia' : t('createShop.createShop')}
             </h2>
             <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-              {(['info', 'appearance', 'content', 'settings', 'credentials'] as const).map((tab) => (
+              {(editingShop ? ['info', 'appearance', 'content', 'settings', 'credentials'] : ['info', 'appearance', 'content', 'settings', 'services', 'barbers']).map((tab) => (
                 <button
                   key={tab}
                   type="button"
-                  onClick={() => setEditTab(tab)}
+                  onClick={() => setEditTab(tab as EditTab)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                     editTab === tab ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white'
                   }`}
@@ -1123,19 +1496,76 @@ export function ShopManagementPage() {
                   {tab === 'content' && t('management.contentTab')}
                   {tab === 'settings' && t('management.settingsTab')}
                   {tab === 'credentials' && t('management.credentialsTab')}
+                  {tab === 'services' && t('createShop.servicesTab')}
+                  {tab === 'barbers' && t('createShop.barbersTab')}
                 </button>
               ))}
             </div>
-            <form onSubmit={(e) => { e.preventDefault(); handleEdit(); }} className="flex-1 overflow-y-auto min-h-0 pr-1">
+            <form onSubmit={(e) => { e.preventDefault(); editingShop ? handleEdit() : handleCreate(); }} className="flex-1 overflow-y-auto min-h-0 pr-1">
               {editTab === 'info' && (
                 <section className="space-y-5">
                   <p className="text-white/60 text-sm">{t('management.infoIntro')}</p>
-                  <div><label htmlFor="editName" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">{t('management.name')} *</label><input id="editName" type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" /></div>
+                  <div>
+                    <label htmlFor="editName" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">{t('management.name')} *</label>
+                    <input
+                      id="editName"
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => {
+                        const name = e.target.value;
+                        setFormData((prev) => ({ ...prev, name, ...(!editingShop && (!prev.slug || prev.slug === generateSlug(prev.name)) ? { slug: generateSlug(name) } : {}) }));
+                      }}
+                      required
+                      className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
+                    />
+                    {!editingShop && createErrors.name && <p className="text-red-400 text-xs mt-1">{createErrors.name}</p>}
+                  </div>
                   <div><label htmlFor="editSlug" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">{t('management.slug')} *</label><input id="editSlug" type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} required pattern="[a-z0-9-]+" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" /></div>
                   <div><label htmlFor="editDomain" className="block text-white/50 text-sm mb-2">{t('management.domain')}</label><input id="editDomain" type="text" value={formData.domain} onChange={(e) => setFormData({ ...formData, domain: e.target.value })} placeholder={t('management.domainPlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
                   <div><label htmlFor="editPath" className="block text-white/50 text-sm mb-2">{t('management.path')}</label><input id="editPath" type="text" value={formData.path} onChange={(e) => setFormData({ ...formData, path: e.target.value })} placeholder={t('management.pathPlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
                   <div><label htmlFor="editApiBase" className="block text-white/50 text-sm mb-2">{t('management.apiBase')}</label><input id="editApiBase" type="url" value={formData.apiBase} onChange={(e) => setFormData({ ...formData, apiBase: e.target.value })} placeholder={t('management.apiBasePlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
+                  {!editingShop && (
+                    <div className="pt-4 border-t border-white/10 space-y-4">
+                      <h4 className="text-white font-medium">{t('management.accessCredentials')}</h4>
+                      <div>
+                        <label htmlFor="createOwnerPasswordMineiro" className="block text-white/70 text-sm mb-2">{t('management.ownerPassword')} *</label>
+                        <input id="createOwnerPasswordMineiro" type="password" value={formData.ownerPassword} onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })} required minLength={6} placeholder={t('management.ownerPasswordPlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/30" />
+                        {createErrors.ownerPassword && <p className="text-red-400 text-xs mt-1">{createErrors.ownerPassword}</p>}
+                      </div>
+                      <div>
+                        <label htmlFor="createStaffPasswordMineiro" className="block text-white/70 text-sm mb-2">{t('management.staffPassword')} *</label>
+                        <input id="createStaffPasswordMineiro" type="password" value={formData.staffPassword} onChange={(e) => setFormData({ ...formData, staffPassword: e.target.value })} required minLength={6} placeholder={t('management.staffPasswordPlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/30" />
+                        {createErrors.staffPassword && <p className="text-red-400 text-xs mt-1">{createErrors.staffPassword}</p>}
+                      </div>
+                      <div className="pt-4 border-t border-white/10">
+                        <h4 className="text-white font-medium mb-2">{t('management.kioskAccess')}</h4>
+                        <p className="text-white/60 text-sm mb-3">{t('management.kioskAccessHint')}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
+                            <input type="text" value={formData.settings.kioskUsername || ''} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskUsername: e.target.value || undefined } })} placeholder={t('management.kioskUsernamePlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                          </div>
+                          <div>
+                            <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
+                            <input type="password" value={formData.settings.kioskPassword || ''} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskPassword: e.target.value || undefined } })} placeholder={t('management.kioskPasswordPlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </section>
+              )}
+              {editTab === 'services' && !editingShop && (
+                <>
+                  {createErrors.services && <p className="text-red-400 text-sm mb-4">{createErrors.services}</p>}
+                  <StepServices services={createServices} onChange={setCreateServices} errors={createErrors} />
+                </>
+              )}
+              {editTab === 'barbers' && !editingShop && (
+                <>
+                  {createErrors.barbers && <p className="text-red-400 text-sm mb-4">{createErrors.barbers}</p>}
+                  <StepBarbers barbers={createBarbers} onChange={setCreateBarbers} errors={createErrors} />
+                </>
               )}
               {editTab === 'appearance' && (
                 <AppearanceForm
@@ -1191,11 +1621,13 @@ export function ShopManagementPage() {
                           <input type="url" value={contentForm.about.imageUrl} onChange={(e) => { setHomeImageError(null); setContentForm({ about: { ...contentForm.about, imageUrl: e.target.value } }); }} placeholder="https://..." className="form-input flex-1 min-w-[200px] w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" />
                           <input ref={homeImageInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={async (e) => {
                             const file = e.target.files?.[0];
-                            if (!file || !user?.companyId || !editingShop) return;
+                            if (!file || !user?.companyId) return;
                             setHomeImageError(null);
                             setHomeImageUploading(true);
                             try {
-                              const { url } = await api.uploadShopHomeImage(user.companyId, editingShop.id, file);
+                              const { url } = editingShop
+                                ? await api.uploadShopHomeImage(user.companyId, editingShop.id, file)
+                                : await api.uploadDraftHomeImage(user.companyId, file);
                               setContentForm({ about: { ...contentForm.about, imageUrl: url } });
                             } catch (err) {
                               setHomeImageError(getErrorMessage(err, t('management.uploadError')));
@@ -1369,7 +1801,7 @@ export function ShopManagementPage() {
                             disabled={!customFeatureForm.icon.trim() || !customFeatureForm.text.trim()}
                             className="w-full px-4 py-2 bg-[#D4AF37] hover:bg-[#E8C547] text-[#0a0a0a] rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Adicionar personalizado
+                            {t('management.addCustomFeature')}
                           </button>
                         </div>
                       </div>
@@ -1405,32 +1837,6 @@ export function ShopManagementPage() {
                         </li>
                       ))}
                     </ul>
-                  </section>
-                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                    <h4 className="text-white font-medium">{t('management.kioskAccess')}</h4>
-                    <p className="text-white/60 text-sm">{t('management.kioskAccessHint')}</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
-                        <input
-                          type="text"
-                          value={formData.settings.kioskUsername || ''}
-                          onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskUsername: e.target.value || undefined } })}
-                          placeholder={t('management.kioskUsernamePlaceholder')}
-                          className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
-                        <input
-                          type="password"
-                          value={formData.settings.kioskPassword || ''}
-                          onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskPassword: e.target.value || undefined } })}
-                          placeholder={t('management.kioskPasswordPlaceholder')}
-                          className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm"
-                        />
-                      </div>
-                    </div>
                   </section>
                   <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
                     <h4 className="text-white font-medium">{t('management.operatingHours')}</h4>
@@ -1707,6 +2113,32 @@ export function ShopManagementPage() {
                       </ul>
                     )}
                   </section>
+                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <h4 className="text-white font-medium">{t('management.kioskAccess')}</h4>
+                    <p className="text-white/60 text-sm">{t('management.kioskAccessHint')}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
+                        <input
+                          type="text"
+                          value={formData.settings.kioskUsername || ''}
+                          onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskUsername: e.target.value || undefined } })}
+                          placeholder={t('management.kioskUsernamePlaceholder')}
+                          className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
+                        <input
+                          type="password"
+                          value={formData.settings.kioskPassword || ''}
+                          onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskPassword: e.target.value || undefined } })}
+                          placeholder={t('management.kioskPasswordPlaceholder')}
+                          className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm"
+                        />
+                      </div>
+                    </div>
+                  </section>
                 </div>
               )}
               <div className="modal-actions flex gap-2 sm:gap-3 mt-5 sm:mt-6 flex-shrink-0 pt-4 border-t border-white/10">
@@ -1719,13 +2151,14 @@ export function ShopManagementPage() {
                   }}
                   className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="modal-btn primary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#242424]"
+                  disabled={!editingShop && isSubmittingCreate}
+                  className="modal-btn primary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#242424] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Salvar
+                  {!editingShop ? (isSubmittingCreate ? t('createShop.creating') : t('createShop.createBarbershop')) : (t('common.save') ?? 'Salvar')}
                 </button>
               </div>
             </form>

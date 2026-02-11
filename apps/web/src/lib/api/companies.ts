@@ -22,7 +22,7 @@ export interface CompaniesApi {
   uploadShopHomeImage(companyId: number, shopId: number, file: File): Promise<{ url: string }>;
   uploadDraftHomeImage(companyId: number, file: File): Promise<{ url: string }>;
   createFullShop(companyId: number, data: {
-    name: string; slug?: string; domain?: string; 
+    name: string; slug?: string; domain?: string; path?: string; apiBase?: string;
     ownerPassword: string; staffPassword: string;
     theme?: Partial<ShopTheme>; homeContent?: Partial<HomeContent>;
     homeContentByLocale?: Record<string, Partial<HomeContent>>;

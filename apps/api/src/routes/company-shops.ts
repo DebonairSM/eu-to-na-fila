@@ -743,6 +743,8 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         name: z.string().min(1).max(200),
         slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
         domain: z.string().optional(),
+        path: z.string().optional(),
+        apiBase: z.string().url().optional(),
         ownerPassword: z.string().min(6).max(200),
         staffPassword: z.string().min(6).max(200),
         theme: themeInputSchema,
@@ -795,12 +797,13 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         : null;
 
       const result = await db.transaction(async (tx) => {
+        const projectPath = body.path ?? `/projects/${projectSlug}`;
         const [newProject] = await tx
           .insert(schema.projects)
           .values({
             slug: projectSlug,
             name: body.name,
-            path: `/projects/${projectSlug}`,
+            path: projectPath,
             createdAt: new Date(),
             updatedAt: new Date(),
           })
@@ -828,8 +831,8 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
             slug,
             name: body.name,
             domain: body.domain || null,
-            path: `/projects/${projectSlug}`,
-            apiBase: null,
+            path: projectPath,
+            apiBase: body.apiBase ?? null,
             theme: JSON.stringify(themeToStore),
             homeContent: homeContentToStore,
             settings: settingsToStore,
