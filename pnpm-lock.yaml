@@ -131,6 +131,9 @@ importers:
       clsx:
         specifier: ^2.1.0
         version: 2.1.1
+      date-fns-tz:
+        specifier: ^3.2.0
+        version: 3.2.0(date-fns@4.1.0)
       jspdf:
         specifier: ^2.5.2
         version: 2.5.2

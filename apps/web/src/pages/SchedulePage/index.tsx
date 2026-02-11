@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { Link } from 'react-router-dom';
+import { fromZonedTime } from 'date-fns-tz';
 import { Navigation } from '@/components/Navigation';
 import { Container, Heading, Card, CardContent, Input, InputLabel, InputError, Button, Text } from '@/components/design-system';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
@@ -117,9 +118,9 @@ export function SchedulePage() {
       return;
     }
 
-    const scheduledTime = new Date(selectedDate);
-    const [h, m] = selectedTime.split(':').map(Number);
-    scheduledTime.setHours(h, m, 0, 0);
+    const tz = settings?.timezone ?? 'America/Sao_Paulo';
+    const localDateTime = `${dateStr}T${selectedTime}:00`;
+    const utcDate = fromZonedTime(localDateTime, tz);
 
     setIsSubmitting(true);
     try {
@@ -128,7 +129,7 @@ export function SchedulePage() {
         customerName: fullName,
         customerPhone: customerPhone.trim() || undefined,
         preferredBarberId: selectedBarberId ?? undefined,
-        scheduledTime: scheduledTime.toISOString(),
+        scheduledTime: utcDate.toISOString(),
         deviceId: getOrCreateDeviceId(),
       });
       navigate(`/appointment/${ticket.id}/confirm?shop=${encodeURIComponent(shopSlug)}`);
