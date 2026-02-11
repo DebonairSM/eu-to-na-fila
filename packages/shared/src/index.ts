@@ -13,5 +13,8 @@ export * from './types/errors.js';
 // Utils
 export * from './utils/shopStatus.js';
 
+// Constants
+export * from './constants/barbershopFeatures.js';
+
 // Note: WebSocket types removed - using HTTP polling instead
 

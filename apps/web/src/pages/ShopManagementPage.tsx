@@ -2,12 +2,13 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import type { ShopTheme, HomeContent, ShopAdminView, ShopSettings, ShopStyleConfig, OperatingHours } from '@eutonafila/shared';
-import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, shopStyleConfigSchema } from '@eutonafila/shared';
+import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, shopStyleConfigSchema, BARBERSHOP_FEATURES } from '@eutonafila/shared';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useModal } from '@/hooks/useModal';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
+import { Modal } from '@/components/Modal';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
@@ -138,6 +139,8 @@ export function ShopManagementPage() {
     staffPassword: '',
   });
   const [contentLocale, setContentLocale] = useState<string>('pt-BR');
+  const [featureSelectorOpen, setFeatureSelectorOpen] = useState(false);
+  const [customFeatureForm, setCustomFeatureForm] = useState<{ icon: string; text: string }>({ icon: '', text: '' });
   type BarberAccessRow = { barberId: number; name: string; username: string; password: string; initialUsername: string };
   const [barberAccess, setBarberAccess] = useState<BarberAccessRow[]>([]);
   const [barberAccessLoading, setBarberAccessLoading] = useState(false);
@@ -664,28 +667,31 @@ export function ShopManagementPage() {
                   {editTab === 'settings' && (
                     <div className="space-y-6">
                       <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                        <h4 className="text-white font-medium">Fila</h4>
+                        <h4 className="text-white font-medium">{t('management.queueSection')}</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-white/60 text-sm mb-2">Tamanho máximo da fila</label>
+                            <label className="block text-white/60 text-sm mb-2">{t('management.maxQueueSize')}</label>
                             <input type="number" min={1} max={500} value={formData.settings.maxQueueSize} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
                           </div>
                           <div>
-                            <label className="block text-white/60 text-sm mb-2">Duração padrão do serviço (min)</label>
+                            <label className="block text-white/60 text-sm mb-2">{t('management.defaultServiceDuration')}</label>
                             <input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
                           </div>
                         </div>
                       </section>
                       <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                        <h4 className="text-white font-medium">Regras de atendimento</h4>
+                        <h4 className="text-white font-medium">{t('management.serviceRules')}</h4>
                         <ul className="space-y-4">
                           {([
-                            { key: 'requirePhone' as const, label: 'Exigir telefone do cliente' },
-                            { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' },
-                            { key: 'deviceDeduplication' as const, label: 'Impedir múltiplos tickets por dispositivo' },
-                            { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' },
-                            { key: 'allowAppointments' as const, label: 'Permitir agendamentos (fila híbrida com horário marcado)' },
-                          ]).map(({ key, label }) => (
+                            { key: 'requirePhone' as const, labelKey: 'management.requirePhone' },
+                            { key: 'allowBarberPreference' as const, labelKey: 'management.allowBarberPreference' },
+                            { key: 'requireBarberChoice' as const, labelKey: 'management.requireBarberChoice' },
+                            { key: 'allowDuplicateNames' as const, labelKey: 'management.allowDuplicateNames' },
+                            { key: 'deviceDeduplication' as const, labelKey: 'management.deviceDeduplication' },
+                            { key: 'allowCustomerCancelInProgress' as const, labelKey: 'management.allowCustomerCancelInProgress' },
+                            { key: 'allowAppointments' as const, labelKey: 'management.allowAppointments' },
+                            { key: 'allowQueueBeforeOpen' as const, labelKey: 'management.allowQueueBeforeOpen' },
+                          ]).map(({ key, labelKey }) => (
                             <li key={key}>
                               <label className="flex items-center gap-3 cursor-pointer group">
                                 <button
@@ -697,15 +703,41 @@ export function ShopManagementPage() {
                                 >
                                   <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-[#0a0a0a]' : 'translate-x-0 bg-white/60'}`} />
                                 </button>
-                                <span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span>
+                                <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t(labelKey)}</span>
                               </label>
                             </li>
                           ))}
                         </ul>
                       </section>
                       <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                        <h4 className="text-white font-medium">Horário de funcionamento</h4>
-                        <p className="text-white/60 text-sm">Usado para agendamentos. Deixe fechado os dias sem atendimento.</p>
+                        <h4 className="text-white font-medium">{t('management.kioskAccess')}</h4>
+                        <p className="text-white/60 text-sm">{t('management.kioskAccessHint')}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
+                            <input
+                              type="text"
+                              value={formData.settings.kioskUsername || ''}
+                              onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskUsername: e.target.value || undefined } })}
+                              placeholder={t('management.kioskUsernamePlaceholder')}
+                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
+                            <input
+                              type="password"
+                              value={formData.settings.kioskPassword || ''}
+                              onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskPassword: e.target.value || undefined } })}
+                              placeholder={t('management.kioskPasswordPlaceholder')}
+                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                            />
+                          </div>
+                        </div>
+                      </section>
+                      <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <h4 className="text-white font-medium">{t('management.operatingHours')}</h4>
+                        <p className="text-white/60 text-sm">{t('management.operatingHoursHint')}</p>
                         {formData.settings.allowAppointments && (
                           <div className="flex flex-wrap items-end gap-2">
                             <div className="min-w-[200px]">
@@ -744,23 +776,29 @@ export function ShopManagementPage() {
                           <table className="w-full text-sm">
                             <thead>
                               <tr className="text-left text-white/60 border-b border-white/10">
-                                <th className="py-2 pr-4">Dia</th>
-                                <th className="py-2 pr-4 w-24">Aberto</th>
-                                <th className="py-2 pr-4">Abertura</th>
-                                <th className="py-2 pr-4">Fechamento</th>
+                                <th className="py-2 pr-4">{t('management.day')}</th>
+                                <th className="py-2 pr-4 w-24">{t('management.open')}</th>
+                                <th className="py-2 pr-4">{t('management.opensAt')}</th>
+                                <th className="py-2 pr-4">{t('management.closesAt')}</th>
+                                <th className="py-2 pr-4 w-24">{t('management.lunch')}</th>
+                                <th className="py-2 pr-4">{t('management.lunchStart')}</th>
+                                <th className="py-2 pr-4">{t('management.lunchEnd')}</th>
                               </tr>
                             </thead>
                             <tbody>
                               {(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const).map((day) => {
-                                const labels: Record<typeof day, string> = { monday: 'Segunda', tuesday: 'Terça', wednesday: 'Quarta', thursday: 'Quinta', friday: 'Sexta', saturday: 'Sábado', sunday: 'Domingo' };
+                                const labelKeys: Record<typeof day, string> = { monday: 'management.monday', tuesday: 'management.tuesday', wednesday: 'management.wednesday', thursday: 'management.thursday', friday: 'management.friday', saturday: 'management.saturday', sunday: 'management.sunday' };
                                 const hours = formData.settings.operatingHours ?? ({} as OperatingHours);
                                 const dayHours = hours[day];
                                 const isOpen = dayHours != null;
                                 const open = dayHours?.open ?? '09:00';
                                 const close = dayHours?.close ?? '18:00';
+                                const hasLunch = dayHours?.lunchStart != null && dayHours?.lunchEnd != null;
+                                const lunchStart = dayHours?.lunchStart ?? '12:00';
+                                const lunchEnd = dayHours?.lunchEnd ?? '13:00';
                                 return (
                                   <tr key={day} className="border-b border-white/5">
-                                    <td className="py-2 pr-4 text-white/90">{labels[day]}</td>
+                                    <td className="py-2 pr-4 text-white/90">{t(labelKeys[day])}</td>
                                     <td className="py-2 pr-4">
                                       <button
                                         type="button"
@@ -777,7 +815,7 @@ export function ShopManagementPage() {
                                         type="time"
                                         value={open}
                                         disabled={!isOpen}
-                                        onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, operatingHours: { ...hours, [day]: { open: e.target.value, close } } } })}
+                                        onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, operatingHours: { ...hours, [day]: { ...dayHours!, open: e.target.value, close, lunchStart: dayHours?.lunchStart, lunchEnd: dayHours?.lunchEnd } } } })}
                                         className="w-full max-w-[120px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm disabled:opacity-50"
                                       />
                                     </td>
@@ -786,7 +824,37 @@ export function ShopManagementPage() {
                                         type="time"
                                         value={close}
                                         disabled={!isOpen}
-                                        onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, operatingHours: { ...hours, [day]: { open, close: e.target.value } } } })}
+                                        onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, operatingHours: { ...hours, [day]: { ...dayHours!, open, close: e.target.value, lunchStart: dayHours?.lunchStart, lunchEnd: dayHours?.lunchEnd } } } })}
+                                        className="w-full max-w-[120px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm disabled:opacity-50"
+                                      />
+                                    </td>
+                                    <td className="py-2 pr-4">
+                                      <button
+                                        type="button"
+                                        role="switch"
+                                        aria-checked={hasLunch}
+                                        disabled={!isOpen}
+                                        onClick={() => setFormData({ ...formData, settings: { ...formData.settings, operatingHours: { ...hours, [day]: hasLunch ? { open, close, lunchStart: undefined, lunchEnd: undefined } : { open, close, lunchStart, lunchEnd } } } })}
+                                        className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${hasLunch ? 'bg-white' : 'bg-white/20'} disabled:opacity-30`}
+                                      >
+                                        <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${hasLunch ? 'translate-x-5 bg-[#0a0a0a]' : 'translate-x-0 bg-white/60'}`} />
+                                      </button>
+                                    </td>
+                                    <td className="py-2 pr-4">
+                                      <input
+                                        type="time"
+                                        value={lunchStart}
+                                        disabled={!isOpen || !hasLunch}
+                                        onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, operatingHours: { ...hours, [day]: { ...dayHours!, open, close, lunchStart: e.target.value, lunchEnd } } } })}
+                                        className="w-full max-w-[120px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm disabled:opacity-50"
+                                      />
+                                    </td>
+                                    <td className="py-2 pr-4">
+                                      <input
+                                        type="time"
+                                        value={lunchEnd}
+                                        disabled={!isOpen || !hasLunch}
+                                        onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, operatingHours: { ...hours, [day]: { ...dayHours!, open, close, lunchStart, lunchEnd: e.target.value } } } })}
                                         className="w-full max-w-[120px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm disabled:opacity-50"
                                       />
                                     </td>
@@ -1138,6 +1206,47 @@ export function ShopManagementPage() {
                         {homeImageError && <p className="text-sm text-[#ef4444] mt-1">{homeImageError}</p>}
                       </div>
                       <div><label className="block text-white/60 text-sm mb-1">{t('management.imageAlt')}</label><input type="text" value={contentForm.about.imageAlt} onChange={(e) => setContentForm({ about: { ...contentForm.about, imageAlt: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      
+                      {/* Features Editor */}
+                      <div>
+                        <label className="block text-white/60 text-sm mb-2">{t('management.features')}</label>
+                        <div className="space-y-2">
+                          {contentForm.about.features.map((feature, idx) => (
+                            <div key={idx} className="flex gap-2 items-start">
+                              <span className="material-symbols-outlined text-white/60 text-xl mt-2">{feature.icon}</span>
+                              <input
+                                type="text"
+                                value={feature.text}
+                                readOnly
+                                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newFeatures = contentForm.about.features.filter((_, i) => i !== idx);
+                                  setContentForm({ about: { ...contentForm.about, features: newFeatures } });
+                                }}
+                                className="px-3 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-sm"
+                              >
+                                <span className="material-symbols-outlined text-base">delete</span>
+                              </button>
+                            </div>
+                          ))}
+                          
+                          {/* Add Feature Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCustomFeatureForm({ icon: '', text: '' });
+                              setFeatureSelectorOpen(true);
+                            }}
+                            className="w-full py-2 border border-dashed border-white/20 rounded-lg text-white/60 hover:text-white hover:border-white/40 transition-colors text-sm flex items-center justify-center gap-2"
+                          >
+                            <span className="material-symbols-outlined text-base">add</span>
+                            {t('management.addFeature')}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </section>
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
@@ -1157,58 +1266,222 @@ export function ShopManagementPage() {
                       <div><label className="block text-white/60 text-sm mb-1">{t('management.mapQuery')}</label><input type="text" value={contentForm.location.mapQuery} onChange={(e) => setContentForm({ location: { ...contentForm.location, mapQuery: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                     </div>
                   </section>
+
+                  {/* Feature Selector Modal */}
+                  <Modal
+                    isOpen={featureSelectorOpen}
+                    onClose={() => setFeatureSelectorOpen(false)}
+                    title={t('management.selectFeature')}
+                    className="max-w-2xl"
+                  >
+                    <div className="space-y-4">
+                      {/* Predefined Features by Category */}
+                      {['service', 'amenity', 'payment', 'special'].map((category) => {
+                        const categoryFeatures = BARBERSHOP_FEATURES.filter(f => f.category === category);
+                        const categoryLabels = {
+                          service: { pt: 'Serviços', en: 'Services' },
+                          amenity: { pt: 'Comodidades', en: 'Amenities' },
+                          payment: { pt: 'Pagamento', en: 'Payment' },
+                          special: { pt: 'Especiais', en: 'Special' }
+                        };
+                        const categoryLabel = contentLocale === 'pt-BR' 
+                          ? categoryLabels[category as keyof typeof categoryLabels].pt 
+                          : categoryLabels[category as keyof typeof categoryLabels].en;
+                        
+                        return (
+                          <div key={category}>
+                            <h5 className="text-white/80 font-medium text-sm mb-2">{categoryLabel}</h5>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {categoryFeatures.map((feature) => (
+                                <button
+                                  key={feature.id}
+                                  type="button"
+                                  onClick={() => {
+                                    const text = contentLocale === 'pt-BR' ? feature.labelPtBR : feature.labelEn;
+                                    setContentForm({
+                                      about: {
+                                        ...contentForm.about,
+                                        features: [...contentForm.about.features, { icon: feature.icon, text }]
+                                      }
+                                    });
+                                    setFeatureSelectorOpen(false);
+                                  }}
+                                  className="flex items-center gap-3 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-left transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[#D4AF37]">{feature.icon}</span>
+                                  <span className="text-white text-sm">{contentLocale === 'pt-BR' ? feature.labelPtBR : feature.labelEn}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* Custom Feature */}
+                      <div className="pt-4 border-t border-white/10">
+                        <h5 className="text-white/80 font-medium text-sm mb-3">{t('management.customFeature')}</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-white/60 text-sm mb-1">{t('management.customFeatureIcon')}</label>
+                            <input
+                              type="text"
+                              value={customFeatureForm.icon}
+                              onChange={(e) => setCustomFeatureForm({ ...customFeatureForm, icon: e.target.value })}
+                              placeholder="star"
+                              className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                            />
+                            <p className="text-white/40 text-xs mt-1">
+                              <a href="https://fonts.google.com/icons" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/60">
+                                Ver ícones disponíveis
+                              </a>
+                            </p>
+                          </div>
+                          <div>
+                            <label className="block text-white/60 text-sm mb-1">{t('management.customFeatureText')}</label>
+                            <input
+                              type="text"
+                              value={customFeatureForm.text}
+                              onChange={(e) => setCustomFeatureForm({ ...customFeatureForm, text: e.target.value })}
+                              placeholder="Ex: Ambiente familiar"
+                              className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (customFeatureForm.icon.trim() && customFeatureForm.text.trim()) {
+                                setContentForm({
+                                  about: {
+                                    ...contentForm.about,
+                                    features: [...contentForm.about.features, { 
+                                      icon: customFeatureForm.icon.trim(), 
+                                      text: customFeatureForm.text.trim() 
+                                    }]
+                                  }
+                                });
+                                setCustomFeatureForm({ icon: '', text: '' });
+                                setFeatureSelectorOpen(false);
+                              }
+                            }}
+                            disabled={!customFeatureForm.icon.trim() || !customFeatureForm.text.trim()}
+                            className="w-full px-4 py-2 bg-[#D4AF37] hover:bg-[#E8C547] text-[#0a0a0a] rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Adicionar personalizado
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </Modal>
                 </div>
                 );
               })()}
               {editTab === 'settings' && (
                 <div className="space-y-6">
-                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Fila</h4><div className="grid grid-cols-2 gap-4"><div><label className="block text-white/60 text-sm mb-2">Tamanho máximo da fila</label><input type="number" min={1} max={500} value={formData.settings.maxQueueSize} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-2">Duração padrão do serviço (min)</label><input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div></div></section>
-                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Regras de atendimento</h4><ul className="space-y-4">{[{ key: 'requirePhone' as const, label: 'Exigir telefone do cliente' }, { key: 'allowBarberPreference' as const, label: 'Permitir cliente escolher barbeiro preferido' }, { key: 'requireBarberChoice' as const, label: 'Exigir escolha de barbeiro' }, { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' }, { key: 'deviceDeduplication' as const, label: 'Impedir múltiplos tickets por dispositivo' }, { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' }, { key: 'allowAppointments' as const, label: 'Permitir agendamentos (fila híbrida com horário marcado)' }, { key: 'allowQueueBeforeOpen' as const, label: 'Permitir entrada na fila antes do horário de abertura' }].map(({ key, label }) => (<li key={key}><label className="flex items-center gap-3 cursor-pointer group"><button type="button" role="switch" aria-checked={formData.settings[key]} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button><span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span></label></li>))}</ul></section>
                   <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                    <h4 className="text-white font-medium">Acesso ao Modo Quiosque</h4>
-                    <p className="text-white/60 text-sm">Credenciais para acessar o modo quiosque (tela de exibição)</p>
+                    <h4 className="text-white font-medium">{t('management.queueSection')}</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-white/60 text-sm mb-2">{t('management.maxQueueSize')}</label>
+                        <input type="number" min={1} max={500} value={formData.settings.maxQueueSize} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-white/60 text-sm mb-2">{t('management.defaultServiceDuration')}</label>
+                        <input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" />
+                      </div>
+                    </div>
+                  </section>
+                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <h4 className="text-white font-medium">{t('management.serviceRules')}</h4>
+                    <ul className="space-y-4">
+                      {[{ key: 'requirePhone' as const, labelKey: 'management.requirePhone' }, { key: 'allowBarberPreference' as const, labelKey: 'management.allowBarberPreference' }, { key: 'requireBarberChoice' as const, labelKey: 'management.requireBarberChoice' }, { key: 'allowDuplicateNames' as const, labelKey: 'management.allowDuplicateNames' }, { key: 'deviceDeduplication' as const, labelKey: 'management.deviceDeduplication' }, { key: 'allowCustomerCancelInProgress' as const, labelKey: 'management.allowCustomerCancelInProgress' }, { key: 'allowAppointments' as const, labelKey: 'management.allowAppointments' }, { key: 'allowQueueBeforeOpen' as const, labelKey: 'management.allowQueueBeforeOpen' }].map(({ key, labelKey }) => (
+                        <li key={key}>
+                          <label className="flex items-center gap-3 cursor-pointer group">
+                            <button type="button" role="switch" aria-checked={formData.settings[key]} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
+                            <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t(labelKey)}</span>
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <h4 className="text-white font-medium">{t('management.kioskAccess')}</h4>
+                    <p className="text-white/60 text-sm">{t('management.kioskAccessHint')}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-white/60 text-sm mb-2">Usuário</label>
+                        <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
                         <input
                           type="text"
                           value={formData.settings.kioskUsername || ''}
                           onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskUsername: e.target.value || undefined } })}
-                          placeholder="Ex: quiosque"
+                          placeholder={t('management.kioskUsernamePlaceholder')}
                           className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-white/60 text-sm mb-2">Senha</label>
+                        <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
                         <input
                           type="password"
                           value={formData.settings.kioskPassword || ''}
                           onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskPassword: e.target.value || undefined } })}
-                          placeholder="Digite uma senha"
+                          placeholder={t('management.kioskPasswordPlaceholder')}
                           className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm"
                         />
                       </div>
                     </div>
                   </section>
                   <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                    <h4 className="text-white font-medium">Horário de funcionamento</h4>
-                    <p className="text-white/60 text-sm">Usado para agendamentos. Deixe fechado os dias sem atendimento.</p>
+                    <h4 className="text-white font-medium">{t('management.operatingHours')}</h4>
+                    <p className="text-white/60 text-sm">{t('management.operatingHoursHint')}</p>
+                    {formData.settings.allowAppointments && (
+                      <div className="flex flex-wrap items-end gap-2">
+                        <div className="min-w-[200px]">
+                          <label htmlFor="editTimezoneMobile" className="block text-white/60 text-sm mb-1">{t('management.timezone')}</label>
+                          <select
+                            id="editTimezoneMobile"
+                            value={formData.settings.timezone ?? 'America/Sao_Paulo'}
+                            onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, timezone: e.target.value || undefined } })}
+                            className="w-full max-w-[280px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                          >
+                            {(() => {
+                              const value = formData.settings.timezone ?? 'America/Sao_Paulo';
+                              const options = getTimezoneOptions();
+                              const list = options.includes(value) ? options : [value, ...options];
+                              return list.map((tz) => (
+                                <option key={tz} value={tz}>
+                                  {tz}
+                                </option>
+                              ));
+                            })()}
+                          </select>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const tz = getBrowserTimezone();
+                            setFormData({ ...formData, settings: { ...formData.settings, timezone: tz } });
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/20 text-white text-sm hover:bg-white/15"
+                        >
+                          {t('management.useMyTimezone')}
+                        </button>
+                      </div>
+                    )}
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="text-left text-white/60 border-b border-white/10">
-                            <th className="py-2 pr-4">Dia</th>
-                            <th className="py-2 pr-4 w-24">Aberto</th>
-                            <th className="py-2 pr-4">Abertura</th>
-                            <th className="py-2 pr-4">Fechamento</th>
-                            <th className="py-2 pr-4 w-24">Almoço</th>
-                            <th className="py-2 pr-4">Saída</th>
-                            <th className="py-2 pr-4">Retorno</th>
+                            <th className="py-2 pr-4">{t('management.day')}</th>
+                            <th className="py-2 pr-4 w-24">{t('management.open')}</th>
+                            <th className="py-2 pr-4">{t('management.opensAt')}</th>
+                            <th className="py-2 pr-4">{t('management.closesAt')}</th>
+                            <th className="py-2 pr-4 w-24">{t('management.lunch')}</th>
+                            <th className="py-2 pr-4">{t('management.lunchStart')}</th>
+                            <th className="py-2 pr-4">{t('management.lunchEnd')}</th>
                           </tr>
                         </thead>
                         <tbody>
                           {(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const).map((day) => {
-                            const labels: Record<typeof day, string> = { monday: 'Segunda', tuesday: 'Terça', wednesday: 'Quarta', thursday: 'Quinta', friday: 'Sexta', saturday: 'Sábado', sunday: 'Domingo' };
+                            const labelKeys: Record<typeof day, string> = { monday: 'management.monday', tuesday: 'management.tuesday', wednesday: 'management.wednesday', thursday: 'management.thursday', friday: 'management.friday', saturday: 'management.saturday', sunday: 'management.sunday' };
                             const hours = formData.settings.operatingHours ?? ({} as OperatingHours);
                             const dayHours = hours[day];
                             const isOpen = dayHours != null;
@@ -1220,7 +1493,7 @@ export function ShopManagementPage() {
                             
                             return (
                               <tr key={day} className="border-b border-white/5">
-                                <td className="py-2 pr-4 text-white/90">{labels[day]}</td>
+                                <td className="py-2 pr-4 text-white/90">{t(labelKeys[day])}</td>
                                 
                                 {/* Open/Closed Toggle */}
                                 <td className="py-2 pr-4">
