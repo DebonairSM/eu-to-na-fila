@@ -970,10 +970,117 @@ export function CreateShopPage() {
                 )}
 
                 {createTab === 'settings' && (
-                  <section className="space-y-4">
-                    <p className="text-white/60 text-sm">{t('management.settingsIntro')}</p>
-                    <OperatingHoursForm value={data.settings.operatingHours} onChange={(oh) => onChange({ settings: { ...data.settings, operatingHours: oh } })} />
-                  </section>
+                  <div className="space-y-6">
+                    <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                      <h4 className="text-white font-medium">{t('management.queueSection')}</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div><label className="block text-white/60 text-sm mb-2">{t('management.maxQueueSize')}</label><input type="number" min={1} max={500} value={data.settings.maxQueueSize} onChange={(e) => onChange({ settings: { ...data.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className={FORM_INPUT} /></div>
+                        <div><label className="block text-white/60 text-sm mb-2">{t('management.defaultServiceDuration')}</label><input type="number" min={1} max={480} value={data.settings.defaultServiceDuration} onChange={(e) => onChange({ settings: { ...data.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className={FORM_INPUT} /></div>
+                      </div>
+                    </section>
+                    <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                      <h4 className="text-white font-medium">{t('management.serviceRules')}</h4>
+                      <ul className="space-y-4">
+                        {[{ key: 'requirePhone' as const, labelKey: 'management.requirePhone' }, { key: 'allowBarberPreference' as const, labelKey: 'management.allowBarberPreference' }, { key: 'requireBarberChoice' as const, labelKey: 'management.requireBarberChoice' }, { key: 'allowDuplicateNames' as const, labelKey: 'management.allowDuplicateNames' }, { key: 'deviceDeduplication' as const, labelKey: 'management.deviceDeduplication' }, { key: 'allowCustomerCancelInProgress' as const, labelKey: 'management.allowCustomerCancelInProgress' }, { key: 'allowAppointments' as const, labelKey: 'management.allowAppointments' }, { key: 'allowQueueBeforeOpen' as const, labelKey: 'management.allowQueueBeforeOpen' }].map(({ key, labelKey }) => (
+                          <li key={key}>
+                            <label className="flex items-center gap-3 cursor-pointer group">
+                              <button type="button" role="switch" aria-checked={data.settings[key]} onClick={() => onChange({ settings: { ...data.settings, [key]: !data.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${data.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${data.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
+                              <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t(labelKey)}</span>
+                            </label>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                    <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                      <h4 className="text-white font-medium">{t('management.kioskAccess')}</h4>
+                      <p className="text-white/60 text-sm">{t('management.kioskAccessHint')}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
+                          <input
+                            type="text"
+                            value={data.settings.kioskUsername || ''}
+                            onChange={(e) => onChange({ settings: { ...data.settings, kioskUsername: e.target.value || undefined } })}
+                            placeholder={t('management.kioskUsernamePlaceholder')}
+                            className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
+                          <input
+                            type="password"
+                            value={data.settings.kioskPassword || ''}
+                            onChange={(e) => onChange({ settings: { ...data.settings, kioskPassword: e.target.value || undefined } })}
+                            placeholder={t('management.kioskPasswordPlaceholder')}
+                            className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm"
+                          />
+                        </div>
+                      </div>
+                    </section>
+                    <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                      <h4 className="text-white font-medium">{t('management.operatingHours')}</h4>
+                      <p className="text-white/60 text-sm">{t('management.operatingHoursHint')}</p>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-left text-white/60 border-b border-white/10">
+                              <th className="py-2 pr-4">{t('management.day')}</th>
+                              <th className="py-2 pr-4 w-24">{t('management.open')}</th>
+                              <th className="py-2 pr-4">{t('management.opensAt')}</th>
+                              <th className="py-2 pr-4">{t('management.closesAt')}</th>
+                              <th className="py-2 pr-4 w-24">Almoço</th>
+                              <th className="py-2 pr-4">Saída</th>
+                              <th className="py-2 pr-4">Retorno</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const).map((day) => {
+                              const labelKeys: Record<typeof day, string> = { monday: 'management.monday', tuesday: 'management.tuesday', wednesday: 'management.wednesday', thursday: 'management.thursday', friday: 'management.friday', saturday: 'management.saturday', sunday: 'management.sunday' };
+                              const hours = data.settings.operatingHours ?? ({} as OperatingHours);
+                              const dayHours = hours[day];
+                              const isOpen = dayHours != null;
+                              const open = dayHours?.open ?? '09:00';
+                              const close = dayHours?.close ?? '18:00';
+                              const hasLunch = dayHours?.lunchStart != null && dayHours?.lunchEnd != null;
+                              const lunchStart = dayHours?.lunchStart ?? '12:00';
+                              const lunchEnd = dayHours?.lunchEnd ?? '13:00';
+                              return (
+                                <tr key={day} className="border-b border-white/5">
+                                  <td className="py-2 pr-4 text-white/90">{t(labelKeys[day])}</td>
+                                  <td className="py-2 pr-4">
+                                    <button
+                                      type="button"
+                                      role="switch"
+                                      aria-checked={isOpen}
+                                      onClick={() => onChange({ settings: { ...data.settings, operatingHours: { ...hours, [day]: isOpen ? null : { open, close } } } })}
+                                      className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${isOpen ? 'bg-[#D4AF37]' : 'bg-white/20'}`}
+                                    >
+                                      <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${isOpen ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} />
+                                    </button>
+                                  </td>
+                                  <td className="py-2 pr-4">
+                                    <input type="time" value={open} disabled={!isOpen} onChange={(e) => onChange({ settings: { ...data.settings, operatingHours: { ...hours, [day]: { ...dayHours!, open: e.target.value, close, lunchStart: dayHours?.lunchStart, lunchEnd: dayHours?.lunchEnd } } } })} className={`${FORM_INPUT} max-w-[120px] disabled:opacity-50`} />
+                                  </td>
+                                  <td className="py-2 pr-4">
+                                    <input type="time" value={close} disabled={!isOpen} onChange={(e) => onChange({ settings: { ...data.settings, operatingHours: { ...hours, [day]: { ...dayHours!, open, close: e.target.value, lunchStart: dayHours?.lunchStart, lunchEnd: dayHours?.lunchEnd } } } })} className={`${FORM_INPUT} max-w-[120px] disabled:opacity-50`} />
+                                  </td>
+                                  <td className="py-2 pr-4">
+                                    <button type="button" role="switch" aria-checked={hasLunch} disabled={!isOpen} onClick={() => onChange({ settings: { ...data.settings, operatingHours: { ...hours, [day]: hasLunch ? { open, close, lunchStart: undefined, lunchEnd: undefined } : { open, close, lunchStart, lunchEnd } } } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${hasLunch ? 'bg-[#D4AF37]' : 'bg-white/20'} disabled:opacity-30`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${hasLunch ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
+                                  </td>
+                                  <td className="py-2 pr-4">
+                                    <input type="time" value={lunchStart} disabled={!isOpen || !hasLunch} onChange={(e) => onChange({ settings: { ...data.settings, operatingHours: { ...hours, [day]: { ...dayHours!, open, close, lunchStart: e.target.value, lunchEnd } } } })} className={`${FORM_INPUT} max-w-[120px] disabled:opacity-50`} />
+                                  </td>
+                                  <td className="py-2 pr-4">
+                                    <input type="time" value={lunchEnd} disabled={!isOpen || !hasLunch} onChange={(e) => onChange({ settings: { ...data.settings, operatingHours: { ...hours, [day]: { ...dayHours!, open, close, lunchStart, lunchEnd: e.target.value } } } })} className={`${FORM_INPUT} max-w-[120px] disabled:opacity-50`} />
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
                 )}
 
                 {createTab === 'services' && (
