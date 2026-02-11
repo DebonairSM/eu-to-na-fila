@@ -76,6 +76,8 @@ class ApiClient extends BaseApiClient {
   getShopConfig = this._shops.getShopConfig;
   getAllShops = this._shops.getAllShops;
   getProjects = this._shops.getProjects;
+  setTemporaryStatus = this._shops.setTemporaryStatus;
+  clearTemporaryStatus = this._shops.clearTemporaryStatus;
 
   // --- Companies ---
   getCompanyDashboard = this._companies.getCompanyDashboard;

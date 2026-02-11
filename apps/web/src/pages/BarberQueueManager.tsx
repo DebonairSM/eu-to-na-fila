@@ -166,35 +166,6 @@ export function BarberQueueManager() {
   const rescheduleDateStr = rescheduleDate
     ? `${rescheduleDate.getFullYear()}-${String(rescheduleDate.getMonth() + 1).padStart(2, '0')}-${String(rescheduleDate.getDate()).padStart(2, '0')}`
     : '';
-  const editTicket = editAppointmentTicketId != null ? pendingTickets.find((t) => t.id === editAppointmentTicketId) : undefined;
-  useEffect(() => {
-    if (!editAppointmentTicketId || !rescheduleDateStr || !editTicket?.serviceId || !useSlotsForAppointment) {
-      setRescheduleSlots([]);
-      return;
-    }
-    setRescheduleSlotsLoading(true);
-    api
-      .getAppointmentSlots(shopSlug, rescheduleDateStr, editTicket.serviceId, (editTicket as { preferredBarberId?: number }).preferredBarberId ?? undefined)
-      .then((res) => setRescheduleSlots(res.slots))
-      .catch(() => setRescheduleSlots([]))
-      .finally(() => setRescheduleSlotsLoading(false));
-  }, [editAppointmentTicketId, rescheduleDateStr, editTicket?.serviceId, editTicket?.preferredBarberId, shopSlug, useSlotsForAppointment]);
-
-  useEffect(() => {
-    if (editAppointmentTicketId != null && editAppointmentTime.trim()) {
-      const d = new Date(editAppointmentTime);
-      if (!isNaN(d.getTime())) {
-        setRescheduleDate(d);
-        const h = String(d.getHours()).padStart(2, '0');
-        const min = String(d.getMinutes()).padStart(2, '0');
-        setRescheduleSlotTime(`${h}:${min}`);
-      }
-    } else if (editAppointmentTicketId == null) {
-      setRescheduleDate(undefined);
-      setRescheduleSlotTime(null);
-      setRescheduleSlots([]);
-    }
-  }, [editAppointmentTicketId, editAppointmentTime]);
 
   const disabledDaysForCalendar = useCallback((date: Date) => {
     const today = new Date();
@@ -273,10 +244,49 @@ export function BarberQueueManager() {
     };
   }, [tickets]);
 
+  // Get the ticket being edited for rescheduling
+  const editTicket = editAppointmentTicketId != null ? pendingTickets.find((t) => t.id === editAppointmentTicketId) : undefined;
+
   // Memoize sorted barbers by ID (barber role sees only themselves)
   const sortedBarbers = useMemo(() => {
     return [...displayBarbers].sort((a, b) => a.id - b.id);
   }, [displayBarbers]);
+
+  // Load reschedule slots when editing appointment
+  useEffect(() => {
+    if (!editAppointmentTicketId || !rescheduleDateStr || !useSlotsForAppointment) {
+      setRescheduleSlots([]);
+      return;
+    }
+    const ticket = pendingTickets.find((t) => t.id === editAppointmentTicketId);
+    if (!ticket?.serviceId) {
+      setRescheduleSlots([]);
+      return;
+    }
+    setRescheduleSlotsLoading(true);
+    api
+      .getAppointmentSlots(shopSlug, rescheduleDateStr, ticket.serviceId, (ticket as { preferredBarberId?: number }).preferredBarberId ?? undefined)
+      .then((res) => setRescheduleSlots(res.slots))
+      .catch(() => setRescheduleSlots([]))
+      .finally(() => setRescheduleSlotsLoading(false));
+  }, [editAppointmentTicketId, rescheduleDateStr, pendingTickets, shopSlug, useSlotsForAppointment]);
+
+  // Parse reschedule date/time from editAppointmentTime
+  useEffect(() => {
+    if (editAppointmentTicketId != null && editAppointmentTime.trim()) {
+      const d = new Date(editAppointmentTime);
+      if (!isNaN(d.getTime())) {
+        setRescheduleDate(d);
+        const h = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        setRescheduleSlotTime(`${h}:${min}`);
+      }
+    } else if (editAppointmentTicketId == null) {
+      setRescheduleDate(undefined);
+      setRescheduleSlotTime(null);
+      setRescheduleSlots([]);
+    }
+  }, [editAppointmentTicketId, editAppointmentTime]);
 
   // Combined name handler for check-in forms
   const handleCombinedCheckInNameChange = useCallback((value: string) => {

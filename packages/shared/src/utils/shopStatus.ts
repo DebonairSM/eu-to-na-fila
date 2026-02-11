@@ -1,4 +1,4 @@
-import type { OperatingHours, DayHours } from '../schemas/shopConfig';
+import type { OperatingHours } from '../schemas/shopConfig';
 
 export interface ShopStatusResult {
   isOpen: boolean;
@@ -126,7 +126,7 @@ function parseTime(timeStr: string): number {
 /**
  * Create a Date object for a specific time today in the shop's timezone
  */
-function createDateFromTime(baseDate: Date, timeStr: string, timezone: string): Date {
+function createDateFromTime(baseDate: Date, timeStr: string, _timezone: string): Date {
   const [hours, minutes] = timeStr.split(':').map(Number);
   const date = new Date(baseDate);
   date.setHours(hours, minutes, 0, 0);

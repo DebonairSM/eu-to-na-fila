@@ -4,8 +4,9 @@ import { getShopStatus } from '@eutonafila/shared';
 import { useEffect, useState } from 'react';
 
 export function ShopStatusBanner() {
-  const { settings } = useShopConfig();
+  const { config } = useShopConfig();
   const { t } = useLocale();
+  const settings = config.settings;
   const [status, setStatus] = useState(() => 
     getShopStatus(
       settings.operatingHours, 
