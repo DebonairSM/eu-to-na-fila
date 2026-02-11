@@ -31,6 +31,10 @@ export function HeroSection() {
   };
   const useSplitLayout = behavior.heroSplit;
   const showDecorativeBlock = behavior.showDecorativeBlock;
+  const heroCard = behavior.heroCard ?? false;
+  const heroBanner = behavior.heroBanner ?? false;
+  const heroNarrow = behavior.heroNarrow ?? false;
+  const heroAsymmetric = behavior.heroAsymmetric ?? false;
   const showSchedule = hasScheduleEnabled(config.settings ?? {});
   const badgeClass = cn(
     'hero-badge mb-6',
@@ -81,11 +85,14 @@ export function HeroSection() {
   return (
     <section
       id="main-content"
-      className="hero relative min-h-screen flex items-start justify-center pt-16 lg:items-center lg:pt-0 overflow-hidden"
+      className={cn(
+        'hero relative min-h-screen overflow-hidden',
+        heroBanner ? 'flex flex-col justify-end pt-16 lg:pt-0 lg:min-h-[85vh]' : 'flex items-start justify-center pt-16 lg:items-center lg:pt-0'
+      )}
       style={{ backgroundColor: 'var(--shop-background, #0a0a0a)' }}
     >
       {behavior.heroOverlay && <div className="hero-gradient-overlay absolute inset-0 pointer-events-none z-[1]" aria-hidden />}
-      <Container size="2xl" className="relative z-10 w-full">
+      <Container size="2xl" className={cn('relative z-10 w-full', heroBanner && 'hero-banner-container')}>
         <div className="lg:hidden text-center">
           <FadeIn delay={0}>
             {showBadge && (
@@ -133,22 +140,39 @@ export function HeroSection() {
         <div
           className={cn(
             'hidden lg:grid items-center min-h-screen py-20',
-            useSplitLayout ? 'lg:grid-cols-2 lg:gap-12 xl:gap-16' : 'lg:grid-cols-1 lg:gap-0'
+            heroBanner && 'min-h-0 py-12 lg:py-16',
+            useSplitLayout && !heroAsymmetric && 'lg:grid-cols-2 lg:gap-12 xl:gap-16',
+            useSplitLayout && heroAsymmetric && 'lg:grid-cols-[1.1fr_1.4fr] xl:grid-cols-[1fr_1.5fr] lg:gap-14 xl:gap-20',
+            !useSplitLayout && 'lg:grid-cols-1 lg:gap-0'
           )}
         >
-          <FadeIn delay={200}>
+          {showDecorativeBlock && heroAsymmetric && (
+            <FadeIn delay={400} className="order-1 flex items-center justify-center">
+              <div className="w-full max-w-[220px] aspect-square rounded-2xl border-[length:var(--shop-border-width,1px)] border-[style:var(--shop-border-style,solid)] border-[rgba(255,255,255,0.08)] flex items-center justify-center bg-[rgba(255,255,255,0.02)]">
+                <span className="material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)]/20">
+                  content_cut
+                </span>
+              </div>
+            </FadeIn>
+          )}
+          <FadeIn delay={200} className={showDecorativeBlock && heroAsymmetric ? 'order-2' : ''}>
             <div
               className={cn(
-                useSplitLayout && 'max-w-[560px]',
-                !useSplitLayout && 'text-center mx-auto max-w-[760px]',
-                behavior.heroFrame && 'hero-frame max-w-3xl mx-auto border border-[var(--shop-border-color,rgba(255,255,255,0.12))] rounded-lg px-8 py-10'
+                useSplitLayout && !heroAsymmetric && 'max-w-[560px]',
+                useSplitLayout && heroAsymmetric && 'max-w-[520px]',
+                !useSplitLayout && 'text-center mx-auto',
+                !useSplitLayout && !heroNarrow && 'max-w-[760px]',
+                heroNarrow && 'max-w-md',
+                behavior.heroFrame && !heroCard && 'hero-frame max-w-3xl mx-auto border border-[var(--shop-border-color,rgba(255,255,255,0.12))] rounded-lg px-8 py-10',
+                heroCard && 'hero-card mx-auto',
+                heroBanner && 'hero-band'
               )}
             >
               {innerContent}
             </div>
           </FadeIn>
 
-          {showDecorativeBlock && (
+          {showDecorativeBlock && !heroAsymmetric && (
             <FadeIn delay={400}>
               <div className="flex items-center justify-center">
                 <div className="w-full max-w-[200px] aspect-square rounded-2xl border-[length:var(--shop-border-width,1px)] border-[style:var(--shop-border-style,solid)] border-[rgba(255,255,255,0.08)] flex items-center justify-center bg-[rgba(255,255,255,0.02)]">

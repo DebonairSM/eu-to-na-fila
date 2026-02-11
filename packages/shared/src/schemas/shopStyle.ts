@@ -26,8 +26,13 @@ export const layoutIdSchema = z.enum([
   'minimal',         // Single column, minimal badge, text-only CTAs
   'luxury',          // Single column, gradient overlay, optional CTA shimmer
   'bold',            // Strong typography, thick section underlines
-  'classic',         // Label-style badge, ornament feel, thin section rule
-  'editorial',       // Generous whitespace, thin rules, minimal decoration
+  'classic',         // Label-style badge, double frame, thin section rule
+  'editorial',       // Center section titles, thin rules, generous whitespace
+  'card',            // Hero content inside floating card
+  'banner',          // Full-width hero strip, content in bottom band
+  'spotlight',       // Very narrow hero column, high focus
+  'asymmetric',      // Split with reversed columns, uneven grid
+  'magazine',        // Left-aligned section titles, editorial feel
 ]);
 
 export type LayoutId = z.infer<typeof layoutIdSchema>;

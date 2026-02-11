@@ -5,6 +5,14 @@ export interface LayoutBehavior {
   heroSplit: boolean;
   /** Bordered frame around hero content */
   heroFrame: boolean;
+  /** Hero content inside a floating card (distinct from frame) */
+  heroCard: boolean;
+  /** Full-width hero strip with content in a bottom band */
+  heroBanner: boolean;
+  /** Very narrow hero column (spotlight) */
+  heroNarrow: boolean;
+  /** Split hero with reversed column order and uneven grid */
+  heroAsymmetric: boolean;
   /** Badge style: pill (default), label (double border), minimal (text-only) */
   badgeStyle: 'pill' | 'label' | 'minimal';
   /** Show decorative icon block in hero */
@@ -15,6 +23,8 @@ export interface LayoutBehavior {
   ctaTextOnly: boolean;
   /** Section title decoration: none, line (thin rule), block (thick underline) */
   sectionTitleStyle: 'none' | 'line' | 'block';
+  /** Section title alignment (magazine = left) */
+  sectionTitleAlign: 'center' | 'left';
   /** About section image frame: none, border, double, shadow, sharp */
   aboutImageFrame: 'none' | 'border' | 'double' | 'shadow' | 'sharp';
 }
@@ -23,82 +33,197 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
   centered: {
     heroSplit: false,
     heroFrame: false,
+    heroCard: false,
+    heroBanner: false,
+    heroNarrow: false,
+    heroAsymmetric: false,
     badgeStyle: 'pill',
     showDecorativeBlock: false,
     heroOverlay: false,
     ctaTextOnly: false,
     sectionTitleStyle: 'none',
+    sectionTitleAlign: 'center',
     aboutImageFrame: 'none',
   },
   centered_frame: {
     heroSplit: false,
     heroFrame: true,
+    heroCard: false,
+    heroBanner: false,
+    heroNarrow: false,
+    heroAsymmetric: false,
     badgeStyle: 'pill',
     showDecorativeBlock: false,
     heroOverlay: false,
     ctaTextOnly: false,
     sectionTitleStyle: 'line',
+    sectionTitleAlign: 'center',
     aboutImageFrame: 'border',
   },
   split: {
     heroSplit: true,
     heroFrame: false,
+    heroCard: false,
+    heroBanner: false,
+    heroNarrow: false,
+    heroAsymmetric: false,
     badgeStyle: 'pill',
     showDecorativeBlock: true,
     heroOverlay: false,
     ctaTextOnly: false,
     sectionTitleStyle: 'none',
+    sectionTitleAlign: 'center',
     aboutImageFrame: 'none',
   },
   minimal: {
     heroSplit: false,
     heroFrame: false,
+    heroCard: false,
+    heroBanner: false,
+    heroNarrow: false,
+    heroAsymmetric: false,
     badgeStyle: 'minimal',
     showDecorativeBlock: false,
     heroOverlay: false,
     ctaTextOnly: true,
     sectionTitleStyle: 'none',
+    sectionTitleAlign: 'center',
     aboutImageFrame: 'none',
   },
   luxury: {
     heroSplit: false,
     heroFrame: false,
+    heroCard: false,
+    heroBanner: false,
+    heroNarrow: false,
+    heroAsymmetric: false,
     badgeStyle: 'pill',
     showDecorativeBlock: false,
     heroOverlay: true,
     ctaTextOnly: false,
     sectionTitleStyle: 'line',
+    sectionTitleAlign: 'center',
     aboutImageFrame: 'shadow',
   },
   bold: {
     heroSplit: false,
     heroFrame: false,
+    heroCard: false,
+    heroBanner: false,
+    heroNarrow: false,
+    heroAsymmetric: false,
     badgeStyle: 'pill',
     showDecorativeBlock: false,
     heroOverlay: false,
     ctaTextOnly: false,
     sectionTitleStyle: 'block',
+    sectionTitleAlign: 'center',
     aboutImageFrame: 'sharp',
   },
   classic: {
     heroSplit: false,
     heroFrame: true,
+    heroCard: false,
+    heroBanner: false,
+    heroNarrow: false,
+    heroAsymmetric: false,
     badgeStyle: 'label',
     showDecorativeBlock: false,
     heroOverlay: false,
     ctaTextOnly: false,
     sectionTitleStyle: 'line',
-    aboutImageFrame: 'border',
+    sectionTitleAlign: 'center',
+    aboutImageFrame: 'double',
   },
   editorial: {
     heroSplit: false,
     heroFrame: false,
+    heroCard: false,
+    heroBanner: false,
+    heroNarrow: false,
+    heroAsymmetric: false,
     badgeStyle: 'pill',
     showDecorativeBlock: false,
     heroOverlay: false,
     ctaTextOnly: false,
     sectionTitleStyle: 'line',
+    sectionTitleAlign: 'center',
     aboutImageFrame: 'none',
+  },
+  card: {
+    heroSplit: false,
+    heroFrame: false,
+    heroCard: true,
+    heroBanner: false,
+    heroNarrow: false,
+    heroAsymmetric: false,
+    badgeStyle: 'pill',
+    showDecorativeBlock: false,
+    heroOverlay: false,
+    ctaTextOnly: false,
+    sectionTitleStyle: 'line',
+    sectionTitleAlign: 'center',
+    aboutImageFrame: 'shadow',
+  },
+  banner: {
+    heroSplit: false,
+    heroFrame: false,
+    heroCard: false,
+    heroBanner: true,
+    heroNarrow: false,
+    heroAsymmetric: false,
+    badgeStyle: 'minimal',
+    showDecorativeBlock: false,
+    heroOverlay: true,
+    ctaTextOnly: true,
+    sectionTitleStyle: 'none',
+    sectionTitleAlign: 'center',
+    aboutImageFrame: 'none',
+  },
+  spotlight: {
+    heroSplit: false,
+    heroFrame: false,
+    heroCard: false,
+    heroBanner: false,
+    heroNarrow: true,
+    heroAsymmetric: false,
+    badgeStyle: 'minimal',
+    showDecorativeBlock: false,
+    heroOverlay: false,
+    ctaTextOnly: true,
+    sectionTitleStyle: 'none',
+    sectionTitleAlign: 'center',
+    aboutImageFrame: 'none',
+  },
+  asymmetric: {
+    heroSplit: true,
+    heroFrame: false,
+    heroCard: false,
+    heroBanner: false,
+    heroNarrow: false,
+    heroAsymmetric: true,
+    badgeStyle: 'label',
+    showDecorativeBlock: true,
+    heroOverlay: false,
+    ctaTextOnly: false,
+    sectionTitleStyle: 'block',
+    sectionTitleAlign: 'center',
+    aboutImageFrame: 'sharp',
+  },
+  magazine: {
+    heroSplit: false,
+    heroFrame: false,
+    heroCard: false,
+    heroBanner: false,
+    heroNarrow: false,
+    heroAsymmetric: false,
+    badgeStyle: 'minimal',
+    showDecorativeBlock: false,
+    heroOverlay: false,
+    ctaTextOnly: true,
+    sectionTitleStyle: 'line',
+    sectionTitleAlign: 'left',
+    aboutImageFrame: 'border',
   },
 };
 
@@ -111,6 +236,11 @@ export const LAYOUT_LABELS: Record<LayoutId, string> = {
   bold: 'Em destaque',
   classic: 'Clássico',
   editorial: 'Editorial',
+  card: 'Cartão',
+  banner: 'Faixa',
+  spotlight: 'Destaque',
+  asymmetric: 'Assimétrico',
+  magazine: 'Revista',
 };
 
 export function getLayoutBehavior(layout: LayoutId): LayoutBehavior {
@@ -122,12 +252,12 @@ export function getLayoutBehavior(layout: LayoutId): LayoutBehavior {
  * Shown in the layout selector so users can pick a layout that fits the architecture.
  */
 export const PRESET_RECOMMENDED_LAYOUTS: Record<StylePresetId, LayoutId[]> = {
-  modern: ['centered', 'split', 'minimal', 'editorial'],
-  classical: ['centered_frame', 'classic', 'editorial'],
-  vintage: ['split', 'classic', 'centered_frame'],
-  luxury: ['luxury', 'centered_frame', 'classic'],
-  industrial: ['bold', 'split', 'centered'],
-  minimal: ['minimal', 'editorial', 'centered'],
+  modern: ['centered', 'split', 'card', 'minimal', 'editorial'],
+  classical: ['centered_frame', 'classic', 'editorial', 'magazine'],
+  vintage: ['split', 'asymmetric', 'classic', 'centered_frame'],
+  luxury: ['luxury', 'banner', 'centered_frame', 'card'],
+  industrial: ['bold', 'asymmetric', 'split', 'spotlight'],
+  minimal: ['minimal', 'spotlight', 'editorial', 'magazine'],
 };
 
 export function isLayoutRecommendedForPreset(preset: StylePresetId, layout: LayoutId): boolean {

@@ -414,7 +414,25 @@ export function ShopManagementPage() {
       errs.barbers = createBarbers.length === 0 ? t('createShop.addAtLeastOneBarber') : t('createShop.allBarbersNeedName');
     }
     setCreateErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+    if (Object.keys(errs).length > 0) {
+      const firstKey = (['name', 'ownerPassword', 'staffPassword', 'services', 'barbers'] as const).find((k) => errs[k]);
+      if (firstKey) {
+        const tabForKey: EditTab = firstKey === 'services' ? 'services' : firstKey === 'barbers' ? 'barbers' : 'info';
+        setEditTab(tabForKey);
+        const rootIds: Record<string, string> = { name: 'editNameRoot', ownerPassword: 'createOwnerPasswordRoot', staffPassword: 'createStaffPasswordRoot', services: 'create-services-section', barbers: 'create-barbers-section' };
+        const mineiroIds: Record<string, string> = { name: 'editName', ownerPassword: 'createOwnerPasswordMineiro', staffPassword: 'createStaffPasswordMineiro', services: 'create-services-section', barbers: 'create-barbers-section' };
+        const sectionIds = ['services', 'barbers'];
+        setTimeout(() => {
+          const id = rootIds[firstKey] ?? mineiroIds[firstKey];
+          const el = id ? document.getElementById(id) : null;
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (!sectionIds.includes(firstKey)) (el as HTMLInputElement).focus?.();
+          }
+        }, 100);
+      }
+      return;
+    }
     setIsSubmittingCreate(true);
     setErrorMessage(null);
     try {
@@ -453,7 +471,7 @@ export function ShopManagementPage() {
     } finally {
       setIsSubmittingCreate(false);
     }
-  }, [user?.companyId, formData, createServices, createBarbers, t, loadShops, editModal]);
+  }, [user?.companyId, formData, createServices, createBarbers, t, loadShops, editModal, setEditTab]);
 
   const handleEdit = useCallback(async () => {
     if (!user?.companyId || !editingShop || !formData.name.trim()) {
@@ -733,101 +751,123 @@ export function ShopManagementPage() {
               aria-modal="true"
               aria-labelledby="edit-modal-title-root"
             >
-              <div className="modal-content bg-[#242424] border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[min(90vw,700px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4">
-                <h2 id="edit-modal-title-root" className="text-xl sm:text-2xl text-white mb-4">
-                  {editingShop ? t('management.editShop') ?? 'Editar Barbearia' : t('createShop.createShop')}
-                </h2>
-                <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-                  {(editingShop ? ['info', 'appearance', 'content', 'settings', 'credentials'] : ['info', 'appearance', 'content', 'settings', 'services', 'barbers']).map((tab) => (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setEditTab(tab as EditTab)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                        editTab === tab ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white'
-                      }`}
-                    >
-                      {tab === 'info' && t('management.infoTab')}
-                      {tab === 'appearance' && t('management.appearanceTab')}
-                      {tab === 'content' && t('management.contentTab')}
-                      {tab === 'settings' && t('management.settingsTab')}
-                      {tab === 'credentials' && t('management.credentialsTab')}
-                      {tab === 'services' && t('createShop.servicesTab')}
-                      {tab === 'barbers' && t('createShop.barbersTab')}
-                    </button>
-                  ))}
-                </div>
-                <form onSubmit={(e) => { e.preventDefault(); editingShop ? handleEdit() : handleCreate(); }} className="flex-1 overflow-y-auto min-h-0 pr-1">
+              <div className="modal-content bg-[#242424] border border-white/20 rounded-2xl p-5 sm:p-6 lg:p-8 max-w-[min(90vw,720px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 shadow-2xl">
+                <header className="flex-shrink-0 mb-6">
+                  <h2 id="edit-modal-title-root" className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
+                    {editingShop ? t('management.editShop') ?? 'Editar Barbearia' : t('createShop.createShop')}
+                  </h2>
+                  <p className="text-white/50 text-sm mt-1">
+                    {editingShop ? t('management.infoIntro') : t('createShop.newShop')}
+                  </p>
+                </header>
+                <nav className="flex-shrink-0 border-b border-white/15 overflow-x-auto -mx-1 px-1" aria-label={t('management.settingsTab')}>
+                  <div className="flex gap-0 min-w-max">
+                    {(editingShop ? ['info', 'appearance', 'content', 'settings', 'credentials'] : ['info', 'appearance', 'content', 'settings', 'services', 'barbers']).map((tab) => (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setEditTab(tab as EditTab)}
+                        className={`relative py-3 px-4 text-sm font-medium transition-colors whitespace-nowrap rounded-t-lg ${
+                          editTab === tab
+                            ? 'text-white'
+                            : 'text-white/55 hover:text-white/85'
+                        }`}
+                        aria-current={editTab === tab ? 'page' : undefined}
+                      >
+                        {tab === 'info' && t('management.infoTab')}
+                        {tab === 'appearance' && t('management.appearanceTab')}
+                        {tab === 'content' && t('management.contentTab')}
+                        {tab === 'settings' && t('management.settingsTab')}
+                        {tab === 'credentials' && t('management.credentialsTab')}
+                        {tab === 'services' && t('createShop.servicesTab')}
+                        {tab === 'barbers' && t('createShop.barbersTab')}
+                        {editTab === tab && (
+                          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full" aria-hidden="true" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </nav>
+                <form onSubmit={(e) => { e.preventDefault(); editingShop ? handleEdit() : handleCreate(); }} className="flex-1 overflow-y-auto min-h-0 pr-1 mt-5">
                   {editTab === 'info' && (
-                    <section className="space-y-5">
-                      <p className="text-white/60 text-sm">{t('management.infoIntro')}</p>
-                      <div>
-                        <label htmlFor="editNameRoot" className="block text-white/70 text-sm mb-2">{t('management.name')} *</label>
-                        <input
-                          id="editNameRoot"
-                          type="text"
-                          value={formData.name}
-                          onChange={(e) => {
-                            const name = e.target.value;
-                            setFormData((prev) => ({
-                              ...prev,
-                              name,
-                              ...(!editingShop && (!prev.slug || prev.slug === generateSlug(prev.name)) ? { slug: generateSlug(name) } : {}),
-                            }));
-                          }}
-                          required
-                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
-                        />
-                        {!editingShop && createErrors.name && <p className="text-red-400 text-xs mt-1">{createErrors.name}</p>}
+                    <section className="space-y-6">
+                      <div className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5 space-y-4">
+                        <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.infoTab')}</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="editNameRoot" className="block text-white/70 text-sm mb-1.5">{t('management.name')} *</label>
+                            <input
+                              id="editNameRoot"
+                              type="text"
+                              value={formData.name}
+                              onChange={(e) => {
+                                const name = e.target.value;
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  name,
+                                  ...(!editingShop && (!prev.slug || prev.slug === generateSlug(prev.name)) ? { slug: generateSlug(name) } : {}),
+                                }));
+                              }}
+                              required
+                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
+                            />
+                            {!editingShop && createErrors.name && <p className="text-red-400 text-xs mt-1">{createErrors.name}</p>}
+                          </div>
+                          <div>
+                            <label htmlFor="editSlugRoot" className="block text-white/70 text-sm mb-1.5">{t('management.slug')} *</label>
+                            <input
+                              id="editSlugRoot"
+                              type="text"
+                              value={formData.slug}
+                              onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+                              required
+                              pattern="[-a-z0-9]+"
+                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <label htmlFor="editSlugRoot" className="block text-white/70 text-sm mb-2">{t('management.slug')} *</label>
-                        <input
-                          id="editSlugRoot"
-                          type="text"
-                          value={formData.slug}
-                          onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
-                          required
-                          pattern="[a-z0-9-]+"
-                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="editDomainRoot" className="block text-white/50 text-sm mb-2">{t('management.domain')}</label>
-                        <input
-                          id="editDomainRoot"
-                          type="text"
-                          value={formData.domain}
-                          onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                          placeholder={t('management.domainPlaceholder')}
-                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="editPathRoot" className="block text-white/50 text-sm mb-2">{t('management.path')}</label>
-                        <input
-                          id="editPathRoot"
-                          type="text"
-                          value={formData.path}
-                          onChange={(e) => setFormData({ ...formData, path: e.target.value })}
-                          placeholder={t('management.pathPlaceholder')}
-                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="editApiBaseRoot" className="block text-white/50 text-sm mb-2">{t('management.apiBase')}</label>
-                        <input
-                          id="editApiBaseRoot"
-                          type="url"
-                          value={formData.apiBase}
-                          onChange={(e) => setFormData({ ...formData, apiBase: e.target.value })}
-                          placeholder={t('management.apiBasePlaceholder')}
-                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
-                        />
+                      <div className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5 space-y-4">
+                        <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.domain')}</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="sm:col-span-2">
+                            <label htmlFor="editDomainRoot" className="block text-white/60 text-sm mb-1.5">{t('management.domain')}</label>
+                            <input
+                              id="editDomainRoot"
+                              type="text"
+                              value={formData.domain}
+                              onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+                              placeholder={t('management.domainPlaceholder')}
+                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="editPathRoot" className="block text-white/60 text-sm mb-1.5">{t('management.path')}</label>
+                            <input
+                              id="editPathRoot"
+                              type="text"
+                              value={formData.path}
+                              onChange={(e) => setFormData({ ...formData, path: e.target.value })}
+                              placeholder={t('management.pathPlaceholder')}
+                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="editApiBaseRoot" className="block text-white/60 text-sm mb-1.5">{t('management.apiBase')}</label>
+                            <input
+                              id="editApiBaseRoot"
+                              type="url"
+                              value={formData.apiBase}
+                              onChange={(e) => setFormData({ ...formData, apiBase: e.target.value })}
+                              placeholder={t('management.apiBasePlaceholder')}
+                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
+                            />
+                          </div>
+                        </div>
                       </div>
                       {!editingShop && (
-                        <div className="pt-4 border-t border-white/10 space-y-4">
-                          <h4 className="text-white font-medium">{t('management.accessCredentials')}</h4>
+                        <div className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5 space-y-4">
+                          <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.accessCredentials')}</h3>
                           <div>
                             <label htmlFor="createOwnerPasswordRoot" className="block text-white/70 text-sm mb-2">{t('management.ownerPassword')} *</label>
                             <input id="createOwnerPasswordRoot" type="password" value={formData.ownerPassword} onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })} required minLength={6} placeholder={t('management.ownerPasswordPlaceholder')} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] placeholder:text-white/30" />
@@ -857,16 +897,16 @@ export function ShopManagementPage() {
                     </section>
                   )}
                   {editTab === 'services' && !editingShop && (
-                    <>
+                    <div id="create-services-section">
                       {createErrors.services && <p className="text-red-400 text-sm mb-4">{createErrors.services}</p>}
                       <StepServices services={createServices} onChange={setCreateServices} errors={createErrors} />
-                    </>
+                    </div>
                   )}
                   {editTab === 'barbers' && !editingShop && (
-                    <>
+                    <div id="create-barbers-section">
                       {createErrors.barbers && <p className="text-red-400 text-sm mb-4">{createErrors.barbers}</p>}
                       <StepBarbers barbers={createBarbers} onChange={setCreateBarbers} errors={createErrors} />
-                    </>
+                    </div>
                   )}
                   {editTab === 'appearance' && (
                     <AppearanceForm
@@ -1477,56 +1517,88 @@ export function ShopManagementPage() {
           aria-modal="true"
           aria-labelledby="edit-modal-title"
         >
-          <div className="modal-content bg-[#242424] border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[min(90vw,700px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4">
-            <h2 id="edit-modal-title" className="modal-title text-xl sm:text-2xl text-white mb-4">
-              {editingShop ? t('management.editShop') ?? 'Editar Barbearia' : t('createShop.createShop')}
-            </h2>
-            <div className="flex gap-2 mb-5 border-b border-white/10 pb-3 overflow-x-auto">
-              {(editingShop ? ['info', 'appearance', 'content', 'settings', 'credentials'] : ['info', 'appearance', 'content', 'settings', 'services', 'barbers']).map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setEditTab(tab as EditTab)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                    editTab === tab ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white'
-                  }`}
-                >
-                  {tab === 'info' && t('management.infoTab')}
-                  {tab === 'appearance' && t('management.appearanceTab')}
-                  {tab === 'content' && t('management.contentTab')}
-                  {tab === 'settings' && t('management.settingsTab')}
-                  {tab === 'credentials' && t('management.credentialsTab')}
-                  {tab === 'services' && t('createShop.servicesTab')}
-                  {tab === 'barbers' && t('createShop.barbersTab')}
-                </button>
-              ))}
-            </div>
-            <form onSubmit={(e) => { e.preventDefault(); editingShop ? handleEdit() : handleCreate(); }} className="flex-1 overflow-y-auto min-h-0 pr-1">
+          <div className="modal-content bg-[#242424] border border-white/10 rounded-2xl p-5 sm:p-6 lg:p-8 max-w-[min(90vw,720px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 shadow-2xl">
+            <header className="flex-shrink-0 mb-6">
+              <h2 id="edit-modal-title" className="modal-title text-xl sm:text-2xl font-semibold text-white tracking-tight">
+                {editingShop ? t('management.editShop') ?? 'Editar Barbearia' : t('createShop.createShop')}
+              </h2>
+              <p className="text-white/50 text-sm mt-1">
+                {editingShop ? t('management.infoIntro') : t('createShop.newShop')}
+              </p>
+            </header>
+            <nav className="flex-shrink-0 border-b border-white/15 overflow-x-auto -mx-1 px-1" aria-label={t('management.settingsTab')}>
+              <div className="flex gap-0 min-w-max">
+                {(editingShop ? ['info', 'appearance', 'content', 'settings', 'credentials'] : ['info', 'appearance', 'content', 'settings', 'services', 'barbers']).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setEditTab(tab as EditTab)}
+                    className={`relative py-3 px-4 text-sm font-medium transition-colors whitespace-nowrap rounded-t-lg ${
+                      editTab === tab ? 'text-white' : 'text-white/55 hover:text-white/85'
+                    }`}
+                    aria-current={editTab === tab ? 'page' : undefined}
+                  >
+                    {tab === 'info' && t('management.infoTab')}
+                    {tab === 'appearance' && t('management.appearanceTab')}
+                    {tab === 'content' && t('management.contentTab')}
+                    {tab === 'settings' && t('management.settingsTab')}
+                    {tab === 'credentials' && t('management.credentialsTab')}
+                    {tab === 'services' && t('createShop.servicesTab')}
+                    {tab === 'barbers' && t('createShop.barbersTab')}
+                    {editTab === tab && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#D4AF37] rounded-full" aria-hidden="true" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </nav>
+            <form onSubmit={(e) => { e.preventDefault(); editingShop ? handleEdit() : handleCreate(); }} className="flex-1 overflow-y-auto min-h-0 pr-1 mt-5">
               {editTab === 'info' && (
-                <section className="space-y-5">
-                  <p className="text-white/60 text-sm">{t('management.infoIntro')}</p>
-                  <div>
-                    <label htmlFor="editName" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">{t('management.name')} *</label>
-                    <input
-                      id="editName"
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => {
-                        const name = e.target.value;
-                        setFormData((prev) => ({ ...prev, name, ...(!editingShop && (!prev.slug || prev.slug === generateSlug(prev.name)) ? { slug: generateSlug(name) } : {}) }));
-                      }}
-                      required
-                      className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
-                    />
-                    {!editingShop && createErrors.name && <p className="text-red-400 text-xs mt-1">{createErrors.name}</p>}
+                <section className="space-y-6">
+                  <div className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5 space-y-4">
+                    <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.infoTab')}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="editName" className="block text-white/70 text-sm mb-1.5">{t('management.name')} *</label>
+                        <input
+                          id="editName"
+                          type="text"
+                          value={formData.name}
+                          onChange={(e) => {
+                            const name = e.target.value;
+                            setFormData((prev) => ({ ...prev, name, ...(!editingShop && (!prev.slug || prev.slug === generateSlug(prev.name)) ? { slug: generateSlug(name) } : {}) }));
+                          }}
+                          required
+                          className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
+                        />
+                        {!editingShop && createErrors.name && <p className="text-red-400 text-xs mt-1">{createErrors.name}</p>}
+                      </div>
+                      <div>
+                        <label htmlFor="editSlug" className="block text-white/70 text-sm mb-1.5">{t('management.slug')} *</label>
+                        <input id="editSlug" type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} required pattern="[-a-z0-9]+" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" />
+                      </div>
+                    </div>
                   </div>
-                  <div><label htmlFor="editSlug" className="block text-[rgba(255,255,255,0.7)] text-sm mb-2">{t('management.slug')} *</label><input id="editSlug" type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} required pattern="[a-z0-9-]+" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" /></div>
-                  <div><label htmlFor="editDomain" className="block text-white/50 text-sm mb-2">{t('management.domain')}</label><input id="editDomain" type="text" value={formData.domain} onChange={(e) => setFormData({ ...formData, domain: e.target.value })} placeholder={t('management.domainPlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
-                  <div><label htmlFor="editPath" className="block text-white/50 text-sm mb-2">{t('management.path')}</label><input id="editPath" type="text" value={formData.path} onChange={(e) => setFormData({ ...formData, path: e.target.value })} placeholder={t('management.pathPlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
-                  <div><label htmlFor="editApiBase" className="block text-white/50 text-sm mb-2">{t('management.apiBase')}</label><input id="editApiBase" type="url" value={formData.apiBase} onChange={(e) => setFormData({ ...formData, apiBase: e.target.value })} placeholder={t('management.apiBasePlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" /></div>
+                  <div className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5 space-y-4">
+                    <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.domain')}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <label htmlFor="editDomain" className="block text-white/60 text-sm mb-1.5">{t('management.domain')}</label>
+                        <input id="editDomain" type="text" value={formData.domain} onChange={(e) => setFormData({ ...formData, domain: e.target.value })} placeholder={t('management.domainPlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" />
+                      </div>
+                      <div>
+                        <label htmlFor="editPath" className="block text-white/60 text-sm mb-1.5">{t('management.path')}</label>
+                        <input id="editPath" type="text" value={formData.path} onChange={(e) => setFormData({ ...formData, path: e.target.value })} placeholder={t('management.pathPlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" />
+                      </div>
+                      <div>
+                        <label htmlFor="editApiBase" className="block text-white/60 text-sm mb-1.5">{t('management.apiBase')}</label>
+                        <input id="editApiBase" type="url" value={formData.apiBase} onChange={(e) => setFormData({ ...formData, apiBase: e.target.value })} placeholder={t('management.apiBasePlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" />
+                      </div>
+                    </div>
+                  </div>
                   {!editingShop && (
-                    <div className="pt-4 border-t border-white/10 space-y-4">
-                      <h4 className="text-white font-medium">{t('management.accessCredentials')}</h4>
+                    <div className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5 space-y-4">
+                      <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.accessCredentials')}</h3>
                       <div>
                         <label htmlFor="createOwnerPasswordMineiro" className="block text-white/70 text-sm mb-2">{t('management.ownerPassword')} *</label>
                         <input id="createOwnerPasswordMineiro" type="password" value={formData.ownerPassword} onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })} required minLength={6} placeholder={t('management.ownerPasswordPlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/30" />
@@ -1556,16 +1628,16 @@ export function ShopManagementPage() {
                 </section>
               )}
               {editTab === 'services' && !editingShop && (
-                <>
+                <div id="create-services-section">
                   {createErrors.services && <p className="text-red-400 text-sm mb-4">{createErrors.services}</p>}
                   <StepServices services={createServices} onChange={setCreateServices} errors={createErrors} />
-                </>
+                </div>
               )}
               {editTab === 'barbers' && !editingShop && (
-                <>
+                <div id="create-barbers-section">
                   {createErrors.barbers && <p className="text-red-400 text-sm mb-4">{createErrors.barbers}</p>}
                   <StepBarbers barbers={createBarbers} onChange={setCreateBarbers} errors={createErrors} />
-                </>
+                </div>
               )}
               {editTab === 'appearance' && (
                 <AppearanceForm
