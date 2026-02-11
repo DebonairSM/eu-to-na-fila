@@ -118,12 +118,12 @@ export function SchedulePage() {
       return;
     }
 
-    const tz = settings?.timezone ?? 'America/Sao_Paulo';
-    const localDateTime = `${dateStr}T${selectedTime}:00`;
-    const utcDate = fromZonedTime(localDateTime, tz);
-
     setIsSubmitting(true);
     try {
+      const tz = settings?.timezone ?? 'America/Sao_Paulo';
+      const localDateTime = `${dateStr}T${selectedTime}:00`;
+      const utcDate = fromZonedTime(localDateTime, tz);
+
       const ticket = await api.bookAppointment(shopSlug, {
         serviceId: selectedServiceId,
         customerName: fullName,
