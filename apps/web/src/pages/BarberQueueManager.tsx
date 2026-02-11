@@ -47,8 +47,8 @@ export function BarberQueueManager() {
   } = useKiosk();
 
   // Use longer polling interval in kiosk mode to improve performance
-  const pollInterval = isKioskMode ? 10000 : 5000; // 10s for kiosk, 5s for management
-  const barberPollInterval = isKioskMode ? 10000 : 0; // Poll barbers in kiosk mode so presence updates without refresh
+  const pollInterval = 2000; // 2s polling for queue updates
+  const barberPollInterval = isKioskMode ? 2000 : 0; // Poll barbers in kiosk mode so presence updates without refresh
   const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval);
   const { barbers, togglePresence } = useBarbers(barberPollInterval);
   const { activeServices } = useServices();
@@ -253,23 +253,20 @@ export function BarberQueueManager() {
   }, [displayBarbers]);
 
   // Load reschedule slots when editing appointment
+  const editTicketServiceId = editTicket?.serviceId;
+  const editTicketBarberId = editTicket ? (editTicket as { preferredBarberId?: number }).preferredBarberId : undefined;
   useEffect(() => {
-    if (!editAppointmentTicketId || !rescheduleDateStr || !useSlotsForAppointment) {
-      setRescheduleSlots([]);
-      return;
-    }
-    const ticket = pendingTickets.find((t) => t.id === editAppointmentTicketId);
-    if (!ticket?.serviceId) {
+    if (!editAppointmentTicketId || !rescheduleDateStr || !useSlotsForAppointment || !editTicketServiceId) {
       setRescheduleSlots([]);
       return;
     }
     setRescheduleSlotsLoading(true);
     api
-      .getAppointmentSlots(shopSlug, rescheduleDateStr, ticket.serviceId, (ticket as { preferredBarberId?: number }).preferredBarberId ?? undefined)
+      .getAppointmentSlots(shopSlug, rescheduleDateStr, editTicketServiceId, editTicketBarberId)
       .then((res) => setRescheduleSlots(res.slots))
       .catch(() => setRescheduleSlots([]))
       .finally(() => setRescheduleSlotsLoading(false));
-  }, [editAppointmentTicketId, rescheduleDateStr, pendingTickets, shopSlug, useSlotsForAppointment]);
+  }, [editAppointmentTicketId, rescheduleDateStr, editTicketServiceId, editTicketBarberId, shopSlug, useSlotsForAppointment]);
 
   // Parse reschedule date/time from editAppointmentTime
   useEffect(() => {

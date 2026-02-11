@@ -22,7 +22,7 @@ export function StatusPage() {
   const { t } = useLocale();
   const ticketIdFromParams = id ? parseInt(id, 10) : null;
   const { ticket, isLoading, error, refetch } = useTicketStatus(ticketIdFromParams);
-  const { data: queueData } = useQueue(3000);
+  const { data: queueData } = useQueue(2000);
   const { getServiceById } = useServices();
   const [shareSuccess, setShareSuccess] = useState(false);
   const { config: shopConfig } = useShopConfig();

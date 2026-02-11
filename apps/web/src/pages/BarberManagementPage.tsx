@@ -302,8 +302,9 @@ export function BarberManagementPage() {
           </section>
         )}
 
-        {/* Shop Status Override Controls (Owner Only) */}
         {isOwner && (
+        <>
+          {/* Shop Status Override Controls */}
           <section className="mb-6 p-4 bg-white/5 border border-white/10 rounded-lg">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
@@ -340,17 +341,16 @@ export function BarberManagementPage() {
               </div>
             </div>
           </section>
-        )}
 
-        {isOwner && (
-        <button
-          onClick={addModal.open}
-          className="add-barber-btn flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:opacity-90 hover:-translate-y-0.5 hover:-translate-y-0.5 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-background)]"
-          aria-label={t('barber.addNewBarber')}
-        >
-          <span className="material-symbols-outlined text-lg sm:text-xl" aria-hidden="true">add</span>
-          {t('barber.addBarber')}
-        </button>
+          <button
+            onClick={addModal.open}
+            className="add-barber-btn flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:opacity-90 hover:-translate-y-0.5 hover:-translate-y-0.5 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-background)]"
+            aria-label={t('barber.addNewBarber')}
+          >
+            <span className="material-symbols-outlined text-lg sm:text-xl" aria-hidden="true">add</span>
+            {t('barber.addBarber')}
+          </button>
+        </>
         )}
 
         {/* Barbers Grid */}

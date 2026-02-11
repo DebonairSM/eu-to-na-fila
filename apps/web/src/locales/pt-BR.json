@@ -357,6 +357,7 @@
     "deviceDeduplication": "Impedir múltiplos tickets por dispositivo",
     "allowCustomerCancelInProgress": "Permitir cliente cancelar atendimento em andamento",
     "allowAppointments": "Permitir agendamentos (fila híbrida com horário marcado)",
+    "allowQueueBeforeOpen": "Permitir entrada na fila antes do horário de abertura",
     "noShopsRegistered": "Nenhuma barbearia cadastrada",
     "noBarbersInShop": "Nenhum barbeiro cadastrado nesta barbearia.",
     "removeShopTitle": "Remover Barbearia",

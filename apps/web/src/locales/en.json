@@ -357,6 +357,7 @@
     "deviceDeduplication": "Prevent multiple tickets per device",
     "allowCustomerCancelInProgress": "Allow customer to cancel in-progress service",
     "allowAppointments": "Allow appointments (hybrid queue with scheduled time)",
+    "allowQueueBeforeOpen": "Allow queue entry before opening hours",
     "noShopsRegistered": "No shops registered",
     "noBarbersInShop": "No barbers registered in this shop.",
     "removeShopTitle": "Remove Shop",

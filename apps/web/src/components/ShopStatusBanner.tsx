@@ -1,12 +1,24 @@
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { getShopStatus } from '@eutonafila/shared';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 export function ShopStatusBanner() {
   const { config } = useShopConfig();
   const { t } = useLocale();
   const settings = config.settings;
+  
+  // Memoize settings to prevent unnecessary recalculations
+  const settingsKey = useMemo(() => 
+    JSON.stringify({
+      operatingHours: settings.operatingHours,
+      timezone: settings.timezone,
+      temporaryStatusOverride: settings.temporaryStatusOverride,
+      allowQueueBeforeOpen: settings.allowQueueBeforeOpen
+    }),
+    [settings.operatingHours, settings.timezone, settings.temporaryStatusOverride, settings.allowQueueBeforeOpen]
+  );
+  
   const [status, setStatus] = useState(() => 
     getShopStatus(
       settings.operatingHours, 
@@ -16,9 +28,9 @@ export function ShopStatusBanner() {
     )
   );
 
-  // Update status every minute
+  // Update status every 2 seconds
   useEffect(() => {
-    const interval = setInterval(() => {
+    const updateStatus = () => {
       setStatus(
         getShopStatus(
           settings.operatingHours, 
@@ -27,9 +39,11 @@ export function ShopStatusBanner() {
           settings.allowQueueBeforeOpen
         )
       );
-    }, 60000);
+    };
+    
+    const interval = setInterval(updateStatus, 2000);
     return () => clearInterval(interval);
-  }, [settings.operatingHours, settings.timezone, settings.temporaryStatusOverride, settings.allowQueueBeforeOpen]);
+  }, [settingsKey]);
 
   if (status.isOpen) {
     return null; // Don't show banner when open

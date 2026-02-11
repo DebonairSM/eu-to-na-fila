@@ -105,7 +105,10 @@ export function SchedulePage() {
       setSubmitError(t('join.phoneRequired'));
       return;
     }
-    // Barber is optional (preferred barber only).
+    if (settings?.requireBarberChoice && !selectedBarberId) {
+      setSubmitError(t('join.chooseBarber'));
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -188,13 +191,16 @@ export function SchedulePage() {
                   </select>
                 </div>
 
-                {barbers.length > 0 && (
+                {(barbers.length > 0 || settings?.requireBarberChoice) && (
                   <div>
-                    <InputLabel htmlFor="schedule-barber">{t('join.barberLabelOptional')}</InputLabel>
+                    <InputLabel htmlFor="schedule-barber">
+                      {settings?.requireBarberChoice ? t('join.barberLabel') : t('join.barberLabelOptional')}
+                    </InputLabel>
                     <select
                       id="schedule-barber"
                       value={selectedBarberId ?? ''}
                       onChange={(e) => setSelectedBarberId(e.target.value ? parseInt(e.target.value, 10) : null)}
+                      required={settings?.requireBarberChoice}
                       className="form-control-select w-full mt-1"
                     >
                       <option value="">{t('join.selectOption')}</option>
@@ -202,6 +208,9 @@ export function SchedulePage() {
                         <option key={b.id} value={b.id}>{b.name}</option>
                       ))}
                     </select>
+                    {settings?.requireBarberChoice && barbers.filter((b) => b.isActive).length === 0 && (
+                      <p className="text-sm text-[#ef4444] mt-1">{t('join.noBarberActive')}</p>
+                    )}
                   </div>
                 )}
 

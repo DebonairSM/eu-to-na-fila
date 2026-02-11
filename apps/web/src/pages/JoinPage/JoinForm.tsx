@@ -107,9 +107,11 @@ export function JoinForm() {
               </div>
             )}
 
-            {barbers.length > 0 && (
+            {(barbers.length > 0 || settings.requireBarberChoice) && (
               <div className="min-w-0">
-                <InputLabel htmlFor="preferredBarber">{t('join.barberLabelOptional')}</InputLabel>
+                <InputLabel htmlFor="preferredBarber">
+                  {settings.requireBarberChoice ? t('join.barberLabel') : t('join.barberLabelOptional')}
+                </InputLabel>
                 <select
                   id="preferredBarber"
                   value={selectedBarberId ?? ''}
@@ -117,6 +119,7 @@ export function JoinForm() {
                     const v = e.target.value;
                     setSelectedBarberId(v ? parseInt(v, 10) : null);
                   }}
+                  required={settings.requireBarberChoice}
                   className="form-control-select w-full max-w-full"
                 >
                   <option value="">{t('join.selectOption')}</option>
@@ -124,6 +127,9 @@ export function JoinForm() {
                     <option key={b.id} value={b.id}>{b.name}</option>
                   ))}
                 </select>
+                {settings.requireBarberChoice && barbers.filter(b => b.isActive).length === 0 && (
+                  <p className="text-sm text-[#ef4444] mt-1">{t('join.noBarberActive')}</p>
+                )}
               </div>
             )}
           </div>

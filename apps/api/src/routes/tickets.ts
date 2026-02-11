@@ -80,7 +80,11 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
         { field: 'customerPhone', message: 'Este campo é obrigatório' },
       ]);
     }
-    // Barber is always optional (preferred barber); never required for clients.
+    if (settings.requireBarberChoice && !data.preferredBarberId) {
+      throw new ValidationError('Barber choice is required', [
+        { field: 'preferredBarberId', message: 'Escolha um barbeiro' },
+      ]);
+    }
 
     // Check for existing active ticket by device FIRST (before creating)
     // Device-based check takes priority to prevent multiple tickets from same device
@@ -161,6 +165,18 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
     const settings = parseSettings(shop.settings);
     if (!settings.allowAppointments) throw new ValidationError('Appointments not enabled for this shop');
+
+    // Enforce per-shop required fields
+    if (settings.requirePhone && !data.customerPhone) {
+      throw new ValidationError('Phone number is required', [
+        { field: 'customerPhone', message: 'Este campo é obrigatório' },
+      ]);
+    }
+    if (settings.requireBarberChoice && !data.preferredBarberId) {
+      throw new ValidationError('Barber choice is required', [
+        { field: 'preferredBarberId', message: 'Escolha um barbeiro' },
+      ]);
+    }
 
     const timezone = settings.timezone ?? 'America/Sao_Paulo';
     const { dateStr, timeStr } = utcToShopLocal(data.scheduledTime, timezone);

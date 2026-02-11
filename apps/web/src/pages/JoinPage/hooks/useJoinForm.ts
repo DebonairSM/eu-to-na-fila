@@ -44,7 +44,7 @@ export function useJoinForm() {
   const { t } = useLocale();
   const settings = shopConfig.settings;
   const { validateName } = useProfanityFilter();
-  const { data } = useQueue(30000);
+  const { data } = useQueue(2000);
   const { barbers } = useBarbers();
   const { activeServices, isLoading: isLoadingServices } = useServices();
 
@@ -350,7 +350,10 @@ export function useJoinForm() {
       setSubmitError(t('join.phoneRequired'));
       return;
     }
-    // Barber is optional (preferred barber only).
+    if (settings.requireBarberChoice && !selectedBarberId) {
+      setSubmitError(t('join.chooseBarber'));
+      return;
+    }
 
     setIsSubmitting(true);
 
