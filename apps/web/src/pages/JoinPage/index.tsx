@@ -4,6 +4,7 @@ import { JoinForm } from './JoinForm';
 import { Container, Heading } from '@/components/design-system';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { ShopStatusBanner } from '@/components/ShopStatusBanner';
 
 function hasScheduleEnabled(settings: { allowAppointments?: boolean; operatingHours?: unknown }): boolean {
   if (!settings?.allowAppointments) return false;
@@ -38,6 +39,8 @@ export function JoinPage() {
               {t('join.joinTitle')}
             </Heading>
           </div>
+
+          <ShopStatusBanner />
 
           <JoinForm />
 

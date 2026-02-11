@@ -1161,13 +1161,23 @@ export function ShopManagementPage() {
               {editTab === 'settings' && (
                 <div className="space-y-6">
                   <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Fila</h4><div className="grid grid-cols-2 gap-4"><div><label className="block text-white/60 text-sm mb-2">Tamanho máximo da fila</label><input type="number" min={1} max={500} value={formData.settings.maxQueueSize} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxQueueSize: parseInt(e.target.value) || 80 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div><div><label className="block text-white/60 text-sm mb-2">Duração padrão do serviço (min)</label><input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" /></div></div></section>
-                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Regras de atendimento</h4><ul className="space-y-4">{[{ key: 'requirePhone' as const, label: 'Exigir telefone do cliente' }, { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' }, { key: 'deviceDeduplication' as const, label: 'Impedir múltiplos tickets por dispositivo' }, { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' }, { key: 'allowAppointments' as const, label: 'Permitir agendamentos (fila híbrida com horário marcado)' }].map(({ key, label }) => (<li key={key}><label className="flex items-center gap-3 cursor-pointer group"><button type="button" role="switch" aria-checked={formData.settings[key]} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button><span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span></label></li>))}</ul></section>
+                  <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4"><h4 className="text-white font-medium">Regras de atendimento</h4><ul className="space-y-4">{[{ key: 'requirePhone' as const, label: 'Exigir telefone do cliente' }, { key: 'allowDuplicateNames' as const, label: 'Permitir nomes duplicados na fila' }, { key: 'deviceDeduplication' as const, label: 'Impedir múltiplos tickets por dispositivo' }, { key: 'allowCustomerCancelInProgress' as const, label: 'Permitir cliente cancelar atendimento em andamento' }, { key: 'allowAppointments' as const, label: 'Permitir agendamentos (fila híbrida com horário marcado)' }, { key: 'allowQueueBeforeOpen' as const, label: 'Permitir entrada na fila antes do horário de abertura' }].map(({ key, label }) => (<li key={key}><label className="flex items-center gap-3 cursor-pointer group"><button type="button" role="switch" aria-checked={formData.settings[key]} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button><span className="text-white/80 text-sm group-hover:text-white transition-colors">{label}</span></label></li>))}</ul></section>
                   <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
                     <h4 className="text-white font-medium">Horário de funcionamento</h4>
                     <p className="text-white/60 text-sm">Usado para agendamentos. Deixe fechado os dias sem atendimento.</p>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead><tr className="text-left text-white/60 border-b border-white/10"><th className="py-2 pr-4">Dia</th><th className="py-2 pr-4 w-24">Aberto</th><th className="py-2 pr-4">Abertura</th><th className="py-2 pr-4">Fechamento</th></tr></thead>
+                        <thead>
+                          <tr className="text-left text-white/60 border-b border-white/10">
+                            <th className="py-2 pr-4">Dia</th>
+                            <th className="py-2 pr-4 w-24">Aberto</th>
+                            <th className="py-2 pr-4">Abertura</th>
+                            <th className="py-2 pr-4">Fechamento</th>
+                            <th className="py-2 pr-4 w-24">Almoço</th>
+                            <th className="py-2 pr-4">Saída</th>
+                            <th className="py-2 pr-4">Retorno</th>
+                          </tr>
+                        </thead>
                         <tbody>
                           {(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const).map((day) => {
                             const labels: Record<typeof day, string> = { monday: 'Segunda', tuesday: 'Terça', wednesday: 'Quarta', thursday: 'Quinta', friday: 'Sexta', saturday: 'Sábado', sunday: 'Domingo' };
@@ -1176,14 +1186,140 @@ export function ShopManagementPage() {
                             const isOpen = dayHours != null;
                             const open = dayHours?.open ?? '09:00';
                             const close = dayHours?.close ?? '18:00';
+                            const hasLunch = dayHours?.lunchStart != null && dayHours?.lunchEnd != null;
+                            const lunchStart = dayHours?.lunchStart ?? '12:00';
+                            const lunchEnd = dayHours?.lunchEnd ?? '13:00';
+                            
                             return (
                               <tr key={day} className="border-b border-white/5">
                                 <td className="py-2 pr-4 text-white/90">{labels[day]}</td>
+                                
+                                {/* Open/Closed Toggle */}
                                 <td className="py-2 pr-4">
-                                  <button type="button" role="switch" aria-checked={isOpen} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, operatingHours: { ...hours, [day]: isOpen ? null : { open, close } } } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${isOpen ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${isOpen ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
+                                  <button 
+                                    type="button" 
+                                    role="switch" 
+                                    aria-checked={isOpen}
+                                    onClick={() => setFormData({ 
+                                      ...formData, 
+                                      settings: { 
+                                        ...formData.settings, 
+                                        operatingHours: { 
+                                          ...hours, 
+                                          [day]: isOpen ? null : { open, close } 
+                                        } 
+                                      } 
+                                    })}
+                                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${isOpen ? 'bg-[#D4AF37]' : 'bg-white/20'}`}
+                                  >
+                                    <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${isOpen ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} />
+                                  </button>
                                 </td>
-                                <td className="py-2 pr-4"><input type="time" value={open} disabled={!isOpen} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, operatingHours: { ...hours, [day]: { open: e.target.value, close } } } })} className="w-full max-w-[120px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm disabled:opacity-50" /></td>
-                                <td className="py-2 pr-4"><input type="time" value={close} disabled={!isOpen} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, operatingHours: { ...hours, [day]: { open, close: e.target.value } } } })} className="w-full max-w-[120px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm disabled:opacity-50" /></td>
+                                
+                                {/* Opening Time */}
+                                <td className="py-2 pr-4">
+                                  <input 
+                                    type="time" 
+                                    value={open} 
+                                    disabled={!isOpen}
+                                    onChange={(e) => setFormData({ 
+                                      ...formData, 
+                                      settings: { 
+                                        ...formData.settings, 
+                                        operatingHours: { 
+                                          ...hours, 
+                                          [day]: { ...dayHours!, open: e.target.value, close, lunchStart: dayHours?.lunchStart, lunchEnd: dayHours?.lunchEnd } 
+                                        } 
+                                      } 
+                                    })}
+                                    className="w-full max-w-[120px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm disabled:opacity-50"
+                                  />
+                                </td>
+                                
+                                {/* Closing Time */}
+                                <td className="py-2 pr-4">
+                                  <input 
+                                    type="time" 
+                                    value={close} 
+                                    disabled={!isOpen}
+                                    onChange={(e) => setFormData({ 
+                                      ...formData, 
+                                      settings: { 
+                                        ...formData.settings, 
+                                        operatingHours: { 
+                                          ...hours, 
+                                          [day]: { ...dayHours!, open, close: e.target.value, lunchStart: dayHours?.lunchStart, lunchEnd: dayHours?.lunchEnd } 
+                                        } 
+                                      } 
+                                    })}
+                                    className="w-full max-w-[120px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm disabled:opacity-50"
+                                  />
+                                </td>
+                                
+                                {/* Lunch Toggle */}
+                                <td className="py-2 pr-4">
+                                  <button 
+                                    type="button" 
+                                    role="switch" 
+                                    aria-checked={hasLunch}
+                                    disabled={!isOpen}
+                                    onClick={() => setFormData({ 
+                                      ...formData, 
+                                      settings: { 
+                                        ...formData.settings, 
+                                        operatingHours: { 
+                                          ...hours, 
+                                          [day]: hasLunch 
+                                            ? { open, close, lunchStart: undefined, lunchEnd: undefined }
+                                            : { open, close, lunchStart, lunchEnd }
+                                        } 
+                                      } 
+                                    })}
+                                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${hasLunch ? 'bg-[#D4AF37]' : 'bg-white/20'} disabled:opacity-30`}
+                                  >
+                                    <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${hasLunch ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} />
+                                  </button>
+                                </td>
+                                
+                                {/* Lunch Start */}
+                                <td className="py-2 pr-4">
+                                  <input 
+                                    type="time" 
+                                    value={lunchStart} 
+                                    disabled={!isOpen || !hasLunch}
+                                    onChange={(e) => setFormData({ 
+                                      ...formData, 
+                                      settings: { 
+                                        ...formData.settings, 
+                                        operatingHours: { 
+                                          ...hours, 
+                                          [day]: { ...dayHours!, open, close, lunchStart: e.target.value, lunchEnd } 
+                                        } 
+                                      } 
+                                    })}
+                                    className="w-full max-w-[120px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm disabled:opacity-50"
+                                  />
+                                </td>
+                                
+                                {/* Lunch End */}
+                                <td className="py-2 pr-4">
+                                  <input 
+                                    type="time" 
+                                    value={lunchEnd} 
+                                    disabled={!isOpen || !hasLunch}
+                                    onChange={(e) => setFormData({ 
+                                      ...formData, 
+                                      settings: { 
+                                        ...formData.settings, 
+                                        operatingHours: { 
+                                          ...hours, 
+                                          [day]: { ...dayHours!, open, close, lunchStart, lunchEnd: e.target.value } 
+                                        } 
+                                      } 
+                                    })}
+                                    className="w-full max-w-[120px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm disabled:opacity-50"
+                                  />
+                                </td>
                               </tr>
                             );
                           })}

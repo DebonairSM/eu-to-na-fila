@@ -13,6 +13,14 @@
     "error": "Error",
     "retry": "Try again"
   },
+  "shop": {
+    "closed": "Closed",
+    "closedForLunch": "Closed for lunch",
+    "opensAt": "Opens at",
+    "returnsAt": "Returns at",
+    "tomorrow": "tomorrow",
+    "at": "at"
+  },
   "accessibility": {
     "skipLink": "Skip to main content",
     "loading": "Loading…",
@@ -82,7 +90,9 @@
     "chooseBarber": "Choose a barber.",
     "selectService": "Select a service.",
     "submitErrorDefault": "Error joining the queue. Please try again.",
-    "scheduleForLater": "Schedule for later"
+    "scheduleForLater": "Schedule for later",
+    "shopClosed": "The shop is currently closed.",
+    "shopClosedForLunch": "The shop is closed for lunch break."
   },
   "schedule": {
     "title": "Schedule appointment",

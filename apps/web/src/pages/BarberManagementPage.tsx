@@ -11,6 +11,7 @@ import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
 import { WaitTimeSimulator } from '@/components/WaitTimeSimulator';
+import { Modal } from '@/components/Modal';
 import { getErrorMessage } from '@/lib/utils';
 import type { Barber, Service } from '@eutonafila/shared';
 
@@ -98,6 +99,38 @@ export function BarberManagementPage() {
     try { await api.updateService(svc.id, { isActive: !svc.isActive }); await loadServices(); }
     catch (err) { setErrorMessage(getErrorMessage(err, t('barber.updateServiceError'))); }
   }, [loadServices, t]);
+
+  // Shop status override state (owner only)
+  const [overrideModal, setOverrideModal] = useState(false);
+  const [overrideForm, setOverrideForm] = useState({
+    isOpen: true,
+    durationMinutes: 60,
+    reason: '',
+  });
+  const [overrideSubmitting, setOverrideSubmitting] = useState(false);
+
+  const handleSetOverride = useCallback(async () => {
+    setOverrideSubmitting(true);
+    try {
+      await api.setTemporaryStatus(shopSlug, overrideForm);
+      setOverrideModal(false);
+      setOverrideForm({ isOpen: true, durationMinutes: 60, reason: '' });
+      window.location.reload();
+    } catch (err) {
+      setErrorMessage(getErrorMessage(err, 'Erro ao definir status temporário'));
+    } finally {
+      setOverrideSubmitting(false);
+    }
+  }, [shopSlug, overrideForm]);
+
+  const handleClearOverride = useCallback(async () => {
+    try {
+      await api.clearTemporaryStatus(shopSlug);
+      window.location.reload();
+    } catch (err) {
+      setErrorMessage(getErrorMessage(err, 'Erro ao limpar status temporário'));
+    }
+  }, [shopSlug]);
 
   // Staff (no owner/barber) goes to queue manager; barber and owner stay
   if (!isOwner && !isBarber) {
@@ -265,6 +298,46 @@ export function BarberManagementPage() {
               >
                 {applyingToAll ? t('common.saving') : t('barber.applyToAllBarbers')}
               </button>
+            </div>
+          </section>
+        )}
+
+        {/* Shop Status Override Controls (Owner Only) */}
+        {isOwner && (
+          <section className="mb-6 p-4 bg-white/5 border border-white/10 rounded-lg">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <h3 className="text-white font-medium mb-1">Status da Loja</h3>
+                <p className="text-white/60 text-sm">
+                  Controle temporário de abertura/fechamento
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setOverrideForm({ isOpen: true, durationMinutes: 60, reason: '' });
+                    setOverrideModal(true);
+                  }}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  Abrir Agora
+                </button>
+                <button
+                  onClick={() => {
+                    setOverrideForm({ isOpen: false, durationMinutes: 60, reason: '' });
+                    setOverrideModal(true);
+                  }}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  Fechar Agora
+                </button>
+                <button
+                  onClick={handleClearOverride}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  Limpar Override
+                </button>
+              </div>
             </div>
           </section>
         )}
@@ -757,6 +830,70 @@ export function BarberManagementPage() {
         variant="destructive"
         icon="delete"
       />
+
+      {/* Override Modal */}
+      {overrideModal && (
+        <Modal
+          isOpen={overrideModal}
+          onClose={() => setOverrideModal(false)}
+          title={overrideForm.isOpen ? 'Abrir Loja Temporariamente' : 'Fechar Loja Temporariamente'}
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-white/80 text-sm mb-2">
+                Duração (minutos)
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={1440}
+                value={overrideForm.durationMinutes}
+                onChange={(e) => setOverrideForm({ 
+                  ...overrideForm, 
+                  durationMinutes: parseInt(e.target.value) || 60 
+                })}
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+              />
+              <p className="text-white/50 text-xs mt-1">
+                Máximo: 1440 minutos (24 horas)
+              </p>
+            </div>
+            
+            <div>
+              <label className="block text-white/80 text-sm mb-2">
+                Motivo (opcional)
+              </label>
+              <input
+                type="text"
+                maxLength={200}
+                value={overrideForm.reason}
+                onChange={(e) => setOverrideForm({ 
+                  ...overrideForm, 
+                  reason: e.target.value 
+                })}
+                placeholder="Ex: Manutenção, Evento especial..."
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-white/40"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={() => setOverrideModal(false)}
+                className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSetOverride}
+                disabled={overrideSubmitting}
+                className="flex-1 px-4 py-2 bg-[#D4AF37] hover:bg-[#E8C547] text-[#0a0a0a] rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                {overrideSubmitting ? 'Aplicando...' : 'Aplicar'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

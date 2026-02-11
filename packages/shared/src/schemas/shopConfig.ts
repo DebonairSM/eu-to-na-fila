@@ -215,6 +215,8 @@ export const homeContentByLocaleInputSchema = z.record(z.string(), homeContentIn
 export interface DayHours {
   open: string;
   close: string;
+  lunchStart?: string;
+  lunchEnd?: string;
 }
 
 /** Operating hours per day. Missing or null = closed. */
@@ -231,6 +233,8 @@ export interface OperatingHours {
 const dayHoursSchema = z.object({
   open: z.string(),
   close: z.string(),
+  lunchStart: z.string().optional(),
+  lunchEnd: z.string().optional(),
 });
 
 const operatingHoursSchema = z
@@ -258,6 +262,14 @@ export interface ShopSettings {
   operatingHours?: OperatingHours;
   /** IANA timezone (e.g. America/Sao_Paulo) for operating hours and appointment slots. */
   timezone?: string;
+  /** Allow customers to join queue before opening hours */
+  allowQueueBeforeOpen: boolean;
+  /** Temporary manual override of shop open/closed status */
+  temporaryStatusOverride?: {
+    isOpen: boolean;
+    until: string;
+    reason?: string;
+  } | null;
 }
 
 /** Zod schema for settings validation with defaults. Adding a new field here with a .default() is all you need. */
@@ -272,6 +284,12 @@ export const shopSettingsSchema = z.object({
   allowAppointments: z.boolean().default(false),
   operatingHours: operatingHoursSchema,
   timezone: z.string().max(100).default('America/Sao_Paulo'),
+  allowQueueBeforeOpen: z.boolean().default(false),
+  temporaryStatusOverride: z.object({
+    isOpen: z.boolean(),
+    until: z.string(),
+    reason: z.string().optional(),
+  }).nullable().optional(),
 });
 
 /** Partial input for PATCH (all optional, shallow-merged with existing). */
@@ -286,6 +304,12 @@ export const shopSettingsInputSchema = z.object({
   allowAppointments: z.boolean().optional(),
   operatingHours: operatingHoursSchema.optional(),
   timezone: z.string().max(100).optional(),
+  allowQueueBeforeOpen: z.boolean().optional(),
+  temporaryStatusOverride: z.object({
+    isOpen: z.boolean(),
+    until: z.string(),
+    reason: z.string().optional(),
+  }).nullable().optional(),
 }).optional();
 
 /** Default settings values. Single source of truth. */

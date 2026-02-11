@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import type { UpdateTicketStatus } from '@eutonafila/shared';
-import { createAppointmentSchema } from '@eutonafila/shared';
+import { createAppointmentSchema, getShopStatus } from '@eutonafila/shared';
 import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { ticketService, queueService } from '../services/index.js';
@@ -47,6 +47,22 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     const settings = parseSettings(shop.settings);
+
+    // Check if shop is open (unless allowQueueBeforeOpen is enabled)
+    const status = getShopStatus(
+      settings.operatingHours,
+      settings.timezone ?? 'America/Sao_Paulo',
+      settings.temporaryStatusOverride,
+      settings.allowQueueBeforeOpen
+    );
+    
+    if (!status.isOpen) {
+      throw new ValidationError(
+        status.isInLunch 
+          ? 'Shop is closed for lunch break'
+          : 'Shop is currently closed'
+      );
+    }
 
     // Validate body - remove shopId from external request
     const bodySchema = z.object({

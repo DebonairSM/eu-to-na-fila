@@ -13,6 +13,14 @@
     "error": "Erro",
     "retry": "Tentar novamente"
   },
+  "shop": {
+    "closed": "Fechado",
+    "closedForLunch": "Fechado para almoço",
+    "opensAt": "Abre às",
+    "returnsAt": "Retorna às",
+    "tomorrow": "amanhã",
+    "at": "às"
+  },
   "accessibility": {
     "skipLink": "Pular para o conteúdo principal",
     "loading": "Carregando…",
@@ -82,7 +90,9 @@
     "chooseBarber": "Escolha um barbeiro.",
     "selectService": "Selecione um serviço.",
     "submitErrorDefault": "Erro ao entrar na fila. Tente novamente.",
-    "scheduleForLater": "Agendar para depois"
+    "scheduleForLater": "Agendar para depois",
+    "shopClosed": "A barbearia está fechada no momento.",
+    "shopClosedForLunch": "A barbearia está fechada para almoço."
   },
   "schedule": {
     "title": "Agendar horário",

@@ -327,6 +327,24 @@ export function useJoinForm() {
       }
     }
 
+    // Check shop status before creating ticket
+    const { getShopStatus } = await import('@eutonafila/shared');
+    const status = getShopStatus(
+      settings.operatingHours,
+      settings.timezone ?? 'America/Sao_Paulo',
+      settings.temporaryStatusOverride,
+      settings.allowQueueBeforeOpen
+    );
+
+    if (!status.isOpen) {
+      setSubmitError(
+        status.isInLunch 
+          ? t('join.shopClosedForLunch')
+          : t('join.shopClosed')
+      );
+      return;
+    }
+
     // Enforce per-shop settings
     if (settings.requirePhone && !customerPhone.trim()) {
       setSubmitError(t('join.phoneRequired'));

@@ -40,8 +40,22 @@ export async function getAppointmentSlots(
   };
   const openMin = parseTime(hours.open ?? '09:00');
   const closeMin = parseTime(hours.close ?? '18:00');
+  
+  // Check for lunch break
+  const lunchStartMin = hours.lunchStart ? parseTime(hours.lunchStart) : null;
+  const lunchEndMin = hours.lunchEnd ? parseTime(hours.lunchEnd) : null;
+  const hasLunch = lunchStartMin !== null && lunchEndMin !== null;
+  
   const slotStarts: number[] = [];
   for (let t = openMin; t + slotDurationMin <= closeMin; t += slotDurationMin) {
+    // Skip slots that overlap with lunch break
+    if (hasLunch && lunchStartMin !== null && lunchEndMin !== null) {
+      const slotEnd = t + slotDurationMin;
+      // Skip if slot overlaps with lunch (slot starts before lunch ends AND slot ends after lunch starts)
+      if (t < lunchEndMin && slotEnd > lunchStartMin) {
+        continue;
+      }
+    }
     slotStarts.push(t);
   }
 

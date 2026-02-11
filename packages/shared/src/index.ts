@@ -10,5 +10,8 @@ export * from './schemas/shopStyle.js';
 export * from './types/api.js';
 export * from './types/errors.js';
 
+// Utils
+export * from './utils/shopStatus.js';
+
 // Note: WebSocket types removed - using HTTP polling instead
 
