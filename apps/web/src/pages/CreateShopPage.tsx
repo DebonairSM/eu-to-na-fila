@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { api } from '@/lib/api';
-import type { ShopTheme, HomeContent, ShopSettings, ShopStyleConfig } from '@eutonafila/shared';
+import type { ShopTheme, HomeContent, ShopSettings, ShopStyleConfig, OperatingHours } from '@eutonafila/shared';
 import { DEFAULT_THEME, DEFAULT_HOME_CONTENT, DEFAULT_SETTINGS, shopStyleConfigSchema } from '@eutonafila/shared';
 import { useModal } from '@/hooks/useModal';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
@@ -654,6 +654,66 @@ export function CreateShopPage() {
                       </li>
                     ))}
                   </ul>
+                </section>
+                <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                  <h4 className="text-white font-medium">{t('management.operatingHours')}</h4>
+                  <p className="text-white/60 text-sm">{t('management.operatingHoursHint')}</p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-white/60 border-b border-white/10">
+                          <th className="py-2 pr-4">{t('management.day')}</th>
+                          <th className="py-2 pr-4 w-24">{t('management.open')}</th>
+                          <th className="py-2 pr-4">{t('management.opensAt')}</th>
+                          <th className="py-2 pr-4">{t('management.closesAt')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const).map((day) => {
+                          const labelKeys: Record<typeof day, string> = { monday: 'management.monday', tuesday: 'management.tuesday', wednesday: 'management.wednesday', thursday: 'management.thursday', friday: 'management.friday', saturday: 'management.saturday', sunday: 'management.sunday' };
+                          const hours = data.settings.operatingHours ?? ({} as OperatingHours);
+                          const dayHours = hours[day];
+                          const isOpen = dayHours != null;
+                          const open = dayHours?.open ?? '09:00';
+                          const close = dayHours?.close ?? '18:00';
+                          return (
+                            <tr key={day} className="border-b border-white/5">
+                              <td className="py-2 pr-4 text-white/90">{t(labelKeys[day])}</td>
+                              <td className="py-2 pr-4">
+                                <button
+                                  type="button"
+                                  role="switch"
+                                  aria-checked={isOpen}
+                                  onClick={() => onChange({ settings: { ...data.settings, operatingHours: { ...hours, [day]: isOpen ? null : { open, close } } } })}
+                                  className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${isOpen ? 'bg-[#D4AF37]' : 'bg-white/20'}`}
+                                >
+                                  <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${isOpen ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} />
+                                </button>
+                              </td>
+                              <td className="py-2 pr-4">
+                                <input
+                                  type="time"
+                                  value={open}
+                                  disabled={!isOpen}
+                                  onChange={(e) => onChange({ settings: { ...data.settings, operatingHours: { ...hours, [day]: { open: e.target.value, close } } } })}
+                                  className={`${FORM_INPUT} max-w-[120px] disabled:opacity-50`}
+                                />
+                              </td>
+                              <td className="py-2 pr-4">
+                                <input
+                                  type="time"
+                                  value={close}
+                                  disabled={!isOpen}
+                                  onChange={(e) => onChange({ settings: { ...data.settings, operatingHours: { ...hours, [day]: { open, close: e.target.value } } } })}
+                                  className={`${FORM_INPUT} max-w-[120px] disabled:opacity-50`}
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </section>
               </div>
             )}

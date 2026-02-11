@@ -79,7 +79,32 @@
     "phoneRequired": "Phone is required.",
     "chooseBarber": "Choose a barber.",
     "selectService": "Select a service.",
-    "submitErrorDefault": "Error joining the queue. Please try again."
+    "submitErrorDefault": "Error joining the queue. Please try again.",
+    "scheduleForLater": "Schedule for later"
+  },
+  "schedule": {
+    "title": "Schedule appointment",
+    "selectDate": "Choose date",
+    "selectService": "Choose service",
+    "selectBarber": "Choose barber",
+    "selectTime": "Choose time",
+    "yourName": "Your name",
+    "confirmBooking": "Confirm booking",
+    "booking": "Booking...",
+    "noSlots": "No slots available on this day.",
+    "loadingSlots": "Loading slots...",
+    "shopClosed": "Closed on this day.",
+    "slotNoLongerAvailable": "This time slot is no longer available."
+  },
+  "appointment": {
+    "confirmTitle": "Appointment confirmed",
+    "emailReminder": "Email me the reminder",
+    "emailPlaceholder": "you@email.com",
+    "sendReminder": "Send reminder",
+    "reminderSent": "Reminder sent.",
+    "addToCalendar": "Add to calendar",
+    "googleCalendar": "Google Calendar",
+    "appleCalendar": "Apple Calendar"
   },
   "status": {
     "ticketNotFound": "Ticket not found",
@@ -324,7 +349,20 @@
     "addShopAria": "Add new shop",
     "closeErrorAria": "Close error message",
     "leaveBlankToNotChange": "Leave blank to not change",
-    "usernamePlaceholder": "E.g. joao.silva"
+    "usernamePlaceholder": "E.g. joao.silva",
+    "operatingHours": "Operating hours",
+    "operatingHoursHint": "Used for appointments. Leave closed for days with no service.",
+    "day": "Day",
+    "open": "Open",
+    "opensAt": "Opens at",
+    "closesAt": "Closes at",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday"
   },
   "company": {
     "dashboardTitle": "Company Dashboard",

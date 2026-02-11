@@ -394,12 +394,12 @@ export class TicketService {
   }
 
   /**
-   * Create an appointment (staff only). Requires shop settings.allowAppointments.
+   * Create an appointment (staff or public book). Requires shop settings.allowAppointments.
    * Inserts with type=appointment, status=pending, scheduledTime; ticket_number set to A-{id}.
    */
   async createAppointment(
     shopId: number,
-    data: { serviceId: number; customerName: string; customerPhone?: string; scheduledTime: Date | string }
+    data: { serviceId: number; customerName: string; customerPhone?: string; preferredBarberId?: number; scheduledTime: Date | string }
   ): Promise<Ticket> {
     const shop = await this.db.query.shops.findFirst({
       where: eq(schema.shops.id, shopId),
@@ -426,7 +426,7 @@ export class TicketService {
         customerName: data.customerName,
         customerPhone: data.customerPhone ?? null,
         deviceId: null,
-        preferredBarberId: null,
+        preferredBarberId: data.preferredBarberId ?? null,
         status: 'pending',
         position: 0,
         estimatedWaitTime: null,
@@ -446,7 +446,7 @@ export class TicketService {
     this.auditService.logTicketCreated(ticket.id, shopId, {
       customerName: data.customerName,
       serviceId: data.serviceId,
-      preferredBarberId: undefined,
+      preferredBarberId: data.preferredBarberId,
       actorType: 'staff',
     });
 

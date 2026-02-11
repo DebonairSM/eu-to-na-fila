@@ -5,6 +5,17 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { getLayoutBehavior } from '@/lib/layouts';
 import { cn } from '@/lib/utils';
 
+function hasScheduleEnabled(settings: { allowAppointments?: boolean; operatingHours?: unknown }): boolean {
+  if (!settings?.allowAppointments) return false;
+  const hours = settings.operatingHours as Record<string, { open?: string; close?: string } | null> | undefined;
+  if (!hours || typeof hours !== 'object') return false;
+  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
+  return days.some((d) => {
+    const h = hours[d];
+    return h != null && typeof h === 'object' && h.open != null && h.close != null;
+  });
+}
+
 export function HeroSection() {
   const { t } = useLocale();
   const { config } = useShopConfig();
@@ -20,6 +31,7 @@ export function HeroSection() {
   };
   const useSplitLayout = behavior.heroSplit;
   const showDecorativeBlock = behavior.showDecorativeBlock;
+  const showSchedule = hasScheduleEnabled(config.settings ?? {});
   const badgeClass = cn(
     'hero-badge mb-6',
     behavior.badgeStyle === 'label' && 'hero-badge--label',
@@ -41,13 +53,21 @@ export function HeroSection() {
       <Text size="xl" variant="secondary" className={cn('mb-12', useSplitLayout ? '' : 'max-w-[500px] mx-auto text-center')}>
         {hero.subtitle}
       </Text>
-      <div className={useSplitLayout ? 'flex gap-4' : 'flex gap-4 justify-center'}>
+      <div className={useSplitLayout ? 'flex gap-4 flex-wrap' : 'flex gap-4 justify-center flex-wrap'}>
         <Link to="/join">
           <Button size="lg" className={behavior.heroOverlay ? 'cta-join' : ''}>
             {!ctaTextOnly && <span className="material-symbols-outlined text-xl">person_add</span>}
             {hero.ctaJoin}
           </Button>
         </Link>
+        {showSchedule && (
+          <Link to="/schedule">
+            <Button variant="outline" size="lg" className={behavior.heroOverlay ? 'cta-join' : ''}>
+              {!ctaTextOnly && <span className="material-symbols-outlined text-xl">event</span>}
+              {t('join.scheduleForLater')}
+            </Button>
+          </Link>
+        )}
         <a href="#location">
           <Button variant="outline" size="lg" className={behavior.heroOverlay ? 'cta-location' : ''}>
             {!ctaTextOnly && <span className="material-symbols-outlined text-xl">location_on</span>}
@@ -85,13 +105,21 @@ export function HeroSection() {
             </Text>
           </SlideIn>
           <SlideIn direction="up" delay={600}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
               <Link to="/join">
                 <Button size="lg" fullWidth className="sm:w-auto">
                   {!ctaTextOnly && <span className="material-symbols-outlined text-xl">person_add</span>}
                   {hero.ctaJoin}
                 </Button>
               </Link>
+              {showSchedule && (
+                <Link to="/schedule">
+                  <Button variant="outline" size="lg" fullWidth className="sm:w-auto">
+                    {!ctaTextOnly && <span className="material-symbols-outlined text-xl">event</span>}
+                    {t('join.scheduleForLater')}
+                  </Button>
+                </Link>
+              )}
               <a href="#location">
                 <Button variant="outline" size="lg" fullWidth className="sm:w-auto">
                   {!ctaTextOnly && <span className="material-symbols-outlined text-xl">location_on</span>}

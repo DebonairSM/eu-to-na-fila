@@ -11,6 +11,11 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { shapeTicketResponse } from '../lib/ticketResponse.js';
 import { parseSettings } from '../lib/settings.js';
+import { getAppointmentSlots } from '../lib/appointmentSlots.js';
+import { sendAppointmentReminder } from '../services/EmailService.js';
+import { getHomeContentForLocale } from '@eutonafila/shared';
+
+const reminderSentTicketIds = new Set<number>();
 
 /**
  * Ticket routes.
@@ -117,9 +122,110 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       serviceId: data.serviceId,
       customerName: data.customerName,
       customerPhone: data.customerPhone,
+      preferredBarberId: data.preferredBarberId,
       scheduledTime,
     });
     return reply.status(201).send(shapeTicketResponse(ticket as Record<string, unknown>));
+  });
+
+  /**
+   * Book an appointment (public). Validates slot is available, then creates appointment.
+   * @route POST /api/shops/:slug/appointments/book
+   */
+  fastify.post('/shops/:slug/appointments/book', async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const bodySchema = z.object({
+      serviceId: z.number(),
+      customerName: z.string().min(1).max(200),
+      customerPhone: z.string().optional(),
+      preferredBarberId: z.number().optional(),
+      scheduledTime: z.string(),
+      deviceId: z.string().optional(),
+    });
+    const data = validateRequest(bodySchema, request.body);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    const settings = parseSettings(shop.settings);
+    if (!settings.allowAppointments) throw new ValidationError('Appointments not enabled for this shop');
+
+    const scheduledTime = new Date(data.scheduledTime);
+    if (isNaN(scheduledTime.getTime())) throw new ValidationError('Invalid scheduledTime');
+
+    const dateStr = scheduledTime.getUTCFullYear() + '-' + String(scheduledTime.getUTCMonth() + 1).padStart(2, '0') + '-' + String(scheduledTime.getUTCDate()).padStart(2, '0');
+    const timeStr = String(scheduledTime.getUTCHours()).padStart(2, '0') + ':' + String(scheduledTime.getUTCMinutes()).padStart(2, '0');
+
+    const { slots } = await getAppointmentSlots(shop, dateStr, data.serviceId, data.preferredBarberId ?? undefined);
+    const slot = slots.find((sl) => sl.time === timeStr);
+    if (!slot || !slot.available) throw new ValidationError('This time slot is no longer available');
+
+    const ticket = await ticketService.createAppointment(shop.id, {
+      serviceId: data.serviceId,
+      customerName: data.customerName,
+      customerPhone: data.customerPhone,
+      preferredBarberId: data.preferredBarberId,
+      scheduledTime: data.scheduledTime,
+    });
+    return reply.status(201).send(shapeTicketResponse(ticket as Record<string, unknown>));
+  });
+
+  /**
+   * Send appointment reminder email (public). Rate-limited to one per ticket.
+   * @route POST /api/shops/:slug/appointments/:id/remind
+   */
+  fastify.post('/shops/:slug/appointments/:id/remind', async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+      id: z.coerce.number().int().positive(),
+    });
+    const { slug, id: ticketId } = validateRequest(paramsSchema, request.params);
+    const bodySchema = z.object({ email: z.string().email() });
+    const { email } = validateRequest(bodySchema, request.body);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    const ticket = await ticketService.getById(ticketId);
+    if (!ticket) throw new NotFoundError('Ticket not found');
+    if (ticket.shopId !== shop.id) throw new NotFoundError('Ticket not found');
+    if ((ticket as { type?: string }).type !== 'appointment') throw new ValidationError('Only appointments can have reminders');
+
+    if (reminderSentTicketIds.has(ticketId)) {
+      return reply.status(200).send({ sent: true, message: 'Reminder already sent' });
+    }
+
+    const service = await db.query.services.findFirst({
+      where: eq(schema.services.id, ticket.serviceId),
+      columns: { name: true },
+    });
+    const barberId = (ticket as { preferredBarberId?: number }).preferredBarberId ?? (ticket as { barberId?: number }).barberId;
+    let barberName: string | null = null;
+    if (barberId) {
+      const barber = await db.query.barbers.findFirst({
+        where: eq(schema.barbers.id, barberId),
+        columns: { name: true },
+      });
+      barberName = barber?.name ?? null;
+    }
+
+    const homeContent = getHomeContentForLocale(shop.homeContent, 'pt-BR');
+    const address = homeContent?.location?.address ?? null;
+
+    const scheduledTime = (ticket as { scheduledTime?: Date | string }).scheduledTime;
+    const scheduledAt = scheduledTime ? new Date(scheduledTime) : new Date();
+
+    const sent = await sendAppointmentReminder(email, {
+      shopName: shop.name,
+      serviceName: service?.name ?? 'Serviço',
+      scheduledAt,
+      barberName: barberName ?? undefined,
+      address: address ?? undefined,
+    });
+
+    if (sent) reminderSentTicketIds.add(ticketId);
+
+    return reply.send({ sent });
   });
 
   /**
@@ -139,6 +245,30 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const ticket = await ticketService.checkIn(id);
     if (ticket.shopId !== shop.id) throw new NotFoundError(`Ticket with ID ${id} not found`);
     return reply.send(shapeTicketResponse(ticket as Record<string, unknown>));
+  });
+
+  /**
+   * Get available appointment slots for a date (public).
+   * @route GET /api/shops/:slug/appointments/slots
+   * @query date - YYYY-MM-DD
+   * @query serviceId - Service ID
+   * @query barberId - Optional; if set, only slots where this barber is free
+   */
+  fastify.get('/shops/:slug/appointments/slots', async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const querySchema = z.object({
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      serviceId: z.coerce.number().int().positive(),
+      barberId: z.coerce.number().int().positive().optional(),
+    });
+    const { date: dateStr, serviceId, barberId } = validateRequest(querySchema, request.query);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    const { slots } = await getAppointmentSlots(shop, dateStr, serviceId, barberId);
+    return reply.send({ slots });
   });
 
   /**

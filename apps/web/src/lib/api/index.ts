@@ -48,6 +48,9 @@ class ApiClient extends BaseApiClient {
   getActiveTicketByDevice = this._tickets.getActiveTicketByDevice;
   createTicket = this._tickets.createTicket;
   createAppointment = this._tickets.createAppointment;
+  getAppointmentSlots = this._tickets.getAppointmentSlots;
+  bookAppointment = this._tickets.bookAppointment;
+  sendAppointmentReminder = this._tickets.sendAppointmentReminder;
   checkInAppointment = this._tickets.checkInAppointment;
   getTicket = this._tickets.getTicket;
   updateTicketStatus = this._tickets.updateTicketStatus;

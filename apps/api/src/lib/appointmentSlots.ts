@@ -1,0 +1,123 @@
+import { db, schema as s } from '../db/index.js';
+import { eq, and, or, gte, lt, inArray } from 'drizzle-orm';
+import { parseSettings } from './settings.js';
+import { NotFoundError, ValidationError } from './errors.js';
+
+export async function getAppointmentSlots(
+  shop: { id: number; settings: unknown },
+  dateStr: string,
+  serviceId: number,
+  barberId?: number
+): Promise<{ slots: Array<{ time: string; available: boolean }> }> {
+  const settings = parseSettings(shop.settings);
+  if (!settings.allowAppointments) throw new NotFoundError('Appointments not enabled');
+
+  const service = await db.query.services.findFirst({
+    where: and(eq(s.services.id, serviceId), eq(s.services.shopId, shop.id)),
+  });
+  if (!service) throw new NotFoundError('Service not found');
+  if (!service.isActive) throw new ValidationError('Service is not active');
+
+  const date = new Date(dateStr + 'T12:00:00.000Z');
+  if (isNaN(date.getTime())) throw new ValidationError('Invalid date');
+  const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
+  const dayKey = dayKeys[date.getUTCDay()];
+  const hours = settings.operatingHours?.[dayKey];
+  if (!hours || typeof hours !== 'object') return { slots: [] };
+
+  const slotDurationMin = service.duration + 5;
+  const parseTime = (str: string) => {
+    const [h, m] = str.split(':').map(Number);
+    return (h ?? 0) * 60 + (m ?? 0);
+  };
+  const openMin = parseTime(hours.open ?? '09:00');
+  const closeMin = parseTime(hours.close ?? '18:00');
+  const slotStarts: number[] = [];
+  for (let t = openMin; t + slotDurationMin <= closeMin; t += slotDurationMin) {
+    slotStarts.push(t);
+  }
+
+  const dayStart = new Date(dateStr + 'T00:00:00.000Z');
+  const dayEnd = new Date(dayStart);
+  dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
+
+  const barbersList = await db.query.barbers.findMany({
+    where: and(eq(s.barbers.shopId, shop.id), eq(s.barbers.isActive, true)),
+    columns: { id: true },
+  });
+  const barberIds = barbersList.map((b) => b.id);
+  if (barberIds.length === 0) {
+    return {
+      slots: slotStarts.map((t) => ({
+        time: `${Math.floor(t / 60)}`.padStart(2, '0') + ':' + `${t % 60}`.padStart(2, '0'),
+        available: false,
+      })),
+    };
+  }
+
+  const filterBarber = barberId != null ? (barberIds.includes(barberId) ? [barberId] : []) : barberIds;
+
+  const ticketsOnDay = await db
+    .select({
+      id: s.tickets.id,
+      barberId: s.tickets.barberId,
+      preferredBarberId: s.tickets.preferredBarberId,
+      scheduledTime: s.tickets.scheduledTime,
+      startedAt: s.tickets.startedAt,
+      serviceId: s.tickets.serviceId,
+      type: s.tickets.type,
+      status: s.tickets.status,
+    })
+    .from(s.tickets)
+    .where(
+      and(
+        eq(s.tickets.shopId, shop.id),
+        or(
+          and(
+            eq(s.tickets.type, 'appointment'),
+            inArray(s.tickets.status, ['pending', 'waiting', 'in_progress']),
+            gte(s.tickets.scheduledTime, dayStart),
+            lt(s.tickets.scheduledTime, dayEnd)
+          ),
+          and(
+            eq(s.tickets.status, 'in_progress'),
+            gte(s.tickets.startedAt, dayStart),
+            lt(s.tickets.startedAt, dayEnd)
+          )
+        )
+      )
+    );
+
+  const servicesById = await db.query.services.findMany({
+    where: eq(s.services.shopId, shop.id),
+    columns: { id: true, duration: true },
+  });
+  const durationByServiceId = Object.fromEntries(servicesById.map((svc) => [svc.id, svc.duration]));
+
+  type Block = { barberId: number; startMin: number; endMin: number };
+  const blocks: Block[] = [];
+  for (const t of ticketsOnDay) {
+    const start = t.scheduledTime ?? t.startedAt;
+    if (!start) continue;
+    const startDate = new Date(start);
+    const startMin = startDate.getUTCHours() * 60 + startDate.getUTCMinutes();
+    const dur = durationByServiceId[t.serviceId] ?? settings.defaultServiceDuration;
+    const endMin = startMin + dur;
+    const bid = t.barberId ?? t.preferredBarberId;
+    if (bid != null) blocks.push({ barberId: bid, startMin, endMin });
+  }
+
+  const slots = slotStarts.map((slotStart) => {
+    const slotEnd = slotStart + slotDurationMin;
+    const overlaps = (b: Block) => slotStart < b.endMin && slotEnd > b.startMin;
+    const available = filterBarber.some((bid) => !blocks.some((b) => b.barberId === bid && overlaps(b)));
+    const h = Math.floor(slotStart / 60);
+    const m = slotStart % 60;
+    return {
+      time: `${h}`.padStart(2, '0') + ':' + `${m}`.padStart(2, '0'),
+      available,
+    };
+  });
+
+  return { slots };
+}

@@ -79,7 +79,32 @@
     "phoneRequired": "Telefone é obrigatório.",
     "chooseBarber": "Escolha um barbeiro.",
     "selectService": "Selecione um serviço.",
-    "submitErrorDefault": "Erro ao entrar na fila. Tente novamente."
+    "submitErrorDefault": "Erro ao entrar na fila. Tente novamente.",
+    "scheduleForLater": "Agendar para depois"
+  },
+  "schedule": {
+    "title": "Agendar horário",
+    "selectDate": "Escolha a data",
+    "selectService": "Escolha o serviço",
+    "selectBarber": "Escolha o barbeiro",
+    "selectTime": "Escolha o horário",
+    "yourName": "Seu nome",
+    "confirmBooking": "Confirmar agendamento",
+    "booking": "Agendando...",
+    "noSlots": "Nenhum horário disponível neste dia.",
+    "loadingSlots": "Carregando horários...",
+    "shopClosed": "Fechado neste dia.",
+    "slotNoLongerAvailable": "Este horário não está mais disponível."
+  },
+  "appointment": {
+    "confirmTitle": "Agendamento confirmado",
+    "emailReminder": "Receber lembrete por e-mail",
+    "emailPlaceholder": "seu@email.com",
+    "sendReminder": "Enviar lembrete",
+    "reminderSent": "Lembrete enviado.",
+    "addToCalendar": "Adicionar ao calendário",
+    "googleCalendar": "Google Calendar",
+    "appleCalendar": "Apple Calendar"
   },
   "status": {
     "ticketNotFound": "Ticket não encontrado",
@@ -324,7 +349,20 @@
     "addShopAria": "Adicionar nova barbearia",
     "closeErrorAria": "Fechar mensagem de erro",
     "leaveBlankToNotChange": "Deixe em branco para não alterar",
-    "usernamePlaceholder": "Ex: joao.silva"
+    "usernamePlaceholder": "Ex: joao.silva",
+    "operatingHours": "Horário de funcionamento",
+    "operatingHoursHint": "Usado para agendamentos. Deixe fechado os dias sem atendimento.",
+    "day": "Dia",
+    "open": "Aberto",
+    "opensAt": "Abertura",
+    "closesAt": "Fechamento",
+    "monday": "Segunda",
+    "tuesday": "Terça",
+    "wednesday": "Quarta",
+    "thursday": "Quinta",
+    "friday": "Sexta",
+    "saturday": "Sábado",
+    "sunday": "Domingo"
   },
   "company": {
     "dashboardTitle": "Dashboard Empresarial",

@@ -49,12 +49,13 @@ export const createTicketSchema = z.object({
 });
 export type CreateTicket = z.infer<typeof createTicketSchema>;
 
-/** Staff-only: create an appointment (type=appointment, status=pending). */
+/** Staff or public book: create an appointment (type=appointment, status=pending). */
 export const createAppointmentSchema = z.object({
   shopId: z.number(),
   serviceId: z.number(),
   customerName: z.string().min(1).max(200),
   customerPhone: z.string().optional(),
+  preferredBarberId: z.number().optional(),
   scheduledTime: z.union([z.string(), z.date()]), // ISO string or Date
 });
 export type CreateAppointment = z.infer<typeof createAppointmentSchema>;

@@ -23,6 +23,8 @@ const BarberManagementPage = lazyWithRetry(() => import('./pages/BarberManagemen
 const AdManagementPage = lazyWithRetry(() => import('./pages/AdManagementPage').then((m) => ({ default: m.AdManagementPage })));
 const CompanyDashboard = lazyWithRetry(() => import('./pages/CompanyDashboard').then((m) => ({ default: m.CompanyDashboard })));
 const CreateShopPage = lazyWithRetry(() => import('./pages/CreateShopPage').then((m) => ({ default: m.CreateShopPage })));
+const SchedulePage = lazyWithRetry(() => import('./pages/SchedulePage').then((m) => ({ default: m.SchedulePage })));
+const AppointmentConfirmPage = lazyWithRetry(() => import('./pages/AppointmentConfirmPage').then((m) => ({ default: m.AppointmentConfirmPage })));
 
 // Protected Route Component
 function ProtectedRoute({
@@ -90,6 +92,8 @@ function AppContent() {
       <Route path="/shops" element={<NetworkPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/join" element={<JoinPageGuard />} />
+      <Route path="/schedule" element={<SchedulePage />} />
+      <Route path="/appointment/:id/confirm" element={<AppointmentConfirmPage />} />
       <Route path="/status/:id" element={<StatusPage />} />
       <Route path="/shop/login" element={<LoginPage />} />
 

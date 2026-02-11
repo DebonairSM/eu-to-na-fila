@@ -211,6 +211,40 @@ export const homeContentInputSchema = z.object({
 /** PATCH body: home content keyed by locale. Each value is partial (same shape as homeContentInputSchema). */
 export const homeContentByLocaleInputSchema = z.record(z.string(), homeContentInputSchema).optional();
 
+/** Single day open/close times (e.g. { open: "09:00", close: "19:00" }). */
+export interface DayHours {
+  open: string;
+  close: string;
+}
+
+/** Operating hours per day. Missing or null = closed. */
+export interface OperatingHours {
+  monday?: DayHours | null;
+  tuesday?: DayHours | null;
+  wednesday?: DayHours | null;
+  thursday?: DayHours | null;
+  friday?: DayHours | null;
+  saturday?: DayHours | null;
+  sunday?: DayHours | null;
+}
+
+const dayHoursSchema = z.object({
+  open: z.string(),
+  close: z.string(),
+});
+
+const operatingHoursSchema = z
+  .object({
+    monday: dayHoursSchema.nullable().optional(),
+    tuesday: dayHoursSchema.nullable().optional(),
+    wednesday: dayHoursSchema.nullable().optional(),
+    thursday: dayHoursSchema.nullable().optional(),
+    friday: dayHoursSchema.nullable().optional(),
+    saturday: dayHoursSchema.nullable().optional(),
+    sunday: dayHoursSchema.nullable().optional(),
+  })
+  .optional();
+
 /** Per-shop business rules. All fields have defaults matching current hardcoded behavior. */
 export interface ShopSettings {
   maxQueueSize: number;
@@ -221,6 +255,7 @@ export interface ShopSettings {
   deviceDeduplication: boolean;
   allowCustomerCancelInProgress: boolean;
   allowAppointments: boolean;
+  operatingHours?: OperatingHours;
 }
 
 /** Zod schema for settings validation with defaults. Adding a new field here with a .default() is all you need. */
@@ -233,6 +268,7 @@ export const shopSettingsSchema = z.object({
   deviceDeduplication: z.boolean().default(true),
   allowCustomerCancelInProgress: z.boolean().default(false),
   allowAppointments: z.boolean().default(false),
+  operatingHours: operatingHoursSchema,
 });
 
 /** Partial input for PATCH (all optional, shallow-merged with existing). */
@@ -245,6 +281,7 @@ export const shopSettingsInputSchema = z.object({
   deviceDeduplication: z.boolean().optional(),
   allowCustomerCancelInProgress: z.boolean().optional(),
   allowAppointments: z.boolean().optional(),
+  operatingHours: operatingHoursSchema.optional(),
 }).optional();
 
 /** Default settings values. Single source of truth. */
