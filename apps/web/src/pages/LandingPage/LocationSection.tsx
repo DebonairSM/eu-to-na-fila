@@ -2,11 +2,16 @@ import { cn } from '@/lib/utils';
 import { Heading, Text, Section, Stack } from '@/components/design-system';
 import { useShopConfig, useShopHomeContent } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
+import { getLayoutBehavior } from '@/lib/layouts';
 
 export function LocationSection() {
   const { t } = useLocale();
   const { config } = useShopConfig();
   const homeContent = useShopHomeContent();
+  const layout = config.style?.layout ?? 'centered';
+  const behavior = getLayoutBehavior(layout);
+  const compact = behavior.aboutRightColumn === 'location';
+
   const fallbackLocation = {
     sectionTitle: t('management.locationSection'),
     labelAddress: t('management.address'),
@@ -60,7 +65,36 @@ export function LocationSection() {
     },
   ];
 
-  const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(loc.mapQuery)}&output=embed`;
+  const mapEmbedUrl = loc.mapQuery
+    ? `https://www.google.com/maps?q=${encodeURIComponent(loc.mapQuery)}&output=embed`
+    : null;
+
+  if (compact && mapEmbedUrl) {
+    return (
+      <Section id="location" variant="secondary">
+        <div className="text-center mb-8">
+          <Heading level={2} className={cn('section-title', 'section-title--layout')}>{loc.sectionTitle}</Heading>
+        </div>
+        <div className="max-w-4xl mx-auto rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
+          <iframe
+            src={mapEmbedUrl}
+            width="100%"
+            height="400"
+            style={{ border: 0 }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="grayscale hover:grayscale-0 transition-all w-full"
+            title={`${t('shop.locationTitle')} ${config.name}`}
+          />
+        </div>
+      </Section>
+    );
+  }
+
+  if (compact) {
+    return <Section id="location" variant="secondary" className="sr-only" aria-label={loc.sectionTitle} />;
+  }
 
   return (
     <Section id="location" variant="secondary">
@@ -87,19 +121,21 @@ export function LocationSection() {
           ))}
         </Stack>
 
-        <div className="rounded-xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
-          <iframe
-            src={mapEmbedUrl}
-            width="100%"
-            height="300"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            className="grayscale hover:grayscale-0 transition-all"
-            title={`${t('shop.locationTitle')} ${config.name}`}
-          />
-        </div>
+        {mapEmbedUrl && (
+          <div className="rounded-xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
+            <iframe
+              src={mapEmbedUrl}
+              width="100%"
+              height="300"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="grayscale hover:grayscale-0 transition-all"
+              title={`${t('shop.locationTitle')} ${config.name}`}
+            />
+          </div>
+        )}
       </div>
 
       <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-start">
@@ -120,19 +156,21 @@ export function LocationSection() {
             </div>
           ))}
         </Stack>
-        <div className="rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
-          <iframe
-            src={mapEmbedUrl}
-            width="100%"
-            height="500"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            className="grayscale hover:grayscale-0 transition-all"
-            title={`${t('shop.locationTitle')} ${config.name}`}
-          />
-        </div>
+        {mapEmbedUrl && (
+          <div className="rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
+            <iframe
+              src={mapEmbedUrl}
+              width="100%"
+              height="500"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="grayscale hover:grayscale-0 transition-all"
+              title={`${t('shop.locationTitle')} ${config.name}`}
+            />
+          </div>
+        )}
       </div>
     </Section>
   );

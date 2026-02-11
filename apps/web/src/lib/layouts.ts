@@ -27,6 +27,10 @@ export interface LayoutBehavior {
   sectionTitleAlign: 'center' | 'left';
   /** About section image frame: none, border, double, shadow, sharp */
   aboutImageFrame: 'none' | 'border' | 'double' | 'shadow' | 'sharp';
+  /** Page section order: default (About then Location) or aboutLast (Location then About) */
+  sectionOrder: 'default' | 'aboutLast';
+  /** About section right column: image, location content, or none (single column) */
+  aboutRightColumn: 'image' | 'location' | 'none';
 }
 
 export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
@@ -44,6 +48,8 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
     sectionTitleStyle: 'none',
     sectionTitleAlign: 'center',
     aboutImageFrame: 'none',
+    sectionOrder: 'default',
+    aboutRightColumn: 'image',
   },
   centered_frame: {
     heroSplit: false,
@@ -59,6 +65,8 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
     sectionTitleStyle: 'line',
     sectionTitleAlign: 'center',
     aboutImageFrame: 'border',
+    sectionOrder: 'default',
+    aboutRightColumn: 'image',
   },
   split: {
     heroSplit: true,
@@ -74,6 +82,8 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
     sectionTitleStyle: 'none',
     sectionTitleAlign: 'center',
     aboutImageFrame: 'none',
+    sectionOrder: 'default',
+    aboutRightColumn: 'image',
   },
   minimal: {
     heroSplit: false,
@@ -89,6 +99,8 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
     sectionTitleStyle: 'none',
     sectionTitleAlign: 'center',
     aboutImageFrame: 'none',
+    sectionOrder: 'aboutLast',
+    aboutRightColumn: 'none',
   },
   luxury: {
     heroSplit: false,
@@ -104,6 +116,8 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
     sectionTitleStyle: 'line',
     sectionTitleAlign: 'center',
     aboutImageFrame: 'shadow',
+    sectionOrder: 'default',
+    aboutRightColumn: 'image',
   },
   bold: {
     heroSplit: false,
@@ -119,6 +133,8 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
     sectionTitleStyle: 'block',
     sectionTitleAlign: 'center',
     aboutImageFrame: 'sharp',
+    sectionOrder: 'aboutLast',
+    aboutRightColumn: 'none',
   },
   classic: {
     heroSplit: false,
@@ -134,6 +150,8 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
     sectionTitleStyle: 'line',
     sectionTitleAlign: 'center',
     aboutImageFrame: 'double',
+    sectionOrder: 'default',
+    aboutRightColumn: 'image',
   },
   editorial: {
     heroSplit: false,
@@ -149,6 +167,8 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
     sectionTitleStyle: 'line',
     sectionTitleAlign: 'center',
     aboutImageFrame: 'none',
+    sectionOrder: 'aboutLast',
+    aboutRightColumn: 'location',
   },
   card: {
     heroSplit: false,
@@ -164,6 +184,8 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
     sectionTitleStyle: 'line',
     sectionTitleAlign: 'center',
     aboutImageFrame: 'shadow',
+    sectionOrder: 'default',
+    aboutRightColumn: 'location',
   },
   banner: {
     heroSplit: false,
@@ -179,6 +201,8 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
     sectionTitleStyle: 'none',
     sectionTitleAlign: 'center',
     aboutImageFrame: 'none',
+    sectionOrder: 'aboutLast',
+    aboutRightColumn: 'none',
   },
   spotlight: {
     heroSplit: false,
@@ -194,6 +218,8 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
     sectionTitleStyle: 'none',
     sectionTitleAlign: 'center',
     aboutImageFrame: 'none',
+    sectionOrder: 'aboutLast',
+    aboutRightColumn: 'none',
   },
   asymmetric: {
     heroSplit: true,
@@ -209,6 +235,8 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
     sectionTitleStyle: 'block',
     sectionTitleAlign: 'center',
     aboutImageFrame: 'sharp',
+    sectionOrder: 'default',
+    aboutRightColumn: 'image',
   },
   magazine: {
     heroSplit: false,
@@ -224,6 +252,8 @@ export const LAYOUT_BEHAVIORS: Record<LayoutId, LayoutBehavior> = {
     sectionTitleStyle: 'line',
     sectionTitleAlign: 'left',
     aboutImageFrame: 'border',
+    sectionOrder: 'aboutLast',
+    aboutRightColumn: 'none',
   },
 };
 
