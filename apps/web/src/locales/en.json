@@ -682,7 +682,10 @@
     "maxSizeHint": "PNG, JPEG, WebP or MP4. Max 50MB",
     "deleteButton": "Delete",
     "activeShort": "Active",
-    "inactiveShort": "Inactive"
+    "inactiveShort": "Inactive",
+    "showIn": "Show in",
+    "allShops": "All shops",
+    "assignSuccess": "Ad assignment updated"
   },
   "appearance": {
     "intro": "Visual style and colors for the home page.",

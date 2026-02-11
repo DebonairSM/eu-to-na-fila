@@ -12,7 +12,7 @@ function dbg() {}
 
 // Bump this when deploying changes that affect built asset graphs.
 // A stale cached HTML/JS combo is the most common cause of "blank black screen" after deploy.
-const CACHE_VERSION = 'v9';
+const CACHE_VERSION = 'v10';
 
 const STATIC_CACHE_NAME = `eutonafila-static-${CACHE_VERSION}`;
 const PAGE_CACHE_NAME = `eutonafila-pages-${CACHE_VERSION}`;
@@ -54,7 +54,8 @@ const API_ROUTES = [
 ];
 
 /**
- * Install event - cache static assets
+ * Install event - cache static assets.
+ * Uses add() per URL so one 404 (e.g. missing favicon.png or font) does not break the whole install.
  */
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing service worker', CACHE_VERSION, '(cross-origin skip fix)');
@@ -62,9 +63,14 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(PAGE_CACHE_NAME).then((cache) => {
       console.log('[SW] Caching static assets');
-      return cache.addAll(STATIC_ASSETS);
+      return Promise.all(
+        STATIC_ASSETS.map((url) =>
+          cache.add(url).catch((err) => {
+            console.warn('[SW] Precache failed (continuing):', url, err);
+          })
+        )
+      );
     }).then(() => {
-      // Skip waiting to activate immediately
       return self.skipWaiting();
     })
   );

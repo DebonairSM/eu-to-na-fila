@@ -8,6 +8,7 @@ import { api, ApiError } from '@/lib/api';
 import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
 import { Container } from '@/components/design-system/Spacing/Container';
+import type { ShopAdminView } from '@eutonafila/shared';
 
 interface Ad {
   id: number;
@@ -27,15 +28,19 @@ interface Ad {
 }
 
 export function AdManagementPage() {
-  const { isCompanyAdmin } = useAuthContext();
+  const { isCompanyAdmin, user } = useAuthContext();
   const { t } = useLocale();
   const navigate = useNavigate();
   const [ads, setAds] = useState<Ad[]>([]);
+  const [shops, setShops] = useState<ShopAdminView[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState<number | null>(null); // Ad ID being uploaded
+  const [uploading, setUploading] = useState<number | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadShopId, setUploadShopId] = useState<number | null>(null); // null = all shops
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const companyId = user?.companyId ?? null;
 
   // Redirect if not company admin
   useEffect(() => {
@@ -43,6 +48,12 @@ export function AdManagementPage() {
       navigate('/company/login');
     }
   }, [isCompanyAdmin, navigate]);
+
+  // Load company shops
+  useEffect(() => {
+    if (!companyId) return;
+    api.getCompanyShops(companyId).then(setShops).catch(() => setShops([]));
+  }, [companyId]);
 
   // Load ads on mount
   useEffect(() => {
@@ -102,9 +113,9 @@ export function AdManagementPage() {
       setError(null);
       setSuccess(null);
 
-      // Upload file directly
+      // Upload file directly (uploadShopId: null = all shops)
       setUploadProgress(50);
-      await api.uploadAd(file, undefined, undefined);
+      await api.uploadAd(file, uploadShopId ?? undefined, undefined);
       
       setUploadProgress(100);
       setSuccess(t('ads.uploadSuccess'));
@@ -160,12 +171,20 @@ export function AdManagementPage() {
       setSuccess(t('ads.deleteSuccess'));
       await loadAds();
     } catch (err) {
-      // Don't show error for auth errors - onAuthError callback will handle redirect
-      if (err instanceof ApiError && err.isAuthError()) {
-        // Auth error - onAuthError callback will redirect to login
-        return;
-      }
+      if (err instanceof ApiError && err.isAuthError()) return;
       setError(getErrorMessage(err, t('ads.deleteError')));
+    }
+  };
+
+  const handleUpdateShopId = async (adId: number, newShopId: number | null) => {
+    try {
+      setError(null);
+      await api.updateAd(adId, { shopId: newShopId });
+      setSuccess(t('ads.assignSuccess'));
+      await loadAds();
+    } catch (err) {
+      if (err instanceof ApiError && err.isAuthError()) return;
+      setError(getErrorMessage(err, t('ads.updateError')));
     }
   };
 
@@ -209,6 +228,21 @@ export function AdManagementPage() {
           {/* Upload Section */}
           <div className="mb-8 border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-6">
             <h2 className="text-xl font-semibold mb-4">{t('ads.addNew')}</h2>
+            {shops.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-white/60 text-sm mb-2">{t('ads.showIn')}</label>
+                <select
+                  value={uploadShopId === null ? '' : String(uploadShopId)}
+                  onChange={(e) => setUploadShopId(e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                  className="form-select w-full max-w-xs px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                >
+                  <option value="">{t('ads.allShops')}</option>
+                  {shops.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
               <label className="block">
                 <input
                   type="file"
@@ -321,6 +355,21 @@ export function AdManagementPage() {
                                 <span className="text-yellow-400">⚠ {t('ads.inactive')}</span>
                               )}
                             </p>
+                            {shops.length > 0 && (
+                              <div className="mt-2">
+                                <span className="text-white/50 text-xs">{t('ads.showIn')}: </span>
+                                <select
+                                  value={ad.shopId === null ? '' : String(ad.shopId)}
+                                  onChange={(e) => handleUpdateShopId(ad.id, e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                                  className="ml-1 px-2 py-1 rounded bg-white/10 border border-white/20 text-white/90 text-xs"
+                                >
+                                  <option value="">{t('ads.allShops')}</option>
+                                  {shops.map((s) => (
+                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mt-4">
@@ -394,6 +443,21 @@ export function AdManagementPage() {
           {/* Upload Section */}
           <div className="mb-8 border border-white/10 bg-white/5 rounded-2xl p-6">
             <h2 className="text-xl font-semibold mb-4">{t('ads.addNew')}</h2>
+            {shops.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-white/60 text-sm mb-2">{t('ads.showIn')}</label>
+                <select
+                  value={uploadShopId === null ? '' : String(uploadShopId)}
+                  onChange={(e) => setUploadShopId(e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                  className="form-select w-full max-w-xs px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                >
+                  <option value="">{t('ads.allShops')}</option>
+                  {shops.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <label className="block">
               <input
                 type="file"
@@ -404,11 +468,11 @@ export function AdManagementPage() {
                 }}
                 disabled={uploading !== null}
                 className="hidden"
-                id="ad-upload"
+                id="ad-upload-mineiro"
               />
               <div className="flex items-center gap-3">
                 <label
-                  htmlFor="ad-upload"
+                  htmlFor="ad-upload-mineiro"
                   className={`flex-1 px-4 py-3 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
                     uploading !== null
                       ? 'border-white/30 bg-white/10 cursor-wait'
@@ -502,6 +566,21 @@ export function AdManagementPage() {
                                 <span className="text-yellow-400">⚠ {t('ads.inactive')}</span>
                               )}
                             </p>
+                            {shops.length > 0 && (
+                              <div className="mt-2">
+                                <span className="text-white/50 text-xs">{t('ads.showIn')}: </span>
+                                <select
+                                  value={ad.shopId === null ? '' : String(ad.shopId)}
+                                  onChange={(e) => handleUpdateShopId(ad.id, e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                                  className="ml-1 px-2 py-1 rounded bg-white/10 border border-white/20 text-white/90 text-xs"
+                                >
+                                  <option value="">{t('ads.allShops')}</option>
+                                  {shops.map((s) => (
+                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mt-4">

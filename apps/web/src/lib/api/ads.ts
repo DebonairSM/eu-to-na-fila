@@ -11,7 +11,7 @@ export interface AdsApi {
   uploadAd(file: File, shopId?: number | null, position?: number): Promise<{ message: string; ad: { id: number; position: number; enabled: boolean; mediaType: string; mimeType: string; publicUrl: string; version: number } }>;
   getAdsManifest(shopSlug: string, options?: { timeout?: number }): Promise<{ manifestVersion: number; ads: Array<{ id: number; position: number; mediaType: string; url: string; version: number }> }>;
   getAds(shopId?: number): Promise<Ad[]>;
-  updateAd(adId: number, data: { enabled?: boolean; position?: number }): Promise<Ad>;
+  updateAd(adId: number, data: { enabled?: boolean; position?: number; shopId?: number | null }): Promise<Ad>;
   deleteAd(adId: number): Promise<{ message: string }>;
 }
 

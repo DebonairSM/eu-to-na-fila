@@ -230,6 +230,15 @@ for (const filename of STATIC_ASSET_FILES) {
   });
 }
 
+// Serve fonts under /projects/:slug/fonts/:filename so SW precache and app work for any slug
+fastify.get('/projects/:slug/fonts/:filename', async (request, reply) => {
+  const { filename } = request.params as { slug: string; filename: string };
+  const filePath = join(projectsMineiroPath, 'fonts', filename);
+  if (!existsSync(filePath)) return reply.code(404).send({ error: 'Not found' });
+  const mime = filename.endsWith('.ttf') ? 'font/ttf' : filename.endsWith('.woff2') ? 'font/woff2' : 'application/octet-stream';
+  return reply.type(mime).send(readFileSync(filePath));
+});
+
 // Company ad files are now served through API endpoint /api/ads/:id/media
 // No need for static file serving - this simplifies the architecture and eliminates CORS issues
 // Create companies directory if it doesn't exist (for file storage, not serving)

@@ -682,7 +682,10 @@
     "maxSizeHint": "PNG, JPEG, WebP ou MP4. Máximo 50MB",
     "deleteButton": "Excluir",
     "activeShort": "Ativo",
-    "inactiveShort": "Inativo"
+    "inactiveShort": "Inativo",
+    "showIn": "Exibir em",
+    "allShops": "Todas as unidades",
+    "assignSuccess": "Anúncio atualizado"
   },
   "appearance": {
     "intro": "Estilo visual e cores da página inicial.",
