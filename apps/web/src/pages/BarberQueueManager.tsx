@@ -51,6 +51,7 @@ export function BarberQueueManager() {
   const { isBarber, user } = useAuthContext();
   const { t } = useLocale();
   const displayBarbers = isBarber && user ? barbers.filter((b) => b.id === user.id) : barbers;
+  const singleBarberId = displayBarbers.length === 1 ? displayBarbers[0].id : null;
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [customerToRemove, setCustomerToRemove] = useState<number | null>(null);
@@ -97,7 +98,9 @@ export function BarberQueueManager() {
   const settings = shopConfig.settings;
   // Barber selection is always optional (preferred barber only); never required for clients or staff.
 
-  // Sync checkInServiceId to first active service when activeServices loads (like JoinForm)
+  // Sync checkInServiceId to first active service when activeServices loads (like JoinForm). Use primitives to avoid loop.
+  const firstActiveServiceId = activeServices[0]?.id ?? null;
+  const activeServiceIdsStr = activeServices.map((s) => s.id).join(',');
   useEffect(() => {
     if (activeServices.length === 0) {
       setCheckInServiceId(null);
@@ -105,38 +108,42 @@ export function BarberQueueManager() {
     }
     const validIds = new Set(activeServices.map((s) => s.id));
     if (checkInServiceId !== null && validIds.has(checkInServiceId)) return;
-    setCheckInServiceId(activeServices[0].id);
-  }, [activeServices, checkInServiceId]);
+    setCheckInServiceId(firstActiveServiceId);
+  }, [activeServices.length, firstActiveServiceId, activeServiceIdsStr, checkInServiceId]);
 
-  // Auto-set checkInBarberId when single barber (convenience default)
+  // Auto-set checkInBarberId when single barber (convenience default). Use primitive deps to avoid loop.
   useEffect(() => {
-    if (displayBarbers.length === 1 && checkInModal.isOpen) {
-      setCheckInBarberId(displayBarbers[0].id);
+    if (singleBarberId !== null && checkInModal.isOpen) {
+      setCheckInBarberId(singleBarberId);
     }
-  }, [displayBarbers, checkInModal.isOpen]);
+  }, [singleBarberId, checkInModal.isOpen]);
 
   // Auto-set preferredBarberId in appointment form when single barber and modal opens
   useEffect(() => {
-    if (displayBarbers.length === 1 && appointmentModalOpen) {
-      setAppointmentForm((f) => ({ ...f, preferredBarberId: displayBarbers[0].id }));
+    if (singleBarberId !== null && appointmentModalOpen) {
+      setAppointmentForm((f) => ({ ...f, preferredBarberId: singleBarberId }));
     }
-  }, [displayBarbers, appointmentModalOpen]);
+  }, [singleBarberId, appointmentModalOpen]);
 
-  // Auto-focus first name input when check-in modal opens
+  // Auto-focus first name input when check-in modal opens; reset form only when modal closes (transition)
+  const checkInModalWasOpenRef = useRef(false);
   useEffect(() => {
-    if (checkInModal.isOpen && firstNameInputRef.current) {
-      // Small delay to ensure modal is fully rendered
-      setTimeout(() => {
-        firstNameInputRef.current?.focus();
-      }, 100);
-    } else if (!checkInModal.isOpen) {
-      // Reset form when modal closes
-      setCheckInName({ first: '', last: '' });
-      setCombinedCheckInName('');
-      setCheckInBarberId(null);
-      setCheckInServiceId(activeServices[0]?.id ?? null);
+    if (checkInModal.isOpen) {
+      checkInModalWasOpenRef.current = true;
+      if (firstNameInputRef.current) {
+        const t = setTimeout(() => firstNameInputRef.current?.focus(), 100);
+        return () => clearTimeout(t);
+      }
+    } else {
+      if (checkInModalWasOpenRef.current) {
+        checkInModalWasOpenRef.current = false;
+        setCheckInName({ first: '', last: '' });
+        setCombinedCheckInName('');
+        setCheckInBarberId(null);
+        setCheckInServiceId(firstActiveServiceId);
+      }
     }
-  }, [checkInModal.isOpen, activeServices]);
+  }, [checkInModal.isOpen, firstActiveServiceId]);
 
   // Preload barber avatar images when barbers data is available
   useEffect(() => {
