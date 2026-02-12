@@ -14,14 +14,6 @@
     "retry": "Try again",
     "dismiss": "Dismiss"
   },
-  "shop": {
-    "closed": "Closed",
-    "closedForLunch": "Closed for lunch",
-    "opensAt": "Opens at",
-    "returnsAt": "Returns at",
-    "tomorrow": "tomorrow",
-    "at": "at"
-  },
   "accessibility": {
     "skipLink": "Skip to main content",
     "loading": "Loading…",
@@ -111,7 +103,14 @@
     "noSlots": "No slots available on this day.",
     "loadingSlots": "Loading slots...",
     "shopClosed": "Closed on this day.",
-    "slotNoLongerAvailable": "This time slot is no longer available."
+    "slotNoLongerAvailable": "This time slot is no longer available.",
+    "checkInWithLogin": "Check in with login"
+  },
+  "checkin": {
+    "title": "Check-in complete",
+    "description": "You are logged in. You can join the queue or book an appointment.",
+    "backToJoin": "Join queue",
+    "backToSchedule": "Book appointment"
   },
   "appointment": {
     "confirmTitle": "Appointment confirmed",
@@ -164,6 +163,12 @@
     "loginWithPin": "Log in with PIN",
     "companyLogin": "Company access",
     "restrictedAccess": "Restricted access",
+    "clientLoginTitle": "Client login",
+    "clientLoginHint": "Staff or owner: enter the shop password to access the dashboard.",
+    "barberLoginTitle": "Barber login",
+    "barberLoginHint": "Enter your barber username and password to access your card and assign customers.",
+    "barberLoginLink": "Barber login",
+    "backToClientLogin": "Back to client login",
     "username": "Username",
     "usernameBarbers": "(barbers)",
     "showPassword": "Show password",
@@ -280,6 +285,12 @@
     "loadError": "Failed to load shops"
   },
   "shop": {
+    "closed": "Closed",
+    "closedForLunch": "Closed for lunch",
+    "opensAt": "Opens at",
+    "returnsAt": "Returns at",
+    "tomorrow": "tomorrow",
+    "at": "at",
     "heroCtaJoinDefault": "Join Queue",
     "heroCtaLocationDefault": "Get Directions",
     "aboutSectionTitleDefault": "About",
@@ -565,7 +576,7 @@
     "tapToAdd": "Tap the button above to add",
     "joinQueue": "Join Queue",
     "nameLabel": "Name *",
-    "namePlaceholder": "Name and initial",
+    "namePlaceholder": "Full name",
     "phoneOptional": "Phone (optional)",
     "adding": "Adding...",
     "add": "Add",

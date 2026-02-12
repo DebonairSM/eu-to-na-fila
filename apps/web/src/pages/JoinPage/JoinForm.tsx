@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useJoinForm } from './hooks/useJoinForm';
 import { ActiveBarbersInfo } from './ActiveBarbersInfo';
 import { Card, CardContent, Input, InputLabel, InputError, Button } from '@/components/design-system';
@@ -91,6 +92,11 @@ export function JoinForm() {
                 }}
               />
               <InputError message={validationError || ''} />
+              <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
+                <Link to={`/shop/login?redirect=${encodeURIComponent('/checkin/confirm')}`} className="text-[var(--shop-accent)] hover:underline">
+                  {t('schedule.checkInWithLogin')}
+                </Link>
+              </p>
             </div>
 
             {settings.requirePhone && (

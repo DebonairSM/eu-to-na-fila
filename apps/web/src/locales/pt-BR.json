@@ -14,14 +14,6 @@
     "retry": "Tentar novamente",
     "dismiss": "Fechar"
   },
-  "shop": {
-    "closed": "Fechado",
-    "closedForLunch": "Fechado para almoço",
-    "opensAt": "Abre às",
-    "returnsAt": "Retorna às",
-    "tomorrow": "amanhã",
-    "at": "às"
-  },
   "accessibility": {
     "skipLink": "Pular para o conteúdo principal",
     "loading": "Carregando…",
@@ -111,7 +103,14 @@
     "noSlots": "Nenhum horário disponível neste dia.",
     "loadingSlots": "Carregando horários...",
     "shopClosed": "Fechado neste dia.",
-    "slotNoLongerAvailable": "Este horário não está mais disponível."
+    "slotNoLongerAvailable": "Este horário não está mais disponível.",
+    "checkInWithLogin": "Fazer check-in com login"
+  },
+  "checkin": {
+    "title": "Check-in concluído",
+    "description": "Você está conectado. Você pode entrar na fila ou agendar um horário.",
+    "backToJoin": "Entrar na fila",
+    "backToSchedule": "Agendar horário"
   },
   "appointment": {
     "confirmTitle": "Agendamento confirmado",
@@ -164,6 +163,12 @@
     "loginWithPin": "Entrar com PIN",
     "companyLogin": "Acesso empresarial",
     "restrictedAccess": "Acesso restrito",
+    "clientLoginTitle": "Login de cliente",
+    "clientLoginHint": "Funcionário ou dono: digite a senha da barbearia para acessar o painel.",
+    "barberLoginTitle": "Login de barbeiro",
+    "barberLoginHint": "Digite seu usuário e senha de barbeiro para acessar seu card e atribuir clientes.",
+    "barberLoginLink": "Login de barbeiro",
+    "backToClientLogin": "Voltar ao login de cliente",
     "username": "Usuário",
     "usernameBarbers": "(barbeiros)",
     "showPassword": "Mostrar senha",
@@ -280,6 +285,12 @@
     "loadError": "Falha ao carregar barbearias"
   },
   "shop": {
+    "closed": "Fechado",
+    "closedForLunch": "Fechado para almoço",
+    "opensAt": "Abre às",
+    "returnsAt": "Retorna às",
+    "tomorrow": "amanhã",
+    "at": "às",
     "heroCtaJoinDefault": "Entrar na Fila",
     "heroCtaLocationDefault": "Como Chegar",
     "aboutSectionTitleDefault": "Sobre",
@@ -565,7 +576,7 @@
     "tapToAdd": "Toque no botão acima para adicionar",
     "joinQueue": "Entrar na Fila",
     "nameLabel": "Nome *",
-    "namePlaceholder": "Nome e inicial",
+    "namePlaceholder": "Nome completo",
     "phoneOptional": "Telefone (opcional)",
     "adding": "Adicionando...",
     "add": "Adicionar",

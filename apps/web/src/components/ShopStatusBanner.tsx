@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from 'react';
 
 export function ShopStatusBanner() {
   const { config } = useShopConfig();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const settings = config.settings;
   
   // Memoize settings to prevent unnecessary recalculations
@@ -52,24 +52,25 @@ export function ShopStatusBanner() {
 
   const formatTime = (date: Date | null) => {
     if (!date) return '';
-    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString(locale === 'pt-BR' ? 'pt-BR' : 'en', { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatDate = (date: Date | null) => {
     if (!date) return '';
+    const localeTag = locale === 'pt-BR' ? 'pt-BR' : 'en';
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
     if (date.toDateString() === today.toDateString()) {
       return formatTime(date);
     } else if (date.toDateString() === tomorrow.toDateString()) {
       return `${t('shop.tomorrow')} ${t('shop.at')} ${formatTime(date)}`;
     } else {
-      return date.toLocaleDateString('pt-BR', { 
-        weekday: 'long', 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      return date.toLocaleDateString(localeTag, {
+        weekday: 'long',
+        hour: '2-digit',
+        minute: '2-digit',
       });
     }
   };

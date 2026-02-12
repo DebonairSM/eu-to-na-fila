@@ -322,52 +322,15 @@ export function BarberQueueManager() {
     }
   }, [editAppointmentTicketId, editAppointmentTime]);
 
-  // Combined name handler for check-in forms
+  // Combined name handler for check-in forms: allow full name with spaces
   const handleCombinedCheckInNameChange = useCallback((value: string) => {
-    // Check if there's already a space and last initial
-    const spaceIndex = value.indexOf(' ');
-    const hasSpace = spaceIndex !== -1;
-    
-    let processedValue = value;
-    
-    if (!hasSpace) {
-      // No space yet - user is typing first name
-      // Auto-capitalize first letter, lowercase the rest
-      if (value.length > 0) {
-        processedValue = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-      }
-    } else {
-      // Space detected - split into first name and potential last initial
-      const beforeSpace = value.substring(0, spaceIndex);
-      const afterSpace = value.substring(spaceIndex + 1);
-      
-      // Format first name: capitalize first letter, lowercase rest
-      const formattedFirstName = beforeSpace.length > 0
-        ? beforeSpace.charAt(0).toUpperCase() + beforeSpace.slice(1).toLowerCase()
-        : '';
-      
-      // Limit to one character after space and capitalize it
-      const limitedAfterSpace = afterSpace.slice(0, 1).toUpperCase();
-      
-      // Always preserve the space, even if no character after it yet
-      processedValue = formattedFirstName + ' ' + limitedAfterSpace;
-    }
-    
-    setCombinedCheckInName(processedValue);
-    
-    // Parse to extract firstName and lastName for validation
-    const spaceIdx = processedValue.indexOf(' ');
-    if (spaceIdx !== -1) {
-      setCheckInName({
-        first: processedValue.substring(0, spaceIdx).trim(),
-        last: processedValue.substring(spaceIdx + 1).trim(),
-      });
-    } else {
-      setCheckInName({
-        first: processedValue.trim(),
-        last: '',
-      });
-    }
+    const formatted = formatName(value);
+    setCombinedCheckInName(formatted);
+    const words = formatted.trim().split(/\s+/).filter(Boolean);
+    setCheckInName({
+      first: words[0] ?? '',
+      last: words.length > 1 ? words.slice(1).join(' ') : '',
+    });
   }, []);
 
   const handleAddCustomer = useCallback(async () => {
@@ -377,9 +340,7 @@ export function BarberQueueManager() {
       return;
     }
 
-    const fullName = checkInName.last.trim()
-      ? `${formatName(checkInName.first.trim())} ${formatName(checkInName.last.trim())}`
-      : formatName(checkInName.first.trim());
+    const fullName = [checkInName.first.trim(), checkInName.last.trim()].filter(Boolean).map((s) => formatName(s)).join(' ');
 
     setIsSubmitting(true);
     setErrorMessage(null);

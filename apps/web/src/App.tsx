@@ -29,6 +29,7 @@ const CompanyDashboard = lazyWithRetry(() => import('./pages/CompanyDashboard').
 const ShopManagementPage = lazyWithRetry(() => import('./pages/ShopManagementPage').then((m) => ({ default: m.ShopManagementPage })));
 const SchedulePage = lazyWithRetry(() => import('./pages/SchedulePage').then((m) => ({ default: m.SchedulePage })));
 const AppointmentConfirmPage = lazyWithRetry(() => import('./pages/AppointmentConfirmPage').then((m) => ({ default: m.AppointmentConfirmPage })));
+const CheckInConfirmPage = lazyWithRetry(() => import('./pages/CheckInConfirmPage').then((m) => ({ default: m.CheckInConfirmPage })));
 const ClientDetailPage = lazyWithRetry(() => import('./pages/ClientDetailPage').then((m) => ({ default: m.ClientDetailPage })));
 const ClientSearchPage = lazyWithRetry(() => import('./pages/ClientSearchPage').then((m) => ({ default: m.ClientSearchPage })));
 
@@ -108,6 +109,7 @@ function AppContent() {
       <Route path="/join" element={<JoinPageGuard />} />
       <Route path="/schedule" element={<SchedulePage />} />
       <Route path="/appointment/:id/confirm" element={<AppointmentConfirmPage />} />
+      <Route path="/checkin/confirm" element={<CheckInConfirmPage />} />
       <Route path="/status/:id" element={<StatusPage />} />
       <Route path="/shop/login" element={<LoginPage />} />
       <Route path="/kiosk-login" element={<KioskLoginPage />} />

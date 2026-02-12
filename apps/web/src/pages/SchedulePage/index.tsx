@@ -258,6 +258,11 @@ export function SchedulePage() {
                     className="w-full mt-1"
                   />
                   <InputError message={validationError || ''} />
+                <p className="text-sm text-[var(--shop-text-secondary)]">
+                  <Link to={`/shop/login?redirect=${encodeURIComponent('/checkin/confirm')}`} className="text-[var(--shop-accent)] hover:underline">
+                    {t('schedule.checkInWithLogin')}
+                  </Link>
+                </p>
                 </div>
 
                 {settings?.requirePhone && (

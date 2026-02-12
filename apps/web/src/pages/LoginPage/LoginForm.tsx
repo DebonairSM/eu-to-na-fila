@@ -4,6 +4,8 @@ import { useLocale } from '@/contexts/LocaleContext';
 
 export function LoginForm() {
   const {
+    mode,
+    setMode,
     username,
     setUsername,
     password,
@@ -15,6 +17,7 @@ export function LoginForm() {
     handleSubmit,
   } = useLoginForm();
   const { t } = useLocale();
+  const isBarber = mode === 'barber';
 
   return (
     <div className="space-y-6">
@@ -24,31 +27,36 @@ export function LoginForm() {
             lock
           </span>
         </div>
+        <h2 className="text-lg font-semibold text-[var(--shop-text-primary)]">
+          {isBarber ? t('auth.barberLoginTitle') : t('auth.clientLoginTitle')}
+        </h2>
         <p className="text-sm text-[var(--shop-text-secondary)]">
-          {t('auth.restrictedAccess')}
+          {isBarber ? t('auth.barberLoginHint') : t('auth.clientLoginHint')}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="relative">
-          <input
-            id="username"
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder=" "
-            autoComplete="username"
-            className="w-full px-4 py-4 pt-6 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)] text-base placeholder:text-[var(--shop-text-secondary)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
-          />
-          <label
-            htmlFor="username"
-            className={`absolute left-4 text-sm text-[var(--shop-text-secondary)] pointer-events-none transition-all ${
-              username ? 'top-2 text-xs text-[var(--shop-accent)]' : 'top-4'
-            }`}
-          >
-            {t('auth.username')} <span className="text-white/40">{t('auth.usernameBarbers')}</span>
-          </label>
-        </div>
+        {isBarber && (
+          <div className="relative">
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder=" "
+              autoComplete="username"
+              className="w-full px-4 py-4 pt-6 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)] text-base placeholder:text-[var(--shop-text-secondary)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
+            />
+            <label
+              htmlFor="username"
+              className={`absolute left-4 text-sm text-[var(--shop-text-secondary)] pointer-events-none transition-all ${
+                username ? 'top-2 text-xs text-[var(--shop-accent)]' : 'top-4'
+              }`}
+            >
+              {t('auth.username')}
+            </label>
+          </div>
+        )}
 
         <div className="relative">
           <input
@@ -57,7 +65,7 @@ export function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder=" "
-            autoComplete="current-password"
+            autoComplete={isBarber ? 'current-password' : 'current-password'}
             required
             className="w-full px-4 py-4 pt-6 pr-12 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)] text-base placeholder:text-[var(--shop-text-secondary)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
           />
@@ -106,17 +114,38 @@ export function LoginForm() {
         </button>
       </form>
 
-      <div className="text-center space-y-2 pt-2">
-        <Link
-          to="/kiosk-login"
-          className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors block"
-        >
-          <span className="material-symbols-outlined text-base">tv</span>
-          {t('auth.kioskModeOnly') ?? 'Modo quiosque (só exibição)'}
-        </Link>
+      <div className="text-center space-y-2 pt-2 border-t border-[var(--shop-border-color)]">
+        {isBarber ? (
+          <button
+            type="button"
+            onClick={() => setMode('client')}
+            className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors w-full"
+          >
+            <span className="material-symbols-outlined text-base">arrow_back</span>
+            {t('auth.backToClientLogin')}
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setMode('barber')}
+              className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors w-full"
+            >
+              <span className="material-symbols-outlined text-base">person</span>
+              {t('auth.barberLoginLink')}
+            </button>
+            <Link
+              to="/kiosk-login"
+              className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors block"
+            >
+              <span className="material-symbols-outlined text-base">tv</span>
+              {t('auth.kioskModeOnly') ?? 'Modo quiosque (só exibição)'}
+            </Link>
+          </>
+        )}
         <Link
           to="/home"
-          className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors"
+          className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors block"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
           {t('common.back')}
