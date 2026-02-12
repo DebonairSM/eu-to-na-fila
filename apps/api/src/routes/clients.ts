@@ -1,0 +1,162 @@
+import type { FastifyPluginAsync } from 'fastify';
+import { z } from 'zod';
+import { clientService } from '../services/index.js';
+import { validateRequest } from '../lib/validation.js';
+import { NotFoundError } from '../lib/errors.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
+import { getShopBySlug } from '../lib/shop.js';
+
+/**
+ * Client routes.
+ * Handles client lookup (remember), client detail, clip notes, and service history.
+ */
+export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
+  /**
+   * Lookup client by phone for join form prefilling (remember my info).
+   * Public, rate-limited by global limiter.
+   *
+   * @route GET /api/shops/:slug/clients/remember
+   * @query phone - Phone number to lookup
+   * @returns { name?: string, hasClient: boolean }
+   */
+  fastify.get('/shops/:slug/clients/remember', async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const querySchema = z.object({ phone: z.string().min(1) });
+    const { phone } = validateRequest(querySchema, request.query);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    const client = await clientService.findByPhone(shop.id, phone);
+    return {
+      hasClient: !!client,
+      name: client?.name,
+    };
+  });
+
+  /**
+   * Search clients by name or phone. Staff/owner/barber only.
+   *
+   * @route GET /api/shops/:slug/clients
+   * @query q - Search query
+   */
+  fastify.get('/shops/:slug/clients', {
+    preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const querySchema = z.object({ q: z.string().default('') });
+    const { q } = validateRequest(querySchema, request.query);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    if (request.user?.role === 'barber' && request.user.shopId !== shop.id) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    }
+
+    const clients = await clientService.search(shop.id, q);
+    return { clients };
+  });
+
+  /**
+   * Get client detail with clip notes and service history. Staff/owner/barber only.
+   *
+   * @route GET /api/shops/:slug/clients/:id
+   */
+  fastify.get('/shops/:slug/clients/:id', {
+    preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+      id: z.coerce.number().int().positive(),
+    });
+    const { slug, id } = validateRequest(paramsSchema, request.params);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    if (request.user?.role === 'barber' && request.user.shopId !== shop.id) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    }
+
+    const client = await clientService.getByIdWithShopCheck(id, shop.id);
+    if (!client) throw new NotFoundError('Client not found');
+
+    const [clipNotes, serviceHistory] = await Promise.all([
+      clientService.getClipNotes(id, shop.id),
+      clientService.getServiceHistory(id, shop.id),
+    ]);
+
+    return {
+      client,
+      clipNotes,
+      serviceHistory,
+    };
+  });
+
+  /**
+   * Update client info. Staff/owner/barber only.
+   *
+   * @route PATCH /api/shops/:slug/clients/:id
+   */
+  fastify.patch('/shops/:slug/clients/:id', {
+    preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+      id: z.coerce.number().int().positive(),
+    });
+    const { slug, id } = validateRequest(paramsSchema, request.params);
+    const bodySchema = z.object({
+      name: z.string().min(1).optional(),
+      email: z.string().email().nullable().optional(),
+    });
+    const data = validateRequest(bodySchema, request.body);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    if (request.user?.role === 'barber' && request.user.shopId !== shop.id) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    }
+
+    const client = await clientService.update(id, shop.id, data);
+    return client;
+  });
+
+  /**
+   * Add clip note to client. Staff/owner/barber only.
+   * Barbers use their own id; owner/staff may pass barberId to attribute the note.
+   *
+   * @route POST /api/shops/:slug/clients/:id/clip-notes
+   */
+  fastify.post('/shops/:slug/clients/:id/clip-notes', {
+    preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+      id: z.coerce.number().int().positive(),
+    });
+    const { slug, id } = validateRequest(paramsSchema, request.params);
+    const bodySchema = z.object({
+      note: z.string().min(1).max(2000),
+      barberId: z.number().int().positive().optional(),
+    });
+    const body = validateRequest(bodySchema, request.body);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    if (request.user?.role === 'barber' && request.user.shopId !== shop.id) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    }
+
+    const barberId = request.user?.barberId ?? body.barberId;
+    if (!barberId) throw new NotFoundError('Barber context required to add clip note');
+
+    const clipNote = await clientService.addClipNote(id, shop.id, barberId, body.note);
+    return reply.status(201).send(clipNote);
+  });
+};

@@ -806,6 +806,36 @@
   background: var(--shop-surface-primary, #0a0a0a);
   color: var(--shop-text-primary, #fff);
 }
+/* Ensure select display value is always visible (avoids white-on-white in some themes) */
+select.form-control-select {
+  color: var(--shop-text-primary, #fff);
+  background-color: var(--shop-surface-secondary, #1a1a1a);
+}
+
+/* Dropdown styling per shop layout (match architectural style) */
+[data-shop-layout="centered_frame"] .form-control-select,
+[data-shop-layout="classic"] .form-control-select {
+  border-width: 2px;
+  border-color: var(--shop-border-color, rgba(255,255,255,0.12));
+}
+[data-shop-layout="minimal"] .form-control-select,
+[data-shop-layout="spotlight"] .form-control-select,
+[data-shop-layout="banner"] .form-control-select {
+  border-color: rgba(255,255,255,0.12);
+}
+[data-shop-layout="bold"] .form-control-select,
+[data-shop-layout="asymmetric"] .form-control-select {
+  border-width: 2px;
+  border-color: var(--shop-border-color, rgba(255,255,255,0.2));
+}
+[data-shop-layout="luxury"] .form-control-select,
+[data-shop-layout="card"] .form-control-select {
+  border-radius: var(--radius-lg, 16px);
+}
+[data-shop-layout="magazine"] .form-control-select {
+  border-width: 1px;
+  border-color: var(--shop-border-color, rgba(255,255,255,0.12));
+}
 
 /* Schedule page: DayPicker uses full container width */
 .schedule-calendar-wrap {

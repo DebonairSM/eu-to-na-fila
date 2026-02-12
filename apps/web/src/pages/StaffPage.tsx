@@ -91,6 +91,21 @@ export function StaffPage() {
           )}
 
           <Link
+            to="/clients"
+            className="bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_12%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_6%,transparent)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-2xl p-10 flex flex-col items-center gap-4 transition-all hover:border-[var(--shop-accent)] hover:-translate-y-1"
+          >
+            <div className="text-5xl text-[var(--shop-accent)]">
+              <span className="material-symbols-outlined">person_search</span>
+            </div>
+            <h2 className="text-2xl font-semibold text-[var(--shop-text-primary)] text-center">
+              {t('staff.clients')}
+            </h2>
+            <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">
+              arrow_forward
+            </span>
+          </Link>
+
+          <Link
             to="/manage?kiosk=true"
             className="bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_12%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_6%,transparent)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-2xl p-10 flex flex-col items-center gap-4 transition-all hover:border-[var(--shop-accent)] hover:-translate-y-1"
           >

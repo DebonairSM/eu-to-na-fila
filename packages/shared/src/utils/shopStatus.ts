@@ -18,6 +18,7 @@ export function getShopStatus(
   timezone: string,
   temporaryOverride?: { isOpen: boolean; until: string; reason?: string } | null,
   allowQueueBeforeOpen: boolean = false,
+  checkInHoursBeforeOpen: number = 1,
   now: Date = new Date()
 ): ShopStatusResult {
   // Check temporary override first
@@ -70,12 +71,11 @@ export function getShopStatus(
       nextOpenTime: nextOpen, 
       currentPeriod: 'before_open' 
     };
-    
-    // If allowQueueBeforeOpen is true, treat as open
-    if (allowQueueBeforeOpen) {
+    const minutesUntilOpen = openTime - currentTime;
+    const allowedMinutesBeforeOpen = (checkInHoursBeforeOpen ?? 1) * 60;
+    if (allowQueueBeforeOpen && minutesUntilOpen <= allowedMinutesBeforeOpen) {
       result.isOpen = true;
     }
-    
     return result;
   }
 

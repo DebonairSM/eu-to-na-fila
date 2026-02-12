@@ -19,6 +19,7 @@ export const ticketSchema = z.object({
   service: ticketServiceSchema.optional(), // Present when API embeds service for display
   barberId: z.number().optional(),
   preferredBarberId: z.number().optional(),
+  clientId: z.number().optional().nullable(),
   customerName: z.string().min(1).max(200),
   customerPhone: z.string().optional(),
   deviceId: z.string().optional(), // Device identifier for preventing multiple active tickets per device

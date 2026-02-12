@@ -48,12 +48,12 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
 
     const settings = parseSettings(shop.settings);
 
-    // Check if shop is open (unless allowQueueBeforeOpen is enabled)
     const status = getShopStatus(
       settings.operatingHours,
       settings.timezone ?? 'America/Sao_Paulo',
       settings.temporaryStatusOverride,
-      settings.allowQueueBeforeOpen
+      settings.allowQueueBeforeOpen,
+      settings.checkInHoursBeforeOpen ?? 1
     );
     
     if (!status.isOpen) {
@@ -92,7 +92,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       const existingTicketByDevice = await ticketService.findActiveTicketByDevice(shop.id, data.deviceId);
       if (existingTicketByDevice) {
         // Device already has an active ticket - return it with 200 status (existing resource)
-        return reply.status(200).send(existingTicketByDevice);
+        return reply.status(200).send(shapeTicketResponse(existingTicketByDevice as Record<string, unknown>));
       }
     }
 
@@ -113,11 +113,11 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     // Otherwise, it's a newly created ticket
     if (ticketAge > 2000 || ticketAge < -1000) {
       // Existing ticket (either old ticket or race condition) - return 200
-      return reply.status(200).send(ticket);
+      return reply.status(200).send(shapeTicketResponse(ticket as Record<string, unknown>));
     }
 
     // New ticket created - return 201
-    return reply.status(201).send(ticket);
+    return reply.status(201).send(shapeTicketResponse(ticket as Record<string, unknown>));
   });
 
   /**
@@ -267,6 +267,21 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const { slug, id } = validateRequest(paramsSchema, request.params);
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    const settings = parseSettings(shop.settings);
+    const status = getShopStatus(
+      settings.operatingHours,
+      settings.timezone ?? 'America/Sao_Paulo',
+      settings.temporaryStatusOverride,
+      settings.allowQueueBeforeOpen,
+      settings.checkInHoursBeforeOpen ?? 1
+    );
+    if (!status.isOpen) {
+      throw new ValidationError(
+        status.isInLunch
+          ? 'Shop is closed for lunch break'
+          : 'Shop is currently closed. Check-in is only allowed during opening hours or within the allowed hours before opening.'
+      );
+    }
     const ticket = await ticketService.checkIn(id);
     if (ticket.shopId !== shop.id) throw new NotFoundError(`Ticket with ID ${id} not found`);
     return reply.send(shapeTicketResponse(ticket as Record<string, unknown>));

@@ -85,6 +85,13 @@
       "when": 1768700000000,
       "tag": "0011_add_projects",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1770921881210,
+      "tag": "0016_add_clients_and_clip_notes",
+      "breakpoints": true
     }
   ]
 }

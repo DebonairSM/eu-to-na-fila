@@ -89,24 +89,12 @@ export function formatName(name: string): string {
 }
 
 /**
- * Format a full name for public display by showing only first name and last initial.
- * This is used to protect privacy when displaying names in queue views.
- * 
- * Handles edge cases:
+ * Format a full name for compact display: first name plus initial of the word after.
+ * Used in queue/barber views to save space while keeping the client identifiable.
+ *
  * - Single name returns as-is
- * - Multiple names: first name + last initial
+ * - Two or more words: first name + initial of next word (e.g. "João Silva" -> "João S.")
  * - Empty strings return empty string
- * 
- * @param fullName - Full name string (e.g., "João Silva" or "Maria Santos")
- * @returns Formatted name with last name abbreviated (e.g., "João S." or "Maria S.")
- * 
- * @example
- * ```typescript
- * formatNameForDisplay('João Silva') // 'João S.'
- * formatNameForDisplay('Maria Santos') // 'Maria S.'
- * formatNameForDisplay('Pedro') // 'Pedro'
- * formatNameForDisplay('  joão  silva  ') // 'João S.'
- * ```
  */
 export function formatNameForDisplay(fullName: string): string {
   if (!fullName || fullName.trim().length === 0) {
@@ -114,21 +102,17 @@ export function formatNameForDisplay(fullName: string): string {
   }
 
   const trimmed = fullName.trim();
-  const words = trimmed.split(/\s+/).filter(word => word.length > 0);
-  
-  // If only one word, return as-is
+  const words = trimmed.split(/\s+/).filter((word) => word.length > 0);
+
   if (words.length === 1) {
     return formatName(words[0]);
   }
-  
-  // Format first name
+
   const firstName = formatName(words[0]);
-  
-  // Get last name and take first letter
-  const lastName = words[words.length - 1];
-  const lastInitial = lastName.charAt(0).toUpperCase();
-  
-  return `${firstName} ${lastInitial}.`;
+  const wordAfter = words[1];
+  const initial = wordAfter.charAt(0).toUpperCase();
+
+  return `${firstName} ${initial}.`;
 }
 
 /**

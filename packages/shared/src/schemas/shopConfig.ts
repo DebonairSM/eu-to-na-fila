@@ -265,6 +265,8 @@ export interface ShopSettings {
   timezone?: string;
   /** Allow customers to join queue before opening hours */
   allowQueueBeforeOpen: boolean;
+  /** When allowQueueBeforeOpen is true: how many hours before opening time check-in is allowed (e.g. 1 = from 1 hour before opening until closing). */
+  checkInHoursBeforeOpen?: number;
   /** Temporary manual override of shop open/closed status */
   temporaryStatusOverride?: {
     isOpen: boolean;
@@ -290,6 +292,7 @@ export const shopSettingsSchema = z.object({
   operatingHours: operatingHoursSchema,
   timezone: z.string().max(100).default('America/Sao_Paulo'),
   allowQueueBeforeOpen: z.boolean().default(false),
+  checkInHoursBeforeOpen: z.number().min(0).max(24).default(1),
   temporaryStatusOverride: z.object({
     isOpen: z.boolean(),
     until: z.string(),
@@ -313,6 +316,7 @@ export const shopSettingsInputSchema = z.object({
   operatingHours: operatingHoursSchema.optional(),
   timezone: z.string().max(100).optional(),
   allowQueueBeforeOpen: z.boolean().optional(),
+  checkInHoursBeforeOpen: z.number().min(0).max(24).optional(),
   kioskUsername: z.string().max(100).optional(),
   kioskPassword: z.string().max(100).optional(),
   temporaryStatusOverride: z.object({

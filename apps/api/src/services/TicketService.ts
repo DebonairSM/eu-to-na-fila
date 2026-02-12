@@ -4,6 +4,7 @@ import { eq, and, or, ne, sql, gt, asc } from 'drizzle-orm';
 import type { CreateTicket, UpdateTicketStatus, Ticket } from '@eutonafila/shared';
 import type { QueueService } from './QueueService.js';
 import type { AuditService } from './AuditService.js';
+import type { ClientService } from './ClientService.js';
 import { ConflictError, NotFoundError, ValidationError } from '../lib/errors.js';
 import { parseSettings } from '../lib/settings.js';
 
@@ -14,7 +15,8 @@ export class TicketService {
   constructor(
     private db: DbClient,
     private queueService: QueueService,
-    private auditService: AuditService
+    private auditService: AuditService,
+    private clientService: ClientService
   ) {}
 
   async getById(id: number): Promise<Ticket | null> {
@@ -163,6 +165,25 @@ export class TicketService {
         .where(eq(schema.tickets.id, ticket.id));
       (ticket as any).ticketNumber = ticketNumber;
       (ticket as any).checkInTime = now;
+    }
+
+    // Client resolution: link ticket to client when phone is provided
+    if (data.customerPhone && data.customerPhone.trim().length > 0) {
+      try {
+        const client = await this.clientService.findOrCreateByPhone(
+          shopId,
+          data.customerPhone,
+          data.customerName
+        );
+        await this.db
+          .update(schema.tickets)
+          .set({ clientId: client.id, updatedAt: now })
+          .where(eq(schema.tickets.id, ticket.id));
+        (ticket as any).clientId = client.id;
+      } catch (err) {
+        // Non-fatal: ticket is created, client link skipped
+        console.warn('[TicketService] Client resolution failed:', err);
+      }
     }
 
     this.auditService.logTicketCreated(ticket.id, shopId, {
@@ -478,9 +499,27 @@ export class TicketService {
       .returning();
 
     const ticketNumber = `A-${ticket.id}`;
+    let clientId: number | null = null;
+    if (data.customerPhone && data.customerPhone.trim().length > 0) {
+      try {
+        const client = await this.clientService.findOrCreateByPhone(
+          shopId,
+          data.customerPhone,
+          data.customerName
+        );
+        clientId = client.id;
+      } catch (err) {
+        console.warn('[TicketService] Client resolution failed for appointment:', err);
+      }
+    }
+
     await this.db
       .update(schema.tickets)
-      .set({ ticketNumber, updatedAt: now })
+      .set({
+        ticketNumber,
+        ...(clientId != null ? { clientId } : {}),
+        updatedAt: now,
+      })
       .where(eq(schema.tickets.id, ticket.id));
 
     this.auditService.logTicketCreated(ticket.id, shopId, {
@@ -490,7 +529,7 @@ export class TicketService {
       actorType: 'staff',
     });
 
-    return { ...ticket, ticketNumber } as Ticket;
+    return { ...ticket, ticketNumber, clientId } as Ticket;
   }
 
   /**

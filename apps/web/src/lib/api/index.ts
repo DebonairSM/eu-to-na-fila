@@ -18,6 +18,7 @@ import { createCompaniesApi } from './companies';
 import { createAuthApi } from './auth';
 import { createAdsApi } from './ads';
 import { createAnalyticsApi } from './analytics';
+import { createClientsApi } from './clients';
 
 export type { ShopTheme, HomeContent, ShopPublicConfig, ShopListItem, ShopAdminView } from '@eutonafila/shared';
 export type { PlacesLookupResult, PlacesLookupLocation } from './companies';
@@ -34,6 +35,7 @@ class ApiClient extends BaseApiClient {
   private _auth = createAuthApi(this);
   private _ads = createAdsApi(this);
   private _analytics = createAnalyticsApi(this);
+  private _clients = createClientsApi(this);
 
   // --- Queue ---
   getQueue = this._queue.getQueue;
@@ -107,6 +109,13 @@ class ApiClient extends BaseApiClient {
   // --- Analytics ---
   getAnalytics = this._analytics.getAnalytics;
   getBarberAnalytics = this._analytics.getBarberAnalytics;
+
+  // --- Clients ---
+  getClientRemember = this._clients.getClientRemember;
+  searchClients = this._clients.searchClients;
+  getClient = this._clients.getClient;
+  updateClient = this._clients.updateClient;
+  addClipNote = this._clients.addClipNote;
 
   // --- WebSocket ---
   getWebSocketUrl(): string | null {

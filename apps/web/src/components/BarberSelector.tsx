@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Modal } from './Modal';
 import { BarberCard } from './BarberCard';
+import { ClipNotesPanel } from './ClipNotesPanel';
 import { Button } from './ui/button';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { Barber, Ticket } from '@eutonafila/shared';
@@ -21,6 +22,12 @@ export interface BarberSelectorProps {
   preferredBarberName?: string | null;
   /** When in exclusive barber login, the logged-in barber's id (for "prefers you" vs "different barber"). */
   currentBarberId?: number | null;
+  /** When set, show clip notes for this client above the barber grid. */
+  clientId?: number | null;
+  /** Shop slug for fetching clip notes. Required when clientId is set. */
+  shopSlug?: string;
+  /** Callback when clip notes panel reports an error. */
+  onClipNotesError?: (msg: string) => void;
 }
 
 export function BarberSelector({
@@ -36,6 +43,9 @@ export function BarberSelector({
   preferredBarberId = null,
   preferredBarberName = null,
   currentBarberId = null,
+  clientId = null,
+  shopSlug,
+  onClipNotesError,
 }: BarberSelectorProps) {
   const { t } = useLocale();
   const sortedDisplayedBarbers = useMemo(() => {
@@ -76,6 +86,13 @@ export function BarberSelector({
       className="max-w-2xl"
     >
       <div className="space-y-4 relative">
+        {clientId != null && shopSlug && (
+          <ClipNotesPanel
+            shopSlug={shopSlug}
+            clientId={clientId}
+            onError={onClipNotesError}
+          />
+        )}
         {/* Hidden focus target so the first barber doesn't get auto-focused (and show a focus ring) when the modal opens */}
         <button
           type="button"

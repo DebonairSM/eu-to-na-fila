@@ -14,9 +14,10 @@ export function ShopStatusBanner() {
       operatingHours: settings.operatingHours,
       timezone: settings.timezone,
       temporaryStatusOverride: settings.temporaryStatusOverride,
-      allowQueueBeforeOpen: settings.allowQueueBeforeOpen
+      allowQueueBeforeOpen: settings.allowQueueBeforeOpen,
+      checkInHoursBeforeOpen: settings.checkInHoursBeforeOpen,
     }),
-    [settings.operatingHours, settings.timezone, settings.temporaryStatusOverride, settings.allowQueueBeforeOpen]
+    [settings.operatingHours, settings.timezone, settings.temporaryStatusOverride, settings.allowQueueBeforeOpen, settings.checkInHoursBeforeOpen]
   );
   
   const [status, setStatus] = useState(() => 
@@ -24,11 +25,11 @@ export function ShopStatusBanner() {
       settings.operatingHours, 
       settings.timezone ?? 'America/Sao_Paulo',
       settings.temporaryStatusOverride,
-      settings.allowQueueBeforeOpen
+      settings.allowQueueBeforeOpen,
+      settings.checkInHoursBeforeOpen ?? 1
     )
   );
 
-  // Update status every 2 seconds
   useEffect(() => {
     const updateStatus = () => {
       setStatus(
@@ -36,12 +37,12 @@ export function ShopStatusBanner() {
           settings.operatingHours, 
           settings.timezone ?? 'America/Sao_Paulo',
           settings.temporaryStatusOverride,
-          settings.allowQueueBeforeOpen
+          settings.allowQueueBeforeOpen,
+          settings.checkInHoursBeforeOpen ?? 1
         )
       );
     };
-    
-    const interval = setInterval(updateStatus, 5000); // 5s for status banner (not critical)
+    const interval = setInterval(updateStatus, 5000);
     return () => clearInterval(interval);
   }, [settingsKey]);
 

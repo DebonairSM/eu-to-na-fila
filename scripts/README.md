@@ -93,6 +93,27 @@ powershell -ExecutionPolicy Bypass -File scripts\uninstall-windows-production.ps
 
 ## Development Scripts
 
+### check-theme-contrast.ts (web)
+
+Validates that all shop theme color sets (default theme and preset palettes) meet WCAG AA contrast for readability. Checks text-on-background and text-on-accent pairs.
+
+**Usage:**
+
+```bash
+# From project root
+pnpm check:contrast
+
+# Or from apps/web
+pnpm --filter web check:contrast
+```
+
+**What it does:**
+
+1. Loads the default theme and all preset palettes from the web app
+2. For each set, checks contrast for: textPrimary on background/surfaces/nav, textSecondary on background, textOnAccent on accent
+3. Requires 4.5:1 for normal text and 3:1 for accent (large/UI text) per WCAG 2.1 AA
+4. Exits with code 1 if any pair fails and prints which theme and pair failed
+
 ### integrate-web.js
 
 Copies built web app to API public folder for integrated deployment.

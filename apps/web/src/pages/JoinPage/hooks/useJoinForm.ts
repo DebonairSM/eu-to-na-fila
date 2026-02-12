@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, ApiError } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
@@ -8,12 +8,15 @@ import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useQueue } from '@/hooks/useQueue';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useServices } from '@/hooks/useServices';
+import { getShopStatus } from '@eutonafila/shared';
 import { getErrorMessage, formatName, getOrCreateDeviceId } from '@/lib/utils';
 import { logError } from '@/lib/logger';
 import { STORAGE_KEYS } from '@/lib/constants';
 
 const STORAGE_KEY = STORAGE_KEYS.ACTIVE_TICKET_ID;
-const CUSTOMER_NAME_STORAGE_KEY = 'eutonafila_customer_name';
+const CUSTOMER_NAME_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_NAME;
+const CUSTOMER_PHONE_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_PHONE;
+const REMEMBER_PHONE_DEBOUNCE_MS = 400;
 
 export function useJoinForm() {
   const [combinedName, setCombinedName] = useState('');
@@ -24,6 +27,7 @@ export function useJoinForm() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [closedReason, setClosedReason] = useState<'lunch' | 'closed' | null>(null);
   const [isAlreadyInQueue, setIsAlreadyInQueue] = useState(false);
   const [existingTicketId, setExistingTicketId] = useState<number | null>(null);
   const [nameCollisionError, setNameCollisionError] = useState<string | null>(null);
@@ -38,6 +42,8 @@ export function useJoinForm() {
   } | null>(null);
   const [isLoadingWaitTimes, setIsLoadingWaitTimes] = useState(true);
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
+  const combinedNameRef = useRef(combinedName);
+  combinedNameRef.current = combinedName;
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
   const { config: shopConfig } = useShopConfig();
@@ -127,7 +133,7 @@ export function useJoinForm() {
     };
   }, [shopSlug]);
 
-  // Load stored customer name on mount
+  // Load stored customer name and phone on mount
   useEffect(() => {
     try {
       const storedName = localStorage.getItem(CUSTOMER_NAME_STORAGE_KEY);
@@ -138,23 +144,46 @@ export function useJoinForm() {
           const storedLastName = parsed.lastName.trim();
           
           if (storedFirstName) {
-            // Reconstruct combinedName from stored firstName and lastName
             const combined = storedLastName
               ? `${storedFirstName} ${storedLastName}`
               : storedFirstName;
-            
             setFirstName(storedFirstName);
             setLastName(storedLastName);
             setCombinedName(combined);
           }
         }
       }
+      const storedPhone = localStorage.getItem(CUSTOMER_PHONE_STORAGE_KEY);
+      if (storedPhone && typeof storedPhone === 'string') {
+        setCustomerPhone(storedPhone.trim());
+      }
     } catch (error) {
-      // Gracefully handle JSON parse errors or invalid data
-      // Form will start empty if stored data is invalid
       logError('Failed to load stored customer name', error);
     }
   }, []);
+
+  // Remember my info: when phone changes, debounced lookup to prefill name
+  useEffect(() => {
+    const digits = customerPhone.replace(/\D/g, '');
+    if (digits.length < 8) return;
+
+    const t = setTimeout(async () => {
+      try {
+        const res = await api.getClientRemember(shopSlug, customerPhone);
+        if (res.hasClient && res.name && res.name.trim()) {
+          if (combinedNameRef.current.trim()) return;
+          const formatted = formatName(res.name.trim());
+          const words = formatted.trim().split(/\s+/).filter(Boolean);
+          setFirstName(words[0] ?? '');
+          setLastName(words.length > 1 ? words.slice(1).join(' ') : '');
+          setCombinedName(formatted);
+        }
+      } catch (err) {
+        logError('Failed to fetch client remember', err);
+      }
+    }, REMEMBER_PHONE_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [customerPhone, shopSlug]);
 
   // Real-time validation
   useEffect(() => {
@@ -176,50 +205,15 @@ export function useJoinForm() {
     }
   }, [firstName, lastName, validateName, nameCollisionError]);
 
-  // Combined name handler that handles auto-capitalization and spacebar detection
+  // Combined name handler: allow full name with spaces; auto-capitalize each word
   const handleCombinedNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
-    
-    // Check if there's already a space and last initial
-    const spaceIndex = input.indexOf(' ');
-    const hasSpace = spaceIndex !== -1;
-    
-    let processedValue = input;
-    
-    if (!hasSpace) {
-      // No space yet - user is typing first name
-      // Auto-capitalize first letter, lowercase the rest
-      if (input.length > 0) {
-        processedValue = input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
-      }
-    } else {
-      // Space detected - split into first name and potential last initial
-      const beforeSpace = input.substring(0, spaceIndex);
-      const afterSpace = input.substring(spaceIndex + 1);
-      
-      // Format first name: capitalize first letter, lowercase rest
-      const formattedFirstName = beforeSpace.length > 0
-        ? beforeSpace.charAt(0).toUpperCase() + beforeSpace.slice(1).toLowerCase()
-        : '';
-      
-      // Limit to one character after space and capitalize it
-      const limitedAfterSpace = afterSpace.slice(0, 1).toUpperCase();
-      
-      // Always preserve the space, even if no character after it yet
-      processedValue = formattedFirstName + ' ' + limitedAfterSpace;
-    }
-    
+    const processedValue = formatName(input);
     setCombinedName(processedValue);
-    
-    // Parse to extract firstName and lastName for validation
-    const spaceIdx = processedValue.indexOf(' ');
-    if (spaceIdx !== -1) {
-      setFirstName(processedValue.substring(0, spaceIdx).trim());
-      setLastName(processedValue.substring(spaceIdx + 1).trim());
-    } else {
-      setFirstName(processedValue.trim());
-      setLastName('');
-    }
+
+    const words = processedValue.trim().split(/\s+/).filter(Boolean);
+    setFirstName(words[0] ?? '');
+    setLastName(words.length > 1 ? words.slice(1).join(' ') : '');
   };
 
   // Legacy handlers kept for backward compatibility (not used but maintained for type safety)
@@ -240,6 +234,7 @@ export function useJoinForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
+    setClosedReason(null);
     setIsAlreadyInQueue(false);
     setExistingTicketId(null);
     setNameCollisionError(null);
@@ -332,30 +327,27 @@ export function useJoinForm() {
       }
     }
 
-    // Check shop status before creating ticket
-    const { getShopStatus } = await import('@eutonafila/shared');
     const status = getShopStatus(
       settings.operatingHours,
       settings.timezone ?? 'America/Sao_Paulo',
       settings.temporaryStatusOverride,
-      settings.allowQueueBeforeOpen
+      settings.allowQueueBeforeOpen,
+      settings.checkInHoursBeforeOpen ?? 1
     );
 
     if (!status.isOpen) {
-      setSubmitError(
-        status.isInLunch 
-          ? t('join.shopClosedForLunch')
-          : t('join.shopClosed')
-      );
+      setClosedReason(status.isInLunch ? 'lunch' : 'closed');
+      setSubmitError(null);
       return;
     }
 
-    // Enforce per-shop settings
     if (settings.requirePhone && !customerPhone.trim()) {
+      setClosedReason(null);
       setSubmitError(t('join.phoneRequired'));
       return;
     }
     if (settings.requireBarberChoice && !selectedBarberId) {
+      setClosedReason(null);
       setSubmitError(t('join.chooseBarber'));
       return;
     }
@@ -368,6 +360,7 @@ export function useJoinForm() {
       ? selectedServiceId
       : null;
     if (serviceId == null) {
+      setClosedReason(null);
       setSubmitError(t('join.selectService'));
       setIsSubmitting(false);
       return;
@@ -387,7 +380,6 @@ export function useJoinForm() {
       // Store ticket ID in localStorage for persistence
       localStorage.setItem(STORAGE_KEY, ticket.id.toString());
 
-      // Store customer name in localStorage for future visits
       localStorage.setItem(
         CUSTOMER_NAME_STORAGE_KEY,
         JSON.stringify({
@@ -395,6 +387,9 @@ export function useJoinForm() {
           lastName: lastName.trim(),
         })
       );
+      if (customerPhone.trim()) {
+        localStorage.setItem(CUSTOMER_PHONE_STORAGE_KEY, customerPhone.trim());
+      }
 
       // Navigate to status page
       navigate(`/status/${ticket.id}`);
@@ -406,9 +401,11 @@ export function useJoinForm() {
         if (errorMessage.includes('nome') && (errorMessage.includes('uso') || errorMessage.includes('já está'))) {
           setNameCollisionError(errorMessage);
         } else {
+          setClosedReason(null);
           setSubmitError(errorMessage || t('join.submitErrorDefault'));
         }
       } else {
+        setClosedReason(null);
         setSubmitError(getErrorMessage(error, t('join.submitErrorDefault')));
       }
     } finally {
@@ -430,6 +427,7 @@ export function useJoinForm() {
     validationError,
     isSubmitting,
     submitError,
+    closedReason,
     isAlreadyInQueue,
     existingTicketId,
     nameCollisionError,

@@ -27,6 +27,7 @@ import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { useLocale } from '@/contexts/LocaleContext';
 import { cn, getErrorMessage, formatName, formatNameForDisplay } from '@/lib/utils';
 import { hasHoursForDay, hasAnyOperatingHours } from '@/lib/operatingHours';
+import { getShopStatus } from '@eutonafila/shared';
 
 const AD_VIEW_DURATION = 15000; // 15 seconds
 
@@ -62,6 +63,7 @@ export function BarberQueueManager() {
   const [customerToComplete, setCustomerToComplete] = useState<number | null>(null);
   const [checkInName, setCheckInName] = useState({ first: '', last: '' });
   const [combinedCheckInName, setCombinedCheckInName] = useState('');
+  const [checkInPhone, setCheckInPhone] = useState('');
   const [checkInServiceId, setCheckInServiceId] = useState<number | null>(null);
   const [checkInBarberId, setCheckInBarberId] = useState<number | null>(null);
   const [checkInProgressTicketId, setCheckInProgressTicketId] = useState<number | null>(null);
@@ -70,7 +72,7 @@ export function BarberQueueManager() {
   const [deadZoneWarning, setDeadZoneWarning] = useState<string | null>(null);
   const [nextTicketLoading, setNextTicketLoading] = useState(false);
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
-  const [appointmentForm, setAppointmentForm] = useState({ customerName: '', serviceId: 0, scheduledTime: '', preferredBarberId: null as number | null });
+  const [appointmentForm, setAppointmentForm] = useState({ customerName: '', customerPhone: '', serviceId: 0, scheduledTime: '', preferredBarberId: null as number | null });
   const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
   const [scheduledSectionOpen, setScheduledSectionOpen] = useState(false);
   const [editAppointmentTicketId, setEditAppointmentTicketId] = useState<number | null>(null);
@@ -84,6 +86,7 @@ export function BarberQueueManager() {
   const [rescheduleSlotTime, setRescheduleSlotTime] = useState<string | null>(null);
   const [rescheduleSlots, setRescheduleSlots] = useState<Array<{ time: string; available: boolean }>>([]);
   const [rescheduleSlotsLoading, setRescheduleSlotsLoading] = useState(false);
+  const [standardWaitTimeMinutes, setStandardWaitTimeMinutes] = useState<number | null>(null);
   const firstNameInputRef = useRef<HTMLInputElement>(null);
 
   const settings = shopConfig.settings;
@@ -96,14 +99,38 @@ export function BarberQueueManager() {
   const removeConfirmModal = useModal(false);
   const completeConfirmModal = useModal(false);
   const { validateName } = useProfanityFilter();
+  const allowAppointments = shopConfig.settings?.allowAppointments ?? false;
 
-  const isAppointmentSelectable = useCallback((ticket: { type?: string; scheduledTime?: string | Date | null }) => {
+  // Fetch standard wait time for check-in eligibility (remaining <= estimated wait time)
+  useEffect(() => {
+    if (!shopSlug || !allowAppointments) {
+      setStandardWaitTimeMinutes(null);
+      return;
+    }
+    api.getWaitTimes(shopSlug).then((res) => {
+      setStandardWaitTimeMinutes(res.standardWaitTime ?? null);
+    }).catch(() => setStandardWaitTimeMinutes(null));
+  }, [shopSlug, allowAppointments]);
+
+  const shopStatus = useMemo(() => getShopStatus(
+    settings?.operatingHours,
+    timezone,
+    settings?.temporaryStatusOverride,
+    settings?.allowQueueBeforeOpen ?? false,
+    settings?.checkInHoursBeforeOpen ?? 1
+  ), [settings?.operatingHours, settings?.temporaryStatusOverride, settings?.allowQueueBeforeOpen, settings?.checkInHoursBeforeOpen, timezone]);
+
+  const canCheckInAppointment = useCallback((ticket: { type?: string; scheduledTime?: string | Date | null }) => {
+    if (!shopStatus.isOpen) return false;
     if ((ticket.type ?? 'walkin') !== 'appointment') return true;
     const scheduled = ticket.scheduledTime ? new Date(ticket.scheduledTime).getTime() : 0;
     if (scheduled === 0) return true;
-    const oneHourMs = 60 * 60 * 1000;
-    return Date.now() >= scheduled - oneHourMs;
-  }, []);
+    const now = Date.now();
+    if (now >= scheduled) return true;
+    const remainingMinutes = (scheduled - now) / 60_000;
+    const estimatedMinutes = standardWaitTimeMinutes ?? 30;
+    return remainingMinutes <= estimatedMinutes;
+  }, [shopStatus.isOpen, standardWaitTimeMinutes]);
 
   // Enter kiosk mode if ?kiosk=true in URL or user logged in as kiosk-only
   const isKioskOnly = user?.role === 'kiosk';
@@ -189,6 +216,7 @@ export function BarberQueueManager() {
         checkInModalWasOpenRef.current = false;
         setCheckInName({ first: '', last: '' });
         setCombinedCheckInName('');
+        setCheckInPhone('');
         setCheckInBarberId(null);
         setCheckInServiceId(firstActiveServiceId);
       }
@@ -226,13 +254,21 @@ export function BarberQueueManager() {
   }, [barbers]);
 
   const tickets = queueData?.tickets || [];
-  const allowAppointments = shopConfig.settings?.allowAppointments ?? false;
 
   // Memoize sorted tickets and counts (API returns weighted order when allowAppointments)
   const { sortedTickets, waitingCount, servingCount, pendingTickets } = useMemo(() => {
     const waitingTickets = tickets.filter((t) => t.status === 'waiting');
     const inProgressTickets = tickets.filter((t) => t.status === 'in_progress');
     const pending = tickets.filter((t) => t.status === 'pending');
+    const sortedPending = [...pending].sort((a, b) => {
+      const sa = (a as { scheduledTime?: string | Date | null }).scheduledTime
+        ? new Date((a as { scheduledTime: string | Date }).scheduledTime).getTime()
+        : 0;
+      const sb = (b as { scheduledTime?: string | Date | null }).scheduledTime
+        ? new Date((b as { scheduledTime: string | Date }).scheduledTime).getTime()
+        : 0;
+      return sa - sb;
+    });
     const sortedWaitingTickets = [...waitingTickets].sort((a, b) => {
       if (a.position !== b.position) return a.position - b.position;
       return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
@@ -241,7 +277,7 @@ export function BarberQueueManager() {
       sortedTickets: [...sortedWaitingTickets, ...inProgressTickets],
       waitingCount: waitingTickets.length,
       servingCount: inProgressTickets.length,
-      pendingTickets: pending,
+      pendingTickets: sortedPending,
     };
   }, [tickets]);
 
@@ -352,10 +388,12 @@ export function BarberQueueManager() {
       await api.createTicket(shopSlug, {
         customerName: fullName,
         serviceId,
+        ...(checkInPhone.trim() && { customerPhone: checkInPhone.trim() }),
         ...(settings.allowBarberPreference && { preferredBarberId: checkInBarberId ?? undefined }),
       });
       setCheckInName({ first: '', last: '' });
       setCombinedCheckInName('');
+      setCheckInPhone('');
       setCheckInBarberId(null);
       setCheckInServiceId(activeServices[0]?.id ?? null);
       checkInModal.close();
@@ -366,7 +404,7 @@ export function BarberQueueManager() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [checkInName, validateName, refetchQueue, checkInModal, shopSlug, t, checkInServiceId, checkInBarberId, activeServices, settings.allowBarberPreference]);
+  }, [checkInName, checkInPhone, validateName, refetchQueue, checkInModal, shopSlug, t, checkInServiceId, checkInBarberId, activeServices, settings.allowBarberPreference]);
 
   const handleSelectBarber = useCallback(async (barberId: number | null) => {
     if (!selectedCustomerId) return;
@@ -449,9 +487,10 @@ export function BarberQueueManager() {
         customerName: appointmentForm.customerName.trim(),
         serviceId: appointmentForm.serviceId,
         scheduledTime: scheduledTimeIso,
+        ...(appointmentForm.customerPhone.trim() && { customerPhone: appointmentForm.customerPhone.trim() }),
         ...(settings.allowBarberPreference && { preferredBarberId: appointmentForm.preferredBarberId ?? undefined }),
       });
-      setAppointmentForm({ customerName: '', serviceId: 0, scheduledTime: '', preferredBarberId: null });
+      setAppointmentForm({ customerName: '', customerPhone: '', serviceId: 0, scheduledTime: '', preferredBarberId: null });
       setAppointmentModalOpen(false);
       setAppointmentDate(undefined);
       setAppointmentSlotTime(null);
@@ -578,21 +617,6 @@ export function BarberQueueManager() {
         {/* Main Content */}
         {currentView === 'queue' && (
           <div className="flex-1 flex flex-col h-full">
-            {/* Header with Shop Name / Check-in Button */}
-            <header className="flex-shrink-0 pt-8 pb-6 text-center border-b border-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)]">
-              <button
-                onClick={() => {
-                  checkInModal.open();
-                  showQueueView();
-                }}
-                className="inline-flex items-center gap-4 px-10 py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] rounded-2xl font-semibold text-xl hover:opacity-90 hover:-translate-y-1 hover:shadow-[0_8px_32px_color-mix(in_srgb,var(--shop-accent)_50%,transparent)] transition-all"
-                aria-label={t('barber.addClientAria')}
-              >
-                <span className="material-symbols-outlined text-2xl">person_add</span>
-                <span className="font-['Playfair_Display',serif] text-2xl tracking-wide uppercase">{queueData?.shop?.name ?? shopConfig.name}</span>
-              </button>
-            </header>
-
             {/* Queue List - Centered with proper spacing */}
             <div className="flex-1 overflow-y-auto py-8 px-6">
               <div className="max-w-4xl mx-auto space-y-4">
@@ -701,6 +725,21 @@ export function BarberQueueManager() {
                 </div>
               </div>
             </footer>
+
+            {/* Shop name / Check-in button - at bottom of page */}
+            <div className="flex-shrink-0 pt-6 pb-8 text-center border-t border-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)]">
+              <button
+                onClick={() => {
+                  checkInModal.open();
+                  showQueueView();
+                }}
+                className="inline-flex items-center gap-4 px-10 py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] rounded-2xl font-semibold text-xl hover:opacity-90 hover:-translate-y-1 hover:shadow-[0_8px_32px_color-mix(in_srgb,var(--shop-accent)_50%,transparent)] transition-all"
+                aria-label={t('barber.addClientAria')}
+              >
+                <span className="material-symbols-outlined text-2xl">person_add</span>
+                <span className="font-['Playfair_Display',serif] text-2xl tracking-wide uppercase">{queueData?.shop?.name ?? shopConfig.name}</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -831,8 +870,11 @@ export function BarberQueueManager() {
           {/* Add Customer / Call Next / Add Appointment */}
           <div className="queue-header mb-6 flex flex-col sm:flex-row gap-3">
             <button
+              type="button"
               onClick={checkInModal.open}
-              className="checkin-btn flex items-center justify-center gap-3 px-8 py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] border-2 border-[var(--shop-accent)] rounded-lg font-semibold flex-1 transition-all hover:-translate-y-0.5 hover:bg-[var(--shop-accent-hover)]"
+              disabled={!shopStatus.isOpen}
+              title={!shopStatus.isOpen ? t('barber.shopOutsideCheckInHours') : undefined}
+              className="checkin-btn flex items-center justify-center gap-3 px-8 py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] border-2 border-[var(--shop-accent)] rounded-lg font-semibold flex-1 transition-all hover:-translate-y-0.5 hover:bg-[var(--shop-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="material-symbols-outlined text-xl">person_add</span>
               {t('barber.addClient')}
@@ -922,7 +964,8 @@ export function BarberQueueManager() {
                           <button
                             type="button"
                             onClick={() => handleCheckInAppointment(ticket.id)}
-                            disabled={checkInProgressTicketId === ticket.id}
+                            disabled={checkInProgressTicketId === ticket.id || !canCheckInAppointment(ticket)}
+                            title={!canCheckInAppointment(ticket) ? t('barber.checkInWhenWithinWaitTime') : undefined}
                             className="px-2 py-1 rounded text-xs bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {checkInProgressTicketId === ticket.id ? (
@@ -1002,10 +1045,10 @@ export function BarberQueueManager() {
                       barbers={displayBarbers}
                       preferredBarberName={preferredBarberName ?? undefined}
                       displayPosition={displayPosition}
-                      disabled={ticket.status === 'waiting' && !isAppointmentSelectable(ticket)}
-                      disabledReason={ticket.status === 'waiting' && !isAppointmentSelectable(ticket) ? t('barber.appointmentTooEarly') : undefined}
+                      disabled={ticket.status === 'waiting' && !canCheckInAppointment(ticket)}
+                      disabledReason={ticket.status === 'waiting' && !canCheckInAppointment(ticket) ? t('barber.appointmentTooEarly') : undefined}
                       onClick={() => {
-                        if (!isAppointmentSelectable(ticket)) {
+                        if (!canCheckInAppointment(ticket)) {
                           setErrorMessage(t('barber.appointmentTooEarly'));
                           return;
                         }
@@ -1100,6 +1143,20 @@ export function BarberQueueManager() {
               }}
             />
           </div>
+          <div>
+            <label htmlFor="checkInPhone" className="block text-sm font-medium mb-2">
+              {settings.requirePhone ? t('join.phoneLabel') : t('barber.phoneOptional')}
+            </label>
+            <input
+              id="checkInPhone"
+              type="tel"
+              value={checkInPhone}
+              onChange={(e) => setCheckInPhone(e.target.value)}
+              placeholder={t('join.phonePlaceholder')}
+              required={settings.requirePhone}
+              className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
           {activeServices.length >= 2 && (
             <div>
               <label htmlFor="checkInService" className="block text-sm font-medium mb-2">{t('join.serviceLabel')}</label>
@@ -1108,7 +1165,7 @@ export function BarberQueueManager() {
                 value={checkInServiceId ?? ''}
                 onChange={(e) => setCheckInServiceId(e.target.value ? parseInt(e.target.value, 10) : null)}
                 required
-                className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
+                className="form-control-select w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
               >
                 <option value="">{t('join.selectOption')}</option>
                 {activeServices.map((s) => (
@@ -1124,7 +1181,7 @@ export function BarberQueueManager() {
                 id="checkInBarber"
                 value={checkInBarberId ?? ''}
                 onChange={(e) => setCheckInBarberId(e.target.value ? parseInt(e.target.value, 10) : null)}
-                className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
+                className="form-control-select w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
               >
                 <option value="">{t('join.selectOption')}</option>
                 {barbers.filter((b) => b.isActive).map((b) => (
@@ -1141,7 +1198,8 @@ export function BarberQueueManager() {
               type="submit"
               disabled={
                 isSubmitting ||
-                (activeServices.length >= 2 && !checkInServiceId)
+                (activeServices.length >= 2 && !checkInServiceId) ||
+                (settings.requirePhone && !checkInPhone.trim())
               }
               className="flex-1"
             >
@@ -1158,7 +1216,7 @@ export function BarberQueueManager() {
           onClose={() => {
             setAppointmentModalOpen(false);
             setErrorMessage(null);
-            setAppointmentForm((f) => ({ ...f, scheduledTime: '', preferredBarberId: null }));
+            setAppointmentForm((f) => ({ ...f, customerName: '', customerPhone: '', scheduledTime: '', preferredBarberId: null }));
           }}
           title={t('barber.addAppointmentTitle')}
         >
@@ -1176,6 +1234,17 @@ export function BarberQueueManager() {
               />
             </div>
             <div>
+              <label htmlFor="appointmentPhone" className="block text-sm font-medium mb-1">{t('barber.phoneOptional')}</label>
+              <input
+                id="appointmentPhone"
+                type="tel"
+                value={appointmentForm.customerPhone}
+                onChange={(e) => setAppointmentForm((f) => ({ ...f, customerPhone: e.target.value }))}
+                placeholder={t('join.phonePlaceholder')}
+                className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+              />
+            </div>
+            <div>
               <label htmlFor="appointmentService" className="block text-sm font-medium mb-1">{t('join.serviceLabel')}</label>
               <select
                 id="appointmentService"
@@ -1187,7 +1256,7 @@ export function BarberQueueManager() {
                   setAppointmentSlotTime(null);
                 }}
                 required
-                className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+                className="form-control-select w-full min-h-[44px]"
               >
                 <option value="">Selecione</option>
                 {activeServices.map((s) => (
@@ -1264,7 +1333,7 @@ export function BarberQueueManager() {
                   id="appointmentBarber"
                   value={appointmentForm.preferredBarberId ?? ''}
                   onChange={(e) => setAppointmentForm((f) => ({ ...f, preferredBarberId: e.target.value ? parseInt(e.target.value, 10) : null }))}
-                  className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+                  className="form-control-select w-full min-h-[44px]"
                 >
                   <option value="">{t('join.selectOption')}</option>
                   {barbers.filter((b) => b.isActive).map((b) => (
@@ -1418,6 +1487,9 @@ export function BarberQueueManager() {
             preferredBarberId={preferredBarberId}
             preferredBarberName={preferredBarberName}
             currentBarberId={isBarber && user ? user.id : null}
+            clientId={(selectedTicket as { clientId?: number } | undefined)?.clientId ?? null}
+            shopSlug={shopSlug}
+            onClipNotesError={setErrorMessage}
           />
         );
       })()}

@@ -260,6 +260,8 @@ export function ShopManagementPage() {
   const [editingShop, setEditingShop] = useState<Shop | null>(null);
   type EditTab = 'info' | 'appearance' | 'content' | 'settings' | 'credentials' | 'services' | 'barbers';
   const [editTab, setEditTab] = useState<EditTab>('info');
+  /** Unified tabs for both create and edit so there are no discrepancies. */
+  const editModalTabs: EditTab[] = ['info', 'appearance', 'content', 'settings', 'services', 'barbers', 'credentials'];
   const [createServices, setCreateServices] = useState<ServiceItem[]>([]);
   const [createBarbers, setCreateBarbers] = useState<BarberItem[]>([]);
   const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
@@ -301,6 +303,12 @@ export function ShopManagementPage() {
   type BarberAccessRow = { barberId: number; name: string; username: string; password: string; initialUsername: string };
   const [barberAccess, setBarberAccess] = useState<BarberAccessRow[]>([]);
   const [barberAccessLoading, setBarberAccessLoading] = useState(false);
+  type EditServiceRow = { id: number; name: string; description: string | null; duration: number; price: number | null };
+  type EditBarberRow = { id: number; name: string; email: string | null; phone: string | null };
+  const [editServices, setEditServices] = useState<EditServiceRow[]>([]);
+  const [editServicesLoading, setEditServicesLoading] = useState(false);
+  const [editBarbers, setEditBarbers] = useState<EditBarberRow[]>([]);
+  const [editBarbersLoading, setEditBarbersLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [paletteIndices, setPaletteIndices] = useState<[number, number, number]>(() => pickThreeRandomPaletteIndices(formData.style.preset));
   const [savedPalettes, setSavedPalettes] = useState<Array<{ label: string; theme: ShopTheme }>>([]);
@@ -372,6 +380,61 @@ export function ShopManagementPage() {
     return () => { cancelled = true; };
   }, [editTab, editingShop?.slug]);
 
+  useEffect(() => {
+    if (editTab !== 'services' || !editingShop?.slug) {
+      setEditServices([]);
+      return;
+    }
+    let cancelled = false;
+    setEditServicesLoading(true);
+    api.getServices(editingShop.slug)
+      .then((list) => {
+        if (!cancelled) {
+          setEditServices(list.map((s) => ({
+            id: s.id,
+            name: s.name,
+            description: s.description ?? null,
+            duration: s.duration,
+            price: s.price ?? null,
+          })));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setEditServices([]);
+      })
+      .finally(() => {
+        if (!cancelled) setEditServicesLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [editTab, editingShop?.slug]);
+
+  useEffect(() => {
+    if (editTab !== 'barbers' || !editingShop?.slug) {
+      setEditBarbers([]);
+      return;
+    }
+    let cancelled = false;
+    setEditBarbersLoading(true);
+    api.getBarbers(editingShop.slug)
+      .then((list) => {
+        if (!cancelled) {
+          setEditBarbers(list.map((b) => ({
+            id: b.id,
+            name: b.name,
+            email: b.email ?? null,
+            phone: b.phone ?? null,
+          })));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setEditBarbers([]);
+      })
+      .finally(() => {
+        if (!cancelled) setEditBarbersLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [editTab, editingShop?.slug]);
+
   const openCreateModal = useCallback(() => {
     setEditingShop(null);
     setFormData({
@@ -417,7 +480,7 @@ export function ShopManagementPage() {
     if (Object.keys(errs).length > 0) {
       const firstKey = (['name', 'ownerPassword', 'staffPassword', 'services', 'barbers'] as const).find((k) => errs[k]);
       if (firstKey) {
-        const tabForKey: EditTab = firstKey === 'services' ? 'services' : firstKey === 'barbers' ? 'barbers' : 'info';
+        const tabForKey: EditTab = firstKey === 'services' ? 'services' : firstKey === 'barbers' ? 'barbers' : firstKey === 'ownerPassword' || firstKey === 'staffPassword' ? 'credentials' : 'info';
         setEditTab(tabForKey);
         const rootIds: Record<string, string> = { name: 'editNameRoot', ownerPassword: 'createOwnerPasswordRoot', staffPassword: 'createStaffPasswordRoot', services: 'create-services-section', barbers: 'create-barbers-section' };
         const mineiroIds: Record<string, string> = { name: 'editName', ownerPassword: 'createOwnerPasswordMineiro', staffPassword: 'createStaffPasswordMineiro', services: 'create-services-section', barbers: 'create-barbers-section' };
@@ -762,7 +825,7 @@ export function ShopManagementPage() {
                 </header>
                 <nav className="flex-shrink-0 border-b border-white/15 overflow-x-auto -mx-1 px-1" aria-label={t('management.settingsTab')}>
                   <div className="flex gap-0 min-w-max">
-                    {(editingShop ? ['info', 'appearance', 'content', 'settings', 'credentials'] : ['info', 'appearance', 'content', 'settings', 'services', 'barbers']).map((tab) => (
+                    {editModalTabs.map((tab) => (
                       <button
                         key={tab}
                         type="button"
@@ -865,47 +928,95 @@ export function ShopManagementPage() {
                           </div>
                         </div>
                       </div>
-                      {!editingShop && (
-                        <div className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5 space-y-4">
-                          <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.accessCredentials')}</h3>
-                          <div>
-                            <label htmlFor="createOwnerPasswordRoot" className="block text-white/70 text-sm mb-2">{t('management.ownerPassword')} *</label>
-                            <input id="createOwnerPasswordRoot" type="password" value={formData.ownerPassword} onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })} required minLength={6} placeholder={t('management.ownerPasswordPlaceholder')} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] placeholder:text-white/30" />
-                            {createErrors.ownerPassword && <p className="text-red-400 text-xs mt-1">{createErrors.ownerPassword}</p>}
-                          </div>
-                          <div>
-                            <label htmlFor="createStaffPasswordRoot" className="block text-white/70 text-sm mb-2">{t('management.staffPassword')} *</label>
-                            <input id="createStaffPasswordRoot" type="password" value={formData.staffPassword} onChange={(e) => setFormData({ ...formData, staffPassword: e.target.value })} required minLength={6} placeholder={t('management.staffPasswordPlaceholder')} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] placeholder:text-white/30" />
-                            {createErrors.staffPassword && <p className="text-red-400 text-xs mt-1">{createErrors.staffPassword}</p>}
-                          </div>
-                          <div className="pt-4 border-t border-white/10">
-                            <h4 className="text-sm font-medium text-white/90 uppercase tracking-wider mb-2">{t('management.kioskAccess')}</h4>
-                            <p className="text-white/60 text-sm mb-3">{t('management.kioskAccessHint')}</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
-                                <input type="text" value={formData.settings.kioskUsername || ''} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskUsername: e.target.value || undefined } })} placeholder={t('management.kioskUsernamePlaceholder')} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
-                              </div>
-                              <div>
-                                <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
-                                <input type="password" value={formData.settings.kioskPassword || ''} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskPassword: e.target.value || undefined } })} placeholder={t('management.kioskPasswordPlaceholder')} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </section>
                   )}
-                  {editTab === 'services' && !editingShop && (
-                    <div id="create-services-section" className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
-                      {createErrors.services && <p className="text-red-400 text-sm mb-4">{createErrors.services}</p>}
-                      <StepServices services={createServices} onChange={setCreateServices} errors={createErrors} />
+                  {editTab === 'credentials' && !editingShop && (
+                    <div className="space-y-6 rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
+                      <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.accessCredentials')}</h3>
+                      <div>
+                        <label htmlFor="createOwnerPasswordRoot" className="block text-white/70 text-sm mb-2">{t('management.ownerPassword')} *</label>
+                        <input id="createOwnerPasswordRoot" type="password" value={formData.ownerPassword} onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })} required minLength={6} placeholder={t('management.ownerPasswordPlaceholder')} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] placeholder:text-white/30" />
+                        {createErrors.ownerPassword && <p className="text-red-400 text-xs mt-1">{createErrors.ownerPassword}</p>}
+                      </div>
+                      <div>
+                        <label htmlFor="createStaffPasswordRoot" className="block text-white/70 text-sm mb-2">{t('management.staffPassword')} *</label>
+                        <input id="createStaffPasswordRoot" type="password" value={formData.staffPassword} onChange={(e) => setFormData({ ...formData, staffPassword: e.target.value })} required minLength={6} placeholder={t('management.staffPasswordPlaceholder')} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] placeholder:text-white/30" />
+                        {createErrors.staffPassword && <p className="text-red-400 text-xs mt-1">{createErrors.staffPassword}</p>}
+                      </div>
+                      <div className="pt-4 border-t border-white/10">
+                        <h4 className="text-sm font-medium text-white/90 uppercase tracking-wider mb-2">{t('management.kioskAccess')}</h4>
+                        <p className="text-white/60 text-sm mb-3">{t('management.kioskAccessHint')}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
+                            <input type="text" value={formData.settings.kioskUsername || ''} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskUsername: e.target.value || undefined } })} placeholder={t('management.kioskUsernamePlaceholder')} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                          </div>
+                          <div>
+                            <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
+                            <input type="password" value={formData.settings.kioskPassword || ''} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskPassword: e.target.value || undefined } })} placeholder={t('management.kioskPasswordPlaceholder')} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
-                  {editTab === 'barbers' && !editingShop && (
+                  {editTab === 'services' && (
+                    <div id="create-services-section" className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
+                      {!editingShop && createErrors.services && <p className="text-red-400 text-sm mb-4">{createErrors.services}</p>}
+                      {!editingShop && <StepServices services={createServices} onChange={setCreateServices} errors={createErrors} />}
+                      {editingShop && (
+                        <div className="space-y-6">
+                          <div>
+                            <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-2">{t('createShop.servicesTab')}</h2>
+                            <p className="text-white/60 text-sm">{t('createShop.servicesIntro')}</p>
+                          </div>
+                          {editServicesLoading ? (
+                            <p className="text-white/50 text-sm">{t('common.loading')}</p>
+                          ) : editServices.length === 0 ? (
+                            <p className="text-white/50 text-sm">{t('management.noServicesInShop')}</p>
+                          ) : (
+                            <div className="space-y-4">
+                              {editServices.map((s, index) => (
+                                <div key={s.id} className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2">
+                                  <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.serviceN')} {index + 1}</span>
+                                  <p className="text-white font-medium">{s.name}</p>
+                                  {s.description && <p className="text-white/60 text-sm">{s.description}</p>}
+                                  <p className="text-white/50 text-sm">{t('createShop.durationMin')}: {s.duration} · {t('createShop.priceReais')}: {s.price != null ? (s.price / 100).toFixed(2) : '–'}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {editTab === 'barbers' && (
                     <div id="create-barbers-section" className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
-                      {createErrors.barbers && <p className="text-red-400 text-sm mb-4">{createErrors.barbers}</p>}
-                      <StepBarbers barbers={createBarbers} onChange={setCreateBarbers} errors={createErrors} />
+                      {!editingShop && createErrors.barbers && <p className="text-red-400 text-sm mb-4">{createErrors.barbers}</p>}
+                      {!editingShop && <StepBarbers barbers={createBarbers} onChange={setCreateBarbers} errors={createErrors} />}
+                      {editingShop && (
+                        <div className="space-y-6">
+                          <div>
+                            <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-2">{t('createShop.barbersTab')}</h2>
+                            <p className="text-white/60 text-sm">{t('createShop.barbersIntro')}</p>
+                          </div>
+                          {editBarbersLoading ? (
+                            <p className="text-white/50 text-sm">{t('common.loading')}</p>
+                          ) : editBarbers.length === 0 ? (
+                            <p className="text-white/50 text-sm">{t('management.noBarbersInShop')}</p>
+                          ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {editBarbers.map((b, index) => (
+                                <div key={b.id} className="rounded-lg border border-white/10 bg-white/5 p-4">
+                                  <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.barberN')} {index + 1}</span>
+                                  <p className="text-white font-medium mt-1">{b.name}</p>
+                                  {b.email && <p className="text-white/60 text-sm">{b.email}</p>}
+                                  {b.phone && <p className="text-white/60 text-sm">{b.phone}</p>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                   {editTab === 'appearance' && (
@@ -1106,7 +1217,6 @@ export function ShopManagementPage() {
                             { key: 'deviceDeduplication' as const, labelKey: 'management.deviceDeduplication' },
                             { key: 'allowCustomerCancelInProgress' as const, labelKey: 'management.allowCustomerCancelInProgress' },
                             { key: 'allowAppointments' as const, labelKey: 'management.allowAppointments' },
-                            { key: 'allowQueueBeforeOpen' as const, labelKey: 'management.allowQueueBeforeOpen' },
                           ]).map(({ key, labelKey }) => (
                             <li key={key}>
                               <label className="flex items-center gap-3 cursor-pointer group">
@@ -1123,6 +1233,36 @@ export function ShopManagementPage() {
                               </label>
                             </li>
                           ))}
+                          <li>
+                            <label className="flex items-center gap-3 cursor-pointer group">
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={formData.settings.allowQueueBeforeOpen}
+                                onClick={() => setFormData({ ...formData, settings: { ...formData.settings, allowQueueBeforeOpen: !formData.settings.allowQueueBeforeOpen } })}
+                                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings.allowQueueBeforeOpen ? 'bg-white' : 'bg-white/20'}`}
+                              >
+                                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings.allowQueueBeforeOpen ? 'translate-x-5 bg-[#0a0a0a]' : 'translate-x-0 bg-white/60'}`} />
+                              </button>
+                              <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t('management.allowQueueBeforeOpen')}</span>
+                              {formData.settings.allowQueueBeforeOpen && (
+                                <span className="flex items-center gap-1.5 text-white/60 text-sm">
+                                  <label htmlFor="checkInHoursBeforeOpen" className="sr-only">{t('management.checkInHoursBeforeOpen')}</label>
+                                  <input
+                                    id="checkInHoursBeforeOpen"
+                                    type="number"
+                                    min={0}
+                                    max={24}
+                                    step={0.5}
+                                    value={formData.settings.checkInHoursBeforeOpen ?? 1}
+                                    onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, checkInHoursBeforeOpen: Math.max(0, Math.min(24, parseFloat(e.target.value) || 0)) } })}
+                                    className="w-14 px-2 py-1 rounded bg-white/10 border border-white/20 text-white text-sm"
+                                  />
+                                  <span>{t('management.hoursBeforeOpen')}</span>
+                                </span>
+                              )}
+                            </label>
+                          </li>
                         </ul>
                       </section>
                       <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
@@ -1528,7 +1668,7 @@ export function ShopManagementPage() {
           </header>
           <nav className="flex-shrink-0 border-b border-white/15 overflow-x-auto -mx-1 px-1" aria-label={t('management.settingsTab')}>
               <div className="flex gap-0 min-w-max">
-                {(editingShop ? ['info', 'appearance', 'content', 'settings', 'credentials'] : ['info', 'appearance', 'content', 'settings', 'services', 'barbers']).map((tab) => (
+                {editModalTabs.map((tab) => (
                   <button
                     key={tab}
                     type="button"
@@ -1596,47 +1736,95 @@ export function ShopManagementPage() {
                       </div>
                     </div>
                   </div>
-                  {!editingShop && (
-                    <div className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5 space-y-4">
-                      <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.accessCredentials')}</h3>
-                      <div>
-                        <label htmlFor="createOwnerPasswordMineiro" className="block text-white/70 text-sm mb-2">{t('management.ownerPassword')} *</label>
-                        <input id="createOwnerPasswordMineiro" type="password" value={formData.ownerPassword} onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })} required minLength={6} placeholder={t('management.ownerPasswordPlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/30" />
-                        {createErrors.ownerPassword && <p className="text-red-400 text-xs mt-1">{createErrors.ownerPassword}</p>}
-                      </div>
-                      <div>
-                        <label htmlFor="createStaffPasswordMineiro" className="block text-white/70 text-sm mb-2">{t('management.staffPassword')} *</label>
-                        <input id="createStaffPasswordMineiro" type="password" value={formData.staffPassword} onChange={(e) => setFormData({ ...formData, staffPassword: e.target.value })} required minLength={6} placeholder={t('management.staffPasswordPlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/30" />
-                        {createErrors.staffPassword && <p className="text-red-400 text-xs mt-1">{createErrors.staffPassword}</p>}
-                      </div>
-                      <div className="pt-4 border-t border-white/10">
-                        <h4 className="text-sm font-medium text-white/90 uppercase tracking-wider mb-2">{t('management.kioskAccess')}</h4>
-                        <p className="text-white/60 text-sm mb-3">{t('management.kioskAccessHint')}</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
-                            <input type="text" value={formData.settings.kioskUsername || ''} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskUsername: e.target.value || undefined } })} placeholder={t('management.kioskUsernamePlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
-                          </div>
-                          <div>
-                            <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
-                            <input type="password" value={formData.settings.kioskPassword || ''} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskPassword: e.target.value || undefined } })} placeholder={t('management.kioskPasswordPlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </section>
               )}
-              {editTab === 'services' && !editingShop && (
-                <div id="create-services-section" className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
-                  {createErrors.services && <p className="text-red-400 text-sm mb-4">{createErrors.services}</p>}
-                  <StepServices services={createServices} onChange={setCreateServices} errors={createErrors} />
+              {editTab === 'credentials' && !editingShop && (
+                <div className="space-y-6 rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
+                  <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.accessCredentials')}</h3>
+                  <div>
+                    <label htmlFor="createOwnerPasswordMineiro" className="block text-white/70 text-sm mb-2">{t('management.ownerPassword')} *</label>
+                    <input id="createOwnerPasswordMineiro" type="password" value={formData.ownerPassword} onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })} required minLength={6} placeholder={t('management.ownerPasswordPlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/30" />
+                    {createErrors.ownerPassword && <p className="text-red-400 text-xs mt-1">{createErrors.ownerPassword}</p>}
+                  </div>
+                  <div>
+                    <label htmlFor="createStaffPasswordMineiro" className="block text-white/70 text-sm mb-2">{t('management.staffPassword')} *</label>
+                    <input id="createStaffPasswordMineiro" type="password" value={formData.staffPassword} onChange={(e) => setFormData({ ...formData, staffPassword: e.target.value })} required minLength={6} placeholder={t('management.staffPasswordPlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/30" />
+                    {createErrors.staffPassword && <p className="text-red-400 text-xs mt-1">{createErrors.staffPassword}</p>}
+                  </div>
+                  <div className="pt-4 border-t border-white/10">
+                    <h4 className="text-sm font-medium text-white/90 uppercase tracking-wider mb-2">{t('management.kioskAccess')}</h4>
+                    <p className="text-white/60 text-sm mb-3">{t('management.kioskAccessHint')}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-white/60 text-sm mb-2">{t('management.kioskUsername')}</label>
+                        <input type="text" value={formData.settings.kioskUsername || ''} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskUsername: e.target.value || undefined } })} placeholder={t('management.kioskUsernamePlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-white/60 text-sm mb-2">{t('management.kioskPassword')}</label>
+                        <input type="password" value={formData.settings.kioskPassword || ''} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, kioskPassword: e.target.value || undefined } })} placeholder={t('management.kioskPasswordPlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
-              {editTab === 'barbers' && !editingShop && (
+              {editTab === 'services' && (
+                <div id="create-services-section" className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
+                  {!editingShop && createErrors.services && <p className="text-red-400 text-sm mb-4">{createErrors.services}</p>}
+                  {!editingShop && <StepServices services={createServices} onChange={setCreateServices} errors={createErrors} />}
+                  {editingShop && (
+                    <div className="space-y-6">
+                      <div>
+                        <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-2">{t('createShop.servicesTab')}</h2>
+                        <p className="text-white/60 text-sm">{t('createShop.servicesIntro')}</p>
+                      </div>
+                      {editServicesLoading ? (
+                        <p className="text-white/50 text-sm">{t('common.loading')}</p>
+                      ) : editServices.length === 0 ? (
+                        <p className="text-white/50 text-sm">{t('management.noServicesInShop')}</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {editServices.map((s, index) => (
+                            <div key={s.id} className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2">
+                              <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.serviceN')} {index + 1}</span>
+                              <p className="text-white font-medium">{s.name}</p>
+                              {s.description && <p className="text-white/60 text-sm">{s.description}</p>}
+                              <p className="text-white/50 text-sm">{t('createShop.durationMin')}: {s.duration} · {t('createShop.priceReais')}: {s.price != null ? (s.price / 100).toFixed(2) : '–'}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              {editTab === 'barbers' && (
                 <div id="create-barbers-section" className="rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
-                  {createErrors.barbers && <p className="text-red-400 text-sm mb-4">{createErrors.barbers}</p>}
-                  <StepBarbers barbers={createBarbers} onChange={setCreateBarbers} errors={createErrors} />
+                  {!editingShop && createErrors.barbers && <p className="text-red-400 text-sm mb-4">{createErrors.barbers}</p>}
+                  {!editingShop && <StepBarbers barbers={createBarbers} onChange={setCreateBarbers} errors={createErrors} />}
+                  {editingShop && (
+                    <div className="space-y-6">
+                      <div>
+                        <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-2">{t('createShop.barbersTab')}</h2>
+                        <p className="text-white/60 text-sm">{t('createShop.barbersIntro')}</p>
+                      </div>
+                      {editBarbersLoading ? (
+                        <p className="text-white/50 text-sm">{t('common.loading')}</p>
+                      ) : editBarbers.length === 0 ? (
+                        <p className="text-white/50 text-sm">{t('management.noBarbersInShop')}</p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {editBarbers.map((b, index) => (
+                            <div key={b.id} className="rounded-lg border border-white/10 bg-white/5 p-4">
+                              <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.barberN')} {index + 1}</span>
+                              <p className="text-white font-medium mt-1">{b.name}</p>
+                              {b.email && <p className="text-white/60 text-sm">{b.email}</p>}
+                              {b.phone && <p className="text-white/60 text-sm">{b.phone}</p>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
               {editTab === 'appearance' && (
@@ -1900,7 +2088,7 @@ export function ShopManagementPage() {
                   <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
                     <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.serviceRules')}</h3>
                     <ul className="space-y-4">
-                      {[{ key: 'requirePhone' as const, labelKey: 'management.requirePhone' }, { key: 'allowBarberPreference' as const, labelKey: 'management.allowBarberPreference' }, { key: 'requireBarberChoice' as const, labelKey: 'management.requireBarberChoice' }, { key: 'allowDuplicateNames' as const, labelKey: 'management.allowDuplicateNames' }, { key: 'deviceDeduplication' as const, labelKey: 'management.deviceDeduplication' }, { key: 'allowCustomerCancelInProgress' as const, labelKey: 'management.allowCustomerCancelInProgress' }, { key: 'allowAppointments' as const, labelKey: 'management.allowAppointments' }, { key: 'allowQueueBeforeOpen' as const, labelKey: 'management.allowQueueBeforeOpen' }].map(({ key, labelKey }) => (
+                      {[{ key: 'requirePhone' as const, labelKey: 'management.requirePhone' }, { key: 'allowBarberPreference' as const, labelKey: 'management.allowBarberPreference' }, { key: 'requireBarberChoice' as const, labelKey: 'management.requireBarberChoice' }, { key: 'allowDuplicateNames' as const, labelKey: 'management.allowDuplicateNames' }, { key: 'deviceDeduplication' as const, labelKey: 'management.deviceDeduplication' }, { key: 'allowCustomerCancelInProgress' as const, labelKey: 'management.allowCustomerCancelInProgress' }, { key: 'allowAppointments' as const, labelKey: 'management.allowAppointments' }].map(({ key, labelKey }) => (
                         <li key={key}>
                           <label className="flex items-center gap-3 cursor-pointer group">
                             <button type="button" role="switch" aria-checked={formData.settings[key]} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
@@ -1908,6 +2096,18 @@ export function ShopManagementPage() {
                           </label>
                         </li>
                       ))}
+                      <li>
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <button type="button" role="switch" aria-checked={formData.settings.allowQueueBeforeOpen} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, allowQueueBeforeOpen: !formData.settings.allowQueueBeforeOpen } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings.allowQueueBeforeOpen ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings.allowQueueBeforeOpen ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
+                          <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t('management.allowQueueBeforeOpen')}</span>
+                          {formData.settings.allowQueueBeforeOpen && (
+                            <span className="flex items-center gap-1.5 text-white/60 text-sm">
+                              <input type="number" min={0} max={24} step={0.5} value={formData.settings.checkInHoursBeforeOpen ?? 1} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, checkInHoursBeforeOpen: Math.max(0, Math.min(24, parseFloat(e.target.value) || 0)) } })} className="w-14 px-2 py-1 rounded bg-white/10 border border-white/20 text-white text-sm" />
+                              <span>{t('management.hoursBeforeOpen')}</span>
+                            </span>
+                          )}
+                        </label>
+                      </li>
                     </ul>
                   </section>
                   <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">

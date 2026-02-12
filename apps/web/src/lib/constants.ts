@@ -56,6 +56,10 @@ export const STORAGE_KEYS = {
   DEVICE_ID: 'eutonafila_device_id',
   /** UI locale (e.g. pt-BR, en) for i18n */
   LOCALE: 'eutonafila_locale',
+  /** Customer name for remember-my-info (localStorage fallback) */
+  CUSTOMER_NAME: 'eutonafila_customer_name',
+  /** Customer phone for remember-my-info (localStorage fallback) */
+  CUSTOMER_PHONE: 'eutonafila_customer_phone',
 } as const;
 
 /**

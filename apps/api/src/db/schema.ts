@@ -89,12 +89,37 @@ export const barbers = pgTable('barbers', {
   shopUsernameUnique: uniqueIndex('barbers_shop_username_unique').on(table.shopId, table.username),
 }));
 
+export const clients = pgTable('clients', {
+  id: serial('id').primaryKey(),
+  shopId: integer('shop_id').notNull().references(() => shops.id),
+  phone: text('phone').notNull(), // Normalized digits only; unique per shop
+  name: text('name').notNull(),
+  email: text('email'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  shopPhoneUnique: uniqueIndex('clients_shop_phone_unique').on(table.shopId, table.phone),
+  shopIdIdx: index('clients_shop_id_idx').on(table.shopId),
+}));
+
+export const clientClipNotes = pgTable('client_clip_notes', {
+  id: serial('id').primaryKey(),
+  clientId: integer('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  barberId: integer('barber_id').notNull().references(() => barbers.id),
+  note: text('note').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => ({
+  clientIdIdx: index('client_clip_notes_client_id_idx').on(table.clientId),
+  barberIdIdx: index('client_clip_notes_barber_id_idx').on(table.barberId),
+}));
+
 export const tickets = pgTable('tickets', {
   id: serial('id').primaryKey(),
   shopId: integer('shop_id').notNull().references(() => shops.id),
   serviceId: integer('service_id').notNull().references(() => services.id),
   barberId: integer('barber_id').references(() => barbers.id),
   preferredBarberId: integer('preferred_barber_id').references(() => barbers.id),
+  clientId: integer('client_id').references(() => clients.id),
   customerName: text('customer_name').notNull(),
   customerPhone: text('customer_phone'),
   deviceId: text('device_id'), // Device identifier for preventing multiple active tickets per device
@@ -115,6 +140,7 @@ export const tickets = pgTable('tickets', {
   shopDeviceIdx: index('tickets_shop_device_idx').on(table.shopId, table.deviceId),
   shopStatusIdx: index('tickets_shop_status_idx').on(table.shopId, table.status),
   shopCreatedIdx: index('tickets_shop_created_idx').on(table.shopId, table.createdAt),
+  clientIdIdx: index('tickets_client_id_idx').on(table.clientId),
 }));
 
 export const companyAds = pgTable('company_ads', {
@@ -159,6 +185,7 @@ export const shopsRelations = relations(shops, ({ one, many }) => ({
   company: one(companies, { fields: [shops.companyId], references: [companies.id] }),
   services: many(services),
   barbers: many(barbers),
+  clients: many(clients),
   tickets: many(tickets),
   ads: many(companyAds),
 }));
@@ -171,12 +198,25 @@ export const servicesRelations = relations(services, ({ one, many }) => ({
 export const barbersRelations = relations(barbers, ({ one, many }) => ({
   shop: one(shops, { fields: [barbers.shopId], references: [shops.id] }),
   tickets: many(tickets),
+  clipNotes: many(clientClipNotes),
+}));
+
+export const clientsRelations = relations(clients, ({ one, many }) => ({
+  shop: one(shops, { fields: [clients.shopId], references: [shops.id] }),
+  tickets: many(tickets),
+  clipNotes: many(clientClipNotes),
+}));
+
+export const clientClipNotesRelations = relations(clientClipNotes, ({ one }) => ({
+  client: one(clients, { fields: [clientClipNotes.clientId], references: [clients.id] }),
+  barber: one(barbers, { fields: [clientClipNotes.barberId], references: [barbers.id] }),
 }));
 
 export const ticketsRelations = relations(tickets, ({ one }) => ({
   shop: one(shops, { fields: [tickets.shopId], references: [shops.id] }),
   service: one(services, { fields: [tickets.serviceId], references: [services.id] }),
   barber: one(barbers, { fields: [tickets.barberId], references: [barbers.id] }),
+  client: one(clients, { fields: [tickets.clientId], references: [clients.id] }),
 }));
 
 export const auditLog = pgTable('audit_log', {

@@ -15,6 +15,7 @@ export function JoinForm() {
     validationError,
     isSubmitting,
     submitError,
+    closedReason,
     isAlreadyInQueue,
     existingTicketId,
     nameCollisionError,
@@ -166,7 +167,16 @@ export function JoinForm() {
               </div>
             )}
 
-            {submitError && (
+            {closedReason && (
+              <div className="p-5 rounded-xl bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_25%,transparent)] text-center">
+                <span className="material-symbols-outlined text-3xl text-[var(--shop-accent)] block mb-2" aria-hidden="true">schedule</span>
+                <p className="text-[var(--shop-text-primary)] font-medium">
+                  {closedReason === 'lunch' ? 'Fechado para almoço.' : 'Fechado no momento.'}
+                </p>
+              </div>
+            )}
+
+            {submitError && !closedReason && (
               <div className="p-4 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/20">
                 <p className="text-sm text-[#ef4444] flex items-center gap-2">
                   <span className="material-symbols-outlined text-base">error</span>

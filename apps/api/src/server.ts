@@ -23,6 +23,7 @@ import { companyShopsRoutes } from './routes/company-shops.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { shopsRoutes } from './routes/shops.js';
 import { adsRoutes } from './routes/ads.js';
+import { clientsRoutes } from './routes/clients.js';
 import { projectsRoutes } from './routes/projects.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { registerWebSocket } from './websocket/handler.js';
@@ -328,6 +329,7 @@ fastify.register(
     instance.register(analyticsRoutes);
     instance.register(shopsRoutes);
     instance.register(adsRoutes);
+    instance.register(clientsRoutes);
     instance.register(projectsRoutes);
   },
   { prefix: '/api' }
