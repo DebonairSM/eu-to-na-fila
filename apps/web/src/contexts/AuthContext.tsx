@@ -11,6 +11,7 @@ interface AuthContextType {
   isBarber: boolean;
   isCompanyAdmin: boolean;
   isKioskOnly: boolean;
+  isCustomer: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

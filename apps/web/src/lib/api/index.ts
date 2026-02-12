@@ -98,6 +98,9 @@ class ApiClient extends BaseApiClient {
   authenticateBarber = this._auth.authenticateBarber;
   authenticateKiosk = this._auth.authenticateKiosk;
   companyAuthenticate = this._auth.companyAuthenticate;
+  registerCustomer = this._auth.registerCustomer;
+  loginCustomer = this._auth.loginCustomer;
+  getCustomerGoogleAuthUrl = this._auth.getCustomerGoogleAuthUrl;
 
   // --- Ads ---
   uploadAd = this._ads.uploadAd;

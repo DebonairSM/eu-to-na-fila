@@ -6,10 +6,11 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { getErrorMessage } from '@/lib/utils';
 
-export type LoginMode = 'client' | 'barber';
+export type LoginMode = 'customer' | 'barber' | 'staff';
 
 export function useLoginForm() {
-  const [mode, setMode] = useState<LoginMode>('client');
+  const [mode, setMode] = useState<LoginMode>('customer');
+  const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -52,7 +53,7 @@ export function useLoginForm() {
           navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/barber');
           return;
         }
-      } else {
+      } else if (mode === 'staff') {
         const authResult = await api.authenticate(shopSlug, password);
         if (authResult.valid && authResult.token) {
           login({
@@ -63,6 +64,25 @@ export function useLoginForm() {
           });
           const defaultPath = authResult.role === 'owner' ? '/owner' : '/manage';
           navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : defaultPath);
+          return;
+        }
+      } else {
+        if (!email.trim()) {
+          setError(t('auth.fillAllFields'));
+          setIsLoading(false);
+          isSubmittingRef.current = false;
+          return;
+        }
+        const customerResult = await api.loginCustomer(shopSlug, { email: email.trim(), password });
+        if (customerResult.valid && customerResult.token && customerResult.role === 'customer') {
+          login({
+            id: customerResult.clientId ?? 0,
+            username: email.trim(),
+            role: 'customer',
+            name: email.trim(),
+            clientId: customerResult.clientId,
+          });
+          navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/checkin/confirm');
           return;
         }
       }
@@ -76,9 +96,17 @@ export function useLoginForm() {
     }
   };
 
+  const goToGoogleAuth = () => {
+    const redirectUri = redirectTo && redirectTo.startsWith('/') ? redirectTo : '/checkin/confirm';
+    const url = api.getCustomerGoogleAuthUrl(shopSlug, redirectUri);
+    window.location.href = url;
+  };
+
   return {
     mode,
     setMode,
+    email,
+    setEmail,
     username,
     setUsername,
     password,
@@ -88,5 +116,6 @@ export function useLoginForm() {
     isLoading,
     error,
     handleSubmit,
+    goToGoogleAuth,
   };
 }

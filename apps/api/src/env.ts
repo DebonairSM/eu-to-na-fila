@@ -47,6 +47,9 @@ const envSchema = z.object({
   NOMINATIM_BASE_URL: z.string().url().optional(),
   /** User-Agent for Nominatim requests (required by usage policy). Defaults to app identifier. */
   NOMINATIM_USER_AGENT: z.string().optional(),
+  /** Google OAuth 2.0 for customer Sign in with Google. Optional; if not set, Google login is disabled. */
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
 });
 
 let env: z.infer<typeof envSchema>;

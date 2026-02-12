@@ -269,11 +269,12 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       if (body.homeContentByLocale !== undefined) {
-        const record: Record<string, unknown> = {};
+        const existingByLocale = (shop.homeContent ?? {}) as Record<string, unknown>;
+        const record: Record<string, unknown> = { ...existingByLocale };
         for (const [locale, partial] of Object.entries(body.homeContentByLocale)) {
           if (partial != null && typeof partial === 'object') {
-            const existing = (shop.homeContent as Record<string, unknown>)?.[locale] ?? {};
-            record[locale] = mergeHomeContent({ ...(existing as object), ...partial });
+            const existing = (existingByLocale[locale] ?? {}) as object;
+            record[locale] = mergeHomeContent({ ...existing, ...partial });
           }
         }
         if (Object.keys(record).length > 0) {

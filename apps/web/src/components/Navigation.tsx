@@ -23,7 +23,7 @@ export function Navigation() {
     linkAbout: t('nav.about'),
     linkLocation: t('nav.location'),
     ctaJoin: t('nav.ctaJoin'),
-    linkBarbers: t('nav.barbers'),
+    linkBarbers: t('nav.login'),
     labelDashboard: t('nav.dashboard'),
     labelDashboardCompany: t('nav.dashboardCompany'),
     labelLogout: t('nav.logout'),

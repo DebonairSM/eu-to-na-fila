@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 
-export type UserRole = 'owner' | 'staff' | 'barber' | 'company_admin' | 'kiosk';
+export type UserRole = 'owner' | 'staff' | 'barber' | 'company_admin' | 'kiosk' | 'customer';
 
 export interface User {
   id: number;
@@ -9,6 +9,7 @@ export interface User {
   role: UserRole;
   name?: string;
   companyId?: number;
+  clientId?: number;
 }
 
 interface AuthState {
@@ -91,6 +92,7 @@ export function useAuth() {
   const isBarber = authState.user?.role === 'barber';
   const isCompanyAdmin = authState.user?.role === 'company_admin';
   const isKioskOnly = authState.user?.role === 'kiosk';
+  const isCustomer = authState.user?.role === 'customer';
 
   return {
     ...authState,
@@ -100,5 +102,6 @@ export function useAuth() {
     isBarber,
     isCompanyAdmin,
     isKioskOnly,
+    isCustomer,
   };
 }

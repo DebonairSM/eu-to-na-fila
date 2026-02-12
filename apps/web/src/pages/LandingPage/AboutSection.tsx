@@ -65,7 +65,7 @@ export function AboutSection() {
     { icon: 'phone' as const, title: loc.labelPhone ?? t('management.phone'), content: loc.phone, href: loc.phoneHref },
     { icon: 'language' as const, title: loc.labelLanguages ?? t('management.languages'), content: loc.languages },
   ];
-  const mapEmbedUrl = loc.mapQuery ? `https://www.google.com/maps?q=${encodeURIComponent(loc.mapQuery)}&output=embed` : null;
+  // Map is rendered only in LocationSection to avoid duplicate maps per layout.
 
   const aboutContent = (
     <>
@@ -88,54 +88,37 @@ export function AboutSection() {
   );
 
   const locationBlock = (
-    <div className="space-y-6">
-      <Stack spacing="lg">
-        {locationItems.map((item) => (
-          <div key={item.title} className="location-info-card flex gap-4">
-            <span className="location-info-card__icon material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-xl flex-shrink-0">
-              {item.icon}
-            </span>
-            <div className="location-info-card__body min-w-0">
-              <Heading level={4} className="location-info-card__title mb-1 text-lg font-semibold">
-                {item.title}
-              </Heading>
-              <Text size="sm" variant="secondary" className="location-info-card__content">
-                {'link' in item && item.link ? (
-                  <>
-                    <span className="whitespace-pre-line">{item.content}</span>
-                    <br />
-                    <a href={item.link} target="_blank" rel="noopener noreferrer" className={accentClass}>
-                      {item.linkLabel}
-                    </a>
-                  </>
-                ) : 'href' in item && item.href ? (
-                  <a href={item.href} className={accentClass}>
-                    {item.content}
-                  </a>
-                ) : (
+    <Stack spacing="lg">
+      {locationItems.map((item) => (
+        <div key={item.title} className="location-info-card flex gap-4">
+          <span className="location-info-card__icon material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-xl flex-shrink-0">
+            {item.icon}
+          </span>
+          <div className="location-info-card__body min-w-0">
+            <Heading level={4} className="location-info-card__title mb-1 text-lg font-semibold">
+              {item.title}
+            </Heading>
+            <Text size="sm" variant="secondary" className="location-info-card__content">
+              {'link' in item && item.link ? (
+                <>
                   <span className="whitespace-pre-line">{item.content}</span>
-                )}
-              </Text>
-            </div>
+                  <br />
+                  <a href={item.link} target="_blank" rel="noopener noreferrer" className={accentClass}>
+                    {item.linkLabel}
+                  </a>
+                </>
+              ) : 'href' in item && item.href ? (
+                <a href={item.href} className={accentClass}>
+                  {item.content}
+                </a>
+              ) : (
+                <span className="whitespace-pre-line">{item.content}</span>
+              )}
+            </Text>
           </div>
-        ))}
-      </Stack>
-      {mapEmbedUrl && (
-        <div className="rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
-          <iframe
-            src={mapEmbedUrl}
-            width="100%"
-            height="320"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            className="grayscale hover:grayscale-0 transition-all w-full"
-            title={`${t('shop.locationTitle')} ${config.name}`}
-          />
         </div>
-      )}
-    </div>
+      ))}
+    </Stack>
   );
 
   if (rightColumn === 'none') {

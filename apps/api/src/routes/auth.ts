@@ -4,12 +4,13 @@ import { db, schema } from '../db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { getShopBySlug } from '../lib/shop.js';
-import { ValidationError } from '../lib/errors.js';
+import { ValidationError, ConflictError } from '../lib/errors.js';
 import { signToken } from '../lib/jwt.js';
-import { verifyPassword, validatePassword } from '../lib/password.js';
+import { hashPassword, verifyPassword, validatePassword } from '../lib/password.js';
 import { getKioskPasswordHash } from '../lib/settings.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { logAuthFailure, logAuthSuccess, getClientIp } from '../middleware/security.js';
+import { env } from '../env.js';
 
 /**
  * Auth routes.
@@ -251,6 +252,318 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       role: 'kiosk' as const,
       token,
     };
+  });
+
+  // --- Customer auth (email/password + Google) ---
+  const customerRateLimit = createRateLimit({
+    max: isDevelopment ? 50 : 20,
+    timeWindow: '15 minutes',
+    keyGenerator: (request) => {
+      const ip = getClientIp(request);
+      const slug = (request.params as { slug?: string })?.slug || 'unknown';
+      return `customer:${ip}:${slug}`;
+    },
+  });
+
+  function normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
+  }
+
+  /**
+   * Customer register: email + password. Creates client or sets password on existing (no password yet).
+   *
+   * @route POST /api/shops/:slug/auth/customer/register
+   * @body email, password, name?
+   */
+  fastify.post('/shops/:slug/auth/customer/register', {
+    preHandler: [customerRateLimit],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const bodySchema = z.object({
+      email: z.string().email('Invalid email'),
+      password: z.string().min(1).max(200),
+      name: z.string().max(200).optional(),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const body = validateRequest(bodySchema, request.body);
+
+    const pwValidation = validatePassword(body.password);
+    if (!pwValidation.isValid) {
+      throw new ValidationError(pwValidation.error || 'Invalid password');
+    }
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) {
+      logAuthFailure(request, 'shop_not_found', slug);
+      return reply.status(404).send({ valid: false, error: 'Shop not found' });
+    }
+
+    const normalizedEmail = normalizeEmail(body.email);
+    const phonePlaceholder = `e:${normalizedEmail}`;
+
+    const existing = await db.query.clients.findFirst({
+      where: and(
+        eq(schema.clients.shopId, shop.id),
+        eq(schema.clients.email, normalizedEmail)
+      ),
+    });
+
+    if (existing) {
+      if (existing.passwordHash) {
+        logAuthFailure(request, 'customer_email_taken', slug);
+        throw new ConflictError('This email is already registered. Log in or reset password.');
+      }
+      const passwordHash = await hashPassword(body.password);
+      const name = (body.name && body.name.trim()) || existing.name;
+      await db.update(schema.clients).set({
+        name,
+        passwordHash,
+        updatedAt: new Date(),
+      }).where(eq(schema.clients.id, existing.id));
+
+      logAuthSuccess(request, shop.id, 'customer');
+      const token = signToken({
+        userId: existing.id,
+        shopId: shop.id,
+        role: 'customer',
+        clientId: existing.id,
+      });
+      return { valid: true, role: 'customer', token, clientId: existing.id };
+    }
+
+    const passwordHash = await hashPassword(body.password);
+    const name = (body.name && body.name.trim()) || normalizedEmail.split('@')[0] || 'Customer';
+    const [created] = await db.insert(schema.clients).values({
+      shopId: shop.id,
+      phone: phonePlaceholder,
+      name,
+      email: normalizedEmail,
+      passwordHash,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+
+    if (!created) throw new ValidationError('Failed to create account');
+    logAuthSuccess(request, shop.id, 'customer');
+    const token = signToken({
+      userId: created.id,
+      shopId: shop.id,
+      role: 'customer',
+      clientId: created.id,
+    });
+    return reply.status(201).send({ valid: true, role: 'customer', token, clientId: created.id });
+  });
+
+  /**
+   * Customer login: email + password.
+   *
+   * @route POST /api/shops/:slug/auth/customer/login
+   * @body email, password
+   */
+  fastify.post('/shops/:slug/auth/customer/login', {
+    preHandler: [customerRateLimit],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const bodySchema = z.object({
+      email: z.string().email('Invalid email'),
+      password: z.string().min(1).max(200),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { email, password } = validateRequest(bodySchema, request.body);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) {
+      logAuthFailure(request, 'shop_not_found', slug);
+      return { valid: false, role: null };
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+    const client = await db.query.clients.findFirst({
+      where: and(
+        eq(schema.clients.shopId, shop.id),
+        eq(schema.clients.email, normalizedEmail)
+      ),
+    });
+
+    if (!client || !client.passwordHash) {
+      logAuthFailure(request, 'invalid_customer_login', slug);
+      return { valid: false, role: null };
+    }
+
+    const matches = await verifyPassword(password, client.passwordHash);
+    if (!matches) {
+      logAuthFailure(request, 'invalid_customer_login', slug);
+      return { valid: false, role: null };
+    }
+
+    logAuthSuccess(request, shop.id, 'customer');
+    const token = signToken({
+      userId: client.id,
+      shopId: shop.id,
+      role: 'customer',
+      clientId: client.id,
+    });
+    return {
+      valid: true,
+      role: 'customer' as const,
+      token,
+      clientId: client.id,
+    };
+  });
+
+  /**
+   * Redirect to Google OAuth for customer Sign in with Google.
+   *
+   * @route GET /api/shops/:slug/auth/customer/google
+   * @query redirect_uri - Frontend URL to redirect after auth (optional)
+   */
+  fastify.get('/shops/:slug/auth/customer/google', async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const redirectUri = (request.query as { redirect_uri?: string })?.redirect_uri;
+
+    if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+      return reply.status(503).send({ error: 'Google login is not configured' });
+    }
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) {
+      return reply.status(404).send({ error: 'Shop not found' });
+    }
+
+    const baseUrl = request.headers['x-forwarded-proto'] && request.headers['x-forwarded-host']
+      ? `${request.headers['x-forwarded-proto']}://${request.headers['x-forwarded-host']}`
+      : `${request.protocol}://${request.hostname}`;
+    const callbackPath = `/api/shops/${slug}/auth/customer/google/callback`;
+    const backendRedirectUri = `${baseUrl}${callbackPath}`;
+
+    const { google } = await import('googleapis');
+    const oauth2 = new google.auth.OAuth2(
+      env.GOOGLE_CLIENT_ID,
+      env.GOOGLE_CLIENT_SECRET,
+      backendRedirectUri
+    );
+
+    const state = Buffer.from(JSON.stringify({ slug, redirect_uri: redirectUri || '' })).toString('base64url');
+    const scope = 'openid email profile';
+    const url = oauth2.generateAuthUrl({
+      access_type: 'offline',
+      scope,
+      state,
+      prompt: 'consent',
+    });
+    return reply.redirect(302, url);
+  });
+
+  /**
+   * Google OAuth callback: exchange code, find/create client, issue JWT, redirect to frontend.
+   *
+   * @route GET /api/shops/:slug/auth/customer/google/callback
+   */
+  fastify.get('/shops/:slug/auth/customer/google/callback', async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const query = request.query as { code?: string; state?: string };
+
+    if (!query.code || !query.state) {
+      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=google_callback_missing`);
+    }
+
+    let stateData: { slug: string; redirect_uri: string };
+    try {
+      stateData = JSON.parse(Buffer.from(query.state, 'base64url').toString());
+    } catch {
+      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=invalid_state`);
+    }
+    if (stateData.slug !== slug) {
+      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=invalid_state`);
+    }
+
+    if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=google_not_configured`);
+    }
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) {
+      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=shop_not_found`);
+    }
+
+    const baseUrl = request.headers['x-forwarded-proto'] && request.headers['x-forwarded-host']
+      ? `${request.headers['x-forwarded-proto']}://${request.headers['x-forwarded-host']}`
+      : `${request.protocol}://${request.hostname}`;
+    const callbackPath = `/api/shops/${slug}/auth/customer/google/callback`;
+    const redirectUri = `${baseUrl}${callbackPath}`;
+
+    const { google } = await import('googleapis');
+    const oauth2 = new google.auth.OAuth2(
+      env.GOOGLE_CLIENT_ID,
+      env.GOOGLE_CLIENT_SECRET,
+      redirectUri
+    );
+    const { tokens } = await oauth2.getToken(query.code).catch(() => {
+      throw new ValidationError('Google token exchange failed');
+    });
+    oauth2.setCredentials(tokens);
+    const oauth2Client = google.oauth2({ version: 'v2', auth: oauth2 });
+    const { data: userinfo } = await oauth2Client.userinfo.get().catch(() => {
+      throw new ValidationError('Failed to get Google user info');
+    });
+
+    const googleId = userinfo.id;
+    const email = userinfo.email?.trim().toLowerCase();
+    const name = (userinfo.name || userinfo.given_name || email?.split('@')[0] || 'Customer').trim();
+
+    if (!email) {
+      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=google_no_email`);
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+    const phonePlaceholder = `e:${normalizedEmail}`;
+
+    let client = await db.query.clients.findFirst({
+      where: and(
+        eq(schema.clients.shopId, shop.id),
+        eq(schema.clients.email, normalizedEmail)
+      ),
+    });
+
+    if (client) {
+      if (!client.googleId) {
+        await db.update(schema.clients).set({
+          googleId,
+          updatedAt: new Date(),
+        }).where(eq(schema.clients.id, client.id));
+      }
+    } else {
+      const [created] = await db.insert(schema.clients).values({
+        shopId: shop.id,
+        phone: phonePlaceholder,
+        name,
+        email: normalizedEmail,
+        googleId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).returning();
+      client = created ?? client;
+    }
+
+    if (!client) {
+      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=create_failed`);
+    }
+
+    logAuthSuccess(request, shop.id, 'customer');
+    const token = signToken({
+      userId: client.id,
+      shopId: shop.id,
+      role: 'customer',
+      clientId: client.id,
+    });
+    const frontendOrigin = env.CORS_ORIGIN;
+    const redirectPath = stateData.redirect_uri && stateData.redirect_uri.startsWith('/')
+      ? stateData.redirect_uri
+      : '/checkin/confirm';
+    const callbackUrl = `${frontendOrigin}/shop/callback?token=${encodeURIComponent(token)}&shop=${encodeURIComponent(slug)}&client_id=${encodeURIComponent(String(client.id))}&redirect=${encodeURIComponent(redirectPath)}`;
+    return reply.redirect(302, callbackUrl);
   });
 };
 

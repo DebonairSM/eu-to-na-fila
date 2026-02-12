@@ -1915,19 +1915,86 @@ export function ShopManagementPage() {
                       </div>
                       {editServicesLoading ? (
                         <p className="text-white/50 text-sm">{t('common.loading')}</p>
-                      ) : editServices.length === 0 ? (
-                        <p className="text-white/50 text-sm">{t('management.noServicesInShop')}</p>
                       ) : (
-                        <div className="space-y-4">
-                          {editServices.map((s, index) => (
-                            <div key={s.id} className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2">
-                              <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.serviceN')} {index + 1}</span>
-                              <p className="text-white font-medium">{s.name}</p>
-                              {s.description && <p className="text-white/60 text-sm">{s.description}</p>}
-                              <p className="text-white/50 text-sm">{t('createShop.durationMin')}: {s.duration} · {t('createShop.priceReais')}: {s.price != null ? (s.price / 100).toFixed(2) : '–'}</p>
-                            </div>
-                          ))}
-                        </div>
+                        <>
+                          <div className="space-y-4">
+                            {editServices.map((s, index) => (
+                              <div key={s.id} className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2 relative">
+                                {editServices.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      if (s.id > 0) {
+                                        try {
+                                          await api.deleteService(s.id);
+                                          setEditServices((prev) => prev.filter((x) => x.id !== s.id));
+                                        } catch (err) {
+                                          setErrorMessage(getErrorMessage(err, t('management.updateError')));
+                                        }
+                                      } else {
+                                        setEditServices((prev) => prev.filter((x) => x.id !== s.id));
+                                      }
+                                    }}
+                                    className="absolute top-3 right-3 text-red-400/60 hover:text-red-400 transition-colors p-1"
+                                    aria-label={t('createShop.removeService')}
+                                  >
+                                    <span className="material-symbols-outlined text-lg">close</span>
+                                  </button>
+                                )}
+                                <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.serviceN')} {index + 1}</span>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div className="sm:col-span-2">
+                                    <input
+                                      type="text"
+                                      value={s.name}
+                                      onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, name: e.target.value } : x)))}
+                                      placeholder={t('createShop.serviceNamePlaceholder')}
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                    />
+                                  </div>
+                                  <div className="sm:col-span-2">
+                                    <input
+                                      type="text"
+                                      value={s.description ?? ''}
+                                      onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, description: e.target.value || null } : x)))}
+                                      placeholder={t('createShop.serviceDescPlaceholder')}
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-white/50 text-xs mb-1">{t('createShop.durationMin')}</label>
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      value={s.duration}
+                                      onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, duration: parseInt(e.target.value, 10) || 1 } : x)))}
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-white/50 text-xs mb-1">{t('createShop.priceReais')}</label>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      step="0.01"
+                                      value={s.price != null ? (s.price / 100).toFixed(2) : ''}
+                                      onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, price: Math.round(parseFloat(e.target.value || '0') * 100) } : x)))}
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditServices((prev) => [...prev, { id: 0, name: '', description: null, duration: 30, price: null }])}
+                            className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition-all text-sm"
+                          >
+                            <span className="material-symbols-outlined text-lg">add</span>
+                            {t('createShop.addService')}
+                          </button>
+                        </>
                       )}
                     </div>
                   )}
@@ -1945,19 +2012,74 @@ export function ShopManagementPage() {
                       </div>
                       {editBarbersLoading ? (
                         <p className="text-white/50 text-sm">{t('common.loading')}</p>
-                      ) : editBarbers.length === 0 ? (
-                        <p className="text-white/50 text-sm">{t('management.noBarbersInShop')}</p>
                       ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {editBarbers.map((b, index) => (
-                            <div key={b.id} className="rounded-lg border border-white/10 bg-white/5 p-4">
-                              <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.barberN')} {index + 1}</span>
-                              <p className="text-white font-medium mt-1">{b.name}</p>
-                              {b.email && <p className="text-white/60 text-sm">{b.email}</p>}
-                              {b.phone && <p className="text-white/60 text-sm">{b.phone}</p>}
-                            </div>
-                          ))}
-                        </div>
+                        <>
+                          <div className="space-y-4">
+                            {editBarbers.map((b, index) => (
+                              <div key={b.id} className="rounded-lg border border-white/10 bg-white/5 p-4 relative">
+                                {editBarbers.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      if (b.id > 0) {
+                                        try {
+                                          await api.deleteBarber(b.id);
+                                          setEditBarbers((prev) => prev.filter((x) => x.id !== b.id));
+                                        } catch (err) {
+                                          setErrorMessage(getErrorMessage(err, t('management.updateError')));
+                                        }
+                                      } else {
+                                        setEditBarbers((prev) => prev.filter((x) => x.id !== b.id));
+                                      }
+                                    }}
+                                    className="absolute top-3 right-3 text-red-400/60 hover:text-red-400 transition-colors p-1"
+                                    aria-label={t('createShop.removeBarber')}
+                                  >
+                                    <span className="material-symbols-outlined text-lg">close</span>
+                                  </button>
+                                )}
+                                <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.barberN')} {index + 1}</span>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                                  <div className="sm:col-span-2">
+                                    <input
+                                      type="text"
+                                      value={b.name}
+                                      onChange={(e) => setEditBarbers((prev) => prev.map((x) => (x.id === b.id ? { ...x, name: e.target.value } : x)))}
+                                      placeholder={t('createShop.namePlaceholder')}
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                    />
+                                  </div>
+                                  <div className="sm:col-span-2">
+                                    <input
+                                      type="text"
+                                      value={b.email ?? ''}
+                                      onChange={(e) => setEditBarbers((prev) => prev.map((x) => (x.id === b.id ? { ...x, email: e.target.value || null } : x)))}
+                                      placeholder={t('createShop.emailPlaceholder')}
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                    />
+                                  </div>
+                                  <div className="sm:col-span-2">
+                                    <input
+                                      type="text"
+                                      value={b.phone ?? ''}
+                                      onChange={(e) => setEditBarbers((prev) => prev.map((x) => (x.id === b.id ? { ...x, phone: e.target.value || null } : x)))}
+                                      placeholder={t('createShop.phonePlaceholder')}
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditBarbers((prev) => [...prev, { id: 0, name: '', email: null, phone: null }])}
+                            className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition-all text-sm"
+                          >
+                            <span className="material-symbols-outlined text-lg">add</span>
+                            {t('createShop.addBarber')}
+                          </button>
+                        </>
                       )}
                     </div>
                   )}
@@ -2005,6 +2127,14 @@ export function ShopManagementPage() {
                       <div><label className="block text-white/60 text-sm mb-1">{t('management.subtitle')}</label><input type="text" value={contentForm.hero.subtitle} onChange={(e) => setContentForm({ hero: { ...contentForm.hero, subtitle: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                       <div><label className="block text-white/60 text-sm mb-1">{t('management.ctaJoin')}</label><input type="text" value={contentForm.hero.ctaJoin} onChange={(e) => setContentForm({ hero: { ...contentForm.hero, ctaJoin: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                       <div><label className="block text-white/60 text-sm mb-1">{t('management.ctaLocation')}</label><input type="text" value={contentForm.hero.ctaLocation} onChange={(e) => setContentForm({ hero: { ...contentForm.hero, ctaLocation: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                    </div>
+                  </section>
+                  <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <h4 className="text-white font-medium">{t('management.navSection')}</h4>
+                    <div className="space-y-3">
+                      {([{ key: 'linkServices' as const, label: t('management.linkServices') }, { key: 'linkAbout' as const, label: t('management.linkAbout') }, { key: 'linkLocation' as const, label: t('management.linkLocation') }, { key: 'ctaJoin' as const, label: t('management.ctaJoinLabel') }, { key: 'linkBarbers' as const, label: t('management.linkBarbers') }]).map(({ key, label }) => (
+                        <div key={key}><label className="block text-white/60 text-sm mb-1">{label}</label><input type="text" value={contentForm.nav[key]} onChange={(e) => setContentForm({ nav: { ...contentForm.nav, [key]: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      ))}
                     </div>
                   </section>
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
@@ -2081,14 +2211,24 @@ export function ShopManagementPage() {
                     </div>
                   </section>
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                    <h4 className="text-white font-medium">Seção Serviços</h4>
+                    <h4 className="text-white font-medium">{t('management.servicesSection')}</h4>
                     <div className="space-y-3">
-                      <div><label className="block text-white/60 text-sm mb-1">Título da seção</label><input type="text" value={contentForm.services.sectionTitle} onChange={(e) => setContentForm({ services: { ...contentForm.services, sectionTitle: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.sectionTitle')}</label><input type="text" value={contentForm.services.sectionTitle} onChange={(e) => setContentForm({ services: { ...contentForm.services, sectionTitle: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.loadingText')}</label><input type="text" value={contentForm.services.loadingText} onChange={(e) => setContentForm({ services: { ...contentForm.services, loadingText: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
+                      <div><label className="block text-white/60 text-sm mb-1">{t('management.emptyText')}</label><input type="text" value={contentForm.services.emptyText} onChange={(e) => setContentForm({ services: { ...contentForm.services, emptyText: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                     </div>
                   </section>
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                    <h4 className="text-white font-medium">Localização</h4>
+                    <h4 className="text-white font-medium">{t('management.locationSection')}</h4>
                     <div className="space-y-3">
+                      <div>
+                        <label className="block text-white/60 text-sm mb-1">{t('management.lookupByAddress')}</label>
+                        <div className="flex gap-2 flex-wrap">
+                          <input type="text" value={placesLookupAddress} onChange={(e) => setPlacesLookupAddress(e.target.value)} placeholder={t('management.addressPlaceholder')} className="form-input flex-1 min-w-[200px] w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" disabled={placesLookupLoading} />
+                          <button type="button" onClick={handlePlacesLookup} disabled={placesLookupLoading || !placesLookupAddress.trim()} className="px-4 py-2.5 rounded-lg bg-[#D4AF37] text-[#0a0a0a] font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]">{placesLookupLoading ? t('management.searching') : t('management.search')}</button>
+                        </div>
+                        {placesLookupMessage && <p className={`text-sm mt-1 ${placesLookupMessage.startsWith('success:') ? 'text-green-400' : 'text-amber-400'}`}>{placesLookupMessage.startsWith('success:') ? placesLookupMessage.slice(8) : placesLookupMessage}</p>}
+                      </div>
                       <div><label className="block text-white/60 text-sm mb-1">{t('management.address')}</label><textarea value={contentForm.location.address} onChange={(e) => setContentForm({ location: { ...contentForm.location, address: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[60px]" /></div>
                       <div><label className="block text-white/60 text-sm mb-1">{t('management.hours')}</label><textarea value={contentForm.location.hours} onChange={(e) => setContentForm({ location: { ...contentForm.location, hours: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                       <div><label className="block text-white/60 text-sm mb-1">{t('management.phone')}</label><input type="text" value={contentForm.location.phone} onChange={(e) => setContentForm({ location: { ...contentForm.location, phone: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>

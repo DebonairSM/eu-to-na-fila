@@ -92,9 +92,11 @@ export const barbers = pgTable('barbers', {
 export const clients = pgTable('clients', {
   id: serial('id').primaryKey(),
   shopId: integer('shop_id').notNull().references(() => shops.id),
-  phone: text('phone').notNull(), // Normalized digits only; unique per shop
+  phone: text('phone').notNull(), // Normalized digits only; unique per shop (use placeholder for email-only signups)
   name: text('name').notNull(),
   email: text('email'),
+  passwordHash: text('password_hash'), // For email/password customer login
+  googleId: text('google_id'), // Google OAuth sub for Sign in with Google
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({

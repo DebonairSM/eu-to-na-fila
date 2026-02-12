@@ -9,8 +9,9 @@ export interface AuthUser {
   id: number;
   shopId?: number;
   companyId?: number;
-  role: 'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk';
+  role: 'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk' | 'customer';
   barberId?: number;
+  clientId?: number;
 }
 
 /**
@@ -66,6 +67,7 @@ export function requireAuth(): preHandlerHookHandler {
         companyId: decoded.companyId,
         role: decoded.role,
         barberId: decoded.barberId,
+        clientId: decoded.clientId,
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Invalid or expired token';
@@ -94,7 +96,7 @@ export function requireAuth(): preHandlerHookHandler {
  * ```
  */
 export function requireRole(
-  allowedRoles: Array<'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk'>
+  allowedRoles: Array<'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk' | 'customer'>
 ): preHandlerHookHandler {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     if (!request.user) {

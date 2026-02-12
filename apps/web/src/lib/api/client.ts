@@ -34,6 +34,10 @@ export class BaseApiClient {
     this.onNetworkSuccess = callbacks.onSuccess;
   }
 
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
+
   setAuthToken(token: string): void {
     this.authToken = token;
     sessionStorage.setItem(this.TOKEN_STORAGE_KEY, token);

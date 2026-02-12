@@ -102,54 +102,18 @@ export function LocationSection() {
         <Heading level={2} className={cn('section-title', 'section-title--layout')}>{loc.sectionTitle}</Heading>
       </div>
 
-      <div className="lg:hidden space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16 items-start">
         <Stack spacing="lg">
           {locationItems.map((item) => (
-            <div key={item.title} className="location-info-card flex gap-4">
-              <span className="location-info-card__icon material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-xl flex-shrink-0">
+            <div key={item.title} className="location-info-card flex gap-4 lg:gap-6">
+              <span className="location-info-card__icon material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-xl lg:text-2xl flex-shrink-0">
                 {item.icon}
               </span>
               <div className="location-info-card__body min-w-0">
-                <Heading level={4} className="location-info-card__title mb-1 text-lg font-semibold">
+                <Heading level={4} className="location-info-card__title mb-1 lg:mb-2 text-lg font-semibold">
                   {item.title}
                 </Heading>
-                <Text size="sm" variant="secondary" className="location-info-card__content">
-                  {item.content}
-                </Text>
-              </div>
-            </div>
-          ))}
-        </Stack>
-
-        {mapEmbedUrl && (
-          <div className="rounded-xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
-            <iframe
-              src={mapEmbedUrl}
-              width="100%"
-              height="300"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              className="grayscale hover:grayscale-0 transition-all"
-              title={`${t('shop.locationTitle')} ${config.name}`}
-            />
-          </div>
-        )}
-      </div>
-
-      <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-start">
-        <Stack spacing="xl">
-          {locationItems.map((item) => (
-            <div key={item.title} className="location-info-card flex gap-6">
-              <span className="location-info-card__icon material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-2xl flex-shrink-0">
-                {item.icon}
-              </span>
-              <div className="location-info-card__body min-w-0">
-                <Heading level={4} className="location-info-card__title mb-2 text-lg font-semibold">
-                  {item.title}
-                </Heading>
-                <Text size="base" variant="secondary" className="location-info-card__content">
+                <Text size="sm" className="lg:!text-base location-info-card__content" variant="secondary">
                   {item.content}
                 </Text>
               </div>
@@ -157,16 +121,16 @@ export function LocationSection() {
           ))}
         </Stack>
         {mapEmbedUrl && (
-          <div className="rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
+          <div className="rounded-xl lg:rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.08)]">
             <iframe
               src={mapEmbedUrl}
               width="100%"
-              height="500"
+              height="400"
               style={{ border: 0 }}
+              className="grayscale hover:grayscale-0 transition-all w-full"
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              className="grayscale hover:grayscale-0 transition-all"
               title={`${t('shop.locationTitle')} ${config.name}`}
             />
           </div>

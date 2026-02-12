@@ -361,7 +361,7 @@ export const DEFAULT_HOME_CONTENT: HomeContent = {
     linkAbout: 'Sobre',
     linkLocation: 'Localização',
     ctaJoin: 'Entrar na Fila',
-    linkBarbers: 'Barbeiros',
+    linkBarbers: 'Entrar',
     labelDashboard: 'Dashboard',
     labelDashboardCompany: 'Dashboard Empresarial',
     labelLogout: 'Sair',

@@ -6,6 +6,8 @@ export function LoginForm() {
   const {
     mode,
     setMode,
+    email,
+    setEmail,
     username,
     setUsername,
     password,
@@ -15,9 +17,15 @@ export function LoginForm() {
     isLoading,
     error,
     handleSubmit,
+    goToGoogleAuth,
   } = useLoginForm();
   const { t } = useLocale();
+  const isCustomer = mode === 'customer';
   const isBarber = mode === 'barber';
+  const isStaff = mode === 'staff';
+
+  const titleKey = isBarber ? 'auth.barberLoginTitle' : isStaff ? 'auth.staffLoginTitle' : 'auth.clientLoginTitle';
+  const hintKey = isBarber ? 'auth.barberLoginHint' : isStaff ? 'auth.staffLoginHint' : 'auth.clientLoginHint';
 
   return (
     <div className="space-y-6">
@@ -28,14 +36,36 @@ export function LoginForm() {
           </span>
         </div>
         <h2 className="text-lg font-semibold text-[var(--shop-text-primary)]">
-          {isBarber ? t('auth.barberLoginTitle') : t('auth.clientLoginTitle')}
+          {t(titleKey)}
         </h2>
         <p className="text-sm text-[var(--shop-text-secondary)]">
-          {isBarber ? t('auth.barberLoginHint') : t('auth.clientLoginHint')}
+          {t(hintKey)}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        {isCustomer && (
+          <div className="relative">
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder=" "
+              autoComplete="email"
+              className="w-full px-4 py-4 pt-6 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)] text-base placeholder:text-[var(--shop-text-secondary)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
+            />
+            <label
+              htmlFor="email"
+              className={`absolute left-4 text-sm text-[var(--shop-text-secondary)] pointer-events-none transition-all ${
+                email ? 'top-2 text-xs text-[var(--shop-accent)]' : 'top-4'
+              }`}
+            >
+              {t('auth.email')}
+            </label>
+          </div>
+        )}
+
         {isBarber && (
           <div className="relative">
             <input
@@ -65,7 +95,7 @@ export function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder=" "
-            autoComplete={isBarber ? 'current-password' : 'current-password'}
+            autoComplete={isCustomer ? 'current-password' : 'current-password'}
             required
             className="w-full px-4 py-4 pt-6 pr-12 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)] text-base placeholder:text-[var(--shop-text-secondary)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
           />
@@ -112,44 +142,59 @@ export function LoginForm() {
             <span className="material-symbols-outlined text-xl">login</span>
           )}
         </button>
-      </form>
 
-      <div className="text-center space-y-2 pt-2 border-t border-[var(--shop-border-color)]">
-        {isBarber ? (
-          <button
-            type="button"
-            onClick={() => setMode('client')}
-            className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors w-full"
-          >
-            <span className="material-symbols-outlined text-base">arrow_back</span>
-            {t('auth.backToClientLogin')}
-          </button>
-        ) : (
+        {isCustomer && (
           <>
+            <p className="text-center text-sm text-[var(--shop-text-secondary)]">
+              <Link to="/shop/signup" className="text-[var(--shop-accent)] hover:underline">
+                {t('auth.createAccount')}
+              </Link>
+            </p>
             <button
               type="button"
-              onClick={() => setMode('barber')}
-              className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors w-full"
+              onClick={goToGoogleAuth}
+              className="w-full px-6 py-3 min-h-[44px] border border-[var(--shop-border-color)] rounded-lg flex items-center justify-center gap-2 text-[var(--shop-text-primary)] text-sm font-medium hover:bg-[rgba(255,255,255,0.05)] transition-all"
             >
-              <span className="material-symbols-outlined text-base">person</span>
-              {t('auth.barberLoginLink')}
+              {t('auth.signInWithGoogle')}
             </button>
-            <Link
-              to="/kiosk-login"
-              className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors block"
-            >
-              <span className="material-symbols-outlined text-base">tv</span>
-              {t('auth.kioskModeOnly') ?? 'Modo quiosque (só exibição)'}
-            </Link>
           </>
         )}
-        <Link
-          to="/home"
-          className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors block"
-        >
-          <span className="material-symbols-outlined text-base">arrow_back</span>
-          {t('common.back')}
-        </Link>
+      </form>
+
+      <div className="text-center pt-3 border-t border-[var(--shop-border-color)]">
+        {isBarber || isStaff ? (
+          <p className="text-xs text-[var(--shop-text-secondary)]">
+            <button
+              type="button"
+              onClick={() => setMode('customer')}
+              className="text-[var(--shop-accent)] hover:underline"
+            >
+              {t('auth.backToClientLogin')}
+            </button>
+            {' · '}
+            <Link to="/home" className="text-[var(--shop-accent)] hover:underline">
+              {t('common.back')}
+            </Link>
+          </p>
+        ) : (
+          <p className="text-xs text-[var(--shop-text-secondary)]">
+            <button type="button" onClick={() => setMode('barber')} className="text-[var(--shop-accent)] hover:underline">
+              {t('auth.barberLoginLink')}
+            </button>
+            {' · '}
+            <button type="button" onClick={() => setMode('staff')} className="text-[var(--shop-accent)] hover:underline">
+              {t('auth.staffLoginLink')}
+            </button>
+            {' · '}
+            <Link to="/kiosk-login" className="text-[var(--shop-accent)] hover:underline">
+              {t('auth.kioskModeOnly')}
+            </Link>
+            {' · '}
+            <Link to="/home" className="text-[var(--shop-accent)] hover:underline">
+              {t('common.back')}
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );

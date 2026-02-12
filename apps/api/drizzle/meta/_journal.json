@@ -92,6 +92,13 @@
       "when": 1770921881210,
       "tag": "0016_add_clients_and_clip_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1771000000000,
+      "tag": "0017_add_client_auth",
+      "breakpoints": true
     }
   ]
 }

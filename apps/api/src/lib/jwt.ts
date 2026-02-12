@@ -9,8 +9,9 @@ export interface JWTPayload {
   userId: number;
   shopId?: number;
   companyId?: number;
-  role: 'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk';
+  role: 'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk' | 'customer';
   barberId?: number;
+  clientId?: number;
   iat?: number;
   exp?: number;
 }
@@ -25,8 +26,9 @@ export function signToken(user: {
   userId: number;
   shopId?: number;
   companyId?: number;
-  role: 'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk';
+  role: 'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk' | 'customer';
   barberId?: number;
+  clientId?: number;
 }): string {
   const payload: JWTPayload = {
     userId: user.userId,
@@ -34,6 +36,7 @@ export function signToken(user: {
     companyId: user.companyId,
     role: user.role,
     barberId: user.barberId,
+    clientId: user.clientId,
   };
 
   return jwt.sign(payload, env.JWT_SECRET, {
