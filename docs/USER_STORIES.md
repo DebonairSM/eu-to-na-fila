@@ -437,10 +437,13 @@ User interactions and implementation status for EuToNaFila queue management syst
 ### Access Control
 
 **Public (no auth):**
-- Join queue, view queue, view status, list services, list barbers
+- Join queue, view queue, view status, list services, list barbers, book appointments
+
+**Customer (logged in):**
+- Self check-in for own appointments (status page), manage account
 
 **Staff + Owner:**
-- Manage queue, update tickets, toggle presence
+- Manage queue, update tickets, toggle presence, create appointments (no customer check-in)
 
 **Owner only:**
 - View analytics, manage barbers, manage services (API only)
@@ -476,6 +479,6 @@ User interactions and implementation status for EuToNaFila queue management syst
 
 1. **Service Management UI:** Backend complete, frontend UI not implemented
 2. **Single Tenant:** Currently supports one shop per deployment
-3. **No Multi-language:** Portuguese only
-4. **No Email Notifications:** Real-time updates via polling only
-5. **No Appointment System:** Walk-in queue only
+3. **No Multi-language:** Portuguese only (localization keys exist for pt-BR and en)
+4. **Email:** Appointment reminders supported (Gmail API or SMTP)
+5. **Appointments:** Supported - booking, slots, customer self check-in (logged-in customers only)

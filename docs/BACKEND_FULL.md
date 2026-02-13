@@ -115,6 +115,16 @@ Authorization: Bearer <token>
 - Must be included in Authorization header for protected endpoints
 - 401 Unauthorized returned if missing/invalid/expired
 
+### Customer Auth (Sign in with Google)
+
+**Initiate:** `GET /api/shops/:slug/auth/customer/google?redirect_uri=/optional/path`
+- Redirects user to Google OAuth. After auth, Google redirects to `/api/auth/customer/google/callback` (root callback, shop slug in state).
+
+**Callback:** `GET /api/auth/customer/google/callback?code=...&state=...`
+- Exchanges code for tokens, finds/creates client, issues JWT with `role: customer`, redirects to frontend callback.
+
+**Env:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `PUBLIC_API_URL`. Add redirect URI in Google Console: `{PUBLIC_API_URL}/api/auth/customer/google/callback`. See RENDER_DEPLOY.md for troubleshooting.
+
 ## API Endpoints
 
 ### Public Endpoints (No Auth Required)
@@ -440,8 +450,11 @@ throw new ConflictError('Cannot delete service in use');
 | `PORT` | Server port | 4041 | No |
 | `DATABASE_URL` | PostgreSQL connection | postgresql://localhost:5432/eutonafila | Yes (prod) |
 | `JWT_SECRET` | JWT signing secret (32+ chars) | change_me_in_production... | Yes (prod) |
-| `CORS_ORIGIN` | Allowed origin | http://localhost:4040 | Yes (prod) |
+| `CORS_ORIGIN` | Allowed origin (frontend URL) | http://localhost:4040 | Yes (prod) |
 | `SHOP_SLUG` | Default shop | mineiro | No |
+| `PUBLIC_API_URL` | Canonical API URL for OAuth (no trailing slash) | - | Yes if using Google OAuth |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | - | Optional (Sign in with Google + Gmail) |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | - | Optional |
 
 **Example `DATABASE_URL`:**
 ```

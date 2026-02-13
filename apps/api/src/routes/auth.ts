@@ -17,6 +17,27 @@ import { env } from '../env.js';
  * Owner/staff: password-based authentication. Barber: username + password.
  */
 export const authRoutes: FastifyPluginAsync = async (fastify) => {
+  /**
+   * Debug: returns the Google OAuth redirect URI the app would use.
+   * Compare with Authorized redirect URIs in Google Cloud Console.
+   * @route GET /api/auth/debug/google-redirect-uri
+   */
+  fastify.get('/auth/debug/google-redirect-uri', async (request, reply) => {
+    const callbackPath = '/api/auth/customer/google/callback';
+    const baseUrl = env.PUBLIC_API_URL
+      ? env.PUBLIC_API_URL.replace(/\/$/, '')
+      : (request.headers['x-forwarded-proto'] && request.headers['x-forwarded-host']
+          ? `${request.headers['x-forwarded-proto']}://${request.headers['x-forwarded-host']}`
+          : `${request.protocol}://${request.headers.host || request.hostname}`);
+    const redirectUri = `${baseUrl}${callbackPath}`;
+    return {
+      redirectUri,
+      configured: !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET,
+      publicApiUrl: env.PUBLIC_API_URL ?? null,
+      corsOrigin: env.CORS_ORIGIN,
+    };
+  });
+
   // Brute force protection: more lenient in development
   const isDevelopment = process.env.NODE_ENV === 'development';
   const maxAttempts = isDevelopment ? 100 : 30;
@@ -431,12 +452,12 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(404).send({ error: 'Shop not found' });
     }
 
-    const callbackPath = `/api/shops/${slug}/auth/customer/google/callback`;
+    const callbackPath = `/api/auth/customer/google/callback`;
     const baseUrl = env.PUBLIC_API_URL
       ? env.PUBLIC_API_URL.replace(/\/$/, '')
       : (request.headers['x-forwarded-proto'] && request.headers['x-forwarded-host']
           ? `${request.headers['x-forwarded-proto']}://${request.headers['x-forwarded-host']}`
-          : `${request.protocol}://${request.hostname}`);
+          : `${request.protocol}://${request.headers.host || request.hostname}`);
     const backendRedirectUri = `${baseUrl}${callbackPath}`;
 
     const { google } = await import('googleapis');
@@ -459,12 +480,11 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Google OAuth callback: exchange code, find/create client, issue JWT, redirect to frontend.
+   * Root callback - shop slug comes from OAuth state. Single redirect URI for all shops.
    *
-   * @route GET /api/shops/:slug/auth/customer/google/callback
+   * @route GET /api/auth/customer/google/callback
    */
-  fastify.get('/shops/:slug/auth/customer/google/callback', async (request, reply) => {
-    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
-    const { slug } = validateRequest(paramsSchema, request.params);
+  fastify.get('/auth/customer/google/callback', async (request, reply) => {
     const query = request.query as { code?: string; state?: string };
 
     if (!query.code || !query.state) {
@@ -477,7 +497,8 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     } catch {
       return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=invalid_state`);
     }
-    if (stateData.slug !== slug) {
+    const slug = stateData.slug;
+    if (!slug || typeof slug !== 'string') {
       return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=invalid_state`);
     }
 
@@ -490,12 +511,12 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=shop_not_found`);
     }
 
-    const callbackPath = `/api/shops/${slug}/auth/customer/google/callback`;
+    const callbackPath = `/api/auth/customer/google/callback`;
     const baseUrl = env.PUBLIC_API_URL
       ? env.PUBLIC_API_URL.replace(/\/$/, '')
       : (request.headers['x-forwarded-proto'] && request.headers['x-forwarded-host']
           ? `${request.headers['x-forwarded-proto']}://${request.headers['x-forwarded-host']}`
-          : `${request.protocol}://${request.hostname}`);
+          : `${request.protocol}://${request.headers.host || request.hostname}`);
     const redirectUri = `${baseUrl}${callbackPath}`;
 
     const { google } = await import('googleapis');

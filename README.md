@@ -180,17 +180,13 @@ pnpm build:api
 pnpm start
 ```
 
-### Deploy to Render/Railway
+### Deploy to Render
 
-1. Create Web Service from repo
-2. Build command:
-   ```bash
-   pnpm install --frozen-lockfile && pnpm build:web && pnpm integrate:web && pnpm build:api
-   ```
-3. Start command:
-   ```bash
-   node apps/api/dist/server.js
-   ```
+See [RENDER_DEPLOY.md](./RENDER_DEPLOY.md) for full instructions. Summary:
+
+1. Use Blueprint (render.yaml) or manual Web Service
+2. Build: `pnpm install --frozen-lockfile && pnpm build:render && ...` (see render.yaml)
+3. Start: `pnpm db:migrate && cd apps/api && node dist/server.js`
 4. Environment variables:
    ```
    NODE_ENV=production
@@ -198,6 +194,8 @@ pnpm start
    JWT_SECRET=<secure-random-string>
    CORS_ORIGIN=https://yourdomain.com
    SHOP_SLUG=mineiro
+   PUBLIC_API_URL=https://yourdomain.com   # For Google OAuth - must match API domain
+   # Optional - Sign in with Google: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
    ```
 
 ### Tablet Installation (PWA)

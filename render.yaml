@@ -16,6 +16,9 @@ services:
         generateValue: true
       - key: CORS_ORIGIN
         sync: false
+      # For Google OAuth (Sign in with Google): set to your public URL, e.g. https://eutonafila.com.br
+      - key: PUBLIC_API_URL
+        sync: false
       - key: SHOP_SLUG
         value: mineiro
       # Supabase Storage configuration for ad files

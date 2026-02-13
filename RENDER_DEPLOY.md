@@ -121,8 +121,8 @@ To enable customer "Sign in with Google" (and account creation via Google):
    - `PUBLIC_API_URL` – your API root URL with no trailing slash (e.g. `https://your-app.onrender.com`)
 
 2. In **Google Cloud Console** go to **APIs & Services > Credentials**, open your OAuth 2.0 Client (Web application), and under **Authorized redirect URIs** add exactly:
-   - `https://your-app.onrender.com/api/shops/mineiro/auth/customer/google/callback`
-   Add one URI per shop slug if you use multiple shops (e.g. replace `mineiro` with each slug).
+   - `https://your-app.onrender.com/api/auth/customer/google/callback`
+   One URI works for all shops (shop slug is passed in OAuth state).
 
 3. Sign in with Google both signs in existing customers and creates a new customer account for that shop and email when one does not exist.
 
@@ -133,6 +133,30 @@ To enable customer "Sign in with Google" (and account creation via Google):
 - **Health Check**: `https://your-app.onrender.com/health`
 
 ## Troubleshooting
+
+### Error 400: redirect_uri_mismatch (Sign in with Google)
+
+Verify the redirect URI: visit `https://your-domain/api/auth/debug/google-redirect-uri` and ensure `redirectUri` in the response exactly matches what's in Google Console.
+
+This means the redirect URI sent to Google does not exactly match what is in **Google Cloud Console > Credentials > your OAuth client > Authorized redirect URIs**.
+
+1. **Find the redirect URI your app uses:**
+   - Local dev (pnpm dev, Vite proxy): `http://localhost:4040/api/auth/customer/google/callback` (requests go through the frontend, so use the web port 4040)
+   - Local dev (API directly): `http://localhost:4041/api/auth/customer/google/callback` (API port 4041)
+   - Production: `https://YOUR-API-DOMAIN/api/auth/customer/google/callback`
+
+2. **Set PUBLIC_API_URL in production** so the redirect URI matches Google Console exactly:
+   - Add `PUBLIC_API_URL=https://eutonafila.com.br` (or your domain, no trailing slash) to Render environment variables
+   - This must match the domain where your API is reachable. Verify by visiting: `https://your-domain/api/auth/debug/google-redirect-uri`
+   - The API uses this to build the callback URL. Without it, the fallback uses proxy headers and can differ.
+
+3. **Add the exact redirect URI in Google Cloud Console:**
+   - Go to [Google Cloud Console](https://console.cloud.google.com) > APIs & Services > Credentials
+   - Open your OAuth 2.0 Client ID (Web application)
+   - Under **Authorized redirect URIs**, add the full URL (e.g. `http://localhost:4040/api/auth/customer/google/callback`)
+   - No trailing slash. Match protocol (http vs https), port, host, and path exactly.
+   - One URI covers all shops (shop slug is in OAuth state).
+   - If using same OAuth client for Gmail API (appointment reminders): add `http://localhost:3000/oauth2callback` for the get-gmail-refresh-token script.
 
 ### Customer register returns 500: "column password_hash does not exist"
 
