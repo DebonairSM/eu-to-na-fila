@@ -111,9 +111,44 @@ If Blueprint doesn't work, create the service manually:
    - Run: `pnpm db:migrate`
    - (Optional) Run: `pnpm db:seed` for test data
 
+### Sign in with Google
+
+To enable customer "Sign in with Google" (and account creation via Google):
+
+1. In Render dashboard, set these environment variables:
+   - `GOOGLE_CLIENT_ID` – from Google Cloud Console (OAuth 2.0 Client ID)
+   - `GOOGLE_CLIENT_SECRET` – from Google Cloud Console
+   - `PUBLIC_API_URL` – your API root URL with no trailing slash (e.g. `https://your-app.onrender.com`)
+
+2. In **Google Cloud Console** go to **APIs & Services > Credentials**, open your OAuth 2.0 Client (Web application), and under **Authorized redirect URIs** add exactly:
+   - `https://your-app.onrender.com/api/shops/mineiro/auth/customer/google/callback`
+   Add one URI per shop slug if you use multiple shops (e.g. replace `mineiro` with each slug).
+
+3. Sign in with Google both signs in existing customers and creates a new customer account for that shop and email when one does not exist.
+
 ## Access Your App
 
 - **SPA**: `https://your-app.onrender.com/projects/mineiro`
 - **API**: `https://your-app.onrender.com/api`
 - **Health Check**: `https://your-app.onrender.com/health`
+
+## Troubleshooting
+
+### Customer register returns 500: "column password_hash does not exist"
+
+The `clients` table is missing columns added by migration `0017_add_client_auth`. Apply the schema change using one of the options below.
+
+**Option A – Run the SQL manually (use this if you are on Render free tier)**  
+Render Shell is only available on paid plans. Run this SQL in your database provider’s SQL editor (e.g. **Supabase Dashboard > SQL Editor**) or via `psql`:
+
+```sql
+ALTER TABLE "clients" ADD COLUMN IF NOT EXISTS "password_hash" text;
+ALTER TABLE "clients" ADD COLUMN IF NOT EXISTS "google_id" text;
+CREATE UNIQUE INDEX IF NOT EXISTS "clients_shop_email_unique" ON "clients" ("shop_id", LOWER("email")) WHERE "email" IS NOT NULL;
+```
+
+After that, customer registration and Sign in with Google will work.
+
+**Option B – Run migrations from Render Shell (paid plans only)**  
+If you have Shell access, open your service > **Shell** and run `pnpm db:migrate`, then restart the service if needed.
 

@@ -50,6 +50,8 @@ const envSchema = z.object({
   /** Google OAuth 2.0 for customer Sign in with Google. Optional; if not set, Google login is disabled. */
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+  /** Canonical public URL of the API (no trailing slash). When set, used to build Google OAuth redirect_uri so it matches Google Cloud Console. */
+  PUBLIC_API_URL: z.string().url().optional(),
 });
 
 let env: z.infer<typeof envSchema>;

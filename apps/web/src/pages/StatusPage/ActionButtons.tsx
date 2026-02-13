@@ -13,6 +13,9 @@ interface ActionButtonsProps {
   leaveError?: string | null;
   onDismissLeaveError?: () => void;
   onShare?: () => void;
+  showCheckIn?: boolean;
+  onCheckIn?: () => Promise<void>;
+  isCheckingIn?: boolean;
 }
 
 export function ActionButtons({
@@ -24,6 +27,9 @@ export function ActionButtons({
   leaveError,
   onDismissLeaveError,
   onShare,
+  showCheckIn,
+  onCheckIn,
+  isCheckingIn,
 }: ActionButtonsProps) {
   const { t } = useLocale();
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -45,6 +51,26 @@ export function ActionButtons({
   return (
     <>
       <Stack spacing="md">
+        {showCheckIn && onCheckIn && (
+          <Button
+            size="lg"
+            fullWidth
+            onClick={onCheckIn}
+            disabled={isCheckingIn}
+          >
+            {isCheckingIn ? (
+              <>
+                <span className="material-symbols-outlined animate-spin text-xl">hourglass_empty</span>
+                {t('barber.checkingIn')}
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-xl">login</span>
+                {t('barber.checkIn')}
+              </>
+            )}
+          </Button>
+        )}
         {leaveError && (
           <div className="p-4 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/20 flex items-start gap-3">
             <span className="material-symbols-outlined text-[#ef4444] text-xl flex-shrink-0">error</span>

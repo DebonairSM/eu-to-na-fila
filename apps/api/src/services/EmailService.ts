@@ -9,6 +9,13 @@ export interface AppointmentReminderData {
   scheduledAt: Date;
   barberName?: string | null;
   address?: string | null;
+  /** Frontend base URL (e.g. CORS_ORIGIN). No trailing slash. */
+  frontendBaseUrl: string;
+  /** Shop slug for building paths like /projects/{slug}/... */
+  shopSlug: string;
+  ticketId: number;
+  /** True when appointment was booked with a logged-in customer account (has clientId). */
+  hasClientAccount: boolean;
 }
 
 let nodemailerTransporter: Transporter | null = null;
@@ -81,7 +88,15 @@ export async function sendAppointmentReminder(toEmail: string, data: Appointment
   if (data.address) {
     lines.push(``, `Endereço: ${data.address.replace(/\n/g, ', ')}`);
   }
-  lines.push(``, `Ao chegar, faça check-in na página do seu ticket para entrar na fila.`, ``, `Até lá.`);
+  const basePath = `/projects/${data.shopSlug}`;
+  if (data.hasClientAccount) {
+    const manageUrl = `${data.frontendBaseUrl}${basePath}/checkin/confirm`;
+    lines.push(``, `Gerencie seus agendamentos e faça check-in quando chegar:`, `${manageUrl}`, ``);
+  } else {
+    const statusUrl = `${data.frontendBaseUrl}${basePath}/status/${data.ticketId}`;
+    lines.push(``, `Acesse o status do seu agendamento e faça check-in quando chegar:`, `${statusUrl}`, ``);
+  }
+  lines.push(`Até lá.`);
 
   const textBody = lines.join('\n');
   const subject = `Lembrete: agendamento em ${data.shopName} - ${dateStr}`;

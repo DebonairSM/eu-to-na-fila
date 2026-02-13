@@ -232,6 +232,7 @@ export function optionalAuth(): preHandlerHookHandler {
         companyId: decoded.companyId,
         role: decoded.role,
         barberId: decoded.barberId,
+        clientId: decoded.clientId,
       };
     } catch (error) {
       // Invalid token, but that's okay for optional auth

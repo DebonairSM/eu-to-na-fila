@@ -167,23 +167,27 @@ export class TicketService {
       (ticket as any).checkInTime = now;
     }
 
-    // Client resolution: link ticket to client when phone is provided
-    if (data.customerPhone && data.customerPhone.trim().length > 0) {
+    // Client resolution: use authenticated clientId when provided, otherwise resolve by phone
+    const dataWithClient = data as CreateTicket & { clientId?: number };
+    let clientId: number | null = dataWithClient.clientId ?? null;
+    if (clientId == null && data.customerPhone && data.customerPhone.trim().length > 0) {
       try {
         const client = await this.clientService.findOrCreateByPhone(
           shopId,
           data.customerPhone,
           data.customerName
         );
-        await this.db
-          .update(schema.tickets)
-          .set({ clientId: client.id, updatedAt: now })
-          .where(eq(schema.tickets.id, ticket.id));
-        (ticket as any).clientId = client.id;
+        clientId = client.id;
       } catch (err) {
-        // Non-fatal: ticket is created, client link skipped
         console.warn('[TicketService] Client resolution failed:', err);
       }
+    }
+    if (clientId != null) {
+      await this.db
+        .update(schema.tickets)
+        .set({ clientId, updatedAt: now })
+        .where(eq(schema.tickets.id, ticket.id));
+      (ticket as any).clientId = clientId;
     }
 
     this.auditService.logTicketCreated(ticket.id, shopId, {
@@ -460,7 +464,7 @@ export class TicketService {
    */
   async createAppointment(
     shopId: number,
-    data: { serviceId: number; customerName: string; customerPhone?: string; preferredBarberId?: number; scheduledTime: Date | string }
+    data: { serviceId: number; customerName: string; customerPhone?: string; preferredBarberId?: number; scheduledTime: Date | string; clientId?: number }
   ): Promise<Ticket> {
     const shop = await this.db.query.shops.findFirst({
       where: eq(schema.shops.id, shopId),
@@ -499,8 +503,8 @@ export class TicketService {
       .returning();
 
     const ticketNumber = `A-${ticket.id}`;
-    let clientId: number | null = null;
-    if (data.customerPhone && data.customerPhone.trim().length > 0) {
+    let clientId: number | null = data.clientId ?? null;
+    if (clientId == null && data.customerPhone && data.customerPhone.trim().length > 0) {
       try {
         const client = await this.clientService.findOrCreateByPhone(
           shopId,

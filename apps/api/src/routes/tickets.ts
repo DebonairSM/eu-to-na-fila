@@ -7,12 +7,13 @@ import { eq } from 'drizzle-orm';
 import { ticketService, queueService } from '../services/index.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError, ForbiddenError, InternalError } from '../lib/errors.js';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireRole, optionalAuth } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { shapeTicketResponse } from '../lib/ticketResponse.js';
 import { parseSettings } from '../lib/settings.js';
 import { getAppointmentSlots, utcToShopLocal } from '../lib/appointmentSlots.js';
 import { sendAppointmentReminder } from '../services/EmailService.js';
+import { env } from '../env.js';
 import { getHomeContentForLocale } from '@eutonafila/shared';
 
 const reminderSentTicketIds = new Set<number>();
@@ -36,7 +37,9 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {400} If validation fails
    * @throws {409} If queue is full
    */
-  fastify.post('/shops/:slug/tickets', async (request, reply) => {
+  fastify.post('/shops/:slug/tickets', {
+    preHandler: [optionalAuth()],
+  }, async (request, reply) => {
     // Validate params
     const paramsSchema = z.object({
       slug: z.string().min(1),
@@ -98,11 +101,15 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Create ticket using service (service.create() also checks internally for safety)
     // It will check by deviceId first, then by customerName as fallback
-    const beforeCreate = Date.now();
-    const ticket = await ticketService.create(shop.id, {
+    const createData = {
       ...data,
       shopId: shop.id,
-    });
+    };
+    if (request.user?.role === 'customer' && request.user.clientId != null) {
+      (createData as { clientId?: number }).clientId = request.user.clientId;
+    }
+    const beforeCreate = Date.now();
+    const ticket = await ticketService.create(shop.id, createData);
 
     // Determine if this is a new ticket or existing ticket returned by service
     // Check if ticket was created just now (within last 2 seconds) or if it's older (existing)
@@ -146,9 +153,12 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Book an appointment (public). Validates slot is available, then creates appointment.
+   * When customer is logged in, links appointment to their client account.
    * @route POST /api/shops/:slug/appointments/book
    */
-  fastify.post('/shops/:slug/appointments/book', async (request, reply) => {
+  fastify.post('/shops/:slug/appointments/book', {
+    preHandler: [optionalAuth()],
+  }, async (request, reply) => {
     const paramsSchema = z.object({ slug: z.string().min(1) });
     const { slug } = validateRequest(paramsSchema, request.params);
     const bodySchema = z.object({
@@ -185,12 +195,14 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const slot = slots.find((sl) => sl.time === timeStr);
     if (!slot || !slot.available) throw new ValidationError('This time slot is no longer available');
 
+    const clientId = request.user?.role === 'customer' ? request.user.clientId : undefined;
     const ticket = await ticketService.createAppointment(shop.id, {
       serviceId: data.serviceId,
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       preferredBarberId: data.preferredBarberId,
       scheduledTime: data.scheduledTime,
+      clientId,
     });
     return reply.status(201).send(shapeTicketResponse(ticket as Record<string, unknown>));
   });
@@ -240,12 +252,18 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const scheduledTime = (ticket as { scheduledTime?: Date | string }).scheduledTime;
     const scheduledAt = scheduledTime ? new Date(scheduledTime) : new Date();
 
+    const ticketClientId = (ticket as { clientId?: number | null }).clientId ?? null;
+    const frontendBase = env.CORS_ORIGIN.replace(/\/$/, '');
     const sent = await sendAppointmentReminder(email, {
       shopName: shop.name,
       serviceName: service?.name ?? 'Serviço',
       scheduledAt,
       barberName: barberName ?? undefined,
       address: address ?? undefined,
+      frontendBaseUrl: frontendBase,
+      shopSlug: slug,
+      ticketId,
+      hasClientAccount: ticketClientId != null,
     });
 
     if (sent) reminderSentTicketIds.add(ticketId);
@@ -254,11 +272,11 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
-   * Check in an appointment (pending -> waiting). Staff/owner/barber only.
+   * Check in an appointment (pending -> waiting). Customer only; must be the ticket owner.
    * @route POST /api/shops/:slug/tickets/:id/check-in
    */
   fastify.post('/shops/:slug/tickets/:id/check-in', {
-    preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
+    preHandler: [requireAuth(), requireRole(['customer'])],
   }, async (request, reply) => {
     const paramsSchema = z.object({
       slug: z.string().min(1),
@@ -267,6 +285,14 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const { slug, id } = validateRequest(paramsSchema, request.params);
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    const existingTicket = await ticketService.getById(id);
+    if (!existingTicket) throw new NotFoundError(`Ticket with ID ${id} not found`);
+    if (existingTicket.shopId !== shop.id) throw new NotFoundError(`Ticket with ID ${id} not found`);
+    const userClientId = request.user?.clientId;
+    const ticketClientId = (existingTicket as { clientId?: number | null }).clientId ?? null;
+    if (userClientId == null || ticketClientId !== userClientId) {
+      throw new ForbiddenError('You can only check in your own appointment');
+    }
     const settings = parseSettings(shop.settings);
     const status = getShopStatus(
       settings.operatingHours,
@@ -283,7 +309,6 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       );
     }
     const ticket = await ticketService.checkIn(id);
-    if (ticket.shopId !== shop.id) throw new NotFoundError(`Ticket with ID ${id} not found`);
     return reply.send(shapeTicketResponse(ticket as Record<string, unknown>));
   });
 

@@ -1,13 +1,15 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTicketStatus } from '@/hooks/useTicketStatus';
 import { useQueue } from '@/hooks/useQueue';
 import { useServices } from '@/hooks/useServices';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useBarbers } from '@/hooks/useBarbers';
 import { api } from '@/lib/api';
+import { getErrorMessage } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
@@ -32,7 +34,10 @@ export function StatusPage() {
   const [shareSuccess, setShareSuccess] = useState(false);
   const [generalLineWaitTime, setGeneralLineWaitTime] = useState<number | null>(null);
   const { config: shopConfig } = useShopConfig();
+  const { user } = useAuthContext();
   const { barber, isLeaving, handleLeaveQueue, handleShareTicket, leaveError, clearLeaveError } = useStatusDisplay(ticket);
+  const [checkInError, setCheckInError] = useState<string | null>(null);
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
 
   const preferredBarberId = (ticket as { preferredBarberId?: number | null } | null)?.preferredBarberId ?? null;
   const preferredBarberName = preferredBarberId != null ? barbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
@@ -88,6 +93,29 @@ export function StatusPage() {
       setTimeout(() => setShareSuccess(false), 3000);
     }
   };
+
+  const ticketClientId = (ticket as { clientId?: number | null })?.clientId ?? null;
+  const ticketType = (ticket as { type?: string })?.type ?? 'walkin';
+  const canCheckInAsClient =
+    ticket?.status === 'pending' &&
+    ticketType === 'appointment' &&
+    user?.role === 'customer' &&
+    user?.clientId != null &&
+    ticketClientId === user.clientId;
+
+  const handleCheckIn = useCallback(async () => {
+    if (!shopSlug || !ticketIdFromParams) return;
+    setCheckInError(null);
+    setIsCheckingIn(true);
+    try {
+      await api.checkInAppointment(shopSlug, ticketIdFromParams);
+      await refetch();
+    } catch (error) {
+      setCheckInError(getErrorMessage(error, t('barber.checkInError')));
+    } finally {
+      setIsCheckingIn(false);
+    }
+  }, [shopSlug, ticketIdFromParams, refetch, t]);
 
   if (!id) {
     return (
@@ -187,9 +215,12 @@ export function StatusPage() {
             canCancel={canCancel}
             onLeaveQueue={handleLeaveQueue}
             isLeaving={isLeaving}
-            leaveError={leaveError}
-            onDismissLeaveError={clearLeaveError}
+            leaveError={checkInError ?? leaveError}
+            onDismissLeaveError={() => { setCheckInError(null); clearLeaveError(); }}
             onShare={handleShare}
+            showCheckIn={canCheckInAsClient}
+            onCheckIn={handleCheckIn}
+            isCheckingIn={isCheckingIn}
           />
 
           {shareSuccess && (
@@ -227,9 +258,12 @@ export function StatusPage() {
               canCancel={canCancel}
               onLeaveQueue={handleLeaveQueue}
               isLeaving={isLeaving}
-              leaveError={leaveError}
-              onDismissLeaveError={clearLeaveError}
+              leaveError={checkInError ?? leaveError}
+              onDismissLeaveError={() => { setCheckInError(null); clearLeaveError(); }}
               onShare={handleShare}
+              showCheckIn={canCheckInAsClient}
+              onCheckIn={handleCheckIn}
+              isCheckingIn={isCheckingIn}
             />
           </div>
         </div>

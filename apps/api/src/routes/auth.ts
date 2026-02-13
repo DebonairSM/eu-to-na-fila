@@ -431,10 +431,12 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(404).send({ error: 'Shop not found' });
     }
 
-    const baseUrl = request.headers['x-forwarded-proto'] && request.headers['x-forwarded-host']
-      ? `${request.headers['x-forwarded-proto']}://${request.headers['x-forwarded-host']}`
-      : `${request.protocol}://${request.hostname}`;
     const callbackPath = `/api/shops/${slug}/auth/customer/google/callback`;
+    const baseUrl = env.PUBLIC_API_URL
+      ? env.PUBLIC_API_URL.replace(/\/$/, '')
+      : (request.headers['x-forwarded-proto'] && request.headers['x-forwarded-host']
+          ? `${request.headers['x-forwarded-proto']}://${request.headers['x-forwarded-host']}`
+          : `${request.protocol}://${request.hostname}`);
     const backendRedirectUri = `${baseUrl}${callbackPath}`;
 
     const { google } = await import('googleapis');
@@ -488,10 +490,12 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=shop_not_found`);
     }
 
-    const baseUrl = request.headers['x-forwarded-proto'] && request.headers['x-forwarded-host']
-      ? `${request.headers['x-forwarded-proto']}://${request.headers['x-forwarded-host']}`
-      : `${request.protocol}://${request.hostname}`;
     const callbackPath = `/api/shops/${slug}/auth/customer/google/callback`;
+    const baseUrl = env.PUBLIC_API_URL
+      ? env.PUBLIC_API_URL.replace(/\/$/, '')
+      : (request.headers['x-forwarded-proto'] && request.headers['x-forwarded-host']
+          ? `${request.headers['x-forwarded-proto']}://${request.headers['x-forwarded-host']}`
+          : `${request.protocol}://${request.hostname}`);
     const redirectUri = `${baseUrl}${callbackPath}`;
 
     const { google } = await import('googleapis');

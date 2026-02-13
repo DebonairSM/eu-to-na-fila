@@ -66,7 +66,6 @@ export function BarberQueueManager() {
   const [checkInPhone, setCheckInPhone] = useState('');
   const [checkInServiceId, setCheckInServiceId] = useState<number | null>(null);
   const [checkInBarberId, setCheckInBarberId] = useState<number | null>(null);
-  const [checkInProgressTicketId, setCheckInProgressTicketId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [deadZoneWarning, setDeadZoneWarning] = useState<string | null>(null);
@@ -410,18 +409,6 @@ export function BarberQueueManager() {
       setNextTicketLoading(false);
     }
   }, [shopSlug, barberSelectorModal, t]);
-
-  const handleCheckInAppointment = useCallback(async (ticketId: number) => {
-    setCheckInProgressTicketId(ticketId);
-    try {
-      await api.checkInAppointment(shopSlug, ticketId);
-      await refetchQueue();
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error, t('barber.checkInError')));
-    } finally {
-      setCheckInProgressTicketId(null);
-    }
-  }, [shopSlug, refetchQueue, t]);
 
   const handleCreateAppointment = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -922,22 +909,6 @@ export function BarberQueueManager() {
                           )}
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => handleCheckInAppointment(ticket.id)}
-                            disabled={checkInProgressTicketId === ticket.id || !canCheckInAppointment(ticket)}
-                            title={!canCheckInAppointment(ticket) ? t('barber.checkInWhenWithinWaitTime') : undefined}
-                            className="px-2 py-1 rounded text-xs bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {checkInProgressTicketId === ticket.id ? (
-                              <>
-                                <span className="material-symbols-outlined animate-spin text-sm align-middle mr-0.5">hourglass_empty</span>
-                                {t('barber.checkingIn')}
-                              </>
-                            ) : (
-                              t('barber.checkIn')
-                            )}
-                          </button>
                           <button
                             type="button"
                             onClick={() => {
