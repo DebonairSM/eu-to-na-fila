@@ -26,7 +26,14 @@ export interface ClientClipNote {
 }
 
 export interface ClientDetailResponse {
-  client: { id: number; name: string; phone: string; email?: string | null };
+  client: {
+    id: number;
+    name: string;
+    phone: string;
+    email?: string | null;
+    nextServiceNote?: string | null;
+    nextServiceImageUrl?: string | null;
+  };
   clipNotes: ClientClipNote[];
   serviceHistory: Array<{ id: number; serviceName: string; barberName: string | null; completedAt: string | null }>;
 }

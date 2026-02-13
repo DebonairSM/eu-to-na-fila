@@ -5,6 +5,8 @@ import { ApiError } from './errors.js';
  * Base API client. Handles HTTP requests, auth tokens, and error transformation.
  * Domain modules extend this via mixins.
  */
+const REMEMBER_ME_FLAG = 'eutonafila_remember_me';
+
 export class BaseApiClient {
   protected baseUrl: string;
   protected authToken?: string;
@@ -16,12 +18,15 @@ export class BaseApiClient {
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
     try {
-      const storedToken = sessionStorage.getItem(this.TOKEN_STORAGE_KEY);
+      let storedToken = sessionStorage.getItem(this.TOKEN_STORAGE_KEY);
+      if (!storedToken && localStorage.getItem(REMEMBER_ME_FLAG) === 'true') {
+        storedToken = localStorage.getItem(this.TOKEN_STORAGE_KEY);
+      }
       if (storedToken) {
         this.authToken = storedToken;
       }
     } catch {
-      // sessionStorage might not be available during module init
+      // sessionStorage/localStorage might not be available during module init
     }
   }
 
@@ -46,6 +51,11 @@ export class BaseApiClient {
   clearAuthToken(): void {
     this.authToken = undefined;
     sessionStorage.removeItem(this.TOKEN_STORAGE_KEY);
+    try {
+      localStorage.removeItem(this.TOKEN_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
   }
 
   private static readonly RETRY_DELAY_MS = 1000;

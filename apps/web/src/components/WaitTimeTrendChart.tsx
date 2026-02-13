@@ -1,5 +1,6 @@
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatDate } from '@/lib/format';
+import { formatDurationMinutes } from '@/lib/formatDuration';
 
 interface WaitTimeTrendChartProps {
   data: Record<string, number>;
@@ -97,7 +98,7 @@ export function WaitTimeTrendChart({ data }: WaitTimeTrendChartProps) {
       <div className="mt-4 text-center">
         <p className="text-sm text-white/70">
           {t('chart.averageWaitTime')}: <span className="text-[#3b82f6] font-semibold">
-            {Math.round(Object.values(data).reduce((a, b) => a + b, 0) / days.length)} {t('common.minutes')}
+            {formatDurationMinutes(Math.round(Object.values(data).reduce((a, b) => a + b, 0) / days.length))}
           </span>
         </p>
       </div>

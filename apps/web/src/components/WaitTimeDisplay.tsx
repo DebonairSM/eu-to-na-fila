@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { formatDurationMinutes } from '@/lib/formatDuration';
 
 export interface WaitTimeDisplayProps {
   minutes: number | null;
@@ -32,8 +33,8 @@ export function WaitTimeDisplay({
     displayValue = 'Agora';
     unitLabel = 'sem espera';
   } else {
-    displayValue = minutes;
-    unitLabel = 'minutos';
+    displayValue = formatDurationMinutes(minutes);
+    unitLabel = '';
   }
 
   return (
@@ -62,7 +63,7 @@ export function WaitTimeDisplay({
       >
         {displayValue}
       </div>
-      <div className="wait-unit text-sm text-[var(--shop-text-secondary)] mt-1">{unitLabel}</div>
+      {unitLabel ? <div className="wait-unit text-sm text-[var(--shop-text-secondary)] mt-1">{unitLabel}</div> : null}
     </div>
   );
 }

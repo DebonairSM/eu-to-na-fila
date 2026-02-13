@@ -1,10 +1,13 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import { join } from 'path';
+import { existsSync, readFileSync } from 'fs';
 import { clientService } from '../services/index.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
+import { getPublicPath } from '../lib/paths.js';
 
 /**
  * Client routes.
@@ -90,10 +93,67 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
     ]);
 
     return {
-      client,
+      client: {
+        ...client,
+        nextServiceNote: (client as { nextServiceNote?: string | null }).nextServiceNote ?? null,
+        nextServiceImageUrl: (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl ?? null,
+      },
       clipNotes,
       serviceHistory,
     };
+  });
+
+  /**
+   * Serve client reference image. Staff/owner/barber only.
+   * For local-stored images, serves from disk. For Supabase URLs, redirects.
+   *
+   * @route GET /api/shops/:slug/clients/:id/reference-image
+   */
+  fastify.get('/shops/:slug/clients/:id/reference-image', {
+    preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+      id: z.coerce.number().int().positive(),
+    });
+    const { slug, id } = validateRequest(paramsSchema, request.params);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    if (request.user?.role === 'barber' && request.user.shopId !== shop.id) {
+      throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    }
+
+    const client = await clientService.getByIdWithShopCheck(id, shop.id);
+    if (!client) throw new NotFoundError('Client not found');
+
+    const imageUrl = (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl;
+    if (!imageUrl) {
+      return reply.status(404).send({ error: 'No reference image' });
+    }
+
+    // If URL points to our customer reference route, serve from local storage
+    if (imageUrl.includes('/auth/customer/me/reference/image')) {
+      const publicPath = getPublicPath();
+      const companyId = (shop as { companyId?: number | null }).companyId;
+      const dir = companyId != null
+        ? join(publicPath, 'companies', String(companyId), 'shops', String(shop.id), 'clients', String(id))
+        : join(publicPath, 'shops', String(shop.id), 'clients', String(id));
+      const exts = ['.png', '.jpg', '.jpeg', '.webp'];
+      for (const ext of exts) {
+        const filePath = join(dir, `reference${ext}`);
+        if (existsSync(filePath)) {
+          const content = readFileSync(filePath);
+          const contentType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+          return reply.type(contentType).send(content);
+        }
+      }
+      return reply.status(404).send({ error: 'Image file not found' });
+    }
+
+    // External URL (Supabase) - redirect
+    return reply.redirect(302, imageUrl);
   });
 
   /**

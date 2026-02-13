@@ -4,12 +4,12 @@ interface ServiceTimeDistributionChartProps {
 
 const ranges = ['0-10', '10-20', '20-30', '30-45', '45-60', '60+'];
 const rangeLabels: Record<string, string> = {
-  '0-10': '0-10 min',
-  '10-20': '10-20 min',
-  '20-30': '20-30 min',
-  '30-45': '30-45 min',
-  '45-60': '45-60 min',
-  '60+': '60+ min',
+  '0-10': '0-10m',
+  '10-20': '10-20m',
+  '20-30': '20-30m',
+  '30-45': '30-45m',
+  '45-60': '45m-1h',
+  '60+': '1h+',
 };
 
 export function ServiceTimeDistributionChart({ data }: ServiceTimeDistributionChartProps) {

@@ -7,7 +7,7 @@
  */
 
 import { DEFAULT_THEME } from '@eutonafila/shared';
-import { getContrastRatio, WCAG_AA_NORMAL } from '../src/lib/colorContrast';
+import { getContrastRatio, WCAG_AA_NORMAL, WCAG_AAA_NORMAL } from '../src/lib/colorContrast';
 import { PRESET_PALETTES } from '../src/lib/presetPalettes';
 
 type ThemeLike = {
@@ -23,6 +23,7 @@ type ThemeLike = {
 
 const MIN_RATIO_NORMAL = WCAG_AA_NORMAL; // 4.5:1 for normal text
 const MIN_RATIO_ACCENT = WCAG_AA_NORMAL; // 4.5:1 for text on accent (buttons/CTAs)
+const MIN_RATIO_SECONDARY = WCAG_AAA_NORMAL; // 7:1 for secondary text (improved readability)
 
 interface ContrastPair {
   name: string;
@@ -46,7 +47,10 @@ function getPairs(theme: ThemeLike): ContrastPair[] {
     { name: 'textPrimary on surfacePrimary', fg: tp, bg: sp, minRatio: MIN_RATIO_NORMAL },
     { name: 'textPrimary on surfaceSecondary', fg: tp, bg: ss, minRatio: MIN_RATIO_NORMAL },
     { name: 'textPrimary on navBg', fg: tp, bg: nav, minRatio: MIN_RATIO_NORMAL },
-    { name: 'textSecondary on background', fg: ts, bg, minRatio: MIN_RATIO_NORMAL },
+    { name: 'textSecondary on background', fg: ts, bg, minRatio: MIN_RATIO_SECONDARY },
+    { name: 'textSecondary on surfacePrimary', fg: ts, bg: sp, minRatio: MIN_RATIO_SECONDARY },
+    { name: 'textSecondary on surfaceSecondary', fg: ts, bg: ss, minRatio: MIN_RATIO_SECONDARY },
+    { name: 'textSecondary on navBg', fg: ts, bg: nav, minRatio: MIN_RATIO_SECONDARY },
     { name: 'textOnAccent on accent', fg: toa, bg: accent, minRatio: MIN_RATIO_ACCENT },
   ];
 }

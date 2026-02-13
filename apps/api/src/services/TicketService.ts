@@ -1,6 +1,6 @@
 import type { DbClient } from '../db/types.js';
 import { schema } from '../db/index.js';
-import { eq, and, or, ne, sql, gt, asc } from 'drizzle-orm';
+import { eq, and, or, ne, sql, gt, asc, inArray } from 'drizzle-orm';
 import type { CreateTicket, UpdateTicketStatus, Ticket } from '@eutonafila/shared';
 import type { QueueService } from './QueueService.js';
 import type { AuditService } from './AuditService.js';
@@ -114,6 +114,10 @@ export class TicketService {
 
     const isQueueFull = await this.queueService.isQueueFull(shopId, settings.maxQueueSize);
     if (isQueueFull) throw new ConflictError('Queue is full');
+
+    if (settings.allowAppointments) {
+      await this.promoteDueAppointments(shopId);
+    }
 
     if (data.preferredBarberId) {
       const preferredBarber = await this.db.query.barbers.findFirst({
@@ -482,6 +486,19 @@ export class TicketService {
     const scheduledTime = typeof data.scheduledTime === 'string' ? new Date(data.scheduledTime) : data.scheduledTime;
     if (isNaN(scheduledTime.getTime())) throw new ValidationError('Invalid scheduledTime');
 
+    const appointmentCap = Math.floor(settings.maxQueueSize * (settings.maxAppointmentsFraction ?? 0.5));
+    const existingAppointmentCount = await this.db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.type, 'appointment'),
+        inArray(schema.tickets.status, ['pending', 'waiting'])
+      ),
+      columns: { id: true },
+    });
+    if (existingAppointmentCount.length >= appointmentCap) {
+      throw new ConflictError('Appointment capacity reached. Maximum appointments for this queue is ' + appointmentCap + '.');
+    }
+
     const now = new Date();
     const [ticket] = await this.db
       .insert(schema.tickets)
@@ -536,12 +553,16 @@ export class TicketService {
     return { ...ticket, ticketNumber, clientId } as Ticket;
   }
 
+  /** Buffer (minutes): demote waiting appointment only if they would be served this much earlier than their slot. */
+  private static readonly DEMOTE_BUFFER_MINUTES = 15;
+
   /**
    * Promote pending appointments to waiting when:
    * (1) Time until appointment <= current estimated wait time (general or preferred barber line), or
    * (2) Time until appointment <= 30 minutes.
    * Respects preferred barber: uses that barber's line for position/wait when set.
    * Called periodically (e.g. by queue countdown job).
+   * At start: demote waiting appointments that would be served too early (minutesUntil - estimatedWait >= buffer).
    */
   async promoteDueAppointments(shopId: number): Promise<number> {
     const shop = await this.db.query.shops.findFirst({
@@ -552,6 +573,42 @@ export class TicketService {
     if (!settings.allowAppointments) return 0;
 
     const now = new Date();
+
+    const waitingAppointmentsWithFuture = await this.db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.status, 'waiting'),
+        eq(schema.tickets.type, 'appointment'),
+        gt(schema.tickets.scheduledTime, now)
+      ),
+    });
+    const toDemote: number[] = [];
+    for (const t of waitingAppointmentsWithFuture) {
+      const scheduled = t.scheduledTime ? new Date(t.scheduledTime) : null;
+      if (!scheduled) continue;
+      const minutesUntil = (scheduled.getTime() - now.getTime()) / 60_000;
+      const estimatedWait = t.estimatedWaitTime ?? 0;
+      if (minutesUntil - estimatedWait >= TicketService.DEMOTE_BUFFER_MINUTES) {
+        toDemote.push(t.id);
+      }
+    }
+    if (toDemote.length > 0) {
+      for (const id of toDemote) {
+        await this.db
+          .update(schema.tickets)
+          .set({
+            status: 'pending',
+            checkInTime: null,
+            position: 0,
+            estimatedWaitTime: null,
+            updatedAt: now,
+          })
+          .where(eq(schema.tickets.id, id));
+      }
+      await this.queueService.recalculatePositions(shopId, settings);
+      await this.recalculateWaitTimes(shopId);
+    }
+
     const pendingAppointments = await this.db.query.tickets.findMany({
       where: and(
         eq(schema.tickets.shopId, shopId),

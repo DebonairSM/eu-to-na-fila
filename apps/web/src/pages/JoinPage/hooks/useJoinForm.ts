@@ -59,8 +59,6 @@ export function useJoinForm() {
   const { user, isCustomer, logout } = useAuthContext();
   const { t } = useLocale();
 
-  const hasSufficientName = isCustomer && isSufficientName(user?.name);
-  const showNameField = !hasSufficientName;
   const needsProfileCompletion = isCustomer && user?.name && !isSufficientName(user.name);
   const settings = shopConfig.settings;
   const { validateName } = useProfanityFilter();
@@ -478,7 +476,6 @@ export function useJoinForm() {
     selectedServiceId,
     setSelectedServiceId,
     settings,
-    showNameField,
     needsProfileCompletion,
     isLoggedInAsCustomer: isCustomer,
     customerName: user?.name,

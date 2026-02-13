@@ -1,6 +1,6 @@
 import type { DbClient } from '../db/types.js';
 import { schema } from '../db/index.js';
-import { eq, and, asc, inArray } from 'drizzle-orm';
+import { eq, and, asc, inArray, gt } from 'drizzle-orm';
 import type { AuditService } from './AuditService.js';
 import type { ShopSettings } from '@eutonafila/shared';
 
@@ -228,7 +228,7 @@ export class QueueService {
         }
         let totalWait = barberAvailability;
         for (const t of ticketsAhead) {
-          totalWait += getDuration(t.serviceId);
+          totalWait += getDuration(t.serviceId, ticket.preferredBarberId);
         }
         estimatedWaitTime = position === 0 ? null : Math.ceil(totalWait);
       } else {
@@ -283,8 +283,13 @@ export class QueueService {
     return ticketsAhead.length + 1;
   }
 
-  async calculateWaitTime(shopId: number, position: number, defaultServiceDuration: number = 20): Promise<number | null> {
-    if (position === 0) return null;
+  /** Run wave simulation for a given list of tickets ahead; returns wait in minutes. */
+  private async runWaveWaitTime(
+    shopId: number,
+    ticketsAhead: Array<{ serviceId: number; preferredBarberId: number | null }>,
+    defaultServiceDuration: number
+  ): Promise<number | null> {
+    if (ticketsAhead.length === 0) return 0;
     const now = new Date();
 
     const activeBarbers = await this.db.query.barbers.findMany({
@@ -302,9 +307,6 @@ export class QueueService {
       ),
     });
     const inProgressWithBarbers = inProgressTickets.filter(t => t.barberId !== null);
-
-    const generalLineTickets = await this.getGeneralLineWaitingTickets(shopId);
-    const ticketsAhead = generalLineTickets.slice(0, Math.max(position - 1, 0));
 
     const serviceIds = new Set<number>();
     for (const t of inProgressWithBarbers) serviceIds.add(t.serviceId);
@@ -349,6 +351,86 @@ export class QueueService {
     }
 
     return Math.ceil(Math.min(...barberAvailability));
+  }
+
+  async calculateWaitTime(shopId: number, position: number, defaultServiceDuration: number = 20): Promise<number | null> {
+    if (position === 0) return null;
+    const generalLineTickets = await this.getGeneralLineWaitingTickets(shopId);
+    const ticketsAhead = generalLineTickets.slice(0, Math.max(position - 1, 0));
+    return this.runWaveWaitTime(shopId, ticketsAhead, defaultServiceDuration);
+  }
+
+  /**
+   * Standard wait time including only pending appointments that would be promoted
+   * (minutesUntil <= current standard wait or <= 30). Used when allowAppointments is true.
+   */
+  async calculateStandardWaitTimeIncludingAtRiskAppointments(
+    shopId: number,
+    settings: ShopSettings
+  ): Promise<number | null> {
+    const now = new Date();
+    const defaultDuration = settings.defaultServiceDuration ?? 20;
+
+    const generalLineTickets = await this.getGeneralLineWaitingTickets(shopId);
+    const standardWaitNoPending = await this.runWaveWaitTime(
+      shopId,
+      generalLineTickets,
+      defaultDuration
+    );
+    const standardWaitMinutes = standardWaitNoPending ?? 0;
+
+    const pendingAppointments = await this.db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shopId),
+        eq(schema.tickets.status, 'pending'),
+        eq(schema.tickets.type, 'appointment'),
+        gt(schema.tickets.scheduledTime, now)
+      ),
+      orderBy: [asc(schema.tickets.scheduledTime)],
+    });
+
+    const atRisk = pendingAppointments.filter((a) => {
+      const scheduled = a.scheduledTime ? new Date(a.scheduledTime) : null;
+      if (!scheduled) return false;
+      const minutesUntil = (scheduled.getTime() - now.getTime()) / 60_000;
+      return minutesUntil <= standardWaitMinutes || minutesUntil <= 30;
+    });
+
+    if (atRisk.length === 0) {
+      const nextPosition = generalLineTickets.length + 1;
+      return this.calculateWaitTime(shopId, nextPosition, defaultDuration);
+    }
+
+    const generalWithType = generalLineTickets.map((t) => ({
+      ...t,
+      type: (t as { type?: string }).type ?? 'walkin',
+      scheduledTime: (t as { scheduledTime?: Date | string | null }).scheduledTime ?? null,
+      checkInTime: (t as { checkInTime?: Date | string | null }).checkInTime ?? null,
+      createdAt: t.createdAt,
+    }));
+    const atRiskAsWaiting = atRisk.map((a) => ({
+      ...a,
+      type: 'appointment' as const,
+      scheduledTime: a.scheduledTime,
+      checkInTime: now,
+      createdAt: now,
+    }));
+    const merged = this.sortWaitingTicketsByWeighted(
+      [...generalWithType, ...atRiskAsWaiting] as Array<{
+        type?: string | null;
+        scheduledTime?: Date | string | null;
+        checkInTime?: Date | string | null;
+        createdAt: Date | string;
+        serviceId: number;
+        preferredBarberId: number | null;
+      }>,
+      now
+    );
+    return this.runWaveWaitTime(
+      shopId,
+      merged.map((t) => ({ serviceId: t.serviceId, preferredBarberId: t.preferredBarberId })),
+      defaultDuration
+    );
   }
 
   /**

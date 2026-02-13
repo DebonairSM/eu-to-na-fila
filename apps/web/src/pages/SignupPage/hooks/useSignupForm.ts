@@ -63,6 +63,11 @@ export function useSignupForm() {
     }
   };
 
+  const goToGoogleAuth = () => {
+    const url = api.getCustomerGoogleAuthUrl(shopSlug, '/checkin/confirm');
+    window.location.href = url;
+  };
+
   return {
     email,
     setEmail,
@@ -77,5 +82,6 @@ export function useSignupForm() {
     isLoading,
     error,
     handleSubmit,
+    goToGoogleAuth,
   };
 }

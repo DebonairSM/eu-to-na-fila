@@ -175,6 +175,28 @@ export async function uploadShopHomeImage(
 }
 
 /**
+ * Upload client reference image (note/image for next service). Path: companies/{companyId}/shops/{shopId}/clients/{clientId}/reference.{ext}
+ */
+export async function uploadClientReferenceImage(
+  companyId: number,
+  shopId: number,
+  clientId: number,
+  fileBuffer: Buffer,
+  mimeType: string
+): Promise<string> {
+  const supabase = getSupabaseClient();
+  const extension = MIME_TO_EXT[mimeType] || '.jpg';
+  const storagePath = `companies/${companyId}/shops/${shopId}/clients/${clientId}/reference${extension}`;
+  const { error } = await supabase.storage
+    .from(BUCKET_NAME)
+    .upload(storagePath, fileBuffer, { contentType: mimeType, upsert: true });
+  if (error) throw new Error(`Failed to upload client reference image: ${error.message}`);
+  const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(storagePath);
+  if (!data?.publicUrl) throw new Error('Failed to get public URL for client reference image');
+  return data.publicUrl;
+}
+
+/**
  * Upload draft home about image (for create flow, no shop yet). Path: companies/{companyId}/drafts/home-about-{uuid}.{ext}
  */
 export async function uploadDraftHomeImage(

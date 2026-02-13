@@ -94,6 +94,7 @@
     "shopClosedForLunch": "Fechado para almoço.",
     "loggedInAs": "Conectado como {name}",
     "completeProfile": "Complete seu perfil",
+    "nameChangeHint": "Alterar o nome vale apenas para esta visita. ",
     "notYouLogout": "Não é você? Sair"
   },
   "schedule": {
@@ -113,6 +114,8 @@
   },
   "account": {
     "title": "Minha conta",
+    "manageYourAccount": "Gerencie sua conta",
+    "loginToManage": "Entre para gerenciar seu perfil, agendamentos e preferências.",
     "profile": "Perfil",
     "appointments": "Agendamentos",
     "history": "Histórico",
@@ -124,7 +127,16 @@
     "noHistory": "Nenhum histórico de atendimentos",
     "viewStatus": "Ver status",
     "checkIn": "Fazer check-in",
-    "preferencesComingSoon": "Preferências em breve."
+    "preferencesComingSoon": "Preferências em breve.",
+    "emailReminders": "Enviar lembretes por e-mail",
+    "referenceForNextService": "Referência para o próximo atendimento",
+    "referenceNotePlaceholder": "Anotação ou instruções para o próximo corte...",
+    "uploadReferenceImage": "Enviar imagem de referência",
+    "removeImage": "Remover imagem",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "saved": "Salvo",
+    "createAccount": "Criar conta"
   },
   "checkin": {
     "title": "Check-in concluído",
@@ -194,6 +206,9 @@
     "backToClientLogin": "Voltar ao login de cliente",
     "createAccount": "Criar conta",
     "signInWithGoogle": "Entrar com Google",
+    "signInOrCreateWithGoogle": "Entrar ou criar conta com Google",
+    "createAccountWithGoogle": "Criar conta com Google",
+    "googleAccountHint": "Novo? Criaremos sua conta.",
     "username": "Usuário",
     "usernameBarbers": "(barbeiros)",
     "showPassword": "Mostrar senha",
@@ -208,6 +223,7 @@
     "fillAllFields": "Preencha todos os campos.",
     "invalidCredentials": "E-mail ou senha incorretos.",
     "loginError": "Erro ao entrar. Tente novamente.",
+    "rememberMe": "Lembrar de mim",
     "signupTitle": "Criar conta",
     "signupHint": "Digite seu e-mail e escolha uma senha.",
     "nameOptional": "Nome (opcional)",
@@ -216,7 +232,8 @@
     "passwordMinLength": "A senha deve ter pelo menos 6 caracteres.",
     "creatingAccount": "Criando conta...",
     "signupError": "Não foi possível criar a conta. Tente novamente.",
-    "alreadyHaveAccount": "Já tem uma conta? Entrar"
+    "alreadyHaveAccount": "Já tem uma conta? Entrar",
+    "orUseEmail": "Ou use e-mail"
   },
   "root": {
     "projects": "Projetos",
@@ -423,6 +440,8 @@
     "hero": "Hero",
     "queueSection": "Fila",
     "maxQueueSize": "Tamanho máximo da fila",
+    "maxAppointmentsFraction": "Fração da fila para agendamentos (0–1)",
+    "maxAppointmentsFractionHint": "Ex.: 0,5 = até 50% da capacidade podem ser agendamentos",
     "defaultServiceDuration": "Duração padrão do serviço (min)",
     "serviceRules": "Regras de atendimento",
     "requirePhone": "Exigir telefone do cliente",

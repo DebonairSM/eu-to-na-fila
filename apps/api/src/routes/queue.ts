@@ -250,11 +250,17 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     const now = new Date();
+    const settings = parseSettings(shop.settings);
 
     // Standard queue: "if the next customer joins the general line now, what's their wait?"
-    // Use general-line position (no preferred barber) and general-line wait time.
-    const generalPosition = await queueService.calculatePosition(shop.id, now);
-    const standardWaitTime = await queueService.calculateWaitTime(shop.id, generalPosition);
+    // When allowAppointments, include only at-risk pending appointments in the estimate.
+    const standardWaitTime = settings.allowAppointments
+      ? await queueService.calculateStandardWaitTimeIncludingAtRiskAppointments(shop.id, settings)
+      : await queueService.calculateWaitTime(
+          shop.id,
+          await queueService.calculatePosition(shop.id, now),
+          settings.defaultServiceDuration
+        );
 
     // Get all active barbers for per-barber wait times (for barber-specific display if needed)
     const barbers = await db.query.barbers.findMany({

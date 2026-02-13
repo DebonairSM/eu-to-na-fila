@@ -1,9 +1,16 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import { join } from 'path';
+import { writeFile, mkdir } from 'fs/promises';
+import { existsSync } from 'fs';
 import { db, schema } from '../db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { getShopBySlug } from '../lib/shop.js';
+import { clientService } from '../services/index.js';
+import { uploadClientReferenceImage } from '../lib/storage.js';
+import { getPublicPath } from '../lib/paths.js';
+import { env } from '../env.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { ValidationError, ConflictError, NotFoundError } from '../lib/errors.js';
 import { signToken } from '../lib/jwt.js';
@@ -11,7 +18,6 @@ import { hashPassword, verifyPassword, validatePassword } from '../lib/password.
 import { getKioskPasswordHash } from '../lib/settings.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { logAuthFailure, logAuthSuccess, getClientIp } from '../middleware/security.js';
-import { env } from '../env.js';
 
 /**
  * Auth routes.
@@ -380,7 +386,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
    * Customer login: email + password.
    *
    * @route POST /api/shops/:slug/auth/customer/login
-   * @body email, password
+   * @body email, password, remember_me (optional)
    */
   fastify.post('/shops/:slug/auth/customer/login', {
     preHandler: [customerRateLimit],
@@ -389,9 +395,10 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const bodySchema = z.object({
       email: z.string().email('Invalid email'),
       password: z.string().min(1).max(200),
+      remember_me: z.boolean().optional(),
     });
     const { slug } = validateRequest(paramsSchema, request.params);
-    const { email, password } = validateRequest(bodySchema, request.body);
+    const { email, password, remember_me } = validateRequest(bodySchema, request.body);
 
     const shop = await getShopBySlug(slug);
     if (!shop) {
@@ -419,12 +426,15 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     logAuthSuccess(request, shop.id, 'customer');
-    const token = signToken({
-      userId: client.id,
-      shopId: shop.id,
-      role: 'customer',
-      clientId: client.id,
-    });
+    const token = signToken(
+      {
+        userId: client.id,
+        shopId: shop.id,
+        role: 'customer',
+        clientId: client.id,
+      },
+      { expiresIn: remember_me === true ? '7d' : '24h' }
+    );
     return {
       valid: true,
       role: 'customer' as const,
@@ -459,11 +469,170 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     if (!client) throw new NotFoundError('Client not found');
 
     const phone = client.phone?.startsWith('e:') ? null : client.phone;
+    const prefs = (client as { preferences?: { emailReminders?: boolean } }).preferences ?? {};
     return {
       name: client.name,
       email: client.email ?? null,
       phone,
+      preferences: { emailReminders: prefs.emailReminders ?? true },
+      nextServiceNote: (client as { nextServiceNote?: string | null }).nextServiceNote ?? null,
+      nextServiceImageUrl: (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl ?? null,
     };
+  });
+
+  /**
+   * Update current customer profile (name, phone, preferences, reference).
+   * @route PATCH /api/shops/:slug/auth/customer/me
+   */
+  fastify.patch('/shops/:slug/auth/customer/me', {
+    preHandler: [requireAuth(), requireRole(['customer'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const clientId = request.user?.clientId;
+    if (!clientId) throw new ValidationError('Invalid customer token');
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError('Shop not found');
+
+    const bodySchema = z.object({
+      name: z.string().min(1).max(200).optional(),
+      phone: z.string().max(50).nullable().optional(),
+      preferences: z.object({ emailReminders: z.boolean().optional() }).optional(),
+      nextServiceNote: z.string().max(2000).nullable().optional(),
+      nextServiceImageUrl: z.string().url().max(500).nullable().optional(),
+    });
+    const data = validateRequest(bodySchema, request.body);
+
+    const updateData: Parameters<typeof clientService.updateCustomerProfile>[2] = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.phone !== undefined) updateData.phone = data.phone;
+    if (data.preferences !== undefined) updateData.preferences = data.preferences;
+    if (data.nextServiceNote !== undefined) updateData.nextServiceNote = data.nextServiceNote;
+    if (data.nextServiceImageUrl !== undefined) updateData.nextServiceImageUrl = data.nextServiceImageUrl;
+
+    const client = await clientService.updateCustomerProfile(clientId, shop.id, updateData);
+    const phone = client.phone?.startsWith('e:') ? null : client.phone;
+    const prefs = (client as { preferences?: { emailReminders?: boolean } }).preferences ?? {};
+    return {
+      name: client.name,
+      email: client.email ?? null,
+      phone,
+      preferences: { emailReminders: prefs.emailReminders ?? true },
+      nextServiceNote: (client as { nextServiceNote?: string | null }).nextServiceNote ?? null,
+      nextServiceImageUrl: (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl ?? null,
+    };
+  });
+
+  /**
+   * Upload client reference image (for next service).
+   * @route POST /api/shops/:slug/auth/customer/me/reference/upload
+   */
+  const ALLOWED_IMAGE_MIME = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+  const MAX_REFERENCE_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+
+  fastify.post('/shops/:slug/auth/customer/me/reference/upload', {
+    preHandler: [requireAuth(), requireRole(['customer'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const clientId = request.user?.clientId;
+    if (!clientId) throw new ValidationError('Invalid customer token');
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError('Shop not found');
+
+    const client = await clientService.getByIdWithShopCheck(clientId, shop.id);
+    if (!client) throw new NotFoundError('Client not found');
+
+    let fileBuffer: Buffer | null = null;
+    let fileMimetype: string | null = null;
+    let fileBytesRead = 0;
+    try {
+      const parts = request.parts();
+      for await (const part of parts) {
+        if (part.type === 'file' && part.fieldname === 'file') {
+          fileBuffer = await part.toBuffer();
+          fileMimetype = part.mimetype ?? null;
+          fileBytesRead = fileBuffer.length;
+        }
+      }
+    } catch (err) {
+      request.log.error({ err }, 'Error parsing multipart');
+      throw new ValidationError('Invalid upload data', [{ field: 'file', message: 'File is required' }]);
+    }
+    if (!fileBuffer || !fileMimetype || !ALLOWED_IMAGE_MIME.includes(fileMimetype)) {
+      throw new ValidationError('A valid image file (PNG, JPEG, WebP) is required', [{ field: 'file', message: 'Invalid file type' }]);
+    }
+    if (fileBytesRead > MAX_REFERENCE_IMAGE_SIZE) {
+      throw new ValidationError('File too large. Maximum size: 5MB', [{ field: 'file', message: 'File too large' }]);
+    }
+
+    const mimeToExt: Record<string, string> = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/jpg': '.jpg', 'image/webp': '.webp' };
+    const extension = mimeToExt[fileMimetype] || '.jpg';
+
+    let url: string;
+    const companyId = (shop as { companyId?: number | null }).companyId;
+
+    if (companyId != null && env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY) {
+      url = await uploadClientReferenceImage(companyId, shop.id, clientId, fileBuffer, fileMimetype);
+    } else {
+      const publicPath = getPublicPath();
+      const dir = companyId != null
+        ? join(publicPath, 'companies', String(companyId), 'shops', String(shop.id), 'clients', String(clientId))
+        : join(publicPath, 'shops', String(shop.id), 'clients', String(clientId));
+      if (!existsSync(dir)) await mkdir(dir, { recursive: true });
+      const filePath = join(dir, `reference${extension}`);
+      await writeFile(filePath, fileBuffer);
+      const host = request.headers['host'] ?? 'localhost';
+      const protocol = request.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+      const base = `${protocol}://${host}`;
+      url = `${base}/api/shops/${encodeURIComponent(slug)}/auth/customer/me/reference/image`;
+    }
+
+    await clientService.updateCustomerProfile(clientId, shop.id, { nextServiceImageUrl: url });
+    return reply.send({ url });
+  });
+
+  /**
+   * Serve client reference image (local storage fallback).
+   * @route GET /api/shops/:slug/auth/customer/me/reference/image
+   */
+  fastify.get('/shops/:slug/auth/customer/me/reference/image', {
+    preHandler: [requireAuth(), requireRole(['customer'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const clientId = request.user?.clientId;
+    if (!clientId) throw new ValidationError('Invalid customer token');
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError('Shop not found');
+
+    const client = await clientService.getByIdWithShopCheck(clientId, shop.id);
+    if (!client) throw new NotFoundError('Client not found');
+
+    const storedUrl = (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl;
+    if (!storedUrl || !storedUrl.includes('/reference/image')) {
+      return reply.status(404).send({ error: 'No reference image' });
+    }
+
+    const { readFileSync } = await import('fs');
+    const publicPath = getPublicPath();
+    const companyId = (shop as { companyId?: number | null }).companyId;
+    const dir = companyId != null
+      ? join(publicPath, 'companies', String(companyId), 'shops', String(shop.id), 'clients', String(clientId))
+      : join(publicPath, 'shops', String(shop.id), 'clients', String(clientId));
+    const exts = ['.png', '.jpg', '.jpeg', '.webp'];
+    for (const ext of exts) {
+      const filePath = join(dir, `reference${ext}`);
+      if (existsSync(filePath)) {
+        const content = readFileSync(filePath);
+        const contentType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+        return reply.type(contentType).send(content);
+      }
+    }
+    return reply.status(404).send({ error: 'Not found' });
   });
 
   /**

@@ -14,6 +14,8 @@ export function LoginForm() {
     setPassword,
     showPassword,
     setShowPassword,
+    rememberMe,
+    setRememberMe,
     isLoading,
     error,
     handleSubmit,
@@ -119,6 +121,19 @@ export function LoginForm() {
           </button>
         </div>
 
+        {isCustomer && (
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 rounded border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-accent)] focus:ring-[var(--shop-accent)]"
+              aria-label={t('auth.rememberMe')}
+            />
+            <span className="text-sm text-[var(--shop-text-secondary)]">{t('auth.rememberMe')}</span>
+          </label>
+        )}
+
         {error && (
           <div className="p-4 rounded-lg bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)]">
             <p className="text-sm text-[#ef4444] flex items-center gap-2">
@@ -145,18 +160,21 @@ export function LoginForm() {
 
         {isCustomer && (
           <>
-            <p className="text-center text-sm text-[var(--shop-text-secondary)]">
-              <Link to="/shop/signup" className="text-[var(--shop-accent)] hover:underline">
-                {t('auth.createAccount')}
-              </Link>
-            </p>
             <button
               type="button"
               onClick={goToGoogleAuth}
               className="w-full px-6 py-3 min-h-[44px] border border-[var(--shop-border-color)] rounded-lg flex items-center justify-center gap-2 text-[var(--shop-text-primary)] text-sm font-medium hover:bg-[rgba(255,255,255,0.05)] transition-all"
             >
-              {t('auth.signInWithGoogle')}
+              {t('auth.signInOrCreateWithGoogle')}
             </button>
+            <p className="text-center text-xs text-[var(--shop-text-secondary)]">
+              {t('auth.googleAccountHint')}
+            </p>
+            <p className="text-center text-sm text-[var(--shop-text-secondary)]">
+              <Link to="/shop/signup" className="text-[var(--shop-accent)] hover:underline">
+                {t('auth.createAccount')}
+              </Link>
+            </p>
           </>
         )}
       </form>

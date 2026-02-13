@@ -20,16 +20,20 @@ export interface JWTPayload {
  * Sign a JWT token for a user.
  *
  * @param user - User information to encode in token
+ * @param options - Optional { expiresIn } (e.g. '7d', '24h'). Default '30d'.
  * @returns Signed JWT token
  */
-export function signToken(user: {
-  userId: number;
-  shopId?: number;
-  companyId?: number;
-  role: 'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk' | 'customer';
-  barberId?: number;
-  clientId?: number;
-}): string {
+export function signToken(
+  user: {
+    userId: number;
+    shopId?: number;
+    companyId?: number;
+    role: 'owner' | 'staff' | 'company_admin' | 'barber' | 'kiosk' | 'customer';
+    barberId?: number;
+    clientId?: number;
+  },
+  options?: { expiresIn?: string }
+): string {
   const payload: JWTPayload = {
     userId: user.userId,
     shopId: user.shopId,
@@ -39,11 +43,12 @@ export function signToken(user: {
     clientId: user.clientId,
   };
 
+  const expiresIn = options?.expiresIn ?? '30d';
   return jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: '30d', // Tokens expire after 30 days (ads are simple, no need for frequent re-auth)
+    expiresIn,
     issuer: 'eutonafila-api',
     audience: 'eutonafila-client',
-  });
+  } as jwt.SignOptions);
 }
 
 /**

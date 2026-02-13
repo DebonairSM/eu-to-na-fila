@@ -17,6 +17,7 @@ export function SignupForm() {
     isLoading,
     error,
     handleSubmit,
+    goToGoogleAuth,
   } = useSignupForm();
   const { t } = useLocale();
 
@@ -35,6 +36,18 @@ export function SignupForm() {
           {t('auth.signupHint')}
         </p>
       </div>
+
+      <button
+        type="button"
+        onClick={goToGoogleAuth}
+        className="w-full px-6 py-3 min-h-[44px] border border-[var(--shop-border-color)] rounded-lg flex items-center justify-center gap-2 text-[var(--shop-text-primary)] text-sm font-medium hover:bg-[rgba(255,255,255,0.05)] transition-all"
+      >
+        {t('auth.createAccountWithGoogle')}
+      </button>
+
+      <p className="text-center text-xs text-[var(--shop-text-secondary)]">
+        {t('auth.orUseEmail')}
+      </p>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="relative">

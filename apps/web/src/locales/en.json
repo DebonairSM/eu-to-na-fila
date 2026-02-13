@@ -94,6 +94,7 @@
     "shopClosedForLunch": "The shop is closed for lunch break.",
     "loggedInAs": "Logged in as {name}",
     "completeProfile": "Complete your profile",
+    "nameChangeHint": "Changing the name only applies to this visit. ",
     "notYouLogout": "Not you? Log out"
   },
   "schedule": {
@@ -113,6 +114,8 @@
   },
   "account": {
     "title": "My account",
+    "manageYourAccount": "Manage your account",
+    "loginToManage": "Log in to manage your profile, appointments, and preferences.",
     "profile": "Profile",
     "appointments": "Appointments",
     "history": "History",
@@ -124,7 +127,16 @@
     "noHistory": "No past appointments",
     "viewStatus": "View status",
     "checkIn": "Check in",
-    "preferencesComingSoon": "Preferences will be available soon."
+    "preferencesComingSoon": "Preferences will be available soon.",
+    "emailReminders": "Email me appointment reminders",
+    "referenceForNextService": "Reference for next service",
+    "referenceNotePlaceholder": "Note or instructions for your next haircut...",
+    "uploadReferenceImage": "Upload reference image",
+    "removeImage": "Remove image",
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "createAccount": "Create account"
   },
   "checkin": {
     "title": "Check-in complete",
@@ -194,6 +206,9 @@
     "backToClientLogin": "Back to customer login",
     "createAccount": "Create account",
     "signInWithGoogle": "Sign in with Google",
+    "signInOrCreateWithGoogle": "Sign in or create account with Google",
+    "createAccountWithGoogle": "Create account with Google",
+    "googleAccountHint": "New? We'll create your account.",
     "username": "Username",
     "usernameBarbers": "(barbers)",
     "showPassword": "Show password",
@@ -208,6 +223,7 @@
     "fillAllFields": "Enter all required fields.",
     "invalidCredentials": "Invalid email or password.",
     "loginError": "Login failed. Try again.",
+    "rememberMe": "Remember me",
     "signupTitle": "Create account",
     "signupHint": "Enter your email and choose a password.",
     "nameOptional": "Name (optional)",
@@ -216,7 +232,8 @@
     "passwordMinLength": "Password must be at least 6 characters.",
     "creatingAccount": "Creating account...",
     "signupError": "Could not create account. Try again.",
-    "alreadyHaveAccount": "Already have an account? Log in"
+    "alreadyHaveAccount": "Already have an account? Log in",
+    "orUseEmail": "Or use email"
   },
   "root": {
     "projects": "Projects",
@@ -423,6 +440,8 @@
     "hero": "Hero",
     "queueSection": "Queue",
     "maxQueueSize": "Maximum queue size",
+    "maxAppointmentsFraction": "Fraction of queue for appointments (0–1)",
+    "maxAppointmentsFractionHint": "E.g. 0.5 = up to 50% of capacity can be appointments",
     "defaultServiceDuration": "Default service duration (min)",
     "serviceRules": "Service rules",
     "requirePhone": "Require customer phone",

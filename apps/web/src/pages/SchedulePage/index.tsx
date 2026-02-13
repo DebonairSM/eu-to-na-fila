@@ -16,6 +16,7 @@ import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { api } from '@/lib/api';
 import { getErrorMessage, formatName, getOrCreateDeviceId } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
+import { formatDurationMinutes } from '@/lib/formatDuration';
 import { hasHoursForDay } from '@/lib/operatingHours';
 
 function isSufficientName(name: string | undefined): boolean {
@@ -33,8 +34,6 @@ export function SchedulePage() {
   const { user, isCustomer, logout } = useAuthContext();
   const { t, locale } = useLocale();
 
-  const hasSufficientName = isCustomer && isSufficientName(user?.name);
-  const showNameField = !hasSufficientName;
   const needsProfileCompletion = isCustomer && user?.name && !isSufficientName(user.name);
   const { activeServices, isLoading: isLoadingServices } = useServices();
   const { barbers } = useBarbers();
@@ -218,7 +217,7 @@ export function SchedulePage() {
                     {activeServices.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name}
-                        {s.duration ? ` (${s.duration} ${t('common.minutes')})` : ''}
+                        {s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}
                         {s.price != null && s.price > 0 ? ` – ${formatCurrency(s.price, locale)}` : ''}
                       </option>
                     ))}
@@ -280,43 +279,37 @@ export function SchedulePage() {
                 )}
 
                 <div>
-                  {showNameField ? (
-                    <>
-                      <InputLabel htmlFor="schedule-name">
-                        {needsProfileCompletion ? t('join.completeProfile') : t('schedule.yourName')}
-                      </InputLabel>
-                      <Input
-                        id="schedule-name"
-                        type="text"
-                        value={combinedName}
-                        onChange={handleCombinedNameChange}
-                        placeholder={t('join.namePlaceholder')}
-                        required
-                        error={!!validationError}
-                        className="w-full mt-1"
-                      />
-                      <InputError message={validationError || ''} />
-                      {!isCustomer && (
-                        <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
-                          <Link to={`/shop/login?redirect=${encodeURIComponent('/checkin/confirm')}`} className="text-[var(--shop-accent)] hover:underline">
-                            {t('schedule.checkInWithLogin')}
-                          </Link>
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm text-[var(--shop-text-secondary)]">
-                        {t('join.loggedInAs').replace('{name}', user?.name ?? '')}
-                      </p>
+                  <InputLabel htmlFor="schedule-name">
+                    {needsProfileCompletion ? t('join.completeProfile') : t('schedule.yourName')}
+                  </InputLabel>
+                  <Input
+                    id="schedule-name"
+                    type="text"
+                    value={combinedName}
+                    onChange={handleCombinedNameChange}
+                    placeholder={t('join.namePlaceholder')}
+                    required
+                    error={!!validationError}
+                    className="w-full mt-1"
+                  />
+                  <InputError message={validationError || ''} />
+                  {isCustomer ? (
+                    <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
+                      {t('join.nameChangeHint')}
                       <button
                         type="button"
                         onClick={() => logout()}
-                        className="text-sm text-[var(--shop-accent)] hover:underline"
+                        className="text-[var(--shop-accent)] hover:underline ml-1"
                       >
                         {t('join.notYouLogout')}
                       </button>
-                    </div>
+                    </p>
+                  ) : (
+                    <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
+                      <Link to={`/shop/login?redirect=${encodeURIComponent('/checkin/confirm')}`} className="text-[var(--shop-accent)] hover:underline">
+                        {t('schedule.checkInWithLogin')}
+                      </Link>
+                    </p>
                   )}
                 </div>
 

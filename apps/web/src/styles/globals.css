@@ -791,7 +791,7 @@
   border-radius: 0.5rem;
   background: var(--shop-surface-secondary, #1a1a1a);
   border: 1px solid var(--shop-border-color, rgba(255,255,255,0.2));
-  padding: 0.875rem 2.5rem 0.875rem 1rem;
+  padding: 0.875rem 3rem 0.875rem 1rem;
   color: var(--shop-text-primary, #fff);
   font-size: 1rem;
   min-height: 52px;
@@ -872,7 +872,7 @@ select.form-control-select {
 .schedule-calendar-wrap .rdp-day-button {
   width: 100%;
   aspect-ratio: 1;
-  max-width: 2.75rem;
+  min-width: 2rem;
   margin: 0 auto;
 }
 

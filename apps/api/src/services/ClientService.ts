@@ -150,6 +150,51 @@ export class ClientService {
     return updated as Client;
   }
 
+  /**
+   * Update customer profile (self-service). Handles name, phone, preferences, reference note/image.
+   */
+  async updateCustomerProfile(
+    id: number,
+    shopId: number,
+    data: {
+      name?: string;
+      phone?: string | null;
+      preferences?: { emailReminders?: boolean };
+      nextServiceNote?: string | null;
+      nextServiceImageUrl?: string | null;
+    }
+  ): Promise<Client> {
+    const client = await this.getByIdWithShopCheck(id, shopId);
+    if (!client) throw new NotFoundError('Client not found');
+
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    if (data.name !== undefined && data.name.trim().length > 0) {
+      updateData.name = data.name.trim();
+    }
+    if (data.phone !== undefined && data.phone != null && data.phone.trim() !== '') {
+      const normalized = normalizePhone(data.phone);
+      if (normalized) updateData.phone = normalized;
+    }
+    if (data.preferences !== undefined) {
+      const current = (client as { preferences?: Record<string, unknown> }).preferences ?? {};
+      const merged = { ...current, ...data.preferences };
+      updateData.preferences = merged;
+    }
+    if (data.nextServiceNote !== undefined) {
+      updateData.nextServiceNote = data.nextServiceNote === '' ? null : data.nextServiceNote;
+    }
+    if (data.nextServiceImageUrl !== undefined) {
+      updateData.nextServiceImageUrl = data.nextServiceImageUrl === '' ? null : data.nextServiceImageUrl;
+    }
+
+    const [updated] = await this.db
+      .update(schema.clients)
+      .set(updateData as Record<string, unknown>)
+      .where(eq(schema.clients.id, id))
+      .returning();
+    return updated as Client;
+  }
+
   async getClipNotes(clientId: number, shopId: number): Promise<ClientClipNote[]> {
     const client = await this.getByIdWithShopCheck(clientId, shopId);
     if (!client) throw new NotFoundError('Client not found');

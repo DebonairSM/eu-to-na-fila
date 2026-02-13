@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
+import { config } from '@/lib/config';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { Navigation } from '@/components/Navigation';
@@ -25,6 +26,46 @@ export function ClientDetailPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const clientId = id ? parseInt(id, 10) : null;
+
+  // Resolve reference image URL: staff route for auth-required images
+  const [refImageDisplayUrl, setRefImageDisplayUrl] = useState<string | null>(null);
+  const refImageObjUrlRef = useRef<string | null>(null);
+  useEffect(() => {
+    const url = data?.client?.nextServiceImageUrl;
+    if (!url || !shopSlug || !clientId) {
+      if (refImageObjUrlRef.current) {
+        URL.revokeObjectURL(refImageObjUrlRef.current);
+        refImageObjUrlRef.current = null;
+      }
+      setRefImageDisplayUrl(null);
+      return;
+    }
+    if (url.includes('/auth/customer/me/reference')) {
+      const staffUrl = `${config.apiBase}/shops/${encodeURIComponent(shopSlug)}/clients/${clientId}/reference-image`;
+      const token = sessionStorage.getItem('eutonafila_auth_token') ?? localStorage.getItem('eutonafila_auth_token');
+      let cancelled = false;
+      fetch(staffUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        .then((r) => r.blob())
+        .then((blob) => {
+          if (cancelled) return;
+          if (refImageObjUrlRef.current) URL.revokeObjectURL(refImageObjUrlRef.current);
+          const objUrl = URL.createObjectURL(blob);
+          refImageObjUrlRef.current = objUrl;
+          setRefImageDisplayUrl(objUrl);
+        })
+        .catch(() => { if (!cancelled) setRefImageDisplayUrl(null); });
+      return () => {
+        cancelled = true;
+        if (refImageObjUrlRef.current) {
+          URL.revokeObjectURL(refImageObjUrlRef.current);
+          refImageObjUrlRef.current = null;
+        }
+        setRefImageDisplayUrl(null);
+      };
+    }
+    setRefImageDisplayUrl(url);
+    return undefined;
+  }, [data?.client?.nextServiceImageUrl, shopSlug, clientId]);
 
   const fetchClient = useCallback(() => {
     if (!shopSlug || !clientId || isNaN(clientId)) return;
@@ -186,6 +227,25 @@ export function ClientDetailPage() {
               </>
             )}
           </section>
+
+          {(client.nextServiceNote || client.nextServiceImageUrl) && (
+            <section className="bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-6">
+              <h2 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[var(--shop-accent)]">image</span>
+                {t('account.referenceForNextService')}
+              </h2>
+              {client.nextServiceNote && (
+                <p className="text-white whitespace-pre-wrap mb-3">{client.nextServiceNote}</p>
+              )}
+              {(refImageDisplayUrl || client.nextServiceImageUrl) && (
+                <img
+                  src={refImageDisplayUrl || client.nextServiceImageUrl || ''}
+                  alt="Reference"
+                  className="max-h-64 rounded-lg border border-white/10 object-cover"
+                />
+              )}
+            </section>
+          )}
 
           <section className="bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-6">
             <h2 className="text-lg font-medium text-white mb-4 flex items-center gap-2">

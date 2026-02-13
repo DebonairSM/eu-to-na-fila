@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
-import { Container, Heading, Text, Card, CardContent } from '@/components/design-system';
+import { Container, Heading, Text, Card, CardContent, Button, Input, InputLabel } from '@/components/design-system';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import type { CustomerProfile, CustomerAppointmentsResponse } from '@/lib/api/auth';
-import { cn } from '@/lib/utils';
+import { config } from '@/lib/config';
+import { formatDurationMinutes } from '@/lib/formatDuration';
+import { cn, getErrorMessage } from '@/lib/utils';
 
 function formatDate(iso: string | null): string {
   if (!iso) return '–';
@@ -30,6 +32,26 @@ export function CustomerAccountPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Editable profile state
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  // Preferences state
+  const [emailReminders, setEmailReminders] = useState(true);
+  const [prefsSaving, setPrefsSaving] = useState(false);
+
+  // Reference state
+  const [refNote, setRefNote] = useState('');
+  const [refImageUrl, setRefImageUrl] = useState<string | null>(null);
+  const [refImageObjectUrl, setRefImageObjectUrl] = useState<string | null>(null);
+  const [refSaving, setRefSaving] = useState(false);
+  const [refUploading, setRefUploading] = useState(false);
+  const [refError, setRefError] = useState<string | null>(null);
+  const refFileInputRef = useRef<HTMLInputElement | null>(null);
+
   useEffect(() => {
     if (!isCustomer || !shopSlug) return;
     let mounted = true;
@@ -42,6 +64,11 @@ export function CustomerAccountPage() {
       .then(([p, a]) => {
         if (mounted) {
           setProfile(p);
+          setEditName(p.name);
+          setEditPhone(p.phone ?? '');
+          setEmailReminders(p.preferences?.emailReminders ?? true);
+          setRefNote(p.nextServiceNote ?? '');
+          setRefImageUrl(p.nextServiceImageUrl ?? null);
           setAppointments(a);
         }
       })
@@ -54,16 +81,173 @@ export function CustomerAccountPage() {
     return () => { mounted = false; };
   }, [isCustomer, shopSlug, t]);
 
+  // Create object URL for auth-required reference images (our API); use URL directly for public (Supabase)
+  const refObjUrlRef = useRef<string | null>(null);
+  useEffect(() => {
+    const url = refImageUrl;
+    if (!url) {
+      if (refObjUrlRef.current) {
+        URL.revokeObjectURL(refObjUrlRef.current);
+        refObjUrlRef.current = null;
+      }
+      setRefImageObjectUrl(null);
+      return;
+    }
+    const apiBase = config.apiBase ?? '';
+    if (apiBase && url.includes('/auth/customer/me/reference')) {
+      const token = sessionStorage.getItem('eutonafila_auth_token') ?? localStorage.getItem('eutonafila_auth_token');
+      let cancelled = false;
+      fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        .then((r) => r.blob())
+        .then((blob) => {
+          if (cancelled) return;
+          if (refObjUrlRef.current) URL.revokeObjectURL(refObjUrlRef.current);
+          const objUrl = URL.createObjectURL(blob);
+          refObjUrlRef.current = objUrl;
+          setRefImageObjectUrl(objUrl);
+        })
+        .catch(() => { if (!cancelled) setRefImageObjectUrl(null); });
+      return () => {
+        cancelled = true;
+        if (refObjUrlRef.current) {
+          URL.revokeObjectURL(refObjUrlRef.current);
+          refObjUrlRef.current = null;
+        }
+        setRefImageObjectUrl(null);
+      };
+    }
+    setRefImageObjectUrl(url);
+    return undefined;
+  }, [refImageUrl]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!shopSlug) return;
+    setProfileSaving(true);
+    setProfileError(null);
+    setProfileSaved(false);
+    try {
+      const updated = await api.updateCustomerProfile(shopSlug, {
+        name: editName.trim(),
+        phone: editPhone.trim() || null,
+      });
+      setProfile(updated);
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 2000);
+    } catch (err) {
+      setProfileError(getErrorMessage(err, t('common.error')));
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const handleToggleEmailReminders = async () => {
+    if (!shopSlug) return;
+    const next = !emailReminders;
+    setEmailReminders(next);
+    setPrefsSaving(true);
+    try {
+      const updated = await api.updateCustomerProfile(shopSlug, {
+        preferences: { emailReminders: next },
+      });
+      setProfile(updated);
+    } catch {
+      setEmailReminders(!next);
+    } finally {
+      setPrefsSaving(false);
+    }
+  };
+
+  const handleSaveReference = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!shopSlug) return;
+    setRefSaving(true);
+    setRefError(null);
+    try {
+      const updated = await api.updateCustomerProfile(shopSlug, {
+        nextServiceNote: refNote.trim() || null,
+      });
+      setProfile(updated);
+    } catch (err) {
+      setRefError(getErrorMessage(err, t('common.error')));
+    } finally {
+      setRefSaving(false);
+    }
+  };
+
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !shopSlug) return;
+    setRefUploading(true);
+    setRefError(null);
+    try {
+      const { url } = await api.uploadClientReferenceImage(shopSlug, file);
+      setRefImageUrl(url);
+      const updated = await api.updateCustomerProfile(shopSlug, { nextServiceImageUrl: url });
+      setProfile(updated);
+    } catch (err) {
+      setRefError(getErrorMessage(err, t('common.error')));
+    } finally {
+      setRefUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    if (!shopSlug) return;
+    setRefSaving(true);
+    setRefError(null);
+    try {
+      const updated = await api.updateCustomerProfile(shopSlug, { nextServiceImageUrl: null });
+      setProfile(updated);
+      setRefImageUrl(null);
+    } catch (err) {
+      setRefError(getErrorMessage(err, t('common.error')));
+    } finally {
+      setRefSaving(false);
+    }
+  };
+
   if (!isCustomer) {
+    const loginUrl = `/shop/login?redirect=${encodeURIComponent('/account')}`;
+    const signupUrl = `/shop/signup?redirect=${encodeURIComponent('/account')}`;
+    const googleUrl = api.getCustomerGoogleAuthUrl(shopSlug, '/account');
+
     return (
       <div className="min-h-screen bg-[#0a0a0a]">
         <Navigation />
         <Container className="pt-20 md:pt-28 lg:pt-32 pb-10">
-          <div className="max-w-2xl mx-auto text-center">
-            <Text variant="secondary">{t('auth.fillAllFields')}</Text>
-            <Link to="/shop/login" className="text-[var(--shop-accent)] hover:underline mt-4 inline-block">
-              {t('nav.login')}
-            </Link>
+          <div className="max-w-md mx-auto">
+            <Card variant="default" className="shadow-lg">
+              <CardContent className="p-8 text-center space-y-6">
+                <div className="w-16 h-16 mx-auto rounded-full bg-[var(--shop-accent)]/20 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-3xl text-[var(--shop-accent)]">person</span>
+                </div>
+                <Heading level={2}>{t('account.manageYourAccount')}</Heading>
+                <Text variant="secondary">{t('account.loginToManage')}</Text>
+                <div className="flex flex-col gap-3 pt-2">
+                  <Link
+                    to={loginUrl}
+                    className="inline-flex items-center justify-center font-semibold rounded-lg min-h-[48px] px-6 py-3 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] hover:bg-[var(--shop-accent-hover)] transition-colors w-full"
+                  >
+                    {t('nav.login')}
+                  </Link>
+                  <a
+                    href={googleUrl}
+                    className="inline-flex items-center justify-center gap-2 font-medium rounded-lg border border-[var(--shop-border-color)] bg-white/5 px-4 py-3 text-[var(--shop-text-primary)] hover:bg-white/10 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-xl">mail</span>
+                    {t('auth.signInOrCreateWithGoogle')}
+                  </a>
+                  <Link
+                    to={signupUrl}
+                    className="text-sm text-[var(--shop-accent)] hover:underline"
+                  >
+                    {t('account.createAccount')}
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </Container>
       </div>
@@ -89,22 +273,41 @@ export function CustomerAccountPage() {
                     <span className="material-symbols-outlined text-[var(--shop-accent)]">person</span>
                     {t('account.profile')}
                   </h2>
-                  <dl className="space-y-2 text-sm">
+                  <form onSubmit={handleSaveProfile} className="space-y-4">
                     <div>
-                      <dt className="text-[var(--shop-text-secondary)]">{t('account.name')}</dt>
-                      <dd className="font-medium">{profile?.name ?? user?.name ?? '–'}</dd>
+                      <InputLabel htmlFor="profile-name">{t('account.name')}</InputLabel>
+                      <Input
+                        id="profile-name"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        required
+                        className="w-full mt-1"
+                      />
                     </div>
                     <div>
-                      <dt className="text-[var(--shop-text-secondary)]">{t('account.email')}</dt>
-                      <dd className="font-medium">{profile?.email ?? user?.username ?? '–'}</dd>
+                      <InputLabel>{t('account.email')}</InputLabel>
+                      <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
+                        {profile?.email ?? user?.username ?? '–'}
+                      </p>
                     </div>
-                    {profile?.phone && (
-                      <div>
-                        <dt className="text-[var(--shop-text-secondary)]">{t('account.phone')}</dt>
-                        <dd className="font-medium">{profile.phone}</dd>
-                      </div>
+                    <div>
+                      <InputLabel htmlFor="profile-phone">{t('account.phone')}</InputLabel>
+                      <Input
+                        id="profile-phone"
+                        type="tel"
+                        value={editPhone}
+                        onChange={(e) => setEditPhone(e.target.value)}
+                        placeholder="(00) 00000-0000"
+                        className="w-full mt-1"
+                      />
+                    </div>
+                    {profileError && (
+                      <p className="text-sm text-[#ef4444]">{profileError}</p>
                     )}
-                  </dl>
+                    <Button type="submit" disabled={profileSaving}>
+                      {profileSaving ? t('account.saving') : profileSaved ? t('account.saved') : t('account.save')}
+                    </Button>
+                  </form>
                 </CardContent>
               </Card>
 
@@ -130,7 +333,7 @@ export function CustomerAccountPage() {
                               {a.type === 'appointment' && a.scheduledTime
                                 ? formatDate(a.scheduledTime)
                                 : a.status === 'waiting' || a.status === 'in_progress'
-                                  ? `#${a.position} · ${a.estimatedWaitTime ?? '–'} ${t('status.minutes')}`
+                                  ? `#${a.position} · ${a.estimatedWaitTime != null ? formatDurationMinutes(a.estimatedWaitTime) : '–'}`
                                   : a.ticketNumber ?? `#${a.id}`}
                             </p>
                           </div>
@@ -201,7 +404,78 @@ export function CustomerAccountPage() {
                     <span className="material-symbols-outlined text-[var(--shop-accent)]">tune</span>
                     {t('account.preferences')}
                   </h2>
-                  <Text variant="secondary">{t('account.preferencesComingSoon')}</Text>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={emailReminders}
+                      onChange={handleToggleEmailReminders}
+                      disabled={prefsSaving}
+                      className="rounded border-[var(--shop-border-color)] bg-white/5 text-[var(--shop-accent)] focus:ring-[var(--shop-accent)]"
+                    />
+                    <span className="text-sm text-[var(--shop-text-primary)]">{t('account.emailReminders')}</span>
+                  </label>
+                </CardContent>
+              </Card>
+
+              <Card variant="default" className="shadow-lg">
+                <CardContent className="p-6">
+                  <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[var(--shop-accent)]">image</span>
+                    {t('account.referenceForNextService')}
+                  </h2>
+                  <form onSubmit={handleSaveReference} className="space-y-4">
+                    <div>
+                      <textarea
+                        value={refNote}
+                        onChange={(e) => setRefNote(e.target.value)}
+                        placeholder={t('account.referenceNotePlaceholder')}
+                        rows={3}
+                        className="w-full px-4 py-3 rounded-lg border border-[var(--shop-border-color)] bg-white/5 text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] resize-none"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <input
+                        ref={refFileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/webp"
+                        onChange={handleUploadImage}
+                        className="hidden"
+                      />
+                      {refImageObjectUrl || refImageUrl ? (
+                        <div className="relative inline-block">
+                          <img
+                            src={refImageObjectUrl || refImageUrl || ''}
+                            alt="Reference"
+                            className="max-h-48 rounded-lg border border-white/10 object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            disabled={refSaving}
+                            className="absolute top-2 right-2 p-2 rounded-full bg-black/70 text-white hover:bg-black/90 disabled:opacity-50"
+                          >
+                            <span className="material-symbols-outlined text-lg">close</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => refFileInputRef.current?.click()}
+                          disabled={refUploading}
+                          className="inline-flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-[var(--shop-border-color)] text-[var(--shop-text-secondary)] hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-colors disabled:opacity-50"
+                        >
+                          <span className="material-symbols-outlined">upload</span>
+                          {refUploading ? t('common.loading') : t('account.uploadReferenceImage')}
+                        </button>
+                      )}
+                    </div>
+                    {refError && (
+                      <p className="text-sm text-[#ef4444]">{refError}</p>
+                    )}
+                    <Button type="submit" disabled={refSaving}>
+                      {refSaving ? t('account.saving') : t('account.save')}
+                    </Button>
+                  </form>
                 </CardContent>
               </Card>
             </>

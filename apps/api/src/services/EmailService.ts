@@ -90,7 +90,7 @@ export async function sendAppointmentReminder(toEmail: string, data: Appointment
   }
   const basePath = `/projects/${data.shopSlug}`;
   if (data.hasClientAccount) {
-    const manageUrl = `${data.frontendBaseUrl}${basePath}/checkin/confirm`;
+    const manageUrl = `${data.frontendBaseUrl}${basePath}/account`;
     lines.push(``, `Gerencie seus agendamentos e faça check-in quando chegar:`, `${manageUrl}`, ``);
   } else {
     const statusUrl = `${data.frontendBaseUrl}${basePath}/status/${data.ticketId}`;

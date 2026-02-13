@@ -12,6 +12,7 @@ import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
 import { WaitTimeSimulator } from '@/components/WaitTimeSimulator';
 import { Modal } from '@/components/Modal';
+import { formatDurationMinutes } from '@/lib/formatDuration';
 import { getErrorMessage } from '@/lib/utils';
 import type { Barber, Service } from '@eutonafila/shared';
 
@@ -563,7 +564,7 @@ export function BarberManagementPage() {
                           {!svc.isActive && <span className="text-xs text-white/40 bg-white/10 px-1.5 py-0.5 rounded">{t('barber.inactive')}</span>}
                         </div>
                         <div className="flex gap-3 text-xs text-white/50 mt-0.5">
-                          <span>{svc.duration} min</span>
+                          <span>{formatDurationMinutes(svc.duration)}</span>
                           {svc.price != null && svc.price > 0 && <span>R$ {(svc.price / 100).toFixed(2)}</span>}
                         </div>
                       </div>

@@ -15,6 +15,21 @@ export async function getAppointmentSlots(
   const settings = parseSettings(shop.settings);
   if (!settings.allowAppointments) throw new NotFoundError('Appointments not enabled');
 
+  const appointmentCap = Math.floor(settings.maxQueueSize * (settings.maxAppointmentsFraction ?? 0.5));
+  const existingCount = await db
+    .select({ id: s.tickets.id })
+    .from(s.tickets)
+    .where(
+      and(
+        eq(s.tickets.shopId, shop.id),
+        eq(s.tickets.type, 'appointment'),
+        inArray(s.tickets.status, ['pending', 'waiting'])
+      )
+    );
+  if (existingCount.length >= appointmentCap) {
+    return { slots: [] };
+  }
+
   const timezone = settings.timezone ?? DEFAULT_TIMEZONE;
 
   const service = await db.query.services.findFirst({
@@ -70,12 +85,7 @@ export async function getAppointmentSlots(
   });
   const barberIds = barbersList.map((b) => b.id);
   if (barberIds.length === 0) {
-    return {
-      slots: slotStarts.map((t) => ({
-        time: `${Math.floor(t / 60)}`.padStart(2, '0') + ':' + `${t % 60}`.padStart(2, '0'),
-        available: false,
-      })),
-    };
+    return { slots: [] };
   }
 
   const filterBarber = barberId != null ? (barberIds.includes(barberId) ? [barberId] : []) : barberIds;
@@ -140,10 +150,24 @@ export async function getAppointmentSlots(
     return {
       time: `${h}`.padStart(2, '0') + ':' + `${m}`.padStart(2, '0'),
       available,
+      slotStart,
     };
   });
 
-  return { slots };
+  const nowInTz = toZonedTime(new Date(), timezone);
+  const isToday =
+    y === nowInTz.getFullYear() &&
+    mo === nowInTz.getMonth() + 1 &&
+    d === nowInTz.getDate();
+  const nowMin = isToday ? nowInTz.getHours() * 60 + nowInTz.getMinutes() : -1;
+  const notPast = (s: { available: boolean; time: string; slotStart: number }) =>
+    !isToday || s.slotStart > nowMin;
+
+  return {
+    slots: slots
+      .filter((s) => s.available && notPast(s))
+      .map(({ time, available }) => ({ time, available })),
+  };
 }
 
 /** Convert UTC ISO string to shop-local dateStr and timeStr for slot validation. */

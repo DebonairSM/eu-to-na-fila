@@ -1,5 +1,6 @@
 import { Card, CardContent, Heading, Text, StatusTransition } from '@/components/design-system';
 import { useLocale } from '@/contexts/LocaleContext';
+import { formatDurationMinutes } from '@/lib/formatDuration';
 
 interface WaitingCardProps {
   waitTime: number | null;
@@ -35,14 +36,14 @@ export function WaitingCard({ waitTime, position, total, ahead, preferredBarberN
             level={1}
             className="text-6xl font-semibold text-[var(--shop-text-primary)] mb-3 drop-shadow-[0_4px_20px_color-mix(in_srgb,var(--shop-accent)_30%,transparent)] leading-tight"
           >
-            {waitTime === null ? '--' : waitTime <= 0 ? t('status.now') : waitTime}
+            {waitTime === null ? '--' : waitTime <= 0 ? t('status.now') : formatDurationMinutes(waitTime)}
           </Heading>
           <Text size="lg" variant="secondary" className="mb-6 text-xl">
-            {waitTime !== null && waitTime <= 0 ? t('status.yourTurn') : t('status.minutes')}
+            {waitTime !== null && waitTime <= 0 ? t('status.yourTurn') : ''}
           </Text>
           {generalLineWaitTime != null && (
             <Text size="xs" variant="tertiary" className="mb-4">
-              {t('join.generalLine')}: {generalLineWaitTime} {t('common.minutes')} — {t('join.faster')}
+              {t('join.generalLine')}: {formatDurationMinutes(generalLineWaitTime)} — {t('join.faster')}
             </Text>
           )}
 

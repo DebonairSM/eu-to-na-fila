@@ -4,7 +4,7 @@ import type { UpdateTicketStatus } from '@eutonafila/shared';
 import { createAppointmentSchema, getShopStatus } from '@eutonafila/shared';
 import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
-import { ticketService, queueService, clientService } from '../services/index.js';
+import { ticketService, queueService } from '../services/index.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError, ForbiddenError, InternalError } from '../lib/errors.js';
 import { requireAuth, requireRole, optionalAuth } from '../middleware/auth.js';
@@ -107,10 +107,6 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     };
     if (request.user?.role === 'customer' && request.user.clientId != null) {
       (createData as { clientId?: number }).clientId = request.user.clientId;
-      const client = await clientService.getByIdWithShopCheck(request.user.clientId, shop.id);
-      if (client && client.name.trim() !== data.customerName.trim()) {
-        await clientService.update(request.user.clientId, shop.id, { name: data.customerName.trim() });
-      }
     }
     const beforeCreate = Date.now();
     const ticket = await ticketService.create(shop.id, createData);
@@ -200,12 +196,6 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     if (!slot || !slot.available) throw new ValidationError('This time slot is no longer available');
 
     const clientId = request.user?.role === 'customer' ? request.user.clientId : undefined;
-    if (clientId) {
-      const client = await clientService.getByIdWithShopCheck(clientId, shop.id);
-      if (client && client.name.trim() !== data.customerName.trim()) {
-        await clientService.update(clientId, shop.id, { name: data.customerName.trim() });
-      }
-    }
     const ticket = await ticketService.createAppointment(shop.id, {
       serviceId: data.serviceId,
       customerName: data.customerName,
@@ -448,16 +438,19 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       throw new ForbiddenError('Barbers can only assign tickets to themselves');
     }
 
-    // Appointments: barbers cannot select/assign until at least 1 hour before the scheduled time
+    // Appointments: barbers cannot select/assign until at least 1 hour before the scheduled time,
+    // unless the ticket is already in the queue (waiting) e.g. promoted by protection.
     const isAssigningBarber = updates.barberId !== undefined && updates.barberId !== null;
     const isStartingService = (updates.status ?? existingTicket.status) === 'in_progress';
     if (isAssigningBarber && isStartingService && (existingTicket as { type?: string }).type === 'appointment') {
-      const scheduledTime = (existingTicket as { scheduledTime?: Date | string | null }).scheduledTime;
-      if (scheduledTime) {
-        const scheduled = new Date(scheduledTime).getTime();
-        const oneHourBefore = scheduled - 60 * 60 * 1000;
-        if (Date.now() < oneHourBefore) {
-          throw new ValidationError('Cannot select this appointment yet. You can select it starting 1 hour before the scheduled time.');
+      if (existingTicket.status !== 'waiting') {
+        const scheduledTime = (existingTicket as { scheduledTime?: Date | string | null }).scheduledTime;
+        if (scheduledTime) {
+          const scheduled = new Date(scheduledTime).getTime();
+          const oneHourBefore = scheduled - 60 * 60 * 1000;
+          if (Date.now() < oneHourBefore) {
+            throw new ValidationError('Cannot select this appointment yet. You can select it starting 1 hour before the scheduled time.');
+          }
         }
       }
     }

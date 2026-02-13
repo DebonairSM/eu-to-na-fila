@@ -254,6 +254,8 @@ const operatingHoursSchema = z
 /** Per-shop business rules. All fields have defaults matching current hardcoded behavior. */
 export interface ShopSettings {
   maxQueueSize: number;
+  /** Fraction of maxQueueSize that can be appointments (0–1). Max appointments = floor(maxQueueSize * this). */
+  maxAppointmentsFraction: number;
   defaultServiceDuration: number;
   requirePhone: boolean;
   requireBarberChoice: boolean;
@@ -283,6 +285,7 @@ export interface ShopSettings {
 /** Zod schema for settings validation with defaults. Adding a new field here with a .default() is all you need. */
 export const shopSettingsSchema = z.object({
   maxQueueSize: z.number().int().min(1).max(500).default(80),
+  maxAppointmentsFraction: z.number().min(0).max(1).default(0.5),
   defaultServiceDuration: z.number().int().min(1).max(480).default(20),
   requirePhone: z.boolean().default(false),
   requireBarberChoice: z.boolean().default(false),
@@ -307,6 +310,7 @@ export const shopSettingsSchema = z.object({
 /** Partial input for PATCH (all optional, shallow-merged with existing). */
 export const shopSettingsInputSchema = z.object({
   maxQueueSize: z.number().int().min(1).max(500).optional(),
+  maxAppointmentsFraction: z.number().min(0).max(1).optional(),
   defaultServiceDuration: z.number().int().min(1).max(480).optional(),
   requirePhone: z.boolean().optional(),
   requireBarberChoice: z.boolean().optional(),

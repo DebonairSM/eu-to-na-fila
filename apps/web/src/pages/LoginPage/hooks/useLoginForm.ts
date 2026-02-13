@@ -14,6 +14,7 @@ export function useLoginForm() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -73,15 +74,23 @@ export function useLoginForm() {
           isSubmittingRef.current = false;
           return;
         }
-        const customerResult = await api.loginCustomer(shopSlug, { email: email.trim(), password });
+        const customerResult = await api.loginCustomer(shopSlug, {
+          email: email.trim(),
+          password,
+          remember_me: rememberMe,
+        });
         if (customerResult.valid && customerResult.token && customerResult.role === 'customer') {
-          login({
-            id: customerResult.clientId ?? 0,
-            username: email.trim(),
-            role: 'customer',
-            name: (customerResult as { name?: string }).name?.trim() || email.trim(),
-            clientId: customerResult.clientId,
-          });
+          api.setAuthToken(customerResult.token);
+          login(
+            {
+              id: customerResult.clientId ?? 0,
+              username: email.trim(),
+              role: 'customer',
+              name: customerResult.name?.trim() || email.trim(),
+              clientId: customerResult.clientId,
+            },
+            { rememberMe }
+          );
           navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/checkin/confirm');
           return;
         }
@@ -113,6 +122,8 @@ export function useLoginForm() {
     setPassword,
     showPassword,
     setShowPassword,
+    rememberMe,
+    setRememberMe,
     isLoading,
     error,
     handleSubmit,

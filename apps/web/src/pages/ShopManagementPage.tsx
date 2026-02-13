@@ -1340,6 +1340,13 @@ export function ShopManagementPage() {
                             <label className="block text-white/60 text-sm mb-2">{t('management.defaultServiceDuration')}</label>
                             <input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
                           </div>
+                          {formData.settings.allowAppointments && (
+                            <div className="col-span-2">
+                              <label className="block text-white/60 text-sm mb-2">{t('management.maxAppointmentsFraction')}</label>
+                              <input type="number" min={0} max={1} step={0.1} value={formData.settings.maxAppointmentsFraction ?? 0.5} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxAppointmentsFraction: Math.max(0, Math.min(1, parseFloat(e.target.value) || 0.5)) } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                              <p className="text-white/50 text-xs mt-1">{t('management.maxAppointmentsFractionHint')}</p>
+                            </div>
+                          )}
                         </div>
                       </section>
                       <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
@@ -2359,6 +2366,13 @@ export function ShopManagementPage() {
                         <label className="block text-white/60 text-sm mb-2">{t('management.defaultServiceDuration')}</label>
                         <input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" />
                       </div>
+                      {formData.settings.allowAppointments && (
+                        <div className="col-span-2">
+                          <label className="block text-white/60 text-sm mb-2">{t('management.maxAppointmentsFraction')}</label>
+                          <input type="number" min={0} max={1} step={0.1} value={formData.settings.maxAppointmentsFraction ?? 0.5} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, maxAppointmentsFraction: Math.max(0, Math.min(1, parseFloat(e.target.value) || 0.5)) } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" />
+                          <p className="text-white/50 text-xs mt-1">{t('management.maxAppointmentsFractionHint')}</p>
+                        </div>
+                      )}
                     </div>
                   </section>
                   <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">

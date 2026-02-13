@@ -1,4 +1,5 @@
 import { DAY_NAMES_PT } from '@/lib/constants';
+import { formatDurationMinutes } from '@/lib/formatDuration';
 
 interface CancellationChartProps {
   data: {
@@ -88,7 +89,7 @@ export function CancellationChart({ data }: CancellationChartProps) {
         <div className="bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] rounded-xl p-4 text-center">
           <p className="text-sm text-white/70 mb-1">Tempo médio antes do cancelamento</p>
           <p className="text-2xl font-semibold text-[#ef4444]">
-            {data.avgTimeBeforeCancellation} minutos
+            {formatDurationMinutes(data.avgTimeBeforeCancellation)}
           </p>
         </div>
       )}

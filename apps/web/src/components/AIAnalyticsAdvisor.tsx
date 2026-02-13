@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { DAY_NAMES_PT_FULL } from '@/lib/constants';
+import { formatDurationMinutes } from '@/lib/formatDuration';
 
 interface AnalyticsData {
   summary: {
@@ -83,7 +84,7 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
         category: 'cancellation',
         severity: 'warning',
         title: 'Cancelamentos tardios',
-        message: `Clientes cancelam em média após ${cancellationAnalysis.avgTimeBeforeCancellation} minutos. Considere melhorar comunicação sobre tempo de espera.`,
+        message: `Clientes cancelam em média após ${formatDurationMinutes(cancellationAnalysis.avgTimeBeforeCancellation)}. Considere melhorar comunicação sobre tempo de espera.`,
         icon: 'schedule',
       });
     }
@@ -113,7 +114,7 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
         category: 'efficiency',
         severity: 'warning',
         title: 'Tempo de serviço elevado',
-        message: `Tempo médio de ${summary.avgServiceTime} minutos por atendimento. Considere otimizar processos.`,
+        message: `Tempo médio de ${formatDurationMinutes(summary.avgServiceTime)} por atendimento. Considere otimizar processos.`,
         icon: 'timer',
       });
     } else if (summary.avgServiceTime < 15 && summary.avgServiceTime > 0) {
@@ -122,7 +123,7 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
         category: 'efficiency',
         severity: 'info',
         title: 'Eficiência alta',
-        message: `Tempo médio de ${summary.avgServiceTime} minutos indica boa eficiência operacional.`,
+        message: `Tempo médio de ${formatDurationMinutes(summary.avgServiceTime)} indica boa eficiência operacional.`,
         icon: 'check_circle',
       });
     }

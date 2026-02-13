@@ -2,6 +2,7 @@ import { Card, CardContent } from '@/components/design-system';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { Barber } from '@eutonafila/shared';
+import { formatDurationMinutes } from '@/lib/formatDuration';
 
 interface BarberWaitTime {
   barberId: number;
@@ -47,7 +48,7 @@ export function ActiveBarbersInfo({
     if (!hasActiveBarbers) return t('join.unavailable');
     if (minutes === null) return '--';
     if (minutes <= 0) return t('status.now');
-    return `${minutes} ${t('common.minutes')}`;
+    return formatDurationMinutes(minutes);
   };
 
   if (isLoading) {

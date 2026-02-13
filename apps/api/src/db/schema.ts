@@ -97,6 +97,9 @@ export const clients = pgTable('clients', {
   email: text('email'),
   passwordHash: text('password_hash'), // For email/password customer login
   googleId: text('google_id'), // Google OAuth sub for Sign in with Google
+  preferences: jsonb('preferences'), // { emailReminders: boolean } etc.
+  nextServiceNote: text('next_service_note'), // Client's note for next service
+  nextServiceImageUrl: text('next_service_image_url'), // Client's image reference for next service
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({
