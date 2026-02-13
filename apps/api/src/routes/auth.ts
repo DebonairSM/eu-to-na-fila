@@ -593,8 +593,8 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const redirectPath = stateData.redirect_uri && stateData.redirect_uri.startsWith('/')
       ? stateData.redirect_uri
       : '/checkin/confirm';
-    const callbackPath = `/projects/${slug}/shop/callback`;
-    const callbackUrl = `${frontendOrigin}${callbackPath}?token=${encodeURIComponent(token)}&shop=${encodeURIComponent(slug)}&client_id=${encodeURIComponent(String(client.id))}&redirect=${encodeURIComponent(redirectPath)}`;
+    const frontendCallbackPath = `/projects/${slug}/shop/callback`;
+    const callbackUrl = `${frontendOrigin}${frontendCallbackPath}?token=${encodeURIComponent(token)}&shop=${encodeURIComponent(slug)}&client_id=${encodeURIComponent(String(client.id))}&redirect=${encodeURIComponent(redirectPath)}`;
     return reply.redirect(302, callbackUrl);
   });
 };
