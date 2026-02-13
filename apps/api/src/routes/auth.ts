@@ -487,28 +487,35 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/auth/customer/google/callback', async (request, reply) => {
     const query = request.query as { code?: string; state?: string };
 
+    const frontendOrigin = env.CORS_ORIGIN.replace(/\/$/, '');
+
+    const redirectToLogin = (error: string, useSlug?: string) => {
+      const slug = useSlug ?? env.SHOP_SLUG;
+      return reply.redirect(302, `${frontendOrigin}/projects/${slug}/shop/login?error=${encodeURIComponent(error)}`);
+    };
+
     if (!query.code || !query.state) {
-      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=google_callback_missing`);
+      return redirectToLogin('google_callback_missing');
     }
 
     let stateData: { slug: string; redirect_uri: string };
     try {
       stateData = JSON.parse(Buffer.from(query.state, 'base64url').toString());
     } catch {
-      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=invalid_state`);
+      return redirectToLogin('invalid_state');
     }
     const slug = stateData.slug;
     if (!slug || typeof slug !== 'string') {
-      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=invalid_state`);
+      return redirectToLogin('invalid_state');
     }
 
     if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
-      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=google_not_configured`);
+      return redirectToLogin('google_not_configured', slug);
     }
 
     const shop = await getShopBySlug(slug);
     if (!shop) {
-      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=shop_not_found`);
+      return redirectToLogin('shop_not_found', slug);
     }
 
     const callbackPath = `/api/auth/customer/google/callback`;
@@ -539,7 +546,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const name = (userinfo.name || userinfo.given_name || email?.split('@')[0] || 'Customer').trim();
 
     if (!email) {
-      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=google_no_email`);
+      return redirectToLogin('google_no_email', slug);
     }
 
     const normalizedEmail = normalizeEmail(email);
@@ -573,7 +580,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     if (!client) {
-      return reply.redirect(302, `${env.CORS_ORIGIN}/shop/login?error=create_failed`);
+      return redirectToLogin('create_failed', slug);
     }
 
     logAuthSuccess(request, shop.id, 'customer');
@@ -583,11 +590,11 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       role: 'customer',
       clientId: client.id,
     });
-    const frontendOrigin = env.CORS_ORIGIN;
     const redirectPath = stateData.redirect_uri && stateData.redirect_uri.startsWith('/')
       ? stateData.redirect_uri
       : '/checkin/confirm';
-    const callbackUrl = `${frontendOrigin}/shop/callback?token=${encodeURIComponent(token)}&shop=${encodeURIComponent(slug)}&client_id=${encodeURIComponent(String(client.id))}&redirect=${encodeURIComponent(redirectPath)}`;
+    const callbackPath = `/projects/${slug}/shop/callback`;
+    const callbackUrl = `${frontendOrigin}${callbackPath}?token=${encodeURIComponent(token)}&shop=${encodeURIComponent(slug)}&client_id=${encodeURIComponent(String(client.id))}&redirect=${encodeURIComponent(redirectPath)}`;
     return reply.redirect(302, callbackUrl);
   });
 };
