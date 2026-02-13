@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api, ApiError } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useQueue } from '@/hooks/useQueue';
@@ -17,6 +18,14 @@ const STORAGE_KEY = STORAGE_KEYS.ACTIVE_TICKET_ID;
 const CUSTOMER_NAME_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_NAME;
 const CUSTOMER_PHONE_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_PHONE;
 const REMEMBER_PHONE_DEBOUNCE_MS = 400;
+
+function isSufficientName(name: string | undefined): boolean {
+  if (!name || !name.trim()) return false;
+  const n = name.trim();
+  if (n === 'Customer') return false;
+  if (n.includes('@')) return false; // email used as placeholder
+  return true;
+}
 
 export function useJoinForm() {
   const [combinedName, setCombinedName] = useState('');
@@ -47,7 +56,12 @@ export function useJoinForm() {
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
   const { config: shopConfig } = useShopConfig();
+  const { user, isCustomer, logout } = useAuthContext();
   const { t } = useLocale();
+
+  const hasSufficientName = isCustomer && isSufficientName(user?.name);
+  const showNameField = !hasSufficientName;
+  const needsProfileCompletion = isCustomer && user?.name && !isSufficientName(user.name);
   const settings = shopConfig.settings;
   const { validateName } = useProfanityFilter();
   const { data } = useQueue(5000); // 5s for join page (less critical, just for wait time estimates)
@@ -133,8 +147,16 @@ export function useJoinForm() {
     };
   }, [shopSlug]);
 
-  // Load stored customer name and phone on mount
+  // Load stored customer name and phone on mount; when logged in, use profile
   useEffect(() => {
+    if (isCustomer && user?.name) {
+      const formatted = formatName(user.name.trim());
+      const words = formatted.trim().split(/\s+/).filter(Boolean);
+      setFirstName(words[0] ?? '');
+      setLastName(words.length > 1 ? words.slice(1).join(' ') : '');
+      setCombinedName(formatted);
+      return;
+    }
     try {
       const storedName = localStorage.getItem(CUSTOMER_NAME_STORAGE_KEY);
       if (storedName) {
@@ -142,7 +164,6 @@ export function useJoinForm() {
         if (parsed && typeof parsed.firstName === 'string' && typeof parsed.lastName === 'string') {
           const storedFirstName = parsed.firstName.trim();
           const storedLastName = parsed.lastName.trim();
-          
           if (storedFirstName) {
             const combined = storedLastName
               ? `${storedFirstName} ${storedLastName}`
@@ -160,7 +181,22 @@ export function useJoinForm() {
     } catch (error) {
       logError('Failed to load stored customer name', error);
     }
-  }, []);
+  }, [isCustomer, user?.name]);
+
+  // When logged in as customer, fetch profile to prefill phone
+  useEffect(() => {
+    if (!isCustomer || !shopSlug) return;
+    let mounted = true;
+    api
+      .getCustomerProfile(shopSlug)
+      .then((profile) => {
+        if (mounted && profile.phone) {
+          setCustomerPhone(profile.phone.trim());
+        }
+      })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, [isCustomer, shopSlug]);
 
   // Remember my info: when phone changes, debounced lookup to prefill name
   useEffect(() => {
@@ -442,5 +478,10 @@ export function useJoinForm() {
     selectedServiceId,
     setSelectedServiceId,
     settings,
+    showNameField,
+    needsProfileCompletion,
+    isLoggedInAsCustomer: isCustomer,
+    customerName: user?.name,
+    logout,
   };
 }

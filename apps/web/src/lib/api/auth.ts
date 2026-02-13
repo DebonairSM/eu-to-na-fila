@@ -1,5 +1,11 @@
 import type { BaseApiClient } from './client.js';
 
+export interface CustomerProfile {
+  name: string;
+  email: string | null;
+  phone: string | null;
+}
+
 export interface AuthApi {
   authenticate(shopSlug: string, password: string): Promise<{ valid: boolean; role: 'owner' | 'staff' | null; token?: string }>;
   authenticateBarber(shopSlug: string, username: string, password: string): Promise<{ valid: boolean; role: 'barber' | null; token?: string; barberId?: number; barberName?: string }>;
@@ -7,6 +13,7 @@ export interface AuthApi {
   companyAuthenticate(username: string, password: string): Promise<{ valid: boolean; role: 'company_admin' | null; token?: string; companyId?: number; userId?: number }>;
   registerCustomer(shopSlug: string, data: { email: string; password: string; name?: string }): Promise<{ valid: boolean; role: 'customer'; token: string; clientId: number }>;
   loginCustomer(shopSlug: string, data: { email: string; password: string }): Promise<{ valid: boolean; role: 'customer' | null; token?: string; clientId?: number }>;
+  getCustomerProfile(shopSlug: string): Promise<CustomerProfile>;
   getCustomerGoogleAuthUrl(shopSlug: string, redirectUri?: string): string;
 }
 
@@ -42,6 +49,9 @@ export function createAuthApi(client: BaseApiClient): AuthApi {
       const result = await c.post(`/shops/${shopSlug}/auth/customer/login`, data) as { valid: boolean; role: 'customer' | null; token?: string; clientId?: number };
       if (result.valid && result.token) client.setAuthToken(result.token);
       return result;
+    },
+    async getCustomerProfile(shopSlug) {
+      return c.get(`/shops/${shopSlug}/auth/customer/me`) as Promise<CustomerProfile>;
     },
     getCustomerGoogleAuthUrl(shopSlug, redirectUri) {
       const base = client.getBaseUrl();

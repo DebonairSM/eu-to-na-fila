@@ -18,6 +18,7 @@ export function ShopCallbackPage() {
     const token = searchParams.get('token');
     const shop = searchParams.get('shop');
     const clientIdParam = searchParams.get('client_id');
+    const nameParam = searchParams.get('name');
     const redirect = searchParams.get('redirect');
 
     if (!token || !shop) {
@@ -31,7 +32,7 @@ export function ShopCallbackPage() {
       id: Number.isNaN(clientId) ? 0 : clientId,
       username: '',
       role: 'customer',
-      name: 'Customer',
+      name: (nameParam && nameParam.trim()) || 'Customer',
       clientId: Number.isNaN(clientId) ? undefined : clientId,
     });
     const target = redirect && redirect.startsWith('/') ? redirect : '/checkin/confirm';

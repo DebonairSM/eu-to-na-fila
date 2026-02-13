@@ -79,7 +79,7 @@ export function useLoginForm() {
             id: customerResult.clientId ?? 0,
             username: email.trim(),
             role: 'customer',
-            name: email.trim(),
+            name: (customerResult as { name?: string }).name?.trim() || email.trim(),
             clientId: customerResult.clientId,
           });
           navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/checkin/confirm');

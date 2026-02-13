@@ -90,7 +90,10 @@
     "submitErrorDefault": "Error joining the queue. Please try again.",
     "scheduleForLater": "Schedule for later",
     "shopClosed": "The shop is currently closed.",
-    "shopClosedForLunch": "The shop is closed for lunch break."
+    "shopClosedForLunch": "The shop is closed for lunch break.",
+    "loggedInAs": "Logged in as {name}",
+    "completeProfile": "Complete your profile",
+    "notYouLogout": "Not you? Log out"
   },
   "schedule": {
     "title": "Schedule appointment",

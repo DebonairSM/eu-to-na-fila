@@ -90,7 +90,10 @@
     "submitErrorDefault": "Erro ao entrar na fila. Tente novamente.",
     "scheduleForLater": "Agendar para depois",
     "shopClosed": "Fechado no momento.",
-    "shopClosedForLunch": "Fechado para almoço."
+    "shopClosedForLunch": "Fechado para almoço.",
+    "loggedInAs": "Conectado como {name}",
+    "completeProfile": "Complete seu perfil",
+    "notYouLogout": "Não é você? Sair"
   },
   "schedule": {
     "title": "Agendar horário",

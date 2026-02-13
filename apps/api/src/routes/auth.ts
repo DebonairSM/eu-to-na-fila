@@ -4,7 +4,8 @@ import { db, schema } from '../db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { getShopBySlug } from '../lib/shop.js';
-import { ValidationError, ConflictError } from '../lib/errors.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
+import { ValidationError, ConflictError, NotFoundError } from '../lib/errors.js';
 import { signToken } from '../lib/jwt.js';
 import { hashPassword, verifyPassword, validatePassword } from '../lib/password.js';
 import { getKioskPasswordHash } from '../lib/settings.js';
@@ -349,7 +350,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
         role: 'customer',
         clientId: existing.id,
       });
-      return { valid: true, role: 'customer', token, clientId: existing.id };
+      return { valid: true, role: 'customer', token, clientId: existing.id, name: name || existing.name };
     }
 
     const passwordHash = await hashPassword(body.password);
@@ -372,7 +373,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       role: 'customer',
       clientId: created.id,
     });
-    return reply.status(201).send({ valid: true, role: 'customer', token, clientId: created.id });
+    return reply.status(201).send({ valid: true, role: 'customer', token, clientId: created.id, name: created.name });
   });
 
   /**
@@ -429,6 +430,39 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       role: 'customer' as const,
       token,
       clientId: client.id,
+      name: client.name,
+    };
+  });
+
+  /**
+   * Get current customer profile (name, email, phone). Customer must be authenticated.
+   *
+   * @route GET /api/shops/:slug/auth/customer/me
+   */
+  fastify.get('/shops/:slug/auth/customer/me', {
+    preHandler: [requireAuth(), requireRole(['customer'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const clientId = request.user?.clientId;
+    if (!clientId) throw new ValidationError('Invalid customer token');
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError('Shop not found');
+
+    const client = await db.query.clients.findFirst({
+      where: and(
+        eq(schema.clients.id, clientId),
+        eq(schema.clients.shopId, shop.id)
+      ),
+    });
+    if (!client) throw new NotFoundError('Client not found');
+
+    const phone = client.phone?.startsWith('e:') ? null : client.phone;
+    return {
+      name: client.name,
+      email: client.email ?? null,
+      phone,
     };
   });
 
@@ -594,7 +628,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       ? stateData.redirect_uri
       : '/checkin/confirm';
     const frontendCallbackPath = `/projects/${slug}/shop/callback`;
-    const callbackUrl = `${frontendOrigin}${frontendCallbackPath}?token=${encodeURIComponent(token)}&shop=${encodeURIComponent(slug)}&client_id=${encodeURIComponent(String(client.id))}&redirect=${encodeURIComponent(redirectPath)}`;
+    const callbackUrl = `${frontendOrigin}${frontendCallbackPath}?token=${encodeURIComponent(token)}&shop=${encodeURIComponent(slug)}&client_id=${encodeURIComponent(String(client.id))}&name=${encodeURIComponent(client.name ?? 'Customer')}&redirect=${encodeURIComponent(redirectPath)}`;
     return reply.redirect(302, callbackUrl);
   });
 };

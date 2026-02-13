@@ -8,6 +8,7 @@ import { Navigation } from '@/components/Navigation';
 import { Container, Heading, Card, CardContent, Input, InputLabel, InputError, Button, Text } from '@/components/design-system';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useServices } from '@/hooks/useServices';
 import { useBarbers } from '@/hooks/useBarbers';
@@ -17,11 +18,24 @@ import { getErrorMessage, formatName, getOrCreateDeviceId } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
 import { hasHoursForDay } from '@/lib/operatingHours';
 
+function isSufficientName(name: string | undefined): boolean {
+  if (!name || !name.trim()) return false;
+  const n = name.trim();
+  if (n === 'Customer') return false;
+  if (n.includes('@')) return false;
+  return true;
+}
+
 export function SchedulePage() {
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
   const { config } = useShopConfig();
+  const { user, isCustomer, logout } = useAuthContext();
   const { t, locale } = useLocale();
+
+  const hasSufficientName = isCustomer && isSufficientName(user?.name);
+  const showNameField = !hasSufficientName;
+  const needsProfileCompletion = isCustomer && user?.name && !isSufficientName(user.name);
   const { activeServices, isLoading: isLoadingServices } = useServices();
   const { barbers } = useBarbers();
   const { validateName } = useProfanityFilter();
@@ -76,6 +90,26 @@ export function SchedulePage() {
       setSelectedServiceId(activeServices[0].id);
     }
   }, [activeServices, selectedServiceId]);
+
+  useEffect(() => {
+    if (isCustomer && user?.name) {
+      setCombinedName(formatName(user.name.trim()));
+    }
+  }, [isCustomer, user?.name]);
+
+  useEffect(() => {
+    if (!isCustomer || !shopSlug) return;
+    let mounted = true;
+    api
+      .getCustomerProfile(shopSlug)
+      .then((profile) => {
+        if (mounted && profile.phone) {
+          setCustomerPhone(profile.phone.trim());
+        }
+      })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, [isCustomer, shopSlug]);
 
   const handleCombinedNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
@@ -246,23 +280,44 @@ export function SchedulePage() {
                 )}
 
                 <div>
-                  <InputLabel htmlFor="schedule-name">{t('schedule.yourName')}</InputLabel>
-                  <Input
-                    id="schedule-name"
-                    type="text"
-                    value={combinedName}
-                    onChange={handleCombinedNameChange}
-                    placeholder={t('join.namePlaceholder')}
-                    required
-                    error={!!validationError}
-                    className="w-full mt-1"
-                  />
-                  <InputError message={validationError || ''} />
-                <p className="text-sm text-[var(--shop-text-secondary)]">
-                  <Link to={`/shop/login?redirect=${encodeURIComponent('/checkin/confirm')}`} className="text-[var(--shop-accent)] hover:underline">
-                    {t('schedule.checkInWithLogin')}
-                  </Link>
-                </p>
+                  {showNameField ? (
+                    <>
+                      <InputLabel htmlFor="schedule-name">
+                        {needsProfileCompletion ? t('join.completeProfile') : t('schedule.yourName')}
+                      </InputLabel>
+                      <Input
+                        id="schedule-name"
+                        type="text"
+                        value={combinedName}
+                        onChange={handleCombinedNameChange}
+                        placeholder={t('join.namePlaceholder')}
+                        required
+                        error={!!validationError}
+                        className="w-full mt-1"
+                      />
+                      <InputError message={validationError || ''} />
+                      {!isCustomer && (
+                        <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
+                          <Link to={`/shop/login?redirect=${encodeURIComponent('/checkin/confirm')}`} className="text-[var(--shop-accent)] hover:underline">
+                            {t('schedule.checkInWithLogin')}
+                          </Link>
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm text-[var(--shop-text-secondary)]">
+                        {t('join.loggedInAs').replace('{name}', user?.name ?? '')}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => logout()}
+                        className="text-sm text-[var(--shop-accent)] hover:underline"
+                      >
+                        {t('join.notYouLogout')}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {settings?.requirePhone && (

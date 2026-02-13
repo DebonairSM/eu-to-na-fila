@@ -31,6 +31,11 @@ export function JoinForm() {
     selectedServiceId,
     setSelectedServiceId,
     settings,
+    showNameField,
+    needsProfileCompletion,
+    isLoggedInAsCustomer,
+    customerName,
+    logout,
   } = useJoinForm();
   const { locale, t } = useLocale();
 
@@ -65,38 +70,56 @@ export function JoinForm() {
             )}
 
             <div className="min-w-0">
-              <InputLabel htmlFor="customerName">{t('join.nameLabel')}</InputLabel>
-              <Input
-                id="customerName"
-                type="text"
-                value={combinedName}
-                onChange={handleCombinedNameChange}
-                placeholder={t('join.namePlaceholder')}
-                autoComplete="one-time-code"
-                autoCapitalize="words"
-                autoCorrect="off"
-                spellCheck="false"
-                inputMode="text"
-                data-lpignore="true"
-                data-form-type="other"
-                required
-                error={!!validationError}
-                className="w-full max-w-full"
-                onFocus={(e) => {
-                  // Prevent autofill UI by temporarily making readOnly
-                  const input = e.target as HTMLInputElement;
-                  input.setAttribute('readonly', 'readonly');
-                  setTimeout(() => {
-                    input.removeAttribute('readonly');
-                  }, 100);
-                }}
-              />
-              <InputError message={validationError || ''} />
-              <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
-                <Link to={`/shop/login?redirect=${encodeURIComponent('/checkin/confirm')}`} className="text-[var(--shop-accent)] hover:underline">
-                  {t('schedule.checkInWithLogin')}
-                </Link>
-              </p>
+              {showNameField ? (
+                <>
+                  <InputLabel htmlFor="customerName">
+                    {needsProfileCompletion ? t('join.completeProfile') : t('join.nameLabel')}
+                  </InputLabel>
+                  <Input
+                    id="customerName"
+                    type="text"
+                    value={combinedName}
+                    onChange={handleCombinedNameChange}
+                    placeholder={t('join.namePlaceholder')}
+                    autoComplete="one-time-code"
+                    autoCapitalize="words"
+                    autoCorrect="off"
+                    spellCheck="false"
+                    inputMode="text"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    required
+                    error={!!validationError}
+                    className="w-full max-w-full"
+                    onFocus={(e) => {
+                      const input = e.target as HTMLInputElement;
+                      input.setAttribute('readonly', 'readonly');
+                      setTimeout(() => input.removeAttribute('readonly'), 100);
+                    }}
+                  />
+                  <InputError message={validationError || ''} />
+                  {!isLoggedInAsCustomer && (
+                    <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
+                      <Link to={`/shop/login?redirect=${encodeURIComponent('/checkin/confirm')}`} className="text-[var(--shop-accent)] hover:underline">
+                        {t('schedule.checkInWithLogin')}
+                      </Link>
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm text-[var(--shop-text-secondary)]">
+                    {t('join.loggedInAs').replace('{name}', customerName ?? '')}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => logout()}
+                    className="text-sm text-[var(--shop-accent)] hover:underline"
+                  >
+                    {t('join.notYouLogout')}
+                  </button>
+                </div>
+              )}
             </div>
 
             {settings.requirePhone && (

@@ -43,11 +43,12 @@ export function useSignupForm() {
         name: name.trim() || undefined,
       });
       if (result.valid && result.token && result.role === 'customer') {
+        const res = result as { name?: string };
         login({
           id: result.clientId,
           username: email.trim(),
           role: 'customer',
-          name: name.trim() || email.trim(),
+          name: res.name?.trim() || name.trim() || email.trim(),
           clientId: result.clientId,
         });
         navigate('/checkin/confirm');
