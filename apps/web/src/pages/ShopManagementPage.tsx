@@ -1208,7 +1208,7 @@ export function ShopManagementPage() {
                       <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
                         <h4 className="text-white font-medium">{t('management.navSection')}</h4>
                         <div className="space-y-3">
-                          {([{ key: 'linkServices' as const, label: t('management.linkServices') }, { key: 'linkAbout' as const, label: t('management.linkAbout') }, { key: 'linkLocation' as const, label: t('management.linkLocation') }, { key: 'ctaJoin' as const, label: t('management.ctaJoinLabel') }, { key: 'linkBarbers' as const, label: t('management.linkBarbers') }]).map(({ key, label }) => (
+                          {([{ key: 'linkServices' as const, label: t('management.linkServices') }, { key: 'linkAbout' as const, label: t('management.linkAbout') }, { key: 'linkLocation' as const, label: t('management.linkLocation') }, { key: 'ctaJoin' as const, label: t('management.ctaJoinLabel') }, { key: 'linkBarbers' as const, label: t('management.linkBarbers') }, { key: 'linkAccount' as const, label: t('management.linkAccount') }]).map(({ key, label }) => (
                             <div key={key}><label className="block text-white/60 text-sm mb-1">{label}</label><input type="text" value={contentForm.nav[key]} onChange={(e) => setContentForm({ nav: { ...contentForm.nav, [key]: e.target.value } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                           ))}
                         </div>
@@ -2132,7 +2132,7 @@ export function ShopManagementPage() {
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
                     <h4 className="text-white font-medium">{t('management.navSection')}</h4>
                     <div className="space-y-3">
-                      {([{ key: 'linkServices' as const, label: t('management.linkServices') }, { key: 'linkAbout' as const, label: t('management.linkAbout') }, { key: 'linkLocation' as const, label: t('management.linkLocation') }, { key: 'ctaJoin' as const, label: t('management.ctaJoinLabel') }, { key: 'linkBarbers' as const, label: t('management.linkBarbers') }]).map(({ key, label }) => (
+                      {([{ key: 'linkServices' as const, label: t('management.linkServices') }, { key: 'linkAbout' as const, label: t('management.linkAbout') }, { key: 'linkLocation' as const, label: t('management.linkLocation') }, { key: 'ctaJoin' as const, label: t('management.ctaJoinLabel') }, { key: 'linkBarbers' as const, label: t('management.linkBarbers') }, { key: 'linkAccount' as const, label: t('management.linkAccount') }]).map(({ key, label }) => (
                         <div key={key}><label className="block text-white/60 text-sm mb-1">{label}</label><input type="text" value={contentForm.nav[key]} onChange={(e) => setContentForm({ nav: { ...contentForm.nav, [key]: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                       ))}
                     </div>

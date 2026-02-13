@@ -6,6 +6,26 @@ export interface CustomerProfile {
   phone: string | null;
 }
 
+export interface CustomerAppointment {
+  id: number;
+  status: string;
+  type: string;
+  customerName: string;
+  serviceName: string | null;
+  barberName: string | null;
+  scheduledTime: string | null;
+  position?: number;
+  estimatedWaitTime?: number | null;
+  ticketNumber: string | null;
+  createdAt: string;
+  completedAt?: string | null;
+}
+
+export interface CustomerAppointmentsResponse {
+  upcoming: CustomerAppointment[];
+  past: CustomerAppointment[];
+}
+
 export interface AuthApi {
   authenticate(shopSlug: string, password: string): Promise<{ valid: boolean; role: 'owner' | 'staff' | null; token?: string }>;
   authenticateBarber(shopSlug: string, username: string, password: string): Promise<{ valid: boolean; role: 'barber' | null; token?: string; barberId?: number; barberName?: string }>;
@@ -14,6 +34,7 @@ export interface AuthApi {
   registerCustomer(shopSlug: string, data: { email: string; password: string; name?: string }): Promise<{ valid: boolean; role: 'customer'; token: string; clientId: number }>;
   loginCustomer(shopSlug: string, data: { email: string; password: string }): Promise<{ valid: boolean; role: 'customer' | null; token?: string; clientId?: number }>;
   getCustomerProfile(shopSlug: string): Promise<CustomerProfile>;
+  getCustomerAppointments(shopSlug: string): Promise<CustomerAppointmentsResponse>;
   getCustomerGoogleAuthUrl(shopSlug: string, redirectUri?: string): string;
 }
 
@@ -52,6 +73,9 @@ export function createAuthApi(client: BaseApiClient): AuthApi {
     },
     async getCustomerProfile(shopSlug) {
       return c.get(`/shops/${shopSlug}/auth/customer/me`) as Promise<CustomerProfile>;
+    },
+    async getCustomerAppointments(shopSlug) {
+      return c.get(`/shops/${shopSlug}/auth/customer/me/appointments`) as Promise<CustomerAppointmentsResponse>;
     },
     getCustomerGoogleAuthUrl(shopSlug, redirectUri) {
       const base = client.getBaseUrl();

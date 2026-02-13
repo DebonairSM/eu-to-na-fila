@@ -101,6 +101,7 @@ class ApiClient extends BaseApiClient {
   registerCustomer = this._auth.registerCustomer;
   loginCustomer = this._auth.loginCustomer;
   getCustomerProfile = this._auth.getCustomerProfile;
+  getCustomerAppointments = this._auth.getCustomerAppointments;
   getCustomerGoogleAuthUrl = this._auth.getCustomerGoogleAuthUrl;
 
   // --- Ads ---

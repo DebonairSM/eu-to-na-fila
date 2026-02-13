@@ -33,6 +33,7 @@ const SchedulePage = lazyWithRetry(() => import('./pages/SchedulePage').then((m)
 const AppointmentConfirmPage = lazyWithRetry(() => import('./pages/AppointmentConfirmPage').then((m) => ({ default: m.AppointmentConfirmPage })));
 const CheckInConfirmPage = lazyWithRetry(() => import('./pages/CheckInConfirmPage').then((m) => ({ default: m.CheckInConfirmPage })));
 const ClientDetailPage = lazyWithRetry(() => import('./pages/ClientDetailPage').then((m) => ({ default: m.ClientDetailPage })));
+const CustomerAccountPage = lazyWithRetry(() => import('./pages/CustomerAccountPage').then((m) => ({ default: m.CustomerAccountPage })));
 const ClientSearchPage = lazyWithRetry(() => import('./pages/ClientSearchPage').then((m) => ({ default: m.ClientSearchPage })));
 
 // Protected Route Component
@@ -114,6 +115,7 @@ function AppContent() {
       <Route path="/checkin/confirm" element={<CheckInConfirmPage />} />
       <Route path="/status/:id" element={<StatusPage />} />
       <Route path="/shop/login" element={<LoginPage />} />
+      <Route path="/account" element={<CustomerAccountPage />} />
       <Route path="/shop/signup" element={<SignupPage />} />
       <Route path="/shop/callback" element={<ShopCallbackPage />} />
       <Route path="/kiosk-login" element={<KioskLoginPage />} />

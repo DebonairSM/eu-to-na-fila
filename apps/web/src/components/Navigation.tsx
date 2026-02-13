@@ -24,6 +24,7 @@ export function Navigation() {
     linkLocation: t('nav.location'),
     ctaJoin: t('nav.ctaJoin'),
     linkBarbers: t('nav.login'),
+    linkAccount: t('nav.account'),
     labelDashboard: t('nav.dashboard'),
     labelDashboardCompany: t('nav.dashboardCompany'),
     labelLogout: t('nav.logout'),
@@ -195,6 +196,33 @@ export function Navigation() {
                 </button>
               </li>
             </>
+          ) : user?.role === 'customer' ? (
+            <>
+              <li>
+                <Link
+                  to="/join"
+                  className="inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] px-4 py-2.5 rounded-xl min-h-[44px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  style={{
+                    color: '#0a0a0a',
+                    backgroundColor: 'var(--shop-accent, #D4AF37)',
+                  }}
+                >
+                  <span className="material-symbols-outlined text-lg" aria-hidden>queue</span>
+                  {navLabels.ctaJoin}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/account"
+                  className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 [&:hover]:[color:var(--shop-accent)]"
+                  style={{
+                    color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
+                  }}
+                >
+                  {navLabels.linkAccount}
+                </Link>
+              </li>
+            </>
           ) : (
             <>
               <li>
@@ -347,6 +375,32 @@ export function Navigation() {
                     >
                       {navLabels.labelLogout}
                     </button>
+                  </>
+                ) : user?.role === 'customer' ? (
+                  <>
+                    <Link
+                      to="/join"
+                      className="flex items-center justify-center gap-2 w-full font-semibold text-sm px-4 py-3 rounded-xl min-h-[48px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2"
+                      style={{ color: '#0a0a0a', backgroundColor: 'var(--shop-accent)' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-lg" aria-hidden>queue</span>
+                      {navLabels.ctaJoin}
+                    </Link>
+                    <Link
+                      to="/account"
+                      className="block w-full text-left text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)]"
+                      style={{ color: 'rgba(255,255,255,0.85)' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      {navLabels.linkAccount}
+                    </Link>
                   </>
                 ) : (
                   <>

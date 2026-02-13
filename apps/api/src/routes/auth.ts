@@ -467,6 +467,68 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
+   * Get current customer's appointments and tickets (upcoming + past).
+   *
+   * @route GET /api/shops/:slug/auth/customer/me/appointments
+   */
+  fastify.get('/shops/:slug/auth/customer/me/appointments', {
+    preHandler: [requireAuth(), requireRole(['customer'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const clientId = request.user?.clientId;
+    if (!clientId) throw new ValidationError('Invalid customer token');
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError('Shop not found');
+
+    const tickets = await db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.clientId, clientId),
+        eq(schema.tickets.shopId, shop.id)
+      ),
+      with: { service: { columns: { name: true } }, barber: { columns: { name: true } } },
+      orderBy: (t, { desc }) => [desc(t.createdAt)],
+      limit: 100,
+    });
+
+    const upcoming = tickets.filter(
+      (t) => t.status === 'pending' || t.status === 'waiting' || t.status === 'in_progress'
+    );
+    const past = tickets.filter(
+      (t) => t.status === 'completed' || t.status === 'cancelled'
+    );
+
+    return {
+      upcoming: upcoming.map((t) => ({
+        id: t.id,
+        status: t.status,
+        type: (t as { type?: string }).type ?? 'walkin',
+        customerName: t.customerName,
+        serviceName: (t.service as { name?: string })?.name ?? null,
+        barberName: (t.barber as { name?: string })?.name ?? null,
+        scheduledTime: t.scheduledTime,
+        position: t.position,
+        estimatedWaitTime: t.estimatedWaitTime,
+        ticketNumber: t.ticketNumber,
+        createdAt: t.createdAt,
+      })),
+      past: past.map((t) => ({
+        id: t.id,
+        status: t.status,
+        type: (t as { type?: string }).type ?? 'walkin',
+        customerName: t.customerName,
+        serviceName: (t.service as { name?: string })?.name ?? null,
+        barberName: (t.barber as { name?: string })?.name ?? null,
+        scheduledTime: t.scheduledTime,
+        completedAt: t.completedAt,
+        ticketNumber: t.ticketNumber,
+        createdAt: t.createdAt,
+      })),
+    };
+  });
+
+  /**
    * Redirect to Google OAuth for customer Sign in with Google.
    *
    * @route GET /api/shops/:slug/auth/customer/google

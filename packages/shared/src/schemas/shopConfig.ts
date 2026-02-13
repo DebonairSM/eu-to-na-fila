@@ -35,6 +35,7 @@ export interface HomeContent {
     linkLocation: string;
     ctaJoin: string;
     linkBarbers: string;
+    linkAccount: string;
     labelDashboard: string;
     labelDashboardCompany: string;
     labelLogout: string;
@@ -168,6 +169,7 @@ export const homeContentInputSchema = z.object({
     linkLocation: z.string().max(100).optional(),
     ctaJoin: z.string().max(100).optional(),
     linkBarbers: z.string().max(100).optional(),
+    linkAccount: z.string().max(100).optional(),
     labelDashboard: z.string().max(100).optional(),
     labelDashboardCompany: z.string().max(100).optional(),
     labelLogout: z.string().max(100).optional(),
@@ -362,6 +364,7 @@ export const DEFAULT_HOME_CONTENT: HomeContent = {
     linkLocation: 'Localização',
     ctaJoin: 'Entrar na Fila',
     linkBarbers: 'Entrar',
+    linkAccount: 'Conta',
     labelDashboard: 'Dashboard',
     labelDashboardCompany: 'Dashboard Empresarial',
     labelLogout: 'Sair',
