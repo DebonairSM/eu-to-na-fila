@@ -1130,10 +1130,11 @@ export function BarberQueueManager() {
             setAppointmentForm((f) => ({ ...f, customerName: '', customerPhone: '', scheduledTime: '', preferredBarberId: null }));
           }}
           title={t('barber.addAppointmentTitle')}
+          className="!bg-[var(--shop-surface-secondary)] !border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)]"
         >
           <form onSubmit={handleCreateAppointment} className="space-y-4">
             <div>
-              <label htmlFor="appointmentName" className="block text-sm font-medium mb-1">{t('barber.nameLabel')}</label>
+              <label htmlFor="appointmentName" className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('barber.nameLabel')}</label>
               <input
                 id="appointmentName"
                 type="text"
@@ -1141,22 +1142,22 @@ export function BarberQueueManager() {
                 onChange={(e) => setAppointmentForm((f) => ({ ...f, customerName: e.target.value }))}
                 placeholder={t('barber.customerNamePlaceholder')}
                 required
-                className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+                className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)]"
               />
             </div>
             <div>
-              <label htmlFor="appointmentPhone" className="block text-sm font-medium mb-1">{t('barber.phoneOptional')}</label>
+              <label htmlFor="appointmentPhone" className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('barber.phoneOptional')}</label>
               <input
                 id="appointmentPhone"
                 type="tel"
                 value={appointmentForm.customerPhone}
                 onChange={(e) => setAppointmentForm((f) => ({ ...f, customerPhone: e.target.value }))}
                 placeholder={t('join.phonePlaceholder')}
-                className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+                className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)]"
               />
             </div>
             <div>
-              <label htmlFor="appointmentService" className="block text-sm font-medium mb-1">{t('join.serviceLabel')}</label>
+              <label htmlFor="appointmentService" className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('join.serviceLabel')}</label>
               <select
                 id="appointmentService"
                 value={appointmentForm.serviceId || ''}
@@ -1169,7 +1170,7 @@ export function BarberQueueManager() {
                 required
                 className="form-control-select w-full min-h-[44px]"
               >
-                <option value="">Selecione</option>
+                <option value="">{t('join.selectOption')}</option>
                 {activeServices.map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
@@ -1178,7 +1179,7 @@ export function BarberQueueManager() {
             {useSlotsForAppointment ? (
               <>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Data *</label>
+                  <label className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('schedule.selectDate')} *</label>
                   <div className="schedule-calendar-wrap w-full overflow-x-auto">
                     <DayPicker
                       mode="single"
@@ -1188,17 +1189,17 @@ export function BarberQueueManager() {
                         setAppointmentSlotTime(null);
                       }}
                       disabled={disabledDaysForCalendar}
-                      className="rdp-default w-full bg-muted/30 rounded-lg p-2 [--rdp-accent-color:var(--shop-accent)]"
+                      className="rdp-default w-full bg-white/5 rounded-lg p-2 [--rdp-accent-color:var(--shop-accent)] border border-[var(--shop-border-color)]"
                     />
                   </div>
                 </div>
                 {appointmentDateStr && appointmentForm.serviceId && (
                   <div>
-                    <label className="block text-sm font-medium mb-1">Horário *</label>
+                    <label className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('schedule.selectTime')} *</label>
                     {appointmentSlotsLoading ? (
-                      <p className="text-sm text-muted-foreground">Carregando horários...</p>
+                      <p className="text-sm text-[var(--shop-text-secondary)]">{t('schedule.loadingSlots')}</p>
                     ) : appointmentSlots.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Nenhum horário disponível neste dia.</p>
+                      <p className="text-sm text-[var(--shop-text-secondary)]">{t('schedule.noSlots')}</p>
                     ) : (
                       <div className="flex flex-wrap gap-2">
                         {appointmentSlots.map((slot) => (
@@ -1212,8 +1213,8 @@ export function BarberQueueManager() {
                               appointmentSlotTime === slot.time
                                 ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]'
                                 : slot.available
-                                  ? 'bg-muted/50 hover:bg-muted text-foreground'
-                                  : 'bg-muted/30 text-muted-foreground cursor-not-allowed'
+                                  ? 'bg-white/10 hover:bg-white/20 text-[var(--shop-text-primary)] border border-[var(--shop-border-color)]'
+                                  : 'bg-white/5 text-[var(--shop-text-secondary)] cursor-not-allowed border border-[var(--shop-border-color)]'
                             )}
                           >
                             {slot.time}
@@ -1226,20 +1227,20 @@ export function BarberQueueManager() {
               </>
             ) : (
               <div>
-                <label htmlFor="appointmentTime" className="block text-sm font-medium mb-1">Data e hora *</label>
+                <label htmlFor="appointmentTime" className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('barber.dateAndTime')} *</label>
                 <input
                   id="appointmentTime"
                   type="datetime-local"
                   value={appointmentForm.scheduledTime}
                   onChange={(e) => setAppointmentForm((f) => ({ ...f, scheduledTime: e.target.value }))}
                   required
-                  className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+                  className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)]"
                 />
               </div>
             )}
             {settings.allowBarberPreference && barbers.length > 0 && (
               <div>
-                <label htmlFor="appointmentBarber" className="block text-sm font-medium mb-1">{t('join.barberLabelOptional')}</label>
+                <label htmlFor="appointmentBarber" className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('join.barberLabelOptional')}</label>
                 <select
                   id="appointmentBarber"
                   value={appointmentForm.preferredBarberId ?? ''}
@@ -1254,8 +1255,8 @@ export function BarberQueueManager() {
               </div>
             )}
             <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => setAppointmentModalOpen(false)} className="flex-1">
-                Cancelar
+              <Button type="button" variant="outline" onClick={() => setAppointmentModalOpen(false)} className="flex-1 border-[var(--shop-border-color)] text-[var(--shop-text-primary)] hover:bg-white/10">
+                {t('common.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -1265,7 +1266,7 @@ export function BarberQueueManager() {
                   !appointmentForm.serviceId ||
                   (useSlotsForAppointment ? !appointmentDate || !appointmentSlotTime : !appointmentForm.scheduledTime)
                 }
-                className="flex-1"
+                className="flex-1 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] hover:bg-[var(--shop-accent-hover)] border-[var(--shop-accent)]"
               >
                 {appointmentSubmitting ? t('barber.creating') : t('barber.createAppointment')}
               </Button>
@@ -1286,12 +1287,13 @@ export function BarberQueueManager() {
             setErrorMessage(null);
           }}
           title={t('barber.rescheduleAppointment')}
+          className="!bg-[var(--shop-surface-secondary)] !border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)]"
         >
           <form onSubmit={handleRescheduleAppointment} className="space-y-4">
             {useSlotsForAppointment ? (
               <>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Data</label>
+                  <label className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('schedule.selectDate')}</label>
                   <div className="schedule-calendar-wrap w-full overflow-x-auto">
                     <DayPicker
                       mode="single"
@@ -1301,17 +1303,17 @@ export function BarberQueueManager() {
                         setRescheduleSlotTime(null);
                       }}
                       disabled={disabledDaysForCalendar}
-                      className="rdp-default w-full bg-muted/30 rounded-lg p-2 [--rdp-accent-color:var(--shop-accent)]"
+                      className="rdp-default w-full bg-white/5 rounded-lg p-2 [--rdp-accent-color:var(--shop-accent)] border border-[var(--shop-border-color)]"
                     />
                   </div>
                 </div>
                 {rescheduleDateStr && editTicket?.serviceId && (
                   <div>
-                    <label className="block text-sm font-medium mb-1">Horário</label>
+                    <label className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('schedule.selectTime')}</label>
                     {rescheduleSlotsLoading ? (
-                      <p className="text-sm text-muted-foreground">Carregando horários...</p>
+                      <p className="text-sm text-[var(--shop-text-secondary)]">{t('schedule.loadingSlots')}</p>
                     ) : rescheduleSlots.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Nenhum horário disponível neste dia.</p>
+                      <p className="text-sm text-[var(--shop-text-secondary)]">{t('schedule.noSlots')}</p>
                     ) : (
                       <div className="flex flex-wrap gap-2">
                         {rescheduleSlots.map((slot) => (
@@ -1325,8 +1327,8 @@ export function BarberQueueManager() {
                               rescheduleSlotTime === slot.time
                                 ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]'
                                 : slot.available
-                                  ? 'bg-muted/50 hover:bg-muted text-foreground'
-                                  : 'bg-muted/30 text-muted-foreground cursor-not-allowed'
+                                  ? 'bg-white/10 hover:bg-white/20 text-[var(--shop-text-primary)] border border-[var(--shop-border-color)]'
+                                  : 'bg-white/5 text-[var(--shop-text-secondary)] cursor-not-allowed border border-[var(--shop-border-color)]'
                             )}
                           >
                             {slot.time}
@@ -1339,14 +1341,14 @@ export function BarberQueueManager() {
               </>
             ) : (
               <div>
-                <label htmlFor="editAppointmentTime" className="block text-sm font-medium mb-1">Data e hora</label>
+                <label htmlFor="editAppointmentTime" className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('barber.dateAndTime')}</label>
                 <input
                   id="editAppointmentTime"
                   type="datetime-local"
                   value={editAppointmentTime}
                   onChange={(e) => setEditAppointmentTime(e.target.value)}
                   required
-                  className="w-full px-3 py-2.5 rounded-lg bg-muted/50 border border-border min-h-[44px]"
+                  className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)]"
                 />
               </div>
             )}
@@ -1360,7 +1362,7 @@ export function BarberQueueManager() {
                   setRescheduleDate(undefined);
                   setRescheduleSlotTime(null);
                 }}
-                className="flex-1"
+                className="flex-1 border-[var(--shop-border-color)] text-[var(--shop-text-primary)] hover:bg-white/10"
               >
                 {t('common.cancel')}
               </Button>
@@ -1370,7 +1372,7 @@ export function BarberQueueManager() {
                   rescheduleSubmitting ||
                   (useSlotsForAppointment ? !rescheduleDate || !rescheduleSlotTime : !editAppointmentTime.trim())
                 }
-                className="flex-1"
+                className="flex-1 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] hover:bg-[var(--shop-accent-hover)] border-[var(--shop-accent)]"
               >
                 {rescheduleSubmitting ? t('barber.rescheduling') : t('barber.reschedule')}
               </Button>

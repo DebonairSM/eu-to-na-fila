@@ -35,6 +35,7 @@ export interface AnalyticsDataForPdf {
     cancellationRate: number;
     avgPerDay: number;
     avgServiceTime: number;
+    revenueCents?: number;
   };
   barbers: Array<{ name: string; totalServed: number; avgServiceTime: number }>;
   serviceBreakdown: Array<{ serviceName: string; count: number; percentage: number }>;
@@ -91,6 +92,9 @@ export function downloadAnalyticsPdf(
     ['Taxa de cancelamento', `${data.summary.cancellationRate}%`],
     ['Média por dia', String(data.summary.avgPerDay)],
     ['Tempo médio de serviço', `${data.summary.avgServiceTime} min`],
+    ...(data.summary.revenueCents != null && data.summary.revenueCents > 0
+      ? [['Receita', `R$ ${(data.summary.revenueCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`]]
+      : []),
   ];
 
   autoTable(doc, {

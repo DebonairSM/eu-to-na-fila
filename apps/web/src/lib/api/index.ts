@@ -121,6 +121,7 @@ class ApiClient extends BaseApiClient {
   // --- Clients ---
   getClientRemember = this._clients.getClientRemember;
   searchClients = this._clients.searchClients;
+  listClients = this._clients.listClients;
   getClient = this._clients.getClient;
   updateClient = this._clients.updateClient;
   addClipNote = this._clients.addClipNote;

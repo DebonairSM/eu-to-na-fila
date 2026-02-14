@@ -15,6 +15,8 @@ import { DayOfWeekChart } from '@/components/DayOfWeekChart';
 import { WaitTimeTrendChart } from '@/components/WaitTimeTrendChart';
 import { CancellationChart } from '@/components/CancellationChart';
 import { ServiceTimeDistributionChart } from '@/components/ServiceTimeDistributionChart';
+import { TypeBreakdownChart } from '@/components/TypeBreakdownChart';
+import { ClientInfoModal } from '@/components/ClientInfoModal';
 import { DAY_NAMES_PT_FULL } from '@/lib/constants';
 import { downloadAnalyticsPdf } from '@/lib/analyticsPdf';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -36,6 +38,7 @@ interface AnalyticsData {
     cancellationRate: number;
     avgPerDay: number;
     avgServiceTime: number;
+    revenueCents?: number;
   };
   barbers: Array<{
     id: number;
@@ -47,7 +50,7 @@ interface AnalyticsData {
   ticketsByDay: Record<string, number>;
   hourlyDistribution: Record<number, number>;
   peakHour: { hour: number; count: number } | null;
-  serviceBreakdown: Array<{ serviceId: number; serviceName: string; count: number; percentage: number }>;
+  serviceBreakdown: Array<{ serviceId: number; serviceName: string; count: number; percentage: number; revenueCents?: number }>;
   dayOfWeekDistribution: Record<string, number>;
   waitTimeTrends: Record<string, number>;
   cancellationAnalysis: {
@@ -66,9 +69,15 @@ interface AnalyticsData {
     weekOverWeek: number;
     last7DaysComparison: Array<{ day: string; change: number }>;
   };
+  revenueByDay?: Record<string, number>;
+  typeBreakdown?: { walkin: number; appointment: number; walkinPercent: number; appointmentPercent: number };
+  typeByDay?: Record<string, { walkin: number; appointment: number }>;
+  clientMetrics?: { uniqueClients: number; newClients: number; returningClients: number; repeatRate: number };
+  preferredBarberFulfillment?: { requested: number; fulfilled: number; rate: number };
+  appointmentMetrics?: { total: number; noShows: number; noShowRate: number; avgMinutesLate: number; onTimeCount: number };
 }
 
-type AnalyticsView = 'overview' | 'time' | 'services' | 'barbers' | 'cancellations';
+type AnalyticsView = 'overview' | 'time' | 'services' | 'barbers' | 'cancellations' | 'clients';
 
 export function AnalyticsPage() {
   const shopSlug = useShopSlug();
@@ -81,6 +90,10 @@ export function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [activeView, setActiveView] = useState<AnalyticsView>('overview');
+  const [clientsPage, setClientsPage] = useState(1);
+  const [clientsList, setClientsList] = useState<{ clients: Array<{ id: number; name: string; phone: string; email: string | null; createdAt: string; ticketCount: number }>; total: number } | null>(null);
+  const [clientsLoading, setClientsLoading] = useState(false);
+  const [clientModalId, setClientModalId] = useState<number | null>(null);
 
   const formatPeriodRange = (since: string, until: string, periodDays: number): string => {
     if (periodDays === 0) return t('analytics.periodAll');
@@ -121,6 +134,16 @@ export function AnalyticsPage() {
     };
     fetchAnalytics();
   }, [days, shopSlug]);
+
+  useEffect(() => {
+    if (activeView !== 'clients' || !shopSlug) return;
+    setClientsLoading(true);
+    api
+      .listClients(shopSlug, clientsPage, 24)
+      .then((res) => setClientsList({ clients: res.clients, total: res.total }))
+      .catch(() => setClientsList(null))
+      .finally(() => setClientsLoading(false));
+  }, [activeView, shopSlug, clientsPage]);
 
   if (isLoading) {
     return (
@@ -247,6 +270,16 @@ export function AnalyticsPage() {
             >
               Cancelamentos
             </button>
+            <button
+              onClick={() => setActiveView('clients')}
+              className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
+                activeView === 'clients'
+                  ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]'
+                  : 'bg-[var(--shop-surface-secondary)] text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] hover:bg-[var(--shop-surface-primary)] border border-[rgba(255,255,255,0.1)]'
+              }`}
+            >
+              {t('analytics.clientsTab')}
+            </button>
           </div>
         </div>
 
@@ -307,6 +340,16 @@ export function AnalyticsPage() {
               Serviço Médio
             </div>
           </div>
+          {stats.revenueCents != null && stats.revenueCents > 0 && (
+            <div className="bg-[var(--shop-surface-secondary)] border-2 border-transparent rounded-2xl p-6 text-center">
+              <div className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-semibold text-[var(--shop-accent)] mb-2">
+                {(stats.revenueCents / 100).toLocaleString(locale, { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}
+              </div>
+              <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
+                {t('analytics.revenue')}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-8">
@@ -364,6 +407,62 @@ export function AnalyticsPage() {
                   </div>
                 );
               })()}
+
+              {data.typeBreakdown && (data.typeBreakdown.walkin > 0 || data.typeBreakdown.appointment > 0) && shopConfig.settings?.allowAppointments && (
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8">
+                  <h3 className="font-['Playfair_Display',serif] text-xl text-white mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[var(--shop-accent)]">event_available</span>
+                    {t('analytics.walkin')} vs {t('analytics.appointment')}
+                  </h3>
+                  <TypeBreakdownChart data={data.typeBreakdown} />
+                </div>
+              )}
+
+              {data.clientMetrics && data.clientMetrics.uniqueClients > 0 && (
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-6 flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">people</span>
+                    <div className="text-left">
+                      <p className="text-xs text-white/50 uppercase tracking-wider">{t('analytics.uniqueClients')}</p>
+                      <p className="text-lg font-semibold text-white">{data.clientMetrics.uniqueClients}</p>
+                      <p className="text-sm text-white/60">{data.clientMetrics.newClients} {t('analytics.newClients')} · {data.clientMetrics.returningClients} {t('analytics.returningClients')} · {data.clientMetrics.repeatRate}% {t('analytics.repeatRate')}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {data.preferredBarberFulfillment && data.preferredBarberFulfillment.requested > 0 && shopConfig.settings?.allowBarberPreference !== false && (
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-6">
+                  <h3 className="font-['Playfair_Display',serif] text-xl text-white mb-2 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[var(--shop-accent)]">thumb_up</span>
+                    {t('analytics.preferredBarberFulfillment')}
+                  </h3>
+                  <p className="text-white/70 text-sm">{data.preferredBarberFulfillment.fulfilled} / {data.preferredBarberFulfillment.requested} ({data.preferredBarberFulfillment.rate}%)</p>
+                </div>
+              )}
+
+              {data.appointmentMetrics && data.appointmentMetrics.total > 0 && (
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-6">
+                  <h3 className="font-['Playfair_Display',serif] text-xl text-white mb-3 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[var(--shop-accent)]">event_busy</span>
+                    Agendamentos
+                  </h3>
+                  <div className="flex flex-wrap gap-6 text-sm">
+                    <div>
+                      <span className="text-white/50">{t('analytics.appointmentNoShow')}: </span>
+                      <span className="text-white font-medium">{data.appointmentMetrics.noShows} ({data.appointmentMetrics.noShowRate}%)</span>
+                    </div>
+                    <div>
+                      <span className="text-white/50">{t('analytics.avgMinutesLate')}: </span>
+                      <span className="text-white font-medium">{data.appointmentMetrics.avgMinutesLate} min</span>
+                    </div>
+                    <div>
+                      <span className="text-white/50">{t('analytics.onTime')}: </span>
+                      <span className="text-white font-medium">{data.appointmentMetrics.onTimeCount}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
@@ -583,7 +682,86 @@ export function AnalyticsPage() {
               <CancellationChart data={data.cancellationAnalysis} />
             </div>
           )}
+
+          {/* Clients View */}
+          {activeView === 'clients' && (
+            <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
+              <div className="mb-6 flex items-center gap-4">
+                <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">people</span>
+                <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                  {t('analytics.clientsTab')}
+                </h2>
+              </div>
+              {clientsLoading ? (
+                <div className="flex items-center justify-center py-16 text-white/70">
+                  <span className="material-symbols-outlined animate-spin text-3xl">progress_activity</span>
+                </div>
+              ) : clientsList ? (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {clientsList.clients.map((client) => (
+                      <div
+                        key={client.id}
+                        className="bg-[rgba(36,36,36,0.8)] border border-[var(--shop-border-color)] rounded-2xl p-6 flex items-center justify-between gap-4"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-lg text-white truncate font-medium">{client.name || 'Cliente'}</h4>
+                          <p className="text-sm text-white/60 mt-1">
+                            {t('analytics.ticketCount')}: {client.ticketCount}
+                          </p>
+                          <p className="text-xs text-white/40 mt-1">
+                            {new Date(client.createdAt).toLocaleDateString(locale, { dateStyle: 'medium' })}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setClientModalId(client.id)}
+                          className="p-2 rounded-xl bg-[var(--shop-accent)]/20 text-[var(--shop-accent)] hover:bg-[var(--shop-accent)]/30 transition-colors flex-shrink-0"
+                          title={t('analytics.clientInfo')}
+                          aria-label={t('analytics.clientInfo')}
+                        >
+                          <span className="material-symbols-outlined">person</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {clientsList.clients.length === 0 ? (
+                    <p className="text-center text-white/50 py-8">{t('common.noDataAvailable')}</p>
+                  ) : (
+                    <div className="flex items-center justify-center gap-4 mt-8">
+                      <button
+                        type="button"
+                        onClick={() => setClientsPage((p) => Math.max(1, p - 1))}
+                        disabled={clientsPage <= 1}
+                        className="px-4 py-2 rounded-xl bg-[var(--shop-surface-primary)] border border-[var(--shop-border-color)] text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/5 transition-colors"
+                      >
+                        {t('common.back')}
+                      </button>
+                      <span className="text-white/70 text-sm">
+                        {clientsPage} / {Math.ceil(clientsList.total / 24) || 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setClientsPage((p) => p + 1)}
+                        disabled={clientsPage * 24 >= clientsList.total}
+                        className="px-4 py-2 rounded-xl bg-[var(--shop-surface-primary)] border border-[var(--shop-border-color)] text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/5 transition-colors"
+                      >
+                        {t('common.next')}
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-center text-white/50 py-8">{t('common.noDataAvailable')}</p>
+              )}
+            </div>
+          )}
         </div>
+
+        {clientModalId != null && (
+          <ClientInfoModal clientId={clientModalId} onClose={() => setClientModalId(null)} />
+        )}
       </main>
     </div>
   );

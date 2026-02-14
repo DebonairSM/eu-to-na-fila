@@ -1,11 +1,12 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db, schema } from '../db/index.js';
-import { eq, and, gte, lt } from 'drizzle-orm';
+import { eq, and, gte, lt, inArray } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 import { requireAuth, requireRole, requireBarberShop } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
+import { parseSettings } from '../lib/settings.js';
 
 /**
  * Analytics routes.
@@ -72,11 +73,12 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const previousPeriodCount = previousPeriodTickets.length;
 
-    // Get services for service breakdown
+    // Get services for service breakdown and revenue
     const services = await db.query.services.findMany({
       where: eq(schema.services.shopId, shop.id),
     });
     const serviceMap = new Map(services.map(s => [s.id, s.name]));
+    const servicePriceMap = new Map(services.map(s => [s.id, s.price]));
 
     // Calculate statistics
     const total = tickets.length;
@@ -130,6 +132,20 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     });
     
     const avgServiceTime = serviceTimeCount > 0 ? Math.round(totalServiceTime / serviceTimeCount) : 0;
+
+    // Revenue (owner analytics: sum of service prices for completed tickets)
+    let revenueCents = 0;
+    const revenueByDay: Record<string, number> = {};
+    completedTickets.forEach(ticket => {
+      const price = servicePriceMap.get(ticket.serviceId);
+      if (price != null) {
+        revenueCents += price;
+        const day = ticket.createdAt.toISOString().split('T')[0];
+        revenueByDay[day] = (revenueByDay[day] || 0) + price;
+      }
+    });
+
+    const settings = parseSettings(shop.settings);
 
     // Get barber stats
     const barbers = await db.query.barbers.findMany({
@@ -191,18 +207,30 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       hourlyDistribution[h] = hourCounts[h] || 0;
     }
 
-    // Service breakdown
+    // Service breakdown (with revenue for completed)
     const serviceCounts: Record<number, number> = {};
+    const serviceRevenueCents: Record<number, number> = {};
     tickets.forEach(t => {
       serviceCounts[t.serviceId] = (serviceCounts[t.serviceId] || 0) + 1;
     });
+    completedTickets.forEach(t => {
+      const price = servicePriceMap.get(t.serviceId);
+      if (price != null) {
+        serviceRevenueCents[t.serviceId] = (serviceRevenueCents[t.serviceId] || 0) + price;
+      }
+    });
     const serviceBreakdown = Object.entries(serviceCounts)
-      .map(([serviceId, count]) => ({
-        serviceId: parseInt(serviceId),
-        serviceName: serviceMap.get(parseInt(serviceId)) || `Service ${serviceId}`,
-        count,
-        percentage: total > 0 ? Math.round((count / total) * 100) : 0,
-      }))
+      .map(([serviceId, count]) => {
+        const sid = parseInt(serviceId);
+        const rev = serviceRevenueCents[sid] ?? 0;
+        return {
+          serviceId: sid,
+          serviceName: serviceMap.get(sid) || `Service ${serviceId}`,
+          count,
+          percentage: total > 0 ? Math.round((count / total) * 100) : 0,
+          revenueCents: rev,
+        };
+      })
       .sort((a, b) => b.count - a.count);
 
     // Day of week distribution
@@ -394,6 +422,120 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       });
     });
 
+    // Walk-in vs Appointment breakdown
+    const walkinCount = tickets.filter((t) => (t as { type?: string }).type !== 'appointment').length;
+    const appointmentCount = tickets.filter((t) => (t as { type?: string }).type === 'appointment').length;
+    const typeBreakdown = {
+      walkin: walkinCount,
+      appointment: appointmentCount,
+      walkinPercent: total > 0 ? Math.round((walkinCount / total) * 100) : 0,
+      appointmentPercent: total > 0 ? Math.round((appointmentCount / total) * 100) : 0,
+    };
+    const typeByDay: Record<string, { walkin: number; appointment: number }> = {};
+    tickets.forEach((t) => {
+      const day = t.createdAt.toISOString().split('T')[0];
+      if (!typeByDay[day]) typeByDay[day] = { walkin: 0, appointment: 0 };
+      if ((t as { type?: string }).type === 'appointment') {
+        typeByDay[day].appointment++;
+      } else {
+        typeByDay[day].walkin++;
+      }
+    });
+
+    // Client metrics (new vs returning)
+    const ticketsWithClient = tickets.filter((t) => (t as { clientId?: number | null }).clientId != null);
+    const clientIdsInPeriod = [...new Set(ticketsWithClient.map((t) => (t as { clientId: number }).clientId))];
+    let uniqueClients = clientIdsInPeriod.length;
+    let newClients = 0;
+    let returningClients = 0;
+    if (clientIdsInPeriod.length > 0) {
+      const firstTicketByClient = new Map<number, Date>();
+      const allTicketsForClients = await db.query.tickets.findMany({
+        where: and(
+          eq(schema.tickets.shopId, shop.id),
+          inArray(schema.tickets.clientId, clientIdsInPeriod)
+        ),
+        columns: { clientId: true, createdAt: true },
+      });
+      for (const row of allTicketsForClients) {
+        const cid = (row as { clientId: number | null }).clientId;
+        if (cid == null) continue;
+        const existing = firstTicketByClient.get(cid);
+        if (!existing || new Date((row as { createdAt: Date }).createdAt) < existing) {
+          firstTicketByClient.set(cid, new Date((row as { createdAt: Date }).createdAt));
+        }
+      }
+      for (const cid of clientIdsInPeriod) {
+        const firstAt = firstTicketByClient.get(cid);
+        if (firstAt && firstAt >= since) {
+          newClients++;
+        } else {
+          returningClients++;
+        }
+      }
+    }
+    const clientMetrics = {
+      uniqueClients,
+      newClients,
+      returningClients,
+      repeatRate: uniqueClients > 0 ? Math.round((returningClients / uniqueClients) * 100) : 0,
+    };
+
+    // Preferred barber fulfillment
+    const withPreferred = tickets.filter((t) => (t as { preferredBarberId?: number | null }).preferredBarberId != null);
+    const preferredCompleted = withPreferred.filter((t) => t.status === 'completed');
+    const preferredFulfilled = preferredCompleted.filter(
+      (t) => (t as { barberId?: number | null }).barberId === (t as { preferredBarberId?: number | null }).preferredBarberId
+    );
+    const preferredBarberFulfillment = {
+      requested: withPreferred.length,
+      fulfilled: preferredFulfilled.length,
+      rate: withPreferred.length > 0 ? Math.round((preferredFulfilled.length / withPreferred.length) * 100) : 0,
+    };
+
+    // Appointment metrics (no-show, punctuality)
+    const appointmentTickets = tickets.filter((t) => (t as { type?: string }).type === 'appointment');
+    let appointmentMetrics: {
+      total: number;
+      noShows: number;
+      noShowRate: number;
+      avgMinutesLate: number;
+      onTimeCount: number;
+    } | null = null;
+    if (appointmentTickets.length > 0 && settings.allowAppointments) {
+      const now = new Date();
+      const noShows = appointmentTickets.filter((t) => {
+        const st = (t as { scheduledTime?: Date | null }).scheduledTime;
+        if (!st) return false;
+        const scheduled = new Date(st);
+        if (t.status === 'cancelled') return true;
+        if (t.status === 'completed' || t.status === 'in_progress') return false;
+        return scheduled < now;
+      }).length;
+      let totalMinutesLate = 0;
+      let punctualityCount = 0;
+      let onTimeCount = 0;
+      appointmentTickets
+        .filter((t) => t.status === 'completed')
+        .forEach((t) => {
+          const checkIn = (t as { checkInTime?: Date | null }).checkInTime;
+          const scheduled = (t as { scheduledTime?: Date | null }).scheduledTime;
+          if (checkIn && scheduled) {
+            const minsLate = (new Date(checkIn).getTime() - new Date(scheduled).getTime()) / (1000 * 60);
+            totalMinutesLate += minsLate;
+            punctualityCount++;
+            if (minsLate <= 5) onTimeCount++;
+          }
+        });
+      appointmentMetrics = {
+        total: appointmentTickets.length,
+        noShows,
+        noShowRate: appointmentTickets.length > 0 ? Math.round((noShows / appointmentTickets.length) * 100) : 0,
+        avgMinutesLate: punctualityCount > 0 ? Math.round(totalMinutesLate / punctualityCount) : 0,
+        onTimeCount,
+      };
+    }
+
     return {
       period: {
         days,
@@ -410,6 +552,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         cancellationRate,
         avgPerDay,
         avgServiceTime,
+        revenueCents,
       },
       barbers: barberStats,
       ticketsByDay,
@@ -425,6 +568,12 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         weekOverWeek,
         last7DaysComparison,
       },
+      revenueByDay,
+      typeBreakdown,
+      typeByDay,
+      clientMetrics,
+      preferredBarberFulfillment,
+      appointmentMetrics,
     };
   });
 
@@ -534,17 +683,20 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         serviceRevenueCents[ticket.serviceId] = (serviceRevenueCents[ticket.serviceId] || 0) + Math.round(svc.price * shareMultiplier);
       }
     });
+    const settings = parseSettings(shop.settings);
+    const canSeeProfits = settings.barbersCanSeeProfits !== false;
+
     const serviceBreakdown = Object.entries(serviceCounts)
       .map(([serviceId, count]) => {
         const sid = parseInt(serviceId);
         const price = serviceMap.get(sid)?.price;
-        const amountCents = price != null ? (serviceRevenueCents[sid] ?? Math.round(price * count * shareMultiplier)) : 0;
+        const amountCents = canSeeProfits && price != null ? (serviceRevenueCents[sid] ?? Math.round(price * count * shareMultiplier)) : 0;
         return {
           serviceId: sid,
           serviceName: serviceNameMap.get(sid) || `Service ${serviceId}`,
           count,
           percentage: total > 0 ? Math.round((count / total) * 100) : 0,
-          revenueCents: amountCents,
+          ...(canSeeProfits ? { revenueCents: amountCents } : {}),
         };
       })
       .sort((a, b) => b.count - a.count);
@@ -555,6 +707,8 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       const dayName = dayNames[t.createdAt.getDay()];
       dayOfWeekDistribution[dayName]++;
     });
+
+    const summaryRevenueCents = canSeeProfits ? revenueCents : 0;
 
     return {
       period: {
@@ -570,7 +724,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         cancellationRate,
         avgPerDay,
         avgServiceTime,
-        revenueCents,
+        revenueCents: summaryRevenueCents,
       },
       ticketsByDay,
       serviceBreakdown,

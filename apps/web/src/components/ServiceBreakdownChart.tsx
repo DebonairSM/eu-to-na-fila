@@ -1,7 +1,7 @@
 import { useLocale } from '@/contexts/LocaleContext';
 
 interface ServiceBreakdownChartProps {
-  data: Array<{ serviceId: number; serviceName: string; count: number; percentage: number }>;
+  data: Array<{ serviceId: number; serviceName: string; count: number; percentage: number; revenueCents?: number }>;
 }
 
 const colors = [
@@ -16,7 +16,7 @@ const colors = [
 ];
 
 export function ServiceBreakdownChart({ data }: ServiceBreakdownChartProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center h-[250px] text-white/50">
@@ -125,7 +125,14 @@ export function ServiceBreakdownChart({ data }: ServiceBreakdownChartProps) {
                   }}
                 />
               </div>
-              <div className="text-xs text-white/50 mt-1">{item.count} atendimentos</div>
+              <div className="flex items-center justify-between text-xs text-white/50 mt-1">
+                <span>{item.count} atendimentos</span>
+                {item.revenueCents != null && item.revenueCents > 0 && (
+                  <span className="text-[var(--shop-accent)] font-medium">
+                    {(item.revenueCents / 100).toLocaleString(locale, { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         ))}

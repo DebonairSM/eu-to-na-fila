@@ -4,8 +4,9 @@ import { db, schema } from '../db/index.js';
 import { eq, and, asc } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireRole, optionalAuth } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
+import { parseSettings } from '../lib/settings.js';
 import { ticketService } from '../services/index.js';
 import { hashPassword, validatePassword } from '../lib/password.js';
 
@@ -36,7 +37,9 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
    * @returns Array of barbers
    * @throws {404} If shop not found
    */
-  fastify.get('/shops/:slug/barbers', async (request, reply) => {
+  fastify.get('/shops/:slug/barbers', {
+    preHandler: [optionalAuth()],
+  }, async (request, reply) => {
     const paramsSchema = z.object({
       slug: z.string().min(1),
     });
@@ -65,6 +68,13 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
       },
     });
 
+    const isBarberCaller = request.user?.role === 'barber';
+    const settings = parseSettings(shop.settings);
+    const hideRevenueFromBarbers = isBarberCaller && settings.barbersCanSeeProfits === false;
+
+    if (hideRevenueFromBarbers) {
+      return barbers.map(({ revenueSharePercent: _, ...rest }) => rest);
+    }
     return barbers;
   });
 

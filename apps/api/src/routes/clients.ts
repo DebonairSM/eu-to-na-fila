@@ -39,6 +39,31 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
+   * List all clients with pagination. Owner only.
+   *
+   * @route GET /api/shops/:slug/clients/list
+   * @query page - Page number (default 1)
+   * @query limit - Items per page (default 50)
+   */
+  fastify.get('/shops/:slug/clients/list', {
+    preHandler: [requireAuth(), requireRole(['owner'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1) });
+    const querySchema = z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(50),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { page, limit } = validateRequest(querySchema, request.query);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    const { clients, total } = await clientService.listByShop(shop.id, { page, limit });
+    return { clients, total, page, limit };
+  });
+
+  /**
    * Search clients by name or phone. Staff/owner/barber only.
    *
    * @route GET /api/shops/:slug/clients

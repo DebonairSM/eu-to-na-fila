@@ -16,6 +16,23 @@ export interface ClientListItem {
   updatedAt: string;
 }
 
+/** Client list item for analytics Clients tab (paginated, with ticket count). */
+export interface ClientAnalyticsItem {
+  id: number;
+  name: string;
+  phone: string;
+  email: string | null;
+  createdAt: string;
+  ticketCount: number;
+}
+
+export interface ClientListResponse {
+  clients: ClientAnalyticsItem[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export interface ClientClipNote {
   id: number;
   clientId: number;
@@ -31,6 +48,9 @@ export interface ClientDetailResponse {
     name: string;
     phone: string;
     email?: string | null;
+    address?: string | null;
+    dateOfBirth?: string | null;
+    gender?: string | null;
     nextServiceNote?: string | null;
     nextServiceImageUrl?: string | null;
   };
@@ -50,6 +70,7 @@ export interface ClientUpdatePayload {
 export interface ClientsApi {
   getClientRemember(shopSlug: string, phone: string): Promise<ClientRememberResponse>;
   searchClients(shopSlug: string, q: string): Promise<ClientSearchResponse>;
+  listClients(shopSlug: string, page?: number, limit?: number): Promise<ClientListResponse>;
   getClient(shopSlug: string, clientId: number): Promise<ClientDetailResponse>;
   updateClient(shopSlug: string, clientId: number, data: ClientUpdatePayload): Promise<ClientListItem>;
   addClipNote(shopSlug: string, clientId: number, note: string): Promise<ClientClipNote>;
@@ -66,6 +87,9 @@ export function createClientsApi(client: BaseApiClient): ClientsApi {
     async searchClients(shopSlug, q) {
       const query = q.trim() ? `?q=${encodeURIComponent(q.trim())}` : '';
       return c.get(`/shops/${shopSlug}/clients${query}`);
+    },
+    async listClients(shopSlug, page = 1, limit = 50) {
+      return c.get(`/shops/${shopSlug}/clients/list?page=${page}&limit=${limit}`);
     },
     async getClient(shopSlug, clientId) {
       return c.get(`/shops/${shopSlug}/clients/${clientId}`);

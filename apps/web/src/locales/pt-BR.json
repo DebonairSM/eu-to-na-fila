@@ -1,6 +1,7 @@
 {
   "common": {
     "back": "Voltar",
+    "next": "Próximo",
     "noDataAvailable": "Nenhum dado disponível",
     "confirm": "Confirmar",
     "cancel": "Cancelar",
@@ -364,7 +365,21 @@
   },
   "analytics": {
     "periodAll": "Todo o período",
-    "days": "dias"
+    "days": "dias",
+    "revenue": "Receita",
+    "walkin": "Balcão",
+    "appointment": "Agendamento",
+    "uniqueClients": "Clientes únicos",
+    "newClients": "Novos",
+    "returningClients": "Retorno",
+    "repeatRate": "Taxa de retorno",
+    "preferredBarberFulfillment": "Barbeiro preferido atendido",
+    "appointmentNoShow": "Faltas",
+    "avgMinutesLate": "Média (min atraso)",
+    "onTime": "No horário",
+    "clientInfo": "Dados do cliente",
+    "clientsTab": "Clientes",
+    "ticketCount": "Atendimentos"
   },
   "chart": {
     "noData": "Nenhum dado disponível",
@@ -466,6 +481,8 @@
     "allowCustomerCancelInProgress": "Permitir cliente cancelar atendimento em andamento",
     "allowAppointments": "Permitir agendamentos (fila híbrida com horário marcado)",
     "allowQueueBeforeOpen": "Permitir entrada na fila antes do horário de abertura",
+    "barbersCanSeeProfits": "Barbeiros podem ver faturamento e lucro",
+    "barberVisibility": "Visibilidade para barbeiros",
     "checkInHoursBeforeOpen": "Horas antes da abertura em que o check-in é permitido",
     "hoursBeforeOpen": "h antes da abertura",
     "kioskAccess": "Acesso ao Modo Quiosque",
@@ -636,6 +653,7 @@
     "nextError": "Erro ao obter próximo. Tente novamente.",
     "checkInError": "Erro ao fazer check-in. Tente novamente.",
     "fillNameServiceDateTime": "Preencha nome, serviço e data/hora.",
+    "dateAndTime": "Data e hora",
     "appointmentError": "Erro ao criar agendamento. Tente novamente.",
     "removeCustomerError": "Erro ao remover cliente. Tente novamente.",
     "completeError": "Erro ao finalizar atendimento. Tente novamente.",
@@ -771,6 +789,12 @@
   },
   "clients": {
     "title": "Clientes",
+    "name": "Nome",
+    "phone": "Telefone",
+    "email": "E-mail",
+    "address": "Endereço",
+    "dateOfBirth": "Data de nascimento",
+    "gender": "Gênero",
     "searchHint": "Busque por nome ou telefone para encontrar um cliente e abrir a ficha.",
     "searchPlaceholder": "Nome ou telefone...",
     "search": "Buscar",

@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Container, Heading, Text, Card, CardContent } from '@/components/design-system';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 interface BarberAnalyticsData {
@@ -29,9 +30,11 @@ interface BarberAnalyticsData {
 
 export function BarberAnalyticsPage() {
   const shopSlug = useShopSlug();
+  const { config: shopConfig } = useShopConfig();
   const { isBarber, user } = useAuthContext();
   const { locale, t } = useLocale();
   const navigate = useNavigate();
+  const canSeeProfits = shopConfig.settings?.barbersCanSeeProfits !== false;
   const [days, setDays] = useState(30);
   const [data, setData] = useState<BarberAnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -104,7 +107,7 @@ export function BarberAnalyticsPage() {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className={`grid gap-4 ${canSeeProfits ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3'}`}>
             <Card variant="default" className="bg-white/5 border-white/10">
               <CardContent className="p-4">
                 <Text size="sm" variant="secondary" className="uppercase tracking-wider">
@@ -113,14 +116,16 @@ export function BarberAnalyticsPage() {
                 <p className="text-2xl font-bold text-[var(--shop-accent)] mt-1">{summary.completed}</p>
               </CardContent>
             </Card>
-            <Card variant="default" className="bg-white/5 border-white/10">
-              <CardContent className="p-4">
-                <Text size="sm" variant="secondary" className="uppercase tracking-wider">
-                  Faturamento
-                </Text>
-                <p className="text-2xl font-bold text-[var(--shop-accent)] mt-1">{formatCurrency(summary.revenueCents, locale)}</p>
-              </CardContent>
-            </Card>
+            {canSeeProfits && (
+              <Card variant="default" className="bg-white/5 border-white/10">
+                <CardContent className="p-4">
+                  <Text size="sm" variant="secondary" className="uppercase tracking-wider">
+                    Faturamento
+                  </Text>
+                  <p className="text-2xl font-bold text-[var(--shop-accent)] mt-1">{formatCurrency(summary.revenueCents, locale)}</p>
+                </CardContent>
+              </Card>
+            )}
             <Card variant="default" className="bg-white/5 border-white/10">
               <CardContent className="p-4">
                 <Text size="sm" variant="secondary" className="uppercase tracking-wider">
@@ -179,7 +184,7 @@ export function BarberAnalyticsPage() {
                       <span className="text-white/90">{s.serviceName}</span>
                       <span className="text-[var(--shop-accent)] font-medium flex items-center gap-2">
                         {s.count} ({s.percentage}%)
-                        {s.revenueCents != null && s.revenueCents > 0 && (
+                        {canSeeProfits && s.revenueCents != null && s.revenueCents > 0 && (
                           <span className="text-white/80 font-normal">
                             {formatCurrency(s.revenueCents, locale)}
                           </span>

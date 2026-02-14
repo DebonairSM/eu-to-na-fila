@@ -1,7 +1,16 @@
 import type { DbClient } from '../db/types.js';
 import { schema } from '../db/index.js';
-import { eq, and, or, like, desc } from 'drizzle-orm';
+import { eq, and, or, like, desc, inArray, sql } from 'drizzle-orm';
 import { NotFoundError } from '../lib/errors.js';
+
+export interface ClientListItem {
+  id: number;
+  name: string;
+  phone: string;
+  email: string | null;
+  createdAt: Date;
+  ticketCount: number;
+}
 
 /**
  * Normalize phone to digits only for consistent matching.
@@ -136,6 +145,68 @@ export class ClientService {
       orderBy: [desc(schema.clients.updatedAt)],
     });
     return clients as Client[];
+  }
+
+  /**
+   * List all clients for a shop with ticket count. Paginated. Owner-only.
+   */
+  async listByShop(
+    shopId: number,
+    opts: { page: number; limit: number }
+  ): Promise<{ clients: ClientListItem[]; total: number }> {
+    const { page, limit } = opts;
+    const offset = Math.max(0, (page - 1) * limit);
+
+    const [totalRow] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(schema.clients)
+      .where(eq(schema.clients.shopId, shopId));
+    const total = totalRow?.count ?? 0;
+
+    const clients = await this.db.query.clients.findMany({
+      where: eq(schema.clients.shopId, shopId),
+      columns: { id: true, name: true, phone: true, email: true, createdAt: true },
+      orderBy: [desc(schema.clients.updatedAt)],
+      limit,
+      offset,
+    });
+
+    if (clients.length === 0) {
+      return { clients: [], total };
+    }
+
+    const clientIds = clients.map((c) => c.id);
+    const ticketCountRows = await this.db
+      .select({
+        clientId: schema.tickets.clientId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(schema.tickets)
+      .where(
+        and(
+          eq(schema.tickets.shopId, shopId),
+          inArray(schema.tickets.clientId, clientIds)
+        )
+      )
+      .groupBy(schema.tickets.clientId);
+
+    const countMap = new Map<number, number>();
+    for (const row of ticketCountRows) {
+      if (row.clientId != null) {
+        countMap.set(row.clientId, row.count);
+      }
+    }
+
+    const result: ClientListItem[] = clients.map((c) => ({
+      id: c.id,
+      name: c.name,
+      phone: c.phone,
+      email: c.email,
+      createdAt: c.createdAt,
+      ticketCount: countMap.get(c.id) ?? 0,
+    }));
+
+    return { clients: result, total };
   }
 
   async update(id: number, shopId: number, data: { name?: string; email?: string | null }): Promise<Client> {

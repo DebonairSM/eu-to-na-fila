@@ -280,6 +280,8 @@ export interface ShopSettings {
   /** Kiosk mode access credentials */
   kioskUsername?: string;
   kioskPassword?: string;
+  /** When false, barbers cannot see revenue/profit (e.g. salary contract). */
+  barbersCanSeeProfits?: boolean;
 }
 
 /** Zod schema for settings validation with defaults. Adding a new field here with a .default() is all you need. */
@@ -305,6 +307,7 @@ export const shopSettingsSchema = z.object({
   }).nullable().optional(),
   kioskUsername: z.string().max(100).optional(),
   kioskPassword: z.string().max(100).optional(),
+  barbersCanSeeProfits: z.boolean().default(true),
 });
 
 /** Partial input for PATCH (all optional, shallow-merged with existing). */
@@ -325,6 +328,7 @@ export const shopSettingsInputSchema = z.object({
   checkInHoursBeforeOpen: z.number().min(0).max(24).optional(),
   kioskUsername: z.string().max(100).optional(),
   kioskPassword: z.string().max(100).optional(),
+  barbersCanSeeProfits: z.boolean().optional(),
   temporaryStatusOverride: z.object({
     isOpen: z.boolean(),
     until: z.string(),

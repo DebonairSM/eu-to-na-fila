@@ -1409,6 +1409,25 @@ export function ShopManagementPage() {
                         </ul>
                       </section>
                       <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.barberVisibility')}</h3>
+                        <ul className="space-y-4">
+                          <li>
+                            <label className="flex items-center gap-3 cursor-pointer group">
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={formData.settings.barbersCanSeeProfits !== false}
+                                onClick={() => setFormData({ ...formData, settings: { ...formData.settings, barbersCanSeeProfits: formData.settings.barbersCanSeeProfits === false } })}
+                                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings.barbersCanSeeProfits !== false ? 'bg-white' : 'bg-white/20'}`}
+                              >
+                                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings.barbersCanSeeProfits !== false ? 'translate-x-5 bg-[#0a0a0a]' : 'translate-x-0 bg-white/60'}`} />
+                              </button>
+                              <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t('management.barbersCanSeeProfits')}</span>
+                            </label>
+                          </li>
+                        </ul>
+                      </section>
+                      <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
                         <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.operatingHours')}</h3>
                         <p className="text-white/60 text-sm">{t('management.operatingHoursHint')}</p>
                         {formData.settings.allowAppointments && (
@@ -2396,6 +2415,17 @@ export function ShopManagementPage() {
                               <span>{t('management.hoursBeforeOpen')}</span>
                             </span>
                           )}
+                        </label>
+                      </li>
+                    </ul>
+                  </section>
+                  <section className="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.barberVisibility')}</h3>
+                    <ul className="space-y-4">
+                      <li>
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <button type="button" role="switch" aria-checked={formData.settings.barbersCanSeeProfits !== false} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, barbersCanSeeProfits: formData.settings.barbersCanSeeProfits === false } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings.barbersCanSeeProfits !== false ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings.barbersCanSeeProfits !== false ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
+                          <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t('management.barbersCanSeeProfits')}</span>
                         </label>
                       </li>
                     </ul>

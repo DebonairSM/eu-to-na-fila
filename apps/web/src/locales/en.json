@@ -1,6 +1,7 @@
 {
   "common": {
     "back": "Back",
+    "next": "Next",
     "noDataAvailable": "No data available",
     "confirm": "Confirm",
     "cancel": "Cancel",
@@ -364,7 +365,21 @@
   },
   "analytics": {
     "periodAll": "Full period",
-    "days": "days"
+    "days": "days",
+    "revenue": "Revenue",
+    "walkin": "Walk-in",
+    "appointment": "Appointment",
+    "uniqueClients": "Unique clients",
+    "newClients": "New",
+    "returningClients": "Returning",
+    "repeatRate": "Return rate",
+    "preferredBarberFulfillment": "Preferred barber fulfilled",
+    "appointmentNoShow": "No-shows",
+    "avgMinutesLate": "Avg (min late)",
+    "onTime": "On time",
+    "clientInfo": "Client details",
+    "clientsTab": "Clients",
+    "ticketCount": "Services"
   },
   "chart": {
     "noData": "No data available",
@@ -466,6 +481,8 @@
     "allowCustomerCancelInProgress": "Allow customer to cancel in-progress service",
     "allowAppointments": "Allow appointments (hybrid queue with scheduled time)",
     "allowQueueBeforeOpen": "Allow queue entry before opening hours",
+    "barbersCanSeeProfits": "Barbers can see revenue and profit",
+    "barberVisibility": "Barber visibility",
     "checkInHoursBeforeOpen": "Hours before opening that check-in is allowed",
     "hoursBeforeOpen": "h before open",
     "kioskAccess": "Kiosk Mode Access",
@@ -636,6 +653,7 @@
     "nextError": "Error getting next. Try again.",
     "checkInError": "Error checking in. Try again.",
     "fillNameServiceDateTime": "Fill in name, service and date/time.",
+    "dateAndTime": "Date and time",
     "appointmentError": "Error creating appointment. Try again.",
     "removeCustomerError": "Error removing customer. Try again.",
     "completeError": "Error completing service. Try again.",
@@ -771,6 +789,12 @@
   },
   "clients": {
     "title": "Clients",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "dateOfBirth": "Date of birth",
+    "gender": "Gender",
     "searchHint": "Search by name or phone to find a client and open their profile.",
     "searchPlaceholder": "Name or phone...",
     "search": "Search",
