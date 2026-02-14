@@ -145,9 +145,7 @@
     "gender": "Gender",
     "genderPlaceholder": "Optional",
     "genderMale": "Male",
-    "genderFemale": "Female",
-    "genderOther": "Other",
-    "genderPreferNot": "Prefer not to say"
+    "genderFemale": "Female"
   },
   "checkin": {
     "title": "Check-in complete",

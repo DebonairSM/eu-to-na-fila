@@ -361,6 +361,62 @@ export class QueueService {
   }
 
   /**
+   * Estimate wait time for a pending appointment if promoted to waiting, using weighted queue order.
+   * This gives the actual wait based on where the appointment would be placed (by scheduled time),
+   * not the inflated wait from treating them as a walk-in at the end of the line.
+   */
+  async calculateWaitTimeForPendingAppointment(
+    shopId: number,
+    appointment: {
+      id: number;
+      serviceId: number;
+      preferredBarberId: number | null;
+      scheduledTime: Date | string | null;
+    },
+    now: Date,
+    defaultServiceDuration: number
+  ): Promise<number | null> {
+    const generalLineTickets = await this.getGeneralLineWaitingTickets(shopId);
+    const generalWithType = generalLineTickets.map((t) => ({
+      ...t,
+      id: t.id,
+      type: (t as { type?: string }).type ?? 'walkin',
+      scheduledTime: (t as { scheduledTime?: Date | string | null }).scheduledTime ?? null,
+      checkInTime: (t as { checkInTime?: Date | string | null }).checkInTime ?? null,
+      createdAt: t.createdAt,
+      serviceId: t.serviceId,
+      preferredBarberId: t.preferredBarberId,
+    }));
+    const appointmentAsWaiting = {
+      ...appointment,
+      type: 'appointment' as const,
+      scheduledTime: appointment.scheduledTime,
+      checkInTime: now,
+      createdAt: now,
+    };
+    const merged = this.sortWaitingTicketsByWeighted(
+      [...generalWithType, appointmentAsWaiting] as Array<{
+        id: number;
+        type?: string | null;
+        scheduledTime?: Date | string | null;
+        checkInTime?: Date | string | null;
+        createdAt: Date | string;
+        serviceId: number;
+        preferredBarberId: number | null;
+      }>,
+      now
+    );
+    const appointmentIndex = merged.findIndex((t) => t.id === appointment.id);
+    if (appointmentIndex < 0) return null;
+    const ticketsAhead = merged.slice(0, appointmentIndex);
+    return this.runWaveWaitTime(
+      shopId,
+      ticketsAhead.map((t) => ({ serviceId: t.serviceId, preferredBarberId: t.preferredBarberId })),
+      defaultServiceDuration
+    );
+  }
+
+  /**
    * Standard wait time including only pending appointments that would be promoted
    * (minutesUntil <= current standard wait or <= 30). Used when allowAppointments is true.
    */
@@ -565,14 +621,6 @@ export class QueueService {
 
     if (settings.allowAppointments) {
       waitingTickets = this.sortWaitingTicketsByWeighted(waitingTickets as any) as typeof waitingTickets;
-      // Exclude appointments that are not yet selectable (barber cannot select until 1h before)
-      const now = new Date();
-      const oneHourMs = 60 * 60 * 1000;
-      waitingTickets = waitingTickets.filter((t) => {
-        if ((t.type ?? 'walkin') !== 'appointment') return true;
-        const scheduled = t.scheduledTime ? new Date(t.scheduledTime).getTime() : 0;
-        return scheduled === 0 || now.getTime() >= scheduled - oneHourMs;
-      }) as typeof waitingTickets;
     }
 
     const next = waitingTickets[0] ?? null;

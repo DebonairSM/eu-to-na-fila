@@ -620,6 +620,8 @@ export class TicketService {
     });
 
     const toPromote: number[] = [];
+    const defaultDuration = settings.defaultServiceDuration ?? 20;
+
     for (const ticket of pendingAppointments) {
       const scheduled = ticket.scheduledTime ? new Date(ticket.scheduledTime) : null;
       if (!scheduled || scheduled.getTime() <= now.getTime()) continue;
@@ -634,16 +636,20 @@ export class TicketService {
           ticket.preferredBarberId,
           position,
           now,
-          settings.defaultServiceDuration
+          defaultDuration
         );
         estimatedWaitMinutes = wait ?? 0;
       } else {
-        const position = await this.queueService.calculatePosition(shopId, now);
-        const wait = await this.queueService.calculateWaitTime(shopId, position, settings.defaultServiceDuration);
+        const wait = await this.queueService.calculateWaitTimeForPendingAppointment(
+          shopId,
+          { id: ticket.id, serviceId: ticket.serviceId, preferredBarberId: ticket.preferredBarberId, scheduledTime: ticket.scheduledTime },
+          now,
+          defaultDuration
+        );
         estimatedWaitMinutes = wait ?? 0;
       }
 
-      if (minutesUntil <= estimatedWaitMinutes || minutesUntil <= 30) {
+      if (minutesUntil <= estimatedWaitMinutes) {
         toPromote.push(ticket.id);
       }
     }

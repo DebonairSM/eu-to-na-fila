@@ -355,8 +355,6 @@ export function CustomerAccountPage() {
                         <option value="">{t('account.genderPlaceholder')}</option>
                         <option value="male">{t('account.genderMale')}</option>
                         <option value="female">{t('account.genderFemale')}</option>
-                        <option value="other">{t('account.genderOther')}</option>
-                        <option value="prefer_not_to_say">{t('account.genderPreferNot')}</option>
                       </select>
                     </div>
                     {profileError && (

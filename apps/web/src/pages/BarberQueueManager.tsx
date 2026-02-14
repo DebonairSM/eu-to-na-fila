@@ -86,7 +86,6 @@ export function BarberQueueManager() {
   const [rescheduleSlotTime, setRescheduleSlotTime] = useState<string | null>(null);
   const [rescheduleSlots, setRescheduleSlots] = useState<Array<{ time: string; available: boolean }>>([]);
   const [rescheduleSlotsLoading, setRescheduleSlotsLoading] = useState(false);
-  const [standardWaitTimeMinutes, setStandardWaitTimeMinutes] = useState<number | null>(null);
   const firstNameInputRef = useRef<HTMLInputElement>(null);
 
   const settings = shopConfig.settings;
@@ -103,17 +102,6 @@ export function BarberQueueManager() {
   const { validateName } = useProfanityFilter();
   const allowAppointments = shopConfig.settings?.allowAppointments ?? false;
 
-  // Fetch standard wait time for check-in eligibility (remaining <= estimated wait time)
-  useEffect(() => {
-    if (!shopSlug || !allowAppointments) {
-      setStandardWaitTimeMinutes(null);
-      return;
-    }
-    api.getWaitTimes(shopSlug).then((res) => {
-      setStandardWaitTimeMinutes(res.standardWaitTime ?? null);
-    }).catch(() => setStandardWaitTimeMinutes(null));
-  }, [shopSlug, allowAppointments]);
-
   const shopStatus = useMemo(() => getShopStatus(
     settings?.operatingHours,
     timezone,
@@ -121,18 +109,6 @@ export function BarberQueueManager() {
     settings?.allowQueueBeforeOpen ?? false,
     settings?.checkInHoursBeforeOpen ?? 1
   ), [settings?.operatingHours, settings?.temporaryStatusOverride, settings?.allowQueueBeforeOpen, settings?.checkInHoursBeforeOpen, timezone]);
-
-  const canCheckInAppointment = useCallback((ticket: { type?: string; scheduledTime?: string | Date | null }) => {
-    if (!shopStatus.isOpen) return false;
-    if ((ticket.type ?? 'walkin') !== 'appointment') return true;
-    const scheduled = ticket.scheduledTime ? new Date(ticket.scheduledTime).getTime() : 0;
-    if (scheduled === 0) return true;
-    const now = Date.now();
-    if (now >= scheduled) return true;
-    const remainingMinutes = (scheduled - now) / 60_000;
-    const estimatedMinutes = standardWaitTimeMinutes ?? 30;
-    return remainingMinutes <= estimatedMinutes;
-  }, [shopStatus.isOpen, standardWaitTimeMinutes]);
 
   // Enter kiosk mode if ?kiosk=true in URL or user logged in as kiosk-only
   const isKioskOnly = user?.role === 'kiosk';
@@ -982,13 +958,7 @@ export function BarberQueueManager() {
                       barbers={displayBarbers}
                       preferredBarberName={preferredBarberName ?? undefined}
                       displayPosition={displayPosition}
-                      disabled={ticket.status === 'waiting' && !canCheckInAppointment(ticket)}
-                      disabledReason={ticket.status === 'waiting' && !canCheckInAppointment(ticket) ? t('barber.appointmentTooEarly') : undefined}
                       onClick={() => {
-                        if (!canCheckInAppointment(ticket)) {
-                          setErrorMessage(t('barber.appointmentTooEarly'));
-                          return;
-                        }
                         setSelectedCustomerId(ticket.id);
                         barberSelectorModal.open();
                       }}
