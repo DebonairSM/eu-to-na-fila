@@ -7,8 +7,8 @@ let intervalId: ReturnType<typeof setInterval> | null = null;
 
 /**
  * Recalculate wait times for every shop that has active tickets.
- * Also promotes pending appointments to waiting when:
- * - time until appointment <= estimated wait (general or preferred barber line), or
+ * Promotes pending appointments to waiting when:
+ * - time until appointment <= effective wait (general line: max(per-appointment wait, standard line wait); preferred barber: that line), or
  * - time until appointment <= 30 minutes.
  */
 async function recalculateActiveShops(): Promise<void> {

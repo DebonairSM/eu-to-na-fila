@@ -558,9 +558,10 @@ export class TicketService {
 
   /**
    * Promote pending appointments to waiting when:
-   * (1) Time until appointment <= current estimated wait time (general or preferred barber line), or
+   * (1) Time until appointment <= effective wait time (so auto check-in when line wait >= time until appointment), or
    * (2) Time until appointment <= 30 minutes.
-   * Respects preferred barber: uses that barber's line for position/wait when set.
+   * General line: effective wait = max(per-appointment wait, standard line wait) so a 3h line triggers check-in for a 1.5h appointment.
+   * Preferred barber: effective wait = that barber's line wait.
    * Called periodically (e.g. by queue countdown job).
    * At start: demote waiting appointments that would be served too early (minutesUntil - estimatedWait >= buffer).
    */
@@ -622,13 +623,18 @@ export class TicketService {
     const toPromote: number[] = [];
     const defaultDuration = settings.defaultServiceDuration ?? 20;
 
+    // Standard line wait (how long a new joiner would wait). Used so that when the line is longer
+    // than the time until an appointment, we auto check-in (e.g. line 3h, appointment in 1.5h).
+    const standardLineWaitMinutes =
+      (await this.queueService.calculateStandardWaitTimeIncludingAtRiskAppointments(shopId, settings)) ?? 0;
+
     for (const ticket of pendingAppointments) {
       const scheduled = ticket.scheduledTime ? new Date(ticket.scheduledTime) : null;
       if (!scheduled || scheduled.getTime() <= now.getTime()) continue;
 
       const minutesUntil = (scheduled.getTime() - now.getTime()) / 60_000;
 
-      let estimatedWaitMinutes: number;
+      let effectiveWaitMinutes: number;
       if (ticket.preferredBarberId != null) {
         const position = await this.queueService.calculatePositionForPreferredBarber(shopId, ticket.preferredBarberId, now);
         const wait = await this.queueService.calculateWaitTimeForPreferredBarber(
@@ -638,21 +644,21 @@ export class TicketService {
           now,
           defaultDuration
         );
-        estimatedWaitMinutes = wait ?? 0;
+        effectiveWaitMinutes = wait ?? 0;
       } else {
-        // Per-appointment wait: when would THIS appointment be served? Includes current queue + all
-        // other pending. Only the closer one gets a short wait; one 3h away has many ahead.
-        const wait = await this.queueService.calculateWaitTimeForPendingAppointment(
+        // Per-appointment wait: when would THIS appointment be served? Then take max with standard
+        // line wait so we auto check-in when the line is longer than time until appointment.
+        const perAppointmentWait = await this.queueService.calculateWaitTimeForPendingAppointment(
           shopId,
           { id: ticket.id, serviceId: ticket.serviceId, preferredBarberId: ticket.preferredBarberId, scheduledTime: ticket.scheduledTime },
           pendingAppointments.map((p) => ({ id: p.id, serviceId: p.serviceId, preferredBarberId: p.preferredBarberId, scheduledTime: p.scheduledTime })),
           now,
           defaultDuration
         );
-        estimatedWaitMinutes = wait ?? 0;
+        effectiveWaitMinutes = Math.max(perAppointmentWait ?? 0, standardLineWaitMinutes);
       }
 
-      if (minutesUntil <= estimatedWaitMinutes || minutesUntil <= 30) {
+      if (minutesUntil <= effectiveWaitMinutes || minutesUntil <= 30) {
         toPromote.push(ticket.id);
       }
     }
