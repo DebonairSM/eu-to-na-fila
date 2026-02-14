@@ -23,6 +23,7 @@ import { companyShopsRoutes } from './routes/company-shops.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { shopsRoutes } from './routes/shops.js';
 import { adsRoutes } from './routes/ads.js';
+import { propagandasPublicRoutes } from './routes/propagandas-public.js';
 import { clientsRoutes } from './routes/clients.js';
 import { projectsRoutes } from './routes/projects.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
@@ -329,6 +330,7 @@ fastify.register(
     instance.register(analyticsRoutes);
     instance.register(shopsRoutes);
     instance.register(adsRoutes);
+    instance.register(propagandasPublicRoutes);
     instance.register(clientsRoutes);
     instance.register(projectsRoutes);
   },

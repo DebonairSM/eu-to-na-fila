@@ -471,6 +471,8 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const phone = client.phone?.startsWith('e:') ? null : client.phone;
     const prefs = (client as { preferences?: { emailReminders?: boolean } }).preferences ?? {};
     const address = (client as { address?: string | null }).address ?? null;
+    const state = (client as { state?: string | null }).state ?? null;
+    const city = (client as { city?: string | null }).city ?? null;
     const dateOfBirth = (client as { dateOfBirth?: Date | string | null }).dateOfBirth ?? null;
     const gender = (client as { gender?: string | null }).gender ?? null;
     return {
@@ -481,6 +483,8 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       nextServiceNote: (client as { nextServiceNote?: string | null }).nextServiceNote ?? null,
       nextServiceImageUrl: (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl ?? null,
       address,
+      state,
+      city,
       dateOfBirth: dateOfBirth ? (typeof dateOfBirth === 'string' ? dateOfBirth : dateOfBirth.toISOString().slice(0, 10)) : null,
       gender,
     };
@@ -508,6 +512,8 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       nextServiceNote: z.string().max(2000).nullable().optional(),
       nextServiceImageUrl: z.string().url().max(500).nullable().optional(),
       address: z.string().max(500).nullable().optional(),
+      state: z.string().max(2).nullable().optional(),
+      city: z.string().max(200).nullable().optional(),
       dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
       gender: z.string().max(50).nullable().optional(),
     });
@@ -520,6 +526,8 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     if (data.nextServiceNote !== undefined) updateData.nextServiceNote = data.nextServiceNote;
     if (data.nextServiceImageUrl !== undefined) updateData.nextServiceImageUrl = data.nextServiceImageUrl;
     if (data.address !== undefined) updateData.address = data.address;
+    if (data.state !== undefined) updateData.state = data.state;
+    if (data.city !== undefined) updateData.city = data.city;
     if (data.dateOfBirth !== undefined) updateData.dateOfBirth = data.dateOfBirth;
     if (data.gender !== undefined) updateData.gender = data.gender;
 
@@ -527,6 +535,8 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const phone = client.phone?.startsWith('e:') ? null : client.phone;
     const prefs = (client as { preferences?: { emailReminders?: boolean } }).preferences ?? {};
     const resAddress = (client as { address?: string | null }).address ?? null;
+    const resState = (client as { state?: string | null }).state ?? null;
+    const resCity = (client as { city?: string | null }).city ?? null;
     const resDateOfBirth = (client as { dateOfBirth?: Date | string | null }).dateOfBirth ?? null;
     const resGender = (client as { gender?: string | null }).gender ?? null;
     return {
@@ -537,6 +547,8 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       nextServiceNote: (client as { nextServiceNote?: string | null }).nextServiceNote ?? null,
       nextServiceImageUrl: (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl ?? null,
       address: resAddress,
+      state: resState,
+      city: resCity,
       dateOfBirth: resDateOfBirth ? (typeof resDateOfBirth === 'string' ? resDateOfBirth : (resDateOfBirth as Date).toISOString().slice(0, 10)) : null,
       gender: resGender,
     };

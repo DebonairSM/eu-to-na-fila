@@ -493,6 +493,123 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       rate: withPreferred.length > 0 ? Math.round((preferredFulfilled.length / withPreferred.length) * 100) : 0,
     };
 
+    // Demographics: location, gender, age, favorite haircut (from clip notes)
+    const ticketClientIds = [...new Set(
+      tickets
+        .filter((t) => (t as { clientId?: number | null }).clientId != null)
+        .map((t) => (t as { clientId: number }).clientId)
+    )];
+    let demographics: {
+      locationBreakdown: { city: string; state?: string; count: number }[];
+      genderBreakdown: { gender: string; count: number }[];
+      ageBreakdown: { range: string; count: number }[];
+      styleBreakdown: { style: string; count: number }[];
+    } | undefined;
+    if (ticketClientIds.length > 0) {
+      const clientsData = await db.query.clients.findMany({
+        where: and(
+          eq(schema.clients.shopId, shop.id),
+          inArray(schema.clients.id, ticketClientIds)
+        ),
+        columns: { id: true, city: true, state: true, dateOfBirth: true, gender: true },
+      });
+      const clientMap = new Map(clientsData.map((c) => [c.id, c]));
+
+      const locationCounts = new Map<string, { city: string; state?: string; count: number }>();
+      const genderCounts = new Map<string, number>();
+      const ageRanges = ['18-24', '25-34', '35-44', '45+'] as const;
+      const ageCounts = new Map<string, number>(ageRanges.map((r) => [r, 0]));
+
+      for (const t of tickets) {
+        const cid = (t as { clientId?: number | null }).clientId;
+        if (cid == null) continue;
+        const client = clientMap.get(cid) as { city?: string | null; state?: string | null; dateOfBirth?: Date | string | null; gender?: string | null } | undefined;
+        if (!client) continue;
+
+        if (client.city && client.city.trim()) {
+          const key = `${client.city}|${client.state ?? ''}`;
+          const existing = locationCounts.get(key);
+          if (existing) {
+            existing.count++;
+          } else {
+            locationCounts.set(key, {
+              city: client.city.trim(),
+              state: client.state && client.state.trim() ? client.state.trim() : undefined,
+              count: 1,
+            });
+          }
+        }
+
+        const gender = (client.gender ?? 'unknown').toString().toLowerCase() || 'unknown';
+        genderCounts.set(gender, (genderCounts.get(gender) ?? 0) + 1);
+
+        if (client.dateOfBirth) {
+          const dob = typeof client.dateOfBirth === 'string' ? new Date(client.dateOfBirth) : client.dateOfBirth;
+          const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+          if (age >= 18) {
+            if (age <= 24) ageCounts.set('18-24', (ageCounts.get('18-24') ?? 0) + 1);
+            else if (age <= 34) ageCounts.set('25-34', (ageCounts.get('25-34') ?? 0) + 1);
+            else if (age <= 44) ageCounts.set('35-44', (ageCounts.get('35-44') ?? 0) + 1);
+            else ageCounts.set('45+', (ageCounts.get('45+') ?? 0) + 1);
+          }
+        }
+      }
+
+      const STYLE_KEYWORDS = ['degradê', 'degrade', 'fade', 'social', 'militar', 'topete', 'raspado', 'undercut', 'baby hair', 'maquina', 'navalha'] as const;
+      const styleCounts = new Map<string, number>();
+      const notes = await db.query.clientClipNotes.findMany({
+        where: inArray(schema.clientClipNotes.clientId, ticketClientIds),
+        columns: { note: true },
+      });
+      for (const n of notes) {
+        const noteLower = n.note.toLowerCase();
+        for (const kw of STYLE_KEYWORDS) {
+          if (noteLower.includes(kw)) {
+            const canonical = kw === 'degrade' ? 'degradê' : kw;
+            styleCounts.set(canonical, (styleCounts.get(canonical) ?? 0) + 1);
+          }
+        }
+      }
+
+      demographics = {
+        locationBreakdown: Array.from(locationCounts.values())
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 20),
+        genderBreakdown: Array.from(genderCounts.entries())
+          .map(([gender, count]) => ({ gender, count }))
+          .sort((a, b) => b.count - a.count),
+        ageBreakdown: ageRanges.map((range) => ({ range, count: ageCounts.get(range) ?? 0 })),
+        styleBreakdown: Array.from(styleCounts.entries())
+          .map(([style, count]) => ({ style, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 10),
+      };
+    }
+
+    // Rule-based correlations (cross-tabulations)
+    const ruleBasedInsights: string[] = [];
+    if (demographics) {
+      const loc = demographics.locationBreakdown;
+      const style = demographics.styleBreakdown;
+      const gender = demographics.genderBreakdown;
+      if (loc.length > 0 && style.length > 0) {
+        const topCity = loc[0];
+        const topStyle = style[0];
+        if (topCity && topStyle) {
+          ruleBasedInsights.push(`${topCity.city}${topCity.state ? ` (${topCity.state})` : ''}: ${topCity.count} clientes`);
+          ruleBasedInsights.push(`Corte mais citado: ${topStyle.style} (${topStyle.count}x)`);
+        }
+      }
+      if (gender.length > 0) {
+        const top = gender[0];
+        if (top) {
+          const total = gender.reduce((s, g) => s + g.count, 0);
+          const pct = total > 0 ? Math.round((top.count / total) * 100) : 0;
+          ruleBasedInsights.push(`${top.gender === 'unknown' ? 'Não informado' : top.gender}: ${pct}% dos clientes`);
+        }
+      }
+    }
+
     // Appointment metrics (no-show, punctuality)
     const appointmentTickets = tickets.filter((t) => (t as { type?: string }).type === 'appointment');
     let appointmentMetrics: {
@@ -574,6 +691,10 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       clientMetrics,
       preferredBarberFulfillment,
       appointmentMetrics,
+      ...(demographics ? { demographics } : {}),
+      correlations: {
+        ruleBased: ruleBasedInsights,
+      },
     };
   });
 

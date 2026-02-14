@@ -49,6 +49,8 @@ export interface ClientDetailResponse {
     phone: string;
     email?: string | null;
     address?: string | null;
+    state?: string | null;
+    city?: string | null;
     dateOfBirth?: string | null;
     gender?: string | null;
     nextServiceNote?: string | null;
@@ -65,6 +67,11 @@ export interface ClientSearchResponse {
 export interface ClientUpdatePayload {
   name?: string;
   email?: string | null;
+  address?: string | null;
+  state?: string | null;
+  city?: string | null;
+  dateOfBirth?: string | null;
+  gender?: string | null;
 }
 
 export interface ClientsApi {

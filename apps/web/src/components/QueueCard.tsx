@@ -158,6 +158,11 @@ export const QueueCard = memo(function QueueCard({
                 {t('status.prefersBarber')} {preferredBarberName}
               </p>
             )}
+            {(ticket as { clientCity?: string }).clientCity && (
+              <p className="text-sm text-[var(--shop-text-secondary)] truncate">
+                {(ticket as { clientCity?: string }).clientCity}
+              </p>
+            )}
           </div>
         </div>
 

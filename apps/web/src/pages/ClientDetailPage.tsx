@@ -21,6 +21,11 @@ export function ClientDetailPage() {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editState, setEditState] = useState('');
+  const [editCity, setEditCity] = useState('');
+  const [editDateOfBirth, setEditDateOfBirth] = useState('');
+  const [editGender, setEditGender] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -75,10 +80,23 @@ export function ClientDetailPage() {
       .getClient(shopSlug, clientId)
       .then((res) => {
         setData(res);
-        const c = res.client as { name?: string; email?: string | null };
+        const c = res.client as {
+          name?: string;
+          email?: string | null;
+          address?: string | null;
+          state?: string | null;
+          city?: string | null;
+          dateOfBirth?: string | null;
+          gender?: string | null;
+        };
         if (c.name != null) {
           setEditName(c.name);
           setEditEmail(c.email ?? '');
+          setEditAddress(c.address ?? '');
+          setEditState(c.state ?? '');
+          setEditCity(c.city ?? '');
+          setEditDateOfBirth(c.dateOfBirth ?? '');
+          setEditGender(c.gender ?? '');
         }
       })
       .catch((err) => {
@@ -100,8 +118,14 @@ export function ClientDetailPage() {
 
   const startEdit = () => {
     if (data) {
-      setEditName(data.client.name);
-      setEditEmail(data.client.email ?? '');
+      const c = data.client;
+      setEditName(c.name);
+      setEditEmail(c.email ?? '');
+      setEditAddress(c.address ?? '');
+      setEditState(c.state ?? '');
+      setEditCity(c.city ?? '');
+      setEditDateOfBirth(c.dateOfBirth ?? '');
+      setEditGender(c.gender ?? '');
       setEditing(true);
       setSaveError(null);
       setSaveSuccess(false);
@@ -123,13 +147,24 @@ export function ClientDetailPage() {
       const updated = await api.updateClient(shopSlug, clientId, {
         name: editName.trim() || undefined,
         email: editEmail.trim() || null,
+        address: editAddress.trim() || null,
+        state: editState.trim() || null,
+        city: editCity.trim() || null,
+        dateOfBirth: editDateOfBirth.trim() || null,
+        gender: editGender.trim() || null,
       });
+      const u = updated as { name?: string; email?: string | null; address?: string | null; state?: string | null; city?: string | null; dateOfBirth?: string | null; gender?: string | null };
       setData({
         ...data,
         client: {
           ...data.client,
-          name: updated.name,
-          email: updated.email,
+          name: u.name ?? data.client.name,
+          email: u.email ?? data.client.email,
+          address: u.address ?? data.client.address,
+          state: u.state ?? data.client.state,
+          city: u.city ?? data.client.city,
+          dateOfBirth: u.dateOfBirth ?? data.client.dateOfBirth,
+          gender: u.gender ?? data.client.gender,
         },
       });
       setEditing(false);
@@ -206,6 +241,46 @@ export function ClientDetailPage() {
                       onChange={(e) => setEditEmail(e.target.value)}
                       className="w-full px-3 py-2 rounded-lg bg-black/30 border border-[var(--shop-accent)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
                     />
+                    <label className="block text-sm text-[var(--shop-text-secondary)]">{t('account.state')}</label>
+                    <input
+                      type="text"
+                      value={editState}
+                      onChange={(e) => setEditState(e.target.value)}
+                      placeholder="SP"
+                      maxLength={2}
+                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-[var(--shop-accent)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                    />
+                    <label className="block text-sm text-[var(--shop-text-secondary)]">{t('account.city')}</label>
+                    <input
+                      type="text"
+                      value={editCity}
+                      onChange={(e) => setEditCity(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-[var(--shop-accent)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                    />
+                    <label className="block text-sm text-[var(--shop-text-secondary)]">{t('account.address')}</label>
+                    <input
+                      type="text"
+                      value={editAddress}
+                      onChange={(e) => setEditAddress(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-[var(--shop-accent)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                    />
+                    <label className="block text-sm text-[var(--shop-text-secondary)]">{t('account.dateOfBirth')}</label>
+                    <input
+                      type="date"
+                      value={editDateOfBirth}
+                      onChange={(e) => setEditDateOfBirth(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-[var(--shop-accent)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                    />
+                    <label className="block text-sm text-[var(--shop-text-secondary)]">{t('account.gender')}</label>
+                    <select
+                      value={editGender}
+                      onChange={(e) => setEditGender(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-[var(--shop-accent)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                    >
+                      <option value="">{t('account.genderPlaceholder')}</option>
+                      <option value="male">{t('account.genderMale')}</option>
+                      <option value="female">{t('account.genderFemale')}</option>
+                    </select>
                     <div className="flex gap-2 mt-3">
                       <Button
                         onClick={handleSave}
@@ -235,6 +310,12 @@ export function ClientDetailPage() {
                 <>
                   <p className="text-[var(--shop-text-secondary)]">{client.phone}</p>
                   {client.email && <p className="text-[var(--shop-text-secondary)] text-sm mt-1">{client.email}</p>}
+                  {(client.city || client.state || client.address) && (
+                    <p className="text-[var(--shop-text-secondary)] text-sm mt-1">
+                      {[client.city, client.state].filter(Boolean).join(' – ')}
+                      {client.address && ` · ${client.address}`}
+                    </p>
+                  )}
                 </>
               )}
             </section>

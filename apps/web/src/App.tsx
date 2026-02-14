@@ -110,6 +110,7 @@ function AppContent() {
       <Route path="/shops" element={<NetworkPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/join" element={<JoinPageGuard />} />
+      <Route path="/join/kiosk" element={<KioskLoginPage />} />
       <Route path="/schedule" element={<SchedulePage />} />
       <Route path="/appointment/:id/confirm" element={<AppointmentConfirmPage />} />
       <Route path="/checkin/confirm" element={<CheckInConfirmPage />} />
@@ -118,7 +119,7 @@ function AppContent() {
       <Route path="/account" element={<CustomerAccountPage />} />
       <Route path="/shop/signup" element={<SignupPage />} />
       <Route path="/shop/callback" element={<ShopCallbackPage />} />
-      <Route path="/kiosk-login" element={<KioskLoginPage />} />
+      <Route path="/kiosk-login" element={<Navigate to="/join/kiosk" replace />} />
 
       <Route
         path="/staff"

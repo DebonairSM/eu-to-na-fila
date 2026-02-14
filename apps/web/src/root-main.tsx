@@ -5,6 +5,8 @@ import { RootHomePage } from './pages/RootHomePage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { RootAboutPage } from './pages/RootAboutPage';
 import { RootContactPage } from './pages/RootContactPage';
+import { PropagandasPage } from './pages/PropagandasPage';
+import { PropagandasBuyPage } from './pages/PropagandasBuyPage';
 import { CompanyLoginPage } from './pages/CompanyLoginPage';
 import { CompanyDashboard } from './pages/CompanyDashboard';
 import { AdManagementPage } from './pages/AdManagementPage';
@@ -55,6 +57,8 @@ function App() {
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/about" element={<RootAboutPage />} />
           <Route path="/contact" element={<RootContactPage />} />
+          <Route path="/propagandas" element={<PropagandasPage />} />
+          <Route path="/propagandas/buy" element={<PropagandasBuyPage />} />
           <Route path="/company/login" element={<CompanyLoginPage />} />
           <Route path="/company/dashboard" element={<ProtectedRoute requireCompanyAdmin><CompanyDashboard /></ProtectedRoute>} />
           <Route path="/company/ads" element={<ProtectedRoute requireCompanyAdmin><AdManagementPage /></ProtectedRoute>} />

@@ -216,3 +216,25 @@ export async function uploadDraftHomeImage(
   if (!data?.publicUrl) throw new Error('Failed to get public URL for draft home image');
   return data.publicUrl;
 }
+
+/**
+ * Upload ad order image (Propagandas buy-ad flow). Path: companies/{companyId}/ad-orders/{orderId}{ext}
+ * Returns { publicUrl, storageKey }.
+ */
+export async function uploadAdOrderImage(
+  companyId: number,
+  orderId: number,
+  fileBuffer: Buffer,
+  mimeType: string
+): Promise<{ publicUrl: string; storageKey: string }> {
+  const supabase = getSupabaseClient();
+  const extension = MIME_TO_EXT[mimeType] || '.jpg';
+  const storagePath = `companies/${companyId}/ad-orders/${orderId}${extension}`;
+  const { error } = await supabase.storage
+    .from(BUCKET_NAME)
+    .upload(storagePath, fileBuffer, { contentType: mimeType, upsert: true });
+  if (error) throw new Error(`Failed to upload ad order image: ${error.message}`);
+  const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(storagePath);
+  if (!data?.publicUrl) throw new Error('Failed to get public URL for ad order image');
+  return { publicUrl: data.publicUrl, storageKey: storagePath };
+}

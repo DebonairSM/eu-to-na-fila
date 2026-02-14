@@ -61,6 +61,12 @@ export function JoinPage() {
               </Link>
             </p>
           )}
+
+          <p className="text-center text-sm text-[rgba(255,255,255,0.5)]">
+            <Link to="/join/kiosk" className="text-[var(--shop-accent)] hover:underline hover:text-[var(--shop-accent-hover)]">
+              {t('join.kioskMode')}
+            </Link>
+          </p>
         </div>
       </Container>
     </div>

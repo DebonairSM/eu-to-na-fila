@@ -52,6 +52,11 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   /** Canonical public URL of the API (no trailing slash). When set, used to build Google OAuth redirect_uri so it matches Google Cloud Console. */
   PUBLIC_API_URL: z.string().url().optional(),
+  /** Company ID for the root marketing site (Propagandas / buy-ad flow). When set, GET /api/public/propagandas/shops returns this company's shops. */
+  ROOT_COMPANY_ID: z
+    .string()
+    .optional()
+    .transform((s) => (s != null && s !== '' ? Number(s) : undefined)),
 });
 
 let env: z.infer<typeof envSchema>;

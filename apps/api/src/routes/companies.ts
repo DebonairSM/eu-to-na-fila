@@ -1,9 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db, schema } from '../db/index.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
-import { NotFoundError } from '../lib/errors.js';
+import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
 import { env } from '../env.js';
 
@@ -300,6 +300,171 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         location.addressLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayAddress)}`;
       }
       return reply.status(200).send({ location });
+    }
+  );
+
+  /**
+   * Get ad orders for the company (admin). Optional filter by status.
+   *
+   * @route GET /api/companies/:id/ad-orders
+   * @query status - Optional: pending_approval | approved | rejected
+   */
+  fastify.get(
+    '/companies/:id/ad-orders',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || request.user.companyId == null) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+      const paramsSchema = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      });
+      const querySchema = z.object({
+        status: z.enum(['pending_approval', 'approved', 'rejected']).optional(),
+      });
+      const { id: companyId } = validateRequest(paramsSchema, request.params);
+      const query = validateRequest(querySchema, request.query as Record<string, unknown>);
+
+      if (request.user.companyId !== companyId) {
+        return reply.status(403).send({
+          error: 'Access denied to this company',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+
+      const conditions = [eq(schema.adOrders.companyId, companyId)];
+      if (query.status) {
+        conditions.push(eq(schema.adOrders.status, query.status));
+      }
+      const orders = await db.query.adOrders.findMany({
+        where: and(...conditions),
+        orderBy: [desc(schema.adOrders.createdAt)],
+      });
+      return reply.send(orders);
+    }
+  );
+
+  /**
+   * PATCH /api/companies/:id/ad-orders/:orderId
+   * Body: { action: 'approve' | 'reject' | 'mark_paid' }
+   * On approve: creates company_ad(s) from order image and sets order status to approved.
+   */
+  fastify.patch(
+    '/companies/:id/ad-orders/:orderId',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || request.user.companyId == null) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+      const paramsSchema = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+        orderId: z.string().transform((val) => parseInt(val, 10)),
+      });
+      const bodySchema = z.object({
+        action: z.enum(['approve', 'reject', 'mark_paid']),
+      });
+      const { id: companyId, orderId } = validateRequest(paramsSchema, request.params);
+      const body = validateRequest(bodySchema, request.body);
+
+      if (request.user.companyId !== companyId) {
+        return reply.status(403).send({
+          error: 'Access denied to this company',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+
+      const [order] = await db
+        .select()
+        .from(schema.adOrders)
+        .where(
+          and(
+            eq(schema.adOrders.id, orderId),
+            eq(schema.adOrders.companyId, companyId)
+          )
+        )
+        .limit(1);
+      if (!order) {
+        throw new NotFoundError('Ad order not found');
+      }
+
+      if (body.action === 'mark_paid') {
+        await db
+          .update(schema.adOrders)
+          .set({ paymentStatus: 'paid', updatedAt: new Date() })
+          .where(eq(schema.adOrders.id, orderId));
+        return reply.send({ ok: true, paymentStatus: 'paid' });
+      }
+
+      if (body.action === 'reject') {
+        await db
+          .update(schema.adOrders)
+          .set({ status: 'rejected', updatedAt: new Date() })
+          .where(eq(schema.adOrders.id, orderId));
+        return reply.send({ ok: true, status: 'rejected' });
+      }
+
+      // approve
+      if (order.status !== 'pending_approval') {
+        throw new ValidationError('Order is not pending approval', [
+          { field: 'action', message: 'Only pending orders can be approved' },
+        ]);
+      }
+      if (!order.imageStorageKey || !order.imagePublicUrl || !order.imageMimeType || order.imageBytes == null) {
+        throw new ValidationError('Order has no image', [
+          { field: 'image', message: 'Order must have an image to approve' },
+        ]);
+      }
+
+      const shopIds: (number | null)[] =
+        order.shopIds && Array.isArray(order.shopIds) && order.shopIds.length > 0
+          ? (order.shopIds as number[])
+          : [null];
+
+      const maxPositionResult = await db
+        .select({ maxPos: sql<number>`COALESCE(MAX(${schema.companyAds.position}), 0)` })
+        .from(schema.companyAds)
+        .where(eq(schema.companyAds.companyId, companyId));
+      const nextPosition = (maxPositionResult[0]?.maxPos ?? 0) + 1;
+
+      for (let i = 0; i < shopIds.length; i++) {
+        await db.insert(schema.companyAds).values({
+          companyId,
+          shopId: shopIds[i],
+          position: nextPosition + i,
+          enabled: true,
+          mediaType: 'image',
+          mimeType: order.imageMimeType,
+          bytes: order.imageBytes,
+          storageKey: order.imageStorageKey,
+          publicUrl: order.imagePublicUrl,
+        });
+      }
+
+      await db
+        .update(schema.adOrders)
+        .set({
+          status: 'approved',
+          approvedAt: new Date(),
+          approvedBy: request.user.id ?? null,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.adOrders.id, orderId));
+
+      return reply.send({ ok: true, status: 'approved' });
     }
   );
 };

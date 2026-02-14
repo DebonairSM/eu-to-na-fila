@@ -17,6 +17,7 @@ import { createShopsApi } from './shops';
 import { createCompaniesApi } from './companies';
 import { createAuthApi } from './auth';
 import { createAdsApi } from './ads';
+import { createPropagandasApi } from './propagandas';
 import { createAnalyticsApi } from './analytics';
 import { createClientsApi } from './clients';
 
@@ -34,6 +35,7 @@ class ApiClient extends BaseApiClient {
   private _companies = createCompaniesApi(this);
   private _auth = createAuthApi(this);
   private _ads = createAdsApi(this);
+  private _propagandas = createPropagandasApi(this);
   private _analytics = createAnalyticsApi(this);
   private _clients = createClientsApi(this);
 
@@ -93,6 +95,8 @@ class ApiClient extends BaseApiClient {
   deleteCompanyShop = this._companies.deleteCompanyShop;
   updateCompanyShopBarber = this._companies.updateCompanyShopBarber;
   lookupPlacesByAddress = this._companies.lookupPlacesByAddress;
+  getAdOrders = this._companies.getAdOrders;
+  patchAdOrder = this._companies.patchAdOrder;
 
   // --- Auth ---
   authenticate = this._auth.authenticate;
@@ -113,6 +117,11 @@ class ApiClient extends BaseApiClient {
   getAds = this._ads.getAds;
   updateAd = this._ads.updateAd;
   deleteAd = this._ads.deleteAd;
+
+  // --- Propagandas (public buy-ad) ---
+  getShopsForAds = this._propagandas.getShopsForAds;
+  createAdOrder = this._propagandas.createAdOrder;
+  uploadAdOrderImage = this._propagandas.uploadAdOrderImage;
 
   // --- Analytics ---
   getAnalytics = this._analytics.getAnalytics;

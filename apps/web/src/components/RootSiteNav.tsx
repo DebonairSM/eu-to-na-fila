@@ -14,6 +14,7 @@ export function RootSiteNav() {
     { to: '/projects', label: t('root.projects') },
     { to: '/about', label: t('root.about') },
     { to: '/contact', label: t('root.contact') },
+    { to: '/propagandas', label: t('root.propagandas') },
   ];
 
   return (

@@ -39,7 +39,11 @@ export class TicketService {
     try {
       let tickets = await this.db.query.tickets.findMany({
         where: whereClause,
-        with: { service: true, barber: true },
+        with: {
+          service: true,
+          barber: true,
+          client: { columns: { city: true, state: true } },
+        },
         orderBy: (tickets, { asc }) => [asc(tickets.createdAt)],
       });
 

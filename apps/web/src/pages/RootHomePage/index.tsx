@@ -95,6 +95,9 @@ function Footer() {
               <Link to="/contact" className="block text-gray-500 hover:text-white text-sm transition-colors">
                 {t('root.contact')}
               </Link>
+              <Link to="/propagandas" className="block text-gray-500 hover:text-white text-sm transition-colors">
+                {t('root.propagandas')}
+              </Link>
             </nav>
           </div>
           <div>

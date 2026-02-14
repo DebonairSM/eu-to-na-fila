@@ -635,7 +635,10 @@ export class QueueService {
         eq(schema.tickets.shopId, shopId),
         eq(schema.tickets.status, 'waiting')
       ),
-      with: { service: true },
+      with: {
+        service: true,
+        client: { columns: { city: true, state: true } },
+      },
       orderBy: [asc(schema.tickets.createdAt)],
     });
 

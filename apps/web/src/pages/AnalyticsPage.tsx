@@ -11,6 +11,8 @@ import { DailyChart } from '@/components/DailyChart';
 import { HourlyChart } from '@/components/HourlyChart';
 import { AIAnalyticsAdvisor } from '@/components/AIAnalyticsAdvisor';
 import { ServiceBreakdownChart } from '@/components/ServiceBreakdownChart';
+import { LocationChart } from '@/components/LocationChart';
+import { DemographicsInsights } from '@/components/DemographicsInsights';
 import { DayOfWeekChart } from '@/components/DayOfWeekChart';
 import { WaitTimeTrendChart } from '@/components/WaitTimeTrendChart';
 import { CancellationChart } from '@/components/CancellationChart';
@@ -75,9 +77,16 @@ interface AnalyticsData {
   clientMetrics?: { uniqueClients: number; newClients: number; returningClients: number; repeatRate: number };
   preferredBarberFulfillment?: { requested: number; fulfilled: number; rate: number };
   appointmentMetrics?: { total: number; noShows: number; noShowRate: number; avgMinutesLate: number; onTimeCount: number };
+  demographics?: {
+    locationBreakdown: { city: string; state?: string; count: number }[];
+    genderBreakdown: { gender: string; count: number }[];
+    ageBreakdown: { range: string; count: number }[];
+    styleBreakdown: { style: string; count: number }[];
+  };
+  correlations?: { ruleBased: string[]; llmInsights?: string[] };
 }
 
-type AnalyticsView = 'overview' | 'time' | 'services' | 'barbers' | 'cancellations' | 'clients';
+type AnalyticsView = 'overview' | 'time' | 'services' | 'barbers' | 'cancellations' | 'demographics' | 'clients';
 
 export function AnalyticsPage() {
   const shopSlug = useShopSlug();
@@ -269,6 +278,16 @@ export function AnalyticsPage() {
               }`}
             >
               Cancelamentos
+            </button>
+            <button
+              onClick={() => setActiveView('demographics')}
+              className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
+                activeView === 'demographics'
+                  ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]'
+                  : 'bg-[var(--shop-surface-secondary)] text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] hover:bg-[var(--shop-surface-primary)] border border-[rgba(255,255,255,0.1)]'
+              }`}
+            >
+              Demografia
             </button>
             <button
               onClick={() => setActiveView('clients')}
@@ -681,6 +700,99 @@ export function AnalyticsPage() {
               </div>
               <CancellationChart data={data.cancellationAnalysis} />
             </div>
+          )}
+
+          {/* Demographics View */}
+          {activeView === 'demographics' && (
+            <>
+              {data.demographics && (
+                <DemographicsInsights
+                  locationBreakdown={data.demographics.locationBreakdown}
+                  genderBreakdown={data.demographics.genderBreakdown}
+                  ageBreakdown={data.demographics.ageBreakdown}
+                  styleBreakdown={data.demographics.styleBreakdown}
+                  ruleBased={data.correlations?.ruleBased ?? []}
+                />
+              )}
+              {data.demographics ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {data.demographics.locationBreakdown.length > 0 && (
+                    <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
+                      <div className="mb-6 flex items-center gap-4">
+                        <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">location_on</span>
+                        <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                          Localização
+                        </h2>
+                      </div>
+                      <LocationChart data={data.demographics.locationBreakdown} />
+                    </div>
+                  )}
+                  {data.demographics.genderBreakdown.length > 0 && (
+                    <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
+                      <div className="mb-6 flex items-center gap-4">
+                        <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">people</span>
+                        <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                          Gênero
+                        </h2>
+                      </div>
+                      <div className="space-y-3">
+                        {data.demographics.genderBreakdown.map((g) => (
+                          <div key={g.gender} className="flex items-center justify-between gap-4">
+                            <span className="text-white font-medium">{g.gender === 'unknown' ? 'Não informado' : g.gender}</span>
+                            <span className="text-[#D4AF37] font-semibold">{g.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {data.demographics.ageBreakdown.some((a) => a.count > 0) && (
+                    <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
+                      <div className="mb-6 flex items-center gap-4">
+                        <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">cake</span>
+                        <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                          Faixa Etária
+                        </h2>
+                      </div>
+                      <div className="space-y-3">
+                        {data.demographics.ageBreakdown.map((a) => (
+                          <div key={a.range} className="flex items-center justify-between gap-4">
+                            <span className="text-white font-medium">{a.range} anos</span>
+                            <span className="text-[#D4AF37] font-semibold">{a.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {data.demographics.styleBreakdown.length > 0 && (
+                    <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
+                      <div className="mb-6 flex items-center gap-4">
+                        <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">content_cut</span>
+                        <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                          Estilos Citados
+                        </h2>
+                      </div>
+                      <div className="space-y-3">
+                        {data.demographics.styleBreakdown.map((s) => (
+                          <div key={s.style} className="flex items-center justify-between gap-4">
+                            <span className="text-white font-medium capitalize">{s.style}</span>
+                            <span className="text-[#D4AF37] font-semibold">{s.count}x</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-12 text-center">
+                  <p className="text-white/50">{t('common.noDataAvailable')}</p>
+                  <p className="text-white/40 text-sm mt-2">Clientes com endereço ou dados demográficos preenchidos aparecerão aqui.</p>
+                </div>
+              )}
+            </>
           )}
 
           {/* Clients View */}

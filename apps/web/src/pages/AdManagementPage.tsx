@@ -5,6 +5,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { api, ApiError } from '@/lib/api';
+import type { AdOrder } from '@/lib/api/companies';
 import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
 import { Container } from '@/components/design-system/Spacing/Container';
@@ -39,6 +40,9 @@ export function AdManagementPage() {
   const [uploadShopId, setUploadShopId] = useState<number | null>(null); // null = all shops
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [pendingOrders, setPendingOrders] = useState<AdOrder[]>([]);
+  const [pendingOrdersLoading, setPendingOrdersLoading] = useState(false);
+  const [actingOrderId, setActingOrderId] = useState<number | null>(null);
 
   const companyId = user?.companyId ?? null;
 
@@ -59,6 +63,17 @@ export function AdManagementPage() {
   useEffect(() => {
     loadAds();
   }, []);
+
+  // Load pending ad orders
+  useEffect(() => {
+    if (!companyId) return;
+    setPendingOrdersLoading(true);
+    api
+      .getAdOrders(companyId, 'pending_approval')
+      .then(setPendingOrders)
+      .catch(() => setPendingOrders([]))
+      .finally(() => setPendingOrdersLoading(false));
+  }, [companyId]);
 
   const loadAds = async () => {
     try {
@@ -188,6 +203,34 @@ export function AdManagementPage() {
     }
   };
 
+  const loadPendingOrders = () => {
+    if (!companyId) return;
+    api.getAdOrders(companyId, 'pending_approval').then(setPendingOrders).catch(() => setPendingOrders([]));
+  };
+
+  const handleAdOrderAction = async (orderId: number, action: 'approve' | 'reject' | 'mark_paid') => {
+    if (!companyId) return;
+    setActingOrderId(orderId);
+    setError(null);
+    try {
+      await api.patchAdOrder(companyId, orderId, { action });
+      if (action === 'approve') {
+        setSuccess(t('ads.approveSuccess'));
+        await loadAds();
+      } else if (action === 'reject') {
+        setSuccess(t('ads.rejectSuccess'));
+      } else {
+        setSuccess(t('ads.markPaidSuccess'));
+      }
+      loadPendingOrders();
+    } catch (err) {
+      if (err instanceof ApiError && err.isAuthError()) return;
+      setError(getErrorMessage(err, t('ads.updateError')));
+    } finally {
+      setActingOrderId(null);
+    }
+  };
+
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -224,6 +267,76 @@ export function AdManagementPage() {
               {success}
             </div>
           )}
+
+          {/* Pending ad requests */}
+          <div className="mb-8 border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-6">
+            <h2 className="text-xl font-semibold mb-4">{t('ads.pendingRequests')}</h2>
+            {pendingOrdersLoading ? (
+              <p className="text-white/60 text-sm">{t('ads.loading')}</p>
+            ) : pendingOrders.length === 0 ? (
+              <p className="text-white/50 text-sm">{t('ads.noPendingRequests')}</p>
+            ) : (
+              <div className="space-y-4">
+                {pendingOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="flex flex-wrap items-start gap-4 p-4 rounded-xl border border-white/10 bg-white/5"
+                  >
+                    {order.imagePublicUrl ? (
+                      <img
+                        src={order.imagePublicUrl}
+                        alt=""
+                        className="w-24 h-24 object-contain bg-black rounded-lg border border-white/10 flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-white/40 text-xs flex-shrink-0">
+                        No image
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-white">{order.advertiserName}</p>
+                      <p className="text-sm text-white/60">{order.advertiserEmail}</p>
+                      <p className="text-xs text-white/50 mt-1">
+                        {t('ads.duration')}: {order.durationSeconds}s · {t('ads.shopsCount')}:{' '}
+                        {Array.isArray(order.shopIds) && order.shopIds.length > 0
+                          ? order.shopIds.length
+                          : t('ads.allShops')}
+                      </p>
+                      <p className="text-xs text-white/40 mt-0.5">
+                        {t('ads.createdAt')}: {new Date(order.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleAdOrderAction(order.id, 'approve')}
+                        disabled={actingOrderId === order.id}
+                        className="px-3 py-1.5 rounded-lg text-sm bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30 disabled:opacity-50"
+                      >
+                        {t('ads.approve')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAdOrderAction(order.id, 'reject')}
+                        disabled={actingOrderId === order.id}
+                        className="px-3 py-1.5 rounded-lg text-sm bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 disabled:opacity-50"
+                      >
+                        {t('ads.reject')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAdOrderAction(order.id, 'mark_paid')}
+                        disabled={actingOrderId === order.id}
+                        className="px-3 py-1.5 rounded-lg text-sm bg-white/10 text-white/80 border border-white/20 hover:bg-white/20 disabled:opacity-50"
+                      >
+                        {t('ads.markPaid')}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Upload Section */}
           <div className="mb-8 border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-6">
@@ -439,6 +552,76 @@ export function AdManagementPage() {
               {success}
             </div>
           )}
+
+          {/* Pending ad requests */}
+          <div className="mb-8 border border-white/10 bg-white/5 rounded-2xl p-6">
+            <h2 className="text-xl font-semibold mb-4">{t('ads.pendingRequests')}</h2>
+            {pendingOrdersLoading ? (
+              <p className="text-white/60 text-sm">{t('ads.loading')}</p>
+            ) : pendingOrders.length === 0 ? (
+              <p className="text-white/50 text-sm">{t('ads.noPendingRequests')}</p>
+            ) : (
+              <div className="space-y-4">
+                {pendingOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="flex flex-wrap items-start gap-4 p-4 rounded-xl border border-white/10 bg-white/5"
+                  >
+                    {order.imagePublicUrl ? (
+                      <img
+                        src={order.imagePublicUrl}
+                        alt=""
+                        className="w-24 h-24 object-contain bg-black rounded-lg border border-white/10 flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-white/40 text-xs flex-shrink-0">
+                        No image
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-white">{order.advertiserName}</p>
+                      <p className="text-sm text-white/60">{order.advertiserEmail}</p>
+                      <p className="text-xs text-white/50 mt-1">
+                        {t('ads.duration')}: {order.durationSeconds}s · {t('ads.shopsCount')}:{' '}
+                        {Array.isArray(order.shopIds) && order.shopIds.length > 0
+                          ? order.shopIds.length
+                          : t('ads.allShops')}
+                      </p>
+                      <p className="text-xs text-white/40 mt-0.5">
+                        {t('ads.createdAt')}: {new Date(order.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleAdOrderAction(order.id, 'approve')}
+                        disabled={actingOrderId === order.id}
+                        className="px-3 py-1.5 rounded-lg text-sm bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30 disabled:opacity-50"
+                      >
+                        {t('ads.approve')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAdOrderAction(order.id, 'reject')}
+                        disabled={actingOrderId === order.id}
+                        className="px-3 py-1.5 rounded-lg text-sm bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 disabled:opacity-50"
+                      >
+                        {t('ads.reject')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAdOrderAction(order.id, 'mark_paid')}
+                        disabled={actingOrderId === order.id}
+                        className="px-3 py-1.5 rounded-lg text-sm bg-white/10 text-white/80 border border-white/20 hover:bg-white/20 disabled:opacity-50"
+                      >
+                        {t('ads.markPaid')}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Upload Section */}
           <div className="mb-8 border border-white/10 bg-white/5 rounded-2xl p-6">

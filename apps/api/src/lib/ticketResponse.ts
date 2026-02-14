@@ -36,5 +36,13 @@ export function shapeTicketResponse(ticket: Record<string, unknown>): Record<str
   }
 
   if (service) out.service = service;
+
+  const client = ticket.client;
+  if (client && typeof client === 'object' && 'city' in client) {
+    const c = client as { city?: string | null; state?: string | null };
+    if (c.city != null && c.city !== '') out.clientCity = c.city;
+    if (c.state != null && c.state !== '') out.clientState = c.state;
+  }
+
   return out;
 }

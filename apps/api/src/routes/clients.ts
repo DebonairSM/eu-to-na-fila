@@ -213,6 +213,11 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
     const bodySchema = z.object({
       name: z.string().min(1).optional(),
       email: z.string().email().nullable().optional(),
+      address: z.string().max(500).nullable().optional(),
+      state: z.string().max(2).nullable().optional(),
+      city: z.string().max(200).nullable().optional(),
+      dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+      gender: z.string().max(50).nullable().optional(),
     });
     const data = validateRequest(bodySchema, request.body);
 

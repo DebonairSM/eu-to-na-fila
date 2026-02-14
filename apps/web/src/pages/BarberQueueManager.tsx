@@ -541,6 +541,21 @@ export function BarberQueueManager() {
           <QRCode url={joinUrl} size={60} />
         </div>
 
+        {/* Add Client Button - Always on top */}
+        <div className="flex-shrink-0 pt-20 pb-4 px-6 text-center border-b border-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] bg-[color-mix(in_srgb,var(--shop-background)_98%,transparent)] z-40">
+          <button
+            onClick={() => {
+              checkInModal.open();
+              showQueueView();
+            }}
+            className="inline-flex items-center gap-4 px-10 py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] rounded-2xl font-semibold text-xl hover:opacity-90 hover:-translate-y-1 hover:shadow-[0_8px_32px_color-mix(in_srgb,var(--shop-accent)_50%,transparent)] transition-all"
+            aria-label={t('barber.addClientAria')}
+          >
+            <span className="material-symbols-outlined text-2xl">person_add</span>
+            <span className="font-['Playfair_Display',serif] text-2xl tracking-wide uppercase">{queueData?.shop?.name ?? shopConfig.name}</span>
+          </button>
+        </div>
+
         {/* Main Content */}
         {currentView === 'queue' && (
           <div className="flex-1 flex flex-col h-full">
@@ -652,21 +667,6 @@ export function BarberQueueManager() {
                 </div>
               </div>
             </footer>
-
-            {/* Shop name / Check-in button - at bottom of page */}
-            <div className="flex-shrink-0 pt-6 pb-8 text-center border-t border-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)]">
-              <button
-                onClick={() => {
-                  checkInModal.open();
-                  showQueueView();
-                }}
-                className="inline-flex items-center gap-4 px-10 py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] rounded-2xl font-semibold text-xl hover:opacity-90 hover:-translate-y-1 hover:shadow-[0_8px_32px_color-mix(in_srgb,var(--shop-accent)_50%,transparent)] transition-all"
-                aria-label={t('barber.addClientAria')}
-              >
-                <span className="material-symbols-outlined text-2xl">person_add</span>
-                <span className="font-['Playfair_Display',serif] text-2xl tracking-wide uppercase">{queueData?.shop?.name ?? shopConfig.name}</span>
-              </button>
-            </div>
           </div>
         )}
 

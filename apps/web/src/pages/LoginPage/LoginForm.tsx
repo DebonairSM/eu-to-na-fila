@@ -204,7 +204,7 @@ export function LoginForm() {
               {t('auth.staffLoginLink')}
             </button>
             {' · '}
-            <Link to="/kiosk-login" className="text-[var(--shop-accent)] hover:underline">
+            <Link to="/join/kiosk" className="text-[var(--shop-accent)] hover:underline">
               {t('auth.kioskModeOnly')}
             </Link>
             {' · '}

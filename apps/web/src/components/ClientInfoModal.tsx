@@ -83,10 +83,13 @@ export function ClientInfoModal({ clientId, onClose }: ClientInfoModalProps) {
                   <p className="text-white">{client.email}</p>
                 </div>
               )}
-              {client.address && (
+              {(client.city || client.state || client.address) && (
                 <div>
                   <span className="text-xs text-white/50 uppercase tracking-wider block mb-1">{t('clients.address')}</span>
-                  <p className="text-white whitespace-pre-wrap">{client.address}</p>
+                  <p className="text-white whitespace-pre-wrap">
+                    {[client.city, client.state].filter(Boolean).join(' – ')}
+                    {client.address && `\n${client.address}`}
+                  </p>
                 </div>
               )}
               {client.dateOfBirth && (

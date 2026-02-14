@@ -21,6 +21,7 @@ export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient 
   const { t } = useLocale();
   const [notes, setNotes] = useState<ClientClipNote[]>([]);
   const [serviceHistory, setServiceHistory] = useState<ServiceHistoryItem[]>([]);
+  const [clientCity, setClientCity] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [newNote, setNewNote] = useState('');
   const [adding, setAdding] = useState(false);
@@ -33,6 +34,7 @@ export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient 
         if (mounted) {
           setNotes(res.clipNotes);
           setServiceHistory(res.serviceHistory ?? []);
+          setClientCity(res.client?.city ?? null);
         }
       })
       .catch((err) => {
@@ -77,6 +79,9 @@ export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient 
         <h4 className="text-sm font-medium text-[var(--shop-text-primary)] flex items-center gap-2">
           <span className="material-symbols-outlined text-base">note</span>
           {t('barber.clipNotes')}
+          {clientCity && (
+            <span className="text-xs font-normal text-[var(--shop-text-secondary)]">· {clientCity}</span>
+          )}
         </h4>
         {canViewFullClient && (
           <Link

@@ -37,6 +37,8 @@ export function CustomerAccountPage() {
   // Editable profile state
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [editState, setEditState] = useState('');
+  const [editCity, setEditCity] = useState('');
   const [editAddress, setEditAddress] = useState('');
   const [editDateOfBirth, setEditDateOfBirth] = useState('');
   const [editGender, setEditGender] = useState('');
@@ -71,6 +73,8 @@ export function CustomerAccountPage() {
           setProfile(p);
           setEditName(p.name);
           setEditPhone(p.phone ?? '');
+          setEditState(p.state ?? '');
+          setEditCity(p.city ?? '');
           setEditAddress(p.address ?? '');
           setEditDateOfBirth(p.dateOfBirth ?? '');
           setEditGender(p.gender ?? '');
@@ -138,6 +142,8 @@ export function CustomerAccountPage() {
       const updated = await api.updateCustomerProfile(shopSlug, {
         name: editName.trim(),
         phone: editPhone.trim() || null,
+        state: editState.trim() || null,
+        city: editCity.trim() || null,
         address: editAddress.trim() || null,
         dateOfBirth: editDateOfBirth.trim() || null,
         gender: editGender.trim() || null,
@@ -323,6 +329,31 @@ export function CustomerAccountPage() {
                       />
                     </div>
                     <p className="text-sm text-[var(--shop-text-secondary)] mt-2 mb-1">{t('account.demographicsHint')}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <InputLabel htmlFor="profile-state">{t('account.state')}</InputLabel>
+                        <Input
+                          id="profile-state"
+                          type="text"
+                          value={editState}
+                          onChange={(e) => setEditState(e.target.value)}
+                          placeholder={t('account.statePlaceholder')}
+                          maxLength={2}
+                          className="w-full mt-1"
+                        />
+                      </div>
+                      <div>
+                        <InputLabel htmlFor="profile-city">{t('account.city')}</InputLabel>
+                        <Input
+                          id="profile-city"
+                          type="text"
+                          value={editCity}
+                          onChange={(e) => setEditCity(e.target.value)}
+                          placeholder={t('account.cityPlaceholder')}
+                          className="w-full mt-1"
+                        />
+                      </div>
+                    </div>
                     <div>
                       <InputLabel htmlFor="profile-address">{t('account.address')}</InputLabel>
                       <Input

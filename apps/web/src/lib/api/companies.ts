@@ -45,6 +45,28 @@ export interface CompaniesApi {
   deleteCompanyShop(companyId: number, shopId: number): Promise<{ success: boolean; message: string }>;
   updateCompanyShopBarber(companyId: number, shopId: number, barberId: number, data: { username?: string | null; password?: string }): Promise<{ id: number; name: string; username: string | null }>;
   lookupPlacesByAddress(companyId: number, address: string): Promise<PlacesLookupResult>;
+  getAdOrders(companyId: number, status?: 'pending_approval' | 'approved' | 'rejected'): Promise<AdOrder[]>;
+  patchAdOrder(companyId: number, orderId: number, body: { action: 'approve' | 'reject' | 'mark_paid' }): Promise<{ ok: boolean; status?: string; paymentStatus?: string }>;
+}
+
+export interface AdOrder {
+  id: number;
+  companyId: number;
+  advertiserName: string;
+  advertiserEmail: string;
+  advertiserPhone: string | null;
+  durationSeconds: number;
+  shopIds: number[];
+  imageStorageKey: string | null;
+  imagePublicUrl: string | null;
+  imageMimeType: string | null;
+  imageBytes: number | null;
+  status: string;
+  paymentStatus: string;
+  createdAt: string;
+  updatedAt: string;
+  approvedAt: string | null;
+  approvedBy: number | null;
 }
 
 export function createCompaniesApi(client: BaseApiClient): CompaniesApi {
@@ -91,5 +113,11 @@ export function createCompaniesApi(client: BaseApiClient): CompaniesApi {
       c.patch(`/companies/${companyId}/shops/${shopId}/barbers/${barberId}`, data),
     lookupPlacesByAddress: (companyId, address) =>
       c.get(`/companies/${companyId}/places-lookup?address=${encodeURIComponent(address)}`),
+    getAdOrders: (companyId, status) => {
+      const q = status ? `?status=${encodeURIComponent(status)}` : '';
+      return c.get(`/companies/${companyId}/ad-orders${q}`);
+    },
+    patchAdOrder: (companyId, orderId, body) =>
+      c.patch(`/companies/${companyId}/ad-orders/${orderId}`, body),
   };
 }

@@ -154,11 +154,11 @@ export function KioskLoginPage() {
                 </Link>
                 <br />
                 <Link
-                  to="/home"
+                  to="/join"
                   className="text-sm text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)] inline-flex items-center justify-center gap-2 min-h-[44px] transition-colors"
                 >
                   <span className="material-symbols-outlined text-base">arrow_back</span>
-                  {t('common.back')}
+                  {t('join.backToCheckIn') ?? t('common.back')}
                 </Link>
               </div>
             </div>

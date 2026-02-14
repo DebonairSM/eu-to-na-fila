@@ -12,6 +12,7 @@ const linkKeys = [
   { key: 'companyNav.about' as const, to: '/about' },
   { key: 'companyNav.gallery' as const, to: '/network' },
   { key: 'companyNav.contact' as const, to: '/contact' },
+  { key: 'companyNav.propagandas' as const, to: '/propagandas' },
 ];
 
 export function CompanyNav() {

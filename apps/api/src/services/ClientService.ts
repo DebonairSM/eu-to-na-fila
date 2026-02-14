@@ -26,6 +26,8 @@ export interface Client {
   name: string;
   email: string | null;
   address: string | null;
+  state: string | null;
+  city: string | null;
   dateOfBirth: Date | string | null;
   gender: string | null;
   createdAt: Date;
@@ -209,16 +211,34 @@ export class ClientService {
     return { clients: result, total };
   }
 
-  async update(id: number, shopId: number, data: { name?: string; email?: string | null }): Promise<Client> {
+  async update(
+    id: number,
+    shopId: number,
+    data: {
+      name?: string;
+      email?: string | null;
+      address?: string | null;
+      state?: string | null;
+      city?: string | null;
+      dateOfBirth?: string | null;
+      gender?: string | null;
+    }
+  ): Promise<Client> {
     const client = await this.getByIdWithShopCheck(id, shopId);
     if (!client) throw new NotFoundError('Client not found');
 
+    const setData: Record<string, unknown> = { updatedAt: new Date() };
+    if (data.name !== undefined && data.name.trim().length > 0) setData.name = data.name.trim();
+    if (data.email !== undefined) setData.email = data.email === '' ? null : data.email;
+    if (data.address !== undefined) setData.address = data.address === '' ? null : data.address;
+    if (data.state !== undefined) setData.state = data.state === '' ? null : data.state;
+    if (data.city !== undefined) setData.city = data.city === '' ? null : data.city;
+    if (data.dateOfBirth !== undefined) setData.dateOfBirth = data.dateOfBirth === '' || data.dateOfBirth == null ? null : data.dateOfBirth;
+    if (data.gender !== undefined) setData.gender = data.gender === '' ? null : data.gender;
+
     const [updated] = await this.db
       .update(schema.clients)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set(setData as Record<string, unknown>)
       .where(eq(schema.clients.id, id))
       .returning();
     return updated as Client;
@@ -237,6 +257,8 @@ export class ClientService {
       nextServiceNote?: string | null;
       nextServiceImageUrl?: string | null;
       address?: string | null;
+      state?: string | null;
+      city?: string | null;
       dateOfBirth?: string | null;
       gender?: string | null;
     }
@@ -265,6 +287,12 @@ export class ClientService {
     }
     if (data.address !== undefined) {
       updateData.address = data.address === '' ? null : data.address;
+    }
+    if (data.state !== undefined) {
+      updateData.state = data.state === '' ? null : data.state;
+    }
+    if (data.city !== undefined) {
+      updateData.city = data.city === '' ? null : data.city;
     }
     if (data.dateOfBirth !== undefined) {
       updateData.dateOfBirth = data.dateOfBirth === '' || data.dateOfBirth == null ? null : data.dateOfBirth;

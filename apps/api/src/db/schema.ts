@@ -100,7 +100,9 @@ export const clients = pgTable('clients', {
   preferences: jsonb('preferences'), // { emailReminders: boolean } etc.
   nextServiceNote: text('next_service_note'), // Client's note for next service
   nextServiceImageUrl: text('next_service_image_url'), // Client's image reference for next service
-  address: text('address'), // For demographic targeting
+  address: text('address'), // Street/neighborhood details
+  state: text('state'), // Brazilian state (e.g. SP, RJ)
+  city: text('city'), // City name
   dateOfBirth: date('date_of_birth'), // For age / demographic targeting
   gender: text('gender'), // For demographic targeting (optional)
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -173,6 +175,34 @@ export const companyAds = pgTable('company_ads', {
   positionIdx: index('company_ads_position_idx').on(table.companyId, table.shopId, table.position),
 }));
 
+// Ad orders from advertisers (Propagandas buy-ad flow). Admin approves then creates company_ad from order image.
+export const adOrders = pgTable(
+  'ad_orders',
+  {
+    id: serial('id').primaryKey(),
+    companyId: integer('company_id').notNull().references(() => companies.id),
+    advertiserName: text('advertiser_name').notNull(),
+    advertiserEmail: text('advertiser_email').notNull(),
+    advertiserPhone: text('advertiser_phone'),
+    durationSeconds: integer('duration_seconds').notNull(), // 10, 15, 20, 30
+    shopIds: jsonb('shop_ids').$type<number[]>().notNull().default([]), // empty = all shops
+    imageStorageKey: text('image_storage_key'),
+    imagePublicUrl: text('image_public_url'),
+    imageMimeType: text('image_mime_type'),
+    imageBytes: integer('image_bytes'),
+    status: text('status').notNull().default('pending_approval'), // pending_approval | approved | rejected
+    paymentStatus: text('payment_status').notNull().default('pending'), // pending | paid
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    approvedAt: timestamp('approved_at'),
+    approvedBy: integer('approved_by').references(() => companyAdmins.id),
+  },
+  (table) => ({
+    companyIdIdx: index('ad_orders_company_id_idx').on(table.companyId),
+    statusIdx: index('ad_orders_status_idx').on(table.status),
+  })
+);
+
 // Relations
 export const projectsRelations = relations(projects, ({ many }) => ({
   shops: many(shops),
@@ -182,6 +212,7 @@ export const companiesRelations = relations(companies, ({ many }) => ({
   admins: many(companyAdmins),
   shops: many(shops),
   ads: many(companyAds),
+  adOrders: many(adOrders),
 }));
 
 export const companyAdminsRelations = relations(companyAdmins, ({ one }) => ({
@@ -246,6 +277,11 @@ export const auditLog = pgTable('audit_log', {
 export const companyAdsRelations = relations(companyAds, ({ one }) => ({
   company: one(companies, { fields: [companyAds.companyId], references: [companies.id] }),
   shop: one(shops, { fields: [companyAds.shopId], references: [shops.id] }),
+}));
+
+export const adOrdersRelations = relations(adOrders, ({ one }) => ({
+  company: one(companies, { fields: [adOrders.companyId], references: [companies.id] }),
+  approvedByAdmin: one(companyAdmins, { fields: [adOrders.approvedBy], references: [companyAdmins.id] }),
 }));
 
 // Per-barber, per-service, per-day-of-week average service duration stats.

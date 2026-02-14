@@ -8,6 +8,8 @@ export interface CustomerProfile {
   nextServiceNote: string | null;
   nextServiceImageUrl: string | null;
   address: string | null;
+  state: string | null;
+  city: string | null;
   dateOfBirth: string | null;
   gender: string | null;
 }
@@ -47,6 +49,8 @@ export interface AuthApi {
     nextServiceNote?: string | null;
     nextServiceImageUrl?: string | null;
     address?: string | null;
+    state?: string | null;
+    city?: string | null;
     dateOfBirth?: string | null;
     gender?: string | null;
   }): Promise<CustomerProfile>;
