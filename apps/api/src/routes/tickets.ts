@@ -11,6 +11,7 @@ import { requireAuth, requireRole, optionalAuth } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { shapeTicketResponse } from '../lib/ticketResponse.js';
 import { parseSettings } from '../lib/settings.js';
+import { toZonedTime } from 'date-fns-tz';
 import { getAppointmentSlots, utcToShopLocal } from '../lib/appointmentSlots.js';
 import { sendAppointmentReminder } from '../services/EmailService.js';
 import { env } from '../env.js';
@@ -191,7 +192,13 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const timezone = settings.timezone ?? 'America/Sao_Paulo';
     const { dateStr, timeStr } = utcToShopLocal(data.scheduledTime, timezone);
 
-    const { slots } = await getAppointmentSlots(shop, dateStr, data.serviceId, data.preferredBarberId ?? undefined);
+    const nowZoned = toZonedTime(new Date(), timezone);
+    const todayStr = `${nowZoned.getFullYear()}-${String(nowZoned.getMonth() + 1).padStart(2, '0')}-${String(nowZoned.getDate()).padStart(2, '0')}`;
+    const estimatedQueueClearMinutes = dateStr === todayStr && settings.allowAppointments
+      ? await queueService.getEstimatedQueueClearMinutes(shop.id, settings.defaultServiceDuration ?? 20)
+      : undefined;
+
+    const { slots } = await getAppointmentSlots(shop, dateStr, data.serviceId, data.preferredBarberId ?? undefined, estimatedQueueClearMinutes);
     const slot = slots.find((sl) => sl.time === timeStr);
     if (!slot || !slot.available) throw new ValidationError('This time slot is no longer available');
 
@@ -332,7 +339,15 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    const { slots } = await getAppointmentSlots(shop, dateStr, serviceId, barberId);
+    const settings = parseSettings(shop.settings);
+    const timezone = settings.timezone ?? 'America/Sao_Paulo';
+    const nowZoned = toZonedTime(new Date(), timezone);
+    const todayStr = `${nowZoned.getFullYear()}-${String(nowZoned.getMonth() + 1).padStart(2, '0')}-${String(nowZoned.getDate()).padStart(2, '0')}`;
+    const estimatedQueueClearMinutes = dateStr === todayStr && settings.allowAppointments
+      ? await queueService.getEstimatedQueueClearMinutes(shop.id, settings.defaultServiceDuration ?? 20)
+      : undefined;
+
+    const { slots } = await getAppointmentSlots(shop, dateStr, serviceId, barberId, estimatedQueueClearMinutes);
     return reply.send({ slots });
   });
 

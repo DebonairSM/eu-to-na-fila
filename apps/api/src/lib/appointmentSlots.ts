@@ -10,7 +10,8 @@ export async function getAppointmentSlots(
   shop: { id: number; settings: unknown },
   dateStr: string,
   serviceId: number,
-  barberId?: number
+  barberId?: number,
+  estimatedQueueClearMinutes?: number
 ): Promise<{ slots: Array<{ time: string; available: boolean }> }> {
   const settings = parseSettings(shop.settings);
   if (!settings.allowAppointments) throw new NotFoundError('Appointments not enabled');
@@ -128,7 +129,9 @@ export async function getAppointmentSlots(
   const durationByServiceId = Object.fromEntries(servicesById.map((svc) => [svc.id, svc.duration]));
 
   type Block = { barberId: number; startMin: number; endMin: number };
+  type Window = { startMin: number; endMin: number };
   const blocks: Block[] = [];
+  const generalLineWindows: Window[] = [];
   for (const t of ticketsOnDay) {
     const start = t.scheduledTime ?? t.startedAt;
     if (!start) continue;
@@ -138,13 +141,26 @@ export async function getAppointmentSlots(
     const dur = durationByServiceId[t.serviceId] ?? settings.defaultServiceDuration;
     const endMin = startMin + dur;
     const bid = t.barberId ?? t.preferredBarberId;
-    if (bid != null) blocks.push({ barberId: bid, startMin, endMin });
+    if (bid != null) {
+      blocks.push({ barberId: bid, startMin, endMin });
+    } else if (
+      t.type === 'appointment' &&
+      (t.status === 'pending' || t.status === 'waiting') &&
+      t.scheduledTime
+    ) {
+      generalLineWindows.push({ startMin, endMin });
+    }
   }
 
   const slots = slotStarts.map((slotStart) => {
     const slotEnd = slotStart + slotDurationMin;
-    const overlaps = (b: Block) => slotStart < b.endMin && slotEnd > b.startMin;
-    const available = filterBarber.some((bid) => !blocks.some((b) => b.barberId === bid && overlaps(b)));
+    const overlapsBlock = (b: Block) => slotStart < b.endMin && slotEnd > b.startMin;
+    const overlapsWindow = (w: Window) => slotStart < w.endMin && slotEnd > w.startMin;
+    const freeBarberCount = filterBarber.filter(
+      (bid) => !blocks.some((b) => b.barberId === bid && overlapsBlock(b))
+    ).length;
+    const generalLineAtSlot = generalLineWindows.filter(overlapsWindow).length;
+    const available = freeBarberCount > generalLineAtSlot;
     const h = Math.floor(slotStart / 60);
     const m = slotStart % 60;
     return {
@@ -162,10 +178,14 @@ export async function getAppointmentSlots(
   const nowMin = isToday ? nowInTz.getHours() * 60 + nowInTz.getMinutes() : -1;
   const notPast = (s: { available: boolean; time: string; slotStart: number }) =>
     !isToday || s.slotStart > nowMin;
+  const notOccupiedByQueue = (s: { available: boolean; time: string; slotStart: number }) =>
+    !isToday ||
+    estimatedQueueClearMinutes == null ||
+    s.slotStart > nowMin + estimatedQueueClearMinutes;
 
   return {
     slots: slots
-      .filter((s) => s.available && notPast(s))
+      .filter((s) => s.available && notPast(s) && notOccupiedByQueue(s))
       .map(({ time, available }) => ({ time, available })),
   };
 }

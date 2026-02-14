@@ -361,6 +361,20 @@ export class QueueService {
   }
 
   /**
+   * Estimated minutes until the current waiting queue is fully served.
+   * Used to block appointment slots that would be occupied by the queue.
+   */
+  async getEstimatedQueueClearMinutes(
+    shopId: number,
+    defaultServiceDuration: number = 20
+  ): Promise<number> {
+    const generalLineTickets = await this.getGeneralLineWaitingTickets(shopId);
+    if (generalLineTickets.length === 0) return 0;
+    const minutes = await this.runWaveWaitTime(shopId, generalLineTickets, defaultServiceDuration);
+    return minutes ?? 0;
+  }
+
+  /**
    * Per-appointment wait: when would THIS appointment be served if they and all other pending
    * appointments (same line) joined the queue now? Merges current waiting + all pending for
    * general line, sorts by weighted order, finds this appointment's position, returns wait for
@@ -491,8 +505,10 @@ export class QueueService {
   /**
    * Weighted order for hybrid mode: (1) appointments due or past by scheduled_time,
    * (2) future appointments by scheduled_time, (3) walk-ins by check_in_time/created_at.
+   * Appointments at the same exact time are ordered by id so they are coupled and
+   * considered together for wait-time impact (e.g. 4 appointments at 2pm consume 4 barber slots).
    */
-  sortWaitingTicketsByWeighted<T extends { type?: string | null; scheduledTime?: Date | string | null; checkInTime?: Date | string | null; createdAt: Date | string }>(
+  sortWaitingTicketsByWeighted<T extends { type?: string | null; scheduledTime?: Date | string | null; checkInTime?: Date | string | null; createdAt: Date | string; id?: number }>(
     tickets: T[],
     now: Date = new Date()
   ): T[] {
@@ -507,7 +523,11 @@ export class QueueService {
       const priorityA = dueA ? 0 : typeA === 'appointment' ? 1 : 2;
       const priorityB = dueB ? 0 : typeB === 'appointment' ? 1 : 2;
       if (priorityA !== priorityB) return priorityA - priorityB;
-      if (priorityA === 0 || priorityA === 1) return scheduledA - scheduledB;
+      if (priorityA === 0 || priorityA === 1) {
+        const byTime = scheduledA - scheduledB;
+        if (byTime !== 0) return byTime;
+        return (a.id ?? 0) - (b.id ?? 0);
+      }
       const timeA = t(a.checkInTime) || t(a.createdAt);
       const timeB = t(b.checkInTime) || t(b.createdAt);
       return timeA - timeB;
@@ -599,7 +619,8 @@ export class QueueService {
   }
 
   /**
-   * Get the next ticket to serve (first in weighted order when allowAppointments).
+   * Get the next ticket to serve (first in line by FIFO - checkInTime/createdAt).
+   * Appointment priority is for auto check-in timing only, not barber selection.
    * When next is a walk-in and an appointment is due soon, returns deadZoneWarning.
    */
   async getNextTicket(
@@ -609,7 +630,7 @@ export class QueueService {
     next: Record<string, unknown> | null;
     deadZoneWarning?: { message: string; appointmentTicketNumber?: string };
   }> {
-    let waitingTickets = await this.db.query.tickets.findMany({
+    const waitingTickets = await this.db.query.tickets.findMany({
       where: and(
         eq(schema.tickets.shopId, shopId),
         eq(schema.tickets.status, 'waiting')
@@ -618,17 +639,19 @@ export class QueueService {
       orderBy: [asc(schema.tickets.createdAt)],
     });
 
-    if (settings.allowAppointments) {
-      waitingTickets = this.sortWaitingTicketsByWeighted(waitingTickets as any) as typeof waitingTickets;
-    }
+    const fifoSorted = [...waitingTickets].sort((a, b) => {
+      const timeA = (a as { checkInTime?: Date | string | null }).checkInTime ?? a.createdAt;
+      const timeB = (b as { checkInTime?: Date | string | null }).checkInTime ?? b.createdAt;
+      return new Date(timeA).getTime() - new Date(timeB).getTime();
+    });
 
-    const next = waitingTickets[0] ?? null;
+    const next = fifoSorted[0] ?? null;
     if (!next) return { next: null };
 
     let deadZoneWarning: { message: string; appointmentTicketNumber?: string } | undefined;
     if (settings.allowAppointments && (next.type ?? 'walkin') === 'walkin') {
       const now = new Date();
-      const nextAppointment = waitingTickets.find(
+      const nextAppointment = fifoSorted.find(
         (t) => (t.type === 'appointment' && t.scheduledTime && new Date(t.scheduledTime) > now)
       );
       if (nextAppointment?.scheduledTime) {
