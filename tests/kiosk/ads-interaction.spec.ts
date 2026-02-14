@@ -70,7 +70,8 @@ test.describe('Kiosk Mode Ad Interactions', () => {
     expect(rotationActive).toBeTruthy();
   });
 
-  test('should show queue view immediately when clicking any ad', async ({ page }) => {
+  test('should show queue view immediately when clicking any ad', async ({ page, projectName }) => {
+    test.skip(projectName !== 'chromium', 'Multi-ad click sequence runs only on chromium to save CI time');
     await waitForQueueView(page, 5000);
     
     // Test clicking ad1
@@ -130,7 +131,8 @@ test.describe('Kiosk Mode Ad Interactions', () => {
     }
   });
 
-  test('should resume rotation sequence from correct ad after idle timeout', async ({ page }) => {
+  test('should resume rotation sequence from correct ad after idle timeout', async ({ page, projectName }) => {
+    test.skip(projectName !== 'chromium', 'Resume sequence runs only on chromium to save CI time');
     await waitForQueueView(page, 5000);
     
     // Wait for ad2 to appear

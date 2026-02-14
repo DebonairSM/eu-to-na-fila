@@ -130,3 +130,49 @@ export async function sendAppointmentReminder(toEmail: string, data: Appointment
     return false;
   }
 }
+
+/** Optional reminder to company admin when a new Propagandas ad is submitted (paid + image uploaded). */
+export async function sendAdOrderReminderToAdmin(
+  toEmail: string,
+  data: { advertiserName: string; orderId: number; adsManagementUrl: string }
+): Promise<boolean> {
+  const fromEmail = process.env.GMAIL_USER ?? 'eutonafila@gmail.com';
+  const subject = `Propagandas: nova propaganda aguardando aprovação #${data.orderId}`;
+  const textBody = [
+    'Uma nova propaganda foi enviada e está aguardando sua aprovação.',
+    '',
+    `Anunciante: ${data.advertiserName}`,
+    `Pedido: #${data.orderId}`,
+    '',
+    `Aprove ou rejeite no painel: ${data.adsManagementUrl}`,
+  ].join('\n');
+
+  const gmail = getGmailClient();
+  if (gmail) {
+    try {
+      const raw = toBase64Url(buildMessage(toEmail, subject, textBody, fromEmail));
+      await gmail.users.messages.send({
+        userId: 'me',
+        requestBody: { raw },
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  const trans = getNodemailerTransporter();
+  if (!trans) return false;
+
+  try {
+    await trans.sendMail({
+      from: fromEmail,
+      to: toEmail,
+      subject,
+      text: textBody,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}

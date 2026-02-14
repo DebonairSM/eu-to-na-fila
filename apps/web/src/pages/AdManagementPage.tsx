@@ -43,6 +43,10 @@ export function AdManagementPage() {
   const [pendingOrders, setPendingOrders] = useState<AdOrder[]>([]);
   const [pendingOrdersLoading, setPendingOrdersLoading] = useState(false);
   const [actingOrderId, setActingOrderId] = useState<number | null>(null);
+  const [adPricing, setAdPricing] = useState<Record<string, number>>({});
+  const [adPricingSaving, setAdPricingSaving] = useState(false);
+  const [reminderEmail, setReminderEmail] = useState('');
+  const [reminderEmailSaving, setReminderEmailSaving] = useState(false);
 
   const companyId = user?.companyId ?? null;
 
@@ -73,6 +77,13 @@ export function AdManagementPage() {
       .then(setPendingOrders)
       .catch(() => setPendingOrders([]))
       .finally(() => setPendingOrdersLoading(false));
+  }, [companyId]);
+
+  // Load Propagandas pricing and company reminder email
+  useEffect(() => {
+    if (!companyId) return;
+    api.getAdPricing(companyId).then(setAdPricing).catch(() => setAdPricing({}));
+    api.getCompany(companyId).then((c) => setReminderEmail(c.propagandasReminderEmail ?? '')).catch(() => {});
   }, [companyId]);
 
   const loadAds = async () => {
@@ -208,6 +219,42 @@ export function AdManagementPage() {
     api.getAdOrders(companyId, 'pending_approval').then(setPendingOrders).catch(() => setPendingOrders([]));
   };
 
+  const saveAdPricing = async () => {
+    if (!companyId) return;
+    setAdPricingSaving(true);
+    setError(null);
+    try {
+      const pricing: { 10?: number; 15?: number; 20?: number; 30?: number } = {};
+      [10, 15, 20, 30].forEach((d) => {
+        const v = adPricing[String(d)];
+        if (typeof v === 'number' && v >= 0) pricing[d as 10 | 15 | 20 | 30] = Math.round(v);
+      });
+      const updated = await api.putAdPricing(companyId, pricing);
+      setAdPricing(updated);
+      setSuccess(t('ads.savePricing'));
+    } catch (err) {
+      if (err instanceof ApiError && err.isAuthError()) return;
+      setError(getErrorMessage(err, t('ads.loadError')));
+    } finally {
+      setAdPricingSaving(false);
+    }
+  };
+
+  const saveReminderEmail = async () => {
+    if (!companyId) return;
+    setReminderEmailSaving(true);
+    setError(null);
+    try {
+      await api.patchCompany(companyId, { propagandas_reminder_email: reminderEmail.trim() || null });
+      setSuccess(t('ads.reminderEmailSaved'));
+    } catch (err) {
+      if (err instanceof ApiError && err.isAuthError()) return;
+      setError(getErrorMessage(err, t('ads.loadError')));
+    } finally {
+      setReminderEmailSaving(false);
+    }
+  };
+
   const handleAdOrderAction = async (orderId: number, action: 'approve' | 'reject' | 'mark_paid') => {
     if (!companyId) return;
     setActingOrderId(orderId);
@@ -267,6 +314,55 @@ export function AdManagementPage() {
               {success}
             </div>
           )}
+
+          {/* Propagandas pricing */}
+          <div className="mb-8 border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-6">
+            <h2 className="text-xl font-semibold mb-4">{t('ads.pricingTitle')}</h2>
+            <p className="text-white/60 text-sm mb-4">{t('ads.pricePerDuration')}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+              {([10, 15, 20, 30] as const).map((d) => (
+                <div key={d}>
+                  <label className="block text-white/60 text-xs mb-1">{d}s</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={((adPricing[String(d)] ?? 0) / 100).toFixed(2)}
+                    onChange={(e) =>
+                      setAdPricing((p) => ({ ...p, [String(d)]: Math.round(parseFloat(e.target.value || '0') * 100) }))
+                    }
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={saveAdPricing}
+              disabled={adPricingSaving}
+              className="px-4 py-2 rounded-lg text-sm bg-blue-500/20 text-blue-400 border border-blue-500/50 hover:bg-blue-500/30 disabled:opacity-50"
+            >
+              {adPricingSaving ? t('ads.loading') : t('ads.savePricing')}
+            </button>
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <label className="block text-white/60 text-sm mb-2">{t('ads.reminderEmailLabel')}</label>
+              <input
+                type="email"
+                value={reminderEmail}
+                onChange={(e) => setReminderEmail(e.target.value)}
+                placeholder={t('ads.reminderEmailPlaceholder')}
+                className="w-full max-w-md px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder-white/40"
+              />
+              <button
+                type="button"
+                onClick={saveReminderEmail}
+                disabled={reminderEmailSaving}
+                className="mt-2 px-4 py-2 rounded-lg text-sm bg-white/10 text-white/80 border border-white/20 hover:bg-white/20 disabled:opacity-50"
+              >
+                {reminderEmailSaving ? t('ads.loading') : t('ads.saveReminderEmail')}
+              </button>
+            </div>
+          </div>
 
           {/* Pending ad requests */}
           <div className="mb-8 border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-6">
@@ -552,6 +648,55 @@ export function AdManagementPage() {
               {success}
             </div>
           )}
+
+          {/* Propagandas pricing */}
+          <div className="mb-8 border border-white/10 bg-white/5 rounded-2xl p-6">
+            <h2 className="text-xl font-semibold mb-4">{t('ads.pricingTitle')}</h2>
+            <p className="text-white/60 text-sm mb-4">{t('ads.pricePerDuration')}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+              {([10, 15, 20, 30] as const).map((d) => (
+                <div key={d}>
+                  <label className="block text-white/60 text-xs mb-1">{d}s</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={((adPricing[String(d)] ?? 0) / 100).toFixed(2)}
+                    onChange={(e) =>
+                      setAdPricing((p) => ({ ...p, [String(d)]: Math.round(parseFloat(e.target.value || '0') * 100) }))
+                    }
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={saveAdPricing}
+              disabled={adPricingSaving}
+              className="px-4 py-2 rounded-lg text-sm bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/50 hover:bg-[#D4AF37]/30 disabled:opacity-50"
+            >
+              {adPricingSaving ? t('ads.loading') : t('ads.savePricing')}
+            </button>
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <label className="block text-white/60 text-sm mb-2">{t('ads.reminderEmailLabel')}</label>
+              <input
+                type="email"
+                value={reminderEmail}
+                onChange={(e) => setReminderEmail(e.target.value)}
+                placeholder={t('ads.reminderEmailPlaceholder')}
+                className="w-full max-w-md px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder-white/40"
+              />
+              <button
+                type="button"
+                onClick={saveReminderEmail}
+                disabled={reminderEmailSaving}
+                className="mt-2 px-4 py-2 rounded-lg text-sm bg-white/10 text-white/80 border border-white/20 hover:bg-white/20 disabled:opacity-50"
+              >
+                {reminderEmailSaving ? t('ads.loading') : t('ads.saveReminderEmail')}
+              </button>
+            </div>
+          </div>
 
           {/* Pending ad requests */}
           <div className="mb-8 border border-white/10 bg-white/5 rounded-2xl p-6">

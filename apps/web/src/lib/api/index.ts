@@ -97,6 +97,10 @@ class ApiClient extends BaseApiClient {
   lookupPlacesByAddress = this._companies.lookupPlacesByAddress;
   getAdOrders = this._companies.getAdOrders;
   patchAdOrder = this._companies.patchAdOrder;
+  getAdPricing = this._companies.getAdPricing;
+  putAdPricing = this._companies.putAdPricing;
+  getCompany = this._companies.getCompany;
+  patchCompany = this._companies.patchCompany;
 
   // --- Auth ---
   authenticate = this._auth.authenticate;
@@ -120,6 +124,9 @@ class ApiClient extends BaseApiClient {
 
   // --- Propagandas (public buy-ad) ---
   getShopsForAds = this._propagandas.getShopsForAds;
+  getQuote = this._propagandas.getQuote;
+  createCheckout = this._propagandas.createCheckout;
+  getOrderAfterPayment = this._propagandas.getOrderAfterPayment;
   createAdOrder = this._propagandas.createAdOrder;
   uploadAdOrderImage = this._propagandas.uploadAdOrderImage;
 

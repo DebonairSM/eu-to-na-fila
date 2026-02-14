@@ -62,6 +62,163 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
   );
 
   /**
+   * GET /api/companies/:id/ad-pricing
+   * Returns Propagandas pricing (per duration in cents). Company admin only.
+   */
+  fastify.get(
+    '/companies/:id/ad-pricing',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || !request.user.companyId) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+      const paramsSchema = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      });
+      const { id } = validateRequest(paramsSchema, request.params);
+      if (request.user.companyId !== id) {
+        return reply.status(403).send({
+          error: 'Access denied to this company',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+      const rows = await db.query.adPricing.findMany({
+        where: eq(schema.adPricing.companyId, id),
+        columns: { durationSeconds: true, amountCents: true },
+      });
+      const pricing: Record<string, number> = {};
+      for (const r of rows) {
+        pricing[String(r.durationSeconds)] = r.amountCents;
+      }
+      return reply.send(pricing);
+    }
+  );
+
+  /**
+   * PUT /api/companies/:id/ad-pricing
+   * Upsert Propagandas pricing. Body: { "10": 3000, "15": 4500, "20": 6000, "30": 9000 } (cents). Company admin only.
+   */
+  fastify.put(
+    '/companies/:id/ad-pricing',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || !request.user.companyId) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+      const paramsSchema = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      });
+      const bodySchema = z.object({
+        10: z.number().int().min(0).optional(),
+        15: z.number().int().min(0).optional(),
+        20: z.number().int().min(0).optional(),
+        30: z.number().int().min(0).optional(),
+      });
+      const { id } = validateRequest(paramsSchema, request.params);
+      const body = validateRequest(bodySchema, request.body as Record<string, unknown>);
+      if (request.user.companyId !== id) {
+        return reply.status(403).send({
+          error: 'Access denied to this company',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+      const durations = [10, 15, 20, 30] as const;
+      const now = new Date();
+      for (const dur of durations) {
+        const cents = body[dur];
+        if (cents === undefined) continue;
+        await db
+          .insert(schema.adPricing)
+          .values({
+            companyId: id,
+            durationSeconds: dur,
+            amountCents: cents,
+          })
+          .onConflictDoUpdate({
+            target: [schema.adPricing.companyId, schema.adPricing.durationSeconds],
+            set: { amountCents: cents, updatedAt: now },
+          });
+      }
+      const rows = await db.query.adPricing.findMany({
+        where: eq(schema.adPricing.companyId, id),
+        columns: { durationSeconds: true, amountCents: true },
+      });
+      const pricing: Record<string, number> = {};
+      for (const r of rows) {
+        pricing[String(r.durationSeconds)] = r.amountCents;
+      }
+      return reply.send(pricing);
+    }
+  );
+
+  /**
+   * PATCH /api/companies/:id
+   * Update company (e.g. propagandas_reminder_email). Company admin only.
+   */
+  fastify.patch(
+    '/companies/:id',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || !request.user.companyId) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+      const paramsSchema = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      });
+      const bodySchema = z.object({
+        propagandas_reminder_email: z.string().email().nullable().optional(),
+      });
+      const { id } = validateRequest(paramsSchema, request.params);
+      const body = validateRequest(bodySchema, request.body as Record<string, unknown>);
+      if (request.user.companyId !== id) {
+        return reply.status(403).send({
+          error: 'Access denied to this company',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+      const update: { propagandasReminderEmail?: string | null } = {};
+      if (body.propagandas_reminder_email !== undefined) {
+        update.propagandasReminderEmail = body.propagandas_reminder_email;
+      }
+      if (Object.keys(update).length === 0) {
+        const company = await db.query.companies.findFirst({
+          where: eq(schema.companies.id, id),
+        });
+        if (!company) throw new NotFoundError('Company not found');
+        return reply.send(company);
+      }
+      const [updated] = await db
+        .update(schema.companies)
+        .set({ ...update, updatedAt: new Date() })
+        .where(eq(schema.companies.id, id))
+        .returning();
+      if (!updated) throw new NotFoundError('Company not found');
+      return reply.send(updated);
+    }
+  );
+
+  /**
    * Get company dashboard data.
    * 
    * @route GET /api/companies/:id/dashboard

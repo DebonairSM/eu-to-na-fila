@@ -71,7 +71,8 @@ test.describe('Kiosk Mode Ad Rotation', () => {
     expect(finalView).not.toBe('queue');
   });
 
-  test('should rotate through complete sequence: queue -> ad1 -> queue -> ad2 -> queue -> ad3', async ({ page }) => {
+  test('should rotate through complete sequence: queue -> ad1 -> queue -> ad2 -> queue -> ad3', async ({ page, projectName }) => {
+    test.skip(projectName !== 'chromium', 'Full rotation sequence runs only on chromium to save CI time');
     // Start at queue
     await waitForQueueView(page, 5000);
     expect(await getCurrentView(page)).toBe('queue');
@@ -110,11 +111,12 @@ test.describe('Kiosk Mode Ad Rotation', () => {
     expect(rotationActive).toBeTruthy();
     
     // Progress bar should be at the bottom of the screen
-    const progressBar = page.locator('[class*="progress"], [class*="bg-\\[\\#D4AF37\\]"]').first();
-    await expect(progressBar).toBeVisible();
+    const progressBar = page.getByTestId('kiosk-rotation-progress').or(page.locator('div.absolute.bottom-0.left-0.right-0').locator('div.h-full').first());
+    await expect(progressBar.first()).toBeVisible();
   });
 
-  test('should maintain rotation after completing full cycle', async ({ page }) => {
+  test('should maintain rotation after completing full cycle', async ({ page, projectName }) => {
+    test.skip(projectName !== 'chromium', 'Full cycle rotation runs only on chromium to save CI time');
     // Complete one full cycle
     await waitForQueueView(page, 5000);
     

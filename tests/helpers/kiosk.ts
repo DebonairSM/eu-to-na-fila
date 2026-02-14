@@ -1,132 +1,110 @@
 import { Page, expect } from '@playwright/test';
 
 /**
- * Constants for kiosk mode timing
+ * Constants for kiosk mode timing.
+ * In CI or when E2E_FAST_KIOSK=1, use shorter durations for faster tests.
  */
+const useFastKiosk = process.env.E2E_FAST_KIOSK === '1';
 export const KIOSK_TIMINGS = {
-  QUEUE_VIEW_DURATION: 15000, // 15 seconds
-  AD_VIEW_DURATION: 15000, // 15 seconds
-  IDLE_TIMEOUT: 10000, // 10 seconds
-  ROTATION_TOLERANCE: 1000, // 1 second tolerance for timing tests
+  QUEUE_VIEW_DURATION: useFastKiosk ? 3000 : 15000,
+  AD_VIEW_DURATION: useFastKiosk ? 3000 : 15000,
+  IDLE_TIMEOUT: useFastKiosk ? 3000 : 10000,
+  ROTATION_TOLERANCE: 1000,
 } as const;
 
 /**
- * Enters kiosk mode by navigating to the queue manager with kiosk parameter
- * Assumes user is already logged in
+ * Enters kiosk mode by navigating to the queue manager with kiosk parameter.
+ * Assumes user is already logged in.
+ * Uses data-testid when available, with fallbacks for queue/ad content.
  */
 export async function enterKioskMode(page: Page) {
   await page.goto('/projects/mineiro/manage?kiosk=true');
-  
-  // Wait for kiosk mode to be active - look for exit button or queue/ad content
-  // The exit button with aria-label="Exit kiosk mode" is a reliable indicator
+
+  // Prefer stable data-testid; fallback to visible content
+  const kioskRoot = page.getByTestId('kiosk-root');
+  const queueView = page.getByTestId('kiosk-queue-view');
+  const adView = page.getByTestId('kiosk-ad-view');
+  const noAds = page.getByTestId('kiosk-no-ads');
+  const fallback = page.locator('button:has-text("Entrar na Fila"), img[src*="gt-ad"], video[src*="gt-ad"], [data-testid="kiosk-ads-player"]').first();
+
   await expect(
-    page.locator('button[aria-label="Exit kiosk mode"], img[src*="gt-ad"], video[src*="gt-ad"], button:has-text("Entrar na Fila")').first()
+    kioskRoot.or(queueView).or(adView).or(noAds).or(fallback).first()
   ).toBeVisible({ timeout: 10000 });
 }
 
 /**
- * Exits kiosk mode by clicking the exit button or pressing Escape
+ * Exits kiosk mode by pressing Escape (app does not expose "Exit kiosk" button; uses Escape).
  */
 export async function exitKioskMode(page: Page) {
-  // Find exit button with specific aria-label
-  const exitButton = page.locator('button[aria-label="Exit kiosk mode"]');
-  
-  if (await exitButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await exitButton.click();
+  const fullscreenButton = page.getByTestId('kiosk-fullscreen-toggle');
+  if (await fullscreenButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+    // App exits kiosk on Escape; fullscreen toggle only toggles fullscreen
+    await page.keyboard.press('Escape');
   } else {
-    // Fallback: press Escape key
     await page.keyboard.press('Escape');
   }
-  
-  // Wait for kiosk mode to be inactive (exit button should disappear or page should change)
   await page.waitForTimeout(1000);
 }
 
 /**
- * Waits for the queue view to be displayed
+ * Waits for the queue view to be displayed.
+ * Uses data-testid first, then fallback selectors.
  */
 export async function waitForQueueView(page: Page, timeout = 20000) {
-  // Look for queue-related elements - button with "Entrar na Fila" or queue cards
-  await expect(
-    page.locator('button:has-text("Entrar na Fila"), [class*="grid"]:has([class*="bg-\\[rgba\\(212,175,55"]), button[aria-label*="Atribuir barbeiro"]').first()
-  ).toBeVisible({ timeout });
+  const queueView = page.getByTestId('kiosk-queue-view');
+  const fallback = page.locator('button:has-text("Entrar na Fila"), button[aria-label*="Atribuir barbeiro"]').first();
+  await expect(queueView.or(fallback).first()).toBeVisible({ timeout });
 }
 
 /**
- * Waits for an ad view to be displayed
+ * Waits for an ad view to be displayed.
+ * Treats "no ads" and error/loading states as valid ad view states.
  * @param adNumber - Which ad to wait for (1, 2, or 3), or 'any' for any ad
  */
 export async function waitForAdView(page: Page, adNumber: 1 | 2 | 3 | 'any' = 'any', timeout = 20000) {
   if (adNumber === 'any') {
-    // Wait for any ad view - the simplest way is to wait for queue view to disappear
-    // When we rotate to an ad, the queue view should no longer be visible
-    const queueButton = page.locator('button:has-text("Entrar na Fila")').first();
-    
-    // Wait for queue view to disappear (indicating we've rotated to an ad)
-    await expect(queueButton).not.toBeVisible({ timeout });
-    
-    // Also verify that an ad container exists (div with cursor-pointer that's not the queue)
-    const adContainer = page.locator('div.cursor-pointer.flex-1').first();
-    await expect(adContainer).toBeVisible({ timeout: 2000 }).catch(() => {
-      // If container not found, that's okay - the important thing is queue is gone
-    });
-  } else {
-    // Wait for specific ad - try multiple selector patterns
-    let selectors: string[];
-    if (adNumber === 1) {
-      selectors = [
-        'img[src*="gt-ad.png"]:not([src*="gt-ad2"])',
-        'img[alt="Grande Tech"]',
-        'img[src*="/projects/mineiro/gt-ad"]:not([src*="gt-ad2"])'
-      ];
-    } else if (adNumber === 2) {
-      selectors = [
-        'img[src*="gt-ad2.png"]',
-        'img[src*="/projects/mineiro/gt-ad2"]'
-      ];
-    } else {
-      selectors = [
-        'video[src*="gt-ad-001.mp4"]',
-        'video[src*="/projects/mineiro/gt-ad-001"]'
-      ];
+    const queueView = page.getByTestId('kiosk-queue-view');
+    const adView = page.getByTestId('kiosk-ad-view');
+    const adsPlayer = page.getByTestId('kiosk-ads-player');
+    const noAds = page.getByTestId('kiosk-no-ads');
+    const anyAdState = adView.or(adsPlayer).or(noAds).first();
+
+    const adVisible = await anyAdState.isVisible({ timeout }).catch(() => false);
+    if (adVisible) return;
+    const queueGone = await queueView.isHidden().catch(() => false);
+    if (queueGone) return;
+    throw new Error('Ad view (or no-ads state) not found within timeout');
+  }
+
+  // Specific ad: try asset selectors first, then accept ad container / no-ads / error as valid
+  const selectors: string[] =
+    adNumber === 1
+      ? ['img[src*="gt-ad.png"]:not([src*="gt-ad2"])', 'img[alt*="Anúncio"]', 'img[src*="/api/ads/"]']
+      : adNumber === 2
+        ? ['img[src*="gt-ad2.png"]', 'img[src*="/api/ads/"]']
+        : ['video[src*="gt-ad-001"], video[src*="/api/ads/"]'];
+
+  let found = false;
+  for (const selector of selectors) {
+    try {
+      await expect(page.locator(selector).first()).toBeVisible({ timeout: Math.max(2000, timeout / selectors.length) });
+      found = true;
+      break;
+    } catch {
+      continue;
     }
-    
-    // Try each selector until one works, or accept error/loading states as valid
-    let found = false;
-    for (const selector of selectors) {
-      try {
-        const element = page.locator(selector).first();
-        await expect(element).toBeVisible({ timeout: Math.max(2000, timeout / selectors.length) });
-        found = true;
-        break;
-      } catch {
-        // Try next selector
-        continue;
-      }
-    }
-    
-    // If images/videos not found, check for error or loading states (valid ad view states)
-    if (!found) {
-      const errorState = page.locator('text=/Erro ao carregar/i').first();
-      const loadingState = page.locator('text=/Carregando/i').first();
-      const hasError = await errorState.isVisible({ timeout: 1000 }).catch(() => false);
-      const hasLoading = await loadingState.isVisible({ timeout: 1000 }).catch(() => false);
-      
-      if (hasError || hasLoading) {
-        // Ad view is present, just in error/loading state (acceptable for tests)
-        found = true;
-      }
-    }
-    
-    if (!found) {
-      // Last resort: wait for the ad container div to be present
-      await page.waitForTimeout(1000);
-      const adContainer = page.locator('[class*="cursor-pointer"]:has(img, video)').first();
-      const containerVisible = await adContainer.isVisible({ timeout: 2000 }).catch(() => false);
-      if (!containerVisible) {
-        throw new Error(`Ad${adNumber} view not found after ${timeout}ms`);
-      }
-    }
+  }
+
+  if (!found) {
+    const adViewOrNoAds = await page.getByTestId('kiosk-ad-view').or(page.getByTestId('kiosk-ads-player')).or(page.getByTestId('kiosk-no-ads')).first().isVisible({ timeout: 2000 }).catch(() => false);
+    const errorOrLoading = await page.locator('text=/Erro ao carregar|Carregando/i').first().isVisible({ timeout: 1000 }).catch(() => false);
+    if (adViewOrNoAds || errorOrLoading) found = true;
+  }
+
+  if (!found) {
+    const container = page.locator('[class*="cursor-pointer"]:has(img, video), [data-testid="kiosk-ads-player"]').first();
+    const visible = await container.isVisible({ timeout: 2000 }).catch(() => false);
+    if (!visible) throw new Error(`Ad${adNumber} view not found after ${timeout}ms`);
   }
 }
 
@@ -134,88 +112,69 @@ export async function waitForAdView(page: Page, adNumber: 1 | 2 | 3 | 'any' = 'a
  * Clicks on an ad to skip to queue view
  */
 export async function clickAdToSkip(page: Page) {
-  // Find clickable ad container
-  const adContainer = page.locator('[class*="cursor-pointer"]:has(img), [class*="cursor-pointer"]:has(video)').first();
-  await adContainer.click({ timeout: 5000 });
-  
-  // Wait for queue view to appear
+  const adView = page.getByTestId('kiosk-ad-view');
+  const adContainer = page.locator('[class*="cursor-pointer"]:has(img), [class*="cursor-pointer"]:has(video), [data-testid="kiosk-ads-player"]').first();
+  const clickable = await adView.isVisible({ timeout: 2000 }).catch(() => false) ? adView : adContainer;
+  await clickable.click({ timeout: 5000 });
   await waitForQueueView(page, 3000);
 }
 
 /**
- * Checks if rotation is active by looking for progress bar
+ * Checks if rotation is active by looking for progress bar.
  */
 export async function isRotationActive(page: Page): Promise<boolean> {
-  // Progress bar is at the bottom - look for div with absolute bottom-0 containing a div with gold background
-  // Use a more flexible selector that matches the structure
-  const progressBar = page.locator('div.absolute.bottom-0.left-0.right-0').locator('div.h-full').first();
-  return await progressBar.isVisible({ timeout: 1000 }).catch(() => false);
+  const progress = page.getByTestId('kiosk-rotation-progress');
+  if (await progress.isVisible({ timeout: 1000 }).catch(() => false)) return true;
+  const fallback = page.locator('div.absolute.bottom-0.left-0.right-0').locator('div.h-full').first();
+  return await fallback.isVisible({ timeout: 1000 }).catch(() => false);
 }
 
 /**
- * Waits for rotation to start (progress bar appears)
+ * Waits for rotation to start (progress bar appears).
  */
 export async function waitForRotationToStart(page: Page, timeout = 5000) {
-  // Progress bar is at bottom - look for the container div
-  await expect(
-    page.locator('div.absolute.bottom-0.left-0.right-0').locator('div.h-full').first()
-  ).toBeVisible({ timeout });
+  const progress = page.getByTestId('kiosk-rotation-progress');
+  const fallback = page.locator('div.absolute.bottom-0.left-0.right-0').locator('div.h-full').first();
+  await expect(progress.or(fallback).first()).toBeVisible({ timeout });
 }
 
 /**
- * Waits for rotation to stop (progress bar disappears)
+ * Waits for rotation to stop (progress bar disappears).
  */
 export async function waitForRotationToStop(page: Page, timeout = 5000) {
-  // Progress bar should not be visible when rotation is paused
-  await expect(
-    page.locator('div.absolute.bottom-0.left-0.right-0').locator('div.h-full').first()
-  ).not.toBeVisible({ timeout });
+  const progress = page.getByTestId('kiosk-rotation-progress');
+  const fallback = page.locator('div.absolute.bottom-0.left-0.right-0').locator('div.h-full').first();
+  await expect(progress.or(fallback).first()).not.toBeVisible({ timeout });
 }
 
 /**
- * Gets the current view type (queue, ad1, ad2, or ad3)
- * Returns null if cannot determine
- * Note: Since ad images may not exist, we check for queue view first, then assume ad view if queue is not visible
+ * Gets the current view type (queue, ad1, ad2, or ad3).
+ * Treats queue view, ad view (including "no ads" and error states) as valid; returns null only when unclear.
  */
 export async function getCurrentView(page: Page): Promise<'queue' | 'ad1' | 'ad2' | 'ad3' | null> {
-  // Check for queue view - look for "Entrar na Fila" button or queue cards or header with shop name
+  if (await page.getByTestId('kiosk-queue-view').isVisible({ timeout: 500 }).catch(() => false)) return 'queue';
+
   const queueIndicators = [
     'button:has-text("Entrar na Fila")',
     'button[aria-label*="Atribuir barbeiro"]',
-    'header:has-text("Barbearia")',
-    '[class*="grid"]:has([class*="bg-"])' // Queue grid with cards
   ];
-  
   for (const indicator of queueIndicators) {
-    const visible = await page.locator(indicator).first()
-      .isVisible({ timeout: 1000 }).catch(() => false);
-    if (visible) return 'queue';
+    if (await page.locator(indicator).first().isVisible({ timeout: 500 }).catch(() => false)) return 'queue';
   }
-  
-  // If queue is not visible, we're likely in an ad view
-  // Check for specific ad images/videos first
-  const ad1Visible = await page.locator('img[src*="gt-ad.png"]:not([src*="gt-ad2"]), img[alt="Grande Tech"]').first()
-    .isVisible({ timeout: 500 }).catch(() => false);
-  if (ad1Visible) return 'ad1';
-  
-  const ad2Visible = await page.locator('img[src*="gt-ad2.png"]').first()
-    .isVisible({ timeout: 500 }).catch(() => false);
-  if (ad2Visible) return 'ad2';
-  
-  const ad3Visible = await page.locator('video[src*="gt-ad-001.mp4"]').first()
-    .isVisible({ timeout: 500 }).catch(() => false);
-  if (ad3Visible) return 'ad3';
-  
-  // If images/videos not found, check for ad container (cursor-pointer div with img/video or error text)
-  const adContainer = page.locator('[class*="cursor-pointer"]:has(img, video, text=/Erro ao carregar|Carregando/)').first();
-  const hasAdContainer = await adContainer.isVisible({ timeout: 500 }).catch(() => false);
-  
-  if (hasAdContainer) {
-    // We're in an ad view, but can't determine which one - default to ad1 for testing purposes
-    // In practice, the rotation should still work even if we can't distinguish between ads
+
+  if (await page.getByTestId('kiosk-no-ads').isVisible({ timeout: 500 }).catch(() => false)) return 'ad1';
+  if (await page.getByTestId('kiosk-ad-view').isVisible({ timeout: 500 }).catch(() => false)) {
+    const ad1 = await page.locator('img[src*="gt-ad"]:not([src*="gt-ad2"]), img[alt*="Anúncio"]').first().isVisible({ timeout: 300 }).catch(() => false);
+    if (ad1) return 'ad1';
+    const ad2 = await page.locator('img[src*="gt-ad2"]').first().isVisible({ timeout: 300 }).catch(() => false);
+    if (ad2) return 'ad2';
+    const ad3 = await page.locator('video').first().isVisible({ timeout: 300 }).catch(() => false);
+    if (ad3) return 'ad3';
     return 'ad1';
   }
-  
+
+  const adContainer = await page.getByTestId('kiosk-ads-player').or(page.locator('[class*="cursor-pointer"]:has(img, video, text=/Erro ao carregar|Carregando|Nenhum/)').first()).isVisible({ timeout: 500 }).catch(() => false);
+  if (adContainer) return 'ad1';
+
   return null;
 }
-

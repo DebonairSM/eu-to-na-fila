@@ -505,7 +505,7 @@ export function BarberQueueManager() {
     const joinUrl = `${window.location.origin}${import.meta.env.BASE_URL}join`;
 
     return (
-      <div className="fixed inset-0 bg-black text-white z-50 overflow-hidden flex flex-col">
+      <div className="fixed inset-0 bg-black text-white z-50 overflow-hidden flex flex-col" data-testid="kiosk-root">
         {/* Error Message Toast */}
         {errorMessage && (
           <div 
@@ -527,9 +527,11 @@ export function BarberQueueManager() {
 
         {/* Fullscreen Toggle Button */}
         <button
+          type="button"
           onClick={() => void toggleFullscreen()}
           className="absolute top-6 left-6 z-50 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all"
           aria-label={isFullscreen ? t('barber.exitFullscreen') : t('barber.enterFullscreen')}
+          data-testid="kiosk-fullscreen-toggle"
         >
           <span className="material-symbols-outlined text-white/50 text-base">
             {isFullscreen ? 'close_fullscreen' : 'open_in_full'}
@@ -542,7 +544,7 @@ export function BarberQueueManager() {
         </div>
 
         {/* Add Client Button - Always on top */}
-        <div className="flex-shrink-0 pt-20 pb-4 px-6 text-center border-b border-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] bg-[color-mix(in_srgb,var(--shop-background)_98%,transparent)] z-40">
+        <div className="flex-shrink-0 pt-4 pb-4 px-6 text-center border-b border-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] bg-[color-mix(in_srgb,var(--shop-background)_98%,transparent)] z-40">
           <button
             onClick={() => {
               checkInModal.open();
@@ -558,7 +560,7 @@ export function BarberQueueManager() {
 
         {/* Main Content */}
         {currentView === 'queue' && (
-          <div className="flex-1 flex flex-col h-full">
+          <div className="flex-1 flex flex-col h-full" data-testid="kiosk-queue-view">
             {/* Queue List - Centered with proper spacing */}
             <div className="flex-1 overflow-y-auto py-8 px-6">
               <div className="max-w-4xl mx-auto space-y-4">
@@ -675,6 +677,7 @@ export function BarberQueueManager() {
           <div 
             className="flex-1 flex items-center justify-center relative cursor-pointer min-h-0 max-h-screen overflow-hidden"
             onClick={showQueueView}
+            data-testid="kiosk-ad-view"
           >
             <KioskAdsPlayer ads={ads} currentAdIndex={currentAdIndex} />
           </div>
@@ -682,7 +685,7 @@ export function BarberQueueManager() {
 
         {/* Progress Bar - Only show during ad views, not queue */}
         {isKioskMode && isInRotation && currentView !== 'queue' && (
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-50">
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-50" data-testid="kiosk-rotation-progress">
             <div
               key={`progress-${currentView}`}
               className="h-full bg-[var(--shop-accent)]"

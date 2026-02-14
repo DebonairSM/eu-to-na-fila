@@ -7,6 +7,7 @@ import { RootAboutPage } from './pages/RootAboutPage';
 import { RootContactPage } from './pages/RootContactPage';
 import { PropagandasPage } from './pages/PropagandasPage';
 import { PropagandasBuyPage } from './pages/PropagandasBuyPage';
+import { PropagandasBuyCompletePage } from './pages/PropagandasBuyCompletePage';
 import { CompanyLoginPage } from './pages/CompanyLoginPage';
 import { CompanyDashboard } from './pages/CompanyDashboard';
 import { AdManagementPage } from './pages/AdManagementPage';
@@ -59,6 +60,7 @@ function App() {
           <Route path="/contact" element={<RootContactPage />} />
           <Route path="/propagandas" element={<PropagandasPage />} />
           <Route path="/propagandas/buy" element={<PropagandasBuyPage />} />
+          <Route path="/propagandas/buy/complete" element={<PropagandasBuyCompletePage />} />
           <Route path="/company/login" element={<CompanyLoginPage />} />
           <Route path="/company/dashboard" element={<ProtectedRoute requireCompanyAdmin><CompanyDashboard /></ProtectedRoute>} />
           <Route path="/company/ads" element={<ProtectedRoute requireCompanyAdmin><AdManagementPage /></ProtectedRoute>} />

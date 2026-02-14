@@ -47,6 +47,10 @@ export interface CompaniesApi {
   lookupPlacesByAddress(companyId: number, address: string): Promise<PlacesLookupResult>;
   getAdOrders(companyId: number, status?: 'pending_approval' | 'approved' | 'rejected'): Promise<AdOrder[]>;
   patchAdOrder(companyId: number, orderId: number, body: { action: 'approve' | 'reject' | 'mark_paid' }): Promise<{ ok: boolean; status?: string; paymentStatus?: string }>;
+  getAdPricing(companyId: number): Promise<Record<string, number>>;
+  putAdPricing(companyId: number, pricing: { 10?: number; 15?: number; 20?: number; 30?: number }): Promise<Record<string, number>>;
+  getCompany(companyId: number): Promise<{ id: number; name: string; propagandasReminderEmail?: string | null }>;
+  patchCompany(companyId: number, data: { propagandas_reminder_email?: string | null }): Promise<{ id: number; name: string; propagandasReminderEmail?: string | null }>;
 }
 
 export interface AdOrder {
@@ -119,5 +123,9 @@ export function createCompaniesApi(client: BaseApiClient): CompaniesApi {
     },
     patchAdOrder: (companyId, orderId, body) =>
       c.patch(`/companies/${companyId}/ad-orders/${orderId}`, body),
+    getAdPricing: (companyId) => c.get(`/companies/${companyId}/ad-pricing`),
+    putAdPricing: (companyId, pricing) => c.put(`/companies/${companyId}/ad-pricing`, pricing),
+    getCompany: (companyId) => c.get(`/companies/${companyId}`),
+    patchCompany: (companyId, data) => c.patch(`/companies/${companyId}`, data),
   };
 }

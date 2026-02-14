@@ -36,8 +36,8 @@ export function KioskAdsPlayer({ ads, currentAdIndex }: KioskAdsPlayerProps) {
 
   if (!currentAd) {
     return (
-      <div className="w-full h-full bg-black flex items-center justify-center">
-        <div className="text-white/50 text-sm">{t('ads.noAdsAvailable')}</div>
+      <div className="w-full h-full bg-black flex items-center justify-center" data-testid="kiosk-ads-player">
+        <div className="text-white/50 text-sm" data-testid="kiosk-no-ads">{t('ads.noAdsAvailable')}</div>
       </div>
     );
   }
@@ -52,8 +52,8 @@ export function KioskAdsPlayer({ ads, currentAdIndex }: KioskAdsPlayerProps) {
 
   if (mediaError) {
     return (
-      <div className="w-full h-full bg-black flex items-center justify-center">
-        <div className="text-white/50 text-sm">Erro ao carregar anúncio</div>
+      <div className="w-full h-full bg-black flex items-center justify-center" data-testid="kiosk-ads-player">
+        <div className="text-white/50 text-sm" data-testid="kiosk-ad-error">Erro ao carregar anúncio</div>
       </div>
     );
   }
@@ -62,6 +62,7 @@ export function KioskAdsPlayer({ ads, currentAdIndex }: KioskAdsPlayerProps) {
     <div
       ref={containerRef}
       className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center"
+      data-testid="kiosk-ads-player"
     >
       {currentAd.mediaType === 'image' ? (
         <img

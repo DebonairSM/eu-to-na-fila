@@ -57,6 +57,12 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((s) => (s != null && s !== '' ? Number(s) : undefined)),
+  /** Stripe secret key for Propagandas payments. When set, checkout and webhook are enabled. */
+  STRIPE_SECRET_KEY: z.string().optional(),
+  /** Stripe webhook signing secret for verifying checkout.session.completed. */
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  /** Public URL of the frontend (root site) for Stripe success/cancel redirects. No trailing slash. */
+  FRONTEND_PUBLIC_URL: z.string().url().optional(),
 });
 
 let env: z.infer<typeof envSchema>;

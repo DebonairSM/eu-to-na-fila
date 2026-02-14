@@ -14,9 +14,28 @@ export const companies = pgTable('companies', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
+  /** Optional email for Propagandas "new ad submitted" reminder. If unset, first company admin email is used. */
+  propagandasReminderEmail: text('propagandas_reminder_email'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
+
+/** Per-duration pricing for Propagandas (BRL in cents). One row per company per duration. */
+export const adPricing = pgTable(
+  'ad_pricing',
+  {
+    id: serial('id').primaryKey(),
+    companyId: integer('company_id').notNull().references(() => companies.id),
+    durationSeconds: integer('duration_seconds').notNull(), // 10, 15, 20, 30
+    amountCents: integer('amount_cents').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    companyDurationUnique: uniqueIndex('ad_pricing_company_duration_unique').on(table.companyId, table.durationSeconds),
+    companyIdIdx: index('ad_pricing_company_id_idx').on(table.companyId),
+  })
+);
 
 export const companyAdmins = pgTable('company_admins', {
   id: serial('id').primaryKey(),
@@ -186,6 +205,8 @@ export const adOrders = pgTable(
     advertiserPhone: text('advertiser_phone'),
     durationSeconds: integer('duration_seconds').notNull(), // 10, 15, 20, 30
     shopIds: jsonb('shop_ids').$type<number[]>().notNull().default([]), // empty = all shops
+    amountCents: integer('amount_cents'), // amount charged (from pricing at order creation)
+    stripeSessionId: text('stripe_session_id'), // idempotency and link to Stripe
     imageStorageKey: text('image_storage_key'),
     imagePublicUrl: text('image_public_url'),
     imageMimeType: text('image_mime_type'),
@@ -213,6 +234,11 @@ export const companiesRelations = relations(companies, ({ many }) => ({
   shops: many(shops),
   ads: many(companyAds),
   adOrders: many(adOrders),
+  adPricing: many(adPricing),
+}));
+
+export const adPricingRelations = relations(adPricing, ({ one }) => ({
+  company: one(companies, { fields: [adPricing.companyId], references: [companies.id] }),
 }));
 
 export const companyAdminsRelations = relations(companyAdmins, ({ one }) => ({
