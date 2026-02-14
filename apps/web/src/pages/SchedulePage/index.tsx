@@ -12,6 +12,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useServices } from '@/hooks/useServices';
 import { useBarbers } from '@/hooks/useBarbers';
+import { useActiveTicket } from '@/hooks/useActiveTicket';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { api } from '@/lib/api';
 import { getErrorMessage, formatName, getOrCreateDeviceId } from '@/lib/utils';
@@ -37,6 +38,7 @@ export function SchedulePage() {
   const needsProfileCompletion = isCustomer && user?.name && !isSufficientName(user.name);
   const { activeServices, isLoading: isLoadingServices } = useServices();
   const { barbers } = useBarbers();
+  const { activeTicket } = useActiveTicket();
   const { validateName } = useProfanityFilter();
 
   const settings = config.settings;
@@ -183,9 +185,11 @@ export function SchedulePage() {
             <Heading level={1} className="section-title section-title--layout mb-2 text-3xl">
               {t('schedule.title')}
             </Heading>
-            <Link to="/join" className="text-sm text-[var(--shop-accent)] hover:underline">
-              {t('join.viewStatus')}
-            </Link>
+            {activeTicket && (
+              <Link to={`/status/${activeTicket.id}`} className="text-sm text-[var(--shop-accent)] hover:underline">
+                {t('join.viewStatus')}
+              </Link>
+            )}
           </div>
 
           <Card variant="default" className="shadow-lg">

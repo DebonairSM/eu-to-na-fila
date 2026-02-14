@@ -7,7 +7,7 @@
  * Run this after building the web app and before building the API.
  */
 
-import { cp, mkdir, rm } from 'fs/promises';
+import { cp, mkdir, rm, readFile, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -60,6 +60,20 @@ async function integrate() {
   } catch (error) {
     console.error('❌ Error copying files:', error);
     process.exit(1);
+  }
+
+  // Auto-bump SW cache version so each deploy invalidates stale caches
+  const swPath = join(apiPublicDir, 'sw.js');
+  if (existsSync(swPath)) {
+    try {
+      const content = await readFile(swPath, 'utf8');
+      const buildVersion = 'v' + Date.now();
+      const updated = content.replace(/const CACHE_VERSION = '[^']*'/, `const CACHE_VERSION = '${buildVersion}'`);
+      await writeFile(swPath, updated);
+      console.log(`✅ Set sw.js CACHE_VERSION to ${buildVersion}`);
+    } catch (err) {
+      console.warn('⚠️  Warning: Could not bump sw.js CACHE_VERSION:', err.message);
+    }
   }
 
   // Copy root build if it exists

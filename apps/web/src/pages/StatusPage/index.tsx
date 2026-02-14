@@ -1,5 +1,8 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/dist/style.css';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { useTicketStatus } from '@/hooks/useTicketStatus';
 import { useQueue } from '@/hooks/useQueue';
 import { useServices } from '@/hooks/useServices';
@@ -19,7 +22,10 @@ import { WaitingCard } from './WaitingCard';
 import { InProgressCard } from './InProgressCard';
 import { CompletedCard } from './CompletedCard';
 import { ActionButtons } from './ActionButtons';
+import { Modal } from '@/components/Modal';
+import { Button, InputLabel } from '@/components/design-system';
 import { Container, SlideIn } from '@/components/design-system';
+import { hasHoursForDay } from '@/lib/operatingHours';
 
 export function StatusPage() {
   const { id } = useParams<{ id: string }>();
@@ -38,6 +44,13 @@ export function StatusPage() {
   const { barber, isLeaving, handleLeaveQueue, handleShareTicket, leaveError, clearLeaveError } = useStatusDisplay(ticket);
   const [checkInError, setCheckInError] = useState<string | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState<Date | undefined>(undefined);
+  const [rescheduleSlotTime, setRescheduleSlotTime] = useState<string | null>(null);
+  const [rescheduleSlots, setRescheduleSlots] = useState<Array<{ time: string; available: boolean }>>([]);
+  const [rescheduleSlotsLoading, setRescheduleSlotsLoading] = useState(false);
+  const [rescheduleError, setRescheduleError] = useState<string | null>(null);
+  const [rescheduleSubmitting, setRescheduleSubmitting] = useState(false);
 
   const preferredBarberId = (ticket as { preferredBarberId?: number | null } | null)?.preferredBarberId ?? null;
   const preferredBarberName = preferredBarberId != null ? barbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
@@ -117,6 +130,75 @@ export function StatusPage() {
     }
   }, [shopSlug, ticketIdFromParams, refetch, t]);
 
+  const settings = shopConfig.settings;
+  const operatingHours = settings?.operatingHours as Record<string, { open?: string; close?: string } | null> | undefined;
+  const timezone = settings?.timezone ?? 'America/Sao_Paulo';
+
+  const rescheduleDateStr = rescheduleDate
+    ? `${rescheduleDate.getFullYear()}-${String(rescheduleDate.getMonth() + 1).padStart(2, '0')}-${String(rescheduleDate.getDate()).padStart(2, '0')}`
+    : '';
+
+  useEffect(() => {
+    if (!rescheduleModalOpen || !ticket) return;
+    const st = (ticket as { scheduledTime?: string | null }).scheduledTime;
+    if (st) {
+      const zoned = toZonedTime(new Date(st), timezone);
+      setRescheduleDate(new Date(zoned.getFullYear(), zoned.getMonth(), zoned.getDate()));
+      setRescheduleSlotTime(`${String(zoned.getHours()).padStart(2, '0')}:${String(zoned.getMinutes()).padStart(2, '0')}`);
+    } else {
+      const today = new Date();
+      setRescheduleDate(today);
+      setRescheduleSlotTime(null);
+    }
+    setRescheduleError(null);
+  }, [rescheduleModalOpen, ticket, timezone]);
+
+  useEffect(() => {
+    if (!rescheduleModalOpen || !shopSlug || !rescheduleDateStr || !ticket?.serviceId) {
+      setRescheduleSlots([]);
+      return;
+    }
+    setRescheduleSlotsLoading(true);
+    api
+      .getAppointmentSlots(shopSlug, rescheduleDateStr, ticket.serviceId, preferredBarberId ?? undefined)
+      .then((res) => setRescheduleSlots(res.slots))
+      .catch(() => setRescheduleSlots([]))
+      .finally(() => setRescheduleSlotsLoading(false));
+  }, [rescheduleModalOpen, shopSlug, rescheduleDateStr, ticket?.serviceId, preferredBarberId]);
+
+  useEffect(() => {
+    setRescheduleSlotTime(null);
+  }, [rescheduleDate]);
+
+  const rescheduleDisabledDays = useCallback((date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (date < today) return true;
+    return !hasHoursForDay(operatingHours, date);
+  }, [operatingHours]);
+
+  const handleRescheduleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ticketIdFromParams || !rescheduleDate || !rescheduleSlotTime) return;
+    setRescheduleError(null);
+    setRescheduleSubmitting(true);
+    try {
+      const localDateTime = `${rescheduleDateStr}T${rescheduleSlotTime}:00`;
+      const utcDate = fromZonedTime(localDateTime, timezone);
+      await api.rescheduleAppointment(ticketIdFromParams, utcDate.toISOString());
+      await refetch();
+      setRescheduleModalOpen(false);
+    } catch (error) {
+      setRescheduleError(getErrorMessage(error, t('barber.appointmentRescheduleError')));
+    } finally {
+      setRescheduleSubmitting(false);
+    }
+  }, [ticketIdFromParams, rescheduleDate, rescheduleSlotTime, rescheduleDateStr, timezone, refetch, t]);
+
+  const handleOpenReschedule = useCallback(() => {
+    setRescheduleModalOpen(true);
+  }, []);
+
   if (!id) {
     return (
       <div className="min-h-screen bg-[var(--shop-background)]">
@@ -182,7 +264,10 @@ export function StatusPage() {
     waitTime != null &&
     generalLineWaitTime != null &&
     generalLineWaitTime < waitTime;
+  const isPendingAppointment =
+    ticket.status === 'pending' && ticketType === 'appointment';
   const canCancel =
+    isPendingAppointment ||
     ticket.status === 'waiting' ||
     (ticket.status === 'in_progress' && shopConfig.settings.allowCustomerCancelInProgress);
 
@@ -221,6 +306,8 @@ export function StatusPage() {
             showCheckIn={canCheckInAsClient}
             onCheckIn={handleCheckIn}
             isCheckingIn={isCheckingIn}
+            isPendingAppointment={isPendingAppointment}
+            onEditAppointment={handleOpenReschedule}
           />
 
           {shareSuccess && (
@@ -276,6 +363,78 @@ export function StatusPage() {
             </div>
           </SlideIn>
         )}
+
+        <Modal
+          isOpen={rescheduleModalOpen}
+          onClose={() => setRescheduleModalOpen(false)}
+          title={t('barber.rescheduleAppointment')}
+          showCloseButton
+        >
+          <form onSubmit={handleRescheduleSubmit} className="space-y-4">
+            <div>
+              <InputLabel className="mb-2 block">{t('schedule.selectDate')}</InputLabel>
+              <div className="schedule-calendar-wrap w-full overflow-x-auto">
+                <DayPicker
+                  mode="single"
+                  selected={rescheduleDate}
+                  onSelect={(d) => setRescheduleDate(d)}
+                  disabled={rescheduleDisabledDays}
+                  className="rdp-default w-full bg-muted/30 rounded-lg p-2 [--rdp-accent-color:var(--shop-accent)]"
+                />
+              </div>
+            </div>
+            {rescheduleDateStr && ticket?.serviceId && (
+              <div>
+                <InputLabel className="mb-2 block">{t('schedule.selectTime')}</InputLabel>
+                {rescheduleSlotsLoading ? (
+                  <p className="text-sm text-[var(--shop-text-secondary)]">{t('common.loading')}</p>
+                ) : rescheduleSlots.length === 0 ? (
+                  <p className="text-sm text-[var(--shop-text-secondary)]">{t('schedule.noSlots')}</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {rescheduleSlots.map((slot) => (
+                      <button
+                        key={slot.time}
+                        type="button"
+                        disabled={!slot.available}
+                        onClick={() => setRescheduleSlotTime(slot.time)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          rescheduleSlotTime === slot.time
+                            ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]'
+                            : slot.available
+                              ? 'bg-white/10 hover:bg-white/20 text-white'
+                              : 'bg-white/5 text-white/40 cursor-not-allowed'
+                        }`}
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {rescheduleError && (
+              <p className="text-sm text-[#ef4444]">{rescheduleError}</p>
+            )}
+            <div className="flex gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRescheduleModalOpen(false)}
+                className="flex-1"
+              >
+                {t('status.confirmLeaveCancel')}
+              </Button>
+              <Button
+                type="submit"
+                disabled={rescheduleSubmitting || !rescheduleDate || !rescheduleSlotTime}
+                className="flex-1"
+              >
+                {rescheduleSubmitting ? t('barber.rescheduling') : t('barber.reschedule')}
+              </Button>
+            </div>
+          </form>
+        </Modal>
       </Container>
     </div>
   );

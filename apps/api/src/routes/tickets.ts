@@ -484,6 +484,42 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
+   * Reschedule a pending appointment (public endpoint for customers).
+   * Access via status page link (e.g. from email). No auth required.
+   *
+   * @route POST /api/tickets/:id/reschedule
+   * @param id - Ticket ID
+   * @body scheduledTime - New date/time in ISO 8601
+   * @returns Updated ticket
+   * @throws {404} If ticket not found
+   */
+  fastify.post('/tickets/:id/reschedule', async (request, reply) => {
+    const paramsSchema = z.object({
+      id: z.coerce.number().int().positive(),
+    });
+    const bodySchema = z.object({
+      scheduledTime: z.string().datetime(),
+    });
+    const { id } = validateRequest(paramsSchema, request.params);
+    const { scheduledTime } = validateRequest(bodySchema, request.body);
+
+    const existingTicket = await ticketService.getById(id);
+    if (!existingTicket) {
+      throw new NotFoundError(`Ticket with ID ${id} not found`);
+    }
+
+    if ((existingTicket as { type?: string }).type !== 'appointment') {
+      throw new ValidationError('Only appointments can be rescheduled');
+    }
+    if (existingTicket.status !== 'pending') {
+      throw new ValidationError('Only pending appointments can be rescheduled');
+    }
+
+    const updated = await ticketService.rescheduleAppointment(id, scheduledTime);
+    return updated;
+  });
+
+  /**
    * Cancel a ticket (public endpoint for customers).
    * Allows customers to cancel their own tickets without authentication.
    * 
@@ -507,11 +543,16 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const shopSettings = (existingTicket as { shop?: { settings: unknown } }).shop?.settings;
     const settings = parseSettings(shopSettings);
 
-    const canCancel = existingTicket.status === 'waiting'
-      || (settings.allowCustomerCancelInProgress && existingTicket.status === 'in_progress');
+    const isPendingAppointment =
+      existingTicket.status === 'pending' &&
+      (existingTicket as { type?: string }).type === 'appointment';
+    const canCancel =
+      isPendingAppointment ||
+      existingTicket.status === 'waiting' ||
+      (settings.allowCustomerCancelInProgress && existingTicket.status === 'in_progress');
 
     if (!canCancel) {
-      throw new Error('Only waiting tickets can be cancelled by customers');
+      throw new Error('This ticket cannot be cancelled');
     }
 
     const ticket = await ticketService.cancelWithExisting(existingTicket, 'Customer cancelled', 'customer');

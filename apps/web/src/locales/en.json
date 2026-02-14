@@ -193,7 +193,12 @@
     "badgeWaiting": "Waiting",
     "badgeInProgress": "In Progress",
     "badgeCompleted": "Completed",
-    "serviceLabel": "Service"
+    "serviceLabel": "Service",
+    "editAppointment": "Edit",
+    "cancelAppointment": "Cancel appointment",
+    "confirmCancelAppointmentTitle": "Cancel appointment?",
+    "confirmCancelAppointmentMessage": "Are you sure you want to cancel this appointment?",
+    "confirmCancelAppointmentConfirm": "Yes, cancel"
   },
   "auth": {
     "login": "Log in",

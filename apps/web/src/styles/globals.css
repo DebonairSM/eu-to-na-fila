@@ -837,15 +837,17 @@ select.form-control-select {
   border-color: var(--shop-border-color, rgba(255,255,255,0.12));
 }
 
-/* Schedule page / check-in: DayPicker uses full container width */
+/* Schedule page / check-in: DayPicker centered in container */
 .schedule-calendar-wrap {
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 .schedule-calendar-wrap .rdp {
   display: block;
-  width: 100%;
+  width: fit-content;
   max-width: 100%;
-  margin: 0;
+  margin: 0 auto;
 }
 .schedule-calendar-wrap .rdp-months {
   display: flex;

@@ -63,7 +63,7 @@ export async function getAppointmentSlots(
   const hasLunch = lunchStartMin !== null && lunchEndMin !== null;
   
   const slotStarts: number[] = [];
-  for (let t = openMin; t + slotDurationMin <= closeMin; t += slotDurationMin) {
+  for (let t = openMin; t + service.duration <= closeMin; t += slotDurationMin) {
     // Skip slots that overlap with lunch break
     if (hasLunch && lunchStartMin !== null && lunchEndMin !== null) {
       const slotEnd = t + slotDurationMin;

@@ -56,6 +56,7 @@ class ApiClient extends BaseApiClient {
   checkInAppointment = this._tickets.checkInAppointment;
   getTicket = this._tickets.getTicket;
   updateTicketStatus = this._tickets.updateTicketStatus;
+  rescheduleAppointment = this._tickets.rescheduleAppointment;
   cancelTicket = this._tickets.cancelTicket;
   cancelTicketAsStaff = this._tickets.cancelTicketAsStaff;
   updateTicket = this._tickets.updateTicket;

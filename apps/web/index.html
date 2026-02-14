@@ -198,10 +198,15 @@
             }
             
             // Delay initial update to avoid InvalidStateError while SW is installing/activating
-            setTimeout(safeUpdate, 3000);
+            setTimeout(safeUpdate, 1000);
             
-            // Check for updates every 5 minutes
-            setInterval(safeUpdate, 300000);
+            // Check for updates every 2 minutes
+            setInterval(safeUpdate, 120000);
+            
+            // Check when user returns to tab (catches updates after long idle)
+            document.addEventListener('visibilitychange', () => {
+              if (document.visibilityState === 'visible') safeUpdate();
+            });
             
             // Listen for updates and reload if new version available
             registration.addEventListener('updatefound', () => {

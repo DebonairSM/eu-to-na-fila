@@ -16,6 +16,9 @@ interface ActionButtonsProps {
   showCheckIn?: boolean;
   onCheckIn?: () => Promise<void>;
   isCheckingIn?: boolean;
+  /** When true, cancel uses appointment-specific labels and Edit button is shown */
+  isPendingAppointment?: boolean;
+  onEditAppointment?: () => void;
 }
 
 export function ActionButtons({
@@ -30,6 +33,8 @@ export function ActionButtons({
   showCheckIn,
   onCheckIn,
   isCheckingIn,
+  isPendingAppointment,
+  onEditAppointment,
 }: ActionButtonsProps) {
   const { t } = useLocale();
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -51,6 +56,17 @@ export function ActionButtons({
   return (
     <>
       <Stack spacing="md">
+        {isPendingAppointment && onEditAppointment && (
+          <Button
+            size="lg"
+            fullWidth
+            variant="outline"
+            onClick={onEditAppointment}
+          >
+            <span className="material-symbols-outlined text-xl">edit_calendar</span>
+            {t('status.editAppointment')}
+          </Button>
+        )}
         {showCheckIn && onCheckIn && (
           <Button
             size="lg"
@@ -95,7 +111,7 @@ export function ActionButtons({
                 className="w-14 h-14 rounded-full bg-[#ef4444] text-white shadow-lg hover:bg-[#dc2626] transition-all flex items-center justify-center min-h-[56px] min-w-[56px]"
                 onClick={handleLeaveClick}
                 disabled={isLeaving}
-                aria-label={t('status.leaveQueueAria')}
+                aria-label={isPendingAppointment ? t('status.cancelAppointment') : t('status.leaveQueueAria')}
               >
                 {isLeaving ? (
                   <span className="material-symbols-outlined animate-spin text-2xl">
@@ -125,7 +141,7 @@ export function ActionButtons({
                 ) : (
                   <>
                     <span className="material-symbols-outlined text-xl">exit_to_app</span>
-                    {t('status.leaveQueue')}
+                    {isPendingAppointment ? t('status.cancelAppointment') : t('status.leaveQueue')}
                   </>
                 )}
               </Button>
@@ -154,9 +170,9 @@ export function ActionButtons({
         isOpen={showLeaveConfirm}
         onClose={() => setShowLeaveConfirm(false)}
         onConfirm={handleConfirmLeave}
-        title={t('status.confirmLeaveTitle')}
-        message={t('status.confirmLeaveMessage')}
-        confirmText={t('status.confirmLeaveConfirm')}
+        title={isPendingAppointment ? t('status.confirmCancelAppointmentTitle') : t('status.confirmLeaveTitle')}
+        message={isPendingAppointment ? t('status.confirmCancelAppointmentMessage') : t('status.confirmLeaveMessage')}
+        confirmText={isPendingAppointment ? t('status.confirmCancelAppointmentConfirm') : t('status.confirmLeaveConfirm')}
         cancelText={t('status.confirmLeaveCancel')}
         variant="destructive"
         icon="exit_to_app"

@@ -193,7 +193,12 @@
     "badgeWaiting": "Aguardando",
     "badgeInProgress": "Em Atendimento",
     "badgeCompleted": "Concluído",
-    "serviceLabel": "Serviço"
+    "serviceLabel": "Serviço",
+    "editAppointment": "Editar",
+    "cancelAppointment": "Cancelar agendamento",
+    "confirmCancelAppointmentTitle": "Cancelar agendamento?",
+    "confirmCancelAppointmentMessage": "Tem certeza que deseja cancelar este agendamento?",
+    "confirmCancelAppointmentConfirm": "Sim, cancelar"
   },
   "auth": {
     "login": "Entrar",

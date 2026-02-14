@@ -4,6 +4,7 @@ import { JoinForm } from './JoinForm';
 import { Container, Heading } from '@/components/design-system';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { useActiveTicket } from '@/hooks/useActiveTicket';
 import { ShopStatusBanner } from '@/components/ShopStatusBanner';
 
 function hasScheduleEnabled(settings: { allowAppointments?: boolean; operatingHours?: unknown }): boolean {
@@ -26,6 +27,7 @@ function hasScheduleEnabled(settings: { allowAppointments?: boolean; operatingHo
 export function JoinPage() {
   const { t } = useLocale();
   const { config } = useShopConfig();
+  const { activeTicket } = useActiveTicket();
   const showSchedule = hasScheduleEnabled(config.settings ?? {});
 
   return (
@@ -52,11 +54,13 @@ export function JoinPage() {
             </p>
           )}
 
-          <p className="text-center text-sm text-[rgba(255,255,255,0.7)]">
-            <Link to="/home" className="text-[var(--shop-accent)] hover:underline hover:text-[var(--shop-accent-hover)]">
-              {t('join.viewStatus')}
-            </Link>
-          </p>
+          {activeTicket && (
+            <p className="text-center text-sm text-[rgba(255,255,255,0.7)]">
+              <Link to={`/status/${activeTicket.id}`} className="text-[var(--shop-accent)] hover:underline hover:text-[var(--shop-accent-hover)]">
+                {t('join.viewStatus')}
+              </Link>
+            </p>
+          )}
         </div>
       </Container>
     </div>
