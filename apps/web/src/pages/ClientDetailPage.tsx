@@ -75,8 +75,11 @@ export function ClientDetailPage() {
       .getClient(shopSlug, clientId)
       .then((res) => {
         setData(res);
-        setEditName(res.client.name);
-        setEditEmail(res.client.email ?? '');
+        const c = res.client as { name?: string; email?: string | null };
+        if (c.name != null) {
+          setEditName(c.name);
+          setEditEmail(c.email ?? '');
+        }
       })
       .catch((err) => {
         setError(getErrorMessage(err, 'Failed to load client'));
@@ -165,6 +168,7 @@ export function ClientDetailPage() {
   }
 
   const { client, clipNotes, serviceHistory } = data;
+  const isBarberView = client.name == null;
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -175,60 +179,68 @@ export function ClientDetailPage() {
           {t('common.back')}
         </Button>
 
+        {isBarberView && (
+          <p className="text-[var(--shop-text-secondary)] text-sm mb-4">
+            {t('clients.barberViewOnlyNotesAndHistory')}
+          </p>
+        )}
+
         <div className="space-y-6">
-          <section className="bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-6">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-              {editing ? (
-                <div className="flex-1 min-w-0 space-y-2">
-                  <label className="block text-sm text-[var(--shop-text-secondary)]">{t('clients.editName')}</label>
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-black/30 border border-[var(--shop-accent)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
-                    maxLength={200}
-                  />
-                  <label className="block text-sm text-[var(--shop-text-secondary)]">{t('clients.editEmail')}</label>
-                  <input
-                    type="email"
-                    value={editEmail}
-                    onChange={(e) => setEditEmail(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-black/30 border border-[var(--shop-accent)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
-                  />
-                  <div className="flex gap-2 mt-3">
-                    <Button
-                      onClick={handleSave}
-                      disabled={saving || !editName.trim()}
-                      className="bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] hover:opacity-90"
-                    >
-                      {saving ? '...' : t('clients.save')}
-                    </Button>
-                    <Button variant="outline" onClick={cancelEdit} disabled={saving}>
-                      {t('clients.cancel')}
-                    </Button>
+          {!isBarberView && (
+            <section className="bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-6">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                {editing ? (
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <label className="block text-sm text-[var(--shop-text-secondary)]">{t('clients.editName')}</label>
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-[var(--shop-accent)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                      maxLength={200}
+                    />
+                    <label className="block text-sm text-[var(--shop-text-secondary)]">{t('clients.editEmail')}</label>
+                    <input
+                      type="email"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-[var(--shop-accent)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                    />
+                    <div className="flex gap-2 mt-3">
+                      <Button
+                        onClick={handleSave}
+                        disabled={saving || !editName.trim()}
+                        className="bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] hover:opacity-90"
+                      >
+                        {saving ? '...' : t('clients.save')}
+                      </Button>
+                      <Button variant="outline" onClick={cancelEdit} disabled={saving}>
+                        {t('clients.cancel')}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ) : (
+                ) : (
+                  <>
+                    <h1 className="text-2xl font-semibold text-[var(--shop-accent)]">{formatNameForDisplay(client.name)}</h1>
+                    <Button variant="ghost" size="sm" onClick={startEdit} className="text-[var(--shop-text-secondary)] hover:text-white">
+                      <span className="material-symbols-outlined mr-1 align-middle text-lg">edit</span>
+                      {t('clients.edit')}
+                    </Button>
+                  </>
+                )}
+              </div>
+              {saveError && <p className="text-red-400 text-sm mt-2">{saveError}</p>}
+              {saveSuccess && <p className="text-green-400 text-sm mt-2">{t('clients.saveSuccess')}</p>}
+              {!editing && (
                 <>
-                  <h1 className="text-2xl font-semibold text-[var(--shop-accent)]">{formatNameForDisplay(client.name)}</h1>
-                  <Button variant="ghost" size="sm" onClick={startEdit} className="text-[var(--shop-text-secondary)] hover:text-white">
-                    <span className="material-symbols-outlined mr-1 align-middle text-lg">edit</span>
-                    {t('clients.edit')}
-                  </Button>
+                  <p className="text-[var(--shop-text-secondary)]">{client.phone}</p>
+                  {client.email && <p className="text-[var(--shop-text-secondary)] text-sm mt-1">{client.email}</p>}
                 </>
               )}
-            </div>
-            {saveError && <p className="text-red-400 text-sm mt-2">{saveError}</p>}
-            {saveSuccess && <p className="text-green-400 text-sm mt-2">{t('clients.saveSuccess')}</p>}
-            {!editing && (
-              <>
-                <p className="text-[var(--shop-text-secondary)]">{client.phone}</p>
-                {client.email && <p className="text-[var(--shop-text-secondary)] text-sm mt-1">{client.email}</p>}
-              </>
-            )}
-          </section>
+            </section>
+          )}
 
-          {(client.nextServiceNote || client.nextServiceImageUrl) && (
+          {!isBarberView && (client.nextServiceNote || client.nextServiceImageUrl) && (
             <section className="bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-6">
               <h2 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[var(--shop-accent)]">image</span>

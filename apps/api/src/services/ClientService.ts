@@ -16,6 +16,9 @@ export interface Client {
   phone: string;
   name: string;
   email: string | null;
+  address: string | null;
+  dateOfBirth: Date | string | null;
+  gender: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -162,6 +165,9 @@ export class ClientService {
       preferences?: { emailReminders?: boolean };
       nextServiceNote?: string | null;
       nextServiceImageUrl?: string | null;
+      address?: string | null;
+      dateOfBirth?: string | null;
+      gender?: string | null;
     }
   ): Promise<Client> {
     const client = await this.getByIdWithShopCheck(id, shopId);
@@ -185,6 +191,15 @@ export class ClientService {
     }
     if (data.nextServiceImageUrl !== undefined) {
       updateData.nextServiceImageUrl = data.nextServiceImageUrl === '' ? null : data.nextServiceImageUrl;
+    }
+    if (data.address !== undefined) {
+      updateData.address = data.address === '' ? null : data.address;
+    }
+    if (data.dateOfBirth !== undefined) {
+      updateData.dateOfBirth = data.dateOfBirth === '' || data.dateOfBirth == null ? null : data.dateOfBirth;
+    }
+    if (data.gender !== undefined) {
+      updateData.gender = data.gender === '' ? null : data.gender;
     }
 
     const [updated] = await this.db

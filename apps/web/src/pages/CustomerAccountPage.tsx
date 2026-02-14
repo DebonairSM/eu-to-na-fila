@@ -5,6 +5,7 @@ import { Container, Heading, Text, Card, CardContent, Button, Input, InputLabel 
 import { useLocale } from '@/contexts/LocaleContext';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useLogout } from '@/hooks/useLogout';
 import { api } from '@/lib/api';
 import type { CustomerProfile, CustomerAppointmentsResponse } from '@/lib/api/auth';
 import { config } from '@/lib/config';
@@ -26,6 +27,7 @@ function formatDate(iso: string | null): string {
 export function CustomerAccountPage() {
   const shopSlug = useShopSlug();
   const { user, isCustomer } = useAuthContext();
+  const { logoutAndGoHome } = useLogout();
   const { t } = useLocale();
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
   const [appointments, setAppointments] = useState<CustomerAppointmentsResponse | null>(null);
@@ -35,6 +37,9 @@ export function CustomerAccountPage() {
   // Editable profile state
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editDateOfBirth, setEditDateOfBirth] = useState('');
+  const [editGender, setEditGender] = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -66,6 +71,9 @@ export function CustomerAccountPage() {
           setProfile(p);
           setEditName(p.name);
           setEditPhone(p.phone ?? '');
+          setEditAddress(p.address ?? '');
+          setEditDateOfBirth(p.dateOfBirth ?? '');
+          setEditGender(p.gender ?? '');
           setEmailReminders(p.preferences?.emailReminders ?? true);
           setRefNote(p.nextServiceNote ?? '');
           setRefImageUrl(p.nextServiceImageUrl ?? null);
@@ -130,6 +138,9 @@ export function CustomerAccountPage() {
       const updated = await api.updateCustomerProfile(shopSlug, {
         name: editName.trim(),
         phone: editPhone.trim() || null,
+        address: editAddress.trim() || null,
+        dateOfBirth: editDateOfBirth.trim() || null,
+        gender: editGender.trim() || null,
       });
       setProfile(updated);
       setProfileSaved(true);
@@ -259,7 +270,17 @@ export function CustomerAccountPage() {
       <Navigation />
       <Container className="pt-20 md:pt-28 lg:pt-32 pb-10">
         <div className="max-w-2xl mx-auto space-y-8">
-          <Heading level={1}>{t('account.title')}</Heading>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <Heading level={1}>{t('account.title')}</Heading>
+            <Button
+              variant="outline"
+              onClick={logoutAndGoHome}
+              className="inline-flex items-center gap-2 text-[var(--shop-text-secondary)] border-[var(--shop-border-color)] hover:bg-white/5 hover:text-[var(--shop-text-primary)]"
+            >
+              <span className="material-symbols-outlined text-lg">logout</span>
+              {t('nav.logout')}
+            </Button>
+          </div>
 
           {loading ? (
             <Text variant="secondary">{t('common.loading')}</Text>
@@ -300,6 +321,43 @@ export function CustomerAccountPage() {
                         placeholder="(00) 00000-0000"
                         className="w-full mt-1"
                       />
+                    </div>
+                    <p className="text-sm text-[var(--shop-text-secondary)] mt-2 mb-1">{t('account.demographicsHint')}</p>
+                    <div>
+                      <InputLabel htmlFor="profile-address">{t('account.address')}</InputLabel>
+                      <Input
+                        id="profile-address"
+                        type="text"
+                        value={editAddress}
+                        onChange={(e) => setEditAddress(e.target.value)}
+                        placeholder={t('account.addressPlaceholder')}
+                        className="w-full mt-1"
+                      />
+                    </div>
+                    <div>
+                      <InputLabel htmlFor="profile-dob">{t('account.dateOfBirth')}</InputLabel>
+                      <Input
+                        id="profile-dob"
+                        type="date"
+                        value={editDateOfBirth}
+                        onChange={(e) => setEditDateOfBirth(e.target.value)}
+                        className="w-full mt-1"
+                      />
+                    </div>
+                    <div>
+                      <InputLabel htmlFor="profile-gender">{t('account.gender')}</InputLabel>
+                      <select
+                        id="profile-gender"
+                        value={editGender}
+                        onChange={(e) => setEditGender(e.target.value)}
+                        className="w-full mt-1 px-4 py-3 rounded-lg border border-[var(--shop-border-color)] bg-white/5 text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                      >
+                        <option value="">{t('account.genderPlaceholder')}</option>
+                        <option value="male">{t('account.genderMale')}</option>
+                        <option value="female">{t('account.genderFemale')}</option>
+                        <option value="other">{t('account.genderOther')}</option>
+                        <option value="prefer_not_to_say">{t('account.genderPreferNot')}</option>
+                      </select>
                     </div>
                     {profileError && (
                       <p className="text-sm text-[#ef4444]">{profileError}</p>

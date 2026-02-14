@@ -136,7 +136,18 @@
     "save": "Save",
     "saving": "Saving...",
     "saved": "Saved",
-    "createAccount": "Create account"
+    "createAccount": "Create account",
+    "demographics": "Additional information",
+    "demographicsHint": "Optional. Used for demographic insights and targeting.",
+    "address": "Address",
+    "addressPlaceholder": "Street, number, neighborhood, city",
+    "dateOfBirth": "Date of birth",
+    "gender": "Gender",
+    "genderPlaceholder": "Optional",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "genderOther": "Other",
+    "genderPreferNot": "Prefer not to say"
   },
   "checkin": {
     "title": "Check-in complete",
@@ -645,6 +656,7 @@
     "viewClient": "View client profile",
     "addClipNote": "Add note",
     "clipNotePlaceholder": "Note (e.g. fade, left side)...",
+    "seePreviousNotes": "See previous notes",
     "serviceHistory": "Service history",
     "updateBarberError": "Error updating barber. Try again.",
     "deleteBarberError": "Error removing barber. Try again.",
@@ -705,6 +717,7 @@
     "clipNotesEmpty": "No notes yet",
     "addClipNote": "Add note",
     "clipNotePlaceholder": "e.g. Prefers short sides...",
+    "seePreviousNotes": "See previous notes",
     "viewClient": "View client",
     "serviceHistory": "Service history",
     "editBarber": "Edit Barber",
@@ -768,7 +781,8 @@
     "editName": "Name",
     "editEmail": "Email",
     "saveSuccess": "Client updated.",
-    "saveError": "Error saving. Try again."
+    "saveError": "Error saving. Try again.",
+    "barberViewOnlyNotesAndHistory": "Only notes and service history are visible. Full client profile is restricted to owner and staff."
   },
   "ads": {
     "title": "Manage Ads",

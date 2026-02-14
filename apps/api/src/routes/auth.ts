@@ -470,6 +470,9 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const phone = client.phone?.startsWith('e:') ? null : client.phone;
     const prefs = (client as { preferences?: { emailReminders?: boolean } }).preferences ?? {};
+    const address = (client as { address?: string | null }).address ?? null;
+    const dateOfBirth = (client as { dateOfBirth?: Date | string | null }).dateOfBirth ?? null;
+    const gender = (client as { gender?: string | null }).gender ?? null;
     return {
       name: client.name,
       email: client.email ?? null,
@@ -477,11 +480,14 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       preferences: { emailReminders: prefs.emailReminders ?? true },
       nextServiceNote: (client as { nextServiceNote?: string | null }).nextServiceNote ?? null,
       nextServiceImageUrl: (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl ?? null,
+      address,
+      dateOfBirth: dateOfBirth ? (typeof dateOfBirth === 'string' ? dateOfBirth : dateOfBirth.toISOString().slice(0, 10)) : null,
+      gender,
     };
   });
 
   /**
-   * Update current customer profile (name, phone, preferences, reference).
+   * Update current customer profile (name, phone, preferences, reference, demographics).
    * @route PATCH /api/shops/:slug/auth/customer/me
    */
   fastify.patch('/shops/:slug/auth/customer/me', {
@@ -501,6 +507,9 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       preferences: z.object({ emailReminders: z.boolean().optional() }).optional(),
       nextServiceNote: z.string().max(2000).nullable().optional(),
       nextServiceImageUrl: z.string().url().max(500).nullable().optional(),
+      address: z.string().max(500).nullable().optional(),
+      dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+      gender: z.string().max(50).nullable().optional(),
     });
     const data = validateRequest(bodySchema, request.body);
 
@@ -510,10 +519,16 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     if (data.preferences !== undefined) updateData.preferences = data.preferences;
     if (data.nextServiceNote !== undefined) updateData.nextServiceNote = data.nextServiceNote;
     if (data.nextServiceImageUrl !== undefined) updateData.nextServiceImageUrl = data.nextServiceImageUrl;
+    if (data.address !== undefined) updateData.address = data.address;
+    if (data.dateOfBirth !== undefined) updateData.dateOfBirth = data.dateOfBirth;
+    if (data.gender !== undefined) updateData.gender = data.gender;
 
     const client = await clientService.updateCustomerProfile(clientId, shop.id, updateData);
     const phone = client.phone?.startsWith('e:') ? null : client.phone;
     const prefs = (client as { preferences?: { emailReminders?: boolean } }).preferences ?? {};
+    const resAddress = (client as { address?: string | null }).address ?? null;
+    const resDateOfBirth = (client as { dateOfBirth?: Date | string | null }).dateOfBirth ?? null;
+    const resGender = (client as { gender?: string | null }).gender ?? null;
     return {
       name: client.name,
       email: client.email ?? null,
@@ -521,6 +536,9 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       preferences: { emailReminders: prefs.emailReminders ?? true },
       nextServiceNote: (client as { nextServiceNote?: string | null }).nextServiceNote ?? null,
       nextServiceImageUrl: (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl ?? null,
+      address: resAddress,
+      dateOfBirth: resDateOfBirth ? (typeof resDateOfBirth === 'string' ? resDateOfBirth : (resDateOfBirth as Date).toISOString().slice(0, 10)) : null,
+      gender: resGender,
     };
   });
 

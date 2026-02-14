@@ -28,16 +28,26 @@ export function WaitTimeTrendChart({ data }: WaitTimeTrendChartProps) {
     return { x, y, value, day };
   });
 
+  const baselineY = chartHeight - 20;
   const pathData = points
     .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
     .join(' ');
 
-  const areaPathData = [
-    pathData,
-    `L ${points[points.length - 1].x} ${chartHeight - 20}`,
-    `L ${points[0].x} ${chartHeight - 20}`,
-    'Z',
-  ].join(' ');
+  // Area under the curve: baseline (left→right), then line from last point back to first
+  const areaPathData =
+    points.length < 2
+      ? ''
+      : [
+          `M ${points[0].x} ${baselineY}`,
+          `L ${points[points.length - 1].x} ${baselineY}`,
+          `L ${points[points.length - 1].x} ${points[points.length - 1].y}`,
+          ...points
+            .slice(0, -1)
+            .reverse()
+            .map((p) => `L ${p.x} ${p.y}`),
+          `L ${points[0].x} ${points[0].y}`,
+          'Z',
+        ].join(' ');
 
   return (
     <div className="wait-time-trend-chart overflow-x-auto">
@@ -49,11 +59,13 @@ export function WaitTimeTrendChart({ data }: WaitTimeTrendChartProps) {
               <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
             </linearGradient>
           </defs>
-          <path
-            d={areaPathData}
-            fill="url(#waitTimeGradient)"
-            className="transition-opacity"
-          />
+          {areaPathData && (
+            <path
+              d={areaPathData}
+              fill="url(#waitTimeGradient)"
+              className="transition-opacity"
+            />
+          )}
           <path
             d={pathData}
             fill="none"

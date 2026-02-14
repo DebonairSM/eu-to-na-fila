@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, serial, jsonb, index, uniqueIndex, real } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, timestamp, serial, jsonb, index, uniqueIndex, real, date } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const projects = pgTable('projects', {
@@ -100,6 +100,9 @@ export const clients = pgTable('clients', {
   preferences: jsonb('preferences'), // { emailReminders: boolean } etc.
   nextServiceNote: text('next_service_note'), // Client's note for next service
   nextServiceImageUrl: text('next_service_image_url'), // Client's image reference for next service
+  address: text('address'), // For demographic targeting
+  dateOfBirth: date('date_of_birth'), // For age / demographic targeting
+  gender: text('gender'), // For demographic targeting (optional)
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({

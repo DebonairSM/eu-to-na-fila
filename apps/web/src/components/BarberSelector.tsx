@@ -28,6 +28,10 @@ export interface BarberSelectorProps {
   shopSlug?: string;
   /** Callback when clip notes panel reports an error. */
   onClipNotesError?: (msg: string) => void;
+  /** When false, clip notes panel hides the "View client" link (e.g. for barbers). */
+  canViewFullClient?: boolean;
+  /** When false, clip notes panel is read-only (no add note). Use during-service notes modal to add. */
+  canAddNoteInPanel?: boolean;
 }
 
 export function BarberSelector({
@@ -46,6 +50,8 @@ export function BarberSelector({
   clientId = null,
   shopSlug,
   onClipNotesError,
+  canViewFullClient = true,
+  canAddNoteInPanel = true,
 }: BarberSelectorProps) {
   const { t } = useLocale();
   const sortedDisplayedBarbers = useMemo(() => {
@@ -91,6 +97,8 @@ export function BarberSelector({
             shopSlug={shopSlug}
             clientId={clientId}
             onError={onClipNotesError}
+            canViewFullClient={canViewFullClient}
+            canAddNote={canAddNoteInPanel}
           />
         )}
         {/* Hidden focus target so the first barber doesn't get auto-focused (and show a focus ring) when the modal opens */}

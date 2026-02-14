@@ -136,7 +136,18 @@
     "save": "Salvar",
     "saving": "Salvando...",
     "saved": "Salvo",
-    "createAccount": "Criar conta"
+    "createAccount": "Criar conta",
+    "demographics": "Informações adicionais",
+    "demographicsHint": "Opcional. Usado para insights e segmentação demográfica.",
+    "address": "Endereço",
+    "addressPlaceholder": "Rua, número, bairro, cidade",
+    "dateOfBirth": "Data de nascimento",
+    "gender": "Gênero",
+    "genderPlaceholder": "Opcional",
+    "genderMale": "Masculino",
+    "genderFemale": "Feminino",
+    "genderOther": "Outro",
+    "genderPreferNot": "Prefiro não dizer"
   },
   "checkin": {
     "title": "Check-in concluído",
@@ -645,6 +656,7 @@
     "viewClient": "Ver ficha do cliente",
     "addClipNote": "Anotar",
     "clipNotePlaceholder": "Anotação (ex.: corte degradê, lado esquerdo)...",
+    "seePreviousNotes": "Ver anotações anteriores",
     "serviceHistory": "Histórico de serviços",
     "updateBarberError": "Erro ao atualizar barbeiro. Tente novamente.",
     "deleteBarberError": "Erro ao remover barbeiro. Tente novamente.",
@@ -705,6 +717,7 @@
     "clipNotesEmpty": "Nenhuma anotação ainda",
     "addClipNote": "Adicionar anotação",
     "clipNotePlaceholder": "ex: Prefere laterais curtas...",
+    "seePreviousNotes": "Ver anotações anteriores",
     "viewClient": "Ver cliente",
     "serviceHistory": "Histórico de serviços",
     "editBarber": "Editar Barbeiro",
@@ -768,7 +781,8 @@
     "editName": "Nome",
     "editEmail": "E-mail",
     "saveSuccess": "Cliente atualizado.",
-    "saveError": "Erro ao salvar. Tente novamente."
+    "saveError": "Erro ao salvar. Tente novamente.",
+    "barberViewOnlyNotesAndHistory": "Apenas anotações e histórico de serviços estão visíveis. O perfil completo do cliente é restrito a dono e equipe."
   },
   "ads": {
     "title": "Gerenciar Anúncios",

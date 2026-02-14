@@ -7,6 +7,9 @@ export interface CustomerProfile {
   preferences: { emailReminders: boolean };
   nextServiceNote: string | null;
   nextServiceImageUrl: string | null;
+  address: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
 }
 
 export interface CustomerAppointment {
@@ -43,6 +46,9 @@ export interface AuthApi {
     preferences?: { emailReminders?: boolean };
     nextServiceNote?: string | null;
     nextServiceImageUrl?: string | null;
+    address?: string | null;
+    dateOfBirth?: string | null;
+    gender?: string | null;
   }): Promise<CustomerProfile>;
   uploadClientReferenceImage(shopSlug: string, file: File): Promise<{ url: string }>;
   getCustomerAppointments(shopSlug: string): Promise<CustomerAppointmentsResponse>;

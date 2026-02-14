@@ -837,19 +837,23 @@ select.form-control-select {
   border-color: var(--shop-border-color, rgba(255,255,255,0.12));
 }
 
-/* Schedule page: DayPicker uses full container width */
+/* Schedule page / check-in: DayPicker uses full container width */
 .schedule-calendar-wrap {
   width: 100%;
 }
 .schedule-calendar-wrap .rdp {
+  display: block;
   width: 100%;
   max-width: 100%;
   margin: 0;
 }
 .schedule-calendar-wrap .rdp-months {
+  display: flex;
   width: 100%;
 }
 .schedule-calendar-wrap .rdp-month {
+  flex: 1 1 0;
+  min-width: 0;
   width: 100%;
 }
 .schedule-calendar-wrap .rdp-month_grid,
@@ -874,6 +878,23 @@ select.form-control-select {
   aspect-ratio: 1;
   min-width: 2rem;
   margin: 0 auto;
+}
+
+/* On larger screens, let the calendar fill the container instead of staying narrow */
+@media (min-width: 640px) {
+  .schedule-calendar-wrap .rdp-month {
+    min-width: 280px;
+  }
+  .schedule-calendar-wrap .rdp-day_button,
+  .schedule-calendar-wrap .rdp-day-button {
+    min-width: 2.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .schedule-calendar-wrap .rdp-day_button,
+  .schedule-calendar-wrap .rdp-day-button {
+    min-width: 3rem;
+  }
 }
 
 /* Join form card – base */

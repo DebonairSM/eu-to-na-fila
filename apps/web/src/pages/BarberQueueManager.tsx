@@ -17,6 +17,7 @@ import { Modal } from '@/components/Modal';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { BarberSelector } from '@/components/BarberSelector';
 import { BarberCard } from '@/components/BarberCard';
+import { ClipNotesPanel } from '@/components/ClipNotesPanel';
 import { QueueCard } from '@/components/QueueCard';
 import { QRCode } from '@/components/QRCode';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
@@ -95,8 +96,10 @@ export function BarberQueueManager() {
 
   const checkInModal = useModal(false);
   const barberSelectorModal = useModal(false);
+  const notesModal = useModal(false);
   const removeConfirmModal = useModal(false);
   const completeConfirmModal = useModal(false);
+  const [notesForTicketId, setNotesForTicketId] = useState<number | null>(null);
   const { validateName } = useProfanityFilter();
   const allowAppointments = shopConfig.settings?.allowAppointments ?? false;
 
@@ -965,6 +968,8 @@ export function BarberQueueManager() {
                 sortedTickets.map((ticket, index) => {
                   const assignedBarber = getAssignedBarber(ticket);
                   const isServing = ticket.status === 'in_progress';
+                  const ticketClientId = (ticket as { clientId?: number | null }).clientId ?? null;
+                  const showNotesButton = isServing && ticketClientId != null && (!isBarber || (user && assignedBarber?.id === user.id));
                   // Calculate display position based on index in sorted waiting tickets
                   const displayPosition = isServing ? null : index + 1;
                   const preferredBarberId = (ticket as { preferredBarberId?: number }).preferredBarberId;
@@ -995,6 +1000,10 @@ export function BarberQueueManager() {
                         setCustomerToComplete(ticket.id);
                         completeConfirmModal.open();
                       }}
+                      onOpenNotes={showNotesButton ? () => {
+                        setNotesForTicketId(ticket.id);
+                        notesModal.open();
+                      } : undefined}
                     />
                   );
                 })
@@ -1422,7 +1431,32 @@ export function BarberQueueManager() {
             clientId={(selectedTicket as { clientId?: number } | undefined)?.clientId ?? null}
             shopSlug={shopSlug}
             onClipNotesError={setErrorMessage}
+            canViewFullClient={!isBarber}
+            canAddNoteInPanel={!isBarber}
           />
+        );
+      })()}
+
+      {/* Notes modal: view and add clip notes while barber is serving (only when clientId exists) */}
+      {notesModal.isOpen && notesForTicketId != null && (() => {
+        const noteTicket = tickets.find((t) => t.id === notesForTicketId);
+        const clientId = (noteTicket as { clientId?: number | null } | undefined)?.clientId ?? null;
+        if (!shopSlug || clientId == null) return null;
+        return (
+          <Modal
+            isOpen={notesModal.isOpen}
+            onClose={() => { notesModal.close(); setNotesForTicketId(null); }}
+            title={t('barber.clipNotes')}
+            className="max-w-lg"
+          >
+            <ClipNotesPanel
+              shopSlug={shopSlug}
+              clientId={clientId}
+              onError={setErrorMessage}
+              canViewFullClient={!isBarber}
+              canAddNote={true}
+            />
+          </Modal>
         );
       })()}
 

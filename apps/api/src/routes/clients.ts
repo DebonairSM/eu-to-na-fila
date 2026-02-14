@@ -4,7 +4,7 @@ import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { clientService } from '../services/index.js';
 import { validateRequest } from '../lib/validation.js';
-import { NotFoundError } from '../lib/errors.js';
+import { NotFoundError, ForbiddenError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { getPublicPath } from '../lib/paths.js';
@@ -92,6 +92,15 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
       clientService.getServiceHistory(id, shop.id),
     ]);
 
+    const isBarber = request.user?.role === 'barber';
+    if (isBarber) {
+      return {
+        client: { id: client.id },
+        clipNotes,
+        serviceHistory,
+      };
+    }
+
     return {
       client: {
         ...client,
@@ -112,6 +121,10 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/shops/:slug/clients/:id/reference-image', {
     preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
   }, async (request, reply) => {
+    const user = request.user as { role?: string; shopId?: number } | undefined;
+    if (user?.role === 'barber') {
+      throw new ForbiddenError('Barbers cannot view client reference image');
+    }
     const paramsSchema = z.object({
       slug: z.string().min(1),
       id: z.coerce.number().int().positive(),
@@ -121,7 +134,7 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    if (request.user?.role === 'barber' && request.user.shopId !== shop.id) {
+    if (user?.role === 'barber' && user.shopId !== shop.id) {
       throw new NotFoundError(`Shop with slug "${slug}" not found`);
     }
 
@@ -164,6 +177,9 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.patch('/shops/:slug/clients/:id', {
     preHandler: [requireAuth(), requireRole(['owner', 'staff', 'barber'])],
   }, async (request, reply) => {
+    if (request.user?.role === 'barber') {
+      throw new ForbiddenError('Barbers cannot update client profile');
+    }
     const paramsSchema = z.object({
       slug: z.string().min(1),
       id: z.coerce.number().int().positive(),
@@ -177,10 +193,6 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
-
-    if (request.user?.role === 'barber' && request.user.shopId !== shop.id) {
-      throw new NotFoundError(`Shop with slug "${slug}" not found`);
-    }
 
     const client = await clientService.update(id, shop.id, data);
     return client;
