@@ -417,8 +417,10 @@ export class QueueService {
   }
 
   /**
-   * Standard wait time including only pending appointments that would be promoted
-   * (minutesUntil <= current standard wait or <= 30). Used when allowAppointments is true.
+   * Standard wait time including ALL pending appointments. Used when allowAppointments is true.
+   * Accounts for multiple appointments in the same hour consuming barber slots - the wait
+   * reflects when a new person would actually be served (current queue + all future appointments
+   * in weighted order).
    */
   async calculateStandardWaitTimeIncludingAtRiskAppointments(
     shopId: number,
@@ -428,13 +430,6 @@ export class QueueService {
     const defaultDuration = settings.defaultServiceDuration ?? 20;
 
     const generalLineTickets = await this.getGeneralLineWaitingTickets(shopId);
-    const standardWaitNoPending = await this.runWaveWaitTime(
-      shopId,
-      generalLineTickets,
-      defaultDuration
-    );
-    const standardWaitMinutes = standardWaitNoPending ?? 0;
-
     const pendingAppointments = await this.db.query.tickets.findMany({
       where: and(
         eq(schema.tickets.shopId, shopId),
@@ -445,14 +440,7 @@ export class QueueService {
       orderBy: [asc(schema.tickets.scheduledTime)],
     });
 
-    const atRisk = pendingAppointments.filter((a) => {
-      const scheduled = a.scheduledTime ? new Date(a.scheduledTime) : null;
-      if (!scheduled) return false;
-      const minutesUntil = (scheduled.getTime() - now.getTime()) / 60_000;
-      return minutesUntil <= standardWaitMinutes || minutesUntil <= 30;
-    });
-
-    if (atRisk.length === 0) {
+    if (pendingAppointments.length === 0) {
       const nextPosition = generalLineTickets.length + 1;
       return this.calculateWaitTime(shopId, nextPosition, defaultDuration);
     }
@@ -464,7 +452,7 @@ export class QueueService {
       checkInTime: (t as { checkInTime?: Date | string | null }).checkInTime ?? null,
       createdAt: t.createdAt,
     }));
-    const atRiskAsWaiting = atRisk.map((a) => ({
+    const pendingAsWaiting = pendingAppointments.map((a) => ({
       ...a,
       type: 'appointment' as const,
       scheduledTime: a.scheduledTime,
@@ -472,7 +460,7 @@ export class QueueService {
       createdAt: now,
     }));
     const merged = this.sortWaitingTicketsByWeighted(
-      [...generalWithType, ...atRiskAsWaiting] as Array<{
+      [...generalWithType, ...pendingAsWaiting] as Array<{
         type?: string | null;
         scheduledTime?: Date | string | null;
         checkInTime?: Date | string | null;

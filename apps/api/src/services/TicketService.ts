@@ -640,16 +640,14 @@ export class TicketService {
         );
         estimatedWaitMinutes = wait ?? 0;
       } else {
-        const wait = await this.queueService.calculateWaitTimeForPendingAppointment(
-          shopId,
-          { id: ticket.id, serviceId: ticket.serviceId, preferredBarberId: ticket.preferredBarberId, scheduledTime: ticket.scheduledTime },
-          now,
-          defaultDuration
-        );
+        // Use standard wait including ALL pending appointments. This accounts for multiple appointments
+        // in the same hour consuming barber slots - the wait reflects when a new person would actually
+        // be served (current queue + all future appointments in weighted order).
+        const wait = await this.queueService.calculateStandardWaitTimeIncludingAtRiskAppointments(shopId, settings);
         estimatedWaitMinutes = wait ?? 0;
       }
 
-      if (minutesUntil <= estimatedWaitMinutes) {
+      if (minutesUntil <= estimatedWaitMinutes || minutesUntil <= 30) {
         toPromote.push(ticket.id);
       }
     }
