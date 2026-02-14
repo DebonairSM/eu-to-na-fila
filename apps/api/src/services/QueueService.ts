@@ -361,9 +361,10 @@ export class QueueService {
   }
 
   /**
-   * Estimate wait time for a pending appointment if promoted to waiting, using weighted queue order.
-   * This gives the actual wait based on where the appointment would be placed (by scheduled time),
-   * not the inflated wait from treating them as a walk-in at the end of the line.
+   * Per-appointment wait: when would THIS appointment be served if they and all other pending
+   * appointments (same line) joined the queue now? Merges current waiting + all pending for
+   * general line, sorts by weighted order, finds this appointment's position, returns wait for
+   * tickets ahead. Only the closer appointment gets a short wait; one 3h away has many ahead.
    */
   async calculateWaitTimeForPendingAppointment(
     shopId: number,
@@ -373,9 +374,19 @@ export class QueueService {
       preferredBarberId: number | null;
       scheduledTime: Date | string | null;
     },
+    allPendingAppointments: Array<{
+      id: number;
+      serviceId: number;
+      preferredBarberId: number | null;
+      scheduledTime: Date | string | null;
+    }>,
     now: Date,
     defaultServiceDuration: number
   ): Promise<number | null> {
+    const activeBarberIds = await this.getActiveBarberIds(shopId);
+    const generalLinePending = allPendingAppointments.filter(
+      (p) => p.preferredBarberId === null || !activeBarberIds.has(p.preferredBarberId!)
+    );
     const generalLineTickets = await this.getGeneralLineWaitingTickets(shopId);
     const generalWithType = generalLineTickets.map((t) => ({
       ...t,
@@ -387,15 +398,15 @@ export class QueueService {
       serviceId: t.serviceId,
       preferredBarberId: t.preferredBarberId,
     }));
-    const appointmentAsWaiting = {
-      ...appointment,
+    const pendingAsWaiting = generalLinePending.map((a) => ({
+      ...a,
       type: 'appointment' as const,
-      scheduledTime: appointment.scheduledTime,
+      scheduledTime: a.scheduledTime,
       checkInTime: now,
       createdAt: now,
-    };
+    }));
     const merged = this.sortWaitingTicketsByWeighted(
-      [...generalWithType, appointmentAsWaiting] as Array<{
+      [...generalWithType, ...pendingAsWaiting] as Array<{
         id: number;
         type?: string | null;
         scheduledTime?: Date | string | null;

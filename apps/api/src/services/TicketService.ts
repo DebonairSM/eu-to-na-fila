@@ -640,10 +640,15 @@ export class TicketService {
         );
         estimatedWaitMinutes = wait ?? 0;
       } else {
-        // Use standard wait including ALL pending appointments. This accounts for multiple appointments
-        // in the same hour consuming barber slots - the wait reflects when a new person would actually
-        // be served (current queue + all future appointments in weighted order).
-        const wait = await this.queueService.calculateStandardWaitTimeIncludingAtRiskAppointments(shopId, settings);
+        // Per-appointment wait: when would THIS appointment be served? Includes current queue + all
+        // other pending. Only the closer one gets a short wait; one 3h away has many ahead.
+        const wait = await this.queueService.calculateWaitTimeForPendingAppointment(
+          shopId,
+          { id: ticket.id, serviceId: ticket.serviceId, preferredBarberId: ticket.preferredBarberId, scheduledTime: ticket.scheduledTime },
+          pendingAppointments.map((p) => ({ id: p.id, serviceId: p.serviceId, preferredBarberId: p.preferredBarberId, scheduledTime: p.scheduledTime })),
+          now,
+          defaultDuration
+        );
         estimatedWaitMinutes = wait ?? 0;
       }
 
