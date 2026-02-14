@@ -1383,7 +1383,7 @@ export function BarberQueueManager() {
       {barberSelectorModal.isOpen && selectedCustomerId && (() => {
         const selectedTicket = tickets.find((t) => t.id === selectedCustomerId);
         const rawPreferredBarberId = (selectedTicket as { preferredBarberId?: number } | undefined)?.preferredBarberId ?? null;
-        const preferredBarberId = settings.allowBarberPreference ? rawPreferredBarberId : null;
+        const preferredBarberId = !isBarber && settings.allowBarberPreference ? rawPreferredBarberId : null;
         const preferredBarberName = preferredBarberId != null ? barbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
         return (
           <BarberSelector
@@ -1398,7 +1398,7 @@ export function BarberQueueManager() {
             preferredBarberId={preferredBarberId}
             preferredBarberName={preferredBarberName}
             currentBarberId={isBarber && user ? user.id : null}
-            clientId={(selectedTicket as { clientId?: number } | undefined)?.clientId ?? null}
+            clientId={!isBarber ? ((selectedTicket as { clientId?: number } | undefined)?.clientId ?? null) : null}
             shopSlug={shopSlug}
             onClipNotesError={setErrorMessage}
             canViewFullClient={!isBarber}
