@@ -33,6 +33,9 @@ If Blueprint doesn't work, create the service manually:
    CORS_ORIGIN=https://your-app.onrender.com
    SHOP_SLUG=mineiro
    
+   # Propagandas (buy-ad page): barbershop list comes from this company. Set to your company ID so /propagandas/buy shows barbershops to select.
+   # ROOT_COMPANY_ID=1
+   
    # Storage Configuration (OPTIONAL)
    # If not set, files are stored locally (but will be lost on redeploy on Render)
    # For persistent storage, use Cloudflare R2 (free tier available)

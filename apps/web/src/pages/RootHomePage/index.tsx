@@ -1,66 +1,8 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { useLocale } from '@/contexts/LocaleContext';
 import { LOGO_URL } from '@/lib/logo';
-
-function Nav() {
-  const { t } = useLocale();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const navLinks = [
-    { to: '/projects', label: t('root.projects') },
-    { to: '/about', label: t('root.about') },
-    { to: '/contact', label: t('root.contact') },
-  ];
-  return (
-    <nav className="border-b border-white/5 bg-[#0a0a0a] sticky top-0 z-50">
-      <Container size="2xl">
-        <div className="flex items-center justify-between py-2 sm:py-2.5">
-          <Link to="/" className="flex items-center gap-3 group leading-none">
-            <img
-              src={LOGO_URL}
-              alt="EuTô NaFila"
-              className="h-8 sm:h-10 w-auto object-contain shrink-0"
-            />
-          </Link>
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-          <button
-            className="md:hidden p-2 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label={t('nav.menu')}
-            aria-expanded={mobileOpen}
-          >
-            <span className="material-symbols-outlined text-xl">{mobileOpen ? 'close' : 'menu'}</span>
-          </button>
-        </div>
-        {mobileOpen && (
-          <div className="md:hidden pb-4 pt-2 border-t border-white/5 space-y-2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setMobileOpen(false)}
-                className="block py-2 text-sm text-gray-400 hover:text-white font-medium"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        )}
-      </Container>
-    </nav>
-  );
-}
+import { RootSiteNav } from '@/components/RootSiteNav';
 
 function Footer() {
   const { t } = useLocale();
@@ -126,7 +68,7 @@ export function RootHomePage() {
   const { t } = useLocale();
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
-      <Nav />
+      <RootSiteNav />
 
       <main>
         {/* 1. Hero: Virtual Line for Barbershops */}

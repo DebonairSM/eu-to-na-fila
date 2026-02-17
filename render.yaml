@@ -21,6 +21,9 @@ services:
         sync: false
       - key: SHOP_SLUG
         value: mineiro
+      # Propagandas: company whose barbershops appear on /propagandas/buy. Set to your company ID (e.g. 1).
+      - key: ROOT_COMPANY_ID
+        sync: false
       # Supabase Storage configuration for ad files
       # Set these in Render dashboard with your actual Supabase values
       - key: SUPABASE_URL
