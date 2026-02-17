@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { RootSiteNav } from '@/components/RootSiteNav';
+import { RootSiteFooter } from '@/components/RootSiteFooter';
 import { useLocale } from '@/contexts/LocaleContext';
-import { LOGO_URL } from '@/lib/logo';
 import { api } from '@/lib/api';
 import type { ShopForAds } from '@/lib/api/propagandas';
 
@@ -106,6 +106,17 @@ export function PropagandasBuyPage() {
             </Link>
           </header>
 
+          <div className="max-w-xl mx-auto mb-6">
+            <p className="text-sm text-gray-500 mb-1">{t('propagandas.step1Of2')}</p>
+            <p className="text-gray-300 text-sm">
+              {shops.length === 0 || shopIds.length === shops.length
+                ? t('propagandas.summaryLineAllShops').replace('{duration}', String(duration))
+                : t('propagandas.summaryLine')
+                    .replace('{duration}', String(duration))
+                    .replace('{shops}', `${shopIds.length} ${t('propagandas.barbershopsLabel').toLowerCase()}`)}
+            </p>
+          </div>
+
           <form onSubmit={handlePay} className="max-w-xl mx-auto space-y-8">
             {submitError && (
               <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
@@ -158,8 +169,8 @@ export function PropagandasBuyPage() {
                     className="text-sm text-blue-400 hover:text-blue-300"
                   >
                     {shopIds.length === shops.length
-                      ? t('propagandas.barbershopsAll')
-                      : t('propagandas.barbershopsAll')}
+                      ? t('propagandas.barbershopsDeselectAll')
+                      : t('propagandas.barbershopsSelectAll')}
                   </button>
                   <div className="flex flex-wrap gap-2">
                     {shops.map((s) => (
@@ -230,10 +241,16 @@ export function PropagandasBuyPage() {
             </div>
 
             <div className="border border-white/10 rounded-lg p-4 bg-white/5">
+              <p className="text-xs text-gray-500 mb-2">{t('propagandas.imageGuidelinesTitle')}</p>
+              <p className="text-xs text-gray-400 mb-4">{t('propagandas.imageGuidelines')}</p>
+            </div>
+
+            <div className="border border-white/20 rounded-xl p-5 bg-white/5">
               <p className="text-sm text-gray-400 mb-1">{t('propagandas.total')}</p>
-              <p className="text-2xl font-medium text-white">
+              <p className="text-3xl font-semibold text-white">
                 {quoteLoading ? t('common.loading') : quote ? quote.amount_display : '—'}
               </p>
+              <p className="text-xs text-gray-500 mt-2">{t('propagandas.securePayment')}</p>
             </div>
 
             <div className="pt-4">
@@ -249,16 +266,9 @@ export function PropagandasBuyPage() {
         </Container>
       </main>
 
-      <footer className="border-t border-white/5 bg-black py-12 mt-24">
-        <Container size="2xl">
-          <div className="flex items-center justify-center gap-3">
-            <img src={LOGO_URL} alt="EuTô NaFila" className="h-8 w-auto opacity-60" />
-            <Link to="/propagandas" className="text-sm text-gray-500 hover:text-white">
-              {t('root.propagandas')}
-            </Link>
-          </div>
-        </Container>
-      </footer>
+      <div className="mt-24">
+        <RootSiteFooter />
+      </div>
     </div>
   );
 }

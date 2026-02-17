@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { RootSiteNav } from '@/components/RootSiteNav';
+import { RootSiteFooter } from '@/components/RootSiteFooter';
 import { useLocale } from '@/contexts/LocaleContext';
-import { LOGO_URL } from '@/lib/logo';
 
 export function PropagandasPage() {
   const { t } = useLocale();
@@ -21,9 +21,30 @@ export function PropagandasPage() {
             </p>
           </header>
 
+          <p className="text-center text-gray-500 text-sm mb-16 max-w-xl mx-auto">
+            {t('root.propagandasSpecs')}
+          </p>
+
+          <section className="mb-16">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+              <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl p-6 text-center">
+                <span className="inline-flex w-10 h-10 rounded-full bg-white/10 text-white font-medium mb-3 items-center justify-center">1</span>
+                <h3 className="text-lg font-medium mb-2">{t('root.propagandasStep1')}</h3>
+              </div>
+              <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl p-6 text-center">
+                <span className="inline-flex w-10 h-10 rounded-full bg-white/10 text-white font-medium mb-3 items-center justify-center">2</span>
+                <h3 className="text-lg font-medium mb-2">{t('root.propagandasStep2')}</h3>
+              </div>
+              <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl p-6 text-center">
+                <span className="inline-flex w-10 h-10 rounded-full bg-white/10 text-white font-medium mb-3 items-center justify-center">3</span>
+                <h3 className="text-lg font-medium mb-2">{t('root.propagandasStep3')}</h3>
+              </div>
+            </div>
+          </section>
+
           <section className="mb-16">
             <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-12">
-              <h2 className="text-2xl font-light mb-6">Demographic</h2>
+              <h2 className="text-2xl font-light mb-6">{t('root.propagandasSectionDemographic')}</h2>
               <p className="text-lg text-gray-300 leading-relaxed">
                 {t('root.propagandasDemographic')}
               </p>
@@ -32,7 +53,7 @@ export function PropagandasPage() {
 
           <section className="mb-16">
             <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-12">
-              <h2 className="text-2xl font-light mb-6">How it works</h2>
+              <h2 className="text-2xl font-light mb-6">{t('root.propagandasSectionHowItWorks')}</h2>
               <p className="text-lg text-gray-300 leading-relaxed">
                 {t('root.propagandasHowItWorks')}
               </p>
@@ -50,64 +71,9 @@ export function PropagandasPage() {
         </Container>
       </main>
 
-      <footer className="border-t border-white/5 bg-black py-16 mt-24">
-        <Container size="2xl">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-4">
-                <img
-                  src={LOGO_URL}
-                  alt="EuTô NaFila"
-                  className="h-24 w-auto object-contain shrink-0"
-                />
-              </div>
-              <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                {t('root.footerTagline')}
-              </p>
-            </div>
-            <div>
-              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">
-                {t('root.navigation')}
-              </h3>
-              <nav className="space-y-3">
-                <Link to="/" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  {t('root.home')}
-                </Link>
-                <Link to="/projects" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  {t('root.projects')}
-                </Link>
-                <Link to="/about" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  {t('root.about')}
-                </Link>
-                <Link to="/contact" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  {t('root.contact')}
-                </Link>
-                <Link to="/propagandas" className="block text-gray-500 hover:text-white text-sm transition-colors">
-                  {t('root.propagandas')}
-                </Link>
-              </nav>
-            </div>
-            <div>
-              <h3 className="font-medium mb-4 text-sm uppercase tracking-wider text-gray-400">
-                {t('root.company')}
-              </h3>
-              <p className="text-gray-500 text-sm">{t('root.madeFor')}</p>
-            </div>
-          </div>
-          <div className="pt-8 border-t border-white/5 text-center text-gray-600 text-sm">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <p>&copy; {new Date().getFullYear()} EuToNaFila. {t('root.copyright')}.</p>
-              <Link
-                to="/company/login"
-                className="text-gray-500/60 hover:text-gray-400 transition-colors text-xs flex items-center gap-1"
-              >
-                <span className="material-symbols-outlined text-sm">lock</span>
-                {t('root.admin')}
-              </Link>
-            </div>
-          </div>
-        </Container>
-      </footer>
+      <div className="mt-24">
+        <RootSiteFooter />
+      </div>
     </div>
   );
 }

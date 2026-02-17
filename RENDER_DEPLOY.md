@@ -46,6 +46,9 @@ If Blueprint doesn't work, create the service manually:
    # STORAGE_ACCESS_KEY_ID=<your-r2-access-key-id>
    # STORAGE_SECRET_ACCESS_KEY=<your-r2-secret-access-key>
    # STORAGE_PUBLIC_BASE_URL=https://<bucket-name>.<account-id>.r2.dev
+   #
+   # Optional: security.txt contact for vulnerability disclosure (default: mailto:security@eutonafila.com)
+   # SECURITY_CONTACT=mailto:security@yourdomain.com
    ```
    
    **Note:** Storage configuration is optional. If not provided, files are stored locally in `public/companies/`. However, on Render, local files are ephemeral and will be lost on redeploy. For production, consider setting up Cloudflare R2 (see section below).

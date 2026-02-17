@@ -45,23 +45,40 @@ const fastify = Fastify({
   requestIdHeader: 'x-request-id',
 });
 
-// Security plugins
+// Security plugins - hardened CSP to reduce firewall/AV false positives
 fastify.register(fastifyHelmet, {
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Needed for Vite
+      scriptSrc: ["'self'", "'unsafe-inline'"], // unsafe-eval removed; production build does not use eval
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Allow Google Fonts
-      imgSrc: ["'self'", "data:", "https:", "http:", "https://ui-avatars.com"], // Allow all images (ads are not sensitive)
-      mediaSrc: ["'self'", "data:", "https:", "http:"], // Allow all media (ads are not sensitive)
-      connectSrc: [
-        "'self'", 
-        "https://api.qrserver.com", // QR code API
-        "wss:", // WebSocket connections
-        "ws:", // WebSocket connections (non-secure)
+      imgSrc: [
+        "'self'",
+        "data:",
+        "blob:",
+        "https://ui-avatars.com",
+        "https://images.unsplash.com",
+        "https://www.google.com",
+        "https://*.r2.dev", // Cloudflare R2 ad storage
+        "https://*.supabase.co", // Supabase storage for ads
       ],
-      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"], // Allow Google Fonts
-      frameSrc: ["'self'", "https://www.google.com"], // Allow Google Maps iframe
+      mediaSrc: [
+        "'self'",
+        "data:",
+        "blob:",
+        "https://*.r2.dev",
+        "https://*.supabase.co",
+      ],
+      connectSrc: [
+        "'self'",
+        "https://api.qrserver.com",
+        "https://api.stripe.com",
+        "https://*.supabase.co",
+        "wss:",
+        "ws:",
+      ],
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
+      frameSrc: ["'self'", "https://www.google.com", "https://js.stripe.com"],
     },
   },
   hsts: {
@@ -313,6 +330,25 @@ fastify.get('/health', async () => {
 // Test route
 fastify.get('/test', async () => {
   return { message: 'Routes are working!' };
+});
+
+// security.txt - RFC 9116 vulnerability disclosure
+const securityContact = process.env.SECURITY_CONTACT ?? 'mailto:security@eutonafila.com';
+const securityTxtExpires = new Date();
+securityTxtExpires.setFullYear(securityTxtExpires.getFullYear() + 1);
+fastify.get('/.well-known/security.txt', async (_request, reply) => {
+  return reply
+    .type('text/plain; charset=utf-8')
+    .send(
+      `Contact: ${securityContact}\nExpires: ${securityTxtExpires.toISOString()}\n`
+    );
+});
+
+// robots.txt - trust signal for crawlers and scanners
+fastify.get('/robots.txt', async (_request, reply) => {
+  return reply
+    .type('text/plain; charset=utf-8')
+    .send('User-agent: *\nAllow: /\n');
 });
 
 // API routes under /api prefix

@@ -333,6 +333,9 @@ export function AdManagementPage() {
                     }
                     className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
                   />
+                  <p className="text-xs text-white/40 mt-1">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((adPricing[String(d)] ?? 0) / 100)}
+                  </p>
                 </div>
               ))}
             </div>
@@ -390,7 +393,12 @@ export function AdManagementPage() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white">{order.advertiserName}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium text-white">{order.advertiserName}</p>
+                        <span className={`px-2 py-0.5 rounded text-xs ${order.paymentStatus === 'paid' ? 'bg-green-500/20 text-green-400 border border-green-500/50' : 'bg-white/10 text-white/70 border border-white/20'}`}>
+                          {order.paymentStatus === 'paid' ? t('ads.paid') : t('ads.pendingPayment')}
+                        </span>
+                      </div>
                       <p className="text-sm text-white/60">{order.advertiserEmail}</p>
                       <p className="text-xs text-white/50 mt-1">
                         {t('ads.duration')}: {order.durationSeconds}s · {t('ads.shopsCount')}:{' '}
@@ -667,6 +675,9 @@ export function AdManagementPage() {
                     }
                     className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
                   />
+                  <p className="text-xs text-white/40 mt-1">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((adPricing[String(d)] ?? 0) / 100)}
+                  </p>
                 </div>
               ))}
             </div>
@@ -724,7 +735,12 @@ export function AdManagementPage() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white">{order.advertiserName}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium text-white">{order.advertiserName}</p>
+                        <span className={`px-2 py-0.5 rounded text-xs ${order.paymentStatus === 'paid' ? 'bg-green-500/20 text-green-400 border border-green-500/50' : 'bg-white/10 text-white/70 border border-white/20'}`}>
+                          {order.paymentStatus === 'paid' ? t('ads.paid') : t('ads.pendingPayment')}
+                        </span>
+                      </div>
                       <p className="text-sm text-white/60">{order.advertiserEmail}</p>
                       <p className="text-xs text-white/50 mt-1">
                         {t('ads.duration')}: {order.durationSeconds}s · {t('ads.shopsCount')}:{' '}

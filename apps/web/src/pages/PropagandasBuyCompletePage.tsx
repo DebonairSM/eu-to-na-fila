@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { RootSiteNav } from '@/components/RootSiteNav';
+import { RootSiteFooter } from '@/components/RootSiteFooter';
 import { useLocale } from '@/contexts/LocaleContext';
-import { LOGO_URL } from '@/lib/logo';
 import { api } from '@/lib/api';
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
@@ -18,9 +18,25 @@ export function PropagandasBuyCompletePage() {
   const [loading, setLoading] = useState(!!sessionId);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const handleFileChange = (selected: File | null) => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setFile(selected);
+    if (selected && ALLOWED_IMAGE_TYPES.includes(selected.type)) {
+      setPreviewUrl(URL.createObjectURL(selected));
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   useEffect(() => {
     if (!sessionId) {
@@ -127,7 +143,8 @@ export function PropagandasBuyCompletePage() {
         <Container size="2xl">
           <header className="mb-12 text-center">
             <h1 className="text-4xl font-light mb-2">{t('propagandas.uploadImageTitle')}</h1>
-            <p className="text-gray-500 text-sm">{t('propagandas.uploadImageSubtext')}</p>
+            <p className="text-gray-500 text-sm mb-2">{t('propagandas.uploadImageSubtext')}</p>
+            <p className="text-xs text-gray-500">{t('propagandas.step2Of2')}</p>
           </header>
 
           <form onSubmit={handleUpload} className="max-w-xl mx-auto space-y-6">
@@ -136,6 +153,10 @@ export function PropagandasBuyCompletePage() {
                 {uploadError}
               </div>
             )}
+            <div className="border border-white/10 rounded-lg p-4 bg-white/5">
+              <p className="text-xs font-medium text-gray-400 mb-1">{t('propagandas.imageGuidelinesTitle')}</p>
+              <p className="text-xs text-gray-500">{t('propagandas.imageGuidelines')}</p>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 {t('propagandas.imageLabel')}
@@ -143,7 +164,7 @@ export function PropagandasBuyCompletePage() {
               <input
                 type="file"
                 accept={ALLOWED_IMAGE_TYPES.join(',')}
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
                 className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:text-sm"
               />
               <p className="text-xs text-gray-500 mt-1">{t('propagandas.imageHint')}</p>
@@ -153,6 +174,11 @@ export function PropagandasBuyCompletePage() {
                 </p>
               )}
             </div>
+            {previewUrl && (
+              <div className="rounded-lg border border-white/10 bg-black/30 overflow-hidden max-w-sm">
+                <img src={previewUrl} alt="" className="w-full h-auto object-contain max-h-64" />
+              </div>
+            )}
             <button
               type="submit"
               disabled={!file || uploading}
@@ -164,16 +190,9 @@ export function PropagandasBuyCompletePage() {
         </Container>
       </main>
 
-      <footer className="border-t border-white/5 bg-black py-12 mt-24">
-        <Container size="2xl">
-          <div className="flex items-center justify-center gap-3">
-            <img src={LOGO_URL} alt="EuTô NaFila" className="h-8 w-auto opacity-60" />
-            <Link to="/propagandas" className="text-sm text-gray-500 hover:text-white">
-              Propagandas
-            </Link>
-          </div>
-        </Container>
-      </footer>
+      <div className="mt-24">
+        <RootSiteFooter />
+      </div>
     </div>
   );
 }
