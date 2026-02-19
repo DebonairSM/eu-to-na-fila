@@ -29,10 +29,10 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    // Get services for this shop
+    // Get services for this shop (ordered by sortOrder then id)
     const services = await db.query.services.findMany({
       where: eq(schema.services.shopId, shop.id),
-      orderBy: (services, { asc }) => [asc(services.name)],
+      orderBy: (s, { asc }) => [asc(s.sortOrder), asc(s.id)],
     });
 
     return services;
@@ -66,6 +66,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       duration: z.number().int().positive(),
       price: z.number().int().positive().optional(),
       isActive: z.boolean().default(true),
+      sortOrder: z.number().int().min(0).optional(),
     });
 
     const { slug } = validateRequest(paramsSchema, request.params);
@@ -73,6 +74,20 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    // Resolve sortOrder: use body.sortOrder if provided, else max(sortOrder)+1 for this shop
+    let sortOrder: number;
+    if (body.sortOrder !== undefined) {
+      sortOrder = body.sortOrder;
+    } else {
+      const maxResult = await db.query.services.findMany({
+        where: eq(schema.services.shopId, shop.id),
+        columns: { sortOrder: true },
+        orderBy: (s, { desc }) => [desc(s.sortOrder)],
+        limit: 1,
+      });
+      sortOrder = (maxResult[0]?.sortOrder ?? -1) + 1;
+    }
 
     // Create service
     const [newService] = await db
@@ -84,6 +99,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
         duration: body.duration,
         price: body.price || null,
         isActive: body.isActive ?? true,
+        sortOrder,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -114,6 +130,42 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
+   * Set display order of services for a shop.
+   * Body is an array of service IDs in the desired order (first = sortOrder 0).
+   *
+   * @route POST /api/shops/:slug/services/reorder
+   * @param slug - Shop slug identifier
+   * @body ids - Array of service IDs in display order
+   * @throws {401} If not authenticated
+   * @throws {403} If not owner
+   * @throws {404} If shop not found
+   */
+  fastify.post('/shops/:slug/services/reorder', {
+    preHandler: [requireAuth(), requireRole(['owner'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+    });
+    const bodySchema = z.object({
+      ids: z.array(z.number().int().positive()),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { ids } = validateRequest(bodySchema, request.body);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    const now = new Date();
+    for (let i = 0; i < ids.length; i++) {
+      await db
+        .update(schema.services)
+        .set({ sortOrder: i, updatedAt: now })
+        .where(and(eq(schema.services.id, ids[i]), eq(schema.services.shopId, shop.id)));
+    }
+    return { ok: true };
+  });
+
+  /**
    * Update a service's details.
    * Requires owner authentication (only owners can modify services).
    * 
@@ -141,6 +193,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       duration: z.number().int().positive().optional(),
       price: z.number().int().positive().optional().nullable(),
       isActive: z.boolean().optional(),
+      sortOrder: z.number().int().min(0).optional(),
     });
 
     const { id } = validateRequest(paramsSchema, request.params);
@@ -162,6 +215,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       duration?: number;
       price?: number | null;
       isActive?: boolean;
+      sortOrder?: number;
       updatedAt: Date;
     } = {
       updatedAt: new Date(),
@@ -181,6 +235,9 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
     }
     if (body.isActive !== undefined) {
       updateData.isActive = body.isActive;
+    }
+    if (body.sortOrder !== undefined) {
+      updateData.sortOrder = body.sortOrder;
     }
 
     // Update service

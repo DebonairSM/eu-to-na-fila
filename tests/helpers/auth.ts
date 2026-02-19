@@ -135,10 +135,14 @@ export async function getAuthToken(
   // Use page.request if it's a Page, otherwise use the request context directly
   const requestContext = 'request' in pageOrRequest ? pageOrRequest.request : pageOrRequest;
   
+  const authUsername = role === 'owner' ? 'owner' : 'staff';
+  const authPassword = credentials.pin;
+
   return retryConnection(async () => {
     const response = await requestContext.post(`${apiBaseUrlWithPath}/shops/mineiro/auth`, {
       data: {
-        pin: credentials.pin,
+        username: authUsername,
+        password: authPassword,
       },
     });
     

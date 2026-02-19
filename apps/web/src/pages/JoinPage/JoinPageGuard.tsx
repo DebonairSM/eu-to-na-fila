@@ -5,7 +5,7 @@ import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Container } from '@/components/design-system';
 import { STORAGE_KEYS } from '@/lib/constants';
-import { getOrCreateDeviceId } from '@/lib/utils';
+import { getOrCreateDeviceId, redirectToStatusPage } from '@/lib/utils';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { JoinPage } from './index';
@@ -35,11 +35,10 @@ export function JoinPageGuard() {
         const activeTicket = await api.getActiveTicketByDevice(shopSlug, deviceId);
         
         if (activeTicket && (activeTicket.status === 'waiting' || activeTicket.status === 'in_progress')) {
-          // Device has an active ticket - store it and redirect immediately
+          // Device has an active ticket - store it and redirect to that ticket's shop status
           console.log('[JoinPageGuard] Found active ticket by deviceId, redirecting to status:', activeTicket.id);
           localStorage.setItem(STORAGE_KEY, activeTicket.id.toString());
-          navigate(`/status/${activeTicket.id}`, { replace: true });
-          // Don't update state - let navigation handle it
+          redirectToStatusPage(activeTicket.id, activeTicket.shopSlug, navigate);
           return;
         }
       } catch (error) {
@@ -54,7 +53,7 @@ export function JoinPageGuard() {
           if (activeTicket && (activeTicket.status === 'waiting' || activeTicket.status === 'in_progress')) {
             console.log('[JoinPageGuard] Found active ticket by deviceId on retry, redirecting:', activeTicket.id);
             localStorage.setItem(STORAGE_KEY, activeTicket.id.toString());
-            navigate(`/status/${activeTicket.id}`, { replace: true });
+            redirectToStatusPage(activeTicket.id, activeTicket.shopSlug, navigate);
             return;
           }
         } catch (retryError) {
@@ -71,10 +70,9 @@ export function JoinPageGuard() {
           try {
             const ticket = await api.getTicket(ticketId);
             if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
-              // Found active ticket in localStorage - redirect immediately
+              // Found active ticket in localStorage - redirect to that ticket's shop status
               console.log('[JoinPageGuard] Found active ticket in localStorage, redirecting to status:', ticketId);
-              navigate(`/status/${ticketId}`, { replace: true });
-              // Don't update state - let navigation handle it
+              redirectToStatusPage(ticketId, ticket.shopSlug, navigate);
               return;
             } else {
               // Ticket exists but is not active - clear it

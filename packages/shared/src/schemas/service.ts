@@ -8,6 +8,7 @@ export const serviceSchema = z.object({
   duration: z.number().int().positive(),
   price: z.number().positive().optional(),
   isActive: z.boolean().default(true),
+  sortOrder: z.number().int().min(0).default(0),
   createdAt: z.date().or(z.string()),
   updatedAt: z.date().or(z.string()),
 });

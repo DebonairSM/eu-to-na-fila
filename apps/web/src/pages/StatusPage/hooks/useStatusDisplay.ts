@@ -71,16 +71,23 @@ export function useStatusDisplay(ticket: Ticket | null) {
 
   const clearLeaveError = useCallback(() => setLeaveError(null), []);
 
+  const LEAVE_FAILED_KEY = 'eutonafila_leave_failed';
+
   const handleLeaveQueue = async (ticketId: number) => {
     setLeaveError(null);
     setIsLeaving(true);
+    // Optimistic: navigate and clear storage immediately so the user sees home right away.
+    localStorage.removeItem(STORAGE_KEY);
+    navigate('/home');
     try {
       await api.cancelTicket(ticketId);
-      localStorage.removeItem(STORAGE_KEY);
-      navigate('/home');
     } catch (error) {
       logError('Error leaving queue', error);
-      setLeaveError(getErrorMessage(error, t('status.leaveErrorFailed')));
+      try {
+        sessionStorage.setItem(LEAVE_FAILED_KEY, '1');
+      } catch {
+        // ignore
+      }
     } finally {
       setIsLeaving(false);
     }

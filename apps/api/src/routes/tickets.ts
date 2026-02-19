@@ -119,13 +119,19 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     
     // If ticket age is > 2 seconds, it's an existing ticket (service returned existing due to race condition)
     // Otherwise, it's a newly created ticket
+    const shapeWithShop = (t: Record<string, unknown>) => {
+      const out = shapeTicketResponse(t);
+      if (!out.shopSlug && shop) (out as Record<string, unknown>).shopSlug = shop.slug;
+      return out;
+    };
+
     if (ticketAge > 2000 || ticketAge < -1000) {
       // Existing ticket (either old ticket or race condition) - return 200
-      return reply.status(200).send(shapeTicketResponse(ticket as Record<string, unknown>));
+      return reply.status(200).send(shapeWithShop(ticket as Record<string, unknown>));
     }
 
     // New ticket created - return 201
-    return reply.status(201).send(shapeTicketResponse(ticket as Record<string, unknown>));
+    return reply.status(201).send(shapeWithShop(ticket as Record<string, unknown>));
   });
 
   /**
@@ -377,7 +383,8 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     const ticket = await ticketService.findActiveTicketByDevice(shop.id, deviceId);
-    return ticket ?? null;
+    if (!ticket) return null;
+    return shapeTicketResponse(ticket as Record<string, unknown>);
   });
 
   /**
@@ -441,6 +448,10 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const existingTicket = await ticketService.getById(id);
     if (!existingTicket) {
       throw new NotFoundError(`Ticket with ID ${id} not found`);
+    }
+
+    if (request.user?.shopId != null && existingTicket.shopId !== request.user.shopId) {
+      throw new ForbiddenError('Access denied to this ticket');
     }
 
     // Reschedule appointment (pending only)
@@ -583,7 +594,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Ticket with ID ${id} not found`);
     }
 
-    if (request.user?.role === 'barber' && request.user.shopId != null && existingTicket.shopId !== request.user.shopId) {
+    if (request.user?.shopId != null && existingTicket.shopId !== request.user.shopId) {
       throw new ForbiddenError('Access denied to this ticket');
     }
 

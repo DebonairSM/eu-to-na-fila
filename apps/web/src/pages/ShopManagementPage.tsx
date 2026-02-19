@@ -586,6 +586,7 @@ export function ShopManagementPage() {
           });
         }
       }
+      const newServiceIds: number[] = [];
       for (const s of editServices) {
         if (s.id > 0) {
           await api.updateService(s.id, {
@@ -595,13 +596,21 @@ export function ShopManagementPage() {
             price: s.price ?? undefined,
           });
         } else if (s.name.trim()) {
-          await api.createService(editingShop.slug, {
+          const created = await api.createService(editingShop.slug, {
             name: s.name.trim(),
             description: s.description ?? undefined,
             duration: s.duration,
             price: s.price ?? undefined,
           });
+          newServiceIds.push(created.id);
         }
+      }
+      let newIdIndex = 0;
+      const orderedIds = editServices
+        .filter((s) => s.id > 0 || s.name.trim())
+        .map((s) => (s.id > 0 ? s.id : newServiceIds[newIdIndex++]));
+      if (orderedIds.length > 0) {
+        await api.reorderServices(editingShop.slug, orderedIds);
       }
       for (const b of editBarbers) {
         if (b.id > 0) {
@@ -910,7 +919,7 @@ export function ShopManagementPage() {
                               value={formData.slug}
                               onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
                               required
-                              pattern="[-a-z0-9]+"
+                              pattern="[a-z0-9\-]+"
                               className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
                             />
                           </div>
@@ -1001,29 +1010,65 @@ export function ShopManagementPage() {
                             <>
                               <div className="space-y-4">
                                 {editServices.map((s, index) => (
-                                  <div key={s.id} className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2 relative">
-                                    {editServices.length > 1 && (
-                                      <button
-                                        type="button"
-                                        onClick={async () => {
-                                          if (s.id > 0) {
-                                            try {
-                                              await api.deleteService(s.id);
+                                  <div key={s.id ? `s-${s.id}` : `s-new-${index}`} className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2 relative">
+                                    <div className="flex items-center justify-between gap-2 mb-2">
+                                      <div className="flex items-center gap-1">
+                                        {editServices.length > 1 && (
+                                          <>
+                                            <button
+                                              type="button"
+                                              onClick={() => setEditServices((prev) => {
+                                                if (index <= 0) return prev;
+                                                const next = [...prev];
+                                                [next[index - 1], next[index]] = [next[index], next[index - 1]];
+                                                return next;
+                                              })}
+                                              className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30"
+                                              disabled={index === 0}
+                                              aria-label={t('createShop.moveServiceUp')}
+                                            >
+                                              <span className="material-symbols-outlined text-lg">arrow_upward</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => setEditServices((prev) => {
+                                                if (index >= prev.length - 1) return prev;
+                                                const next = [...prev];
+                                                [next[index], next[index + 1]] = [next[index + 1], next[index]];
+                                                return next;
+                                              })}
+                                              className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30"
+                                              disabled={index === editServices.length - 1}
+                                              aria-label={t('createShop.moveServiceDown')}
+                                            >
+                                              <span className="material-symbols-outlined text-lg">arrow_downward</span>
+                                            </button>
+                                          </>
+                                        )}
+                                        <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.serviceN')} {index + 1}</span>
+                                      </div>
+                                      {editServices.length > 1 && (
+                                        <button
+                                          type="button"
+                                          onClick={async () => {
+                                            if (s.id > 0) {
+                                              try {
+                                                await api.deleteService(s.id);
+                                                setEditServices((prev) => prev.filter((x) => x.id !== s.id));
+                                              } catch (err) {
+                                                setErrorMessage(getErrorMessage(err, t('management.updateError')));
+                                              }
+                                            } else {
                                               setEditServices((prev) => prev.filter((x) => x.id !== s.id));
-                                            } catch (err) {
-                                              setErrorMessage(getErrorMessage(err, t('management.updateError')));
                                             }
-                                          } else {
-                                            setEditServices((prev) => prev.filter((x) => x.id !== s.id));
-                                          }
-                                        }}
-                                        className="absolute top-3 right-3 text-red-400/60 hover:text-red-400 transition-colors p-1"
-                                        aria-label={t('createShop.removeService')}
-                                      >
-                                        <span className="material-symbols-outlined text-lg">close</span>
-                                      </button>
-                                    )}
-                                    <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.serviceN')} {index + 1}</span>
+                                          }}
+                                          className="p-1 text-red-400/60 hover:text-red-400 transition-colors"
+                                          aria-label={t('createShop.removeService')}
+                                        >
+                                          <span className="material-symbols-outlined text-lg">close</span>
+                                        </button>
+                                      )}
+                                    </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                       <div className="sm:col-span-2">
                                         <input
@@ -1339,6 +1384,7 @@ export function ShopManagementPage() {
                           <div>
                             <label className="block text-white/60 text-sm mb-2">{t('management.defaultServiceDuration')}</label>
                             <input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
+                            <p className="text-white/40 text-xs mt-1">{t('management.defaultServiceDurationHint')}</p>
                           </div>
                           {formData.settings.allowAppointments && (
                             <div className="col-span-2">
@@ -1877,7 +1923,7 @@ export function ShopManagementPage() {
                       </div>
                       <div>
                         <label htmlFor="editSlug" className="block text-white/70 text-sm mb-1.5">{t('management.slug')} *</label>
-                        <input id="editSlug" type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} required pattern="[-a-z0-9]+" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" />
+                        <input id="editSlug" type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} required pattern="[a-z0-9\-]+" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" />
                       </div>
                     </div>
                   </div>
@@ -1945,29 +1991,65 @@ export function ShopManagementPage() {
                         <>
                           <div className="space-y-4">
                             {editServices.map((s, index) => (
-                              <div key={s.id} className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2 relative">
-                                {editServices.length > 1 && (
-                                  <button
-                                    type="button"
-                                    onClick={async () => {
-                                      if (s.id > 0) {
-                                        try {
-                                          await api.deleteService(s.id);
+                              <div key={s.id ? `s-${s.id}` : `s-new-${index}`} className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2 relative">
+                                <div className="flex items-center justify-between gap-2 mb-2">
+                                  <div className="flex items-center gap-1">
+                                    {editServices.length > 1 && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => setEditServices((prev) => {
+                                            if (index <= 0) return prev;
+                                            const next = [...prev];
+                                            [next[index - 1], next[index]] = [next[index], next[index - 1]];
+                                            return next;
+                                          })}
+                                          className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30"
+                                          disabled={index === 0}
+                                          aria-label={t('createShop.moveServiceUp')}
+                                        >
+                                          <span className="material-symbols-outlined text-lg">arrow_upward</span>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setEditServices((prev) => {
+                                            if (index >= prev.length - 1) return prev;
+                                            const next = [...prev];
+                                            [next[index], next[index + 1]] = [next[index + 1], next[index]];
+                                            return next;
+                                          })}
+                                          className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30"
+                                          disabled={index === editServices.length - 1}
+                                          aria-label={t('createShop.moveServiceDown')}
+                                        >
+                                          <span className="material-symbols-outlined text-lg">arrow_downward</span>
+                                        </button>
+                                      </>
+                                    )}
+                                    <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.serviceN')} {index + 1}</span>
+                                  </div>
+                                  {editServices.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        if (s.id > 0) {
+                                          try {
+                                            await api.deleteService(s.id);
+                                            setEditServices((prev) => prev.filter((x) => x.id !== s.id));
+                                          } catch (err) {
+                                            setErrorMessage(getErrorMessage(err, t('management.updateError')));
+                                          }
+                                        } else {
                                           setEditServices((prev) => prev.filter((x) => x.id !== s.id));
-                                        } catch (err) {
-                                          setErrorMessage(getErrorMessage(err, t('management.updateError')));
                                         }
-                                      } else {
-                                        setEditServices((prev) => prev.filter((x) => x.id !== s.id));
-                                      }
-                                    }}
-                                    className="absolute top-3 right-3 text-red-400/60 hover:text-red-400 transition-colors p-1"
-                                    aria-label={t('createShop.removeService')}
-                                  >
-                                    <span className="material-symbols-outlined text-lg">close</span>
-                                  </button>
-                                )}
-                                <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.serviceN')} {index + 1}</span>
+                                      }}
+                                      className="p-1 text-red-400/60 hover:text-red-400 transition-colors"
+                                      aria-label={t('createShop.removeService')}
+                                    >
+                                      <span className="material-symbols-outlined text-lg">close</span>
+                                    </button>
+                                  )}
+                                </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <div className="sm:col-span-2">
                                     <input
@@ -2384,6 +2466,7 @@ export function ShopManagementPage() {
                       <div>
                         <label className="block text-white/60 text-sm mb-2">{t('management.defaultServiceDuration')}</label>
                         <input type="number" min={1} max={480} value={formData.settings.defaultServiceDuration} onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, defaultServiceDuration: parseInt(e.target.value) || 20 } })} className="form-input w-full px-3 py-2.5 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-sm" />
+                        <p className="text-white/40 text-xs mt-1">{t('management.defaultServiceDurationHint')}</p>
                       </div>
                       {formData.settings.allowAppointments && (
                         <div className="col-span-2">

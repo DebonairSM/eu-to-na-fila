@@ -68,7 +68,7 @@ export function LoginForm() {
           </div>
         )}
 
-        {isBarber && (
+        {(isBarber || isStaff) && (
           <div className="relative">
             <input
               id="username"
@@ -167,9 +167,6 @@ export function LoginForm() {
             >
               {t('auth.signInOrCreateWithGoogle')}
             </button>
-            <p className="text-center text-xs text-[var(--shop-text-secondary)]">
-              {t('auth.googleAccountHint')}
-            </p>
             <p className="text-center text-sm text-[var(--shop-text-secondary)]">
               <Link to="/shop/signup" className="text-[var(--shop-accent)] hover:underline">
                 {t('auth.createAccount')}

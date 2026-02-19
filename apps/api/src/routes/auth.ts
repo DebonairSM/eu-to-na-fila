@@ -21,7 +21,7 @@ import { logAuthFailure, logAuthSuccess, getClientIp } from '../middleware/secur
 
 /**
  * Auth routes.
- * Owner/staff: password-based authentication. Barber: username + password.
+ * Owner/staff: username ("owner" or "staff") + password. Barber: username + password.
  */
 export const authRoutes: FastifyPluginAsync = async (fastify) => {
   /**
@@ -60,9 +60,10 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
-   * Verify shop password (owner or staff) and issue JWT token.
+   * Verify shop username + password (owner or staff) and issue JWT token.
    *
    * @route POST /api/shops/:slug/auth
+   * @body username - "owner" or "staff" (case-insensitive)
    * @body password - Owner or staff password
    * @returns { valid, role, token?, pinResetRequired? }
    */
@@ -73,11 +74,23 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       slug: z.string().min(1).max(100),
     });
     const bodySchema = z.object({
+      username: z.string().min(1).max(200),
       password: z.string().min(1).max(200),
     });
 
     const { slug } = validateRequest(paramsSchema, request.params);
-    const { password } = validateRequest(bodySchema, request.body);
+    const { username, password } = validateRequest(bodySchema, request.body);
+
+    const usernameNormalized = username.trim().toLowerCase();
+    const roleFromUsername: 'owner' | 'staff' | null =
+      usernameNormalized === 'owner' ? 'owner'
+        : usernameNormalized === 'staff' ? 'staff'
+          : null;
+
+    if (!roleFromUsername) {
+      logAuthFailure(request, 'invalid_username', slug);
+      return { valid: false, role: null };
+    }
 
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
@@ -92,40 +105,33 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       return { valid: false, role: null };
     }
 
-    let role: 'owner' | 'staff' | null = null;
     let passwordMatches = false;
     let pinResetRequired = false;
 
-    if (shop.ownerPinHash) {
-      const matches = await verifyPassword(password, shop.ownerPinHash);
-      if (matches) {
-        role = 'owner';
+    if (roleFromUsername === 'owner') {
+      if (shop.ownerPinHash) {
+        passwordMatches = await verifyPassword(password, shop.ownerPinHash);
+        if (passwordMatches) pinResetRequired = shop.ownerPinResetRequired || false;
+      } else if (shop.ownerPin === password) {
         passwordMatches = true;
-        pinResetRequired = shop.ownerPinResetRequired || false;
+        pinResetRequired = true;
       }
-    } else if (shop.ownerPin === password) {
-      role = 'owner';
-      passwordMatches = true;
-      pinResetRequired = true;
+    } else {
+      if (shop.staffPinHash) {
+        passwordMatches = await verifyPassword(password, shop.staffPinHash);
+        if (passwordMatches) pinResetRequired = shop.staffPinResetRequired || false;
+      } else if (shop.staffPin === password) {
+        passwordMatches = true;
+        pinResetRequired = true;
+      }
     }
 
-    if (!passwordMatches && shop.staffPinHash) {
-      const matches = await verifyPassword(password, shop.staffPinHash);
-      if (matches) {
-        role = 'staff';
-        passwordMatches = true;
-        pinResetRequired = shop.staffPinResetRequired || false;
-      }
-    } else if (!passwordMatches && shop.staffPin === password) {
-      role = 'staff';
-      passwordMatches = true;
-      pinResetRequired = true;
-    }
-
-    if (!passwordMatches || !role) {
+    if (!passwordMatches) {
       logAuthFailure(request, 'invalid_password', slug);
       return { valid: false, role: null };
     }
+
+    const role = roleFromUsername;
 
     logAuthSuccess(request, shop.id, role);
 

@@ -69,7 +69,7 @@ export function createTicketsApi(client: BaseApiClient): TicketsApi {
       c.patch(`/tickets/${ticketId}/status`, data, 45000),
     rescheduleAppointment: (ticketId, scheduledTime) =>
       c.post(`/tickets/${ticketId}/reschedule`, { scheduledTime }, 15000),
-    cancelTicket: (ticketId) => c.post(`/tickets/${ticketId}/cancel`, {}, 15000),
+    cancelTicket: (ticketId) => c.post(`/tickets/${ticketId}/cancel`, {}, 8000),
     cancelTicketAsStaff: (ticketId) => c.del(`/tickets/${ticketId}`),
     updateTicket: (ticketId, updates) => c.patch(`/tickets/${ticketId}`, updates),
   };

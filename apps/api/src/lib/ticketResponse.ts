@@ -37,6 +37,11 @@ export function shapeTicketResponse(ticket: Record<string, unknown>): Record<str
 
   if (service) out.service = service;
 
+  const shop = ticket.shop;
+  if (shop && typeof shop === 'object' && 'slug' in shop && typeof (shop as { slug: string }).slug === 'string') {
+    out.shopSlug = (shop as { slug: string }).slug;
+  }
+
   const client = ticket.client;
   if (client && typeof client === 'object' && 'city' in client) {
     const c = client as { city?: string | null; state?: string | null };

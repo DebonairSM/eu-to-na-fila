@@ -326,7 +326,7 @@ return this.get<Service[]>(`/shops/${shopSlug}/services`);
 
 ### Auth Endpoints
 ```typescript
-await api.authenticate(slug, pin)  // { valid, role, token }
+await api.authenticate(slug, username, password)  // username: 'owner' | 'staff'; { valid, role, token }
 // Automatically stores token in sessionStorage
 ```
 

@@ -15,6 +15,7 @@ export const ticketServiceSchema = z.object({
 export const ticketSchema = z.object({
   id: z.number(),
   shopId: z.number(),
+  shopSlug: z.string().optional(), // Present when API loads shop relation; used for per-shop status redirects
   serviceId: z.number(),
   service: ticketServiceSchema.optional(), // Present when API embeds service for display
   barberId: z.number().optional(),

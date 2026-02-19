@@ -75,6 +75,7 @@ class ApiClient extends BaseApiClient {
   getServices = this._services.getServices;
   createService = this._services.createService;
   updateService = this._services.updateService;
+  reorderServices = this._services.reorderServices;
   deleteService = this._services.deleteService;
 
   // --- Shops ---

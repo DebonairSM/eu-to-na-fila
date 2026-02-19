@@ -10,7 +10,7 @@ import { useQueue } from '@/hooks/useQueue';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useServices } from '@/hooks/useServices';
 import { getShopStatus } from '@eutonafila/shared';
-import { getErrorMessage, formatName, getOrCreateDeviceId } from '@/lib/utils';
+import { getErrorMessage, formatName, getOrCreateDeviceId, redirectToStatusPage } from '@/lib/utils';
 import { logError } from '@/lib/logger';
 import { STORAGE_KEYS } from '@/lib/constants';
 
@@ -291,10 +291,10 @@ export function useJoinForm() {
     try {
       const activeTicketByDevice = await api.getActiveTicketByDevice(shopSlug, deviceId);
       if (activeTicketByDevice && (activeTicketByDevice.status === 'waiting' || activeTicketByDevice.status === 'in_progress')) {
-        // Device already has an active ticket - store it and redirect immediately
+        // Device already has an active ticket - store it and redirect to that ticket's shop status
         console.log('[useJoinForm] Found active ticket by deviceId during form submission, redirecting:', activeTicketByDevice.id);
         localStorage.setItem(STORAGE_KEY, activeTicketByDevice.id.toString());
-        navigate(`/status/${activeTicketByDevice.id}`, { replace: true });
+        redirectToStatusPage(activeTicketByDevice.id, activeTicketByDevice.shopSlug, navigate);
         return; // Exit early, don't submit form
       }
     } catch (error) {
@@ -314,9 +314,9 @@ export function useJoinForm() {
         try {
           const ticket = await api.getTicket(parsed);
           if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
-            // This device has an active ticket - redirect immediately
+            // This device has an active ticket - redirect to that ticket's shop status
             console.log('[useJoinForm] Found active ticket in localStorage during form submission, redirecting:', parsed);
-            navigate(`/status/${parsed}`, { replace: true });
+            redirectToStatusPage(parsed, ticket.shopSlug, navigate);
             return; // Exit early, don't submit form
           } else {
             // Stored ticket is no longer active, clear it
@@ -341,9 +341,9 @@ export function useJoinForm() {
           (t) => t.id === deviceTicketId && (t.status === 'waiting' || t.status === 'in_progress')
         );
         if (deviceTicket) {
-          // This device has an active ticket in queue - redirect to status
+          // This device has an active ticket in queue - redirect to status (current shop)
           console.log('[useJoinForm] Found active ticket in queue, redirecting:', deviceTicketId);
-          navigate(`/status/${deviceTicketId}`, { replace: true });
+          redirectToStatusPage(deviceTicketId, shopSlug, navigate);
           return; // Exit early
         }
       }
@@ -425,8 +425,8 @@ export function useJoinForm() {
         localStorage.setItem(CUSTOMER_PHONE_STORAGE_KEY, customerPhone.trim());
       }
 
-      // Navigate to status page
-      navigate(`/status/${ticket.id}`);
+      // Navigate to status page (use ticket's shop when present for correct barbershop context)
+      redirectToStatusPage(ticket.id, ticket.shopSlug, navigate);
     } catch (error) {
       // Check if this is a name collision error (409 Conflict)
       if (error instanceof ApiError && error.isConflictError()) {

@@ -153,3 +153,19 @@ export function getOrCreateDeviceId(): string {
   localStorage.setItem(STORAGE_KEYS.DEVICE_ID, deviceId);
   return deviceId;
 }
+
+/**
+ * Redirect to the ticket status page. When ticketShopSlug is present, uses full path
+ * so the app loads in the correct barbershop context (per-shop status).
+ */
+export function redirectToStatusPage(
+  ticketId: number,
+  ticketShopSlug: string | undefined,
+  navigate: (to: string, opts?: { replace?: boolean }) => void
+): void {
+  if (ticketShopSlug) {
+    window.location.assign(`/projects/${ticketShopSlug}/status/${ticketId}`);
+    return;
+  }
+  navigate(`/status/${ticketId}`, { replace: true });
+}

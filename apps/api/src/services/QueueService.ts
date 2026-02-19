@@ -84,6 +84,17 @@ export class QueueService {
     return map;
   }
 
+  /** Load duration for every active service in the shop. Used so standard (non-barber) fallback is per-service. */
+  private async loadAllServiceDurationsForShop(shopId: number): Promise<Map<number, number>> {
+    const services = await this.db.query.services.findMany({
+      where: and(eq(schema.services.shopId, shopId), eq(schema.services.isActive, true)),
+      columns: { id: true, duration: true },
+    });
+    const map = new Map<number, number>();
+    for (const s of services) map.set(s.id, s.duration);
+    return map;
+  }
+
   private async loadBarberWeekdayStats(
     barberIds: number[],
     serviceIds: number[]
@@ -145,7 +156,7 @@ export class QueueService {
 
     const barberIds = barbers.map((b) => b.id);
     const [serviceDurations, barberStats] = await Promise.all([
-      this.loadServiceDurations(serviceIds),
+      this.loadAllServiceDurationsForShop(shopId),
       this.loadBarberWeekdayStats(barberIds, [...serviceIds]),
     ]);
 
@@ -311,7 +322,7 @@ export class QueueService {
     const serviceIds = new Set<number>();
     for (const t of inProgressWithBarbers) serviceIds.add(t.serviceId);
     for (const t of ticketsAhead) serviceIds.add(t.serviceId);
-    const durations = await this.loadServiceDurations(serviceIds);
+    const durations = await this.loadAllServiceDurationsForShop(shopId);
 
     const barberIds = activeBarbers.map((b) => b.id);
     const barberStats = await this.loadBarberWeekdayStats(barberIds, [...serviceIds]);
@@ -725,10 +736,11 @@ export class QueueService {
       ),
     });
 
+    const durations = await this.loadAllServiceDurationsForShop(shopId);
+
     const serviceIds = new Set<number>();
     for (const t of ticketsAhead) serviceIds.add(t.serviceId);
     if (inProgressTicket) serviceIds.add(inProgressTicket.serviceId);
-    const durations = await this.loadServiceDurations(serviceIds);
 
     const barberStats = await this.loadBarberWeekdayStats(
       [preferredBarberId],

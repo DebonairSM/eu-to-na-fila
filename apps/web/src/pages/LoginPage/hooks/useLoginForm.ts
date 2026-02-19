@@ -55,7 +55,13 @@ export function useLoginForm() {
           return;
         }
       } else if (mode === 'staff') {
-        const authResult = await api.authenticate(shopSlug, password);
+        if (!username.trim()) {
+          setError(t('auth.fillAllFields'));
+          setIsLoading(false);
+          isSubmittingRef.current = false;
+          return;
+        }
+        const authResult = await api.authenticate(shopSlug, username.trim(), password);
         if (authResult.valid && authResult.token) {
           login({
             id: 0,

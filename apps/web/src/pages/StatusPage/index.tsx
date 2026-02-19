@@ -55,6 +55,13 @@ export function StatusPage() {
   const preferredBarberId = (ticket as { preferredBarberId?: number | null } | null)?.preferredBarberId ?? null;
   const preferredBarberName = preferredBarberId != null ? barbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
 
+  // Enforce per-barbershop status: if ticket belongs to another shop, redirect to that shop's status URL
+  const ticketShopSlug = (ticket as { shopSlug?: string } | null)?.shopSlug;
+  useEffect(() => {
+    if (isLoading || !ticket || !ticketShopSlug || ticketShopSlug === shopSlug) return;
+    window.location.assign(`/projects/${ticketShopSlug}/status/${ticket.id}`);
+  }, [isLoading, ticket, ticketShopSlug, shopSlug]);
+
   useEffect(() => {
     if (!shopSlug || ticket?.status !== 'waiting' || preferredBarberId == null) {
       setGeneralLineWaitTime(null);
