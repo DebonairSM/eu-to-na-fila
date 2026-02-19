@@ -16,12 +16,24 @@ export async function getProjectBySlug(slug: string): Promise<Project | undefine
 }
 
 /**
- * Resolves shop by slug. Each project has one shop with matching slug (1:1).
- * Use for public API routes (e.g. GET /api/shops/:slug/queue).
+ * Resolves shop by project slug (the segment in /projects/:slug).
+ * The URL path is /projects/:slug, so the slug identifies the project; we then
+ * return the shop for that project. This avoids returning the wrong shop when
+ * multiple shops share the same slug across different projects.
  */
-export async function getShopBySlug(shopSlug: string): Promise<Shop | undefined> {
+export async function getShopByProjectSlug(projectSlug: string): Promise<Shop | undefined> {
+  const project = await getProjectBySlug(projectSlug);
+  if (!project) return undefined;
   const shop = await db.query.shops.findFirst({
-    where: eq(schema.shops.slug, shopSlug),
+    where: eq(schema.shops.projectId, project.id),
   });
   return shop;
+}
+
+/**
+ * Resolves shop by slug. Uses project slug so that /projects/:slug always
+ * maps to the correct shop (one per project). Use for all public API routes.
+ */
+export async function getShopBySlug(shopSlug: string): Promise<Shop | undefined> {
+  return getShopByProjectSlug(shopSlug);
 }

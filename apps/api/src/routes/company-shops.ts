@@ -147,6 +147,9 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
           })
           .returning();
 
+        const themeToStore = JSON.stringify(DEFAULT_THEME);
+        const homeContentToStore = { 'pt-BR': mergeHomeContent({}) };
+
         const [shop] = await tx
           .insert(schema.shops)
           .values({
@@ -157,6 +160,8 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
             domain: body.domain || null,
             path: body.path || `/projects/${projectSlug}`,
             apiBase: body.apiBase || null,
+            theme: themeToStore,
+            homeContent: homeContentToStore,
             createdAt: new Date(),
             updatedAt: new Date(),
           })
