@@ -2,16 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
-import { useLocale } from '@/contexts/LocaleContext';
 import { logError } from '@/lib/logger';
-import { getErrorMessage } from '@/lib/utils';
 import type { Ticket, Barber } from '@eutonafila/shared';
 
 const STORAGE_KEY = 'eutonafila_active_ticket_id';
 
 export function useStatusDisplay(ticket: Ticket | null) {
   const shopSlug = useShopSlug();
-  const { t } = useLocale();
   const [barber, setBarber] = useState<Barber | null>(null);
   const [isLeaving, setIsLeaving] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
