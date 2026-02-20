@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db, schema } from '../db/index.js';
 import { eq, and, asc } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
-import { NotFoundError, ConflictError } from '../lib/errors.js';
+import { NotFoundError, ConflictError, ForbiddenError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 
@@ -56,8 +56,8 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Create a new service for a shop.
-   * Requires owner authentication (only owners can create services).
-   * 
+   * Requires owner or company_admin (company admins can manage services for their company's shops).
+   *
    * @route POST /api/shops/:slug/services
    * @param slug - Shop slug identifier
    * @body name - Service name
@@ -67,11 +67,11 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
    * @body isActive - Whether service is active (default true)
    * @returns Created service
    * @throws {401} If not authenticated
-   * @throws {403} If not owner
+   * @throws {403} If not owner or company admin for this shop
    * @throws {404} If shop not found
    */
   fastify.post('/shops/:slug/services', {
-    preHandler: [requireAuth(), requireRole(['owner'])],
+    preHandler: [requireAuth(), requireRole(['owner', 'company_admin'])],
   }, async (request, reply) => {
     const paramsSchema = z.object({
       slug: z.string().min(1),
@@ -90,6 +90,9 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    if (request.user?.role === 'company_admin' && (request.user.companyId == null || shop.companyId !== request.user.companyId)) {
+      throw new ForbiddenError('Access denied to this shop');
+    }
 
     // Resolve sortOrder: use body.sortOrder if provided, else max(sortOrder)+1 for this shop
     let sortOrder: number;
@@ -148,16 +151,17 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * Set display order of services for a shop.
    * Body is an array of service IDs in the desired order (first = sortOrder 0).
+   * Requires owner or company_admin for this shop.
    *
    * @route POST /api/shops/:slug/services/reorder
    * @param slug - Shop slug identifier
    * @body ids - Array of service IDs in display order
    * @throws {401} If not authenticated
-   * @throws {403} If not owner
+   * @throws {403} If not owner or company admin for this shop
    * @throws {404} If shop not found
    */
   fastify.post('/shops/:slug/services/reorder', {
-    preHandler: [requireAuth(), requireRole(['owner'])],
+    preHandler: [requireAuth(), requireRole(['owner', 'company_admin'])],
   }, async (request, reply) => {
     const paramsSchema = z.object({
       slug: z.string().min(1),
@@ -170,6 +174,9 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    if (request.user?.role === 'company_admin' && (request.user.companyId == null || shop.companyId !== request.user.companyId)) {
+      throw new ForbiddenError('Access denied to this shop');
+    }
 
     const now = new Date();
     for (let i = 0; i < ids.length; i++) {
@@ -183,8 +190,8 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Update a service's details.
-   * Requires owner authentication (only owners can modify services).
-   * 
+   * Requires owner or company_admin for the service's shop.
+   *
    * @route PATCH /api/services/:id
    * @param id - Service ID
    * @body name - Optional service name
@@ -194,11 +201,11 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
    * @body isActive - Optional active status
    * @returns Updated service
    * @throws {401} If not authenticated
-   * @throws {403} If not owner
+   * @throws {403} If not owner or company admin for this shop
    * @throws {404} If service not found
    */
   fastify.patch('/services/:id', {
-    preHandler: [requireAuth(), requireRole(['owner'])],
+    preHandler: [requireAuth(), requireRole(['owner', 'company_admin'])],
   }, async (request, reply) => {
     const paramsSchema = z.object({
       id: z.coerce.number().int().positive(),
@@ -215,13 +222,23 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
     const { id } = validateRequest(paramsSchema, request.params);
     const body = validateRequest(bodySchema, request.body);
 
-    // Get service
+    // Get service and its shop for company_admin access check
     const service = await db.query.services.findFirst({
       where: eq(schema.services.id, id),
     });
 
     if (!service) {
       throw new NotFoundError(`Service with ID ${id} not found`);
+    }
+
+    if (request.user?.role === 'company_admin') {
+      const shop = await db.query.shops.findFirst({
+        where: eq(schema.shops.id, service.shopId),
+        columns: { companyId: true },
+      });
+      if (request.user.companyId == null || !shop || shop.companyId !== request.user.companyId) {
+        throw new ForbiddenError('Access denied to this shop');
+      }
     }
 
     // Build update object
@@ -268,18 +285,18 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Delete a service.
-   * Requires owner authentication (only owners can delete services).
-   * 
+   * Requires owner or company_admin for the service's shop.
+   *
    * @route DELETE /api/services/:id
    * @param id - Service ID
    * @returns Success message
    * @throws {401} If not authenticated
-   * @throws {403} If not owner
+   * @throws {403} If not owner or company admin for this shop
    * @throws {404} If service not found
    * @throws {409} If any tickets (active or past) reference this service
    */
   fastify.delete('/services/:id', {
-    preHandler: [requireAuth(), requireRole(['owner'])],
+    preHandler: [requireAuth(), requireRole(['owner', 'company_admin'])],
   }, async (request, reply) => {
     const paramsSchema = z.object({
       id: z.coerce.number().int().positive(),
@@ -287,13 +304,23 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
 
     const { id } = validateRequest(paramsSchema, request.params);
 
-    // Get service
+    // Get service and its shop for company_admin access check
     const service = await db.query.services.findFirst({
       where: eq(schema.services.id, id),
     });
 
     if (!service) {
       throw new NotFoundError(`Service with ID ${id} not found`);
+    }
+
+    if (request.user?.role === 'company_admin') {
+      const shop = await db.query.shops.findFirst({
+        where: eq(schema.shops.id, service.shopId),
+        columns: { companyId: true },
+      });
+      if (request.user.companyId == null || !shop || shop.companyId !== request.user.companyId) {
+        throw new ForbiddenError('Access denied to this shop');
+      }
     }
 
     // Block delete if any tickets (active or historical) reference this service
