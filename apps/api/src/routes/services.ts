@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db, schema } from '../db/index.js';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ConflictError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
@@ -29,11 +29,27 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    // Get services for this shop (ordered by sortOrder then id)
-    const services = await db.query.services.findMany({
-      where: eq(schema.services.shopId, shop.id),
-      orderBy: (s, { asc }) => [asc(s.sortOrder), asc(s.id)],
-    });
+    // Get services for this shop (ordered by sortOrder then id). Use query builder
+    // so orderBy is reliable; fallback to id-only if sort_order column is missing (migration not run).
+    let services;
+    try {
+      services = await db
+        .select()
+        .from(schema.services)
+        .where(eq(schema.services.shopId, shop.id))
+        .orderBy(asc(schema.services.sortOrder), asc(schema.services.id));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('sort_order') || msg.includes('sortOrder')) {
+        services = await db
+          .select()
+          .from(schema.services)
+          .where(eq(schema.services.shopId, shop.id))
+          .orderBy(asc(schema.services.id));
+      } else {
+        throw err;
+      }
+    }
 
     return services;
   });
