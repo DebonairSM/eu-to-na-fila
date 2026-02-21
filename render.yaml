@@ -4,7 +4,7 @@ services:
     env: node
     plan: starter
     region: oregon
-    buildCommand: pnpm install --frozen-lockfile && pnpm build:render && test -f apps/api/dist/server.js || (echo "Build failed: apps/api/dist/server.js not found" && exit 1)
+    buildCommand: pnpm install --frozen-lockfile && pnpm build:render && test -f apps/api/dist/server.js && test -f apps/api/public/projects/mineiro/index.html || (echo "Build failed: server or SPA not found" && exit 1)
     preDeployCommand: pnpm db:migrate
     startCommand: pnpm db:migrate && cd apps/api && node dist/server.js
     envVars:
