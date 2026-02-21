@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db, schema } from '../db/index.js';
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, and, asc, desc } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ConflictError, ForbiddenError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
@@ -80,7 +80,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       name: z.string().min(1).max(200),
       description: z.string().max(500).optional(),
       duration: z.number().int().positive(),
-      price: z.number().int().positive().optional(),
+      price: z.number().int().min(0).optional(),
       isActive: z.boolean().default(true),
       sortOrder: z.number().int().min(0).optional(),
     });
@@ -94,18 +94,26 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       throw new ForbiddenError('Access denied to this shop');
     }
 
-    // Resolve sortOrder: use body.sortOrder if provided, else max(sortOrder)+1 for this shop
+    // Resolve sortOrder: use body.sortOrder if provided, else max(sortOrder)+1 (fallback if sort_order missing)
     let sortOrder: number;
     if (body.sortOrder !== undefined) {
       sortOrder = body.sortOrder;
     } else {
-      const maxResult = await db.query.services.findMany({
-        where: eq(schema.services.shopId, shop.id),
-        columns: { sortOrder: true },
-        orderBy: (s, { desc }) => [desc(s.sortOrder)],
-        limit: 1,
-      });
-      sortOrder = (maxResult[0]?.sortOrder ?? -1) + 1;
+      try {
+        const maxResult = await db
+          .select({ sortOrder: schema.services.sortOrder })
+          .from(schema.services)
+          .where(eq(schema.services.shopId, shop.id))
+          .orderBy(desc(schema.services.sortOrder))
+          .limit(1);
+        sortOrder = (maxResult[0]?.sortOrder ?? -1) + 1;
+      } catch {
+        const existing = await db
+          .select({ id: schema.services.id })
+          .from(schema.services)
+          .where(eq(schema.services.shopId, shop.id));
+        sortOrder = existing.length;
+      }
     }
 
     // Create service
@@ -124,25 +132,29 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       })
       .returning();
 
-    // Seed barber_service_weekday_stats rows (7 days x each barber)
-    const shopBarbers = await db.query.barbers.findMany({
-      where: eq(schema.barbers.shopId, shop.id),
-    });
-    if (shopBarbers.length > 0) {
-      const now = new Date();
-      const statsRows = shopBarbers.flatMap((barber) =>
-        Array.from({ length: 7 }, (_, day) => ({
-          barberId: barber.id,
-          serviceId: newService.id,
-          shopId: shop.id,
-          dayOfWeek: day,
-          avgDuration: 0,
-          totalCompleted: 0,
-          createdAt: now,
-          updatedAt: now,
-        }))
-      );
-      await db.insert(schema.barberServiceWeekdayStats).values(statsRows);
+    // Seed barber_service_weekday_stats rows (7 days x each barber). Non-fatal if table missing or insert fails.
+    try {
+      const shopBarbers = await db.query.barbers.findMany({
+        where: eq(schema.barbers.shopId, shop.id),
+      });
+      if (shopBarbers.length > 0) {
+        const now = new Date();
+        const statsRows = shopBarbers.flatMap((barber) =>
+          Array.from({ length: 7 }, (_, day) => ({
+            barberId: barber.id,
+            serviceId: newService.id,
+            shopId: shop.id,
+            dayOfWeek: day,
+            avgDuration: 0,
+            totalCompleted: 0,
+            createdAt: now,
+            updatedAt: now,
+          }))
+        );
+        await db.insert(schema.barberServiceWeekdayStats).values(statsRows);
+      }
+    } catch (statsErr) {
+      request.log.warn({ err: statsErr, shopId: shop.id, serviceId: newService.id }, 'Barber service weekday stats seed failed');
     }
 
     return reply.status(201).send(newService);
@@ -214,7 +226,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       name: z.string().min(1).max(200).optional(),
       description: z.string().max(500).optional().nullable(),
       duration: z.number().int().positive().optional(),
-      price: z.number().int().positive().optional().nullable(),
+      price: z.number().int().min(0).optional().nullable(),
       isActive: z.boolean().optional(),
       sortOrder: z.number().int().min(0).optional(),
     });

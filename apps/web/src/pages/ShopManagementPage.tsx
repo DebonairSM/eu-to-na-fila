@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import type { ShopTheme, HomeContent, ShopAdminView, ShopSettings, ShopStyleConfig, OperatingHours } from '@eutonafila/shared';
@@ -131,6 +131,55 @@ function getDefaultBarbers(_t: (key: string) => string): BarberItem[] {
   ];
 }
 
+/** Price input in reais: local string while typing, commits cents on blur. Avoids cursor jumps from toFixed(2). */
+function PriceReaisInput({
+  valueCents,
+  onChange,
+  className,
+}: {
+  valueCents: number | null;
+  onChange: (cents: number | null) => void;
+  className?: string;
+}) {
+  const [local, setLocal] = useState(() =>
+    valueCents != null ? String(valueCents / 100) : ''
+  );
+  const prevCentsRef = useRef<number | null>(valueCents);
+  useEffect(() => {
+    if (prevCentsRef.current !== valueCents) {
+      prevCentsRef.current = valueCents;
+      setLocal(valueCents != null ? String(valueCents / 100) : '');
+    }
+  }, [valueCents]);
+  const handleBlur = () => {
+    const normalized = local.replace(',', '.').trim();
+    if (normalized === '') {
+      onChange(null);
+      setLocal('');
+      return;
+    }
+    const parsed = parseFloat(normalized);
+    if (Number.isNaN(parsed) || parsed < 0) {
+      setLocal(valueCents != null ? String(valueCents / 100) : '');
+      return;
+    }
+    const cents = Math.round(parsed * 100);
+    onChange(cents);
+    setLocal(String(parsed));
+  };
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={local}
+      onChange={(e) => setLocal(e.target.value)}
+      onBlur={handleBlur}
+      placeholder="0"
+      className={className}
+    />
+  );
+}
+
 // --- Step: Services (create mode) ---
 function StepServices({
   services,
@@ -183,7 +232,11 @@ function StepServices({
               </div>
               <div>
                 <label className="block text-white/50 text-xs mb-1">{t('createShop.priceReais')}</label>
-                <input type="number" min={0} step="0.01" value={(service.price / 100).toFixed(2)} onChange={(e) => updateService(service.id, { price: Math.round(parseFloat(e.target.value || '0') * 100) })} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
+                <PriceReaisInput
+                  valueCents={service.price}
+                  onChange={(c) => updateService(service.id, { price: c ?? 0 })}
+                  className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                />
               </div>
             </div>
           </div>
@@ -1100,12 +1153,9 @@ export function ShopManagementPage() {
                                       </div>
                                       <div>
                                         <label className="block text-white/50 text-xs mb-1">{t('createShop.priceReais')}</label>
-                                        <input
-                                          type="number"
-                                          min={0}
-                                          step="0.01"
-                                          value={s.price != null ? (s.price / 100).toFixed(2) : ''}
-                                          onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, price: Math.round(parseFloat(e.target.value || '0') * 100) } : x)))}
+                                        <PriceReaisInput
+                                          valueCents={s.price}
+                                          onChange={(c) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, price: c } : x)))}
                                           className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
                                         />
                                       </div>
@@ -2081,12 +2131,9 @@ export function ShopManagementPage() {
                                   </div>
                                   <div>
                                     <label className="block text-white/50 text-xs mb-1">{t('createShop.priceReais')}</label>
-                                    <input
-                                      type="number"
-                                      min={0}
-                                      step="0.01"
-                                      value={s.price != null ? (s.price / 100).toFixed(2) : ''}
-                                      onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, price: Math.round(parseFloat(e.target.value || '0') * 100) } : x)))}
+                                    <PriceReaisInput
+                                      valueCents={s.price}
+                                      onChange={(c) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, price: c } : x)))}
                                       className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
                                     />
                                   </div>
