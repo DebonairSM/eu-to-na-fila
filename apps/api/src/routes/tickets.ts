@@ -110,19 +110,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       (createData as { clientId?: number }).clientId = request.user.clientId;
     }
     const beforeCreate = Date.now();
-    // #region agent log
-    fetch('http://127.0.0.1:7715/ingest/69bbd552-38bf-48fb-90d8-11269718d3ab',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'dcf4e6'},body:JSON.stringify({sessionId:'dcf4e6',location:'tickets.ts:before create',message:'route before ticketService.create',data:{shopId:shop.id},hypothesisId:'H0',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-    let ticket;
-    try {
-      ticket = await ticketService.create(shop.id, createData);
-    } catch (err) {
-      // #region agent log
-      const msg = err instanceof Error ? err.message : String(err);
-      fetch('http://127.0.0.1:7715/ingest/69bbd552-38bf-48fb-90d8-11269718d3ab',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'dcf4e6'},body:JSON.stringify({sessionId:'dcf4e6',location:'tickets.ts:create catch',message:'create threw',data:{errorMessage:msg},hypothesisId:'Herr',timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-      throw err;
-    }
+    const ticket = await ticketService.create(shop.id, createData);
 
     // Determine if this is a new ticket or existing ticket returned by service
     // Check if ticket was created just now (within last 2 seconds) or if it's older (existing)

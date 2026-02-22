@@ -91,9 +91,6 @@ export class TicketService {
   }
 
   async create(shopId: number, data: CreateTicket): Promise<Ticket> {
-    // #region agent log
-    fetch('http://127.0.0.1:7715/ingest/69bbd552-38bf-48fb-90d8-11269718d3ab',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'dcf4e6'},body:JSON.stringify({sessionId:'dcf4e6',location:'TicketService.ts:create',message:'create started',data:{shopId,serviceId:data.serviceId},hypothesisId:'H1',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     const shop = await this.db.query.shops.findFirst({
       where: eq(schema.shops.id, shopId),
     });
@@ -101,16 +98,10 @@ export class TicketService {
 
     const settings = parseSettings(shop.settings);
 
-    // #region agent log
-    fetch('http://127.0.0.1:7715/ingest/69bbd552-38bf-48fb-90d8-11269718d3ab',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'dcf4e6'},body:JSON.stringify({sessionId:'dcf4e6',location:'TicketService.ts:before services.findFirst',message:'before services.findFirst',data:{serviceId:data.serviceId},hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     const service = await this.db.query.services.findFirst({
       where: and(eq(schema.services.id, data.serviceId), eq(schema.services.shopId, shopId)),
       columns: schema.serviceColumnsWithoutSortOrder,
     });
-    // #region agent log
-    fetch('http://127.0.0.1:7715/ingest/69bbd552-38bf-48fb-90d8-11269718d3ab',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'dcf4e6'},body:JSON.stringify({sessionId:'dcf4e6',location:'TicketService.ts:after services.findFirst',message:'after services.findFirst',data:{serviceId:data.serviceId},hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     if (!service) throw new NotFoundError('Service not found');
     if (!service.isActive) throw new ConflictError('Service is not active');
 
