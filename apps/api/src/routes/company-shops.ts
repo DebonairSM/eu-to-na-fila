@@ -323,6 +323,14 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         .where(eq(schema.shops.id, shopId))
         .returning();
 
+      // Keep project name in sync so /projects list shows the barbershop name
+      if (body.name) {
+        await db
+          .update(schema.projects)
+          .set({ name: body.name, updatedAt: new Date() })
+          .where(eq(schema.projects.id, shop.projectId));
+      }
+
       return { ...updatedShop, settings: sanitizeSettingsForClient(updatedShop.settings) };
     }
   );
