@@ -7,6 +7,8 @@
 3. Render will automatically detect and use `render.yaml`
 4. Review the configuration and click **Apply**
 
+**If you don't see migrations in the logs:** Check that the service **Start Command** is exactly `pnpm start:render`. In Render dashboard: your service → **Settings** → **Build & Deploy** → **Start Command**. If it's empty or different, Render may be using a default and migrations won't run. After fixing, redeploy. You should see `[start:render] Running db:migrate...`, `[db:migrate] Migrations complete!`, then `[start:render] Starting API...` in the **Logs** tab.
+
 ## Option 2: Manual Configuration
 
 If Blueprint doesn't work, create the service manually:
@@ -21,8 +23,8 @@ If Blueprint doesn't work, create the service manually:
    - **Branch**: `main`
    - **Root Directory**: (leave empty - uses repo root)
    - **Environment**: `Node`
-   - **Build Command**: `pnpm install --frozen-lockfile && pnpm build`
-   - **Start Command**: `pnpm db:migrate && node apps/api/dist/server.js`
+   - **Build Command**: `pnpm install --frozen-lockfile && pnpm build:render`
+   - **Start Command**: `pnpm start:render`
    - **Plan**: `Starter` (or higher for production)
 
    **Environment Variables:**

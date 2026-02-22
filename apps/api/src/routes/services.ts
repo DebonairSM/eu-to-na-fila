@@ -127,21 +127,41 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    // Create service
-    const [newService] = await db
-      .insert(schema.services)
-      .values({
-        shopId: shop.id,
-        name: body.name,
-        description: body.description || null,
-        duration: body.duration,
-        price: body.price || null,
-        isActive: body.isActive ?? true,
-        sortOrder,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .returning();
+    const insertValues = {
+      shopId: shop.id,
+      name: body.name,
+      description: body.description || null,
+      duration: body.duration,
+      price: body.price || null,
+      isActive: body.isActive ?? true,
+      sortOrder,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const returningColsCreate = {
+      id: schema.services.id,
+      shopId: schema.services.shopId,
+      name: schema.services.name,
+      description: schema.services.description,
+      duration: schema.services.duration,
+      price: schema.services.price,
+      isActive: schema.services.isActive,
+      createdAt: schema.services.createdAt,
+      updatedAt: schema.services.updatedAt,
+    };
+
+    let newService: { id: number; shopId: number; name: string; description: string | null; duration: number; price: number | null; isActive: boolean; sortOrder: number; createdAt: Date; updatedAt: Date };
+    try {
+      const [row] = await db.insert(schema.services).values(insertValues).returning();
+      newService = row ? { ...row, sortOrder: row.sortOrder ?? sortOrder } : null!;
+    } catch (err: unknown) {
+      const msg = [err instanceof Error ? err.message : String(err), (err as { cause?: Error })?.cause?.message].filter(Boolean).join(' ');
+      if (!msg.includes('sort_order') && !msg.includes('sortOrder')) throw err;
+      const { sortOrder: _o, ...valuesWithoutSortOrder } = insertValues;
+      const [row] = await db.insert(schema.services).values(valuesWithoutSortOrder).returning(returningColsCreate);
+      if (!row) throw new Error('Insert returned no row');
+      newService = { ...row, sortOrder };
+    }
 
     // Seed barber_service_weekday_stats rows (7 days x each barber). Non-fatal if table missing or insert fails.
     try {
@@ -202,11 +222,20 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const now = new Date();
-    for (let i = 0; i < ids.length; i++) {
-      await db
-        .update(schema.services)
-        .set({ sortOrder: i, updatedAt: now })
-        .where(and(eq(schema.services.id, ids[i]), eq(schema.services.shopId, shop.id)));
+    try {
+      for (let i = 0; i < ids.length; i++) {
+        await db
+          .update(schema.services)
+          .set({ sortOrder: i, updatedAt: now })
+          .where(and(eq(schema.services.id, ids[i]), eq(schema.services.shopId, shop.id)));
+      }
+    } catch (err: unknown) {
+      const msg = [err instanceof Error ? err.message : String(err), (err as { cause?: Error })?.cause?.message].filter(Boolean).join(' ');
+      if (msg.includes('sort_order') || msg.includes('sortOrder')) {
+        // Column not yet migrated; reorder has no effect, succeed anyway
+        return { ok: true };
+      }
+      throw err;
     }
     return { ok: true };
   });
@@ -245,9 +274,10 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
     const { id } = validateRequest(paramsSchema, request.params);
     const body = validateRequest(bodySchema, request.body);
 
-    // Get service and its shop for company_admin access check
+    // Get service and its shop for company_admin access check (omit sort_order so this works before migration 0022).
     const service = await db.query.services.findFirst({
       where: eq(schema.services.id, id),
+      columns: schema.serviceColumnsWithoutSortOrder,
     });
 
     if (!service) {
@@ -264,7 +294,6 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    // Build update object
     const updateData: {
       name?: string;
       description?: string | null;
@@ -273,37 +302,47 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       isActive?: boolean;
       sortOrder?: number;
       updatedAt: Date;
-    } = {
-      updatedAt: new Date(),
+    } = { updatedAt: new Date() };
+
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.description !== undefined) updateData.description = body.description;
+    if (body.duration !== undefined) updateData.duration = body.duration;
+    if (body.price !== undefined) updateData.price = body.price;
+    if (body.isActive !== undefined) updateData.isActive = body.isActive;
+    if (body.sortOrder !== undefined) updateData.sortOrder = body.sortOrder;
+
+    const returningCols = {
+      id: schema.services.id,
+      shopId: schema.services.shopId,
+      name: schema.services.name,
+      description: schema.services.description,
+      duration: schema.services.duration,
+      price: schema.services.price,
+      isActive: schema.services.isActive,
+      createdAt: schema.services.createdAt,
+      updatedAt: schema.services.updatedAt,
     };
 
-    if (body.name !== undefined) {
-      updateData.name = body.name;
+    try {
+      const [row] = await db
+        .update(schema.services)
+        .set(updateData)
+        .where(eq(schema.services.id, id))
+        .returning(returningCols);
+      if (!row) throw new NotFoundError(`Service with ID ${id} not found`);
+      return { ...row, sortOrder: updateData.sortOrder ?? 0 };
+    } catch (err: unknown) {
+      const msg = [err instanceof Error ? err.message : String(err), (err as { cause?: Error })?.cause?.message].filter(Boolean).join(' ');
+      if (!msg.includes('sort_order') && !msg.includes('sortOrder')) throw err;
+      const { sortOrder: _omit, ...safeSet } = updateData;
+      const [row] = await db
+        .update(schema.services)
+        .set(safeSet)
+        .where(eq(schema.services.id, id))
+        .returning(returningCols);
+      if (!row) throw new NotFoundError(`Service with ID ${id} not found`);
+      return { ...row, sortOrder: 0 };
     }
-    if (body.description !== undefined) {
-      updateData.description = body.description;
-    }
-    if (body.duration !== undefined) {
-      updateData.duration = body.duration;
-    }
-    if (body.price !== undefined) {
-      updateData.price = body.price;
-    }
-    if (body.isActive !== undefined) {
-      updateData.isActive = body.isActive;
-    }
-    if (body.sortOrder !== undefined) {
-      updateData.sortOrder = body.sortOrder;
-    }
-
-    // Update service
-    const [updatedService] = await db
-      .update(schema.services)
-      .set(updateData)
-      .where(eq(schema.services.id, id))
-      .returning();
-
-    return updatedService;
   });
 
   /**

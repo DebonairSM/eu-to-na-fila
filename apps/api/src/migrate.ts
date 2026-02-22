@@ -20,9 +20,9 @@ const db = drizzle(pool);
 // Use absolute path to migrations folder
 const migrationsFolder = join(__dirname, '..', 'drizzle');
 
-console.log('Running migrations...');
-console.log(`Migrations folder: ${migrationsFolder}`);
+console.log('[db:migrate] Running migrations...');
+console.log(`[db:migrate] Migrations folder: ${migrationsFolder}`);
 await migrate(db, { migrationsFolder });
-console.log('Migrations complete!');
+console.log('[db:migrate] Migrations complete!');
 
 await pool.end();
