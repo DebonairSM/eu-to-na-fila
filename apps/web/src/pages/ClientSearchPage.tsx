@@ -3,16 +3,29 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { formatNameForDisplay } from '@/lib/utils';
 import { getErrorMessage } from '@/lib/utils';
 import type { ClientListItem } from '@/lib/api/clients';
 
+function ageFromDateOfBirth(dateOfBirth: string | null | undefined): number | null {
+  if (!dateOfBirth) return null;
+  const dob = new Date(dateOfBirth);
+  if (Number.isNaN(dob.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age -= 1;
+  return age >= 0 ? age : null;
+}
+
 export function ClientSearchPage() {
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
   const { t } = useLocale();
+  const { isBarber } = useAuthContext();
   const [query, setQuery] = useState('');
   const [clients, setClients] = useState<ClientListItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -102,22 +115,29 @@ export function ClientSearchPage() {
 
         {!loading && clients.length > 0 && (
           <ul className="space-y-2" role="list">
-            {clients.map((client) => (
-              <li key={client.id}>
-                <Link
-                  to={`/clients/${client.id}`}
-                  className="block rounded-xl p-4 bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_25%,transparent)] hover:border-[var(--shop-accent)] transition-colors"
-                >
-                  <span className="font-medium text-[var(--shop-text-primary)]">
-                    {formatNameForDisplay(client.name)}
-                  </span>
-                  <span className="block text-sm text-[var(--shop-text-secondary)] mt-0.5">
-                    {client.phone}
-                    {client.email ? ` · ${client.email}` : ''}
-                  </span>
-                </Link>
-              </li>
-            ))}
+            {clients.map((client) => {
+              const age = ageFromDateOfBirth(client.dateOfBirth);
+              const genderLabel = client.gender === 'male' ? t('account.genderMale') : client.gender === 'female' ? t('account.genderFemale') : client.gender || null;
+              const barberMeta = isBarber && [
+                genderLabel,
+                age != null ? `${age} ${t('clients.yearsOld')}` : null,
+              ].filter(Boolean).join(' · ');
+              return (
+                <li key={client.id}>
+                  <Link
+                    to={`/clients/${client.id}`}
+                    className="block rounded-xl p-4 bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_25%,transparent)] hover:border-[var(--shop-accent)] transition-colors"
+                  >
+                    <span className="font-medium text-[var(--shop-text-primary)]">
+                      {formatNameForDisplay(client.name)}
+                    </span>
+                    <span className="block text-sm text-[var(--shop-text-secondary)] mt-0.5">
+                      {isBarber ? barberMeta || '—' : `${client.phone ?? ''}${client.email ? ` · ${client.email}` : ''}`}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
 

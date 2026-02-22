@@ -69,14 +69,18 @@ export function ClientInfoModal({ clientId, onClose }: ClientInfoModalProps) {
           )}
           {client && !loading && (
             <>
-              <div>
-                <span className="text-xs text-white/50 uppercase tracking-wider block mb-1">{t('clients.name')}</span>
-                <p className="text-white font-medium">{client.name}</p>
-              </div>
-              <div>
-                <span className="text-xs text-white/50 uppercase tracking-wider block mb-1">{t('clients.phone')}</span>
-                <p className="text-white">{client.phone}</p>
-              </div>
+              {client.name != null && (
+                <div>
+                  <span className="text-xs text-white/50 uppercase tracking-wider block mb-1">{t('clients.name')}</span>
+                  <p className="text-white font-medium">{client.name}</p>
+                </div>
+              )}
+              {client.phone != null && client.phone !== '' && (
+                <div>
+                  <span className="text-xs text-white/50 uppercase tracking-wider block mb-1">{t('clients.phone')}</span>
+                  <p className="text-white">{client.phone}</p>
+                </div>
+              )}
               {client.email && (
                 <div>
                   <span className="text-xs text-white/50 uppercase tracking-wider block mb-1">{t('clients.email')}</span>

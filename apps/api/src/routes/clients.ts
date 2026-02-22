@@ -85,6 +85,21 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const clients = await clientService.search(shop.id, q);
+    if (request.user?.role === 'barber') {
+      const limited = clients.map((c) => {
+        const dob = (c as { dateOfBirth?: Date | string | null }).dateOfBirth;
+        const dateStr = dob
+          ? (typeof dob === 'string' ? dob : (dob as Date).toISOString().slice(0, 10))
+          : null;
+        return {
+          id: c.id,
+          name: c.name,
+          gender: (c as { gender?: string | null }).gender ?? null,
+          dateOfBirth: dateStr,
+        };
+      });
+      return { clients: limited };
+    }
     return { clients };
   });
 
@@ -119,8 +134,17 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const isBarber = request.user?.role === 'barber';
     if (isBarber) {
+      const dob = (client as { dateOfBirth?: Date | string | null }).dateOfBirth;
+      const dateStr = dob
+        ? (typeof dob === 'string' ? dob : (dob as Date).toISOString().slice(0, 10))
+        : null;
       return {
-        client: { id: client.id },
+        client: {
+          id: client.id,
+          name: client.name,
+          gender: (client as { gender?: string | null }).gender ?? null,
+          dateOfBirth: dateStr,
+        },
         clipNotes,
         serviceHistory,
       };

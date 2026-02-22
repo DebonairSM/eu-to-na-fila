@@ -203,7 +203,7 @@ export function ClientDetailPage() {
   }
 
   const { client, clipNotes, serviceHistory } = data;
-  const isBarberView = client.name == null;
+  const isBarberView = client.phone == null;
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -215,9 +215,36 @@ export function ClientDetailPage() {
         </Button>
 
         {isBarberView && (
-          <p className="text-[var(--shop-text-secondary)] text-sm mb-4">
-            {t('clients.barberViewOnlyNotesAndHistory')}
-          </p>
+          <>
+            <p className="text-[var(--shop-text-secondary)] text-sm mb-4">
+              {t('clients.barberViewOnlyNotesAndHistory')}
+            </p>
+            {(client.name != null || client.gender != null || client.dateOfBirth != null) && (
+              <section className="bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-6 mb-6">
+                {client.name != null && (
+                  <h1 className="text-xl font-semibold text-[var(--shop-accent)] mb-2">
+                    {formatNameForDisplay(client.name)}
+                  </h1>
+                )}
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[var(--shop-text-secondary)]">
+                  {client.gender != null && client.gender !== '' && (
+                    <span>
+                      {t('clients.gender')}: {client.gender === 'male' ? t('account.genderMale') : client.gender === 'female' ? t('account.genderFemale') : client.gender}
+                    </span>
+                  )}
+                  {client.dateOfBirth != null && client.dateOfBirth !== '' && (() => {
+                    const dob = new Date(client.dateOfBirth);
+                    if (Number.isNaN(dob.getTime())) return null;
+                    const today = new Date();
+                    let age = today.getFullYear() - dob.getFullYear();
+                    const m = today.getMonth() - dob.getMonth();
+                    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age -= 1;
+                    return age >= 0 ? <span>{age} {t('clients.yearsOld')}</span> : null;
+                  })()}
+                </div>
+              </section>
+            )}
+          </>
         )}
 
         <div className="space-y-6">

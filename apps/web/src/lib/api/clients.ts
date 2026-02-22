@@ -8,12 +8,14 @@ export interface ClientRememberResponse {
 /** Client list item (search results and update response). */
 export interface ClientListItem {
   id: number;
-  shopId: number;
-  phone: string;
+  shopId?: number;
+  phone?: string;
   name: string;
-  email: string | null;
-  createdAt: string;
-  updatedAt: string;
+  email?: string | null;
+  gender?: string | null;
+  dateOfBirth?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /** Client list item for analytics Clients tab (paginated, with ticket count). */
@@ -45,8 +47,8 @@ export interface ClientClipNote {
 export interface ClientDetailResponse {
   client: {
     id: number;
-    name: string;
-    phone: string;
+    name?: string;
+    phone?: string;
     email?: string | null;
     address?: string | null;
     state?: string | null;

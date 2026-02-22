@@ -567,6 +567,7 @@
     "manageQueue": "Manage Queue",
     "analytics": "Analytics",
     "manageBarbers": "Manage Barbers",
+    "clients": "Clients",
     "logout": "Log out"
   },
   "barberDashboard": {
@@ -836,7 +837,8 @@
     "editEmail": "Email",
     "saveSuccess": "Client updated.",
     "saveError": "Error saving. Try again.",
-    "barberViewOnlyNotesAndHistory": "Only notes and service history are visible. Full client profile is restricted to owner and staff."
+    "barberViewOnlyNotesAndHistory": "Only notes and service history are visible. Full client profile is restricted to owner and staff.",
+    "yearsOld": "years old"
   },
   "propagandas": {
     "buyTitle": "Buy an ad",

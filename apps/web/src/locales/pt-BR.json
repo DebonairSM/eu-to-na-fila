@@ -567,6 +567,7 @@
     "manageQueue": "Gerenciar Fila",
     "analytics": "Analytics",
     "manageBarbers": "Gerenciar Barbeiros",
+    "clients": "Clientes",
     "logout": "Sair"
   },
   "barberDashboard": {
@@ -836,6 +837,7 @@
     "editEmail": "E-mail",
     "saveSuccess": "Cliente atualizado.",
     "saveError": "Erro ao salvar. Tente novamente.",
+    "yearsOld": "anos",
     "barberViewOnlyNotesAndHistory": "Apenas anotações e histórico de serviços estão visíveis. O perfil completo do cliente é restrito a dono e equipe."
   },
   "propagandas": {
