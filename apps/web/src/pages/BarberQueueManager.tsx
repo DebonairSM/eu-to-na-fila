@@ -269,6 +269,12 @@ export function BarberQueueManager() {
 
   // Load reschedule slots when editing appointment
   const editTicketServiceId = editTicket?.serviceId;
+
+  const getTicketServiceName = useCallback(
+    (ticket: { serviceId: number; service?: { id: number; name: string } }) =>
+      ticket.service?.name ?? activeServices.find((s) => s.id === ticket.serviceId)?.name ?? null,
+    [activeServices]
+  );
   const editTicketBarberId = editTicket ? (editTicket as { preferredBarberId?: number }).preferredBarberId : undefined;
   useEffect(() => {
     if (!editAppointmentTicketId || !rescheduleDateStr || !useSlotsForAppointment || !editTicketServiceId) {
@@ -627,6 +633,12 @@ export function BarberQueueManager() {
                                 </span>
                               )}
                             </div>
+                            {getTicketServiceName(ticket) && (
+                              <p className="text-lg text-white/60 mt-1 truncate flex items-center gap-2">
+                                <span className="material-symbols-outlined text-lg">design_services</span>
+                                {getTicketServiceName(ticket)}
+                              </p>
+                            )}
                             {assignedBarber && (
                               <p className="text-lg text-white/60 mt-1 truncate flex items-center gap-2">
                                 <span className="material-symbols-outlined text-lg">content_cut</span>
@@ -731,6 +743,59 @@ export function BarberQueueManager() {
                     className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl lg:text-2xl rounded-2xl bg-white/10 border-2 border-[var(--shop-border-color)] text-[var(--shop-text-primary)] min-h-[44px] placeholder:text-[var(--shop-text-secondary)] focus:outline-none focus:border-[var(--shop-accent)]"
                   />
                 </div>
+                {settings.requirePhone && (
+                  <div>
+                    <label htmlFor="kioskGuestPhone" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
+                      {t('join.phoneLabel')}
+                    </label>
+                    <input
+                      id="kioskGuestPhone"
+                      type="tel"
+                      value={checkInPhone}
+                      onChange={(e) => setCheckInPhone(e.target.value)}
+                      placeholder={t('join.phonePlaceholder')}
+                      required
+                      className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-lg sm:text-xl rounded-2xl bg-white/10 border-2 border-[var(--shop-border-color)] text-[var(--shop-text-primary)] min-h-[44px] placeholder:text-[var(--shop-text-secondary)] focus:outline-none focus:border-[var(--shop-accent)]"
+                    />
+                  </div>
+                )}
+                {activeServices.length >= 2 && (
+                  <div>
+                    <label htmlFor="kioskCheckInService" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
+                      {t('join.serviceLabel')}
+                    </label>
+                    <select
+                      id="kioskCheckInService"
+                      value={checkInServiceId ?? ''}
+                      onChange={(e) => setCheckInServiceId(e.target.value ? parseInt(e.target.value, 10) : null)}
+                      required
+                      className="select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[48px] px-4 py-3 text-lg rounded-2xl border-2 border-[var(--shop-border-color)] focus:outline-none focus:border-[var(--shop-accent)] bg-white text-gray-900"
+                    >
+                      <option value="">{t('join.selectOption')}</option>
+                      {activeServices.map((s) => (
+                        <option key={s.id} value={s.id} title={s.name}>{truncateOptionLabel(s.name)}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {settings.allowBarberPreference && barbers.filter((b) => b.isActive).length > 0 && (
+                  <div>
+                    <label htmlFor="kioskCheckInBarber" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
+                      {t('join.barberLabelOptional')}
+                    </label>
+                    <select
+                      id="kioskCheckInBarber"
+                      value={checkInBarberId ?? ''}
+                      onChange={(e) => setCheckInBarberId(e.target.value ? parseInt(e.target.value, 10) : null)}
+                      className="select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[48px] px-4 py-3 text-lg rounded-2xl border-2 border-[var(--shop-border-color)] focus:outline-none focus:border-[var(--shop-accent)] bg-white text-gray-900"
+                    >
+                      <option value="">{t('join.selectOption')}</option>
+                      {barbers.filter((b) => b.isActive).map((b) => (
+                        <option key={b.id} value={b.id} title={b.name}>{truncateOptionLabel(b.name)}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="flex gap-3 sm:gap-4 mt-6 sm:mt-8">
                   <button
                     type="button"
@@ -741,7 +806,11 @@ export function BarberQueueManager() {
                   </button>
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={
+                      isSubmitting ||
+                      (activeServices.length >= 2 && !checkInServiceId) ||
+                      (settings.requirePhone && !checkInPhone.trim())
+                    }
                     className="flex-1 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl rounded-2xl bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-semibold hover:bg-[var(--shop-accent-hover)] transition-all disabled:opacity-50 min-h-[44px]"
                   >
                     {isSubmitting ? t('barber.adding') : t('barber.add')}
@@ -752,7 +821,7 @@ export function BarberQueueManager() {
           </div>
         )}
 
-        {/* Kiosk: no barber selector, complete, or remove modals - only add client and view line/ads */}
+        {/* Kiosk: add client modal includes service/barber when configured */}
       </div>
     );
   }
@@ -953,14 +1022,15 @@ export function BarberQueueManager() {
                   const displayPosition = isServing ? null : index + 1;
                   const preferredBarberId = (ticket as { preferredBarberId?: number }).preferredBarberId;
                   const preferredBarberName = settings.allowBarberPreference && preferredBarberId != null ? barbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
-                  return (
-                    <QueueCard
-                      key={ticket.id}
-                      ticket={ticket}
-                      assignedBarber={assignedBarber}
-                      barbers={displayBarbers}
-                      preferredBarberName={preferredBarberName ?? undefined}
-                      displayPosition={displayPosition}
+                    return (
+                      <QueueCard
+                        key={ticket.id}
+                        ticket={ticket}
+                        assignedBarber={assignedBarber}
+                        serviceName={getTicketServiceName(ticket)}
+                        barbers={displayBarbers}
+                        preferredBarberName={preferredBarberName ?? undefined}
+                        displayPosition={displayPosition}
                       onClick={() => {
                         setSelectedCustomerId(ticket.id);
                         barberSelectorModal.open();
@@ -1079,7 +1149,7 @@ export function BarberQueueManager() {
                 value={checkInServiceId ?? ''}
                 onChange={(e) => setCheckInServiceId(e.target.value ? parseInt(e.target.value, 10) : null)}
                 required
-                className="form-control-select w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                className="form-control-select select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
               >
                 <option value="">{t('join.selectOption')}</option>
                 {activeServices.map((s) => (
@@ -1095,7 +1165,7 @@ export function BarberQueueManager() {
                 id="checkInBarber"
                 value={checkInBarberId ?? ''}
                 onChange={(e) => setCheckInBarberId(e.target.value ? parseInt(e.target.value, 10) : null)}
-                className="form-control-select w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                className="form-control-select select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
               >
                 <option value="">{t('join.selectOption')}</option>
                 {barbers.filter((b) => b.isActive).map((b) => (
@@ -1171,7 +1241,7 @@ export function BarberQueueManager() {
                   setAppointmentSlotTime(null);
                 }}
                 required
-                className="form-control-select w-full min-h-[44px]"
+                className="form-control-select select-readable w-full min-h-[44px]"
               >
                 <option value="">{t('join.selectOption')}</option>
                 {activeServices.map((s) => (
@@ -1248,7 +1318,7 @@ export function BarberQueueManager() {
                   id="appointmentBarber"
                   value={appointmentForm.preferredBarberId ?? ''}
                   onChange={(e) => setAppointmentForm((f) => ({ ...f, preferredBarberId: e.target.value ? parseInt(e.target.value, 10) : null }))}
-                  className="form-control-select w-full min-h-[44px]"
+                  className="form-control-select select-readable w-full min-h-[44px]"
                 >
                   <option value="">{t('join.selectOption')}</option>
                   {barbers.filter((b) => b.isActive).map((b) => (

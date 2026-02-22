@@ -55,7 +55,7 @@ export function JoinForm() {
                     setSelectedServiceId(v ? parseInt(v, 10) : null);
                   }}
                   required
-                  className="form-control-select w-full max-w-full"
+                  className="form-control-select select-readable w-full max-w-full"
                 >
                   <option value="">{t('join.selectOption')}</option>
                   {activeServices.map((s) => {
@@ -145,7 +145,7 @@ export function JoinForm() {
                     setSelectedBarberId(v ? parseInt(v, 10) : null);
                   }}
                   required={settings.requireBarberChoice}
-                  className="form-control-select w-full max-w-full"
+                  className="form-control-select select-readable w-full max-w-full"
                 >
                   <option value="">{t('join.selectOption')}</option>
                   {barbers.filter(b => b.isActive).map((b) => (

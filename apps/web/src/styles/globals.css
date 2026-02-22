@@ -802,14 +802,25 @@
   border-color: var(--shop-accent, #D4AF37);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--shop-accent, #D4AF37) 35%, transparent);
 }
+/* Dropdown options: always dark text on light background so list is readable in all contexts */
 .form-control-select option {
-  background: var(--shop-surface-primary, #0a0a0a);
-  color: var(--shop-text-primary, #fff);
+  background: #fff;
+  color: #1a1a1a;
 }
 /* Ensure select display value is always visible (avoids white-on-white in some themes) */
 select.form-control-select {
   color: var(--shop-text-primary, #fff);
   background-color: var(--shop-surface-secondary, #1a1a1a);
+}
+
+/* Explicit readable select: light background and dark text (for dark modals / kiosk) */
+select.select-readable {
+  background-color: #fff;
+  color: #1a1a1a;
+}
+select.select-readable option {
+  background: #fff;
+  color: #1a1a1a;
 }
 
 /* Dropdown styling per shop layout (match architectural style) */

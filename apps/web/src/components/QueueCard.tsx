@@ -8,6 +8,8 @@ export interface QueueCardProps {
   ticket: Ticket;
   assignedBarber?: Barber | null;
   barbers?: Barber[];
+  /** Resolved service name for display (from ticket.service or activeServices). */
+  serviceName?: string | null;
   /** When set, show "Prefers [Name]" under customer name (waiting tickets). */
   preferredBarberName?: string | null;
   displayPosition?: number | null;
@@ -26,6 +28,7 @@ export interface QueueCardProps {
 export const QueueCard = memo(function QueueCard({
   ticket,
   assignedBarber,
+  serviceName = null,
   preferredBarberName = null,
   displayPosition,
   onClick,
@@ -150,6 +153,12 @@ export const QueueCard = memo(function QueueCard({
                 </span>
               )}
             </div>
+            {serviceName && (
+              <p className="text-sm text-[var(--shop-text-secondary)] truncate flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">design_services</span>
+                {serviceName}
+              </p>
+            )}
             {assignedBarber && (
               <p className="text-sm text-[var(--shop-text-secondary)] truncate">{assignedBarber.name}</p>
             )}

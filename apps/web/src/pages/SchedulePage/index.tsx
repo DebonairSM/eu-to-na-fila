@@ -215,7 +215,7 @@ export function SchedulePage() {
                     value={selectedServiceId ?? ''}
                     onChange={(e) => setSelectedServiceId(e.target.value ? parseInt(e.target.value, 10) : null)}
                     required
-                    className="form-control-select w-full mt-1"
+                    className="form-control-select select-readable w-full mt-1"
                   >
                     <option value="">{t('join.selectOption')}</option>
                     {activeServices.map((s) => (
@@ -238,7 +238,7 @@ export function SchedulePage() {
                       value={selectedBarberId ?? ''}
                       onChange={(e) => setSelectedBarberId(e.target.value ? parseInt(e.target.value, 10) : null)}
                       required={settings?.requireBarberChoice}
-                      className="form-control-select w-full mt-1"
+                      className="form-control-select select-readable w-full mt-1"
                     >
                       <option value="">{t('join.selectOption')}</option>
                       {barbers.filter((b) => b.isActive).map((b) => (

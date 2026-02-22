@@ -73,9 +73,10 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const previousPeriodCount = previousPeriodTickets.length;
 
-    // Get services for service breakdown and revenue
+    // Get services for service breakdown and revenue (omit sort_order for DBs before migration 0022)
     const services = await db.query.services.findMany({
       where: eq(schema.services.shopId, shop.id),
+      columns: schema.serviceColumnsWithoutSortOrder,
     });
     const serviceMap = new Map(services.map(s => [s.id, s.name]));
     const servicePriceMap = new Map(services.map(s => [s.id, s.price]));
@@ -757,6 +758,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const services = await db.query.services.findMany({
       where: eq(schema.services.shopId, shop.id),
+      columns: schema.serviceColumnsWithoutSortOrder,
     });
     const serviceMap = new Map(services.map(s => [s.id, s]));
     const serviceNameMap = new Map(services.map(s => [s.id, s.name]));
