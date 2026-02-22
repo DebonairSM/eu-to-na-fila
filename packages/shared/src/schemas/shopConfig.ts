@@ -441,7 +441,7 @@ export interface ShopListItem {
   createdAt: Date | string;
 }
 
-/** Full shop row for company admin editing (includes theme JSON, homeContent, PINs). */
+/** Full shop row for company admin editing (includes theme JSON, homeContent, access). */
 export interface ShopAdminView {
   id: number;
   slug: string;
@@ -453,6 +453,10 @@ export interface ShopAdminView {
   theme: string | null;
   homeContent: HomeContent | Record<string, unknown> | null;
   settings: ShopSettings | Record<string, unknown> | null;
+  /** Login identifier for owner (e.g. email or username). Null = use literal "owner". */
+  ownerUsername: string | null;
+  /** Login identifier for staff (e.g. email or username). Null = use literal "staff". */
+  staffUsername: string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
 }

@@ -23,11 +23,10 @@ export function LoginForm() {
   } = useLoginForm();
   const { t } = useLocale();
   const isCustomer = mode === 'customer';
-  const isBarber = mode === 'barber';
   const isStaff = mode === 'staff';
 
-  const titleKey = isBarber ? 'auth.barberLoginTitle' : isStaff ? 'auth.staffLoginTitle' : 'auth.clientLoginTitle';
-  const hintKey = isBarber ? 'auth.barberLoginHint' : isStaff ? 'auth.staffLoginHint' : 'auth.clientLoginHint';
+  const titleKey = isStaff ? 'auth.staffLoginTitle' : 'auth.clientLoginTitle';
+  const hintKey = isStaff ? 'auth.staffLoginHint' : 'auth.clientLoginHint';
 
   return (
     <div className="space-y-6">
@@ -68,7 +67,7 @@ export function LoginForm() {
           </div>
         )}
 
-        {(isBarber || isStaff) && (
+        {isStaff && (
           <div className="relative">
             <input
               id="username"
@@ -177,7 +176,7 @@ export function LoginForm() {
       </form>
 
       <div className="text-center pt-3 border-t border-[var(--shop-border-color)]">
-        {isBarber || isStaff ? (
+        {isStaff ? (
           <p className="text-xs text-[var(--shop-text-secondary)]">
             <button
               type="button"
@@ -193,17 +192,9 @@ export function LoginForm() {
           </p>
         ) : (
           <p className="text-xs text-[var(--shop-text-secondary)]">
-            <button type="button" onClick={() => setMode('barber')} className="text-[var(--shop-accent)] hover:underline">
-              {t('auth.barberLoginLink')}
-            </button>
-            {' · '}
             <button type="button" onClick={() => setMode('staff')} className="text-[var(--shop-accent)] hover:underline">
               {t('auth.staffLoginLink')}
             </button>
-            {' · '}
-            <Link to="/join/kiosk" className="text-[var(--shop-accent)] hover:underline">
-              {t('auth.kioskModeOnly')}
-            </Link>
             {' · '}
             <Link to="/home" className="text-[var(--shop-accent)] hover:underline">
               {t('common.back')}

@@ -6,7 +6,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { getErrorMessage } from '@/lib/utils';
 
-export type LoginMode = 'customer' | 'barber' | 'staff';
+export type LoginMode = 'customer' | 'staff';
 
 export function useLoginForm() {
   const [mode, setMode] = useState<LoginMode>('customer');
@@ -36,41 +36,50 @@ export function useLoginForm() {
     isSubmittingRef.current = true;
 
     try {
-      if (mode === 'barber') {
+      if (mode === 'staff') {
         if (!username.trim()) {
           setError(t('auth.fillAllFields'));
           setIsLoading(false);
           isSubmittingRef.current = false;
           return;
         }
-        const barberResult = await api.authenticateBarber(shopSlug, username.trim(), password);
-        if (barberResult.valid && barberResult.token) {
-          login({
-            id: barberResult.barberId ?? 0,
-            username: username.trim(),
-            role: 'barber',
-            name: barberResult.barberName ?? username.trim(),
-          });
-          navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/barber');
-          return;
-        }
-      } else if (mode === 'staff') {
-        if (!username.trim()) {
-          setError(t('auth.fillAllFields'));
-          setIsLoading(false);
-          isSubmittingRef.current = false;
-          return;
-        }
-        const authResult = await api.authenticate(shopSlug, username.trim(), password);
-        if (authResult.valid && authResult.token) {
-          login({
-            id: 0,
-            username: authResult.role ?? 'staff',
-            role: authResult.role === 'owner' ? 'owner' : 'staff',
-            name: authResult.role === 'owner' ? 'owner' : 'staff',
-          });
-          const defaultPath = authResult.role === 'owner' ? '/owner' : '/manage';
-          navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : defaultPath);
+        const staffResult = await api.authenticateStaff(shopSlug, username.trim(), password);
+        if (staffResult.valid && staffResult.token && staffResult.role) {
+          const role = staffResult.role;
+          if (role === 'barber') {
+            login({
+              id: staffResult.barberId ?? 0,
+              username: username.trim(),
+              role: 'barber',
+              name: staffResult.barberName ?? username.trim(),
+            });
+            navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/barber');
+          } else if (role === 'owner') {
+            login({
+              id: 0,
+              username: 'owner',
+              role: 'owner',
+              name: 'owner',
+            });
+            navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/owner');
+          } else if (role === 'kiosk') {
+            login({
+              id: 0,
+              username: 'kiosk',
+              role: 'kiosk',
+              name: 'kiosk',
+            });
+            navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/manage?kiosk=true');
+          } else {
+            // staff
+            login({
+              id: 0,
+              username: 'staff',
+              role: 'staff',
+              name: 'staff',
+            });
+            navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/manage');
+          }
           return;
         }
       } else {

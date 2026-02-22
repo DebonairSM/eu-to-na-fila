@@ -219,6 +219,8 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         homeContent: homeContentInputSchema,
         homeContentByLocale: homeContentByLocaleInputSchema,
         settings: shopSettingsInputSchema,
+        ownerUsername: z.string().min(1).max(200).optional().nullable(),
+        staffUsername: z.string().min(1).max(200).optional().nullable(),
         ownerPassword: z.string().min(6).max(200).optional(),
         staffPassword: z.string().min(6).max(200).optional(),
       });
@@ -315,6 +317,13 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         updatePayload.staffPinHash = await hashPassword(body.staffPassword);
         updatePayload.staffPin = null;
         updatePayload.staffPinResetRequired = false;
+      }
+
+      if (body.ownerUsername !== undefined) {
+        updatePayload.ownerUsername = body.ownerUsername?.trim() || null;
+      }
+      if (body.staffUsername !== undefined) {
+        updatePayload.staffUsername = body.staffUsername?.trim() || null;
       }
 
       const [updatedShop] = await db
@@ -767,6 +776,8 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         homeContent: homeContentInputSchema,
         homeContentByLocale: homeContentByLocaleInputSchema,
         settings: shopSettingsInputSchema,
+        ownerUsername: z.string().min(1).max(200).optional().nullable(),
+        staffUsername: z.string().min(1).max(200).optional().nullable(),
         services: z.array(z.object({
           name: z.string().min(1).max(200),
           description: z.string().max(500).optional(),
@@ -854,6 +865,8 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
             settings: settingsToStore,
             ownerPinHash,
             staffPinHash,
+            ownerUsername: (body.ownerUsername?.trim() || null) ?? null,
+            staffUsername: (body.staffUsername?.trim() || null) ?? null,
             ownerPinResetRequired: false,
             staffPinResetRequired: false,
             createdAt: new Date(),

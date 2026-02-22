@@ -66,6 +66,10 @@ export const shops = pgTable('shops', {
   staffPin: text('staff_pin'), // Legacy: plain text PIN (deprecated, use staffPinHash)
   ownerPinHash: text('owner_pin_hash'), // Hashed owner PIN
   staffPinHash: text('staff_pin_hash'), // Hashed staff PIN
+  /** Login identifier for owner (e.g. email or username). If null, literal "owner" is used. */
+  ownerUsername: text('owner_username'),
+  /** Login identifier for staff (e.g. email or username). If null, literal "staff" is used. */
+  staffUsername: text('staff_username'),
   ownerPinResetRequired: boolean('owner_pin_reset_required').notNull().default(true), // Require PIN reset on next login
   staffPinResetRequired: boolean('staff_pin_reset_required').notNull().default(true), // Require PIN reset on next login
   homeContent: jsonb('home_content'), // Per-shop home page copy: hero, services, about, location

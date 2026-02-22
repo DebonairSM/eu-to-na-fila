@@ -23,6 +23,7 @@ export interface CompaniesApi {
   uploadDraftHomeImage(companyId: number, file: File): Promise<{ url: string }>;
   createFullShop(companyId: number, data: {
     name: string; slug?: string; domain?: string; path?: string; apiBase?: string;
+    ownerUsername?: string | null; staffUsername?: string | null;
     ownerPassword: string; staffPassword: string;
     theme?: Partial<ShopTheme>; homeContent?: Partial<HomeContent>;
     homeContentByLocale?: Record<string, Partial<HomeContent>>;
@@ -40,6 +41,7 @@ export interface CompaniesApi {
     homeContent?: Partial<HomeContent>;
     homeContentByLocale?: Record<string, Partial<HomeContent>>;
     settings?: Partial<ShopSettings>;
+    ownerUsername?: string | null; staffUsername?: string | null;
     ownerPassword?: string; staffPassword?: string;
   }): Promise<ShopAdminView>;
   deleteCompanyShop(companyId: number, shopId: number): Promise<{ success: boolean; message: string }>;

@@ -81,17 +81,6 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const { slug } = validateRequest(paramsSchema, request.params);
     const { username, password } = validateRequest(bodySchema, request.body);
 
-    const usernameNormalized = username.trim().toLowerCase();
-    const roleFromUsername: 'owner' | 'staff' | null =
-      usernameNormalized === 'owner' ? 'owner'
-        : usernameNormalized === 'staff' ? 'staff'
-          : null;
-
-    if (!roleFromUsername) {
-      logAuthFailure(request, 'invalid_username', slug);
-      return { valid: false, role: null };
-    }
-
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
       logAuthFailure(request, 'invalid_password_format', slug);
@@ -102,6 +91,21 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     if (!shop) {
       logAuthFailure(request, 'shop_not_found', slug);
+      return { valid: false, role: null };
+    }
+
+    const usernameNormalized = username.trim().toLowerCase();
+    const ownerLogin = shop.ownerUsername?.trim().toLowerCase();
+    const staffLogin = shop.staffUsername?.trim().toLowerCase();
+    const roleFromUsername: 'owner' | 'staff' | null =
+      (ownerLogin && usernameNormalized === ownerLogin) ? 'owner'
+        : (staffLogin && usernameNormalized === staffLogin) ? 'staff'
+          : usernameNormalized === 'owner' ? 'owner'
+            : usernameNormalized === 'staff' ? 'staff'
+              : null;
+
+    if (!roleFromUsername) {
+      logAuthFailure(request, 'invalid_username', slug);
       return { valid: false, role: null };
     }
 
@@ -147,6 +151,147 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       token,
       pinResetRequired,
     };
+  });
+
+  /**
+   * Unified staff login: username + password. Identifies role from credentials.
+   * Tries in order: owner/staff (username "owner" or "staff"), then barber, then kiosk.
+   *
+   * @route POST /api/shops/:slug/auth/staff
+   * @body username - "owner", "staff", barber username, or kiosk username
+   * @body password - Corresponding password
+   * @returns { valid, role: 'owner'|'staff'|'barber'|'kiosk', token?, barberId?, barberName?, pinResetRequired? }
+   */
+  fastify.post('/shops/:slug/auth/staff', {
+    preHandler: [authRateLimit],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1).max(100),
+    });
+    const bodySchema = z.object({
+      username: z.string().min(1).max(200),
+      password: z.string().min(1).max(200),
+    });
+
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { username, password } = validateRequest(bodySchema, request.body);
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      logAuthFailure(request, 'invalid_password_format', slug);
+      throw new ValidationError(passwordValidation.error || 'Invalid password format');
+    }
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) {
+      logAuthFailure(request, 'shop_not_found', slug);
+      return { valid: false, role: null };
+    }
+
+    const usernameNormalized = username.trim().toLowerCase();
+    const ownerLogin = shop.ownerUsername?.trim().toLowerCase();
+    const staffLogin = shop.staffUsername?.trim().toLowerCase();
+    const roleFromUsername: 'owner' | 'staff' | null =
+      (ownerLogin && usernameNormalized === ownerLogin) ? 'owner'
+        : (staffLogin && usernameNormalized === staffLogin) ? 'staff'
+          : usernameNormalized === 'owner' ? 'owner'
+            : usernameNormalized === 'staff' ? 'staff'
+              : null;
+
+    if (roleFromUsername) {
+      let passwordMatches = false;
+      let pinResetRequired = false;
+      if (roleFromUsername === 'owner') {
+        if (shop.ownerPinHash) {
+          passwordMatches = await verifyPassword(password, shop.ownerPinHash);
+          if (passwordMatches) pinResetRequired = shop.ownerPinResetRequired || false;
+        } else if (shop.ownerPin === password) {
+          passwordMatches = true;
+          pinResetRequired = true;
+        }
+      } else {
+        if (shop.staffPinHash) {
+          passwordMatches = await verifyPassword(password, shop.staffPinHash);
+          if (passwordMatches) pinResetRequired = shop.staffPinResetRequired || false;
+        } else if (shop.staffPin === password) {
+          passwordMatches = true;
+          pinResetRequired = true;
+        }
+      }
+      if (passwordMatches) {
+        logAuthSuccess(request, shop.id, roleFromUsername);
+        const token = signToken({
+          userId: shop.id,
+          shopId: shop.id,
+          role: roleFromUsername,
+        } as { userId: number; shopId: number; role: 'owner' | 'staff' });
+        return {
+          valid: true,
+          role: roleFromUsername,
+          token,
+          pinResetRequired,
+        };
+      }
+    }
+
+    // 2) Barber
+    const barber = await db.query.barbers.findFirst({
+      where: and(
+        eq(schema.barbers.shopId, shop.id),
+        eq(schema.barbers.username, usernameNormalized)
+      ),
+    });
+    if (barber?.passwordHash) {
+      const passwordMatches = await verifyPassword(password, barber.passwordHash);
+      if (passwordMatches) {
+        logAuthSuccess(request, shop.id, 'barber');
+        const token = signToken({
+          userId: barber.id,
+          shopId: barber.shopId,
+          role: 'barber',
+          barberId: barber.id,
+        });
+        return {
+          valid: true,
+          role: 'barber' as const,
+          token,
+          barberId: barber.id,
+          barberName: barber.name,
+          pinResetRequired: false,
+        };
+      }
+    }
+
+    // 3) Kiosk
+    const settings = shop.settings as Record<string, unknown> | null;
+    const kioskUsername = settings?.kioskUsername;
+    const kioskPasswordHash = getKioskPasswordHash(shop.settings);
+    const kioskPasswordPlain = typeof settings?.kioskPassword === 'string' ? settings.kioskPassword : null;
+    if (typeof kioskUsername === 'string' && kioskUsername.trim()) {
+      const usernameMatch = username.trim() === kioskUsername.trim();
+      let kioskPasswordMatches = false;
+      if (kioskPasswordHash) {
+        kioskPasswordMatches = await verifyPassword(password, kioskPasswordHash);
+      } else if (kioskPasswordPlain) {
+        kioskPasswordMatches = password === kioskPasswordPlain;
+      }
+      if (usernameMatch && kioskPasswordMatches) {
+        logAuthSuccess(request, shop.id, 'kiosk');
+        const token = signToken({
+          userId: shop.id,
+          shopId: shop.id,
+          role: 'kiosk',
+        });
+        return {
+          valid: true,
+          role: 'kiosk' as const,
+          token,
+        };
+      }
+    }
+
+    logAuthFailure(request, 'invalid_staff_login', slug);
+    return { valid: false, role: null };
   });
 
   /**

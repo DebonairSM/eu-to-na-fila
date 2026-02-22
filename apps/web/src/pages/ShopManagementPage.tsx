@@ -335,6 +335,8 @@ export function ShopManagementPage() {
     style: ShopStyleConfig;
     homeContentByLocale: Record<string, HomeContent>;
     settings: ShopSettings;
+    ownerUsername: string;
+    staffUsername: string;
     ownerPassword: string;
     staffPassword: string;
   }>({
@@ -347,6 +349,8 @@ export function ShopManagementPage() {
     style: defaultStyle,
     homeContentByLocale: defaultHomeByLocale(),
     settings: { ...DEFAULT_SETTINGS },
+    ownerUsername: '',
+    staffUsername: '',
     ownerPassword: '',
     staffPassword: '',
   });
@@ -500,6 +504,8 @@ export function ShopManagementPage() {
       style: defaultStyle,
       homeContentByLocale: defaultHomeByLocale(),
       settings: { ...DEFAULT_SETTINGS },
+      ownerUsername: '',
+      staffUsername: '',
       ownerPassword: '',
       staffPassword: '',
     });
@@ -558,6 +564,8 @@ export function ShopManagementPage() {
         domain: formData.domain || undefined,
         path: formData.path || undefined,
         apiBase: formData.apiBase || undefined,
+        ownerUsername: formData.ownerUsername.trim() || undefined,
+        staffUsername: formData.staffUsername.trim() || undefined,
         ownerPassword: formData.ownerPassword,
         staffPassword: formData.staffPassword,
         theme: formData.theme,
@@ -576,7 +584,7 @@ export function ShopManagementPage() {
         })),
       });
       setEditingShop(null);
-      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' });
+      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerUsername: '', staffUsername: '', ownerPassword: '', staffPassword: '' });
       setCreateServices(getDefaultServices(t));
       setCreateBarbers(getDefaultBarbers(t));
       setCreateErrors({});
@@ -625,6 +633,8 @@ export function ShopManagementPage() {
         theme: { ...formData.theme, style: formData.style },
         homeContentByLocale: formData.homeContentByLocale,
         settings: formData.settings,
+        ownerUsername: formData.ownerUsername.trim() || null,
+        staffUsername: formData.staffUsername.trim() || null,
         ...(op && { ownerPassword: op }),
         ...(sp && { staffPassword: sp }),
       });
@@ -673,7 +683,7 @@ export function ShopManagementPage() {
         }
       }
       setEditingShop(null);
-      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' });
+      setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerUsername: '', staffUsername: '', ownerPassword: '', staffPassword: '' });
       setBarberAccess([]);
       setEditServices([]);
       setEditBarbers([]);
@@ -766,6 +776,8 @@ export function ShopManagementPage() {
       style: nextStyle,
       homeContentByLocale: normalizeToHomeContentByLocaleForEdit(shop.homeContent ?? null),
       settings: mergeSettingsForEdit(shop.settings ?? null),
+      ownerUsername: shop.ownerUsername ?? '',
+      staffUsername: shop.staffUsername ?? '',
       ownerPassword: '',
       staffPassword: '',
     });
@@ -1022,9 +1034,17 @@ export function ShopManagementPage() {
                     <div className="space-y-6 rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
                       <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.accessCredentials')}</h3>
                       <div>
+                        <label htmlFor="createOwnerUsernameRoot" className="block text-white/70 text-sm mb-2">{t('management.ownerUsername')}</label>
+                        <input id="createOwnerUsernameRoot" type="text" value={formData.ownerUsername} onChange={(e) => setFormData({ ...formData, ownerUsername: e.target.value })} placeholder={t('management.ownerUsernamePlaceholder')} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] placeholder:text-white/30" autoComplete="username" />
+                      </div>
+                      <div>
                         <label htmlFor="createOwnerPasswordRoot" className="block text-white/70 text-sm mb-2">{t('management.ownerPassword')} *</label>
                         <input id="createOwnerPasswordRoot" type="password" value={formData.ownerPassword} onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })} required minLength={6} placeholder={t('management.ownerPasswordPlaceholder')} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] placeholder:text-white/30" />
                         {createErrors.ownerPassword && <p className="text-red-400 text-xs mt-1">{createErrors.ownerPassword}</p>}
+                      </div>
+                      <div>
+                        <label htmlFor="createStaffUsernameRoot" className="block text-white/70 text-sm mb-2">{t('management.staffUsername')}</label>
+                        <input id="createStaffUsernameRoot" type="text" value={formData.staffUsername} onChange={(e) => setFormData({ ...formData, staffUsername: e.target.value })} placeholder={t('management.staffUsernamePlaceholder')} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] placeholder:text-white/30" autoComplete="username" />
                       </div>
                       <div>
                         <label htmlFor="createStaffPasswordRoot" className="block text-white/70 text-sm mb-2">{t('management.staffPassword')} *</label>
@@ -1662,7 +1682,19 @@ export function ShopManagementPage() {
                         <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.accessCredentials')}</h3>
                         <div className="space-y-4">
                           <div>
-                            <label htmlFor="editOwnerPassword" className="block text-white/60 text-sm mb-2">Senha do dono (owner)</label>
+                            <label htmlFor="editOwnerUsername" className="block text-white/60 text-sm mb-2">{t('management.ownerUsername')}</label>
+                            <input
+                              id="editOwnerUsername"
+                              type="text"
+                              autoComplete="username"
+                              value={formData.ownerUsername}
+                              onChange={(e) => setFormData({ ...formData, ownerUsername: e.target.value })}
+                              placeholder={t('management.ownerUsernamePlaceholder')}
+                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="editOwnerPassword" className="block text-white/60 text-sm mb-2">{t('management.ownerPassword')}</label>
                             <input
                               id="editOwnerPassword"
                               type="password"
@@ -1672,10 +1704,21 @@ export function ShopManagementPage() {
                               placeholder={t('management.leaveBlankToNotChange')}
                               className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
                             />
-                            <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
                           </div>
                           <div>
-                            <label htmlFor="editStaffPassword" className="block text-white/60 text-sm mb-2">Senha do funcionário (staff)</label>
+                            <label htmlFor="editStaffUsername" className="block text-white/60 text-sm mb-2">{t('management.staffUsername')}</label>
+                            <input
+                              id="editStaffUsername"
+                              type="text"
+                              autoComplete="username"
+                              value={formData.staffUsername}
+                              onChange={(e) => setFormData({ ...formData, staffUsername: e.target.value })}
+                              placeholder={t('management.staffUsernamePlaceholder')}
+                              className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="editStaffPassword" className="block text-white/60 text-sm mb-2">{t('management.staffPassword')}</label>
                             <input
                               id="editStaffPassword"
                               type="password"
@@ -1685,7 +1728,6 @@ export function ShopManagementPage() {
                               placeholder={t('management.leaveBlankToNotChange')}
                               className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
                             />
-                            <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
                           </div>
                         </div>
                       </section>
@@ -1760,7 +1802,7 @@ export function ShopManagementPage() {
                   <div className="flex gap-2 sm:gap-3 mt-5 sm:mt-6 flex-shrink-0 pt-4 border-t border-white/10">
                     <button
                       type="button"
-                      onClick={() => { editModal.close(); setEditingShop(null); setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' }); setContentLocale('pt-BR'); }}
+                      onClick={() => { editModal.close(); setEditingShop(null); setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerUsername: '', staffUsername: '', ownerPassword: '', staffPassword: '' }); setContentLocale('pt-BR'); }}
                       className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-medium cursor-pointer transition-all min-h-[44px] bg-white/10 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                     >
                       {t('common.cancel')}
@@ -2000,9 +2042,17 @@ export function ShopManagementPage() {
                 <div className="space-y-6 rounded-xl bg-white/5 border border-white/10 p-4 sm:p-5">
                   <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.accessCredentials')}</h3>
                   <div>
+                    <label htmlFor="createOwnerUsernameMineiro" className="block text-white/70 text-sm mb-2">{t('management.ownerUsername')}</label>
+                    <input id="createOwnerUsernameMineiro" type="text" value={formData.ownerUsername} onChange={(e) => setFormData({ ...formData, ownerUsername: e.target.value })} placeholder={t('management.ownerUsernamePlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/30" autoComplete="username" />
+                  </div>
+                  <div>
                     <label htmlFor="createOwnerPasswordMineiro" className="block text-white/70 text-sm mb-2">{t('management.ownerPassword')} *</label>
                     <input id="createOwnerPasswordMineiro" type="password" value={formData.ownerPassword} onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })} required minLength={6} placeholder={t('management.ownerPasswordPlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/30" />
                     {createErrors.ownerPassword && <p className="text-red-400 text-xs mt-1">{createErrors.ownerPassword}</p>}
+                  </div>
+                  <div>
+                    <label htmlFor="createStaffUsernameMineiro" className="block text-white/70 text-sm mb-2">{t('management.staffUsername')}</label>
+                    <input id="createStaffUsernameMineiro" type="text" value={formData.staffUsername} onChange={(e) => setFormData({ ...formData, staffUsername: e.target.value })} placeholder={t('management.staffUsernamePlaceholder')} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/30" autoComplete="username" />
                   </div>
                   <div>
                     <label htmlFor="createStaffPasswordMineiro" className="block text-white/70 text-sm mb-2">{t('management.staffPassword')} *</label>
@@ -2768,7 +2818,19 @@ export function ShopManagementPage() {
                     <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('management.accessCredentials')}</h3>
                     <div className="space-y-4">
                       <div>
-                        <label htmlFor="editOwnerPasswordMineiro" className="block text-white/60 text-sm mb-2">Senha do dono (owner)</label>
+                        <label htmlFor="editOwnerUsernameMineiro" className="block text-white/60 text-sm mb-2">{t('management.ownerUsername')}</label>
+                        <input
+                          id="editOwnerUsernameMineiro"
+                          type="text"
+                          autoComplete="username"
+                          value={formData.ownerUsername}
+                          onChange={(e) => setFormData({ ...formData, ownerUsername: e.target.value })}
+                          placeholder={t('management.ownerUsernamePlaceholder')}
+                          className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="editOwnerPasswordMineiro" className="block text-white/60 text-sm mb-2">{t('management.ownerPassword')}</label>
                         <input
                           id="editOwnerPasswordMineiro"
                           type="password"
@@ -2778,10 +2840,21 @@ export function ShopManagementPage() {
                           placeholder={t('management.leaveBlankToNotChange')}
                           className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
                         />
-                        <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
                       </div>
                       <div>
-                        <label htmlFor="editStaffPasswordMineiro" className="block text-white/60 text-sm mb-2">Senha do funcionário (staff)</label>
+                        <label htmlFor="editStaffUsernameMineiro" className="block text-white/60 text-sm mb-2">{t('management.staffUsername')}</label>
+                        <input
+                          id="editStaffUsernameMineiro"
+                          type="text"
+                          autoComplete="username"
+                          value={formData.staffUsername}
+                          onChange={(e) => setFormData({ ...formData, staffUsername: e.target.value })}
+                          placeholder={t('management.staffUsernamePlaceholder')}
+                          className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="editStaffPasswordMineiro" className="block text-white/60 text-sm mb-2">{t('management.staffPassword')}</label>
                         <input
                           id="editStaffPasswordMineiro"
                           type="password"
@@ -2791,7 +2864,6 @@ export function ShopManagementPage() {
                           placeholder={t('management.leaveBlankToNotChange')}
                           className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[44px] placeholder:text-white/40"
                         />
-                        <p className="text-white/50 text-xs mt-1">Usada na página de login da barbearia (usuário em branco).</p>
                       </div>
                     </div>
                   </section>
@@ -2869,7 +2941,7 @@ export function ShopManagementPage() {
                   onClick={() => {
                     editModal.close();
                     setEditingShop(null);
-                    setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerPassword: '', staffPassword: '' }); setContentLocale('pt-BR');
+                    setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerUsername: '', staffUsername: '', ownerPassword: '', staffPassword: '' }); setContentLocale('pt-BR');
                   }}
                   className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >

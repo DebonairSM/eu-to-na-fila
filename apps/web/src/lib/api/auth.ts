@@ -34,10 +34,14 @@ export interface CustomerAppointmentsResponse {
   past: CustomerAppointment[];
 }
 
+export type StaffAuthRole = 'owner' | 'staff' | 'barber' | 'kiosk';
+
 export interface AuthApi {
   authenticate(shopSlug: string, username: string, password: string): Promise<{ valid: boolean; role: 'owner' | 'staff' | null; token?: string }>;
   authenticateBarber(shopSlug: string, username: string, password: string): Promise<{ valid: boolean; role: 'barber' | null; token?: string; barberId?: number; barberName?: string }>;
   authenticateKiosk(shopSlug: string, username: string, password: string): Promise<{ valid: boolean; role: 'kiosk' | null; token?: string }>;
+  /** Unified staff login: identifies owner/staff/barber/kiosk from credentials. */
+  authenticateStaff(shopSlug: string, username: string, password: string): Promise<{ valid: boolean; role: StaffAuthRole | null; token?: string; barberId?: number; barberName?: string; pinResetRequired?: boolean }>;
   companyAuthenticate(username: string, password: string): Promise<{ valid: boolean; role: 'company_admin' | null; token?: string; companyId?: number; userId?: number }>;
   registerCustomer(shopSlug: string, data: { email: string; password: string; name?: string }): Promise<{ valid: boolean; role: 'customer'; token: string; clientId: number }>;
   loginCustomer(shopSlug: string, data: { email: string; password: string; remember_me?: boolean }): Promise<{ valid: boolean; role: 'customer' | null; token?: string; clientId?: number; name?: string }>;
@@ -74,6 +78,11 @@ export function createAuthApi(client: BaseApiClient): AuthApi {
     },
     async authenticateKiosk(shopSlug, username, password) {
       const result = await c.post(`/shops/${shopSlug}/auth/kiosk`, { username, password }) as { valid: boolean; role: 'kiosk' | null; token?: string };
+      if (result.valid && result.token) client.setAuthToken(result.token);
+      return result;
+    },
+    async authenticateStaff(shopSlug, username, password) {
+      const result = await c.post(`/shops/${shopSlug}/auth/staff`, { username, password }) as { valid: boolean; role: StaffAuthRole | null; token?: string; barberId?: number; barberName?: string; pinResetRequired?: boolean };
       if (result.valid && result.token) client.setAuthToken(result.token);
       return result;
     },
