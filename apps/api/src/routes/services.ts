@@ -30,7 +30,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     // Get services for this shop (ordered by sortOrder then id). Use query builder
-    // so orderBy is reliable; fallback to id-only if sort_order column is missing (migration not run).
+    // so orderBy is reliable; fallback if sort_order column is missing (migration not run).
     let services;
     try {
       services = await db
@@ -39,13 +39,24 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
         .where(eq(schema.services.shopId, shop.id))
         .orderBy(asc(schema.services.sortOrder), asc(schema.services.id));
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = [err instanceof Error ? err.message : String(err), (err as { cause?: Error })?.cause?.message].filter(Boolean).join(' ');
       if (msg.includes('sort_order') || msg.includes('sortOrder')) {
         services = await db
-          .select()
+          .select({
+            id: schema.services.id,
+            shopId: schema.services.shopId,
+            name: schema.services.name,
+            description: schema.services.description,
+            duration: schema.services.duration,
+            price: schema.services.price,
+            isActive: schema.services.isActive,
+            createdAt: schema.services.createdAt,
+            updatedAt: schema.services.updatedAt,
+          })
           .from(schema.services)
           .where(eq(schema.services.shopId, shop.id))
           .orderBy(asc(schema.services.id));
+        services = services.map((s) => ({ ...s, sortOrder: 0 }));
       } else {
         throw err;
       }
