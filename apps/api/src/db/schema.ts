@@ -91,6 +91,19 @@ export const services = pgTable('services', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+/** Use when loading service as a relation so queries work even if migration 0022 (sort_order) has not been run. */
+export const serviceColumnsWithoutSortOrder = {
+  id: true,
+  shopId: true,
+  name: true,
+  description: true,
+  duration: true,
+  price: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
 export const barbers = pgTable('barbers', {
   id: serial('id').primaryKey(),
   shopId: integer('shop_id').notNull().references(() => shops.id),

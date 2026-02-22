@@ -22,7 +22,7 @@ export class TicketService {
   async getById(id: number): Promise<Ticket | null> {
     const ticket = await this.db.query.tickets.findFirst({
       where: eq(schema.tickets.id, id),
-      with: { shop: true, service: true, barber: true },
+      with: { shop: true, service: { columns: schema.serviceColumnsWithoutSortOrder }, barber: true },
     });
     return ticket as Ticket | null;
   }
@@ -40,7 +40,7 @@ export class TicketService {
       let tickets = await this.db.query.tickets.findMany({
         where: whereClause,
         with: {
-          service: true,
+          service: { columns: schema.serviceColumnsWithoutSortOrder },
           barber: true,
           client: { columns: { city: true, state: true } },
         },
@@ -70,7 +70,7 @@ export class TicketService {
         eq(schema.tickets.customerName, customerName),
         or(eq(schema.tickets.status, 'waiting'), eq(schema.tickets.status, 'in_progress'))
       ),
-      with: { shop: true, service: true, barber: true },
+      with: { shop: true, service: { columns: schema.serviceColumnsWithoutSortOrder }, barber: true },
       orderBy: (tickets, { desc }) => [desc(tickets.createdAt)],
     });
     return ticket as Ticket | null;
@@ -84,7 +84,7 @@ export class TicketService {
         eq(schema.tickets.deviceId, deviceId),
         or(eq(schema.tickets.status, 'waiting'), eq(schema.tickets.status, 'in_progress'))
       ),
-      with: { shop: true, service: true, barber: true },
+      with: { shop: true, service: { columns: schema.serviceColumnsWithoutSortOrder }, barber: true },
       orderBy: (tickets, { desc }) => [desc(tickets.createdAt)],
     });
     return ticket as Ticket | null;

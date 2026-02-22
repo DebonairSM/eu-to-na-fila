@@ -79,6 +79,7 @@ export class QueueService {
     if (serviceIds.size === 0) return map;
     const services = await this.db.query.services.findMany({
       where: inArray(schema.services.id, [...serviceIds]),
+      columns: { id: true, duration: true },
     });
     for (const s of services) map.set(s.id, s.duration);
     return map;
@@ -647,7 +648,7 @@ export class QueueService {
         eq(schema.tickets.status, 'waiting')
       ),
       with: {
-        service: true,
+        service: { columns: schema.serviceColumnsWithoutSortOrder },
         client: { columns: { city: true, state: true } },
       },
       orderBy: [asc(schema.tickets.createdAt)],
