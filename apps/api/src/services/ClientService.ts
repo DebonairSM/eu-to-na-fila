@@ -1,6 +1,6 @@
 import type { DbClient } from '../db/types.js';
 import { schema } from '../db/index.js';
-import { eq, and, or, like, desc, inArray, sql } from 'drizzle-orm';
+import { eq, and, or, ilike, desc, inArray, sql } from 'drizzle-orm';
 import { NotFoundError } from '../lib/errors.js';
 
 export interface ClientListItem {
@@ -135,10 +135,14 @@ export class ClientService {
     if (!trimmed) return [];
 
     const normalized = normalizePhone(trimmed);
-    const searchPattern = `%${trimmed}%`;
-    const conditions = [like(schema.clients.name, searchPattern)];
+    const words = trimmed.split(/\s+/).filter(Boolean);
+
+    const nameConditions = words.length > 0
+      ? words.map((word) => ilike(schema.clients.name, `%${word}%`))
+      : [ilike(schema.clients.name, `%${trimmed}%`)];
+    const conditions = [and(...nameConditions)];
     if (normalized.length >= 3) {
-      conditions.push(like(schema.clients.phone, `%${normalized}%`));
+      conditions.push(ilike(schema.clients.phone, `%${normalized}%`));
     }
 
     const clients = await this.db.query.clients.findMany({
