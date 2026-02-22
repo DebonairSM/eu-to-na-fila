@@ -65,6 +65,7 @@ function App() {
           <Route path="/company/dashboard" element={<ProtectedRoute requireCompanyAdmin><CompanyDashboard /></ProtectedRoute>} />
           <Route path="/company/ads" element={<ProtectedRoute requireCompanyAdmin><AdManagementPage /></ProtectedRoute>} />
           <Route path="/company/shops" element={<ProtectedRoute requireCompanyAdmin><ShopManagementPage /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </LocaleProvider>
       </AuthProvider>

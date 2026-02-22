@@ -56,6 +56,7 @@ fastify.register(fastifyHelmet, {
         "'self'",
         "data:",
         "blob:",
+        "https://api.qrserver.com", // QR codes in kiosk mode
         "https://ui-avatars.com",
         "https://images.unsplash.com",
         "https://www.google.com",

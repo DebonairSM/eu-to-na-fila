@@ -508,7 +508,8 @@ export function BarberQueueManager() {
 
   // Kiosk Mode View
   if (isKioskMode) {
-    const joinUrl = `${window.location.origin}${import.meta.env.BASE_URL}join`;
+    // Per-shop join URL so the QR code points to this shop's check-in page (e.g. /projects/mineiro/join)
+    const joinUrl = `${window.location.origin}/projects/${shopSlug}/join`;
 
     return (
       <div className="fixed inset-0 bg-black text-white z-50 overflow-hidden flex flex-col" data-testid="kiosk-root">
