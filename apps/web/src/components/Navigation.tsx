@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { config as appConfig } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -272,16 +271,16 @@ export function Navigation() {
         </button>
       </Container>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - high z-index so it stacks above other nav/headers (avoids overlay issues) */}
       {isMobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] lg:hidden"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] lg:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
           <div
-            className="fixed top-0 left-0 w-64 max-w-[70vw] h-full z-[101] p-4 flex flex-col overflow-y-auto lg:hidden shadow-2xl animate-in slide-in-from-left-4"
+            className="fixed top-0 left-0 w-64 max-w-[70vw] h-full z-[10000] p-4 flex flex-col overflow-y-auto lg:hidden shadow-2xl animate-in slide-in-from-left-4"
             role="dialog"
             aria-modal="true"
             aria-label={t('nav.menu')}
@@ -293,7 +292,7 @@ export function Navigation() {
               borderRight: '1px solid var(--shop-border-color, rgba(255,255,255,0.08))',
             }}
           >
-              <div className="flex items-center justify-between mb-4 pb-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
                 <h2 className="text-base font-semibold" style={{ color: 'var(--shop-accent)' }}>{navLabels.labelMenu}</h2>
                 <button
                   className="bg-transparent border-none text-white cursor-pointer p-1.5 min-w-[48px] min-h-[48px] rounded flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2"
@@ -435,7 +434,7 @@ export function Navigation() {
                   <LanguageSwitcher />
                 </div>
               </div>
-            </div>
+          </div>
         </>
       )}
     </nav>

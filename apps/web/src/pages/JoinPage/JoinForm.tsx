@@ -5,6 +5,7 @@ import { Card, CardContent, Input, InputLabel, InputError, Button } from '@/comp
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatCurrency } from '@/lib/format';
 import { formatDurationMinutes } from '@/lib/formatDuration';
+import { truncateOptionLabel } from '@/lib/utils';
 
 export function JoinForm() {
   const {
@@ -57,13 +58,14 @@ export function JoinForm() {
                   className="form-control-select w-full max-w-full"
                 >
                   <option value="">{t('join.selectOption')}</option>
-                  {activeServices.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                      {s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}
-                      {s.price != null && s.price > 0 ? ` – ${formatCurrency(s.price, locale)}` : ''}
-                    </option>
-                  ))}
+                  {activeServices.map((s) => {
+                    const fullLabel = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}${s.price != null && s.price > 0 ? ` – ${formatCurrency(s.price, locale)}` : ''}`;
+                    return (
+                      <option key={s.id} value={s.id} title={fullLabel}>
+                        {truncateOptionLabel(fullLabel)}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             )}

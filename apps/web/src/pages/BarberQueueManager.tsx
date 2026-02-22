@@ -26,7 +26,7 @@ import { KioskAdsPlayer } from '@/components/KioskAdsPlayer';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { useLocale } from '@/contexts/LocaleContext';
-import { cn, getErrorMessage, formatName, formatNameForDisplay } from '@/lib/utils';
+import { cn, getErrorMessage, formatName, formatNameForDisplay, truncateOptionLabel } from '@/lib/utils';
 import { hasHoursForDay, hasAnyOperatingHours } from '@/lib/operatingHours';
 import { getShopStatus } from '@eutonafila/shared';
 
@@ -1079,11 +1079,11 @@ export function BarberQueueManager() {
                 value={checkInServiceId ?? ''}
                 onChange={(e) => setCheckInServiceId(e.target.value ? parseInt(e.target.value, 10) : null)}
                 required
-                className="form-control-select w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                className="form-control-select w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
               >
                 <option value="">{t('join.selectOption')}</option>
                 {activeServices.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
+                  <option key={s.id} value={s.id} title={s.name}>{truncateOptionLabel(s.name)}</option>
                 ))}
               </select>
             </div>
@@ -1095,11 +1095,11 @@ export function BarberQueueManager() {
                 id="checkInBarber"
                 value={checkInBarberId ?? ''}
                 onChange={(e) => setCheckInBarberId(e.target.value ? parseInt(e.target.value, 10) : null)}
-                className="form-control-select w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                className="form-control-select w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
               >
                 <option value="">{t('join.selectOption')}</option>
                 {barbers.filter((b) => b.isActive).map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
+                  <option key={b.id} value={b.id} title={b.name}>{truncateOptionLabel(b.name)}</option>
                 ))}
               </select>
             </div>
@@ -1175,7 +1175,7 @@ export function BarberQueueManager() {
               >
                 <option value="">{t('join.selectOption')}</option>
                 {activeServices.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
+                  <option key={s.id} value={s.id} title={s.name}>{truncateOptionLabel(s.name)}</option>
                 ))}
               </select>
             </div>

@@ -7,6 +7,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Truncate label for select options so long service/barber names fit. Full text available via title. */
+export function truncateOptionLabel(text: string, maxLen: number = 40): string {
+  if (!text || text.length <= maxLen) return text;
+  return text.slice(0, maxLen - 1).trim() + '\u2026';
+}
+
 /**
  * Extract a user-friendly error message from an error object.
  * 
