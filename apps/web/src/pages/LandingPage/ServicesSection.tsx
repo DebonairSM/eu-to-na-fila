@@ -41,7 +41,7 @@ export function ServicesSection() {
           <div className="lg:hidden space-y-4">
             {activeServices.map((service) => (
               <Card key={service.id} hover className="service-card text-center">
-                <CardContent className="p-6">
+                <CardContent className="py-6 px-3">
                   <span className="service-card__icon material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)] mb-4 block">
                     content_cut
                   </span>
@@ -73,7 +73,7 @@ export function ServicesSection() {
               >
                 {activeServices.map((service) => (
                   <Card key={service.id} hover className="service-card text-center">
-                    <CardContent className="p-8">
+                    <CardContent className="py-8 px-4">
                       <span className="service-card__icon material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)] mb-4 block">
                         content_cut
                       </span>

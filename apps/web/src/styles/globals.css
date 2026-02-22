@@ -758,6 +758,8 @@
   font-family: var(--shop-font-heading, 'Playfair Display', serif);
   font-weight: var(--shop-heading-weight, 600);
   line-height: 1.3;
+  min-width: 0;
+  word-break: break-word;
 }
 .service-card__price {
   letter-spacing: 0.02em;

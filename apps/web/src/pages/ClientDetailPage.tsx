@@ -119,7 +119,7 @@ export function ClientDetailPage() {
   const startEdit = () => {
     if (data) {
       const c = data.client;
-      setEditName(c.name);
+      setEditName(c.name ?? '');
       setEditEmail(c.email ?? '');
       setEditAddress(c.address ?? '');
       setEditState(c.state ?? '');
@@ -323,7 +323,7 @@ export function ClientDetailPage() {
                   </div>
                 ) : (
                   <>
-                    <h1 className="text-2xl font-semibold text-[var(--shop-accent)]">{formatNameForDisplay(client.name)}</h1>
+                    <h1 className="text-2xl font-semibold text-[var(--shop-accent)]">{formatNameForDisplay(client.name ?? '')}</h1>
                     <Button variant="ghost" size="sm" onClick={startEdit} className="text-[var(--shop-text-secondary)] hover:text-white">
                       <span className="material-symbols-outlined mr-1 align-middle text-lg">edit</span>
                       {t('clients.edit')}
