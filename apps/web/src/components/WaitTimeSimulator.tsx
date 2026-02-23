@@ -78,7 +78,7 @@ export function WaitTimeSimulator({ services }: WaitTimeSimulatorProps) {
               onChange={(e) =>
                 setSelectedServiceId(e.target.value === '' ? '' : Number(e.target.value))
               }
-              className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm"
+              className="select-readable w-full px-3 py-2 bg-white border border-white/20 rounded-lg text-gray-900 text-sm"
             >
               <option value="">Padrao (30 min)</option>
               {activeServices.map((s) => (

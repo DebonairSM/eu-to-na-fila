@@ -98,7 +98,7 @@ export function BarberAnalyticsPage() {
             <select
               value={days}
               onChange={(e) => setDays(Number(e.target.value))}
-              className="px-3 py-2 rounded-lg bg-white/5 border border-white/20 text-white text-sm"
+              className="select-readable px-3 py-2 rounded-lg bg-white border border-white/20 text-gray-900 text-sm"
             >
               <option value={7}>Últimos 7 dias</option>
               <option value={14}>Últimos 14 dias</option>

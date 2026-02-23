@@ -451,7 +451,7 @@ export function AdManagementPage() {
                 <select
                   value={uploadShopId === null ? '' : String(uploadShopId)}
                   onChange={(e) => setUploadShopId(e.target.value === '' ? null : parseInt(e.target.value, 10))}
-                  className="form-select w-full max-w-xs px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                  className="form-select select-readable w-full max-w-xs px-3 py-2.5 bg-white border border-white/20 rounded-lg text-gray-900 text-sm"
                 >
                   <option value="">{t('ads.allShops')}</option>
                   {shops.map((s) => (
@@ -578,7 +578,7 @@ export function AdManagementPage() {
                                 <select
                                   value={ad.shopId === null ? '' : String(ad.shopId)}
                                   onChange={(e) => handleUpdateShopId(ad.id, e.target.value === '' ? null : parseInt(e.target.value, 10))}
-                                  className="ml-1 px-2 py-1 rounded bg-white/10 border border-white/20 text-white/90 text-xs"
+                                  className="select-readable ml-1 px-2 py-1 rounded bg-white border border-white/20 text-gray-900 text-xs"
                                 >
                                   <option value="">{t('ads.allShops')}</option>
                                   {shops.map((s) => (
@@ -793,7 +793,7 @@ export function AdManagementPage() {
                 <select
                   value={uploadShopId === null ? '' : String(uploadShopId)}
                   onChange={(e) => setUploadShopId(e.target.value === '' ? null : parseInt(e.target.value, 10))}
-                  className="form-select w-full max-w-xs px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                  className="form-select select-readable w-full max-w-xs px-3 py-2.5 bg-white border border-white/20 rounded-lg text-gray-900 text-sm"
                 >
                   <option value="">{t('ads.allShops')}</option>
                   {shops.map((s) => (
@@ -916,7 +916,7 @@ export function AdManagementPage() {
                                 <select
                                   value={ad.shopId === null ? '' : String(ad.shopId)}
                                   onChange={(e) => handleUpdateShopId(ad.id, e.target.value === '' ? null : parseInt(e.target.value, 10))}
-                                  className="ml-1 px-2 py-1 rounded bg-white/10 border border-white/20 text-white/90 text-xs"
+                                  className="select-readable ml-1 px-2 py-1 rounded bg-white border border-white/20 text-gray-900 text-xs"
                                 >
                                   <option value="">{t('ads.allShops')}</option>
                                   {shops.map((s) => (

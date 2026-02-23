@@ -123,7 +123,7 @@ export function AppearanceForm({
               <select
                 value={formData.style.headingFont ?? ''}
                 onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, headingFont: (e.target.value || undefined) as FontToken | undefined } }))}
-                className={inputClass}
+                className={cn(inputClass, 'select-readable bg-white text-gray-900')}
               >
                 <option value="">{t('appearance.defaultStyle')}</option>
                 {(['playfair_display', 'cormorant_garamond', 'lora', 'abril_fatface', 'oswald', 'dm_sans', 'inter', 'crimson_text', 'roboto_condensed', 'montserrat'] as FontToken[]).map((t) => (
@@ -136,7 +136,7 @@ export function AppearanceForm({
               <select
                 value={formData.style.bodyFont ?? ''}
                 onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, bodyFont: (e.target.value || undefined) as FontToken | undefined } }))}
-                className={inputClass}
+                className={cn(inputClass, 'select-readable bg-white text-gray-900')}
               >
                 <option value="">{t('appearance.defaultStyle')}</option>
                 {(['inter', 'lora', 'crimson_text', 'roboto_condensed', 'dm_sans', 'montserrat', 'playfair_display', 'cormorant_garamond', 'abril_fatface', 'oswald'] as FontToken[]).map((t) => (
@@ -161,7 +161,7 @@ export function AppearanceForm({
               <select
                 value={formData.style.dividerStyle ?? ''}
                 onChange={(e) => setFormData((prev) => ({ ...prev, style: { ...prev.style, dividerStyle: (e.target.value || undefined) as DividerStyle | undefined } }))}
-                className={inputClass}
+                className={cn(inputClass, 'select-readable bg-white text-gray-900')}
               >
                 <option value="">{t('appearance.default')}</option>
                 <option value="line">{t('appearance.dividerLine')}</option>

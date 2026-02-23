@@ -302,7 +302,7 @@ export function ClientDetailPage() {
                     <select
                       value={editGender}
                       onChange={(e) => setEditGender(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-[var(--shop-accent)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                      className="select-readable w-full px-3 py-2 rounded-lg bg-white border border-[var(--shop-accent)] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
                     >
                       <option value="">{t('account.genderPlaceholder')}</option>
                       <option value="male">{t('account.genderMale')}</option>

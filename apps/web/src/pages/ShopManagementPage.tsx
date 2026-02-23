@@ -1554,7 +1554,7 @@ export function ShopManagementPage() {
                                 id="editTimezone"
                                 value={formData.settings.timezone ?? 'America/Sao_Paulo'}
                                 onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, timezone: e.target.value || undefined } })}
-                                className="w-full max-w-[280px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                                className="select-readable w-full max-w-[280px] px-2 py-1.5 bg-white border border-white/20 rounded-lg text-gray-900 text-sm"
                               >
                                 {(() => {
                                   const value = formData.settings.timezone ?? 'America/Sao_Paulo';
@@ -2621,7 +2621,7 @@ export function ShopManagementPage() {
                             id="editTimezoneMobile"
                             value={formData.settings.timezone ?? 'America/Sao_Paulo'}
                             onChange={(e) => setFormData({ ...formData, settings: { ...formData.settings, timezone: e.target.value || undefined } })}
-                            className="w-full max-w-[280px] px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+                            className="select-readable w-full max-w-[280px] px-2 py-1.5 bg-white border border-white/20 rounded-lg text-gray-900 text-sm"
                           >
                             {(() => {
                               const value = formData.settings.timezone ?? 'America/Sao_Paulo';

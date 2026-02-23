@@ -381,7 +381,7 @@ export function CustomerAccountPage() {
                         id="profile-gender"
                         value={editGender}
                         onChange={(e) => setEditGender(e.target.value)}
-                        className="w-full mt-1 px-4 py-3 rounded-lg border border-[var(--shop-border-color)] bg-white/5 text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                        className="select-readable w-full mt-1 px-4 py-3 rounded-lg border border-[var(--shop-border-color)] bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
                       >
                         <option value="">{t('account.genderPlaceholder')}</option>
                         <option value="male">{t('account.genderMale')}</option>

@@ -787,6 +787,11 @@
 }
 
 /* Join form: select matching Input (form-control family) */
+/* Global: ensure all dropdown options are readable (avoid white text on white in dark themes) */
+select option {
+  background: #fff !important;
+  color: #1a1a1a !important;
+}
 .form-control-select {
   display: flex;
   width: 100%;
@@ -817,12 +822,12 @@ select.form-control-select {
 
 /* Explicit readable select: light background and dark text (for dark modals / kiosk) */
 select.select-readable {
-  background-color: #fff;
-  color: #1a1a1a;
+  background-color: #fff !important;
+  color: #1a1a1a !important;
 }
 select.select-readable option {
-  background: #fff;
-  color: #1a1a1a;
+  background: #fff !important;
+  color: #1a1a1a !important;
 }
 
 /* Dropdown styling per shop layout (match architectural style) */

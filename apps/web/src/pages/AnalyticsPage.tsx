@@ -196,7 +196,7 @@ export function AnalyticsPage() {
               <select
                 value={days}
                 onChange={(e) => setDays(Number(e.target.value))}
-                className="px-4 py-2.5 bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-xl text-white text-base cursor-pointer focus:outline-none focus:border-[var(--shop-accent)] transition-colors"
+                className="select-readable px-4 py-2.5 bg-white border border-[var(--shop-border-color)] rounded-xl text-gray-900 text-base cursor-pointer focus:outline-none focus:border-[var(--shop-accent)] transition-colors"
               >
                 <option value={7}>{periodLabel(7)}</option>
                 <option value={30}>{periodLabel(30)}</option>
