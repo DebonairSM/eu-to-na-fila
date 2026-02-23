@@ -1,0 +1,3 @@
+# For load_test.py and endurance runs (optional).
+# Install: python -m pip install -r requirements-load.txt
+httpx>=0.25.0

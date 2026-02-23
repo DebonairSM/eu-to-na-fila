@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
-import { useAuthContext } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { formatNameForDisplay } from '@/lib/utils';
@@ -25,7 +24,6 @@ export function ClientSearchPage() {
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
   const { t } = useLocale();
-  const { isBarber } = useAuthContext();
   const [query, setQuery] = useState('');
   const [clients, setClients] = useState<ClientListItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -118,7 +116,8 @@ export function ClientSearchPage() {
             {clients.map((client) => {
               const age = ageFromDateOfBirth(client.dateOfBirth);
               const genderLabel = client.gender === 'male' ? t('account.genderMale') : client.gender === 'female' ? t('account.genderFemale') : client.gender || null;
-              const barberMeta = isBarber && [
+              const hasFullInfo = client.phone != null || client.email != null;
+              const limitedMeta = [
                 genderLabel,
                 age != null ? `${age} ${t('clients.yearsOld')}` : null,
               ].filter(Boolean).join(' · ');
@@ -132,7 +131,7 @@ export function ClientSearchPage() {
                       {formatNameForDisplay(client.name)}
                     </span>
                     <span className="block text-sm text-[var(--shop-text-secondary)] mt-0.5">
-                      {isBarber ? barberMeta || '—' : `${client.phone ?? ''}${client.email ? ` · ${client.email}` : ''}`}
+                      {hasFullInfo ? `${client.phone ?? ''}${client.email ? ` · ${client.email}` : ''}` : limitedMeta || '—'}
                     </span>
                   </Link>
                 </li>

@@ -62,7 +62,7 @@ export default defineConfig({
     command: 'pnpm dev',
     url: `${testConfig.webBaseUrl}/projects/mineiro`,
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    timeout: 180 * 1000, // 3 min for slow machines
     stdout: 'ignore',
     stderr: 'pipe',
   },

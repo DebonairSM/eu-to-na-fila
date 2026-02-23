@@ -74,6 +74,7 @@ fastify.register(fastifyHelmet, {
         "'self'",
         "https://api.qrserver.com",
         "https://api.stripe.com",
+        "https://ui-avatars.com",
         "https://*.supabase.co",
         "wss:",
         "ws:",

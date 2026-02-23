@@ -1,21 +1,48 @@
+import argparse
 import asyncio
 import httpx
+import os
 import time
 import uuid
 from dataclasses import dataclass
 from typing import List
 
-BASE_URL = "https://eutonafila.com.br"
-SHOP_SLUG = "mineiro"
+# Override via env for local or staging (e.g. BASE_URL=http://localhost:4041 SHOP_SLUG=mineiro)
+BASE_URL = os.environ.get("BASE_URL", "https://eutonafila.com.br").rstrip("/")
+SHOP_SLUG = os.environ.get("SHOP_SLUG", "mineiro")
 
-# Ramp profile: (rps, duration_seconds)
-RAMP: List[tuple[int, int]] = [
-    (2, 30),
-    (5, 60),
-    (10, 60),
-    (20, 60),
-    (40, 60),
-]
+# Mode: env or CLI (--quick, --endurance)
+ENDURANCE = os.environ.get("ENDURANCE", "").lower() in ("1", "true", "yes")
+QUICK = os.environ.get("QUICK", "").lower() in ("1", "true", "yes")
+
+def _parse_args():
+    p = argparse.ArgumentParser(description="Load test: POST /api/shops/<slug>/tickets")
+    p.add_argument("--quick", action="store_true", help="Short smoke: 2 rps for 15s")
+    p.add_argument("--endurance", action="store_true", help="Steady 5 rps for 5 min")
+    args = p.parse_args()
+    if args.quick:
+        return [(2, 15)]
+    if args.endurance:
+        return [(5, 300)]
+    return None
+
+_cli_ramp = _parse_args()
+if _cli_ramp is not None:
+    RAMP: List[tuple[int, int]] = _cli_ramp
+    QUICK = _cli_ramp == [(2, 15)]
+    ENDURANCE = _cli_ramp == [(5, 300)]
+elif QUICK:
+    RAMP = [(2, 15)]
+elif ENDURANCE:
+    RAMP = [(5, 300)]
+else:
+    RAMP: List[tuple[int, int]] = [
+        (2, 30),
+        (5, 60),
+        (10, 60),
+        (20, 60),
+        (40, 60),
+    ]
 
 PAYLOAD = {
     "serviceId": 1,
@@ -85,7 +112,8 @@ async def run_stage(rps: int, duration: int, overall: Stats):
     print(f"Stage: {rps} rps for {duration}s")
     stage_stats = Stats()
     stop_time = time.perf_counter() + duration
-    async with httpx.AsyncClient(http2=True, headers={"Accept": "application/json"}) as client:
+    # http2=True requires pip install 'httpx[http2]'; omit for simpler setup
+    async with httpx.AsyncClient(http2=False, headers={"Accept": "application/json"}) as client:
         # number of workers ~= rps, but cap to avoid too many tasks
         workers = max(1, min(rps, 50))
         tasks = [asyncio.create_task(worker(client, stage_stats, stop_time, rps)) for _ in range(workers)]
@@ -98,6 +126,7 @@ async def run_stage(rps: int, duration: int, overall: Stats):
     overall.latencies.extend(stage_stats.latencies)
 
 async def main():
+    print(f"Base URL: {BASE_URL}, shop: {SHOP_SLUG}, mode: {'quick' if QUICK else 'endurance' if ENDURANCE else 'ramp'}")
     overall = Stats()
     for rps, duration in RAMP:
         await run_stage(rps, duration, overall)

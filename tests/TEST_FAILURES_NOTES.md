@@ -137,11 +137,21 @@ Some tests may be flaky due to:
 2. **Verify Dev Server:**
    - Ensure `pnpm dev` works correctly
    - Check that both web and API servers start
+   - E2E waits up to 120s for web server; slow machines may need to start dev first and reuse.
 
 3. **Run Tests:**
    - Use `pnpm test:e2e:ui` for interactive debugging
    - Review failures and adjust expectations if needed
 
-4. **Manual Testing:**
+4. **API Vitest (integration):**
+   - Requires PostgreSQL on localhost:5432 (or DATABASE_URL). Without it, 51 tests fail with ECONNREFUSED.
+
+5. **Load / endurance (`load_test.py`):**
+   - Install: `pip install -r requirements-load.txt`
+   - Quick: `python load_test.py --quick`. Endurance: `python load_test.py --endurance`
+   - Local: `BASE_URL=http://localhost:4041` and `SHOP_SLUG=mineiro`. On Windows PowerShell: `$env:QUICK="1"; python load_test.py`
+   - For successful responses use a running local API (or a staging URL); production may return 4xx/5xx for unauthenticated or invalid payloads.
+
+6. **Manual Testing:**
    - Use `tests/MANUAL_TESTING_CHECKLIST.md` for comprehensive manual validation
    - Some scenarios are better tested manually

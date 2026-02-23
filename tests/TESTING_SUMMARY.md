@@ -107,12 +107,46 @@ Comprehensive test suite has been created for the ad upload/display system. All 
 
 ## Running Tests
 
-### Run All Tests
+### E2E (Playwright)
+Requires dev server to start (or run `pnpm dev` first and set CI= so Playwright reuses it). Default timeout for web server is **180s** (3 min). If the server still does not become ready, start it manually in another terminal (`pnpm dev`), then run `pnpm test:e2e` so Playwright reuses the existing server.
+
 ```bash
-pnpm test
+pnpm test:e2e
+# Chromium only (faster): PLAYWRIGHT_BROWSERS=chromium pnpm test:e2e
+pnpm test:e2e:ui    # interactive
 ```
 
-### Run Specific Test Suite
+### API (Vitest)
+Integration tests require **PostgreSQL** on localhost:5432 (or DATABASE_URL). Without it, analytics and integration tests fail with ECONNREFUSED.
+
+```bash
+pnpm --filter api test:run
+```
+
+### Load / endurance (`load_test.py`)
+Python script that ramps request rate against the ticket-creation API. Default target is production; override for local or staging.
+
+**Prerequisites:** Python 3, and `pip install -r requirements-load.txt` (installs `httpx`).
+
+```bash
+# Default: ramp 2→40 rps against production (https://eutonafila.com.br, shop mineiro)
+python load_test.py
+
+# Quick smoke: 2 rps for 15 seconds (CLI works on all platforms)
+python load_test.py --quick
+
+# Endurance: steady 5 rps for 5 minutes
+python load_test.py --endurance
+
+# Or use env: QUICK=1, ENDURANCE=1
+
+# Local API (e.g. API on port 4041)
+set BASE_URL=http://localhost:4041
+set SHOP_SLUG=mineiro
+python load_test.py --quick
+```
+
+### Run specific E2E suite
 ```bash
 # API tests only
 pnpm test tests/api
@@ -145,12 +179,12 @@ Tests assume:
 
 ## Next Steps
 
-1. Run full test suite to identify any failures
-2. Fix any test failures or flaky tests
-3. Add performance benchmarks
-4. Add load testing for concurrent uploads
-5. Add visual regression tests for UI
-6. Set up CI/CD test automation
+1. Run full test suite to identify any failures (E2E: ensure dev server can start within 120s; API: ensure PostgreSQL is running).
+2. Fix any test failures or flaky tests.
+3. Add performance benchmarks.
+4. Load/endurance: use `load_test.py` with QUICK=1 or ENDURANCE=1; install deps from `requirements-load.txt`.
+5. Add visual regression tests for UI.
+6. Set up CI/CD test automation.
 
 ## Notes
 

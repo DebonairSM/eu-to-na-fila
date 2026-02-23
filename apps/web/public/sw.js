@@ -171,7 +171,8 @@ self.addEventListener('fetch', (event) => {
     }
 
     // Handle API requests (network first, fallback to cache)
-    if (url.pathname.startsWith('/api/')) {
+    // Only intercept same-origin /api/ so we don't treat external URLs like ui-avatars.com/api/ as API
+    if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) {
       event.respondWith(apiNetworkFirstStrategy(request));
       return;
     }
