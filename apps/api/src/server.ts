@@ -233,6 +233,29 @@ fastify.register(fastifyStatic, {
   },
 });
 
+// Also serve same assets at /mineiro/ so rewritten HTML (script src=/mineiro/assets/...) loads
+fastify.register(fastifyStatic, {
+  root: projectsMineiroPath,
+  prefix: '/mineiro/',
+  decorateReply: false,
+  wildcard: false,
+  index: false,
+  setHeaders: (res, path) => {
+    // Cache hashed assets (JS/CSS with hash in filename) for 1 year
+    if (path.includes('/assets/') && /\.[a-f0-9]{8,}\.(js|css)$/i.test(path)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+    // Cache other static assets (fonts, images) for 1 week
+    else if (/\.(woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|ico)$/i.test(path)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800');
+    }
+    // Don't cache HTML, SW, or manifest - always revalidate
+    else if (/\.(html|js|json)$/i.test(path) && !path.includes('/assets/')) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    }
+  },
+});
+
 // Serve static assets for all /projects/:slug/ paths (sw.js, favicon, manifest, etc.)
 // Same SPA build is used for all project slugs; assets live in projects/mineiro
 const STATIC_ASSET_FILES = ['sw.js', 'favicon.svg', 'favicon.png', 'manifest.json', 'icon-192.png', 'icon-512.png'];
@@ -385,13 +408,28 @@ fastify.get('/', async (request, reply) => {
     const fileContent = readFileSync(rootIndexPath, 'utf-8');
     return reply.type('text/html').send(fileContent);
   }
-  // Fallback: redirect to /projects/mineiro/ if root build doesn't exist
-  return reply.redirect('/projects/mineiro/');
+  // Fallback: redirect to /mineiro/ if root build doesn't exist
+  return reply.redirect('/mineiro/');
 });
 
-// Redirect /mineiro to /projects/mineiro/ for backwards compatibility
+// Redirect /mineiro (no trailing slash) to /mineiro/ so barbershop loads
 fastify.get('/mineiro', async (request, reply) => {
-  return reply.redirect('/projects/mineiro/');
+  return reply.redirect(302, '/mineiro/');
+});
+
+// Explicitly serve barbershop SPA at /mineiro/ (so it works even if 404 order or path resolution fails)
+fastify.get('/mineiro/', async (request, reply) => {
+  const project = await getProjectBySlug('mineiro');
+  if (!project) return reply.code(404).send({ error: 'Not found' });
+  const indexPath = join(projectsMineiroPath, 'index.html');
+  if (!existsSync(indexPath)) return reply.code(404).send({ error: 'Not found' });
+  let fileContent = readFileSync(indexPath, 'utf-8');
+  const projectPath = '/mineiro';
+  const buildBase = '/projects/mineiro/';
+  fileContent = fileContent.split(buildBase).join(projectPath + '/');
+  const inject = `<script>window.__SHOP_SLUG__="mineiro";window.__SHOP_PATH__="${projectPath}";</script>`;
+  fileContent = fileContent.replace('</body>', `${inject}\n</body>`);
+  return reply.type('text/html').send(fileContent);
 });
 
 // Redirect /projects/:slug to the project's canonical path when path differs (e.g. /projects/shop -> /shops, /projects/mineiro -> /mineiro)
@@ -433,9 +471,18 @@ fastify.setNotFoundHandler(async (request, reply) => {
   const url = request.url;
   const urlPath = url.split('?')[0];
 
-  // Resolve project by pathname so we serve at project path (e.g. /shops) not only /projects/:slug
+  // Resolve project by pathname so we serve at project path (e.g. /mineiro, /shops) not only /projects/:slug
   const pathname = urlPath.replace(/\?.*$/, '');
-  const pathResolution = await getProjectByPathname(pathname);
+  let pathResolution = await getProjectByPathname(pathname);
+  // Fallback: path like /mineiro or /mineiro/... may be slug; resolve so /mineiro works before migration
+  const reservedSegments = ['api', 'company', 'companies', 'projects', 'about', 'contact', 'health', 'test', 'ws'];
+  if (!pathResolution && /^\/[^/]+(\/|$)/.test(pathname)) {
+    const segment = pathname.slice(1).split('/')[0];
+    if (segment && !reservedSegments.includes(segment)) {
+      const project = await getProjectBySlug(segment);
+      if (project) pathResolution = { project, path: '/' + segment };
+    }
+  }
 
   if (pathResolution) {
     const { project, path: projectPath } = pathResolution;
@@ -478,6 +525,11 @@ fastify.setNotFoundHandler(async (request, reply) => {
     if (existsSync(indexPath)) {
       try {
         let fileContent = readFileSync(indexPath, 'utf-8');
+        // Rewrite build base /projects/mineiro/ to actual path so assets load (e.g. /mineiro/assets/xxx)
+        const buildBase = '/projects/mineiro/';
+        if (projectPath !== '/projects/mineiro' && projectPath + '/' !== buildBase) {
+          fileContent = fileContent.split(buildBase).join(projectPath + '/');
+        }
         const inject = `<script>window.__SHOP_SLUG__="${project.slug.replace(/"/g, '\\"')}";window.__SHOP_PATH__="${projectPath.replace(/"/g, '\\"')}";</script>`;
         fileContent = fileContent.replace('</body>', `${inject}\n</body>`);
         return reply.type('text/html').send(fileContent);
