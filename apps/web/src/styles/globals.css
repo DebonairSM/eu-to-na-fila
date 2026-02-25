@@ -798,7 +798,7 @@ select option {
   border-radius: 0.5rem;
   background: var(--shop-surface-secondary, #1a1a1a);
   border: 1px solid var(--shop-border-color, rgba(255,255,255,0.2));
-  padding: 0.875rem 3rem 0.875rem 1rem;
+  padding: 0.875rem 1.75rem 0.875rem 0.5rem;
   color: var(--shop-text-primary, #fff);
   font-size: 1rem;
   min-height: 52px;
@@ -830,10 +830,11 @@ select.select-readable option {
   color: #1a1a1a !important;
 }
 
-/* Ensure dropdown arrow has enough space from the right border (Tailwind px-* often overrides and cramps it) */
+/* Tighter side padding for text; right side keeps minimal space for the arrow (overrides Tailwind px-*) */
 select.form-control-select,
 select.select-readable {
-  padding-right: 2.5rem !important;
+  padding-left: 0.5rem !important;
+  padding-right: 1.75rem !important;
 }
 
 /* Dropdown styling per shop layout (match architectural style) */

@@ -629,7 +629,7 @@ fastify.addHook('onReady', async () => {
 // Start server
 fastify.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {
   console.log(`✅ Server running at http://localhost:${env.PORT}`);
-  console.log(`📱 SPA available at http://localhost:${env.PORT}/projects/mineiro`);
+  console.log(`📱 SPA available at http://localhost:${env.PORT}/mineiro`);
   console.log(`🔌 API available at http://localhost:${env.PORT}/api`);
   console.log('\n📋 Registered routes:');
   fastify.printRoutes();

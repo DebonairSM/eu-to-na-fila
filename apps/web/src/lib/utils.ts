@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { ApiError } from './api';
+import { getShopBasePath } from './config';
 import { STORAGE_KEYS } from './constants';
 
 export function cn(...inputs: ClassValue[]) {
@@ -164,14 +165,18 @@ export function getOrCreateDeviceId(): string {
 /**
  * Redirect to the ticket status page. When ticketShopSlug is present, uses full path
  * so the app loads in the correct barbershop context (per-shop status).
+ * Same-shop: use current base path (short path); other shop: use /projects/:slug (server redirects to canonical).
  */
 export function redirectToStatusPage(
   ticketId: number,
   ticketShopSlug: string | undefined,
-  navigate: (to: string, opts?: { replace?: boolean }) => void
+  navigate: (to: string, opts?: { replace?: boolean }) => void,
+  currentShopSlug?: string
 ): void {
   if (ticketShopSlug) {
-    window.location.assign(`/projects/${ticketShopSlug}/status/${ticketId}`);
+    const basePath =
+      currentShopSlug === ticketShopSlug ? getShopBasePath() : `/projects/${ticketShopSlug}`;
+    window.location.assign(`${basePath}/status/${ticketId}`);
     return;
   }
   navigate(`/status/${ticketId}`, { replace: true });

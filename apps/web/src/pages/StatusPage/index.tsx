@@ -59,7 +59,11 @@ export function StatusPage() {
   const ticketShopSlug = (ticket as { shopSlug?: string } | null)?.shopSlug;
   useEffect(() => {
     if (isLoading || !ticket || !ticketShopSlug || ticketShopSlug === shopSlug) return;
-    window.location.assign(`/projects/${ticketShopSlug}/status/${ticket.id}`);
+    const basePath =
+      ticketShopSlug === shopSlug
+        ? (typeof window !== 'undefined' && (window as unknown as { __SHOP_PATH__?: string }).__SHOP_PATH__?.replace(/\/+$/, '')) || `/projects/${ticketShopSlug}`
+        : `/projects/${ticketShopSlug}`;
+    window.location.assign(`${basePath}/status/${ticket.id}`);
   }, [isLoading, ticket, ticketShopSlug, shopSlug]);
 
   useEffect(() => {

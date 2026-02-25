@@ -935,33 +935,35 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const frontendOrigin = env.CORS_ORIGIN.replace(/\/$/, '');
 
-    const redirectToLogin = (error: string, useSlug?: string) => {
-      const slug = useSlug ?? env.SHOP_SLUG;
-      return reply.redirect(302, `${frontendOrigin}/projects/${slug}/shop/login?error=${encodeURIComponent(error)}`);
+    const redirectToLogin = async (error: string, useSlug?: string) => {
+      const s = useSlug ?? env.SHOP_SLUG;
+      const sh = await getShopBySlug(s);
+      const basePath = sh ? await getShopFrontendPath(sh, s) : `/projects/${s}`;
+      return reply.redirect(302, `${frontendOrigin}${basePath}/shop/login?error=${encodeURIComponent(error)}`);
     };
 
     if (!query.code || !query.state) {
-      return redirectToLogin('google_callback_missing');
+      return await redirectToLogin('google_callback_missing');
     }
 
     let stateData: { slug: string; redirect_uri: string };
     try {
       stateData = JSON.parse(Buffer.from(query.state, 'base64url').toString());
     } catch {
-      return redirectToLogin('invalid_state');
+      return await redirectToLogin('invalid_state');
     }
     const slug = stateData.slug;
     if (!slug || typeof slug !== 'string') {
-      return redirectToLogin('invalid_state');
+      return await redirectToLogin('invalid_state');
     }
 
     if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
-      return redirectToLogin('google_not_configured', slug);
+      return await redirectToLogin('google_not_configured', slug);
     }
 
     const shop = await getShopBySlug(slug);
     if (!shop) {
-      return redirectToLogin('shop_not_found', slug);
+      return await redirectToLogin('shop_not_found', slug);
     }
 
     const callbackPath = `/api/auth/customer/google/callback`;
@@ -992,7 +994,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const name = (userinfo.name || userinfo.given_name || email?.split('@')[0] || 'Customer').trim();
 
     if (!email) {
-      return redirectToLogin('google_no_email', slug);
+      return await redirectToLogin('google_no_email', slug);
     }
 
     const normalizedEmail = normalizeEmail(email);
@@ -1026,7 +1028,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     if (!client) {
-      return redirectToLogin('create_failed', slug);
+      return await redirectToLogin('create_failed', slug);
     }
 
     logAuthSuccess(request, shop.id, 'customer');

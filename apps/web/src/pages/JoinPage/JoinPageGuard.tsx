@@ -38,7 +38,7 @@ export function JoinPageGuard() {
           // Device has an active ticket - store it and redirect to that ticket's shop status
           console.log('[JoinPageGuard] Found active ticket by deviceId, redirecting to status:', activeTicket.id);
           localStorage.setItem(STORAGE_KEY, activeTicket.id.toString());
-          redirectToStatusPage(activeTicket.id, activeTicket.shopSlug, navigate);
+          redirectToStatusPage(activeTicket.id, activeTicket.shopSlug, navigate, shopSlug);
           return;
         }
       } catch (error) {
@@ -53,7 +53,7 @@ export function JoinPageGuard() {
           if (activeTicket && (activeTicket.status === 'waiting' || activeTicket.status === 'in_progress')) {
             console.log('[JoinPageGuard] Found active ticket by deviceId on retry, redirecting:', activeTicket.id);
             localStorage.setItem(STORAGE_KEY, activeTicket.id.toString());
-            redirectToStatusPage(activeTicket.id, activeTicket.shopSlug, navigate);
+            redirectToStatusPage(activeTicket.id, activeTicket.shopSlug, navigate, shopSlug);
             return;
           }
         } catch (retryError) {
@@ -72,7 +72,7 @@ export function JoinPageGuard() {
             if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
               // Found active ticket in localStorage - redirect to that ticket's shop status
               console.log('[JoinPageGuard] Found active ticket in localStorage, redirecting to status:', ticketId);
-              redirectToStatusPage(ticketId, ticket.shopSlug, navigate);
+              redirectToStatusPage(ticketId, ticket.shopSlug, navigate, shopSlug);
               return;
             } else {
               // Ticket exists but is not active - clear it

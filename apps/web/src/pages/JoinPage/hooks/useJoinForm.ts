@@ -294,7 +294,7 @@ export function useJoinForm() {
         // Device already has an active ticket - store it and redirect to that ticket's shop status
         console.log('[useJoinForm] Found active ticket by deviceId during form submission, redirecting:', activeTicketByDevice.id);
         localStorage.setItem(STORAGE_KEY, activeTicketByDevice.id.toString());
-        redirectToStatusPage(activeTicketByDevice.id, activeTicketByDevice.shopSlug, navigate);
+        redirectToStatusPage(activeTicketByDevice.id, activeTicketByDevice.shopSlug, navigate, shopSlug);
         return; // Exit early, don't submit form
       }
     } catch (error) {
@@ -316,7 +316,7 @@ export function useJoinForm() {
           if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
             // This device has an active ticket - redirect to that ticket's shop status
             console.log('[useJoinForm] Found active ticket in localStorage during form submission, redirecting:', parsed);
-            redirectToStatusPage(parsed, ticket.shopSlug, navigate);
+            redirectToStatusPage(parsed, ticket.shopSlug, navigate, shopSlug);
             return; // Exit early, don't submit form
           } else {
             // Stored ticket is no longer active, clear it
@@ -343,7 +343,7 @@ export function useJoinForm() {
         if (deviceTicket) {
           // This device has an active ticket in queue - redirect to status (current shop)
           console.log('[useJoinForm] Found active ticket in queue, redirecting:', deviceTicketId);
-          redirectToStatusPage(deviceTicketId, shopSlug, navigate);
+          redirectToStatusPage(deviceTicketId, shopSlug, navigate, shopSlug);
           return; // Exit early
         }
       }
@@ -426,7 +426,7 @@ export function useJoinForm() {
       }
 
       // Navigate to status page (use ticket's shop when present for correct barbershop context)
-      redirectToStatusPage(ticket.id, ticket.shopSlug, navigate);
+      redirectToStatusPage(ticket.id, ticket.shopSlug, navigate, shopSlug);
     } catch (error) {
       // Check if this is a name collision error (409 Conflict)
       if (error instanceof ApiError && error.isConflictError()) {

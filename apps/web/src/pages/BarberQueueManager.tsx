@@ -1018,8 +1018,11 @@ export function BarberQueueManager() {
                 sortedTickets.map((ticket, index) => {
                   const assignedBarber = getAssignedBarber(ticket);
                   const isServing = ticket.status === 'in_progress';
+                  const isWaiting = ticket.status === 'waiting';
                   const ticketClientId = (ticket as { clientId?: number | null }).clientId ?? null;
-                  const showNotesButton = isServing && ticketClientId != null && (!isBarber || (user && assignedBarber?.id === user.id));
+                  const hasClientAndInQueue = ticketClientId != null && (isWaiting || isServing);
+                  const canOpenNotesAsBarber = isWaiting || !isBarber || (user && assignedBarber?.id === user.id);
+                  const showNotesButton = hasClientAndInQueue && canOpenNotesAsBarber;
                   // Calculate display position based on index in sorted waiting tickets
                   const displayPosition = isServing ? null : index + 1;
                   const preferredBarberId = (ticket as { preferredBarberId?: number }).preferredBarberId;

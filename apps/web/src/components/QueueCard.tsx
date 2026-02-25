@@ -120,8 +120,8 @@ export const QueueCard = memo(function QueueCard({
                 <span className="material-symbols-outlined text-xl" aria-hidden="true">close</span>
               </button>
             )}
-            {/* See previous notes - shown when barber is serving and client has notes (opens modal to view + add) */}
-            {isServing && onOpenNotes && (
+            {/* View/add client notes - shown when client is in queue (waiting or in progress) and has a client record */}
+            {(isServing || isWaiting) && onOpenNotes && (
               <button
                 type="button"
                 className="flex-shrink-0 w-9 h-9 rounded-md flex items-center justify-center text-[var(--shop-accent)]/90 hover:text-[var(--shop-accent)] hover:bg-[var(--shop-accent)]/20 border border-[var(--shop-accent)]/30 hover:border-[var(--shop-accent)]/50 transition-all focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]/50 focus:ring-offset-0"
