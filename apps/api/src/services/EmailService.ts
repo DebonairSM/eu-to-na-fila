@@ -11,8 +11,10 @@ export interface AppointmentReminderData {
   address?: string | null;
   /** Frontend base URL (e.g. CORS_ORIGIN). No trailing slash. */
   frontendBaseUrl: string;
-  /** Shop slug for building paths like /projects/{slug}/... */
+  /** Shop slug for building paths. */
   shopSlug: string;
+  /** Frontend path for this shop (e.g. /mineiro). If not set, uses /{shopSlug}. */
+  shopPath?: string;
   ticketId: number;
   /** True when appointment was booked with a logged-in customer account (has clientId). */
   hasClientAccount: boolean;
@@ -88,7 +90,7 @@ export async function sendAppointmentReminder(toEmail: string, data: Appointment
   if (data.address) {
     lines.push(``, `Endereço: ${data.address.replace(/\n/g, ', ')}`);
   }
-  const basePath = `/projects/${data.shopSlug}`;
+  const basePath = (data.shopPath ?? `/${data.shopSlug}`).replace(/\/+$/, '');
   if (data.hasClientAccount) {
     const manageUrl = `${data.frontendBaseUrl}${basePath}/account`;
     lines.push(``, `Gerencie seus agendamentos e faça check-in quando chegar:`, `${manageUrl}`, ``);

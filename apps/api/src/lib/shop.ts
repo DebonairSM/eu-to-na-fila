@@ -5,6 +5,12 @@ import type { InferSelectModel } from 'drizzle-orm';
 type Project = InferSelectModel<typeof schema.projects>;
 type Shop = InferSelectModel<typeof schema.shops>;
 
+/** Normalize path for lookup: leading slash, no trailing slash. */
+function normalizePath(p: string): string {
+  const s = p.replace(/\/+$/, '').trim();
+  return s.startsWith('/') ? s : `/${s}`;
+}
+
 /**
  * Resolves project by slug. Used for project-scoped shop lookups.
  */
@@ -13,6 +19,44 @@ export async function getProjectBySlug(slug: string): Promise<Project | undefine
     where: eq(schema.projects.slug, slug),
   });
   return project;
+}
+
+/**
+ * Resolves project by id. Used to get project path for redirects.
+ */
+export async function getProjectById(id: number): Promise<Project | undefined> {
+  const project = await db.query.projects.findFirst({
+    where: eq(schema.projects.id, id),
+  });
+  return project;
+}
+
+/**
+ * Resolves project by its URL path (e.g. /shops or /projects/mineiro).
+ * Used to serve the SPA and assets at the project's configured path.
+ */
+export async function getProjectByPath(path: string): Promise<Project | undefined> {
+  const normalized = normalizePath(path);
+  const project = await db.query.projects.findFirst({
+    where: eq(schema.projects.path, normalized),
+  });
+  return project;
+}
+
+/**
+ * Given a request pathname (e.g. /shops/join or /projects/mineiro/owner),
+ * returns the project and its path if the pathname is under a project path.
+ */
+export async function getProjectByPathname(pathname: string): Promise<{ project: Project; path: string } | undefined> {
+  const normalized = normalizePath(pathname);
+  const projects = await db.query.projects.findMany();
+  for (const project of projects) {
+    const projectPath = normalizePath(project.path);
+    if (normalized === projectPath || normalized.startsWith(projectPath + '/')) {
+      return { project, path: projectPath };
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -42,4 +86,14 @@ export async function getShopBySlug(shopSlug: string): Promise<Shop | undefined>
   return db.query.shops.findFirst({
     where: eq(schema.shops.slug, shopSlug),
   });
+}
+
+/**
+ * Returns the frontend base path for a shop (e.g. /shops or /projects/mineiro).
+ * Used for redirects and links so they use the project's path when set.
+ */
+export async function getShopFrontendPath(shop: Shop, projectSlug: string): Promise<string> {
+  if (shop.path && shop.path.trim()) return shop.path.replace(/\/+$/, '');
+  const project = await getProjectById(shop.projectId);
+  return (project?.path ?? `/${projectSlug}`).replace(/\/+$/, '');
 }

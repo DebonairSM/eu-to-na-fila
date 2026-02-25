@@ -30,6 +30,7 @@ import { projectsRoutes } from './routes/projects.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { registerWebSocket } from './websocket/handler.js';
 import { getPublicPath } from './lib/paths.js';
+import { getProjectByPathname, getProjectBySlug } from './lib/shop.js';
 import { startQueueCountdown } from './jobs/queueCountdown.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -172,7 +173,7 @@ fastify.register(fastifyRateLimit, {
     }
     // Skip global rate limit for static files (SPA assets, PWA manifest, service worker)
     // These are served as static files and shouldn't be rate limited
-    if (request.url.startsWith('/projects/mineiro/') || request.url.startsWith('/companies/')) {
+    if (request.url.startsWith('/projects/mineiro/') || request.url.startsWith('/companies/') || /^\/[^/]+\//.test(request.url?.split('?')[0] ?? '')) {
       return true;
     }
     // Skip global rate limit for authenticated requests (staff/owner operations)
@@ -393,13 +394,28 @@ fastify.get('/mineiro', async (request, reply) => {
   return reply.redirect('/projects/mineiro/');
 });
 
-// Redirect /projects/mineiro to /projects/mineiro/ for proper base path
-fastify.get('/projects/mineiro', async (request, reply) => {
-  return reply.redirect('/projects/mineiro/');
+// Redirect /projects/:slug to the project's canonical path when path differs (e.g. /projects/shop -> /shops, /projects/mineiro -> /mineiro)
+fastify.get('/projects/:slug', async (request, reply) => {
+  const { slug } = request.params as { slug: string };
+  const project = await getProjectBySlug(slug);
+  if (!project) return reply.code(404).send({ error: 'Not found' });
+  const canonicalPath = project.path.replace(/\/+$/, '') || '/';
+  const expectedLegacyPath = `/projects/${slug}`;
+  if (canonicalPath !== expectedLegacyPath) {
+    return reply.redirect(302, canonicalPath + '/');
+  }
+  return reply.redirect(302, canonicalPath + '/');
 });
 
-// Serve index.html for /projects/mineiro/ root
-fastify.get('/projects/mineiro/', async (request, reply) => {
+// Serve index.html for /projects/:slug/ only when project still uses legacy path (redirect to short path otherwise)
+fastify.get('/projects/:slug/', async (request, reply) => {
+  const { slug } = request.params as { slug: string };
+  const project = await getProjectBySlug(slug);
+  if (!project) return reply.code(404).send({ error: 'Not found' });
+  const canonicalPath = project.path.replace(/\/+$/, '') || '/';
+  if (canonicalPath !== `/projects/${slug}`) {
+    return reply.redirect(302, canonicalPath + '/');
+  }
   const indexPath = join(projectsMineiroPath, 'index.html');
   if (existsSync(indexPath)) {
     const fileContent = readFileSync(indexPath, 'utf-8');
@@ -415,24 +431,74 @@ fastify.setErrorHandler(errorHandler);
 // This catches client-side routes that don't match static files
 fastify.setNotFoundHandler(async (request, reply) => {
   const url = request.url;
-  
-  // Don't handle asset files - let them 404 properly
-  const assetExtensions = ['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.json', '.map'];
   const urlPath = url.split('?')[0];
+
+  // Resolve project by pathname so we serve at project path (e.g. /shops) not only /projects/:slug
+  const pathname = urlPath.replace(/\?.*$/, '');
+  const pathResolution = await getProjectByPathname(pathname);
+
+  if (pathResolution) {
+    const { project, path: projectPath } = pathResolution;
+    const pathSuffix = pathname.slice(projectPath.length).replace(/^\//, '') || '';
+
+    // Redirect /shops to /shops/ so relative assets in index.html resolve correctly
+    if (pathSuffix === '' && !pathname.endsWith('/')) {
+      return reply.redirect(302, projectPath + '/');
+    }
+
+    // Serve static assets under project path (e.g. /shops/assets/xxx.js, /shops/sw.js)
+    const isKnownAsset =
+      STATIC_ASSET_FILES.includes(pathSuffix) ||
+      pathSuffix.startsWith('assets/') ||
+      pathSuffix.startsWith('fonts/');
+    if (isKnownAsset) {
+      const filePath =
+        pathSuffix.startsWith('assets/') || pathSuffix.startsWith('fonts/')
+          ? join(projectsMineiroPath, pathSuffix)
+          : join(projectsMineiroPath, pathSuffix);
+      if (existsSync(filePath)) {
+        const mime: Record<string, string> = {
+          'sw.js': 'application/javascript',
+          'favicon.svg': 'image/svg+xml',
+          'favicon.png': 'image/png',
+          'manifest.json': 'application/json',
+          'icon-192.png': 'image/png',
+          'icon-512.png': 'image/png',
+        };
+        const ext = pathSuffix.split('/').pop()?.split('.').pop() ?? '';
+        const contentType =
+          mime[pathSuffix] ??
+          (ext === 'js' ? 'application/javascript' : ext === 'css' ? 'text/css' : ext === 'json' ? 'application/json' : 'application/octet-stream');
+        return reply.type(contentType).send(readFileSync(filePath));
+      }
+    }
+
+    // Serve index.html for SPA routes under this project path, with injected slug/path for client
+    const indexPath = join(projectsMineiroPath, 'index.html');
+    if (existsSync(indexPath)) {
+      try {
+        let fileContent = readFileSync(indexPath, 'utf-8');
+        const inject = `<script>window.__SHOP_SLUG__="${project.slug.replace(/"/g, '\\"')}";window.__SHOP_PATH__="${projectPath.replace(/"/g, '\\"')}";</script>`;
+        fileContent = fileContent.replace('</body>', `${inject}\n</body>`);
+        return reply.type('text/html').send(fileContent);
+      } catch (error) {
+        fastify.log.error({ err: error, path: indexPath }, 'Error reading index.html for SPA fallback');
+      }
+    }
+  }
+
+  // Don't handle asset files - let them 404 properly (when not under a project path)
+  const assetExtensions = ['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.json', '.map'];
   const hasAssetExtension = assetExtensions.some(ext => urlPath.endsWith(ext));
-  
-  // If it's an asset file that 404s, return proper 404
   if (hasAssetExtension) {
-    if (url.startsWith('/projects/mineiro/')) {
+    if (urlPath.startsWith('/projects/mineiro/')) {
       fastify.log.warn({ url }, 'Static asset not found');
     }
     return notFoundHandler(request, reply);
   }
-  
-  // SPA fallback: serve index.html for client routes
-  // Any /projects/:slug/ path is the barbershop SPA (same build for all shops)
-  const isBarbershopSpaRoute = /^\/projects\/[^/]+(\/|$)/.test(urlPath);
 
+  // SPA fallback: any /projects/:slug/ path is the barbershop SPA (same build for all shops)
+  const isBarbershopSpaRoute = /^\/projects\/[^/]+(\/|$)/.test(urlPath);
   if (isBarbershopSpaRoute) {
     const indexPath = join(projectsMineiroPath, 'index.html');
     if (existsSync(indexPath)) {
@@ -444,7 +510,7 @@ fastify.setNotFoundHandler(async (request, reply) => {
       }
     }
   }
-  
+
   // Handle root SPA routes (company homepage: /, /projects, /about, /contact, /company/*)
   if (!urlPath.startsWith('/api')) {
     const rootIndexPath = join(rootPath, 'root.html');
@@ -457,8 +523,7 @@ fastify.setNotFoundHandler(async (request, reply) => {
       }
     }
   }
-  
-  // For other 404s, use default handler
+
   return notFoundHandler(request, reply);
 });
 

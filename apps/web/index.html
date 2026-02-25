@@ -181,9 +181,11 @@
       
       if ('serviceWorker' in navigator && isProduction) {
         window.addEventListener('load', () => {
-          // Use runtime base path so the same build can work across /projects/:slug/
-          const parts = window.location.pathname.split('/').filter(Boolean);
-          const scope = (parts[0] === 'projects' && parts[1]) ? `/projects/${parts[1]}/` : '/';
+          // Use runtime base path so the same build works at /projects/:slug/ or custom path (e.g. /shops)
+          var scope = (window.__SHOP_PATH__ && ((window.__SHOP_PATH__.replace(/\/+$/, '') || '/') + '/')) || (function() {
+            var parts = window.location.pathname.split('/').filter(Boolean);
+            return (parts[0] === 'projects' && parts[1]) ? '/projects/' + parts[1] + '/' : '/';
+          })();
 
           navigator.serviceWorker.register(`${scope}sw.js`, { scope })
           .then(registration => {

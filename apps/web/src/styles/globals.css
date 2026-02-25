@@ -830,6 +830,12 @@ select.select-readable option {
   color: #1a1a1a !important;
 }
 
+/* Ensure dropdown arrow has enough space from the right border (Tailwind px-* often overrides and cramps it) */
+select.form-control-select,
+select.select-readable {
+  padding-right: 2.5rem !important;
+}
+
 /* Dropdown styling per shop layout (match architectural style) */
 [data-shop-layout="centered_frame"] .form-control-select,
 [data-shop-layout="classic"] .form-control-select {

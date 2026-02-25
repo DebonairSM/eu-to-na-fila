@@ -1,6 +1,7 @@
 import { Badge, Heading, Text } from '@/components/design-system';
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatInClientTimezone } from '@/lib/timezones';
+import { formatNameForDisplay } from '@/lib/utils';
 
 interface StatusHeaderProps {
   customerName: string;
@@ -46,7 +47,7 @@ export function StatusHeader({ customerName, status, serviceName, ticketNumber, 
   return (
     <div className="text-center mt-8 sm:mt-0 mb-6 sm:mb-8 lg:mb-10">
       <Heading level={1} className="mb-3 sm:mb-4">
-        {customerName}
+        {formatNameForDisplay(customerName)}
       </Heading>
       {ticketNumber && (
         <Text size="sm" variant="secondary" className="mb-1">

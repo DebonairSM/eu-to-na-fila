@@ -62,7 +62,7 @@
     "joinTitle": "Join Queue",
     "serviceLabel": "Service *",
     "nameLabel": "Name *",
-    "namePlaceholder": "Name and initial",
+    "namePlaceholder": "First and last name",
     "phoneLabel": "Phone *",
     "phonePlaceholder": "(00) 00000-0000",
     "barberLabel": "Barber *",

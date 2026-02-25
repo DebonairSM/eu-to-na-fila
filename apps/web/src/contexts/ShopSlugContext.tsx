@@ -4,8 +4,10 @@ import { config } from '@/lib/config';
 
 const ShopSlugContext = createContext<string>(config.slug);
 
-/** Extract shop slug from path like /projects/barbearia-premium/join -> barbearia-premium */
+/** Extract shop slug: use server-injected slug when present, else from path /projects/:slug. */
 function getSlugFromPath(pathname: string): string | null {
+  const injected = typeof window !== 'undefined' && (window as unknown as { __SHOP_SLUG__?: string }).__SHOP_SLUG__;
+  if (injected) return injected;
   const match = pathname.match(/^\/projects\/([^/]+)/);
   return match ? match[1] : null;
 }

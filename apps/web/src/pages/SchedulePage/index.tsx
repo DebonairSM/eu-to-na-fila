@@ -114,8 +114,8 @@ export function SchedulePage() {
 
   const handleCombinedNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
-    const formatted = formatName(raw);
-    setCombinedName(formatted);
+    const withSingleSpaces = raw.replace(/\s+/g, ' ');
+    setCombinedName(withSingleSpaces);
     setValidationError(null);
   };
 

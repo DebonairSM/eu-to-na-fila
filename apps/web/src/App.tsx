@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { getShopBasePath } from '@/lib/config';
 import { Suspense, useEffect } from 'react';
 import { useAuthContext } from './contexts/AuthContext';
 import { useShopHomeContent } from './contexts/ShopConfigContext';
@@ -50,7 +51,9 @@ function ProtectedRoute({
 }) {
   const { isAuthenticated, isOwner, isCompanyAdmin, isBarber, isKioskOnly, isLoading } = useAuthContext();
   const location = useLocation();
-  const pathname = location.pathname.replace(/^\/projects\/[^/]+/, '') || '/';
+  const basePath = getShopBasePath();
+  const stripBase = basePath === '/' ? location.pathname : location.pathname.replace(new RegExp(`^${basePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\/|$)`), '/');
+  const pathname = stripBase || '/';
 
   const homeContent = useShopHomeContent();
   const { t } = useLocale();

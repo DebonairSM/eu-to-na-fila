@@ -4,6 +4,7 @@ import { BarberCard } from './BarberCard';
 import { ClipNotesPanel } from './ClipNotesPanel';
 import { Button } from './ui/button';
 import { useLocale } from '@/contexts/LocaleContext';
+import { formatNameForDisplay } from '@/lib/utils';
 import type { Barber, Ticket } from '@eutonafila/shared';
 
 export interface BarberSelectorProps {
@@ -88,7 +89,7 @@ export function BarberSelector({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={customerName ? `Atribuir barbeiro para ${customerName}` : 'Selecionar Barbeiro'}
+      title={customerName ? `Atribuir barbeiro para ${formatNameForDisplay(customerName)}` : 'Selecionar Barbeiro'}
       className="max-w-2xl"
     >
       <div className="space-y-4 relative">

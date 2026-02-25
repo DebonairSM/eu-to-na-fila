@@ -7,6 +7,7 @@ import { ShopConfigProvider } from './contexts/ShopConfigContext';
 import { LocaleProvider } from './contexts/LocaleContext';
 import { NetworkStatusProvider } from './contexts/NetworkStatusContext';
 import App from './App';
+import { getShopBasePath } from './lib/config';
 import './styles/globals.css';
 
 // Always use dark theme (matching mockups)
@@ -53,13 +54,8 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Derive router basename from current URL path so the same build works for any /projects/:slug.
-// When at /projects/barbearia-premium/, basename is /projects/barbearia-premium.
-const basename = (() => {
-  if (typeof window === 'undefined') return '/projects/mineiro';
-  const match = window.location.pathname.match(/^\/projects\/[^/]+/);
-  return match ? match[0] : (import.meta.env.BASE_URL ?? '/').replace(/\/$/, '') || '/projects/mineiro';
-})();
+// Router basename: use server-injected path when present (e.g. /shops), else /projects/:slug.
+const basename = getShopBasePath();
 
 // Signal to recovery system that app mounted
 declare global {

@@ -39,7 +39,7 @@ export const shopsRoutes: FastifyPluginAsync = async (fastify) => {
       name: shop.name,
       theme,
       style,
-      path: shop.path ?? `/projects/${shop.slug}`,
+      path: shop.path ?? `/${shop.slug}`,
       homeContentByLocale,
       homeContent: defaultLocale,
       settings,

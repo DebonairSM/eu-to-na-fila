@@ -26,6 +26,7 @@ import { KioskAdsPlayer } from '@/components/KioskAdsPlayer';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { useLocale } from '@/contexts/LocaleContext';
+import { getShopBasePath } from '@/lib/config';
 import { cn, getErrorMessage, formatName, formatNameForDisplay, truncateOptionLabel } from '@/lib/utils';
 import { hasHoursForDay, hasAnyOperatingHours } from '@/lib/operatingHours';
 import { getShopStatus } from '@eutonafila/shared';
@@ -508,8 +509,8 @@ export function BarberQueueManager() {
 
   // Kiosk Mode View
   if (isKioskMode) {
-    // Per-shop join URL so the QR code points to this shop's check-in page (e.g. /projects/mineiro/join)
-    const joinUrl = `${window.location.origin}/projects/${shopSlug}/join`;
+    // Per-shop join URL so the QR code points to this shop's check-in page (uses current path e.g. /shops/join)
+    const joinUrl = `${window.location.origin}${getShopBasePath()}/join`;
 
     return (
       <div className="fixed inset-0 bg-black text-white z-50 overflow-hidden flex flex-col" data-testid="kiosk-root">
@@ -569,7 +570,7 @@ export function BarberQueueManager() {
         {currentView === 'queue' && (
           <div className="flex-1 flex flex-col h-full" data-testid="kiosk-queue-view">
             {/* Queue List - Centered with proper spacing */}
-            <div className="flex-1 overflow-y-auto py-8 px-6">
+            <div className="flex-1 overflow-y-auto py-8 px-4 sm:px-6">
               <div className="max-w-4xl mx-auto space-y-4">
                 {sortedTickets.length === 0 ? (
                   <div className="text-center py-20">
@@ -588,14 +589,14 @@ export function BarberQueueManager() {
                       <div
                         key={ticket.id}
                         className={cn(
-                          'w-full px-8 py-6 rounded-2xl border transition-all',
+                          'w-full px-4 py-5 sm:px-6 sm:py-6 lg:px-8 rounded-2xl border transition-all',
                           {
                             'bg-[var(--shop-background)] border-[color-mix(in_srgb,var(--shop-accent)_40%,transparent)]': isServing,
                             'bg-[color-mix(in_srgb,var(--shop-surface-secondary)_80%,transparent)] border-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)]': !isServing,
                           }
                         )}
                       >
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-3 sm:gap-6">
                           {/* Position badge (read-only in kiosk; no assign/finish actions) */}
                           {isServing ? (
                             <div
@@ -981,7 +982,7 @@ export function BarberQueueManager() {
                             }}
                             className="p-1.5 rounded bg-white/10 text-white/60 hover:text-red-300"
                             title={t('barber.cancelAppointment')}
-                            aria-label={t('barber.cancelAppointmentAria').replace('{name}', ticket.customerName)}
+                            aria-label={t('barber.cancelAppointmentAria').replace('{name}', formatNameForDisplay(ticket.customerName))}
                           >
                             <span className="material-symbols-outlined text-sm">delete</span>
                           </button>
@@ -1510,7 +1511,7 @@ export function BarberQueueManager() {
       {(() => {
         const ticketToRemove = customerToRemove ? tickets.find((tkt) => tkt.id === customerToRemove) : null;
         const isPendingAppointment = ticketToRemove?.status === 'pending';
-        const displayName = ticketToRemove?.customerName ?? t('barber.thisClient');
+        const displayName = ticketToRemove?.customerName != null ? formatNameForDisplay(ticketToRemove.customerName) : t('barber.thisClient');
         return (
           <ConfirmationDialog
             isOpen={removeConfirmModal.isOpen}
@@ -1539,7 +1540,10 @@ export function BarberQueueManager() {
         message={t('barber.completeMessage').replace(
           '{name}',
           customerToComplete
-            ? tickets.find((tkt) => tkt.id === customerToComplete)?.customerName ?? t('barber.thisClient')
+            ? (() => {
+                const name = tickets.find((tkt) => tkt.id === customerToComplete)?.customerName;
+                return name != null ? formatNameForDisplay(name) : t('barber.thisClient');
+              })()
             : t('barber.thisClient')
         )}
         confirmText={t('barber.completeButton')}

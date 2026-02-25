@@ -95,11 +95,12 @@ export function formatName(name: string): string {
 }
 
 /**
- * Format a full name for compact display: first name plus initial of the word after.
- * Used in queue/barber views to save space while keeping the client identifiable.
+ * Format a full name for compact display: first name plus last name initial.
+ * Used in queue, status, and barber views so clients can enter first + last name
+ * in the name box but only "First L." is shown elsewhere.
  *
- * - Single name returns as-is
- * - Two or more words: first name + initial of next word (e.g. "João Silva" -> "João S.")
+ * - Single name returns as-is (capitalized)
+ * - Two or more words: first name + initial of last word (e.g. "João Silva" -> "João S.", "João Carlos Silva" -> "João S.")
  * - Empty strings return empty string
  */
 export function formatNameForDisplay(fullName: string): string {
@@ -115,8 +116,8 @@ export function formatNameForDisplay(fullName: string): string {
   }
 
   const firstName = formatName(words[0]);
-  const wordAfter = words[1];
-  const initial = wordAfter.charAt(0).toUpperCase();
+  const lastWord = words[words.length - 1];
+  const initial = lastWord.charAt(0).toUpperCase();
 
   return `${firstName} ${initial}.`;
 }

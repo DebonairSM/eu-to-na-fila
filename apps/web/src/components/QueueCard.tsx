@@ -52,7 +52,7 @@ export const QueueCard = memo(function QueueCard({
   return (
     <div
       className={cn(
-        'queue-item p-6 rounded-md border-2 transition-all',
+        'queue-item px-4 py-5 sm:p-6 rounded-md border-2 transition-all',
         'focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--shop-accent)] focus-visible:ring-offset-2',
         {
           'border-[var(--shop-accent)] bg-[var(--shop-background)] hover:border-[var(--shop-accent)] hover:bg-[var(--shop-background)]': isServing,
@@ -71,7 +71,7 @@ export const QueueCard = memo(function QueueCard({
           onClick();
         }
       } : undefined}
-      aria-label={!disabled && onClick ? `Cliente ${ticket.customerName}, posição ${displayPosition !== null && displayPosition !== undefined ? displayPosition : ticket.position}${assignedBarber ? `, atendido por ${assignedBarber.name}` : ''}` : undefined}
+      aria-label={!disabled && onClick ? `Cliente ${formatNameForDisplay(ticket.customerName)}, posição ${displayPosition !== null && displayPosition !== undefined ? displayPosition : ticket.position}${assignedBarber ? `, atendido por ${assignedBarber.name}` : ''}` : undefined}
       title={disabled && disabledReason ? disabledReason : undefined}
     >
       <div className="flex items-center justify-between gap-4">
@@ -96,8 +96,8 @@ export const QueueCard = memo(function QueueCard({
               }}
               aria-label={
                 isServing
-                  ? `Finalizar atendimento de ${ticket.customerName}`
-                  : `Remover ${ticket.customerName} da fila`
+                  ? `Finalizar atendimento de ${formatNameForDisplay(ticket.customerName)}`
+                  : `Remover ${formatNameForDisplay(ticket.customerName)} da fila`
               }
             >
               {isServing ? (
@@ -115,7 +115,7 @@ export const QueueCard = memo(function QueueCard({
                   e.stopPropagation();
                   onRemove();
                 }}
-                aria-label={`Remover ${ticket.customerName} da fila e cancelar atendimento`}
+                aria-label={`Remover ${formatNameForDisplay(ticket.customerName)} da fila e cancelar atendimento`}
               >
                 <span className="material-symbols-outlined text-xl" aria-hidden="true">close</span>
               </button>

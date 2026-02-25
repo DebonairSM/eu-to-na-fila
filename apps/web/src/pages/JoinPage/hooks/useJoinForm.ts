@@ -239,13 +239,13 @@ export function useJoinForm() {
     }
   }, [firstName, lastName, validateName, nameCollisionError]);
 
-  // Combined name handler: allow full name with spaces; auto-capitalize each word
+  // Combined name handler: preserve spaces so clients can type first and last name; only collapse multiple spaces
   const handleCombinedNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
-    const processedValue = formatName(input);
-    setCombinedName(processedValue);
+    const withSingleSpaces = input.replace(/\s+/g, ' ');
+    setCombinedName(withSingleSpaces);
 
-    const words = processedValue.trim().split(/\s+/).filter(Boolean);
+    const words = withSingleSpaces.trim().split(/\s+/).filter(Boolean);
     setFirstName(words[0] ?? '');
     setLastName(words.length > 1 ? words.slice(1).join(' ') : '');
   };

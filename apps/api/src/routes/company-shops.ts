@@ -141,7 +141,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
           .values({
             slug: projectSlug,
             name: body.name,
-            path: body.path || `/projects/${projectSlug}`,
+            path: body.path ?? `/${projectSlug}`,
             createdAt: new Date(),
             updatedAt: new Date(),
           })
@@ -158,7 +158,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
             slug,
             name: body.name,
             domain: body.domain || null,
-            path: body.path || `/projects/${projectSlug}`,
+            path: body.path ?? `/${projectSlug}`,
             apiBase: body.apiBase || null,
             theme: themeToStore,
             homeContent: homeContentToStore,
@@ -824,7 +824,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         : null;
 
       const result = await db.transaction(async (tx) => {
-        const projectPath = body.path ?? `/projects/${projectSlug}`;
+        const projectPath = body.path ?? `/${projectSlug}`;
         const [newProject] = await tx
           .insert(schema.projects)
           .values({

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
@@ -23,6 +23,7 @@ import { DAY_NAMES_PT_FULL } from '@/lib/constants';
 import { downloadAnalyticsPdf } from '@/lib/analyticsPdf';
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatDate } from '@/lib/format';
+import { formatNameForDisplay } from '@/lib/utils';
 
 interface AnalyticsData {
   period: {
@@ -103,6 +104,7 @@ export function AnalyticsPage() {
   const [clientsList, setClientsList] = useState<{ clients: Array<{ id: number; name: string; phone: string; email: string | null; createdAt: string; ticketCount: number }>; total: number } | null>(null);
   const [clientsLoading, setClientsLoading] = useState(false);
   const [clientModalId, setClientModalId] = useState<number | null>(null);
+  const contentStartRef = useRef<HTMLDivElement>(null);
 
   const formatPeriodRange = (since: string, until: string, periodDays: number): string => {
     if (periodDays === 0) return t('analytics.periodAll');
@@ -153,6 +155,11 @@ export function AnalyticsPage() {
       .catch(() => setClientsList(null))
       .finally(() => setClientsLoading(false));
   }, [activeView, shopSlug, clientsPage]);
+
+  // Scroll content into view when switching tabs so the new section is visible
+  useEffect(() => {
+    contentStartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeView]);
 
   if (isLoading) {
     return (
@@ -228,8 +235,11 @@ export function AnalyticsPage() {
           </div>
 
           {/* View Selection Menu */}
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div className="flex flex-wrap gap-2 mb-8" role="tablist" aria-label={t('analytics.viewTabs') || 'Analytics sections'}>
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'overview'}
               onClick={() => setActiveView('overview')}
               className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                 activeView === 'overview'
@@ -240,6 +250,9 @@ export function AnalyticsPage() {
               Visão Geral
             </button>
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'time'}
               onClick={() => setActiveView('time')}
               className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                 activeView === 'time'
@@ -250,6 +263,9 @@ export function AnalyticsPage() {
               Análise Temporal
             </button>
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'services'}
               onClick={() => setActiveView('services')}
               className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                 activeView === 'services'
@@ -260,6 +276,9 @@ export function AnalyticsPage() {
               Serviços
             </button>
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'barbers'}
               onClick={() => setActiveView('barbers')}
               className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                 activeView === 'barbers'
@@ -270,6 +289,9 @@ export function AnalyticsPage() {
               Barbeiros
             </button>
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'cancellations'}
               onClick={() => setActiveView('cancellations')}
               className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                 activeView === 'cancellations'
@@ -280,6 +302,9 @@ export function AnalyticsPage() {
               Cancelamentos
             </button>
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'demographics'}
               onClick={() => setActiveView('demographics')}
               className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                 activeView === 'demographics'
@@ -290,6 +315,9 @@ export function AnalyticsPage() {
               Demografia
             </button>
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'clients'}
               onClick={() => setActiveView('clients')}
               className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                 activeView === 'clients'
@@ -371,7 +399,7 @@ export function AnalyticsPage() {
           )}
         </div>
 
-        <div className="space-y-8">
+        <div ref={contentStartRef} className="space-y-8">
           {/* Overview View */}
           {(activeView === 'overview' || activeView === null) && (
             <>
@@ -818,7 +846,7 @@ export function AnalyticsPage() {
                         className="bg-[rgba(36,36,36,0.8)] border border-[var(--shop-border-color)] rounded-2xl p-6 flex items-center justify-between gap-4"
                       >
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-lg text-white truncate font-medium">{client.name || 'Cliente'}</h4>
+                          <h4 className="text-lg text-white truncate font-medium">{client.name ? formatNameForDisplay(client.name) : 'Cliente'}</h4>
                           <p className="text-sm text-white/60 mt-1">
                             {t('analytics.ticketCount')}: {client.ticketCount}
                           </p>

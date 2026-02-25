@@ -6,7 +6,7 @@ import { existsSync } from 'fs';
 import { db, schema } from '../db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
-import { getShopBySlug } from '../lib/shop.js';
+import { getShopBySlug, getShopFrontendPath } from '../lib/shop.js';
 import { clientService } from '../services/index.js';
 import { uploadClientReferenceImage } from '../lib/storage.js';
 import { getPublicPath } from '../lib/paths.js';
@@ -1039,7 +1039,8 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const redirectPath = stateData.redirect_uri && stateData.redirect_uri.startsWith('/')
       ? stateData.redirect_uri
       : '/checkin/confirm';
-    const frontendCallbackPath = `/projects/${slug}/shop/callback`;
+    const basePath = await getShopFrontendPath(shop, slug);
+    const frontendCallbackPath = `${basePath}/shop/callback`;
     const callbackUrl = `${frontendOrigin}${frontendCallbackPath}?token=${encodeURIComponent(token)}&shop=${encodeURIComponent(slug)}&client_id=${encodeURIComponent(String(client.id))}&name=${encodeURIComponent(client.name ?? 'Customer')}&redirect=${encodeURIComponent(redirectPath)}`;
     return reply.redirect(302, callbackUrl);
   });

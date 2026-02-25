@@ -8,7 +8,7 @@ import { ticketService, queueService } from '../services/index.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError, ForbiddenError, InternalError } from '../lib/errors.js';
 import { requireAuth, requireRole, optionalAuth } from '../middleware/auth.js';
-import { getShopBySlug } from '../lib/shop.js';
+import { getShopBySlug, getShopFrontendPath } from '../lib/shop.js';
 import { shapeTicketResponse } from '../lib/ticketResponse.js';
 import { parseSettings } from '../lib/settings.js';
 import { toZonedTime } from 'date-fns-tz';
@@ -267,6 +267,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
 
     const ticketClientId = (ticket as { clientId?: number | null }).clientId ?? null;
     const frontendBase = env.CORS_ORIGIN.replace(/\/$/, '');
+    const shopPath = await getShopFrontendPath(shop, slug);
     const sent = await sendAppointmentReminder(email, {
       shopName: shop.name,
       serviceName: service?.name ?? 'Serviço',
@@ -275,6 +276,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       address: address ?? undefined,
       frontendBaseUrl: frontendBase,
       shopSlug: slug,
+      shopPath,
       ticketId,
       hasClientAccount: ticketClientId != null,
     });

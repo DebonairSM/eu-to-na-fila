@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { getShopBasePath } from '@/lib/config';
 import { Button } from './ui/button';
 import { useLocale } from '@/contexts/LocaleContext';
 
@@ -10,8 +11,7 @@ export interface ErrorDisplayProps {
 
 function getHomeHref(): string {
   if (typeof window === 'undefined') return '/';
-  const match = window.location.pathname.match(/^\/projects\/[^/]+/);
-  const base = match ? match[0] : (import.meta.env.BASE_URL ?? '/').replace(/\/$/, '') || '/';
+  const base = getShopBasePath();
   return `${window.location.origin}${base === '/' ? '' : base}/home`;
 }
 

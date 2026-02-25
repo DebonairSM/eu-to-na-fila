@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
+import { formatNameForDisplay } from '@/lib/utils';
 import type { ClientDetailResponse } from '@/lib/api/clients';
 
 interface ClientInfoModalProps {
@@ -72,7 +73,7 @@ export function ClientInfoModal({ clientId, onClose }: ClientInfoModalProps) {
               {client.name != null && (
                 <div>
                   <span className="text-xs text-white/50 uppercase tracking-wider block mb-1">{t('clients.name')}</span>
-                  <p className="text-white font-medium">{client.name}</p>
+                  <p className="text-white font-medium">{formatNameForDisplay(client.name)}</p>
                 </div>
               )}
               {client.phone != null && client.phone !== '' && (
