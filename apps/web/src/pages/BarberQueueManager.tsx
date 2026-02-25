@@ -1020,9 +1020,8 @@ export function BarberQueueManager() {
                   const isServing = ticket.status === 'in_progress';
                   const isWaiting = ticket.status === 'waiting';
                   const ticketClientId = (ticket as { clientId?: number | null }).clientId ?? null;
-                  const hasClientAndInQueue = ticketClientId != null && (isWaiting || isServing);
                   const canOpenNotesAsBarber = isWaiting || !isBarber || (user && assignedBarber?.id === user.id);
-                  const showNotesButton = hasClientAndInQueue && canOpenNotesAsBarber;
+                  const showNotesButton = (isWaiting || isServing) && canOpenNotesAsBarber;
                   // Calculate display position based on index in sorted waiting tickets
                   const displayPosition = isServing ? null : index + 1;
                   const preferredBarberId = (ticket as { preferredBarberId?: number }).preferredBarberId;
@@ -1487,11 +1486,10 @@ export function BarberQueueManager() {
         );
       })()}
 
-      {/* Notes modal: view and add clip notes while barber is serving (only when clientId exists) */}
-      {notesModal.isOpen && notesForTicketId != null && (() => {
+      {/* Notes modal: view and add clip notes (opens for any waiting/in-progress ticket; shows message if no client record) */}
+      {notesModal.isOpen && notesForTicketId != null && shopSlug && (() => {
         const noteTicket = tickets.find((t) => t.id === notesForTicketId);
         const clientId = (noteTicket as { clientId?: number | null } | undefined)?.clientId ?? null;
-        if (!shopSlug || clientId == null) return null;
         return (
           <Modal
             isOpen={notesModal.isOpen}
@@ -1499,13 +1497,19 @@ export function BarberQueueManager() {
             title={t('barber.clipNotes')}
             className="max-w-lg"
           >
-            <ClipNotesPanel
-              shopSlug={shopSlug}
-              clientId={clientId}
-              onError={setErrorMessage}
-              canViewFullClient={!isBarber}
-              canAddNote={true}
-            />
+            {clientId != null ? (
+              <ClipNotesPanel
+                shopSlug={shopSlug}
+                clientId={clientId}
+                onError={setErrorMessage}
+                canViewFullClient={!isBarber}
+                canAddNote={true}
+              />
+            ) : (
+              <p className="text-[var(--shop-text-secondary)] text-sm">
+                {t('barber.clipNotesNoClientRecord')}
+              </p>
+            )}
           </Modal>
         );
       })()}

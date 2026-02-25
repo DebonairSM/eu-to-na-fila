@@ -706,6 +706,7 @@
     "addClipNote": "Anotar",
     "clipNotePlaceholder": "Anotação (ex.: corte degradê, lado esquerdo)...",
     "seePreviousNotes": "Ver anotações anteriores",
+    "clipNotesNoClientRecord": "As anotações ficam vinculadas a um cadastro de cliente. Esta pessoa entrou na fila sem telefone, então não há cadastro. Informe o telefone no check-in para poder anotar.",
     "serviceHistory": "Histórico de serviços",
     "updateBarberError": "Erro ao atualizar barbeiro. Tente novamente.",
     "deleteBarberError": "Erro ao remover barbeiro. Tente novamente.",

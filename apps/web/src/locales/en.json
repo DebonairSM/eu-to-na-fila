@@ -706,6 +706,7 @@
     "addClipNote": "Add note",
     "clipNotePlaceholder": "Note (e.g. fade, left side)...",
     "seePreviousNotes": "See previous notes",
+    "clipNotesNoClientRecord": "Notes are linked to a client record. This person was checked in without a phone number, so no record was created. Add a phone number when checking in to enable notes.",
     "serviceHistory": "Service history",
     "updateBarberError": "Error updating barber. Try again.",
     "deleteBarberError": "Error removing barber. Try again.",
