@@ -940,7 +940,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const redirectToLogin = async (error: string, useSlug?: string) => {
       const s = useSlug ?? env.SHOP_SLUG;
       const sh = await getShopBySlug(s);
-      const basePath = sh ? await getShopFrontendPath(sh, s) : `/projects/${s}`;
+      const basePath = sh ? await getShopFrontendPath(sh, s) : `/${s}`;
       return reply.redirect(302, `${frontendOrigin}${basePath}/shop/login?error=${encodeURIComponent(error)}`);
     };
 

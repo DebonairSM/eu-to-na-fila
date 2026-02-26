@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Router basename: use server-injected path when present (e.g. /shops), else /projects/:slug.
+// Router basename: use server-injected path when present (e.g. /shops), else short path /:slug.
 const basename = getShopBasePath();
 
 // Signal to recovery system that app mounted

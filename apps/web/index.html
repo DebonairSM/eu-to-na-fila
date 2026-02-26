@@ -85,7 +85,7 @@
     <div id="app-recovery" class="app-recovery">
       <h2>A página não carregou corretamente</h2>
       <p>Isso pode acontecer após uma atualização. Clique abaixo para recarregar.</p>
-      <button id="recovery-btn" onclick="window.__clearCacheAndReload()">Recarregar Página</button>
+      <button id="recovery-btn" type="button">Recarregar Página</button>
     </div>
     
     <!-- Stuck app detection (runs before React) -->
@@ -133,6 +133,9 @@
             window.location.reload(true);
           }
         };
+        
+        // Bind recovery button (no inline onclick for CSP script-src-attr compliance)
+        if (recoveryBtn) recoveryBtn.addEventListener('click', function() { window.__clearCacheAndReload(); });
         
         // Check if app is stuck
         function checkStuck() {

@@ -4,12 +4,17 @@ import { config } from '@/lib/config';
 
 const ShopSlugContext = createContext<string>(config.slug);
 
-/** Extract shop slug: use server-injected slug when present, else from path /projects/:slug. */
+const RESERVED_PATH_SEGMENTS = ['api', 'company', 'companies', 'projects', 'about', 'contact', 'health', 'test', 'ws'];
+
+/** Extract shop slug: use server-injected slug when present, else from path (/projects/:slug or short /:slug). */
 function getSlugFromPath(pathname: string): string | null {
   const injected = typeof window !== 'undefined' && (window as unknown as { __SHOP_SLUG__?: string }).__SHOP_SLUG__;
   if (injected) return injected;
-  const match = pathname.match(/^\/projects\/([^/]+)/);
-  return match ? match[1] : null;
+  const projectsMatch = pathname.match(/^\/projects\/([^/]+)/);
+  if (projectsMatch) return projectsMatch[1];
+  const shortMatch = pathname.match(/^\/([^/]+)/);
+  if (shortMatch && shortMatch[1] && !RESERVED_PATH_SEGMENTS.includes(shortMatch[1])) return shortMatch[1];
+  return null;
 }
 
 export function ShopSlugProvider({ children }: { children: React.ReactNode }) {

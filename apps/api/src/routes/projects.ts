@@ -37,6 +37,11 @@ export const projectsRoutes: FastifyPluginAsync = async (fastify) => {
       .where(inArray(schema.projects.id, ids))
       .orderBy(asc(schema.projects.name));
 
-    return rows;
+    // Always return short path (e.g. /shop) for display/links; normalize legacy /projects/:slug
+    return rows.map((r) => {
+      const path = (r.path ?? '').replace(/\/+$/, '');
+      const shortPath = path.startsWith('/projects/') ? `/${r.slug}` : (path || `/${r.slug}`);
+      return { ...r, path: shortPath };
+    });
   });
 };

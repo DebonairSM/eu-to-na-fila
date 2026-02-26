@@ -61,8 +61,8 @@ export function StatusPage() {
     if (isLoading || !ticket || !ticketShopSlug || ticketShopSlug === shopSlug) return;
     const basePath =
       ticketShopSlug === shopSlug
-        ? (typeof window !== 'undefined' && (window as unknown as { __SHOP_PATH__?: string }).__SHOP_PATH__?.replace(/\/+$/, '')) || `/projects/${ticketShopSlug}`
-        : `/projects/${ticketShopSlug}`;
+        ? (typeof window !== 'undefined' && (window as unknown as { __SHOP_PATH__?: string }).__SHOP_PATH__?.replace(/\/+$/, '')) || `/${ticketShopSlug}`
+        : `/${ticketShopSlug}`;
     window.location.assign(`${basePath}/status/${ticket.id}`);
   }, [isLoading, ticket, ticketShopSlug, shopSlug]);
 

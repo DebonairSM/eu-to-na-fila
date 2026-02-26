@@ -165,7 +165,7 @@ export function getOrCreateDeviceId(): string {
 /**
  * Redirect to the ticket status page. When ticketShopSlug is present, uses full path
  * so the app loads in the correct barbershop context (per-shop status).
- * Same-shop: use current base path (short path); other shop: use /projects/:slug (server redirects to canonical).
+ * Same-shop: use current base path; other shop: use short path /:slug (no /projects).
  */
 export function redirectToStatusPage(
   ticketId: number,
@@ -175,7 +175,7 @@ export function redirectToStatusPage(
 ): void {
   if (ticketShopSlug) {
     const basePath =
-      currentShopSlug === ticketShopSlug ? getShopBasePath() : `/projects/${ticketShopSlug}`;
+      currentShopSlug === ticketShopSlug ? getShopBasePath() : `/${ticketShopSlug}`;
     window.location.assign(`${basePath}/status/${ticketId}`);
     return;
   }
