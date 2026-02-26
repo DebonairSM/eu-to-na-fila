@@ -9,9 +9,9 @@ function isRootSpaPath(path: string): boolean {
   return ROOT_SPA_PATHS.some((p) => path === p || path.startsWith(p + '/'));
 }
 
-// Plugin: redirect / and /mineiro to /mineiro/ in dev; serve root.html for root SPA paths
+// Plugin: redirect / to /projects in dev; serve root.html for root SPA paths
 const redirectPlugin = (): Plugin => ({
-  name: 'redirect-mineiro',
+  name: 'redirect-root',
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
       const path = req.url?.split('?')[0] ?? '';
@@ -22,8 +22,8 @@ const redirectPlugin = (): Plugin => ({
         next();
         return;
       }
-      if (path === '/' || path === '/mineiro') {
-        res.writeHead(302, { Location: `/mineiro/${q}` });
+      if (path === '/') {
+        res.writeHead(302, { Location: `/projects${q}` });
         res.end();
         return;
       }

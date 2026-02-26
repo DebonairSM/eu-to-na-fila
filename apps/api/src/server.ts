@@ -188,6 +188,7 @@ fastify.register(fastifyRateLimit, {
 
 // Static file serving - register BEFORE routes to ensure assets are served first
 const publicPath = getPublicPath();
+// Barbershop SPA build (single build used for all shops; folder name is legacy)
 const projectsMineiroPath = join(publicPath, 'projects', 'mineiro');
 const rootPath = join(publicPath, 'root');
 
@@ -217,29 +218,6 @@ fastify.register(fastifyStatic, {
   decorateReply: false,
   wildcard: false, // Don't use wildcard - we'll handle SPA routes in 404 handler
   index: false, // Don't auto-serve index.html - handle in 404 handler
-  setHeaders: (res, path) => {
-    // Cache hashed assets (JS/CSS with hash in filename) for 1 year
-    if (path.includes('/assets/') && /\.[a-f0-9]{8,}\.(js|css)$/i.test(path)) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    }
-    // Cache other static assets (fonts, images) for 1 week
-    else if (/\.(woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|ico)$/i.test(path)) {
-      res.setHeader('Cache-Control', 'public, max-age=604800');
-    }
-    // Don't cache HTML, SW, or manifest - always revalidate
-    else if (/\.(html|js|json)$/i.test(path) && !path.includes('/assets/')) {
-      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
-    }
-  },
-});
-
-// Also serve same assets at /mineiro/ so rewritten HTML (script src=/mineiro/assets/...) loads
-fastify.register(fastifyStatic, {
-  root: projectsMineiroPath,
-  prefix: '/mineiro/',
-  decorateReply: false,
-  wildcard: false,
-  index: false,
   setHeaders: (res, path) => {
     // Cache hashed assets (JS/CSS with hash in filename) for 1 year
     if (path.includes('/assets/') && /\.[a-f0-9]{8,}\.(js|css)$/i.test(path)) {
@@ -298,30 +276,7 @@ if (!existsSync(companiesPath)) {
   }
 }
 
-// Register static file serving for root assets (if root build exists)
-if (existsSync(rootPath)) {
-  fastify.register(fastifyStatic, {
-    root: rootPath,
-    prefix: '/',
-    decorateReply: false,
-    wildcard: false,
-    index: false,
-    setHeaders: (res, path) => {
-      // Cache hashed assets (JS/CSS with hash in filename) for 1 year
-      if (path.includes('/assets/') && /\.[a-f0-9]{8,}\.(js|css)$/i.test(path)) {
-        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-      }
-      // Cache other static assets (fonts, images) for 1 week
-      else if (/\.(woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|ico)$/i.test(path)) {
-        res.setHeader('Cache-Control', 'public, max-age=604800');
-      }
-      // Don't cache HTML - always revalidate
-      else if (/\.(html|js|json)$/i.test(path) && !path.includes('/assets/')) {
-        res.setHeader('Cache-Control', 'no-cache, must-revalidate');
-      }
-    },
-  });
-}
+// Root static is registered later (after short-path routes) so /:slug is handled first
 
 // Health check with database and WebSocket status
 fastify.get('/health', async () => {
@@ -408,28 +363,7 @@ fastify.get('/', async (request, reply) => {
     const fileContent = readFileSync(rootIndexPath, 'utf-8');
     return reply.type('text/html').send(fileContent);
   }
-  // Fallback: redirect to /mineiro/ if root build doesn't exist
-  return reply.redirect('/mineiro/');
-});
-
-// Redirect /mineiro (no trailing slash) to /mineiro/ so barbershop loads
-fastify.get('/mineiro', async (request, reply) => {
-  return reply.redirect(302, '/mineiro/');
-});
-
-// Explicitly serve barbershop SPA at /mineiro/ (so it works even if 404 order or path resolution fails)
-fastify.get('/mineiro/', async (request, reply) => {
-  const project = await getProjectBySlug('mineiro');
-  if (!project) return reply.code(404).send({ error: 'Not found' });
-  const indexPath = join(projectsMineiroPath, 'index.html');
-  if (!existsSync(indexPath)) return reply.code(404).send({ error: 'Not found' });
-  let fileContent = readFileSync(indexPath, 'utf-8');
-  const projectPath = '/mineiro';
-  const buildBase = '/projects/mineiro/';
-  fileContent = fileContent.split(buildBase).join(projectPath + '/');
-  const inject = `<script>window.__SHOP_SLUG__="mineiro";window.__SHOP_PATH__="${projectPath}";</script>`;
-  fileContent = fileContent.replace('</body>', `${inject}\n</body>`);
-  return reply.type('text/html').send(fileContent);
+  return reply.redirect(302, '/projects');
 });
 
 // Redirect /projects/:slug to the project's canonical path when path differs (e.g. /projects/shop -> /shops, /projects/mineiro -> /mineiro)
@@ -461,6 +395,83 @@ fastify.get('/projects/:slug/', async (request, reply) => {
   }
   return reply.code(404).send({ error: 'Not found' });
 });
+
+// Short-path routes (e.g. /shop, /mineiro) - must run before root static so barbershop SPA is served
+const SHORT_PATH_RESERVED = ['api', 'company', 'companies', 'projects', 'about', 'contact', 'health', 'test', 'ws'];
+fastify.get<{ segment: string }>('/:segment', async (request, reply) => {
+  const { segment } = request.params;
+  if (!segment || SHORT_PATH_RESERVED.includes(segment)) return reply.callNotFound();
+  const project = await getProjectBySlug(segment);
+  if (!project) return reply.callNotFound();
+  return reply.redirect(302, `/${segment}/`);
+});
+fastify.get<{ segment: string; '*': string }>('/:segment/*', async (request, reply) => {
+  const { segment } = request.params;
+  const rest = (request.params as { '*'?: string })['*'] ?? '';
+  const pathSuffix = rest.replace(/^\//, '');
+  if (!segment || SHORT_PATH_RESERVED.includes(segment)) return reply.callNotFound();
+  const project = await getProjectBySlug(segment);
+  if (!project) return reply.callNotFound();
+  const projectPath = `/${segment}`;
+
+  if (pathSuffix === '' && !request.url.split('?')[0].endsWith('/')) {
+    return reply.redirect(302, `/${segment}/`);
+  }
+  const isKnownAsset =
+    STATIC_ASSET_FILES.includes(pathSuffix) ||
+    pathSuffix.startsWith('assets/') ||
+    pathSuffix.startsWith('fonts/');
+  if (isKnownAsset) {
+    const filePath = join(projectsMineiroPath, pathSuffix);
+    if (existsSync(filePath)) {
+      const mime: Record<string, string> = {
+        'sw.js': 'application/javascript',
+        'favicon.svg': 'image/svg+xml',
+        'favicon.png': 'image/png',
+        'manifest.json': 'application/json',
+        'icon-192.png': 'image/png',
+        'icon-512.png': 'image/png',
+      };
+      const ext = pathSuffix.split('/').pop()?.split('.').pop() ?? '';
+      const contentType =
+        mime[pathSuffix] ??
+        (ext === 'js' ? 'application/javascript' : ext === 'css' ? 'text/css' : ext === 'json' ? 'application/json' : 'application/octet-stream');
+      return reply.type(contentType).send(readFileSync(filePath));
+    }
+  }
+  const indexPath = join(projectsMineiroPath, 'index.html');
+  if (existsSync(indexPath)) {
+    let fileContent = readFileSync(indexPath, 'utf-8');
+    const buildBase = '/projects/mineiro/';
+    if (projectPath !== '/projects/mineiro' && projectPath + '/' !== buildBase) {
+      fileContent = fileContent.split(buildBase).join(projectPath + '/');
+    }
+    const inject = `<script>window.__SHOP_SLUG__="${project.slug.replace(/"/g, '\\"')}";window.__SHOP_PATH__="${projectPath.replace(/"/g, '\\"')}";</script>`;
+    fileContent = fileContent.replace('</body>', `${inject}\n</body>`);
+    return reply.type('text/html').send(fileContent);
+  }
+  return reply.callNotFound();
+});
+
+// Register static file serving for root assets (after short-path so /:slug is handled first)
+if (existsSync(rootPath)) {
+  fastify.register(fastifyStatic, {
+    root: rootPath,
+    prefix: '/',
+    decorateReply: false,
+    wildcard: false,
+    index: false,
+    setHeaders: (res, path) => {
+      if (path.includes('/assets/') && /\.[a-f0-9]{8,}\.(js|css)$/i.test(path)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      } else if (/\.(woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|ico)$/i.test(path)) {
+        res.setHeader('Cache-Control', 'public, max-age=604800');
+      } else if (/\.(html|js|json)$/i.test(path) && !path.includes('/assets/')) {
+        res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+      }
+    },
+  });
+}
 
 // Register error handler
 fastify.setErrorHandler(errorHandler);
@@ -629,7 +640,7 @@ fastify.addHook('onReady', async () => {
 // Start server
 fastify.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {
   console.log(`✅ Server running at http://localhost:${env.PORT}`);
-  console.log(`📱 SPA available at http://localhost:${env.PORT}/mineiro`);
+  console.log(`📱 Barbershop SPA at http://localhost:${env.PORT}/:slug (e.g. /shop)`);
   console.log(`🔌 API available at http://localhost:${env.PORT}/api`);
   console.log('\n📋 Registered routes:');
   fastify.printRoutes();
