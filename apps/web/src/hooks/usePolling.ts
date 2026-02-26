@@ -180,94 +180,47 @@ export function useQueuePolling(
 
 /**
  * Hook for polling a specific ticket's status.
- * Optimized for mobile with Page Visibility API, exponential backoff, and network awareness.
- * 
- * @param ticketId - Ticket ID
- * @param options - Polling options
- * @returns Ticket data, loading state, and error state
+ * Uses a single setInterval so there is at most one fetch per interval, with throttle guard.
+ * Pauses when tab is hidden (Page Visibility API).
  */
 export function useTicketPolling(
   ticketId: number | null,
   options: UsePollingOptions = {}
 ) {
   const { interval: rawInterval = 3000, enabled = true } = options;
-  const interval = Math.max(rawInterval, MIN_POLL_MS);
+  const intervalMs = Math.max(rawInterval, MIN_POLL_MS);
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const isMountedRef = useRef(true);
-  const errorCountRef = useRef(0);
-  const backoffTimeoutRef = useRef<number | null>(null);
+  const lastFetchTimeRef = useRef<number>(0);
+  const intervalIdRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchTicket = useCallback(async () => {
-    if (!ticketId) {
-      return;
-    }
+    if (!ticketId) return;
 
-    // Skip if page is hidden (Page Visibility API)
-    if (document.hidden) {
-      return;
-    }
+    // Throttle: do not start a new fetch if we fetched less than intervalMs ago
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < intervalMs) return;
+    if (document.hidden) return;
+
+    lastFetchTimeRef.current = now;
 
     try {
-      const startTime = performance.now();
       const ticketData = await api.getTicket(ticketId);
-      const fetchTime = performance.now() - startTime;
-      
       if (isMountedRef.current) {
         setTicket(ticketData);
         setError(null);
         setIsLoading(false);
-        // Reset error count on success
-        errorCountRef.current = 0;
-      }
-
-      // Network-aware: if fetch took too long, we might be on slow connection
-      if (fetchTime > 2000 && 'connection' in navigator) {
-        // Connection might be slow, but don't adjust immediately
       }
     } catch (err) {
       if (isMountedRef.current) {
         setError(err instanceof Error ? err : new Error('Unknown error'));
         setIsLoading(false);
-        errorCountRef.current += 1;
       }
       logError('Error fetching ticket', err);
     }
-  }, [ticketId]);
-
-  const scheduleNextPoll = useCallback(() => {
-    if (!isMountedRef.current || !enabled || !ticketId || document.hidden) {
-      return;
-    }
-
-    // Clear any existing timeout
-    if (backoffTimeoutRef.current) {
-      clearTimeout(backoffTimeoutRef.current);
-      backoffTimeoutRef.current = null;
-    }
-
-    // Calculate effective interval with network awareness and exponential backoff
-    const networkMultiplier = getNetworkMultiplier();
-    const backoffMultiplier = Math.min(1 + errorCountRef.current * 0.5, 5); // Max 5x backoff
-    const effectiveInterval = interval * networkMultiplier * backoffMultiplier;
-
-    // Use requestIdleCallback if available for non-critical polling
-    if (window.requestIdleCallback && errorCountRef.current === 0) {
-      backoffTimeoutRef.current = window.requestIdleCallback(
-        () => {
-          fetchTicket();
-          scheduleNextPoll();
-        },
-        { timeout: effectiveInterval }
-      ) as unknown as number;
-    } else {
-      backoffTimeoutRef.current = window.setTimeout(() => {
-        fetchTicket();
-        scheduleNextPoll();
-      }, effectiveInterval);
-    }
-  }, [fetchTicket, interval, enabled, ticketId]);
+  }, [ticketId, intervalMs]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -277,45 +230,29 @@ export function useTicketPolling(
       return;
     }
 
-    // Fetch immediately on mount
-    fetchTicket();
+    const startPolling = () => {
+      if (intervalIdRef.current) return;
+      fetchTicket();
+      intervalIdRef.current = window.setInterval(fetchTicket, intervalMs);
+    };
 
-    // Start polling schedule
-    scheduleNextPoll();
-
-    // Handle Page Visibility API - pause when hidden, resume when visible
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // Page is hidden, clear any pending polls
-        if (backoffTimeoutRef.current) {
-          if (window.cancelIdleCallback) {
-            window.cancelIdleCallback(backoffTimeoutRef.current as unknown as number);
-          } else {
-            clearTimeout(backoffTimeoutRef.current);
-          }
-          backoffTimeoutRef.current = null;
-        }
-      } else {
-        // Page is visible, resume polling
-        fetchTicket();
-        scheduleNextPoll();
+    const stopPolling = () => {
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+        intervalIdRef.current = null;
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    startPolling();
+    const onVisibilityChange = () => (document.hidden ? stopPolling() : startPolling());
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
       isMountedRef.current = false;
-      if (backoffTimeoutRef.current) {
-        if (window.cancelIdleCallback) {
-          window.cancelIdleCallback(backoffTimeoutRef.current as unknown as number);
-        } else {
-          clearTimeout(backoffTimeoutRef.current);
-        }
-      }
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      stopPolling();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [fetchTicket, scheduleNextPoll, enabled, ticketId]);
+  }, [fetchTicket, intervalMs, enabled, ticketId]);
 
   return { ticket, isLoading, error, refetch: fetchTicket };
 }
