@@ -124,13 +124,13 @@ function getMonthRange(year: number, month: number): { since: string; until: str
   return { since, until };
 }
 
-function getMonthLabelFromRange(since: string, until: string, locale: string): string {
+function getMonthLabelFromRange(since: string, until: string, locale: string, soFarLabel: string): string {
   const s = new Date(since);
   const u = new Date(until);
   const monthName = s.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
   const lastDayOfMonth = new Date(s.getFullYear(), s.getMonth() + 1, 0);
   const isPartialMonth = u.getTime() < lastDayOfMonth.setHours(23, 59, 59, 999);
-  return isPartialMonth ? `${monthName} (so far)` : monthName;
+  return isPartialMonth ? `${monthName}${soFarLabel}` : monthName;
 }
 
 export function AnalyticsPage() {
@@ -177,7 +177,7 @@ export function AnalyticsPage() {
       const s = new Date(since);
       const u = new Date(until);
       if (s.getFullYear() === u.getFullYear() && s.getMonth() === u.getMonth()) {
-        return getMonthLabelFromRange(since, until, locale);
+        return getMonthLabelFromRange(since, until, locale, t('analytics.monthLabelSoFar'));
       }
     }
     return `${periodDays} ${t('analytics.days')}`;
@@ -215,7 +215,7 @@ export function AnalyticsPage() {
         } else if (err && typeof err === 'object' && 'error' in err) {
           setError(new Error((err as { error: string }).error));
         } else {
-          setError(new Error('Erro ao carregar analytics. Tente novamente.'));
+          setError(new Error(t('analytics.loadError')));
         }
       } finally {
         setIsLoading(false);
@@ -257,7 +257,7 @@ export function AnalyticsPage() {
       <div className="min-h-screen h-full bg-gradient-to-br from-[var(--shop-background)] via-[var(--shop-surface-secondary)] to-[var(--shop-surface-secondary)]">
         <Navigation />
         <div className="flex items-center justify-center min-h-screen pt-20 sm:pt-24">
-          <LoadingSpinner size="lg" text="Carregando analytics..." />
+          <LoadingSpinner size="lg" text={t('analytics.loading')} />
         </div>
       </div>
     );
@@ -268,7 +268,7 @@ export function AnalyticsPage() {
       <div className="min-h-screen h-full bg-gradient-to-br from-[var(--shop-background)] via-[var(--shop-surface-secondary)] to-[var(--shop-surface-secondary)]">
         <Navigation />
         <div className="flex items-center justify-center min-h-screen pt-20 sm:pt-24">
-          <ErrorDisplay error={error || new Error('Failed to load analytics')} />
+          <ErrorDisplay error={error || new Error(t('analytics.loadError'))} />
         </div>
       </div>
     );
@@ -284,7 +284,7 @@ export function AnalyticsPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div>
               <h1 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl md:text-6xl text-white mb-3">
-                Analytics
+                {t('analytics.pageTitle')}
               </h1>
               <p className="text-sm text-white/50">
                 {formatPeriodRange(data.period.since, data.period.until, data.period.days)}
@@ -309,7 +309,7 @@ export function AnalyticsPage() {
                     value={monthYear.month}
                     onChange={(e) => setMonthYear((m) => ({ ...m, month: Number(e.target.value) }))}
                     className="select-readable px-4 py-2.5 bg-white border border-[var(--shop-border-color)] rounded-xl text-gray-900 text-base cursor-pointer focus:outline-none focus:border-[var(--shop-accent)] transition-colors"
-                    aria-label="Month"
+                    aria-label={t('analytics.month')}
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => (
                       <option key={m} value={m}>
@@ -321,7 +321,7 @@ export function AnalyticsPage() {
                     value={monthYear.year}
                     onChange={(e) => setMonthYear((m) => ({ ...m, year: Number(e.target.value) }))}
                     className="select-readable px-4 py-2.5 bg-white border border-[var(--shop-border-color)] rounded-xl text-gray-900 text-base cursor-pointer focus:outline-none focus:border-[var(--shop-accent)] transition-colors"
-                    aria-label="Year"
+                    aria-label={t('analytics.year')}
                   >
                     {Array.from({ length: 5 }, (_, i) => now.getFullYear() - i).map((y) => (
                       <option key={y} value={y}>
@@ -348,19 +348,20 @@ export function AnalyticsPage() {
                       shopName: shopConfig.name,
                       periodLabel: periodLabel(data.period.days, data.period.since, data.period.until),
                       locale,
+                      title: t('analytics.pdfTitle'),
                     }
                   );
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-semibold rounded-xl hover:bg-[var(--shop-accent-hover)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-background)]"
               >
                 <span className="material-symbols-outlined text-xl">download</span>
-                Download PDF
+                {t('analytics.downloadPdf')}
               </button>
             </div>
           </div>
 
           {/* View Selection Menu */}
-          <div className="flex flex-wrap gap-2 mb-8" role="tablist" aria-label={t('analytics.viewTabs') || 'Analytics sections'}>
+          <div className="flex flex-wrap gap-2 mb-8" role="tablist" aria-label={t('analytics.viewTabs')}>
             <button
               type="button"
               role="tab"
@@ -372,7 +373,7 @@ export function AnalyticsPage() {
                   : 'bg-[var(--shop-surface-secondary)] text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] hover:bg-[var(--shop-surface-primary)] border border-[rgba(255,255,255,0.1)]'
               }`}
             >
-              Visão Geral
+              {t('analytics.overviewTab')}
             </button>
             <button
               type="button"
@@ -385,7 +386,7 @@ export function AnalyticsPage() {
                   : 'bg-[var(--shop-surface-secondary)] text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] hover:bg-[var(--shop-surface-primary)] border border-[rgba(255,255,255,0.1)]'
               }`}
             >
-              Análise Temporal
+              {t('analytics.timeTab')}
             </button>
             <button
               type="button"
@@ -398,7 +399,7 @@ export function AnalyticsPage() {
                   : 'bg-[var(--shop-surface-secondary)] text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] hover:bg-[var(--shop-surface-primary)] border border-[rgba(255,255,255,0.1)]'
               }`}
             >
-              Serviços
+              {t('analytics.servicesTab')}
             </button>
             <button
               type="button"
@@ -411,7 +412,7 @@ export function AnalyticsPage() {
                   : 'bg-[var(--shop-surface-secondary)] text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] hover:bg-[var(--shop-surface-primary)] border border-[rgba(255,255,255,0.1)]'
               }`}
             >
-              Barbeiros
+              {t('analytics.barbersTab')}
             </button>
             <button
               type="button"
@@ -424,7 +425,7 @@ export function AnalyticsPage() {
                   : 'bg-[var(--shop-surface-secondary)] text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] hover:bg-[var(--shop-surface-primary)] border border-[rgba(255,255,255,0.1)]'
               }`}
             >
-              Cancelamentos
+              {t('analytics.cancellationsTab')}
             </button>
             <button
               type="button"
@@ -437,7 +438,7 @@ export function AnalyticsPage() {
                   : 'bg-[var(--shop-surface-secondary)] text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)] hover:bg-[var(--shop-surface-primary)] border border-[rgba(255,255,255,0.1)]'
               }`}
             >
-              Demografia
+              {t('analytics.demographicsTab')}
             </button>
             <button
               type="button"
@@ -461,7 +462,7 @@ export function AnalyticsPage() {
               {stats.total}
             </div>
             <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
-              Total
+              {t('analytics.total')}
             </div>
           </div>
           <div className="bg-[var(--shop-surface-secondary)] border-2 border-transparent rounded-2xl p-6 text-center">
@@ -469,7 +470,7 @@ export function AnalyticsPage() {
               {stats.completed}
             </div>
             <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
-              Concluídos
+              {t('analytics.completed')}
             </div>
           </div>
           <div className="bg-[var(--shop-surface-secondary)] border-2 border-transparent rounded-2xl p-6 text-center">
@@ -477,7 +478,7 @@ export function AnalyticsPage() {
               {stats.cancelled}
             </div>
             <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider mb-2">
-              Cancelados
+              {t('analytics.cancelled')}
             </div>
             {stats.total > 0 && (
               <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -490,7 +491,7 @@ export function AnalyticsPage() {
               {stats.completionRate}%
             </div>
             <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider mb-2">
-              Taxa Conclusão
+              {t('analytics.completionRate')}
             </div>
             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div className="h-full bg-[var(--shop-accent)] rounded-full transition-all" style={{ width: `${stats.completionRate}%` }} />
@@ -501,7 +502,7 @@ export function AnalyticsPage() {
               {stats.avgPerDay}
             </div>
             <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
-              Média/Dia
+              {t('analytics.avgPerDay')}
             </div>
           </div>
           <div className="bg-[var(--shop-surface-secondary)] border-2 border-transparent rounded-2xl p-6 text-center">
@@ -509,7 +510,7 @@ export function AnalyticsPage() {
               {stats.avgServiceTime}m
             </div>
             <div className="text-xs sm:text-sm text-white/70 uppercase tracking-wider">
-              Serviço Médio
+              {t('analytics.avgService')}
             </div>
           </div>
           {stats.revenueCents != null && stats.revenueCents > 0 && (
@@ -532,7 +533,7 @@ export function AnalyticsPage() {
               {data.trends.weekOverWeek !== 0 && (
                 <div className="bg-gradient-to-br from-[rgba(59,130,246,0.15)] to-[rgba(59,130,246,0.05)] border border-[rgba(59,130,246,0.3)] rounded-3xl p-8 text-center">
                   <p className="text-sm text-white/70 uppercase tracking-wider mb-3">
-                    Tendência Semanal
+                    {t('analytics.trendWeekly')}
                   </p>
                   <div className={`font-['Playfair_Display',serif] text-5xl font-semibold mb-3 ${
                     data.trends.weekOverWeek > 0 ? 'text-white' : 'text-[#ef4444]'
@@ -839,7 +840,7 @@ export function AnalyticsPage() {
                               <div className="text-center">
                                 <div className="font-['Playfair_Display',serif] text-xl font-semibold text-white">
                                   {barber.avgWorkTimeMinutesSinceMonthStart != null
-                                    ? `${barber.avgWorkTimeMinutesSinceMonthStart} min/day`
+                                    ? `${barber.avgWorkTimeMinutesSinceMonthStart} ${t('analytics.minPerDay')}`
                                     : '—'}
                                 </div>
                                 <div className="text-xs text-white/50 uppercase">{t('analytics.avgWorkTimeThisMonth')}</div>
@@ -918,7 +919,7 @@ export function AnalyticsPage() {
               <div className="mb-6 flex items-center gap-4">
                 <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">cancel</span>
                 <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
-                  Análise de Cancelamentos
+                  {t('analytics.cancellationAnalysisTitle')}
                 </h2>
               </div>
               <CancellationChart data={data.cancellationAnalysis} />

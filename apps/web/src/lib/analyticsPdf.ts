@@ -46,7 +46,7 @@ export interface AnalyticsDataForPdf {
 
 export function downloadAnalyticsPdf(
   data: AnalyticsDataForPdf,
-  options: { shopName?: string; periodLabel: string; locale?: string }
+  options: { shopName?: string; periodLabel: string; locale?: string; title?: string }
 ): void {
   const locale = options.locale ?? 'pt-BR';
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -57,7 +57,7 @@ export function downloadAnalyticsPdf(
   // Title
   doc.setFontSize(22);
   doc.setTextColor(0, 0, 0);
-  doc.text('Relatório de Analytics', margin, y);
+  doc.text(options.title ?? 'Relatório de desempenho', margin, y);
   y += 10;
 
   if (options.shopName) {

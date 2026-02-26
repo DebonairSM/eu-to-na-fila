@@ -66,18 +66,47 @@ export function StatusPage() {
     window.location.assign(`${basePath}/status/${ticket.id}`);
   }, [isLoading, ticket, ticketShopSlug, shopSlug]);
 
+  // Poll general-line wait time at most once per 3 seconds when waiting with a preferred barber
+  const WAIT_TIME_POLL_MS = 3000;
   useEffect(() => {
     if (!shopSlug || ticket?.status !== 'waiting' || preferredBarberId == null) {
       setGeneralLineWaitTime(null);
       return;
     }
     let cancelled = false;
-    api.getWaitTimes(shopSlug).then((res) => {
-      if (!cancelled) setGeneralLineWaitTime(res.standardWaitTime ?? null);
-    }).catch(() => {
-      if (!cancelled) setGeneralLineWaitTime(null);
-    });
-    return () => { cancelled = true; };
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const fetchWaitTime = () => {
+      if (cancelled || document.hidden) return;
+      api.getWaitTimes(shopSlug).then((res) => {
+        if (!cancelled) setGeneralLineWaitTime(res.standardWaitTime ?? null);
+      }).catch(() => {
+        if (!cancelled) setGeneralLineWaitTime(null);
+      });
+    };
+
+    const startPolling = () => {
+      if (intervalId) return;
+      fetchWaitTime();
+      intervalId = window.setInterval(fetchWaitTime, WAIT_TIME_POLL_MS);
+    };
+
+    const stopPolling = () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
+
+    startPolling();
+    const onVisibilityChange = () => (document.hidden ? stopPolling() : startPolling());
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      stopPolling();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [shopSlug, ticket?.status, preferredBarberId]);
 
   const serviceName =

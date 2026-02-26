@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useLocale } from '@/hooks/useLocale';
 import { DAY_NAMES_PT_FULL } from '@/lib/constants';
 import { formatDurationMinutes } from '@/lib/formatDuration';
 
@@ -53,6 +54,7 @@ interface Insight {
 }
 
 export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
+  const { t } = useLocale();
   const insights = useMemo(() => {
     const result: Insight[] = [];
     const { summary, barbers, peakHour, serviceBreakdown, cancellationAnalysis, barberEfficiency, trends } = data;
@@ -283,7 +285,7 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
       <div className="mb-6 flex items-center gap-4">
         <span className="material-symbols-outlined text-[#D4AF37] text-3xl">auto_awesome</span>
         <h2 className="font-['Playfair_Display',serif] text-3xl text-white">
-          Assistente de Analytics
+          {t('analytics.advisorTitle')}
         </h2>
       </div>
 
