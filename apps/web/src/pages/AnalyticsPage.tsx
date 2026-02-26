@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
+import type { BarberServiceHistoryResponse } from '@/lib/api/analytics';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { Navigation } from '@/components/Navigation';
@@ -50,6 +51,8 @@ interface AnalyticsData {
     totalServed: number;
     avgServiceTime: number;
     isPresent: boolean;
+    totalActivityMinutes?: number;
+    avgWorkTimeMinutesSinceMonthStart?: number | null;
   }>;
   barberServiceWeekdayStats?: Array<{
     barberId: number;
@@ -100,7 +103,16 @@ interface AnalyticsData {
 
 type AnalyticsView = 'overview' | 'time' | 'services' | 'barbers' | 'cancellations' | 'demographics' | 'clients';
 
-type PeriodSelect = '7' | '30' | '90' | 'all' | 'month';
+type PeriodSelect = '1' | '7' | '30' | '90' | 'all' | 'month';
+
+function getTodayRange(): { since: string; until: string } {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const s = `${y}-${m}-${day}`;
+  return { since: s, until: s };
+}
 
 function getMonthRange(year: number, month: number): { since: string; until: string } {
   const since = `${year}-${String(month).padStart(2, '0')}-01`;
@@ -138,7 +150,18 @@ export function AnalyticsPage() {
   const [clientsList, setClientsList] = useState<{ clients: Array<{ id: number; name: string; phone: string; email: string | null; createdAt: string; ticketCount: number }>; total: number } | null>(null);
   const [clientsLoading, setClientsLoading] = useState(false);
   const [clientModalId, setClientModalId] = useState<number | null>(null);
+  const [historyBarber, setHistoryBarber] = useState<{ id: number; name: string } | null>(null);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyData, setHistoryData] = useState<BarberServiceHistoryResponse | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const contentStartRef = useRef<HTMLDivElement>(null);
+
+  const formatActivityMinutes = (minutes: number): string => {
+    if (minutes < 60) return `${minutes}m`;
+    const h = Math.floor(minutes / 60);
+    const m = Math.round(minutes % 60);
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  };
 
   const formatPeriodRange = (since: string, until: string, periodDays: number): string => {
     if (periodDays === 0) return t('analytics.periodAll');
@@ -149,6 +172,7 @@ export function AnalyticsPage() {
 
   const periodLabel = (periodDays: number, since?: string, until?: string): string => {
     if (periodDays === 0) return t('analytics.periodAll');
+    if (since != null && until != null && since === until) return t('analytics.periodDay');
     if (since != null && until != null) {
       const s = new Date(since);
       const u = new Date(until);
@@ -170,12 +194,16 @@ export function AnalyticsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const query =
-          periodSelect === 'month'
-            ? getMonthRange(monthYear.year, monthYear.month)
-            : periodSelect === 'all'
-              ? 0
-              : Number(periodSelect);
+        let query: { since: string; until: string } | number;
+        if (periodSelect === 'month') {
+          query = getMonthRange(monthYear.year, monthYear.month);
+        } else if (periodSelect === '1') {
+          query = getTodayRange();
+        } else if (periodSelect === 'all') {
+          query = 0;
+        } else {
+          query = Number(periodSelect);
+        }
         const analyticsData =
           typeof query === 'object'
             ? await api.getAnalytics(shopSlug, { since: query.since, until: query.until })
@@ -205,6 +233,19 @@ export function AnalyticsPage() {
       .catch(() => setClientsList(null))
       .finally(() => setClientsLoading(false));
   }, [activeView, shopSlug, clientsPage]);
+
+  useEffect(() => {
+    if (!historyBarber || !shopSlug) {
+      setHistoryData(null);
+      return;
+    }
+    setHistoryLoading(true);
+    api
+      .getBarberServiceHistory(shopSlug, historyBarber.id, { page: historyPage, limit: 25 })
+      .then(setHistoryData)
+      .catch(() => setHistoryData({ tickets: [], total: 0 }))
+      .finally(() => setHistoryLoading(false));
+  }, [historyBarber, shopSlug, historyPage]);
 
   // Scroll content into view when switching tabs so the new section is visible
   useEffect(() => {
@@ -255,6 +296,7 @@ export function AnalyticsPage() {
                 onChange={(e) => setPeriodSelect(e.target.value as PeriodSelect)}
                 className="select-readable px-4 py-2.5 bg-white border border-[var(--shop-border-color)] rounded-xl text-gray-900 text-base cursor-pointer focus:outline-none focus:border-[var(--shop-accent)] transition-colors"
               >
+                <option value="1">{t('analytics.periodDay')}</option>
                 <option value="7">{periodLabel(7)}</option>
                 <option value="30">{periodLabel(30)}</option>
                 <option value="90">{periodLabel(90)}</option>
@@ -765,32 +807,54 @@ export function AnalyticsPage() {
                     {data.barbers.map((barber) => (
                       <div
                         key={barber.id}
-                        className="bg-[rgba(36,36,36,0.8)] border border-[var(--shop-border-color)] rounded-2xl p-6 flex items-center gap-6"
+                        className="bg-[rgba(36,36,36,0.8)] border border-[var(--shop-border-color)] rounded-2xl p-6 flex flex-col gap-4"
                       >
-                        <div className="w-16 h-16 bg-gradient-to-br from-[var(--shop-accent)] to-[var(--shop-accent-hover)] rounded-full flex items-center justify-center text-2xl font-semibold text-[var(--shop-text-on-accent)] flex-shrink-0">
-                          {barber.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-xl text-white mb-3 truncate">{barber.name}</h4>
-                          <div className="flex gap-6">
-                            <div className="text-center">
-                              <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-[var(--shop-accent)]">
-                                {barber.totalServed}
+                        <div className="flex items-center gap-6">
+                          <div className="w-16 h-16 bg-gradient-to-br from-[var(--shop-accent)] to-[var(--shop-accent-hover)] rounded-full flex items-center justify-center text-2xl font-semibold text-[var(--shop-text-on-accent)] flex-shrink-0">
+                            {barber.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-xl text-white truncate">{barber.name}</h4>
+                            <div className="flex flex-wrap gap-4 mt-2">
+                              <div className="text-center">
+                                <div className="font-['Playfair_Display',serif] text-xl font-semibold text-[var(--shop-accent)]">
+                                  {barber.totalServed}
+                                </div>
+                                <div className="text-xs text-white/50 uppercase">Atendidos</div>
                               </div>
-                              <div className="text-xs text-white/50 uppercase mt-1">
-                                Atendidos
+                              <div className="text-center">
+                                <div className="font-['Playfair_Display',serif] text-xl font-semibold text-[var(--shop-accent)]">
+                                  {barber.avgServiceTime}m
+                                </div>
+                                <div className="text-xs text-white/50 uppercase">Média</div>
                               </div>
-                            </div>
-                            <div className="text-center">
-                              <div className="font-['Playfair_Display',serif] text-2xl font-semibold text-[var(--shop-accent)]">
-                                {barber.avgServiceTime}m
-                              </div>
-                              <div className="text-xs text-white/50 uppercase mt-1">
-                                Média
+                              {barber.totalActivityMinutes != null && (
+                                <div className="text-center">
+                                  <div className="font-['Playfair_Display',serif] text-xl font-semibold text-white">
+                                    {formatActivityMinutes(barber.totalActivityMinutes)}
+                                  </div>
+                                  <div className="text-xs text-white/50 uppercase">{t('analytics.timeOfActivity')}</div>
+                                </div>
+                              )}
+                              <div className="text-center">
+                                <div className="font-['Playfair_Display',serif] text-xl font-semibold text-white">
+                                  {barber.avgWorkTimeMinutesSinceMonthStart != null
+                                    ? `${barber.avgWorkTimeMinutesSinceMonthStart} min/day`
+                                    : '—'}
+                                </div>
+                                <div className="text-xs text-white/50 uppercase">{t('analytics.avgWorkTimeThisMonth')}</div>
                               </div>
                             </div>
                           </div>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => { setHistoryBarber({ id: barber.id, name: barber.name }); setHistoryPage(1); }}
+                          className="mt-2 w-full py-2.5 rounded-xl border border-[var(--shop-border-color)] text-white/90 text-sm font-medium hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <span className="material-symbols-outlined text-lg">history</span>
+                          {t('analytics.viewHistory')}
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -1032,6 +1096,90 @@ export function AnalyticsPage() {
 
         {clientModalId != null && (
           <ClientInfoModal clientId={clientModalId} onClose={() => setClientModalId(null)} />
+        )}
+
+        {historyBarber != null && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="barber-history-title"
+          >
+            <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl shadow-xl max-w-3xl w-full max-h-[85vh] flex flex-col">
+              <div className="flex items-center justify-between p-6 border-b border-[var(--shop-border-color)]">
+                <h2 id="barber-history-title" className="font-['Playfair_Display',serif] text-xl text-white">
+                  {t('analytics.serviceHistory')} – {historyBarber.name}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => { setHistoryBarber(null); setHistoryPage(1); }}
+                  className="p-2 rounded-xl text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  aria-label={t('common.close')}
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <div className="flex-1 overflow-auto p-6">
+                {historyLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <LoadingSpinner size="md" />
+                  </div>
+                ) : historyData && historyData.tickets.length > 0 ? (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-left">
+                        <thead>
+                          <tr className="text-white/50 border-b border-[var(--shop-border-color)]">
+                            <th className="py-2 pr-4">{t('analytics.historyDate')}</th>
+                            <th className="py-2 pr-4">{t('analytics.service')}</th>
+                            <th className="py-2 pr-4">{t('analytics.historyStatus')}</th>
+                            <th className="py-2 text-right">{t('analytics.historyDuration')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {historyData.tickets.map((ticket) => (
+                            <tr key={ticket.id} className="border-b border-white/5">
+                              <td className="py-2 pr-4 text-white/80">
+                                {formatDate(new Date(ticket.createdAt), locale, { dateStyle: 'short', timeStyle: 'short' })}
+                              </td>
+                              <td className="py-2 pr-4 text-white/90">{ticket.serviceName}</td>
+                              <td className="py-2 pr-4 text-white/80">{ticket.status}</td>
+                              <td className="py-2 text-right text-[var(--shop-accent)]">
+                                {ticket.durationMinutes != null ? `${ticket.durationMinutes} min` : '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="flex items-center justify-center gap-4 mt-6">
+                      <button
+                        type="button"
+                        onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+                        disabled={historyPage <= 1}
+                        className="px-4 py-2 rounded-xl bg-[var(--shop-surface-primary)] border border-[var(--shop-border-color)] text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/5 transition-colors"
+                      >
+                        {t('common.back')}
+                      </button>
+                      <span className="text-white/70 text-sm">
+                        {historyPage} / {Math.ceil(historyData.total / 25) || 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setHistoryPage((p) => p + 1)}
+                        disabled={historyPage * 25 >= historyData.total}
+                        className="px-4 py-2 rounded-xl bg-[var(--shop-surface-primary)] border border-[var(--shop-border-color)] text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/5 transition-colors"
+                      >
+                        {t('common.next')}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-center text-white/50 py-12">{t('common.noDataAvailable')}</p>
+                )}
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>

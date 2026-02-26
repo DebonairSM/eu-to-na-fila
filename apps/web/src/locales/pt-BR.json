@@ -409,7 +409,16 @@
     "avgMin": "Média (min)",
     "attendances": "Atendimentos",
     "myTimeByWeekdayTitle": "Tempo médio por dia da semana",
-    "myTimeByWeekdayIntro": "Usado para estimar o tempo de espera na fila. Média de duração por serviço e dia."
+    "myTimeByWeekdayIntro": "Usado para estimar o tempo de espera na fila. Média de duração por serviço e dia.",
+    "timeOfActivity": "Tempo de atividade",
+    "avgWorkTimeThisMonth": "Média de trabalho (este mês)",
+    "serviceHistory": "Histórico de serviços",
+    "viewHistory": "Ver histórico",
+    "historyDate": "Data",
+    "historyStatus": "Status",
+    "historyDuration": "Duração",
+    "periodDay": "Hoje",
+    "viewTabs": "Seções de analytics"
   },
   "chart": {
     "noData": "Nenhum dado disponível",
@@ -555,7 +564,14 @@
     "thursday": "Quinta",
     "friday": "Sexta",
     "saturday": "Sábado",
-    "sunday": "Domingo"
+    "sunday": "Domingo",
+    "resetDataSection": "Resetar dados da barbearia",
+    "resetDataHint": "Apaga todos os tickets da fila e agendamentos desta barbearia. Use para testar antes de entregar. Barbeiros, serviços e configurações não são alterados.",
+    "resetDataButton": "Resetar dados da barbearia",
+    "resetDataTitle": "Resetar dados da barbearia?",
+    "resetDataMessage": "Todos os tickets (fila e agendamentos) desta barbearia serão excluídos permanentemente. Barbeiros e serviços não serão alterados. Esta ação não pode ser desfeita.",
+    "resetDataConfirm": "Resetar dados",
+    "resetDataError": "Falha ao resetar dados. Tente novamente."
   },
   "company": {
     "dashboardTitle": "Dashboard Empresarial",

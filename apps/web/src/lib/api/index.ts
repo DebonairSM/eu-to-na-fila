@@ -62,6 +62,7 @@ class ApiClient extends BaseApiClient {
   cancelTicket = this._tickets.cancelTicket;
   cancelTicketAsStaff = this._tickets.cancelTicketAsStaff;
   updateTicket = this._tickets.updateTicket;
+  deleteAllTickets = this._tickets.deleteAllTickets;
 
   // --- Barbers ---
   getBarbers = this._barbers.getBarbers;
@@ -135,6 +136,7 @@ class ApiClient extends BaseApiClient {
   // --- Analytics ---
   getAnalytics = this._analytics.getAnalytics;
   getBarberAnalytics = this._analytics.getBarberAnalytics;
+  getBarberServiceHistory = this._analytics.getBarberServiceHistory;
 
   // --- Clients ---
   getClientRemember = this._clients.getClientRemember;

@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { toZonedTime } from 'date-fns-tz';
 import { db, schema } from '../db/index.js';
-import { eq, and, gte, lt, inArray } from 'drizzle-orm';
+import { eq, and, gte, lt, inArray, isNotNull, desc, sql } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError } from '../lib/errors.js';
 import { requireAuth, requireRole, requireBarberShop } from '../middleware/auth.js';
@@ -189,35 +189,66 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       where: eq(schema.barbers.shopId, shop.id),
     });
 
+    // Current month range for avgWorkTimeMinutesSinceMonthStart (UTC)
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+    const todayEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
+    const daysElapsedThisMonth = Math.max(1, now.getUTCDate());
+    const monthTickets =
+      daysElapsedThisMonth >= 1
+        ? await db.query.tickets.findMany({
+            where: and(
+              eq(schema.tickets.shopId, shop.id),
+              eq(schema.tickets.status, 'completed'),
+              isNotNull(schema.tickets.completedAt),
+              gte(schema.tickets.completedAt, monthStart),
+              lt(schema.tickets.completedAt, todayEnd)
+            ),
+            columns: { barberId: true, completedAt: true, startedAt: true, status: true },
+          })
+        : [];
+    const monthCompletedByBarber = new Map<number, number>();
+    monthTickets
+      .filter((t): t is typeof t & { completedAt: Date; startedAt: Date } => t.status === 'completed' && t.completedAt != null && t.startedAt != null)
+      .forEach((t) => {
+        const mins = (new Date(t.completedAt).getTime() - new Date(t.startedAt).getTime()) / (1000 * 60);
+        if (mins > 0 && mins < 120 && t.barberId != null) {
+          monthCompletedByBarber.set(t.barberId, (monthCompletedByBarber.get(t.barberId) ?? 0) + mins);
+        }
+      });
+
     const barberStats = barbers.map(barber => {
       const barberTickets = tickets.filter(t => t.barberId === barber.id);
       const barberCompleted = barberTickets.filter(t => t.status === 'completed');
       
-      // Calculate average service time for this barber
-      // Use actual timestamps: completedAt - startedAt
+      // Calculate average service time and total activity time for this barber
+      // Use actual timestamps: completedAt - startedAt (cap 0-120 min per ticket)
       let barberTotalServiceTime = 0;
       let barberServiceTimeCount = 0;
+      let totalActivityMinutes = 0;
       
       barberCompleted.forEach(ticket => {
+        let serviceTime = 0;
         if (ticket.completedAt && ticket.startedAt) {
-          const serviceTime = (new Date(ticket.completedAt).getTime() - new Date(ticket.startedAt).getTime()) / (1000 * 60); // minutes
-          if (serviceTime > 0 && serviceTime < 120) {
-            barberTotalServiceTime += serviceTime;
-            barberServiceTimeCount++;
-          }
+          serviceTime = (new Date(ticket.completedAt).getTime() - new Date(ticket.startedAt).getTime()) / (1000 * 60); // minutes
         } else if (ticket.updatedAt && ticket.createdAt) {
-          // Fallback to old calculation if new timestamps not available
-          const serviceTime = (ticket.updatedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60); // minutes
-          if (serviceTime > 0 && serviceTime < 120) {
-            barberTotalServiceTime += serviceTime;
-            barberServiceTimeCount++;
-          }
+          serviceTime = (ticket.updatedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60);
+        }
+        if (serviceTime > 0 && serviceTime < 120) {
+          barberTotalServiceTime += serviceTime;
+          barberServiceTimeCount++;
+          totalActivityMinutes += serviceTime;
         }
       });
       
       const barberAvgServiceTime = barberServiceTimeCount > 0 
         ? Math.round(barberTotalServiceTime / barberServiceTimeCount) 
         : 0;
+      const monthActivity = monthCompletedByBarber.get(barber.id) ?? 0;
+      const avgWorkTimeMinutesSinceMonthStart =
+        daysElapsedThisMonth >= 1 && monthActivity >= 0
+          ? Math.round(monthActivity / daysElapsedThisMonth)
+          : null;
       
       return {
         id: barber.id,
@@ -225,6 +256,8 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         totalServed: barberCompleted.length,
         avgServiceTime: barberAvgServiceTime,
         isPresent: barber.isPresent,
+        totalActivityMinutes: Math.round(totalActivityMinutes),
+        avgWorkTimeMinutesSinceMonthStart,
       };
     });
 
@@ -759,6 +792,100 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         ruleBased: ruleBasedInsights,
       },
     };
+  });
+
+  /**
+   * Get barber service history (owner only).
+   * Paginated list of tickets for a barber; optional since/until date filter.
+   *
+   * @route GET /api/shops/:slug/analytics/barbers/:barberId/history
+   * @query since - YYYY-MM-DD optional
+   * @query until - YYYY-MM-DD optional
+   * @query page - default 1
+   * @query limit - default 25, max 100
+   */
+  fastify.get('/shops/:slug/analytics/barbers/:barberId/history', {
+    preHandler: [requireAuth(), requireRole(['owner'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
+      barberId: z.coerce.number().int().positive(),
+    });
+    const querySchema = z.object({
+      since: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(25),
+    });
+    const { slug, barberId } = validateRequest(paramsSchema, request.params);
+    const { since: sinceStr, until: untilStr, page, limit } = validateRequest(querySchema, request.query);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    const barber = await db.query.barbers.findFirst({
+      where: and(eq(schema.barbers.id, barberId), eq(schema.barbers.shopId, shop.id)),
+    });
+    if (!barber) throw new NotFoundError(`Barber with ID ${barberId} not found`);
+
+    const conditions = [
+      eq(schema.tickets.shopId, shop.id),
+      eq(schema.tickets.barberId, barberId),
+    ];
+    if (sinceStr != null) {
+      conditions.push(gte(schema.tickets.createdAt, new Date(sinceStr + 'T00:00:00.000Z')));
+    }
+    if (untilStr != null) {
+      const untilDate = new Date(untilStr + 'T00:00:00.000Z');
+      untilDate.setUTCDate(untilDate.getUTCDate() + 1);
+      conditions.push(lt(schema.tickets.createdAt, untilDate));
+    }
+    const whereClause = and(...conditions);
+
+    const [tickets, countRows] = await Promise.all([
+      db.query.tickets.findMany({
+        where: whereClause,
+        orderBy: [desc(schema.tickets.createdAt)],
+        offset: (page - 1) * limit,
+        limit,
+        columns: {
+          id: true,
+          serviceId: true,
+          status: true,
+          createdAt: true,
+          startedAt: true,
+          completedAt: true,
+        },
+      }),
+      db.select({ count: sql<number>`count(*)::int` }).from(schema.tickets).where(whereClause),
+    ]);
+    const total = countRows[0]?.count ?? 0;
+
+    const services = await db.query.services.findMany({
+      where: eq(schema.services.shopId, shop.id),
+      columns: { id: true, name: true },
+    });
+    const serviceNameMap = new Map(services.map((s) => [s.id, s.name]));
+
+    const ticketsWithMeta = tickets.map((t) => {
+      let durationMinutes: number | null = null;
+      if (t.completedAt && t.startedAt) {
+        const mins = (new Date(t.completedAt).getTime() - new Date(t.startedAt).getTime()) / (1000 * 60);
+        if (mins > 0 && mins < 120) durationMinutes = Math.round(mins);
+      }
+      return {
+        id: t.id,
+        serviceId: t.serviceId,
+        serviceName: serviceNameMap.get(t.serviceId) ?? `Service ${t.serviceId}`,
+        status: t.status,
+        createdAt: t.createdAt,
+        startedAt: t.startedAt,
+        completedAt: t.completedAt,
+        durationMinutes,
+      };
+    });
+
+    return { tickets: ticketsWithMeta, total };
   });
 
   /**

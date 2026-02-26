@@ -305,8 +305,10 @@ export function ShopManagementPage() {
   const navigate = useNavigate();
   const editModal = useModal();
   const deleteConfirmModal = useModal();
-  
+  const resetDataConfirmModal = useModal();
+
   const [shops, setShops] = useState<Shop[]>([]);
+  const [isResettingData, setIsResettingData] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [shopToDelete, setShopToDelete] = useState<number | null>(null);
@@ -716,6 +718,20 @@ export function ShopManagementPage() {
       setShops(data);
     }
   }, [shopToDelete, user?.companyId, deleteConfirmModal]);
+
+  const handleResetData = useCallback(async () => {
+    if (!editingShop?.slug) return;
+    resetDataConfirmModal.close();
+    setIsResettingData(true);
+    try {
+      await api.deleteAllTickets(editingShop.slug);
+      setIsResettingData(false);
+    } catch (err) {
+      setIsResettingData(false);
+      const errorMsg = getErrorMessage(err, t('management.resetDataError'));
+      setErrorMessage(errorMsg);
+    }
+  }, [editingShop?.slug, resetDataConfirmModal, t]);
 
   const handlePlacesLookup = useCallback(async () => {
     const address = placesLookupAddress.trim();
@@ -1673,6 +1689,20 @@ export function ShopManagementPage() {
                           </table>
                         </div>
                       </section>
+                      {editingShop && (
+                        <section className="p-4 sm:p-5 rounded-xl bg-red-950/30 border border-red-500/30 space-y-4">
+                          <h3 className="text-sm font-medium text-red-200 uppercase tracking-wider">{t('management.resetDataSection')}</h3>
+                          <p className="text-white/70 text-sm">{t('management.resetDataHint')}</p>
+                          <button
+                            type="button"
+                            onClick={() => resetDataConfirmModal.open()}
+                            disabled={isResettingData}
+                            className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-sm font-medium"
+                          >
+                            {isResettingData ? t('common.loading') : t('management.resetDataButton')}
+                          </button>
+                        </section>
+                      )}
                     </div>
                   )}
                   {editTab === 'credentials' && (
@@ -1827,6 +1857,16 @@ export function ShopManagementPage() {
             cancelText="Cancelar"
             variant="destructive"
             icon="delete"
+          />
+          <ConfirmationDialog
+            isOpen={resetDataConfirmModal.isOpen}
+            onClose={resetDataConfirmModal.close}
+            onConfirm={handleResetData}
+            title={t('management.resetDataTitle')}
+            message={t('management.resetDataMessage')}
+            confirmText={t('management.resetDataConfirm')}
+            variant="destructive"
+            icon="delete_forever"
           />
           </Container>
         </main>
@@ -2971,6 +3011,16 @@ export function ShopManagementPage() {
         cancelText="Cancelar"
         variant="destructive"
         icon="delete"
+      />
+      <ConfirmationDialog
+        isOpen={resetDataConfirmModal.isOpen}
+        onClose={resetDataConfirmModal.close}
+        onConfirm={handleResetData}
+        title={t('management.resetDataTitle')}
+        message={t('management.resetDataMessage')}
+        confirmText={t('management.resetDataConfirm')}
+        variant="destructive"
+        icon="delete_forever"
       />
     </div>
   );

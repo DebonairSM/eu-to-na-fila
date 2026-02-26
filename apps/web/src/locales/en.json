@@ -409,7 +409,16 @@
     "avgMin": "Avg (min)",
     "attendances": "Attendances",
     "myTimeByWeekdayTitle": "Average time by day of week",
-    "myTimeByWeekdayIntro": "Used to estimate queue wait time. Average duration per service and day."
+    "myTimeByWeekdayIntro": "Used to estimate queue wait time. Average duration per service and day.",
+    "timeOfActivity": "Time of activity",
+    "avgWorkTimeThisMonth": "Avg work time (this month)",
+    "serviceHistory": "Service history",
+    "viewHistory": "View history",
+    "historyDate": "Date",
+    "historyStatus": "Status",
+    "historyDuration": "Duration",
+    "periodDay": "Today",
+    "viewTabs": "Analytics sections"
   },
   "chart": {
     "noData": "No data available",
@@ -555,7 +564,14 @@
     "thursday": "Thursday",
     "friday": "Friday",
     "saturday": "Saturday",
-    "sunday": "Sunday"
+    "sunday": "Sunday",
+    "resetDataSection": "Reset barbershop data",
+    "resetDataHint": "Clear all queue and appointment tickets for this shop. Use for testing before delivery. Barbers, services, and settings are not affected.",
+    "resetDataButton": "Reset barbershop data",
+    "resetDataTitle": "Reset barbershop data?",
+    "resetDataMessage": "All tickets (queue and appointments) for this shop will be permanently deleted. Barbers and services will not be changed. This cannot be undone.",
+    "resetDataConfirm": "Reset data",
+    "resetDataError": "Failed to reset data. Try again."
   },
   "company": {
     "dashboardTitle": "Company Dashboard",

@@ -37,6 +37,7 @@ export interface TicketsApi {
   cancelTicket(ticketId: number): Promise<Ticket>;
   cancelTicketAsStaff(ticketId: number): Promise<Ticket>;
   updateTicket(ticketId: number, updates: { barberId?: number | null; status?: 'pending' | 'waiting' | 'in_progress' | 'completed' | 'cancelled'; scheduledTime?: string }): Promise<Ticket>;
+  deleteAllTickets(shopSlug: string): Promise<{ deletedCount: number }>;
 }
 
 export function createTicketsApi(client: BaseApiClient): TicketsApi {
@@ -72,5 +73,6 @@ export function createTicketsApi(client: BaseApiClient): TicketsApi {
     cancelTicket: (ticketId) => c.post(`/tickets/${ticketId}/cancel`, {}, 8000),
     cancelTicketAsStaff: (ticketId) => c.del(`/tickets/${ticketId}`),
     updateTicket: (ticketId, updates) => c.patch(`/tickets/${ticketId}`, updates),
+    deleteAllTickets: (shopSlug) => c.del(`/shops/${shopSlug}/tickets`),
   };
 }

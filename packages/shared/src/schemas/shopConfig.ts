@@ -34,6 +34,7 @@ export interface HomeContent {
     linkAbout: string;
     linkLocation: string;
     ctaJoin: string;
+    ctaSeeStatus: string;
     linkBarbers: string;
     linkAccount: string;
     labelDashboard: string;
@@ -168,6 +169,7 @@ export const homeContentInputSchema = z.object({
     linkAbout: z.string().max(100).optional(),
     linkLocation: z.string().max(100).optional(),
     ctaJoin: z.string().max(100).optional(),
+    ctaSeeStatus: z.string().max(100).optional(),
     linkBarbers: z.string().max(100).optional(),
     linkAccount: z.string().max(100).optional(),
     labelDashboard: z.string().max(100).optional(),
@@ -371,6 +373,7 @@ export const DEFAULT_HOME_CONTENT: HomeContent = {
     linkAbout: 'Sobre',
     linkLocation: 'Localização',
     ctaJoin: 'Entrar na Fila',
+    ctaSeeStatus: 'Ver status',
     linkBarbers: 'Entrar',
     linkAccount: 'Conta',
     labelDashboard: 'Dashboard',
