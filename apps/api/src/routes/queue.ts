@@ -86,10 +86,12 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Diagnostic: expose current wait-time inputs for debugging.
+   * Only registered when NODE_ENV !== 'production'.
    *
    * @route GET /api/shops/:slug/wait-debug
    * @returns { peopleAhead, activePresentBarbers, inProgressRemaining, sampleEstimateForNext }
    */
+  if (process.env.NODE_ENV !== 'production') {
   fastify.get('/shops/:slug/wait-debug', async (request, reply) => {
     const paramsSchema = z.object({
       slug: z.string().min(1),
@@ -199,6 +201,7 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
       sampleEstimateForNext,
     };
   });
+  }
 
   /**
    * Get statistics for a shop.

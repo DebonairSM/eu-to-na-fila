@@ -211,7 +211,7 @@ export function CompanyDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <Link
               to="/company/ads"
-              className="border border-white/10 bg-white/5 rounded-2xl p-10 flex flex-col items-center gap-4 transition-all hover:border-white/20 hover:bg-white/[0.07]"
+              className="border border-white/10 bg-white/5 rounded-xl p-6 flex flex-col items-center gap-4 transition-all hover:border-white/20 hover:bg-white/[0.07]"
             >
               <div className="text-5xl text-[#D4AF37]">
                 <span className="material-symbols-outlined">campaign</span>
@@ -226,7 +226,7 @@ export function CompanyDashboard() {
 
             <Link
               to="/company/shops"
-              className="border border-white/10 bg-white/5 rounded-2xl p-10 flex flex-col items-center gap-4 transition-all hover:border-white/20 hover:bg-white/[0.07]"
+              className="border border-white/10 bg-white/5 rounded-xl p-6 flex flex-col items-center gap-4 transition-all hover:border-white/20 hover:bg-white/[0.07]"
             >
               <div className="text-5xl text-[#D4AF37]">
                 <span className="material-symbols-outlined">store</span>

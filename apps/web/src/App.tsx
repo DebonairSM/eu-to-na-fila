@@ -27,6 +27,7 @@ const AnalyticsPage = lazyWithRetry(() => import('./pages/AnalyticsPage').then((
 const BarberAnalyticsPage = lazyWithRetry(() => import('./pages/BarberAnalyticsPage').then((m) => ({ default: m.BarberAnalyticsPage })));
 const BarberDashboard = lazyWithRetry(() => import('./pages/BarberDashboard').then((m) => ({ default: m.BarberDashboard })));
 const BarberManagementPage = lazyWithRetry(() => import('./pages/BarberManagementPage').then((m) => ({ default: m.BarberManagementPage })));
+const ServiceManagementPage = lazyWithRetry(() => import('./pages/ServiceManagementPage').then((m) => ({ default: m.ServiceManagementPage })));
 const AdManagementPage = lazyWithRetry(() => import('./pages/AdManagementPage').then((m) => ({ default: m.AdManagementPage })));
 const CompanyDashboard = lazyWithRetry(() => import('./pages/CompanyDashboard').then((m) => ({ default: m.CompanyDashboard })));
 const ShopManagementPage = lazyWithRetry(() => import('./pages/ShopManagementPage').then((m) => ({ default: m.ShopManagementPage })));
@@ -193,6 +194,14 @@ function AppContent() {
         element={
           <ProtectedRoute>
             <BarberManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/services"
+        element={
+          <ProtectedRoute requireOwner>
+            <ServiceManagementPage />
           </ProtectedRoute>
         }
       />

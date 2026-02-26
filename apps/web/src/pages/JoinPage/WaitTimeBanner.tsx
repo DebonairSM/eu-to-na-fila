@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { ApiError } from '@/lib/api/errors';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { WaitTimeDisplay } from '@/components/WaitTimeDisplay';
@@ -21,12 +22,26 @@ export function WaitTimeBanner({ sticky = false }: WaitTimeBannerProps) {
     try {
       setWaitError(null);
       setWaitLoading(true);
-      const debug = await api.getWaitDebug(shopSlug);
-      const nextWait =
-        typeof debug.sampleEstimateForNext === 'number'
-          ? debug.sampleEstimateForNext
-          : null;
-      setWaitEstimate(nextWait);
+      try {
+        const debug = await api.getWaitDebug(shopSlug);
+        const nextWait =
+          typeof debug.sampleEstimateForNext === 'number'
+            ? debug.sampleEstimateForNext
+            : null;
+        setWaitEstimate(nextWait);
+      } catch (debugErr: unknown) {
+        const is404 = debugErr instanceof ApiError && debugErr.statusCode === 404;
+        if (is404) {
+          const metrics = await api.getMetrics(shopSlug);
+          const nextWait =
+            typeof metrics.averageWaitTime === 'number' && metrics.averageWaitTime > 0
+              ? metrics.averageWaitTime
+              : null;
+          setWaitEstimate(nextWait);
+        } else {
+          throw debugErr;
+        }
+      }
       setWaitLoading(false);
     } catch (err) {
       setWaitError(err instanceof Error ? err : new Error(t('join.waitError')));

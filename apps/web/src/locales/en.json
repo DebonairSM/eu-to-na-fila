@@ -617,6 +617,7 @@
     "manageQueue": "Manage Queue",
     "analytics": "Analytics",
     "manageBarbers": "Manage Barbers",
+    "manageServices": "Manage Services",
     "clients": "Clients",
     "logout": "Log out"
   },
@@ -625,6 +626,24 @@
     "manageQueue": "Manage queue",
     "analytics": "Performance and analytics",
     "logout": "Log out"
+  },
+  "servicesPage": {
+    "title": "Manage Services",
+    "subtitle": "Create and edit services offered by the shop.",
+    "addService": "Add Service",
+    "noServices": "No services yet. Add the first one.",
+    "name": "Name",
+    "description": "Description",
+    "duration": "Duration (min)",
+    "price": "Price",
+    "active": "Active",
+    "inactive": "Inactive",
+    "edit": "Edit",
+    "delete": "Remove",
+    "deleteConfirm": "Remove this service? You cannot remove it if active tickets use it.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "backToDashboard": "Back to Dashboard"
   },
   "contact": {
     "title": "Contact",

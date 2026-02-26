@@ -617,6 +617,7 @@
     "manageQueue": "Gerenciar Fila",
     "analytics": "Relatórios",
     "manageBarbers": "Gerenciar Barbeiros",
+    "manageServices": "Gerenciar Serviços",
     "clients": "Clientes",
     "logout": "Sair"
   },
@@ -625,6 +626,24 @@
     "manageQueue": "Gerenciar Fila",
     "analytics": "Desempenho e financeiro",
     "logout": "Sair"
+  },
+  "servicesPage": {
+    "title": "Gerenciar Serviços",
+    "subtitle": "Crie e edite os serviços oferecidos pela barbearia.",
+    "addService": "Adicionar Serviço",
+    "noServices": "Nenhum serviço cadastrado. Adicione o primeiro.",
+    "name": "Nome",
+    "description": "Descrição",
+    "duration": "Duração (min)",
+    "price": "Preço (R$)",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "edit": "Editar",
+    "delete": "Remover",
+    "deleteConfirm": "Remover este serviço? Não é possível remover se houver tickets ativos usando-o.",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "backToDashboard": "Voltar ao Dashboard"
   },
   "contact": {
     "title": "Contato",

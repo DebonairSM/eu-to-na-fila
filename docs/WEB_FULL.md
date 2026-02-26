@@ -2,9 +2,9 @@
 
 React SPA documentation for EuToNaFila queue management system.
 
-## Status: ✅ Complete (with noted limitations)
+## Status: ✅ Complete
 
-All core frontend functionality is implemented. Service management UI is pending.
+All core frontend functionality is implemented, including service management at `/services`.
 
 ## Tech Stack
 
@@ -93,8 +93,7 @@ Base path: `/projects/mineiro` (configured in Vite)
 | `/manage` | BarberQueueManager | Auth required | Queue management + kiosk |
 | `/analytics` | AnalyticsPage | Owner only | Analytics dashboard |
 | `/barbers` | BarberManagementPage | Owner only | Barber CRUD |
-
-**Missing:** Service management page (backend ready, frontend not implemented)
+| `/services` | ServiceManagementPage | Owner only | Service CRUD, reorder, toggle active |
 
 ## Pages
 

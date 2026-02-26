@@ -658,7 +658,7 @@ export function AdManagementPage() {
           )}
 
           {/* Propagandas pricing */}
-          <div className="mb-8 border border-white/10 bg-white/5 rounded-2xl p-6">
+          <div className="mb-8 border border-white/10 bg-white/5 rounded-xl p-6">
             <h2 className="text-xl font-semibold mb-4">{t('ads.pricingTitle')}</h2>
             <p className="text-white/60 text-sm mb-4">{t('ads.pricePerDuration')}</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
@@ -710,7 +710,7 @@ export function AdManagementPage() {
           </div>
 
           {/* Pending ad requests */}
-          <div className="mb-8 border border-white/10 bg-white/5 rounded-2xl p-6">
+          <div className="mb-8 border border-white/10 bg-white/5 rounded-xl p-6">
             <h2 className="text-xl font-semibold mb-4">{t('ads.pendingRequests')}</h2>
             {pendingOrdersLoading ? (
               <p className="text-white/60 text-sm">{t('ads.loading')}</p>
@@ -785,7 +785,7 @@ export function AdManagementPage() {
           </div>
 
           {/* Upload Section */}
-          <div className="mb-8 border border-white/10 bg-white/5 rounded-2xl p-6">
+          <div className="mb-8 border border-white/10 bg-white/5 rounded-xl p-6">
             <h2 className="text-xl font-semibold mb-4">{t('ads.addNew')}</h2>
             {shops.length > 0 && (
               <div className="mb-4">
@@ -864,7 +864,7 @@ export function AdManagementPage() {
           ) : (
             <div className="space-y-4">
               {ads.length === 0 ? (
-                <div className="text-center text-white/60 py-12 border border-white/10 bg-white/5 rounded-2xl">
+                <div className="text-center text-white/60 py-12 border border-white/10 bg-white/5 rounded-xl">
                   <p>{t('ads.noAdsYet')}</p>
                   <p className="text-sm mt-2">{t('ads.uploadHint')}</p>
                 </div>
@@ -872,7 +872,7 @@ export function AdManagementPage() {
                 ads.map((ad) => (
                   <div
                     key={ad.id}
-                    className={`border border-white/10 bg-white/5 rounded-2xl p-6 ${!ad.enabled ? 'opacity-60' : ''}`}
+                    className={`border border-white/10 bg-white/5 rounded-xl p-6 ${!ad.enabled ? 'opacity-60' : ''}`}
                   >
                     <div className="flex items-start gap-4">
                       <div className="flex-shrink-0">

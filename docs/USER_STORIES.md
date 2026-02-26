@@ -10,9 +10,9 @@ User interactions and implementation status for EuToNaFila queue management syst
 | Staff Management | ✅ Complete (7/7) |
 | Kiosk Mode | ✅ Complete (5/5) |
 | Authentication | ✅ Complete (2/2) |
-| Admin Features | 🟡 Partial (2/3) |
+| Admin Features | ✅ Complete (3/3) |
 | Future Features | ⏳ Planned (4/4) |
-| **Total** | **✅ 20/21 Core + 4 Future** |
+| **Total** | **✅ 21/21 Core + 4 Future** |
 
 ---
 
@@ -300,7 +300,7 @@ User interactions and implementation status for EuToNaFila queue management syst
 - Logout button
 - Responsive grid layout
 
-**Note:** Service management UI not yet implemented (see US-021)
+**Note:** Service management at `/services` (see US-021)
 
 ---
 
@@ -347,13 +347,13 @@ User interactions and implementation status for EuToNaFila queue management syst
 
 ---
 
-### US-021: Manage Services 🟡
+### US-021: Manage Services ✅
 
 **As an** owner  
 **I want to** create/edit/remove services  
 **So that** I can update offerings
 
-**Status:** Backend ✅ Complete | Frontend ❌ Not Implemented
+**Status:** Backend ✅ Complete | Frontend ✅ Complete
 
 **Backend Implementation:**
 - Service CRUD endpoints fully functional
@@ -367,13 +367,11 @@ User interactions and implementation status for EuToNaFila queue management syst
 - `PATCH /api/services/:id` - Update service (owner only) ✅
 - `DELETE /api/services/:id` - Delete service (owner only) ✅
 
-**Missing Frontend:**
-- Service management page
-- API client methods (createService, updateService, deleteService)
-- Link from Owner Dashboard
-- UI for CRUD operations
-
-**Workaround:** Services currently managed directly via API or database.
+**Frontend Implementation:**
+- Service management page at `/services` (owner only)
+- API client: getServices, createService, updateService, reorderServices, deleteService
+- Owner Dashboard link "Gerenciar Serviços" / "Manage Services"
+- List, add, edit, delete, toggle active, reorder (up/down)
 
 ---
 

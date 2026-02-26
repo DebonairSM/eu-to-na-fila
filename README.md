@@ -389,11 +389,10 @@ Designed for single barbershop deployment:
 
 ## Known Limitations
 
-1. **Service Management UI:** Backend complete, frontend UI not implemented
-2. **Single Tenant:** One shop per deployment (multi-tenancy not supported)
-3. **Polling Updates:** 3-5s intervals (no WebSocket real-time)
-4. **Portuguese Only:** No multi-language support
-5. **No Appointments:** Walk-in queue system only
+1. **Single Tenant:** One shop per deployment (multi-tenancy not supported)
+2. **Polling Updates:** 3-5s intervals (no WebSocket real-time for queue; kiosk/ads use WebSocket)
+3. **Language:** Portuguese is primary; English locale available via language switcher
+4. **Appointments:** Booking, slots, and customer self check-in are supported; see docs/USER_STORIES.md for scope
 
 See `docs/USER_STORIES.md` for detailed implementation status.
 

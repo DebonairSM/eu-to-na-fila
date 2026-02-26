@@ -26,24 +26,26 @@ import { logAuthFailure, logAuthSuccess, getClientIp } from '../middleware/secur
 export const authRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * Debug: returns the Google OAuth redirect URI the app would use.
-   * Compare with Authorized redirect URIs in Google Cloud Console.
+   * Only registered when NODE_ENV !== 'production'.
    * @route GET /api/auth/debug/google-redirect-uri
    */
-  fastify.get('/auth/debug/google-redirect-uri', async (request, reply) => {
-    const callbackPath = '/api/auth/customer/google/callback';
-    const baseUrl = env.PUBLIC_API_URL
-      ? env.PUBLIC_API_URL.replace(/\/$/, '')
-      : (request.headers['x-forwarded-proto'] && request.headers['x-forwarded-host']
-          ? `${request.headers['x-forwarded-proto']}://${request.headers['x-forwarded-host']}`
-          : `${request.protocol}://${request.headers.host || request.hostname}`);
-    const redirectUri = `${baseUrl}${callbackPath}`;
-    return {
-      redirectUri,
-      configured: !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET,
-      publicApiUrl: env.PUBLIC_API_URL ?? null,
-      corsOrigin: env.CORS_ORIGIN,
-    };
-  });
+  if (process.env.NODE_ENV !== 'production') {
+    fastify.get('/auth/debug/google-redirect-uri', async (request, reply) => {
+      const callbackPath = '/api/auth/customer/google/callback';
+      const baseUrl = env.PUBLIC_API_URL
+        ? env.PUBLIC_API_URL.replace(/\/$/, '')
+        : (request.headers['x-forwarded-proto'] && request.headers['x-forwarded-host']
+            ? `${request.headers['x-forwarded-proto']}://${request.headers['x-forwarded-host']}`
+            : `${request.protocol}://${request.headers.host || request.hostname}`);
+      const redirectUri = `${baseUrl}${callbackPath}`;
+      return {
+        redirectUri,
+        configured: !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET,
+        publicApiUrl: env.PUBLIC_API_URL ?? null,
+        corsOrigin: env.CORS_ORIGIN,
+      };
+    });
+  }
 
   // Brute force protection: more lenient in development
   const isDevelopment = process.env.NODE_ENV === 'development';

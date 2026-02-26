@@ -1941,7 +1941,7 @@ export function ShopManagementPage() {
               {shops.map((shop) => (
                 <article
                   key={shop.id}
-                  className="border border-white/10 bg-white/5 rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all hover:border-white/20 hover:bg-white/[0.07] relative overflow-hidden"
+                  className="border border-white/10 bg-white/5 rounded-xl p-4 sm:p-6 transition-all hover:border-white/20 hover:bg-white/[0.07] relative overflow-hidden"
                   aria-labelledby={`shop-name-${shop.id}`}
                 >
                   <div className="shop-header mb-4 sm:mb-5">

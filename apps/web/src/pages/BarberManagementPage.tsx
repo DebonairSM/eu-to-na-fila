@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
@@ -592,16 +593,17 @@ export function BarberManagementPage() {
         )}
       </main>
 
-      {/* Add Barber Modal */}
-      {addModal.isOpen && (
-        <div 
-          className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-5"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(4px)' }}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="add-modal-title"
-        >
-          <div className="modal-content bg-[var(--shop-surface-secondary)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
+      {/* Add Barber Modal - portaled so it overlays everything */}
+      {addModal.isOpen &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-5"
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(4px)' }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-modal-title"
+          >
+            <div className="modal-content bg-[var(--shop-surface-secondary)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
             <h2 id="add-modal-title" className="modal-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-[var(--shop-accent)] mb-5 sm:mb-6">
               {t('barber.addBarber')}
             </h2>
@@ -692,19 +694,20 @@ export function BarberManagementPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Edit Barber Modal */}
-      {editModal.isOpen && (
-        <div 
-          className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-5"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(4px)' }}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div className="modal-content bg-[var(--shop-surface-secondary)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
+      {editModal.isOpen &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-5"
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(4px)' }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
+          >
+            <div className="modal-content bg-[var(--shop-surface-secondary)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
             <h2 id="edit-modal-title" className="modal-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-[var(--shop-accent)] mb-5 sm:mb-6">
               {t('barber.editBarber')}
             </h2>
@@ -816,7 +819,8 @@ export function BarberManagementPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete Confirmation */}
