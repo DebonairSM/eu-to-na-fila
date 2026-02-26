@@ -74,7 +74,7 @@ export function StatusPage() {
       return;
     }
     let cancelled = false;
-    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let intervalId: number | null = null;
 
     const fetchWaitTime = () => {
       if (cancelled || document.hidden) return;

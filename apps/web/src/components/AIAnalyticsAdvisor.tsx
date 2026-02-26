@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useLocale } from '@/hooks/useLocale';
+import { useLocale } from '@/contexts/LocaleContext';
 import { DAY_NAMES_PT_FULL } from '@/lib/constants';
 import { formatDurationMinutes } from '@/lib/formatDuration';
 
