@@ -27,6 +27,7 @@ import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { useLocale } from '@/contexts/LocaleContext';
 import { getShopBasePath } from '@/lib/config';
+import { POLL_INTERVALS } from '@/lib/constants';
 import { cn, getErrorMessage, formatName, formatNameForDisplay, truncateOptionLabel } from '@/lib/utils';
 import { hasHoursForDay, hasAnyOperatingHours } from '@/lib/operatingHours';
 import { getShopStatus } from '@eutonafila/shared';
@@ -49,9 +50,8 @@ export function BarberQueueManager() {
     toggleFullscreen,
   } = useKiosk();
 
-  // Poll queue frequently for real-time updates in management interface
-  const pollInterval = 1000; // 1s polling for queue updates (critical for barbers managing queue)
-  const barberPollInterval = isKioskMode ? 2000 : 0; // Poll barbers in kiosk mode so presence updates without refresh
+  const pollInterval = POLL_INTERVALS.MANAGEMENT_QUEUE;
+  const barberPollInterval = isKioskMode ? 5000 : 0;
   const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval);
   const { barbers, togglePresence } = useBarbers(barberPollInterval);
   const { activeServices } = useServices();
@@ -1019,8 +1019,10 @@ export function BarberQueueManager() {
                   const assignedBarber = getAssignedBarber(ticket);
                   const isServing = ticket.status === 'in_progress';
                   const isWaiting = ticket.status === 'waiting';
+                  const ticketClientId = (ticket as { clientId?: number | null }).clientId ?? null;
+                  const hasClientRecord = ticketClientId != null;
                   const canOpenNotesAsBarber = isWaiting || !isBarber || (user && assignedBarber?.id === user.id);
-                  const showNotesButton = (isWaiting || isServing) && canOpenNotesAsBarber;
+                  const showNotesButton = hasClientRecord && (isWaiting || isServing) && canOpenNotesAsBarber;
                   // Calculate display position based on index in sorted waiting tickets
                   const displayPosition = isServing ? null : index + 1;
                   const preferredBarberId = (ticket as { preferredBarberId?: number }).preferredBarberId;

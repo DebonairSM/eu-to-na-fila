@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { config as appConfig } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useLogout } from '@/hooks/useLogout';
+import { useActiveTicket } from '@/hooks/useActiveTicket';
 import { useShopConfig, useShopHomeContent } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { Container } from '@/components/design-system';
@@ -13,6 +14,7 @@ export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user } = useAuthContext();
   const { logoutAndGoHome } = useLogout();
+  const { activeTicket } = useActiveTicket();
   const { config: shopConfig } = useShopConfig();
   const homeContent = useShopHomeContent();
   const { t } = useLocale();
@@ -23,6 +25,7 @@ export function Navigation() {
     linkAbout: t('nav.about'),
     linkLocation: t('nav.location'),
     ctaJoin: t('nav.ctaJoin'),
+    ctaSeeStatus: t('nav.ctaSeeStatus'),
     linkBarbers: t('nav.login'),
     linkAccount: t('nav.account'),
     labelDashboard: t('nav.dashboard'),
@@ -30,6 +33,10 @@ export function Navigation() {
     labelLogout: t('nav.logout'),
     labelMenu: t('nav.menu'),
   };
+  const showSeeStatus = activeTicket != null;
+  const ctaLabel = showSeeStatus ? (navLabels.ctaSeeStatus ?? t('nav.ctaSeeStatus')) : navLabels.ctaJoin;
+  const ctaTo = showSeeStatus ? `/status/${activeTicket.id}` : '/join';
+  const ctaIcon = showSeeStatus ? 'visibility' : 'queue';
   const shopName = shopConfig.name || appConfig.name;
   const headerIconUrl = homeContent?.branding?.headerIconUrl?.trim();
 
@@ -200,15 +207,15 @@ export function Navigation() {
             <>
               <li>
                 <Link
-                  to="/join"
+                  to={ctaTo}
                   className="inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] px-4 py-2.5 rounded-xl min-h-[44px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2"
                   style={{
                     color: '#0a0a0a',
                     backgroundColor: 'var(--shop-accent, #D4AF37)',
                   }}
                 >
-                  <span className="material-symbols-outlined text-lg" aria-hidden>queue</span>
-                  {navLabels.ctaJoin}
+                  <span className="material-symbols-outlined text-lg" aria-hidden>{ctaIcon}</span>
+                  {ctaLabel}
                 </Link>
               </li>
               <li>
@@ -227,15 +234,15 @@ export function Navigation() {
             <>
               <li>
                 <Link
-                  to="/join"
+                  to={ctaTo}
                   className="inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] px-4 py-2.5 rounded-xl min-h-[44px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2"
                   style={{
                     color: '#0a0a0a',
                     backgroundColor: 'var(--shop-accent, #D4AF37)',
                   }}
                 >
-                  <span className="material-symbols-outlined text-lg" aria-hidden>queue</span>
-                  {navLabels.ctaJoin}
+                  <span className="material-symbols-outlined text-lg" aria-hidden>{ctaIcon}</span>
+                  {ctaLabel}
                 </Link>
               </li>
               <li>
@@ -379,7 +386,7 @@ export function Navigation() {
                 ) : user?.role === 'customer' ? (
                   <>
                     <Link
-                      to="/join"
+                      to={ctaTo}
                       className="flex items-center justify-center gap-2 w-full font-semibold text-sm px-4 py-3 rounded-xl min-h-[48px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2"
                       style={{ color: '#0a0a0a', backgroundColor: 'var(--shop-accent)' }}
                       onClick={(e) => {
@@ -387,8 +394,8 @@ export function Navigation() {
                         setIsMobileMenuOpen(false);
                       }}
                     >
-                      <span className="material-symbols-outlined text-lg" aria-hidden>queue</span>
-                      {navLabels.ctaJoin}
+                      <span className="material-symbols-outlined text-lg" aria-hidden>{ctaIcon}</span>
+                      {ctaLabel}
                     </Link>
                     <Link
                       to="/account"
@@ -405,7 +412,7 @@ export function Navigation() {
                 ) : (
                   <>
                     <Link
-                      to="/join"
+                      to={ctaTo}
                       className="flex items-center justify-center gap-2 w-full font-semibold text-sm px-4 py-3 rounded-xl min-h-[48px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2"
                       style={{ color: '#0a0a0a', backgroundColor: 'var(--shop-accent)' }}
                       onClick={(e) => {
@@ -413,8 +420,8 @@ export function Navigation() {
                         setIsMobileMenuOpen(false);
                       }}
                     >
-                      <span className="material-symbols-outlined text-lg" aria-hidden>queue</span>
-                      {navLabels.ctaJoin}
+                      <span className="material-symbols-outlined text-lg" aria-hidden>{ctaIcon}</span>
+                      {ctaLabel}
                     </Link>
                     <button
                       type="button"

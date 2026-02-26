@@ -5,8 +5,9 @@ import { eq, and, asc } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireRole, optionalAuth } from '../middleware/auth.js';
-import { getShopBySlug } from '../lib/shop.js';
+import { getShopBySlug, getShopById } from '../lib/shop.js';
 import { parseSettings } from '../lib/settings.js';
+import { getBarberPresenceWindow } from '@eutonafila/shared';
 import { ticketService } from '../services/index.js';
 import { hashPassword, validatePassword } from '../lib/password.js';
 
@@ -48,6 +49,16 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
+    const settings = parseSettings(shop.settings);
+    const timezone = settings.timezone ?? 'America/Sao_Paulo';
+    const { shouldAutoAbsent } = getBarberPresenceWindow(settings.operatingHours, timezone);
+    if (shouldAutoAbsent) {
+      await db
+        .update(schema.barbers)
+        .set({ isPresent: false, updatedAt: new Date() })
+        .where(eq(schema.barbers.shopId, shop.id));
+    }
+
     // Get barbers for this shop, sorted by ID for consistent ordering (omit passwordHash)
     const barbers = await db.query.barbers.findMany({
       where: eq(schema.barbers.shopId, shop.id),
@@ -69,7 +80,6 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     });
 
     const isBarberCaller = request.user?.role === 'barber';
-    const settings = parseSettings(shop.settings);
     const hideRevenueFromBarbers = isBarberCaller && settings.barbersCanSeeProfits === false;
 
     if (hideRevenueFromBarbers) {
@@ -114,6 +124,24 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
 
     if (!barber) {
       throw new NotFoundError(`Barber with ID ${id} not found`);
+    }
+
+    const shop = await getShopById(barber.shopId);
+    if (shop) {
+      const settings = parseSettings(shop.settings);
+      const timezone = settings.timezone ?? 'America/Sao_Paulo';
+      const { canMarkPresent, shouldAutoAbsent } = getBarberPresenceWindow(settings.operatingHours, timezone);
+      if (shouldAutoAbsent) {
+        await db
+          .update(schema.barbers)
+          .set({ isPresent: false, updatedAt: new Date() })
+          .where(eq(schema.barbers.shopId, barber.shopId));
+      }
+      if (isPresent && !canMarkPresent) {
+        throw new ValidationError(
+          'Barbers cannot mark themselves present within 1 hour before or after shop closing time'
+        );
+      }
     }
 
     // If marking as not present, unassign any in-progress tickets

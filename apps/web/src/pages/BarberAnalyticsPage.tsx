@@ -26,6 +26,14 @@ interface BarberAnalyticsData {
   ticketsByDay: Record<string, number>;
   serviceBreakdown: Array<{ serviceId: number; serviceName: string; count: number; percentage: number; revenueCents?: number }>;
   dayOfWeekDistribution: Record<string, number>;
+  serviceTimeByWeekday?: Array<{
+    serviceId: number;
+    serviceName: string;
+    dayOfWeek: number;
+    dayName: string;
+    avgDurationMinutes: number;
+    totalCompleted: number;
+  }>;
 }
 
 export function BarberAnalyticsPage() {
@@ -83,7 +91,7 @@ export function BarberAnalyticsPage() {
     );
   }
 
-  const { summary, ticketsByDay, serviceBreakdown, dayOfWeekDistribution } = data;
+  const { summary, ticketsByDay, serviceBreakdown, dayOfWeekDistribution, serviceTimeByWeekday } = data;
   const daysList = Object.entries(ticketsByDay).sort(([a], [b]) => a.localeCompare(b));
 
   return (
@@ -212,6 +220,41 @@ export function BarberAnalyticsPage() {
               </ul>
             </CardContent>
           </Card>
+
+          {serviceTimeByWeekday && serviceTimeByWeekday.length > 0 && (
+            <Card variant="default" className="bg-white/5 border-white/10">
+              <CardContent className="p-6">
+                <Heading level={2} className="text-lg text-white mb-2">
+                  {t('analytics.myTimeByWeekdayTitle')}
+                </Heading>
+                <Text size="sm" variant="secondary" className="mb-4 block">
+                  {t('analytics.myTimeByWeekdayIntro')}
+                </Text>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead>
+                      <tr className="text-white/50 border-b border-white/10">
+                        <th className="py-2 pr-4">{t('analytics.day')}</th>
+                        <th className="py-2 pr-4">{t('analytics.service')}</th>
+                        <th className="py-2 pr-4 text-right">{t('analytics.avgMin')}</th>
+                        <th className="py-2 text-right">{t('analytics.attendances')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {serviceTimeByWeekday.map((row, i) => (
+                        <tr key={`${row.serviceId}-${row.dayOfWeek}-${i}`} className="border-b border-white/5">
+                          <td className="py-2 pr-4 text-white/80">{row.dayName}</td>
+                          <td className="py-2 pr-4 text-white/90">{row.serviceName}</td>
+                          <td className="py-2 pr-4 text-right text-[var(--shop-accent)] font-medium">{row.avgDurationMinutes}</td>
+                          <td className="py-2 text-right text-white/70">{row.totalCompleted}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </Container>
     </div>

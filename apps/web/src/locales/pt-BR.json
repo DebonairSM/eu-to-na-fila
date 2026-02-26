@@ -45,6 +45,7 @@
     "about": "Sobre",
     "location": "Localização",
     "ctaJoin": "Entrar na Fila",
+    "ctaSeeStatus": "Ver status",
     "login": "Entrar",
     "account": "Conta",
     "barbers": "Barbeiros",
@@ -385,6 +386,7 @@
   },
   "analytics": {
     "periodAll": "Todo o período",
+    "periodMonth": "Um mês",
     "days": "dias",
     "revenue": "Receita",
     "walkin": "Balcão",
@@ -399,7 +401,15 @@
     "onTime": "No horário",
     "clientInfo": "Dados do cliente",
     "clientsTab": "Clientes",
-    "ticketCount": "Atendimentos"
+    "ticketCount": "Atendimentos",
+    "timeByWeekdayTitle": "Tempo por dia da semana (estimativa de fila)",
+    "timeByWeekdayIntro": "Média de duração por barbeiro, serviço e dia da semana. Usado para calcular o tempo estimado de espera na fila.",
+    "day": "Dia",
+    "service": "Serviço",
+    "avgMin": "Média (min)",
+    "attendances": "Atendimentos",
+    "myTimeByWeekdayTitle": "Tempo médio por dia da semana",
+    "myTimeByWeekdayIntro": "Usado para estimar o tempo de espera na fila. Média de duração por serviço e dia."
   },
   "chart": {
     "noData": "Nenhum dado disponível",

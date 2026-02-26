@@ -1,8 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import type { Ticket } from '@eutonafila/shared';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { POLL_INTERVALS } from '@/lib/constants';
 import { logError } from '../lib/logger';
 import { api } from '../lib/api';
+
+const MIN_POLL_MS = POLL_INTERVALS.QUEUE_MIN_MS;
 
 interface QueueData {
   shop: {
@@ -50,7 +53,8 @@ export function useQueuePolling(
 ) {
   const shopSlugFromContext = useShopSlug();
   const effectiveShopId = shopId ?? shopSlugFromContext;
-  const { interval = 3000, enabled = true } = options;
+  const { interval: rawInterval = 3000, enabled = true } = options;
+  const interval = Math.max(rawInterval, MIN_POLL_MS);
   const [data, setData] = useState<QueueData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -186,7 +190,8 @@ export function useTicketPolling(
   ticketId: number | null,
   options: UsePollingOptions = {}
 ) {
-  const { interval = 3000, enabled = true } = options;
+  const { interval: rawInterval = 3000, enabled = true } = options;
+  const interval = Math.max(rawInterval, MIN_POLL_MS);
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

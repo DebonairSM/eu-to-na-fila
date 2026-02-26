@@ -75,6 +75,15 @@ export async function getShopByProjectSlug(projectSlug: string): Promise<Shop | 
 }
 
 /**
+ * Resolves shop by id.
+ */
+export async function getShopById(shopId: number): Promise<Shop | undefined> {
+  return db.query.shops.findFirst({
+    where: eq(schema.shops.id, shopId),
+  });
+}
+
+/**
  * Resolves shop by slug. Tries project slug first (for URL path /projects/:slug),
  * then falls back to shop slug (for company dashboard and callers that use the shop's slug).
  * This way both /api/shops/barbearia-premium/... (project slug) and

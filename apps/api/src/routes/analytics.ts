@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import { toZonedTime } from 'date-fns-tz';
 import { db, schema } from '../db/index.js';
 import { eq, and, gte, lt, inArray } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
@@ -31,36 +32,65 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       slug: z.string().min(1),
     });
     const querySchema = z.object({
-      days: z.coerce.number().int().min(0).max(3650).default(7), // 0 = all time
+      days: z.coerce.number().int().min(0).max(3650).optional(),
+      since: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     });
 
     const { slug } = validateRequest(paramsSchema, request.params);
-    const { days } = validateRequest(querySchema, request.query);
+    const raw = validateRequest(querySchema, request.query);
+    const useRange = raw.since != null && raw.until != null;
+    const days = useRange ? undefined : (raw.days ?? 7);
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    const since = new Date();
-    if (days > 0) {
-      since.setDate(since.getDate() - days);
-      since.setHours(0, 0, 0, 0);
+    let since: Date;
+    let until: Date;
+    let periodDays: number;
+    let previousPeriodStart: Date;
+
+    if (useRange && raw.since != null && raw.until != null) {
+      since = new Date(raw.since + 'T00:00:00.000Z');
+      until = new Date(raw.until + 'T00:00:00.000Z');
+      until.setUTCDate(until.getUTCDate() + 1);
+      periodDays = Math.max(1, Math.ceil((until.getTime() - since.getTime()) / (1000 * 60 * 60 * 24)));
+      previousPeriodStart = new Date(since);
+      previousPeriodStart.setUTCDate(previousPeriodStart.getUTCDate() - periodDays);
     } else {
-      since.setTime(0);
+      const d = days ?? 7;
+      since = new Date();
+      if (d > 0) {
+        since.setDate(since.getDate() - d);
+        since.setHours(0, 0, 0, 0);
+      } else {
+        since.setTime(0);
+      }
+      until = new Date();
+      periodDays = d;
+      previousPeriodStart = new Date();
+      if (d > 0) {
+        previousPeriodStart.setDate(previousPeriodStart.getDate() - (d * 2));
+        previousPeriodStart.setHours(0, 0, 0, 0);
+      } else {
+        previousPeriodStart.setTime(0);
+      }
     }
-    const previousPeriodStart = new Date();
-    if (days > 0) {
-      previousPeriodStart.setDate(previousPeriodStart.getDate() - (days * 2));
-      previousPeriodStart.setHours(0, 0, 0, 0);
-    } else {
-      previousPeriodStart.setTime(0);
-    }
+
+    const ticketConditions = useRange
+      ? and(
+          eq(schema.tickets.shopId, shop.id),
+          gte(schema.tickets.createdAt, since),
+          lt(schema.tickets.createdAt, until)
+        )
+      : and(
+          eq(schema.tickets.shopId, shop.id),
+          gte(schema.tickets.createdAt, since)
+        );
 
     // Get all tickets in the period
     const tickets = await db.query.tickets.findMany({
-      where: and(
-        eq(schema.tickets.shopId, shop.id),
-        gte(schema.tickets.createdAt, since)
-      ),
+      where: ticketConditions,
     });
 
     // Get tickets from previous period for comparison
@@ -81,12 +111,13 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     const serviceMap = new Map(services.map(s => [s.id, s.name]));
     const servicePriceMap = new Map(services.map(s => [s.id, s.price]));
 
-    // Calculate statistics
+    // Calculate statistics (all five statuses so total = completed + cancelled + waiting + inProgress + pending)
     const total = tickets.length;
     const completed = tickets.filter(t => t.status === 'completed').length;
     const cancelled = tickets.filter(t => t.status === 'cancelled').length;
     const waiting = tickets.filter(t => t.status === 'waiting').length;
     const inProgress = tickets.filter(t => t.status === 'in_progress').length;
+    const pending = tickets.filter(t => t.status === 'pending').length;
 
     // Completion rate
     const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -99,13 +130,15 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       ticketsByDay[day] = (ticketsByDay[day] || 0) + 1;
     });
 
-    // Average per day (for all-time, use days since first ticket or 1)
-    const dayCount = days > 0 ? days : (() => {
-      const first = tickets.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
-      if (!first || total === 0) return 1;
-      const span = (Date.now() - first.createdAt.getTime()) / (1000 * 60 * 60 * 24);
-      return Math.max(1, Math.ceil(span));
-    })();
+    // Average per day (for all-time, use days since first ticket or 1; for custom range use periodDays)
+    const dayCount = useRange
+      ? periodDays
+      : (days !== undefined && days > 0 ? days : (() => {
+          const first = tickets.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
+          if (!first || total === 0) return 1;
+          const span = (Date.now() - first.createdAt.getTime()) / (1000 * 60 * 60 * 24);
+          return Math.max(1, Math.ceil(span));
+        })());
     const avgPerDay = Math.round(total / dayCount);
 
     // Calculate average service time (for completed tickets)
@@ -147,6 +180,9 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     });
 
     const settings = parseSettings(shop.settings);
+
+    // Day of week in shop timezone (for consistency with hourly distribution)
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
 
     // Get barber stats
     const barbers = await db.query.barbers.findMany({
@@ -192,17 +228,19 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       };
     });
 
-    // Peak hours and hourly distribution
+    // Peak hours and hourly distribution (in shop timezone so "peak hour" matches local business hours)
+    const tz = settings.timezone ?? 'America/Sao_Paulo';
     const hourCounts: Record<number, number> = {};
     tickets.forEach(t => {
-      const hour = t.createdAt.getHours();
+      const createdAtUtc = new Date(t.createdAt);
+      const localInShop = toZonedTime(createdAtUtc, tz);
+      const hour = localInShop.getHours();
       hourCounts[hour] = (hourCounts[hour] || 0) + 1;
     });
-    
-    const peakHour = Object.entries(hourCounts)
-      .sort(([,a], [,b]) => b - a)[0];
 
-    // Hourly distribution (all 24 hours)
+    const peakHour = Object.entries(hourCounts)
+      .sort(([, a], [, b]) => b - a)[0];
+
     const hourlyDistribution: Record<number, number> = {};
     for (let h = 0; h < 24; h++) {
       hourlyDistribution[h] = hourCounts[h] || 0;
@@ -234,19 +272,19 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       })
       .sort((a, b) => b.count - a.count);
 
-    // Day of week distribution
+    // Day of week distribution (shop timezone)
     const dayOfWeekDistribution: Record<string, number> = {
-      'Monday': 0,
-      'Tuesday': 0,
-      'Wednesday': 0,
-      'Thursday': 0,
-      'Friday': 0,
-      'Saturday': 0,
-      'Sunday': 0,
+      Monday: 0,
+      Tuesday: 0,
+      Wednesday: 0,
+      Thursday: 0,
+      Friday: 0,
+      Saturday: 0,
+      Sunday: 0,
     };
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     tickets.forEach(t => {
-      const dayIndex = t.createdAt.getDay();
+      const localInShop = toZonedTime(new Date(t.createdAt), tz);
+      const dayIndex = localInShop.getDay();
       const dayName = dayNames[dayIndex];
       dayOfWeekDistribution[dayName]++;
     });
@@ -292,8 +330,9 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     let cancellationTimeCount = 0;
 
     tickets.forEach(t => {
-      const dayName = dayNames[t.createdAt.getDay()];
-      const hour = t.createdAt.getHours();
+      const localInShop = toZonedTime(new Date(t.createdAt), tz);
+      const dayName = dayNames[localInShop.getDay()];
+      const hour = localInShop.getHours();
       
       if (!cancellationRateByDay[dayName]) {
         cancellationRateByDay[dayName] = { cancelled: 0, total: 0 };
@@ -390,6 +429,23 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         completionRate: barberCompletionRate,
       };
     });
+
+    // Per-barber, per-service, per-day-of-week stats (used for estimated line time)
+    const weekdayStatsRows = await db.query.barberServiceWeekdayStats.findMany({
+      where: eq(schema.barberServiceWeekdayStats.shopId, shop.id),
+      columns: { barberId: true, serviceId: true, dayOfWeek: true, avgDuration: true, totalCompleted: true },
+    });
+    const barberMap = new Map(barbers.map(b => [b.id, b]));
+    const barberServiceWeekdayStats = weekdayStatsRows.map(row => ({
+      barberId: row.barberId,
+      barberName: barberMap.get(row.barberId)?.name ?? `Barber ${row.barberId}`,
+      serviceId: row.serviceId,
+      serviceName: serviceMap.get(row.serviceId) ?? `Service ${row.serviceId}`,
+      dayOfWeek: row.dayOfWeek,
+      dayName: dayNames[row.dayOfWeek],
+      avgDurationMinutes: Math.round(Number(row.avgDuration) * 10) / 10,
+      totalCompleted: row.totalCompleted,
+    }));
 
     // Trends
     const weekOverWeek = previousPeriodCount > 0 
@@ -654,11 +710,15 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       };
     }
 
+    const untilForResponse = useRange && raw.until != null
+      ? new Date(raw.until + 'T23:59:59.999Z')
+      : new Date();
+
     return {
       period: {
-        days,
+        days: periodDays,
         since: since.toISOString(),
-        until: new Date().toISOString(),
+        until: untilForResponse.toISOString(),
       },
       summary: {
         total,
@@ -666,6 +726,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         cancelled,
         waiting,
         inProgress,
+        pending,
         completionRate,
         cancellationRate,
         avgPerDay,
@@ -673,6 +734,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         revenueCents,
       },
       barbers: barberStats,
+      barberServiceWeekdayStats,
       ticketsByDay,
       hourlyDistribution,
       peakHour: peakHour ? { hour: parseInt(peakHour[0]), count: peakHour[1] } : null,
@@ -831,6 +893,23 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       dayOfWeekDistribution[dayName]++;
     });
 
+    // Per-service, per-day-of-week stats (used for estimated line time)
+    const weekdayStatsRows = await db.query.barberServiceWeekdayStats.findMany({
+      where: and(
+        eq(schema.barberServiceWeekdayStats.shopId, shop.id),
+        eq(schema.barberServiceWeekdayStats.barberId, barberId)
+      ),
+      columns: { serviceId: true, dayOfWeek: true, avgDuration: true, totalCompleted: true },
+    });
+    const serviceTimeByWeekday = weekdayStatsRows.map(row => ({
+      serviceId: row.serviceId,
+      serviceName: serviceNameMap.get(row.serviceId) ?? `Service ${row.serviceId}`,
+      dayOfWeek: row.dayOfWeek,
+      dayName: dayNames[row.dayOfWeek],
+      avgDurationMinutes: Math.round(Number(row.avgDuration) * 10) / 10,
+      totalCompleted: row.totalCompleted,
+    }));
+
     const summaryRevenueCents = canSeeProfits ? revenueCents : 0;
 
     return {
@@ -852,6 +931,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       ticketsByDay,
       serviceBreakdown,
       dayOfWeekDistribution,
+      serviceTimeByWeekday,
     };
   });
 };

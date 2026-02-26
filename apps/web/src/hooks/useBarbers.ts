@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { POLL_INTERVALS } from '@/lib/constants';
 import type { Barber } from '@eutonafila/shared';
+
+const MIN_BARBER_POLL_MS = POLL_INTERVALS.QUEUE_MIN_MS;
 
 export function useBarbers(pollInterval?: number) {
   const shopSlug = useShopSlug();
@@ -9,6 +12,11 @@ export function useBarbers(pollInterval?: number) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const previousDataRef = useRef<string>('');
+
+  const effectivePollInterval =
+    pollInterval != null && pollInterval > 0
+      ? Math.max(pollInterval, MIN_BARBER_POLL_MS)
+      : undefined;
 
   const fetchBarbers = useCallback(async () => {
     if (document.hidden) {
@@ -19,7 +27,7 @@ export function useBarbers(pollInterval?: number) {
       setError(null);
       const barbersList = await api.getBarbers(shopSlug);
 
-      if (pollInterval && pollInterval > 0) {
+      if (effectivePollInterval != null && effectivePollInterval > 0) {
         const dataString = JSON.stringify(barbersList);
         if (dataString !== previousDataRef.current) {
           previousDataRef.current = dataString;
@@ -33,13 +41,13 @@ export function useBarbers(pollInterval?: number) {
       setError(err instanceof Error ? err : new Error('Failed to fetch barbers'));
       setIsLoading(false);
     }
-  }, [pollInterval, shopSlug]);
+  }, [effectivePollInterval, shopSlug]);
 
   useEffect(() => {
     setIsLoading(true);
     fetchBarbers();
 
-    if (!pollInterval || pollInterval <= 0) {
+    if (!effectivePollInterval || effectivePollInterval <= 0) {
       return;
     }
 
@@ -54,12 +62,12 @@ export function useBarbers(pollInterval?: number) {
       } else {
         if (!intervalId) {
           fetchBarbers();
-          intervalId = window.setInterval(fetchBarbers, pollInterval);
+          intervalId = window.setInterval(fetchBarbers, effectivePollInterval);
         }
       }
     };
 
-    intervalId = window.setInterval(fetchBarbers, pollInterval);
+    intervalId = window.setInterval(fetchBarbers, effectivePollInterval);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
@@ -68,7 +76,7 @@ export function useBarbers(pollInterval?: number) {
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [fetchBarbers, pollInterval]);
+  }, [fetchBarbers, effectivePollInterval]);
 
   const togglePresence = useCallback(
     async (barberId: number, isPresent: boolean) => {

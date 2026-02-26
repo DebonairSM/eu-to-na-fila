@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { POLL_INTERVALS } from '@/lib/constants';
 import type { GetQueueResponse } from '@eutonafila/shared';
+
+const MIN_POLL_MS = POLL_INTERVALS.QUEUE_MIN_MS;
 
 export function useQueue(pollInterval?: number) {
   const shopSlug = useShopSlug();
@@ -9,6 +12,11 @@ export function useQueue(pollInterval?: number) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const previousDataRef = useRef<string>('');
+
+  const effectiveInterval =
+    pollInterval != null && pollInterval > 0
+      ? Math.max(pollInterval, MIN_POLL_MS)
+      : undefined;
 
   const fetchQueue = useCallback(async () => {
     // Skip if page is hidden (Page Visibility API)
@@ -36,33 +44,27 @@ export function useQueue(pollInterval?: number) {
   useEffect(() => {
     fetchQueue();
 
-    if (!pollInterval || pollInterval <= 0) {
+    if (!effectiveInterval || effectiveInterval <= 0) {
       return;
     }
 
     let intervalId: number | null = null;
 
-    // Handle Page Visibility API - pause when hidden, resume when visible
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // Page is hidden, clear interval
         if (intervalId) {
           clearInterval(intervalId);
           intervalId = null;
         }
       } else {
-        // Page is visible, resume polling
         if (!intervalId) {
           fetchQueue();
-          intervalId = window.setInterval(fetchQueue, pollInterval);
+          intervalId = window.setInterval(fetchQueue, effectiveInterval);
         }
       }
     };
 
-    // Start polling
-    intervalId = window.setInterval(fetchQueue, pollInterval);
-
-    // Listen for visibility changes
+    intervalId = window.setInterval(fetchQueue, effectiveInterval);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
@@ -71,7 +73,7 @@ export function useQueue(pollInterval?: number) {
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [fetchQueue, pollInterval]);
+  }, [fetchQueue, effectiveInterval]);
 
   const waitingTickets = data?.tickets.filter((t) => t.status === 'waiting') || [];
   const inProgressTickets = data?.tickets.filter((t) => t.status === 'in_progress') || [];

@@ -45,6 +45,7 @@
     "about": "About",
     "location": "Location",
     "ctaJoin": "Join Queue",
+    "ctaSeeStatus": "See status",
     "login": "Login",
     "account": "Account",
     "barbers": "Barbers",
@@ -385,6 +386,7 @@
   },
   "analytics": {
     "periodAll": "Full period",
+    "periodMonth": "Single month",
     "days": "days",
     "revenue": "Revenue",
     "walkin": "Walk-in",
@@ -399,7 +401,15 @@
     "onTime": "On time",
     "clientInfo": "Client details",
     "clientsTab": "Clients",
-    "ticketCount": "Services"
+    "ticketCount": "Services",
+    "timeByWeekdayTitle": "Time by day of week (queue estimate)",
+    "timeByWeekdayIntro": "Average duration per barber, service and day of week. Used to calculate estimated wait time in the queue.",
+    "day": "Day",
+    "service": "Service",
+    "avgMin": "Avg (min)",
+    "attendances": "Attendances",
+    "myTimeByWeekdayTitle": "Average time by day of week",
+    "myTimeByWeekdayIntro": "Used to estimate queue wait time. Average duration per service and day."
   },
   "chart": {
     "noData": "No data available",

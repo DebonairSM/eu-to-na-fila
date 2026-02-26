@@ -37,6 +37,7 @@ interface AnalyticsData {
     cancelled: number;
     waiting: number;
     inProgress: number;
+    pending?: number;
     completionRate: number;
     cancellationRate: number;
     avgPerDay: number;
@@ -49,6 +50,16 @@ interface AnalyticsData {
     totalServed: number;
     avgServiceTime: number;
     isPresent: boolean;
+  }>;
+  barberServiceWeekdayStats?: Array<{
+    barberId: number;
+    barberName: string;
+    serviceId: number;
+    serviceName: string;
+    dayOfWeek: number;
+    dayName: string;
+    avgDurationMinutes: number;
+    totalCompleted: number;
   }>;
   ticketsByDay: Record<string, number>;
   hourlyDistribution: Record<number, number>;
@@ -89,13 +100,36 @@ interface AnalyticsData {
 
 type AnalyticsView = 'overview' | 'time' | 'services' | 'barbers' | 'cancellations' | 'demographics' | 'clients';
 
+type PeriodSelect = '7' | '30' | '90' | 'all' | 'month';
+
+function getMonthRange(year: number, month: number): { since: string; until: string } {
+  const since = `${year}-${String(month).padStart(2, '0')}-01`;
+  const now = new Date();
+  const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month;
+  const until = isCurrentMonth
+    ? `${year}-${String(month).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    : `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`;
+  return { since, until };
+}
+
+function getMonthLabelFromRange(since: string, until: string, locale: string): string {
+  const s = new Date(since);
+  const u = new Date(until);
+  const monthName = s.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  const lastDayOfMonth = new Date(s.getFullYear(), s.getMonth() + 1, 0);
+  const isPartialMonth = u.getTime() < lastDayOfMonth.setHours(23, 59, 59, 999);
+  return isPartialMonth ? `${monthName} (so far)` : monthName;
+}
+
 export function AnalyticsPage() {
   const shopSlug = useShopSlug();
   const { config: shopConfig } = useShopConfig();
   const { isOwner } = useAuthContext();
   const { locale, t } = useLocale();
   const navigate = useNavigate();
-  const [days, setDays] = useState(30);
+  const now = new Date();
+  const [periodSelect, setPeriodSelect] = useState<PeriodSelect>('30');
+  const [monthYear, setMonthYear] = useState({ year: now.getFullYear(), month: now.getMonth() + 1 });
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -113,8 +147,15 @@ export function AnalyticsPage() {
     return `${formatDate(s, locale)} – ${formatDate(u, locale)}`;
   };
 
-  const periodLabel = (periodDays: number): string => {
+  const periodLabel = (periodDays: number, since?: string, until?: string): string => {
     if (periodDays === 0) return t('analytics.periodAll');
+    if (since != null && until != null) {
+      const s = new Date(since);
+      const u = new Date(until);
+      if (s.getFullYear() === u.getFullYear() && s.getMonth() === u.getMonth()) {
+        return getMonthLabelFromRange(since, until, locale);
+      }
+    }
     return `${periodDays} ${t('analytics.days')}`;
   };
 
@@ -129,7 +170,16 @@ export function AnalyticsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const analyticsData = await api.getAnalytics(shopSlug, days);
+        const query =
+          periodSelect === 'month'
+            ? getMonthRange(monthYear.year, monthYear.month)
+            : periodSelect === 'all'
+              ? 0
+              : Number(periodSelect);
+        const analyticsData =
+          typeof query === 'object'
+            ? await api.getAnalytics(shopSlug, { since: query.since, until: query.until })
+            : await api.getAnalytics(shopSlug, query);
         setData(analyticsData);
       } catch (err) {
         if (err instanceof Error) {
@@ -144,7 +194,7 @@ export function AnalyticsPage() {
       }
     };
     fetchAnalytics();
-  }, [days, shopSlug]);
+  }, [periodSelect, monthYear.year, monthYear.month, shopSlug]);
 
   useEffect(() => {
     if (activeView !== 'clients' || !shopSlug) return;
@@ -201,15 +251,44 @@ export function AnalyticsPage() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <select
-                value={days}
-                onChange={(e) => setDays(Number(e.target.value))}
+                value={periodSelect}
+                onChange={(e) => setPeriodSelect(e.target.value as PeriodSelect)}
                 className="select-readable px-4 py-2.5 bg-white border border-[var(--shop-border-color)] rounded-xl text-gray-900 text-base cursor-pointer focus:outline-none focus:border-[var(--shop-accent)] transition-colors"
               >
-                <option value={7}>{periodLabel(7)}</option>
-                <option value={30}>{periodLabel(30)}</option>
-                <option value={90}>{periodLabel(90)}</option>
-                <option value={0}>{t('analytics.periodAll')}</option>
+                <option value="7">{periodLabel(7)}</option>
+                <option value="30">{periodLabel(30)}</option>
+                <option value="90">{periodLabel(90)}</option>
+                <option value="month">{t('analytics.periodMonth')}</option>
+                <option value="all">{t('analytics.periodAll')}</option>
               </select>
+              {periodSelect === 'month' && (
+                <>
+                  <select
+                    value={monthYear.month}
+                    onChange={(e) => setMonthYear((m) => ({ ...m, month: Number(e.target.value) }))}
+                    className="select-readable px-4 py-2.5 bg-white border border-[var(--shop-border-color)] rounded-xl text-gray-900 text-base cursor-pointer focus:outline-none focus:border-[var(--shop-accent)] transition-colors"
+                    aria-label="Month"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => (
+                      <option key={m} value={m}>
+                        {new Date(2000, m - 1, 1).toLocaleDateString(locale, { month: 'long' })}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={monthYear.year}
+                    onChange={(e) => setMonthYear((m) => ({ ...m, year: Number(e.target.value) }))}
+                    className="select-readable px-4 py-2.5 bg-white border border-[var(--shop-border-color)] rounded-xl text-gray-900 text-base cursor-pointer focus:outline-none focus:border-[var(--shop-accent)] transition-colors"
+                    aria-label="Year"
+                  >
+                    {Array.from({ length: 5 }, (_, i) => now.getFullYear() - i).map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -223,7 +302,11 @@ export function AnalyticsPage() {
                       cancellationAnalysis: data.cancellationAnalysis,
                       barberEfficiency: data.barberEfficiency,
                     },
-                    { shopName: shopConfig.name, periodLabel: periodLabel(data.period.days), locale }
+                    {
+                      shopName: shopConfig.name,
+                      periodLabel: periodLabel(data.period.days, data.period.since, data.period.until),
+                      locale,
+                    }
                   );
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-semibold rounded-xl hover:bg-[var(--shop-accent-hover)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-background)]"
@@ -710,6 +793,54 @@ export function AnalyticsPage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {data.barberServiceWeekdayStats && data.barberServiceWeekdayStats.length > 0 && (
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
+                  <div className="mb-6 flex items-center gap-4">
+                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">schedule</span>
+                    <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                      {t('analytics.timeByWeekdayTitle')}
+                    </h2>
+                  </div>
+                  <p className="text-sm text-white/60 mb-6">
+                    {t('analytics.timeByWeekdayIntro')}
+                  </p>
+                  <div className="space-y-8">
+                    {data.barbers.map((barber) => {
+                      const barberStats = data.barberServiceWeekdayStats!.filter(s => s.barberId === barber.id);
+                      if (barberStats.length === 0) return null;
+                      return (
+                        <div key={barber.id} className="bg-[rgba(36,36,36,0.8)] border border-[var(--shop-border-color)] rounded-2xl p-6">
+                          <h4 className="text-lg text-white mb-4">{barber.name}</h4>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                              <thead>
+                                <tr className="text-white/50 border-b border-[var(--shop-border-color)]">
+                                  <th className="py-2 pr-4">{t('analytics.day')}</th>
+                                  <th className="py-2 pr-4">{t('analytics.service')}</th>
+                                  <th className="py-2 pr-4 text-right">{t('analytics.avgMin')}</th>
+                                  <th className="py-2 text-right">{t('analytics.attendances')}</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {barberStats.map((row, i) => (
+                                  <tr key={`${row.serviceId}-${row.dayOfWeek}-${i}`} className="border-b border-white/5">
+                                    <td className="py-2 pr-4 text-white/80">{row.dayName}</td>
+                                    <td className="py-2 pr-4 text-white/90">{row.serviceName}</td>
+                                    <td className="py-2 pr-4 text-right text-[var(--shop-accent)] font-medium">{row.avgDurationMinutes}</td>
+                                    <td className="py-2 text-right text-white/70">{row.totalCompleted}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

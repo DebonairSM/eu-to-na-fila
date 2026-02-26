@@ -8,14 +8,16 @@
 export const POLL_INTERVALS = {
   /** Standard queue polling interval (3 seconds) */
   QUEUE: 3000,
+  /** Minimum queue poll interval; values below this are clamped to avoid API hammering */
+  QUEUE_MIN_MS: 2000,
   /** Ticket status polling interval (3 seconds) */
   TICKET_STATUS: 3000,
   /** Wait times polling interval (30 seconds) */
   WAIT_TIMES: 30000,
   /** Kiosk mode queue polling interval (10 seconds) */
   KIOSK_QUEUE: 10000,
-  /** Management mode queue polling interval (5 seconds) */
-  MANAGEMENT_QUEUE: 5000,
+  /** Management/barber queue polling interval (3 seconds) */
+  MANAGEMENT_QUEUE: 3000,
 } as const;
 
 /**

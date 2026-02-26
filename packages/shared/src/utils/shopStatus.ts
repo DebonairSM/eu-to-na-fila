@@ -159,3 +159,49 @@ function findNextOpenTime(
   
   return null; // No opening time in next 7 days
 }
+
+/** 1 hour in minutes; barbers cannot mark present this long before/after closing. */
+const BARBER_PRESENCE_CLOSE_MARGIN_MINUTES = 60;
+
+export interface BarberPresenceWindowResult {
+  /** False when within 1h before closing or 1h after closing, or when shop has no hours today */
+  canMarkPresent: boolean;
+  /** True when current time is >= closing + 1h (barbers should be auto-set absent) */
+  shouldAutoAbsent: boolean;
+}
+
+/**
+ * Barber presence rules around shop closing.
+ * - Barbers cannot mark themselves present from 1h before closing until 1h after closing.
+ * - 1h after closing, barbers are automatically counted absent.
+ */
+export function getBarberPresenceWindow(
+  operatingHours: OperatingHours | undefined,
+  timezone: string,
+  now: Date = new Date()
+): BarberPresenceWindowResult {
+  if (!operatingHours) {
+    return { canMarkPresent: true, shouldAutoAbsent: false };
+  }
+  const shopNow = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
+  const currentDay = dayNames[shopNow.getDay()];
+  const currentTime = shopNow.getHours() * 60 + shopNow.getMinutes();
+  const todayHours = operatingHours[currentDay];
+
+  if (!todayHours) {
+    return { canMarkPresent: false, shouldAutoAbsent: false };
+  }
+
+  const closeTime = parseTime(todayHours.close);
+  const windowStart = closeTime - BARBER_PRESENCE_CLOSE_MARGIN_MINUTES;
+  const windowEnd = closeTime + BARBER_PRESENCE_CLOSE_MARGIN_MINUTES;
+
+  if (currentTime >= windowEnd) {
+    return { canMarkPresent: false, shouldAutoAbsent: true };
+  }
+  if (currentTime >= windowStart) {
+    return { canMarkPresent: false, shouldAutoAbsent: false };
+  }
+  return { canMarkPresent: true, shouldAutoAbsent: false };
+}

@@ -209,10 +209,15 @@ export function downloadAnalyticsPdf(
     });
   }
 
+  const sinceMonth = data.period.since.slice(0, 7);
+  const untilMonth = data.period.until.slice(0, 7);
+  const isSingleMonth = sinceMonth === untilMonth;
   const periodSlug =
     data.period.days === 0
       ? 'todo-periodo'
-      : `${data.period.days}d`;
+      : isSingleMonth
+        ? sinceMonth
+        : `${data.period.days}d`;
   const filename = `analytics-${periodSlug}-${new Date().toISOString().slice(0, 10)}.pdf`;
   doc.save(filename);
 }
