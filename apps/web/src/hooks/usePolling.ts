@@ -194,7 +194,7 @@ export function useTicketPolling(
   const [error, setError] = useState<Error | null>(null);
   const isMountedRef = useRef(true);
   const lastFetchTimeRef = useRef<number>(0);
-  const intervalIdRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const intervalIdRef = useRef<number | null>(null);
 
   const fetchTicket = useCallback(async () => {
     if (!ticketId) return;
