@@ -758,6 +758,33 @@ export function AnalyticsPage() {
           {/* Barbers View */}
           {activeView === 'barbers' && (
             <>
+              {/* Productivity by day of week (per barber, with time frame: All time / This period) */}
+              {(data.barberProductivityByDayAllTime?.length ?? 0) > 0 || (data.barberProductivityByDayInPeriod?.length ?? 0) > 0 || data.barbers.length > 0 ? (
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
+                  <div className="mb-6 flex items-center gap-4">
+                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">bar_chart</span>
+                    <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                      {t('analytics.productivityByDayTitle')}
+                    </h2>
+                  </div>
+                  <p className="text-sm text-white/60 mb-6">
+                    {t('analytics.productivityByDayIntro')}
+                  </p>
+                  <BarberProductivityByDayChart
+                    allTime={data.barberProductivityByDayAllTime ?? []}
+                    inPeriod={data.barberProductivityByDayInPeriod}
+                    scope={productivityChartScope}
+                    onScopeChange={setProductivityChartScope}
+                    dayLabels={DAY_NAMES_PT}
+                    labelAvgMinutes={t('analytics.avgMin')}
+                    labelAttendances={t('analytics.attendances')}
+                    labelAllTime={t('analytics.dataAllTime')}
+                    labelThisPeriod={t('analytics.dataThisPeriod')}
+                  />
+                </div>
+              ) : null}
+
               {data.barberEfficiency.length > 0 && (
                 <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
@@ -877,32 +904,6 @@ export function AnalyticsPage() {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {data.barberProductivityByDayAllTime && data.barberProductivityByDayAllTime.length > 0 && (
-                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
-                  <div className="mb-6 flex items-center gap-4">
-                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">bar_chart</span>
-                    <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
-                      {t('analytics.productivityByDayTitle')}
-                    </h2>
-                  </div>
-                  <p className="text-sm text-white/60 mb-6">
-                    {t('analytics.productivityByDayIntro')}
-                  </p>
-                  <BarberProductivityByDayChart
-                    allTime={data.barberProductivityByDayAllTime}
-                    inPeriod={data.barberProductivityByDayInPeriod}
-                    scope={productivityChartScope}
-                    onScopeChange={setProductivityChartScope}
-                    dayLabels={DAY_NAMES_PT}
-                    labelAvgMinutes={t('analytics.avgMin')}
-                    labelAttendances={t('analytics.attendances')}
-                    labelAllTime={t('analytics.dataAllTime')}
-                    labelThisPeriod={t('analytics.dataThisPeriod')}
-                  />
                 </div>
               )}
 
