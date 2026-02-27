@@ -113,6 +113,20 @@
       "when": 1771300000000,
       "tag": "0024_migrate_project_paths_to_short",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1771400000000,
+      "tag": "0025_add_services_kind",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1771500000000,
+      "tag": "0026_ticket_main_complementary_services",
+      "breakpoints": true
     }
   ]
 }
