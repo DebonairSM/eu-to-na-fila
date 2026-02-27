@@ -56,12 +56,90 @@ export function ServicesSection() {
             ))}
           </div>
 
-          {/* Desktop: columns = min(service count, 4). 1 service = centered single column. */}
+          {/* Desktop: 1–3 = simple grid; 4 = 3 + 1 centered; 5 = 2 top (between cracks) + 3 bottom; 6+ = 3 cols, last row centered when partial */}
           {(() => {
             const n = activeServices.length;
+            const isSingle = n === 1;
+
+            const serviceCard = (service: (typeof activeServices)[0]) => (
+              <Card key={service.id} hover className="service-card text-center h-full">
+                <CardContent className="py-8 px-4">
+                  <span className="service-card__icon material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)] mb-4 block">
+                    content_cut
+                  </span>
+                  <Heading level={3} className="service-card__title mb-4 text-2xl">
+                    {service.name}
+                  </Heading>
+                  <Text size="xl" className="service-card__price text-[var(--shop-accent,#D4AF37)] font-semibold text-2xl">
+                    {formatCurrency(service.price, locale)}
+                  </Text>
+                </CardContent>
+              </Card>
+            );
+
+            if (n === 4) {
+              return (
+                <div
+                  className={cn(
+                    'hidden lg:grid max-w-6xl mx-auto gap-8',
+                    'grid-cols-3'
+                  )}
+                  style={{ gap: 'var(--spacing-lg, 1.5rem)' }}
+                >
+                  {activeServices.slice(0, 3).map(serviceCard)}
+                  <div className="col-start-2 flex justify-center">{serviceCard(activeServices[3])}</div>
+                </div>
+              );
+            }
+
+            if (n === 5) {
+              return (
+                <div
+                  className="hidden lg:grid max-w-6xl mx-auto gap-8"
+                  style={{
+                    gap: 'var(--spacing-lg, 1.5rem)',
+                    gridTemplateColumns: 'repeat(6, 1fr)',
+                    gridTemplateRows: 'auto auto',
+                  }}
+                >
+                  <div className="col-span-2 col-start-2 row-start-1 flex justify-center">{serviceCard(activeServices[3])}</div>
+                  <div className="col-span-2 col-start-4 row-start-1 flex justify-center">{serviceCard(activeServices[4])}</div>
+                  <div className="col-span-2 row-start-2">{serviceCard(activeServices[0])}</div>
+                  <div className="col-span-2 row-start-2">{serviceCard(activeServices[1])}</div>
+                  <div className="col-span-2 row-start-2">{serviceCard(activeServices[2])}</div>
+                </div>
+              );
+            }
+
+            if (n >= 6) {
+              const cols = 3;
+              const fullRows = Math.floor(n / cols);
+              const remainder = n % cols;
+              const restStart = fullRows * cols;
+              return (
+                <div
+                  className="hidden lg:grid max-w-6xl mx-auto gap-8"
+                  style={{
+                    gap: 'var(--spacing-lg, 1.5rem)',
+                    gridTemplateColumns: `repeat(${cols}, 1fr)`,
+                  }}
+                >
+                  {activeServices.slice(0, restStart).map(serviceCard)}
+                  {remainder === 1 && (
+                    <div className="col-start-2 flex justify-center">{serviceCard(activeServices[restStart])}</div>
+                  )}
+                  {remainder === 2 && (
+                    <div className="col-span-3 flex justify-center gap-8" style={{ gap: 'var(--spacing-lg, 1.5rem)' }}>
+                      {serviceCard(activeServices[restStart])}
+                      {serviceCard(activeServices[restStart + 1])}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             const desktopCols = Math.min(Math.max(1, n), 4) as 1 | 2 | 3 | 4;
             const tabletCols = Math.min(desktopCols, 3) as 1 | 2 | 3;
-            const isSingle = n === 1;
             return (
               <Grid
                 cols={{ mobile: 1, tablet: tabletCols, desktop: desktopCols }}
@@ -71,21 +149,7 @@ export function ServicesSection() {
                   isSingle && 'max-w-md'
                 )}
               >
-                {activeServices.map((service) => (
-                  <Card key={service.id} hover className="service-card text-center">
-                    <CardContent className="py-8 px-4">
-                      <span className="service-card__icon material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)] mb-4 block">
-                        content_cut
-                      </span>
-                      <Heading level={3} className="service-card__title mb-4 text-2xl">
-                        {service.name}
-                      </Heading>
-                      <Text size="xl" className="service-card__price text-[var(--shop-accent,#D4AF37)] font-semibold text-2xl">
-                        {formatCurrency(service.price, locale)}
-                      </Text>
-                    </CardContent>
-                  </Card>
-                ))}
+                {activeServices.map(serviceCard)}
               </Grid>
             );
           })()}
