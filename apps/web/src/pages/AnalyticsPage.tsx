@@ -15,7 +15,7 @@ import { ServiceBreakdownChart } from '@/components/ServiceBreakdownChart';
 import { LocationChart } from '@/components/LocationChart';
 import { DemographicsInsights } from '@/components/DemographicsInsights';
 import { DayOfWeekChart } from '@/components/DayOfWeekChart';
-import { BarberProductivityByDayChart } from '@/components/BarberProductivityByDayChart';
+import { BarberProductivityByDayChart, type ProductivityTimeScope } from '@/components/BarberProductivityByDayChart';
 import { WaitTimeTrendChart } from '@/components/WaitTimeTrendChart';
 import { CancellationChart } from '@/components/CancellationChart';
 import { ServiceTimeDistributionChart } from '@/components/ServiceTimeDistributionChart';
@@ -23,6 +23,7 @@ import { TypeBreakdownChart } from '@/components/TypeBreakdownChart';
 import { ClientInfoModal } from '@/components/ClientInfoModal';
 import { DAY_NAMES_PT, DAY_NAMES_PT_FULL } from '@/lib/constants';
 import { downloadAnalyticsPdf } from '@/lib/analyticsPdf';
+import { downloadBarberServiceHistoryCsv } from '@/lib/barberHistoryCsv';
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatDate } from '@/lib/format';
 import { formatNameForDisplay } from '@/lib/utils';
@@ -171,8 +172,61 @@ export function AnalyticsPage() {
   const [historyPage, setHistoryPage] = useState(1);
   const [historyData, setHistoryData] = useState<BarberServiceHistoryResponse | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [productivityChartScope, setProductivityChartScope] = useState<'all_time' | 'period'>('all_time');
+  const [productivityTimeScope, setProductivityTimeScope] = useState<ProductivityTimeScope>('all_time');
+  const [productivityWeekStart, setProductivityWeekStart] = useState<string | null>(null);
+  const [productivityWeekData, setProductivityWeekData] = useState<Array<{ barberId: number; barberName: string; dayOfWeek: number; dayName: string; avgDurationMinutes: number; totalCompleted: number }> | null>(null);
+  const [productivityWeekLoading, setProductivityWeekLoading] = useState(false);
+  const [selectedBarberId, setSelectedBarberId] = useState<number | null>(null);
+  const [downloadBarberModal, setDownloadBarberModal] = useState<{ id: number; name: string } | null>(null);
+  const [downloadCsvLoading, setDownloadCsvLoading] = useState(false);
+  const [downloadRange, setDownloadRange] = useState<'full' | 'partial'>('full');
+  const [downloadSince, setDownloadSince] = useState('');
+  const [downloadUntil, setDownloadUntil] = useState('');
   const contentStartRef = useRef<HTMLDivElement>(null);
+
+  // Week options for productivity chart (Monday-based): this week, last week, 2 weeks ago, ... 5 weeks ago
+  const weekOptionsForProductivity = (() => {
+    const options: { value: string; label: string }[] = [];
+    const pad = (n: number) => String(n).padStart(2, '0');
+    for (let i = 0; i <= 5; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - 7 * i);
+      const day = d.getDay();
+      const diff = day === 0 ? 6 : day - 1;
+      const monday = new Date(d);
+      monday.setDate(d.getDate() - diff);
+      const weekStart = `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`;
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      const label = i === 0 ? t('analytics.weekThis') : i === 1 ? t('analytics.weekLast') : t('analytics.weekN').replace('{{n}}', String(i));
+      const rangeLabel = `${formatDate(monday, locale)} – ${formatDate(sunday, locale)}`;
+      options.push({ value: weekStart, label: `${label} (${rangeLabel})` });
+    }
+    return options;
+  })();
+
+  const productivityWeekLabel = productivityWeekStart && productivityWeekData != null
+    ? (() => {
+        const [y, m, d] = productivityWeekStart.split('-').map(Number);
+        const mon = new Date(y, (m ?? 1) - 1, d ?? 1);
+        const sun = new Date(mon);
+        sun.setDate(mon.getDate() + 6);
+        return `${formatDate(mon, locale)} – ${formatDate(sun, locale)}`;
+      })()
+    : undefined;
+
+  useEffect(() => {
+    if (productivityTimeScope !== 'week' || !productivityWeekStart || !shopSlug) {
+      if (productivityTimeScope !== 'week') setProductivityWeekData(null);
+      return;
+    }
+    setProductivityWeekLoading(true);
+    api
+      .getBarberProductivityByWeek(shopSlug, productivityWeekStart)
+      .then((res) => setProductivityWeekData(res.barberProductivityByDay))
+      .catch(() => setProductivityWeekData([]))
+      .finally(() => setProductivityWeekLoading(false));
+  }, [productivityTimeScope, productivityWeekStart, shopSlug]);
 
   const formatActivityMinutes = (minutes: number): string => {
     if (minutes < 60) return `${minutes}m`;
@@ -670,7 +724,11 @@ export function AnalyticsPage() {
                     </h2>
                   </div>
                   <div className="flex-1 min-h-[280px]">
-                    <DailyChart data={data.ticketsByDay} />
+                    <DailyChart
+                      data={data.ticketsByDay}
+                      since={data.period.since.split('T')[0]}
+                      until={data.period.until.split('T')[0]}
+                    />
                   </div>
                 </div>
 
@@ -771,16 +829,33 @@ export function AnalyticsPage() {
                   <p className="text-sm text-white/60 mb-6">
                     {t('analytics.productivityByDayIntro')}
                   </p>
+                  {productivityTimeScope === 'week' && productivityWeekLoading && (
+                    <p className="text-sm text-white/60 mb-4">{t('common.loading')}</p>
+                  )}
                   <BarberProductivityByDayChart
                     allTime={data.barberProductivityByDayAllTime ?? []}
                     inPeriod={data.barberProductivityByDayInPeriod}
-                    scope={productivityChartScope}
-                    onScopeChange={setProductivityChartScope}
+                    weekData={productivityWeekLoading ? null : productivityWeekData}
+                    weekLabel={productivityWeekLabel}
+                    timeScope={productivityTimeScope}
+                    onTimeScopeChange={(scope) => {
+                      setProductivityTimeScope(scope);
+                      if (scope === 'week' && !productivityWeekStart) setProductivityWeekStart(weekOptionsForProductivity[0]?.value ?? null);
+                    }}
+                    weekOptions={weekOptionsForProductivity}
+                    selectedWeekStart={productivityTimeScope === 'week' ? productivityWeekStart : null}
+                    onWeekSelect={setProductivityWeekStart}
+                    barbers={data.barbers.map((b) => ({ id: b.id, name: b.name }))}
+                    selectedBarberId={selectedBarberId}
+                    onBarberChange={setSelectedBarberId}
                     dayLabels={DAY_NAMES_PT}
                     labelAvgMinutes={t('analytics.avgMin')}
                     labelAttendances={t('analytics.attendances')}
                     labelAllTime={t('analytics.dataAllTime')}
                     labelThisPeriod={t('analytics.dataThisPeriod')}
+                    labelWeek={t('analytics.week')}
+                    labelAllBarbers={t('analytics.allBarbersAverage')}
+                    labelBarber={t('analytics.barber')}
                   />
                 </div>
               ) : null}
@@ -893,14 +968,25 @@ export function AnalyticsPage() {
                             </div>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => { setHistoryBarber({ id: barber.id, name: barber.name }); setHistoryPage(1); }}
-                          className="mt-2 w-full py-2.5 rounded-xl border border-[var(--shop-border-color)] text-white/90 text-sm font-medium hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
-                        >
-                          <span className="material-symbols-outlined text-lg">history</span>
-                          {t('analytics.viewHistory')}
-                        </button>
+                        <div className="mt-2 flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => { setHistoryBarber({ id: barber.id, name: barber.name }); setHistoryPage(1); }}
+                            className="flex-1 py-2.5 rounded-xl border border-[var(--shop-border-color)] text-white/90 text-sm font-medium hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
+                          >
+                            <span className="material-symbols-outlined text-lg">history</span>
+                            {t('analytics.viewHistory')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setDownloadBarberModal({ id: barber.id, name: barber.name }); setDownloadRange('full'); setDownloadSince(''); setDownloadUntil(''); }}
+                            className="py-2.5 px-4 rounded-xl border border-[var(--shop-border-color)] text-white/90 text-sm font-medium hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
+                            title={t('analytics.downloadServiceHistory')}
+                          >
+                            <span className="material-symbols-outlined text-lg">download</span>
+                            {t('analytics.download')}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1144,6 +1230,117 @@ export function AnalyticsPage() {
           <ClientInfoModal clientId={clientModalId} onClose={() => setClientModalId(null)} />
         )}
 
+        {downloadBarberModal != null && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="download-barber-history-title"
+          >
+            <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl shadow-xl max-w-md w-full p-6">
+              <h2 id="download-barber-history-title" className="font-['Playfair_Display',serif] text-xl text-white mb-4">
+                {t('analytics.downloadServiceHistory')} – {downloadBarberModal.name}
+              </h2>
+              <div className="space-y-4 mb-6">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="downloadRange"
+                    checked={downloadRange === 'full'}
+                    onChange={() => setDownloadRange('full')}
+                    className="text-[var(--shop-accent)]"
+                  />
+                  <span className="text-white/90">{t('analytics.downloadFullHistory')}</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="downloadRange"
+                    checked={downloadRange === 'partial'}
+                    onChange={() => setDownloadRange('partial')}
+                    className="text-[var(--shop-accent)]"
+                  />
+                  <span className="text-white/90">{t('analytics.downloadDateRange')}</span>
+                </label>
+                {downloadRange === 'partial' && (
+                  <div className="flex flex-wrap gap-3 pl-6">
+                    <div>
+                      <label className="block text-xs text-white/50 mb-1">{t('analytics.downloadFrom')}</label>
+                      <input
+                        type="date"
+                        value={downloadSince}
+                        onChange={(e) => setDownloadSince(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg bg-[var(--shop-surface-primary)] border border-[var(--shop-border-color)] text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-white/50 mb-1">{t('analytics.downloadTo')}</label>
+                      <input
+                        type="date"
+                        value={downloadUntil}
+                        onChange={(e) => setDownloadUntil(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg bg-[var(--shop-surface-primary)] border border-[var(--shop-border-color)] text-white"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setDownloadBarberModal(null)}
+                  className="px-4 py-2 rounded-xl border border-[var(--shop-border-color)] text-white/90 hover:bg-white/5 transition-colors"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  type="button"
+                  disabled={downloadCsvLoading || (downloadRange === 'partial' && (!downloadSince || !downloadUntil))}
+                  onClick={async () => {
+                    if (!shopSlug || !downloadBarberModal) return;
+                    setDownloadCsvLoading(true);
+                    try {
+                      const options =
+                        downloadRange === 'partial' && downloadSince && downloadUntil
+                          ? { since: downloadSince, until: downloadUntil }
+                          : undefined;
+                      await downloadBarberServiceHistoryCsv(
+                        api.getBarberServiceHistory.bind(api),
+                        shopSlug,
+                        downloadBarberModal.id,
+                        downloadBarberModal.name,
+                        {
+                          date: t('analytics.historyDate'),
+                          service: t('analytics.service'),
+                          status: t('analytics.historyStatus'),
+                          duration: t('analytics.historyDuration'),
+                        },
+                        options
+                      );
+                      setDownloadBarberModal(null);
+                    } finally {
+                      setDownloadCsvLoading(false);
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                >
+                  {downloadCsvLoading ? (
+                    <>
+                      <LoadingSpinner size="sm" />
+                      {t('analytics.downloading')}
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-lg">download</span>
+                      {t('analytics.downloadCsv')}
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {historyBarber != null && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
@@ -1156,14 +1353,49 @@ export function AnalyticsPage() {
                 <h2 id="barber-history-title" className="font-['Playfair_Display',serif] text-xl text-white">
                   {t('analytics.serviceHistory')} – {historyBarber.name}
                 </h2>
-                <button
-                  type="button"
-                  onClick={() => { setHistoryBarber(null); setHistoryPage(1); }}
-                  className="p-2 rounded-xl text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                  aria-label={t('common.close')}
-                >
-                  <span className="material-symbols-outlined">close</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={downloadCsvLoading}
+                    onClick={async () => {
+                      if (!shopSlug) return;
+                      setDownloadCsvLoading(true);
+                      try {
+                        await downloadBarberServiceHistoryCsv(
+                          api.getBarberServiceHistory.bind(api),
+                          shopSlug,
+                          historyBarber.id,
+                          historyBarber.name,
+                          {
+                            date: t('analytics.historyDate'),
+                            service: t('analytics.service'),
+                            status: t('analytics.historyStatus'),
+                            duration: t('analytics.historyDuration'),
+                          },
+                          undefined
+                        );
+                      } finally {
+                        setDownloadCsvLoading(false);
+                      }
+                    }}
+                    className="py-2 px-3 rounded-xl border border-[var(--shop-border-color)] text-white/90 text-sm font-medium hover:bg-white/5 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {downloadCsvLoading ? (
+                      <LoadingSpinner size="sm" />
+                    ) : (
+                      <span className="material-symbols-outlined text-lg">download</span>
+                    )}
+                    {t('analytics.downloadCsv')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setHistoryBarber(null); setHistoryPage(1); }}
+                    className="p-2 rounded-xl text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                    aria-label={t('common.close')}
+                  >
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
               </div>
               <div className="flex-1 overflow-auto p-6">
                 {historyLoading ? (

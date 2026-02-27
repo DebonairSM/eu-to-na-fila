@@ -25,9 +25,25 @@ export interface BarberServiceHistoryParams {
   limit?: number;
 }
 
+export interface BarberProductivityByDayRow {
+  barberId: number;
+  barberName: string;
+  dayOfWeek: number;
+  dayName: string;
+  avgDurationMinutes: number;
+  totalCompleted: number;
+}
+
+export interface BarberProductivityByWeekResponse {
+  weekStart: string;
+  weekEnd: string;
+  barberProductivityByDay: BarberProductivityByDayRow[];
+}
+
 export interface AnalyticsApi {
   getAnalytics(shopSlug: string, options?: AnalyticsQuery): Promise<any>;
   getBarberAnalytics(shopSlug: string, days?: number): Promise<any>;
+  getBarberProductivityByWeek(shopSlug: string, weekStart: string): Promise<BarberProductivityByWeekResponse>;
   getBarberServiceHistory(
     shopSlug: string,
     barberId: number,
@@ -61,6 +77,9 @@ export function createAnalyticsApi(client: BaseApiClient): AnalyticsApi {
     getBarberAnalytics: (shopSlug, days) => {
       const d = typeof days === 'number' ? days : 7;
       return c.get(`/shops/${shopSlug}/analytics/me?days=${d}`, ANALYTICS_TIMEOUT_MS);
+    },
+    getBarberProductivityByWeek: (shopSlug, weekStart) => {
+      return c.get(`/shops/${shopSlug}/analytics/barber-productivity-by-week?weekStart=${encodeURIComponent(weekStart)}`, ANALYTICS_TIMEOUT_MS);
     },
     getBarberServiceHistory: (shopSlug, barberId, params) => {
       const qs = buildQueryString(params ?? {});

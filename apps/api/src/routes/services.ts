@@ -58,7 +58,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
           .from(schema.services)
           .where(eq(schema.services.shopId, shop.id))
           .orderBy(asc(schema.services.id));
-        services = services.map((s) => ({ ...s, sortOrder: 0 }));
+        services = services.map((s) => ({ ...s, sortOrder: 0, kind: 'complementary' as const }));
       } else {
         throw err;
       }
@@ -96,6 +96,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       price: z.number().int().min(0).optional(),
       isActive: z.boolean().default(true),
       sortOrder: z.number().int().min(0).optional(),
+      kind: z.enum(['main', 'complementary']).default('complementary'),
     });
 
     const { slug } = validateRequest(paramsSchema, request.params);
@@ -129,14 +130,23 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
+    // If setting as main, clear main from any other service in this shop (one main per shop)
+    if (body.kind === 'main') {
+      await db
+        .update(schema.services)
+        .set({ kind: 'complementary', updatedAt: new Date() })
+        .where(and(eq(schema.services.shopId, shop.id)));
+    }
+
     const insertValues = {
       shopId: shop.id,
       name: body.name,
       description: body.description || null,
       duration: body.duration,
-      price: body.price || null,
+      price: body.price ?? null,
       isActive: body.isActive ?? true,
       sortOrder,
+      kind: body.kind ?? 'complementary',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -148,11 +158,12 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       duration: schema.services.duration,
       price: schema.services.price,
       isActive: schema.services.isActive,
+      kind: schema.services.kind,
       createdAt: schema.services.createdAt,
       updatedAt: schema.services.updatedAt,
     };
 
-    let newService: { id: number; shopId: number; name: string; description: string | null; duration: number; price: number | null; isActive: boolean; sortOrder: number; createdAt: Date; updatedAt: Date };
+    let newService: { id: number; shopId: number; name: string; description: string | null; duration: number; price: number | null; isActive: boolean; sortOrder: number; kind: string; createdAt: Date; updatedAt: Date };
     try {
       const [row] = await db.insert(schema.services).values(insertValues).returning();
       newService = row ? { ...row, sortOrder: row.sortOrder ?? sortOrder } : null!;
@@ -271,6 +282,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       price: z.number().int().min(0).optional().nullable(),
       isActive: z.boolean().optional(),
       sortOrder: z.number().int().min(0).optional(),
+      kind: z.enum(['main', 'complementary']).optional(),
     });
 
     const { id } = validateRequest(paramsSchema, request.params);
@@ -296,6 +308,14 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
+    // If setting this service to main, clear main from any other service in this shop
+    if (body.kind === 'main') {
+      await db
+        .update(schema.services)
+        .set({ kind: 'complementary', updatedAt: new Date() })
+        .where(and(eq(schema.services.shopId, service.shopId)));
+    }
+
     const updateData: {
       name?: string;
       description?: string | null;
@@ -303,6 +323,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       price?: number | null;
       isActive?: boolean;
       sortOrder?: number;
+      kind?: string;
       updatedAt: Date;
     } = { updatedAt: new Date() };
 
@@ -312,6 +333,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
     if (body.price !== undefined) updateData.price = body.price;
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
     if (body.sortOrder !== undefined) updateData.sortOrder = body.sortOrder;
+    if (body.kind !== undefined) updateData.kind = body.kind;
 
     const returningCols = {
       id: schema.services.id,
@@ -321,6 +343,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       duration: schema.services.duration,
       price: schema.services.price,
       isActive: schema.services.isActive,
+      kind: schema.services.kind,
       createdAt: schema.services.createdAt,
       updatedAt: schema.services.updatedAt,
     };

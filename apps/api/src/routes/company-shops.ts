@@ -776,6 +776,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
           description: z.string().max(500).optional(),
           duration: z.number().int().positive(),
           price: z.number().int().nonnegative().optional(),
+          kind: z.enum(['main', 'complementary']).default('complementary'),
         })).min(1),
         barbers: z.array(z.object({
           name: z.string().min(1).max(100),
@@ -867,18 +868,26 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
           })
           .returning();
 
+        // At most one main per shop: only the first service marked main gets kind 'main'
+        let mainAssigned = false;
         const newServices = await tx
           .insert(schema.services)
           .values(
-            body.services.map((s, index) => ({
-              shopId: newShop.id,
-              name: s.name,
-              description: s.description || null,
-              duration: s.duration,
-              price: s.price ?? null,
-              isActive: true,
-              sortOrder: index,
-            }))
+            body.services.map((s, index) => {
+              const wantMain = s.kind === 'main';
+              const kind = wantMain && !mainAssigned ? 'main' : 'complementary';
+              if (kind === 'main') mainAssigned = true;
+              return {
+                shopId: newShop.id,
+                name: s.name,
+                description: s.description || null,
+                duration: s.duration,
+                price: s.price ?? null,
+                isActive: true,
+                sortOrder: index,
+                kind,
+              };
+            })
           )
           .returning();
 

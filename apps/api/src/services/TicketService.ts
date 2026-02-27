@@ -98,8 +98,41 @@ export class TicketService {
 
     const settings = parseSettings(shop.settings);
 
+    const dataExt = data as CreateTicket & { mainServiceId?: number; complementaryServiceIds?: number[] };
+    const useMainComplementary = dataExt.mainServiceId != null || (dataExt.complementaryServiceIds?.length ?? 0) > 0;
+    let primaryServiceId: number;
+
+    if (useMainComplementary) {
+      const allIds = [
+        ...(dataExt.mainServiceId != null ? [dataExt.mainServiceId] : []),
+        ...(dataExt.complementaryServiceIds ?? []),
+      ];
+      if (allIds.length === 0) throw new ValidationError('Select at least one service.');
+      const services = await this.db.query.services.findMany({
+        where: and(inArray(schema.services.id, allIds), eq(schema.services.shopId, shopId)),
+        columns: { id: true, isActive: true, kind: true },
+      });
+      const serviceMap = new Map(services.map((s) => [s.id, s]));
+      for (const id of allIds) {
+        const svc = serviceMap.get(id);
+        if (!svc) throw new NotFoundError('Service not found');
+        if (!svc.isActive) throw new ConflictError('Service is not active');
+      }
+      if (dataExt.mainServiceId != null) {
+        const mainSvc = serviceMap.get(dataExt.mainServiceId);
+        if (!mainSvc || (mainSvc as { kind?: string }).kind !== 'main') throw new ValidationError('Main service must be of type main.');
+      }
+      for (const id of dataExt.complementaryServiceIds ?? []) {
+        const compSvc = serviceMap.get(id);
+        if (!compSvc || (compSvc as { kind?: string }).kind !== 'complementary') throw new ValidationError('Complementary services must be of type complementary.');
+      }
+      primaryServiceId = dataExt.mainServiceId ?? dataExt.complementaryServiceIds![0];
+    } else {
+      primaryServiceId = data.serviceId!;
+    }
+
     const service = await this.db.query.services.findFirst({
-      where: and(eq(schema.services.id, data.serviceId), eq(schema.services.shopId, shopId)),
+      where: and(eq(schema.services.id, primaryServiceId), eq(schema.services.shopId, shopId)),
       columns: schema.serviceColumnsWithoutSortOrder,
     });
     if (!service) throw new NotFoundError('Service not found');
@@ -147,7 +180,9 @@ export class TicketService {
 
     const insertValues: Record<string, unknown> = {
       shopId,
-      serviceId: data.serviceId,
+      serviceId: primaryServiceId,
+      mainServiceId: dataExt.mainServiceId ?? null,
+      complementaryServiceIds: dataExt.complementaryServiceIds ?? [],
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       deviceId: data.deviceId || null,
@@ -201,7 +236,7 @@ export class TicketService {
 
     this.auditService.logTicketCreated(ticket.id, shopId, {
       customerName: data.customerName,
-      serviceId: data.serviceId,
+      serviceId: primaryServiceId,
       preferredBarberId: data.preferredBarberId,
       actorType: 'customer',
     });

@@ -32,6 +32,14 @@ export function JoinForm() {
     activeServices,
     selectedServiceId,
     setSelectedServiceId,
+    mainServiceId,
+    setMainServiceId,
+    selectedComplementaryIds,
+    setSelectedComplementaryIds,
+    mainServices,
+    complementaryServices,
+    useMainComplementary,
+    hasServiceSelection,
     settings,
     needsProfileCompletion,
     isLoggedInAsCustomer,
@@ -44,7 +52,58 @@ export function JoinForm() {
       <CardContent className="p-6 sm:p-8">
         <form onSubmit={handleSubmit} autoComplete="off">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
-            {hasServices && activeServices.length >= 2 && (
+            {hasServices && useMainComplementary && (
+              <>
+                {mainServices.length > 0 && (
+                  <div className="min-w-0 sm:col-span-2">
+                    <InputLabel htmlFor="mainService">{t('join.mainServiceLabel')}</InputLabel>
+                    <select
+                      id="mainService"
+                      value={mainServiceId ?? ''}
+                      onChange={(e) => setMainServiceId(e.target.value ? parseInt(e.target.value, 10) : null)}
+                      className="form-control-select select-readable w-full max-w-full"
+                    >
+                      <option value="">{t('join.selectOption')}</option>
+                      {mainServices.map((s) => {
+                        const fullLabel = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}${s.price != null && s.price > 0 ? ` – ${formatCurrency(s.price, locale)}` : ''}`;
+                        return (
+                          <option key={s.id} value={s.id} title={fullLabel}>
+                            {truncateOptionLabel(fullLabel)}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                )}
+                {complementaryServices.length > 0 && (
+                  <div className="min-w-0 sm:col-span-2">
+                    <InputLabel>{t('join.complementaryServicesLabel')}</InputLabel>
+                    <div className="space-y-2 mt-1">
+                      {complementaryServices.map((s) => {
+                        const fullLabel = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}${s.price != null && s.price > 0 ? ` – ${formatCurrency(s.price, locale)}` : ''}`;
+                        const checked = selectedComplementaryIds.includes(s.id);
+                        return (
+                          <label key={s.id} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => {
+                                setSelectedComplementaryIds((prev) =>
+                                  prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id]
+                                );
+                              }}
+                              className="rounded border-white/20"
+                            />
+                            <span className="text-sm text-[var(--shop-text-primary)]">{truncateOptionLabel(fullLabel)}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            {hasServices && !useMainComplementary && activeServices.length >= 2 && (
               <div className="min-w-0">
                 <InputLabel htmlFor="service">{t('join.serviceLabel')}</InputLabel>
                 <select
@@ -233,7 +292,7 @@ export function JoinForm() {
                 !!nameCollisionError ||
                 isLoadingServices ||
                 !hasServices ||
-                (hasServices && selectedServiceId == null) ||
+                (hasServices && !hasServiceSelection) ||
                 (settings.requirePhone && !customerPhone.trim())
               }
             >

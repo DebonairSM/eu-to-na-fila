@@ -100,6 +100,7 @@ interface ServiceItem {
   description: string;
   duration: number;
   price: number;
+  kind: 'main' | 'complementary';
 }
 interface BarberItem {
   id: string;
@@ -119,9 +120,9 @@ function generateSlug(name: string): string {
 }
 function getDefaultServices(t: (key: string) => string): ServiceItem[] {
   return [
-    { id: uid(), name: t('createShop.serviceNameHaircut'), description: t('createShop.serviceDescHaircut'), duration: 30, price: 3000 },
-    { id: uid(), name: t('createShop.serviceNameBeard'), description: t('createShop.serviceDescBeard'), duration: 20, price: 2000 },
-    { id: uid(), name: t('createShop.serviceNameCombo'), description: t('createShop.serviceDescCombo'), duration: 45, price: 4500 },
+    { id: uid(), name: t('createShop.serviceNameHaircut'), description: t('createShop.serviceDescHaircut'), duration: 30, price: 3000, kind: 'main' },
+    { id: uid(), name: t('createShop.serviceNameBeard'), description: t('createShop.serviceDescBeard'), duration: 20, price: 2000, kind: 'complementary' },
+    { id: uid(), name: t('createShop.serviceNameCombo'), description: t('createShop.serviceDescCombo'), duration: 45, price: 4500, kind: 'complementary' },
   ];
 }
 function getDefaultBarbers(_t: (key: string) => string): BarberItem[] {
@@ -192,7 +193,21 @@ function StepServices({
 }) {
   const { t } = useLocale();
   const addService = () => {
-    onChange([...services, { id: uid(), name: '', description: '', duration: 30, price: 0 }]);
+    onChange([...services, { id: uid(), name: '', description: '', duration: 30, price: 0, kind: 'complementary' }]);
+  };
+  const setMainService = (id: string) => {
+    onChange(services.map((s) => ({ ...s, kind: s.id === id ? 'main' : 'complementary' })));
+  };
+  const setComplementary = (id: string) => {
+    const current = services.find((s) => s.id === id);
+    if (current?.kind !== 'main') {
+      updateService(id, { kind: 'complementary' });
+      return;
+    }
+    const others = services.filter((s) => s.id !== id);
+    const newMainId = others[0]?.id;
+    if (newMainId) onChange(services.map((s) => ({ ...s, kind: s.id === newMainId ? 'main' : 'complementary' })));
+    else updateService(id, { kind: 'complementary' });
   };
   const removeService = (id: string) => {
     if (services.length <= 1) return;
@@ -225,6 +240,19 @@ function StepServices({
               </div>
               <div className="sm:col-span-2">
                 <input type="text" value={service.description} onChange={(e) => updateService(service.id, { description: e.target.value })} placeholder={t('createShop.serviceDescPlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-white/50 text-xs mb-1">{t('createShop.serviceKind')}</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name={`main-${service.id}`} checked={service.kind === 'main'} onChange={() => setMainService(service.id)} className="rounded border-white/20" />
+                    <span className="text-white/80 text-sm">{t('createShop.serviceKindMain')}</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name={`main-${service.id}`} checked={service.kind === 'complementary'} onChange={() => setComplementary(service.id)} className="rounded border-white/20" />
+                    <span className="text-white/80 text-sm">{t('createShop.serviceKindComplementary')}</span>
+                  </label>
+                </div>
               </div>
               <div>
                 <label className="block text-white/50 text-xs mb-1">{t('createShop.durationMin')}</label>
@@ -578,6 +606,7 @@ export function ShopManagementPage() {
           description: s.description || undefined,
           duration: s.duration,
           price: s.price || undefined,
+          kind: s.kind,
         })),
         barbers: createBarbers.map((b) => ({
           name: b.name,

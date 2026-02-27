@@ -136,6 +136,7 @@ class ApiClient extends BaseApiClient {
   // --- Analytics ---
   getAnalytics = this._analytics.getAnalytics;
   getBarberAnalytics = this._analytics.getBarberAnalytics;
+  getBarberProductivityByWeek = this._analytics.getBarberProductivityByWeek;
   getBarberServiceHistory = this._analytics.getBarberServiceHistory;
 
   // --- Clients ---

@@ -82,6 +82,9 @@ export const shops = pgTable('shops', {
   projectSlugUnique: uniqueIndex('shops_project_id_slug_unique').on(table.projectId, table.slug),
 }));
 
+export const serviceKindEnum = ['main', 'complementary'] as const;
+export type ServiceKind = (typeof serviceKindEnum)[number];
+
 export const services = pgTable('services', {
   id: serial('id').primaryKey(),
   shopId: integer('shop_id').notNull().references(() => shops.id),
@@ -91,11 +94,13 @@ export const services = pgTable('services', {
   price: integer('price'), // in cents
   isActive: boolean('is_active').notNull().default(true),
   sortOrder: integer('sort_order').notNull().default(0),
+  /** main = at most one per shop; complementary = can have many */
+  kind: text('kind').notNull().default('complementary'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-/** Use when loading service as a relation so queries work even if migration 0022 (sort_order) has not been run. */
+/** Use when loading service as a relation so queries work even if migration 0022 (sort_order) or 0025 (kind) has not been run. */
 export const serviceColumnsWithoutSortOrder = {
   id: true,
   shopId: true,
@@ -104,6 +109,7 @@ export const serviceColumnsWithoutSortOrder = {
   duration: true,
   price: true,
   isActive: true,
+  kind: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -164,6 +170,8 @@ export const tickets = pgTable('tickets', {
   id: serial('id').primaryKey(),
   shopId: integer('shop_id').notNull().references(() => shops.id),
   serviceId: integer('service_id').notNull().references(() => services.id),
+  mainServiceId: integer('main_service_id').references(() => services.id),
+  complementaryServiceIds: integer('complementary_service_ids').array().notNull().default([]),
   barberId: integer('barber_id').references(() => barbers.id),
   preferredBarberId: integer('preferred_barber_id').references(() => barbers.id),
   clientId: integer('client_id').references(() => clients.id),

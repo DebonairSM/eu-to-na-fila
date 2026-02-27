@@ -51,6 +51,8 @@ export function useJoinForm() {
   } | null>(null);
   const [isLoadingWaitTimes, setIsLoadingWaitTimes] = useState(true);
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
+  const [mainServiceId, setMainServiceId] = useState<number | null>(null);
+  const [selectedComplementaryIds, setSelectedComplementaryIds] = useState<number[]>([]);
   const combinedNameRef = useRef(combinedName);
   combinedNameRef.current = combinedName;
   const navigate = useNavigate();
@@ -66,16 +68,38 @@ export function useJoinForm() {
   const { barbers } = useBarbers();
   const { activeServices, isLoading: isLoadingServices } = useServices();
 
-  // Default selected service to first active when list loads or changes; keep selection if still valid
+  const mainServices = activeServices.filter((s) => (s as { kind?: string }).kind === 'main');
+  const complementaryServices = activeServices.filter((s) => (s as { kind?: string }).kind !== 'main');
+  const useMainComplementary = mainServices.length > 0 || complementaryServices.length > 1;
+  const validServiceIds = new Set(activeServices.map((s) => s.id));
+
+  // Default selection when list loads or changes; keep valid selection
   useEffect(() => {
     if (activeServices.length === 0) {
       setSelectedServiceId(null);
+      setMainServiceId(null);
+      setSelectedComplementaryIds([]);
       return;
     }
+    const mains = activeServices.filter((s) => (s as { kind?: string }).kind === 'main');
+    const comps = activeServices.filter((s) => (s as { kind?: string }).kind !== 'main');
     const validIds = new Set(activeServices.map((s) => s.id));
-    if (selectedServiceId !== null && validIds.has(selectedServiceId)) return;
-    setSelectedServiceId(activeServices[0].id);
-  }, [activeServices, selectedServiceId]);
+    if (useMainComplementary) {
+      setMainServiceId((m) => {
+        if (m != null && validIds.has(m)) return m;
+        if (mains.length > 0) return mains[0].id;
+        return null;
+      });
+      setSelectedComplementaryIds((prev) => {
+        const sanitized = prev.filter((id) => validIds.has(id));
+        if (sanitized.length > 0) return sanitized;
+        if (comps.length > 0) return [comps[0].id];
+        return [];
+      });
+    } else {
+      setSelectedServiceId((s) => (s != null && validIds.has(s) ? s : activeServices[0].id));
+    }
+  }, [activeServices, useMainComplementary]);
 
   // Clear preferred barber when shop no longer allows it so UI updates immediately
   useEffect(() => {
@@ -388,28 +412,46 @@ export function useJoinForm() {
 
     setIsSubmitting(true);
 
-    // Use selected service; must be in active list
     const validServiceIds = new Set(activeServices.map((s) => s.id));
-    const serviceId = selectedServiceId !== null && validServiceIds.has(selectedServiceId)
-      ? selectedServiceId
-      : null;
-    if (serviceId == null) {
-      setClosedReason(null);
-      setSubmitError(t('join.selectService'));
-      setIsSubmitting(false);
-      return;
+    let payload: {
+      customerName: string;
+      serviceId?: number;
+      mainServiceId?: number;
+      complementaryServiceIds?: number[];
+      customerPhone?: string;
+      preferredBarberId?: number;
+      deviceId?: string;
+    } = {
+      customerName: fullName,
+      deviceId,
+      ...(customerPhone.trim() ? { customerPhone: customerPhone.trim() } : {}),
+      ...(selectedBarberId ? { preferredBarberId: selectedBarberId } : {}),
+    };
+
+    if (useMainComplementary) {
+      const hasMain = mainServiceId != null && validServiceIds.has(mainServiceId);
+      const validComp = selectedComplementaryIds.filter((id) => validServiceIds.has(id));
+      if (!hasMain && validComp.length === 0) {
+        setClosedReason(null);
+        setSubmitError(t('join.selectService'));
+        setIsSubmitting(false);
+        return;
+      }
+      if (hasMain) payload.mainServiceId = mainServiceId!;
+      if (validComp.length > 0) payload.complementaryServiceIds = validComp;
+    } else {
+      const serviceId = selectedServiceId !== null && validServiceIds.has(selectedServiceId) ? selectedServiceId : null;
+      if (serviceId == null) {
+        setClosedReason(null);
+        setSubmitError(t('join.selectService'));
+        setIsSubmitting(false);
+        return;
+      }
+      payload.serviceId = serviceId;
     }
 
     try {
-      // Create ticket with deviceId included
-      // Backend will check if device already has an active ticket and return existing if found
-      const ticket = await api.createTicket(shopSlug, {
-        customerName: fullName,
-        serviceId,
-        deviceId, // Include deviceId to prevent multiple active tickets per device
-        ...(customerPhone.trim() ? { customerPhone: customerPhone.trim() } : {}),
-        ...(selectedBarberId ? { preferredBarberId: selectedBarberId } : {}),
-      });
+      const ticket = await api.createTicket(shopSlug, payload);
 
       // Store ticket ID in localStorage for persistence
       localStorage.setItem(STORAGE_KEY, ticket.id.toString());
@@ -475,6 +517,16 @@ export function useJoinForm() {
     activeServices,
     selectedServiceId,
     setSelectedServiceId,
+    mainServiceId,
+    setMainServiceId,
+    selectedComplementaryIds,
+    setSelectedComplementaryIds,
+    mainServices,
+    complementaryServices,
+    useMainComplementary,
+    hasServiceSelection: useMainComplementary
+      ? (mainServiceId != null && validServiceIds.has(mainServiceId)) || selectedComplementaryIds.some((id) => validServiceIds.has(id))
+      : selectedServiceId != null && validServiceIds.has(selectedServiceId),
     settings,
     needsProfileCompletion,
     isLoggedInAsCustomer: isCustomer,

@@ -26,11 +26,18 @@ export function ServiceManagementPage() {
   const deleteModal = useModal();
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    duration: number;
+    price: number;
+    kind: 'main' | 'complementary';
+  }>({
     name: '',
     description: '',
     duration: 30,
     price: 0,
+    kind: 'complementary',
   });
 
   useErrorTimeout(errorMessage, () => setErrorMessage(null));
@@ -53,7 +60,7 @@ export function ServiceManagementPage() {
   }, [loadServices]);
 
   const openAdd = useCallback(() => {
-    setFormData({ name: '', description: '', duration: 30, price: 0 });
+    setFormData({ name: '', description: '', duration: 30, price: 0, kind: 'complementary' });
     setEditingService(null);
     addModal.open();
   }, [addModal]);
@@ -61,11 +68,13 @@ export function ServiceManagementPage() {
   const openEdit = useCallback(
     (svc: Service) => {
       setEditingService(svc);
+      const kind = (svc as { kind?: string }).kind === 'main' ? 'main' : 'complementary';
       setFormData({
         name: svc.name,
         description: svc.description ?? '',
         duration: svc.duration,
         price: svc.price != null ? svc.price / 100 : 0,
+        kind,
       });
       editModal.open();
     },
@@ -80,6 +89,7 @@ export function ServiceManagementPage() {
         description: formData.description.trim() || undefined,
         duration: formData.duration,
         price: formData.price > 0 ? Math.round(formData.price * 100) : undefined,
+        kind: formData.kind,
       });
       addModal.close();
       await loadServices();
@@ -96,6 +106,7 @@ export function ServiceManagementPage() {
         description: formData.description.trim() || null,
         duration: formData.duration,
         price: formData.price > 0 ? Math.round(formData.price * 100) : null,
+        kind: formData.kind,
       });
       editModal.close();
       setEditingService(null);
@@ -223,6 +234,11 @@ export function ServiceManagementPage() {
                 <div className="flex-1 min-w-0">
                   <p className={`font-medium ${svc.isActive ? 'text-[var(--shop-text-primary)]' : 'text-[var(--shop-text-secondary)] line-through'}`}>
                     {svc.name}
+                    {(svc as { kind?: string }).kind === 'main' && (
+                      <span className="ml-2 text-xs font-normal px-2 py-0.5 rounded bg-[var(--shop-accent)]/20 text-[var(--shop-accent)]">
+                        {t('servicesPage.kindMain')}
+                      </span>
+                    )}
                   </p>
                   {svc.description && (
                     <p className="text-sm text-[var(--shop-text-secondary)] mt-0.5 truncate">{svc.description}</p>
@@ -349,7 +365,7 @@ function ServiceForm({
   saveLabel,
   t,
 }: {
-  formData: { name: string; description: string; duration: number; price: number };
+  formData: { name: string; description: string; duration: number; price: number; kind: 'main' | 'complementary' };
   setFormData: React.Dispatch<React.SetStateAction<typeof formData>>;
   onSave: () => void;
   onCancel: () => void;
@@ -390,6 +406,35 @@ function ServiceForm({
           className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-[var(--shop-text-primary)] placeholder:text-white/40"
           maxLength={500}
         />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-[var(--shop-text-primary)] mb-1">
+          {t('servicesPage.kind')}
+        </label>
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="kind"
+              value="complementary"
+              checked={formData.kind === 'complementary'}
+              onChange={() => setFormData((d) => ({ ...d, kind: 'complementary' }))}
+              className="rounded border-white/20"
+            />
+            <span className="text-sm text-[var(--shop-text-primary)]">{t('servicesPage.kindComplementary')}</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="kind"
+              value="main"
+              checked={formData.kind === 'main'}
+              onChange={() => setFormData((d) => ({ ...d, kind: 'main' }))}
+              className="rounded border-white/20"
+            />
+            <span className="text-sm text-[var(--shop-text-primary)]">{t('servicesPage.kindMain')}</span>
+          </label>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>

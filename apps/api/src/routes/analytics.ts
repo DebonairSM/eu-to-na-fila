@@ -887,6 +887,100 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
+   * Get barber productivity by day of week for a specific week (owner only).
+   * weekStart = Monday of the week (YYYY-MM-DD). Returns per-barber, per-day stats for completed tickets in that week.
+   *
+   * @route GET /api/shops/:slug/analytics/barber-productivity-by-week
+   * @query weekStart - YYYY-MM-DD (Monday of the week)
+   */
+  fastify.get('/shops/:slug/analytics/barber-productivity-by-week', {
+    preHandler: [requireAuth(), requireRole(['owner'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1) });
+    const querySchema = z.object({
+      weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { weekStart } = validateRequest(querySchema, request.query);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    const settings = parseSettings(shop.settings);
+    const tz = settings.timezone ?? 'America/Sao_Paulo';
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+
+    const weekStartDate = new Date(weekStart + 'T00:00:00.000Z');
+    const weekEndDate = new Date(weekStartDate);
+    weekEndDate.setUTCDate(weekEndDate.getUTCDate() + 7);
+
+    const barbers = await db.query.barbers.findMany({
+      where: eq(schema.barbers.shopId, shop.id),
+      columns: { id: true, name: true },
+    });
+    const barberMap = new Map(barbers.map((b) => [b.id, b.name]));
+
+    const weekTickets = await db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shop.id),
+        eq(schema.tickets.status, 'completed'),
+        isNotNull(schema.tickets.barberId),
+        isNotNull(schema.tickets.startedAt),
+        isNotNull(schema.tickets.completedAt),
+        gte(schema.tickets.completedAt, weekStartDate),
+        lt(schema.tickets.completedAt, weekEndDate)
+      ),
+      columns: { barberId: true, startedAt: true, completedAt: true },
+    });
+
+    const byBarberDay = new Map<string, { totalCompleted: number; totalDurationMin: number }>();
+    for (const t of weekTickets) {
+      const barberId = (t as { barberId: number }).barberId;
+      const completedAt = new Date((t as { completedAt: Date }).completedAt);
+      const startedAt = new Date((t as { startedAt: Date }).startedAt);
+      const dayOfWeek = toZonedTime(completedAt, tz).getDay();
+      const durationMin = (completedAt.getTime() - startedAt.getTime()) / (1000 * 60);
+      const key = `${barberId}:${dayOfWeek}`;
+      const cur = byBarberDay.get(key);
+      if (cur) {
+        cur.totalCompleted += 1;
+        cur.totalDurationMin += durationMin;
+      } else {
+        byBarberDay.set(key, { totalCompleted: 1, totalDurationMin: durationMin });
+      }
+    }
+
+    const barberProductivityByDay: Array<{
+      barberId: number;
+      barberName: string;
+      dayOfWeek: number;
+      dayName: string;
+      avgDurationMinutes: number;
+      totalCompleted: number;
+    }> = [];
+    for (const [key, agg] of byBarberDay) {
+      const [barberIdStr, dayStr] = key.split(':');
+      const barberId = parseInt(barberIdStr, 10);
+      const dayOfWeek = parseInt(dayStr, 10);
+      barberProductivityByDay.push({
+        barberId,
+        barberName: barberMap.get(barberId) ?? `Barber ${barberId}`,
+        dayOfWeek,
+        dayName: dayNames[dayOfWeek],
+        avgDurationMinutes:
+          agg.totalCompleted > 0
+            ? Math.round((agg.totalDurationMin / agg.totalCompleted) * 10) / 10
+            : 0,
+        totalCompleted: agg.totalCompleted,
+      });
+    }
+
+    const weekEndSunday = new Date(weekStartDate);
+    weekEndSunday.setUTCDate(weekEndSunday.getUTCDate() + 6);
+    return { weekStart, weekEnd: weekEndSunday.toISOString().split('T')[0], barberProductivityByDay };
+  });
+
+  /**
    * Get barber service history (owner only).
    * Paginated list of tickets for a barber; optional since/until date filter.
    *

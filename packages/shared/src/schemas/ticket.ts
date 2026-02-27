@@ -43,12 +43,22 @@ export type Ticket = z.infer<typeof ticketSchema>;
 
 export const createTicketSchema = z.object({
   shopId: z.number(),
-  serviceId: z.number(),
+  /** Legacy: single service. Ignored when mainServiceId or complementaryServiceIds is provided. */
+  serviceId: z.number().optional(),
+  mainServiceId: z.number().optional(),
+  complementaryServiceIds: z.array(z.number().int().positive()).optional(),
   customerName: z.string().min(1).max(200),
   customerPhone: z.string().optional(),
   preferredBarberId: z.number().optional(),
-  deviceId: z.string().optional(), // Device identifier for preventing multiple active tickets per device
-});
+  deviceId: z.string().optional(),
+}).refine(
+  (data) => {
+    const hasNew = (data.mainServiceId != null) || ((data.complementaryServiceIds?.length ?? 0) > 0);
+    if (hasNew) return true;
+    return data.serviceId != null;
+  },
+  { message: 'Provide either serviceId or (mainServiceId and/or complementaryServiceIds)' }
+);
 export type CreateTicket = z.infer<typeof createTicketSchema>;
 
 /** Staff or public book: create an appointment (type=appointment, status=pending). */

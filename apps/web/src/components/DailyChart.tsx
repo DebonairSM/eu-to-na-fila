@@ -1,18 +1,40 @@
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatDayShort } from '@/lib/format';
 
+/** Max bars to show so the chart stays readable; when period is longer, show the most recent days. */
+const MAX_DAYS_DISPLAYED = 31;
+
 interface DailyChartProps {
   data: Record<string, number>;
+  /** Start of the analytics period (YYYY-MM-DD). If set with until, chart shows days in this range. */
+  since?: string;
+  /** End of the analytics period (YYYY-MM-DD). If set with since, chart shows days in this range. */
+  until?: string;
 }
 
-export function DailyChart({ data }: DailyChartProps) {
+function buildDaysInRange(since: string, until: string): string[] {
+  const start = new Date(since + 'T00:00:00.000Z');
+  const end = new Date(until + 'T00:00:00.000Z');
+  const days: string[] = [];
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    days.push(cursor.toISOString().split('T')[0]);
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  if (days.length <= MAX_DAYS_DISPLAYED) return days;
+  return days.slice(-MAX_DAYS_DISPLAYED);
+}
+
+export function DailyChart({ data, since, until }: DailyChartProps) {
   const { locale } = useLocale();
-  // Get last 7 days
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (6 - i));
-    return date.toISOString().split('T')[0];
-  });
+  const days =
+    since != null && until != null
+      ? buildDaysInRange(since, until)
+      : Array.from({ length: 7 }, (_, i) => {
+          const date = new Date();
+          date.setDate(date.getDate() - (6 - i));
+          return date.toISOString().split('T')[0];
+        });
 
   const displayedValues = days.map((day) => data[day] ?? 0);
   const maxValue = Math.max(1, ...displayedValues);

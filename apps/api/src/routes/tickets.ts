@@ -68,14 +68,19 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       );
     }
 
-    // Validate body - remove shopId from external request
+    // Validate body: legacy single serviceId or new mainServiceId + complementaryServiceIds
     const bodySchema = z.object({
-      serviceId: z.number(),
+      serviceId: z.number().optional(),
+      mainServiceId: z.number().optional(),
+      complementaryServiceIds: z.array(z.number().int().positive()).optional(),
       customerName: z.string().min(1).max(200),
       customerPhone: z.string().optional(),
       preferredBarberId: z.number().optional(),
-      deviceId: z.string().optional(), // Device identifier for preventing multiple active tickets per device
-    });
+      deviceId: z.string().optional(),
+    }).refine(
+      (d) => (d.mainServiceId != null || (d.complementaryServiceIds?.length ?? 0) > 0) || d.serviceId != null,
+      { message: 'Select at least one service (serviceId or main/complementary services).' }
+    );
     const data = validateRequest(bodySchema, request.body);
 
     // Enforce per-shop required fields
@@ -100,11 +105,18 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    // Create ticket using service (service.create() also checks internally for safety)
-    // It will check by deviceId first, then by customerName as fallback
+    const mainServiceId = data.mainServiceId ?? undefined;
+    const complementaryServiceIds = data.complementaryServiceIds && data.complementaryServiceIds.length > 0 ? data.complementaryServiceIds : undefined;
+    const serviceId = (mainServiceId != null || complementaryServiceIds?.length)
+      ? (mainServiceId ?? complementaryServiceIds?.[0])
+      : data.serviceId!;
+
     const createData = {
       ...data,
       shopId: shop.id,
+      serviceId,
+      mainServiceId,
+      complementaryServiceIds: complementaryServiceIds ?? [],
     };
     if (request.user?.role === 'customer' && request.user.clientId != null) {
       (createData as { clientId?: number }).clientId = request.user.clientId;
