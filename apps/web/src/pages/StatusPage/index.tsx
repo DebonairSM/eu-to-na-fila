@@ -51,6 +51,17 @@ export function StatusPage() {
   const [rescheduleSlotsLoading, setRescheduleSlotsLoading] = useState(false);
   const [rescheduleError, setRescheduleError] = useState<string | null>(null);
   const [rescheduleSubmitting, setRescheduleSubmitting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch, isRefreshing]);
 
   const preferredBarberId = (ticket as { preferredBarberId?: number | null } | null)?.preferredBarberId ?? null;
   const preferredBarberName = preferredBarberId != null ? barbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
@@ -317,7 +328,18 @@ export function StatusPage() {
 
       <Container className="pt-24 pb-20">
         <div className="lg:hidden space-y-8">
-          <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} ticketNumber={(ticket as { ticketNumber?: string | null }).ticketNumber} scheduledTime={(ticket as { scheduledTime?: string | null }).scheduledTime} />
+          <div className="flex items-start justify-center gap-2">
+            <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} ticketNumber={(ticket as { ticketNumber?: string | null }).ticketNumber} scheduledTime={(ticket as { scheduledTime?: string | null }).scheduledTime} />
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              aria-label={t('status.refresh')}
+              className="shrink-0 p-2 rounded-lg border border-[var(--shop-border-color)] text-[var(--shop-text-secondary)] hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-colors disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined">{isRefreshing ? 'progress_activity' : 'refresh'}</span>
+            </button>
+          </div>
 
           {isWaiting && (
             <WaitingCard
@@ -362,7 +384,18 @@ export function StatusPage() {
 
         <div className="hidden lg:block">
           <div className="max-w-2xl mx-auto space-y-10">
-            <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} ticketNumber={(ticket as { ticketNumber?: string | null }).ticketNumber} scheduledTime={(ticket as { scheduledTime?: string | null }).scheduledTime} />
+            <div className="flex items-start justify-center gap-2">
+              <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} ticketNumber={(ticket as { ticketNumber?: string | null }).ticketNumber} scheduledTime={(ticket as { scheduledTime?: string | null }).scheduledTime} />
+              <button
+                type="button"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                aria-label={t('status.refresh')}
+                className="shrink-0 p-2 rounded-lg border border-[var(--shop-border-color)] text-[var(--shop-text-secondary)] hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-colors disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined">{isRefreshing ? 'progress_activity' : 'refresh'}</span>
+              </button>
+            </div>
 
             {isWaiting && (
               <WaitingCard

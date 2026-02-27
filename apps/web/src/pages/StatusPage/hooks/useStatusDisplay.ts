@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { getShopBasePath } from '@/lib/config';
 import { logError } from '@/lib/logger';
 import type { Ticket, Barber } from '@eutonafila/shared';
 
@@ -91,7 +92,8 @@ export function useStatusDisplay(ticket: Ticket | null) {
   };
 
   const handleShareTicket = async (ticketId: number) => {
-    const url = `${window.location.origin}/status/${ticketId}`;
+    const base = getShopBasePath();
+    const url = `${window.location.origin}${base === '/' ? '' : base}/status/${ticketId}`;
     try {
       await navigator.clipboard.writeText(url);
       return true;

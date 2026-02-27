@@ -1,16 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Ticket } from '@eutonafila/shared';
 import { useTicketPolling } from './usePolling';
-
-const POLL_INTERVAL = 3000; // 3 seconds per US-002
+import { POLL_INTERVALS } from '@/lib/constants';
 
 export function useTicketStatus(ticketId: number | null) {
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const previousDataRef = useRef<{ status: string; estimatedWaitTime: number | undefined; position: number } | null>(null);
 
-  // Use optimized polling hook
+  // When in line (waiting) or unknown: poll every 15s; otherwise every minute
+  const interval =
+    ticket == null || ticket.status === 'waiting'
+      ? POLL_INTERVALS.TICKET_STATUS_CHECK_IN_LINE
+      : POLL_INTERVALS.TICKET_STATUS;
+
   const { ticket: polledTicket, isLoading, error, refetch } = useTicketPolling(ticketId, {
-    interval: POLL_INTERVAL,
+    interval,
     enabled: !!ticketId,
   });
 

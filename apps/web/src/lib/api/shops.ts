@@ -14,7 +14,7 @@ export function createShopsApi(client: BaseApiClient): ShopsApi {
   return {
     getShopConfig: (shopSlug) => c.get(`/shops/${shopSlug}/config`),
     getAllShops: () => c.get('/shops'),
-    getProjects: () => c.get(`/projects?_=${Date.now()}`),
+    getProjects: () => c.get('/projects'),
     setTemporaryStatus: (shopSlug, data) => c.patch(`/shops/${shopSlug}/temporary-status`, data),
     clearTemporaryStatus: (shopSlug) => c.del(`/shops/${shopSlug}/temporary-status`),
   };

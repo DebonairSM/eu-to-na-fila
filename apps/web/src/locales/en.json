@@ -204,6 +204,7 @@
     "badgeInProgress": "In Progress",
     "badgeCompleted": "Completed",
     "serviceLabel": "Service",
+    "refresh": "Refresh",
     "editAppointment": "Edit",
     "cancelAppointment": "Cancel appointment",
     "confirmCancelAppointmentTitle": "Cancel appointment?",

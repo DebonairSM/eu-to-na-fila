@@ -10,8 +10,10 @@ export const POLL_INTERVALS = {
   QUEUE: 3000,
   /** Minimum queue poll interval; values below this are clamped to avoid API hammering */
   QUEUE_MIN_MS: 2000,
-  /** Ticket status polling interval (3 seconds) */
-  TICKET_STATUS: 3000,
+  /** Ticket status polling when not in line (1 minute) */
+  TICKET_STATUS: 60000,
+  /** Ticket status polling when in line / check-in (15 seconds) */
+  TICKET_STATUS_CHECK_IN_LINE: 15000,
   /** Wait times polling interval (30 seconds) */
   WAIT_TIMES: 30000,
   /** Kiosk mode queue polling interval (10 seconds) */

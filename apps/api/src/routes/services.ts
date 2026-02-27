@@ -29,6 +29,8 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
+    reply.header('Cache-Control', 'public, max-age=120, stale-while-revalidate=30');
+
     // Get services for this shop (ordered by sortOrder then id). Use query builder
     // so orderBy is reliable; fallback if sort_order column is missing (migration not run).
     let services;

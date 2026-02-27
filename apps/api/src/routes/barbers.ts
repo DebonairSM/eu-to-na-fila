@@ -49,6 +49,8 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
+    reply.header('Cache-Control', 'public, max-age=120, stale-while-revalidate=30');
+
     const settings = parseSettings(shop.settings);
     const timezone = settings.timezone ?? 'America/Sao_Paulo';
     const { shouldAutoAbsent } = getBarberPresenceWindow(settings.operatingHours, timezone);

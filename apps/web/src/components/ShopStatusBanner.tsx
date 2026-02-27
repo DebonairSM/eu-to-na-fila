@@ -1,10 +1,10 @@
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { getShopStatus } from '@eutonafila/shared';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 
 export function ShopStatusBanner() {
-  const { config } = useShopConfig();
+  const { config, invalidateConfig } = useShopConfig();
   const { t, locale } = useLocale();
   const settings = config.settings;
   
@@ -42,9 +42,14 @@ export function ShopStatusBanner() {
         )
       );
     };
-    const interval = setInterval(updateStatus, 5000);
+    updateStatus();
+    const interval = setInterval(updateStatus, 60000);
     return () => clearInterval(interval);
   }, [settingsKey]);
+
+  const handleRefresh = useCallback(() => {
+    invalidateConfig();
+  }, [invalidateConfig]);
 
   if (status.isOpen) {
     return null; // Don't show banner when open
@@ -78,8 +83,8 @@ export function ShopStatusBanner() {
   return (
     <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
       <div className="flex items-center gap-3">
-        <span className="material-symbols-outlined text-red-400 text-2xl">schedule</span>
-        <div>
+        <span className="material-symbols-outlined text-red-400 text-2xl shrink-0">schedule</span>
+        <div className="min-w-0 flex-1">
           <p className="text-white font-medium">
             {status.isOverridden && status.overrideReason
               ? status.overrideReason
@@ -97,6 +102,14 @@ export function ShopStatusBanner() {
             </p>
           )}
         </div>
+        <button
+          type="button"
+          onClick={handleRefresh}
+          aria-label={t('status.refresh')}
+          className="shrink-0 p-2 rounded-lg border border-red-500/30 text-red-300 hover:bg-red-500/20 transition-colors"
+        >
+          <span className="material-symbols-outlined">refresh</span>
+        </button>
       </div>
     </div>
   );

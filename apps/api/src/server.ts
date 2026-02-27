@@ -30,7 +30,7 @@ import { projectsRoutes } from './routes/projects.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { registerWebSocket } from './websocket/handler.js';
 import { getPublicPath } from './lib/paths.js';
-import { getProjectByPathname, getProjectBySlug } from './lib/shop.js';
+import { getProjectByPathname, getProjectBySlug, getShopByProjectSlug } from './lib/shop.js';
 import { startQueueCountdown } from './jobs/queueCountdown.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -461,8 +461,9 @@ fastify.get<{ Params: { segment: string; '*': string } }>('/:segment/*', async (
     if (projectPath !== '/projects/mineiro' && projectPath + '/' !== buildBase) {
       fileContent = fileContent.split(buildBase).join(projectPath + '/');
     }
-    const shopSlug = project?.slug ?? '';
-    const inject = `<script>window.__SHOP_SLUG__="${shopSlug.replace(/"/g, '\\"')}";window.__SHOP_PATH__="${projectPath.replace(/"/g, '\\"')}";</script>`;
+    const shop = project ? await getShopByProjectSlug(project.slug) : null;
+    const shopSlug = (shop?.slug ?? project?.slug ?? '').replace(/"/g, '\\"');
+    const inject = `<script>window.__SHOP_SLUG__="${shopSlug}";window.__SHOP_PATH__="${projectPath.replace(/"/g, '\\"')}";</script>`;
     fileContent = fileContent.replace('</body>', `${inject}\n</body>`);
     return reply.type('text/html').send(fileContent);
   }
@@ -557,7 +558,9 @@ fastify.setNotFoundHandler(async (request, reply) => {
         if (projectPath !== '/projects/mineiro' && projectPath + '/' !== buildBase) {
           fileContent = fileContent.split(buildBase).join(projectPath + '/');
         }
-        const inject = `<script>window.__SHOP_SLUG__="${project.slug.replace(/"/g, '\\"')}";window.__SHOP_PATH__="${projectPath.replace(/"/g, '\\"')}";</script>`;
+        const shop = await getShopByProjectSlug(project.slug);
+        const slugForInject = (shop?.slug ?? project.slug).replace(/"/g, '\\"');
+        const inject = `<script>window.__SHOP_SLUG__="${slugForInject}";window.__SHOP_PATH__="${projectPath.replace(/"/g, '\\"')}";</script>`;
         fileContent = fileContent.replace('</body>', `${inject}\n</body>`);
         return reply.type('text/html').send(fileContent);
       } catch (error) {

@@ -28,6 +28,8 @@ export const shopsRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
+    reply.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+
     const theme = parseTheme(shop.theme);
     const style = parseResolvedStyle(shop.theme);
     const homeContentByLocale = normalizeToHomeContentByLocale(shop.homeContent ?? null);

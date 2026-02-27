@@ -16,7 +16,7 @@ export const projectsRoutes: FastifyPluginAsync = async (fastify) => {
    * @returns Array of projects with id, slug, name, path
    */
   fastify.get('/projects', async (request, reply) => {
-    reply.header('Cache-Control', 'no-store, no-cache, must-revalidate');
+    reply.header('Cache-Control', 'public, max-age=120, stale-while-revalidate=30');
     const projectIdsWithShops = await db
       .selectDistinct({ projectId: schema.shops.projectId })
       .from(schema.shops);
