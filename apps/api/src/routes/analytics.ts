@@ -494,7 +494,6 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         allTimeByBarberDay.set(key, { totalCompleted: completed, weightedDuration: completed * dur });
       }
     }
-    const tz = settings.timezone ?? 'America/Sao_Paulo';
     const barberProductivityByDayAllTime: Array<{
       barberId: number;
       barberName: string;
