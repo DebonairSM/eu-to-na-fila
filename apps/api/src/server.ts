@@ -410,7 +410,7 @@ async function resolveProjectForShortPath(pathname: string): Promise<{ project: 
   return { project, path: '/' + segment };
 }
 
-fastify.get<{ segment: string }>('/:segment', async (request, reply) => {
+fastify.get<{ Params: { segment: string } }>('/:segment', async (request, reply) => {
   const { segment } = request.params;
   if (!segment || SHORT_PATH_RESERVED.includes(segment)) return reply.callNotFound();
   const pathname = (request.url?.split('?')[0] ?? '').replace(/\/+$/, '') || `/${segment}`;
@@ -419,14 +419,14 @@ fastify.get<{ segment: string }>('/:segment', async (request, reply) => {
   const { path: projectPath } = resolution;
   return reply.redirect(302, projectPath + '/');
 });
-fastify.get<{ segment: string; '*': string }>('/:segment/*', async (request, reply) => {
+fastify.get<{ Params: { segment: string; '*': string } }>('/:segment/*', async (request, reply) => {
   const { segment } = request.params;
-  const rest = (request.params as { '*'?: string })['*'] ?? '';
+  const rest = request.params['*'] ?? '';
   const pathSuffix = rest.replace(/^\//, '');
   if (!segment || SHORT_PATH_RESERVED.includes(segment)) return reply.callNotFound();
   const pathname = (request.url?.split('?')[0] ?? '').replace(/\?.*$/, '');
   const resolution = await resolveProjectForShortPath(pathname);
-  if (!resolution) return reply.callNotFound();
+  if (!resolution?.project) return reply.callNotFound();
   const { project, path: projectPath } = resolution;
 
   if (pathSuffix === '' && !request.url.split('?')[0].endsWith('/')) {
@@ -461,7 +461,8 @@ fastify.get<{ segment: string; '*': string }>('/:segment/*', async (request, rep
     if (projectPath !== '/projects/mineiro' && projectPath + '/' !== buildBase) {
       fileContent = fileContent.split(buildBase).join(projectPath + '/');
     }
-    const inject = `<script>window.__SHOP_SLUG__="${project.slug.replace(/"/g, '\\"')}";window.__SHOP_PATH__="${projectPath.replace(/"/g, '\\"')}";</script>`;
+    const shopSlug = project?.slug ?? '';
+    const inject = `<script>window.__SHOP_SLUG__="${shopSlug.replace(/"/g, '\\"')}";window.__SHOP_PATH__="${projectPath.replace(/"/g, '\\"')}";</script>`;
     fileContent = fileContent.replace('</body>', `${inject}\n</body>`);
     return reply.type('text/html').send(fileContent);
   }
