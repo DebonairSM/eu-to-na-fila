@@ -98,7 +98,6 @@ export function BarberProductivityByDayChart({
   labelBarber,
 }: BarberProductivityByDayChartProps) {
   const hasPeriod = inPeriod && inPeriod.length > 0;
-  const hasWeek = weekData && weekData.length > 0;
 
   const rawData =
     timeScope === 'week' && weekData && weekData.length > 0
