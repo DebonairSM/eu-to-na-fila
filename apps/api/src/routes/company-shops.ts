@@ -339,6 +339,15 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
           .set({ name: body.name, updatedAt: new Date() })
           .where(eq(schema.projects.id, shop.projectId));
       }
+      // Keep project path in sync so barbershop is served at the URL from settings
+      if (body.path !== undefined && body.path !== null) {
+        const raw = String(body.path).trim().replace(/\/+$/, '');
+        const projectPath = raw.startsWith('/') ? raw : raw ? `/${raw}` : `/${updatedShop.slug}`;
+        await db
+          .update(schema.projects)
+          .set({ path: projectPath, updatedAt: new Date() })
+          .where(eq(schema.projects.id, shop.projectId));
+      }
 
       return { ...updatedShop, settings: sanitizeSettingsForClient(updatedShop.settings) };
     }

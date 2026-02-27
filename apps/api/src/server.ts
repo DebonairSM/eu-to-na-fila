@@ -396,26 +396,41 @@ fastify.get('/projects/:slug/', async (request, reply) => {
   return reply.code(404).send({ error: 'Not found' });
 });
 
-// Short-path routes (e.g. /shop, /mineiro) - must run before root static so barbershop SPA is served
+// Short-path routes: barbershop at path from settings (e.g. /minha-barbearia) or /:slug. Must run before root static.
 const SHORT_PATH_RESERVED = ['api', 'company', 'companies', 'projects', 'about', 'contact', 'health', 'test', 'ws'];
+
+async function resolveProjectForShortPath(pathname: string): Promise<{ project: Awaited<ReturnType<typeof getProjectBySlug>>; path: string } | null> {
+  const normalized = pathname.replace(/\?.*$/, '').replace(/\/+$/, '') || '/';
+  const byPath = await getProjectByPathname(normalized === '/' ? '' : normalized);
+  if (byPath) return byPath;
+  const segment = normalized.slice(1).split('/')[0];
+  if (!segment || SHORT_PATH_RESERVED.includes(segment)) return null;
+  const project = await getProjectBySlug(segment);
+  if (!project) return null;
+  return { project, path: '/' + segment };
+}
+
 fastify.get<{ segment: string }>('/:segment', async (request, reply) => {
   const { segment } = request.params;
   if (!segment || SHORT_PATH_RESERVED.includes(segment)) return reply.callNotFound();
-  const project = await getProjectBySlug(segment);
-  if (!project) return reply.callNotFound();
-  return reply.redirect(302, `/${segment}/`);
+  const pathname = (request.url?.split('?')[0] ?? '').replace(/\/+$/, '') || `/${segment}`;
+  const resolution = await resolveProjectForShortPath(pathname);
+  if (!resolution) return reply.callNotFound();
+  const { path: projectPath } = resolution;
+  return reply.redirect(302, projectPath + '/');
 });
 fastify.get<{ segment: string; '*': string }>('/:segment/*', async (request, reply) => {
   const { segment } = request.params;
   const rest = (request.params as { '*'?: string })['*'] ?? '';
   const pathSuffix = rest.replace(/^\//, '');
   if (!segment || SHORT_PATH_RESERVED.includes(segment)) return reply.callNotFound();
-  const project = await getProjectBySlug(segment);
-  if (!project) return reply.callNotFound();
-  const projectPath = `/${segment}`;
+  const pathname = (request.url?.split('?')[0] ?? '').replace(/\?.*$/, '');
+  const resolution = await resolveProjectForShortPath(pathname);
+  if (!resolution) return reply.callNotFound();
+  const { project, path: projectPath } = resolution;
 
   if (pathSuffix === '' && !request.url.split('?')[0].endsWith('/')) {
-    return reply.redirect(302, `/${segment}/`);
+    return reply.redirect(302, projectPath + '/');
   }
   const isKnownAsset =
     STATIC_ASSET_FILES.includes(pathSuffix) ||
