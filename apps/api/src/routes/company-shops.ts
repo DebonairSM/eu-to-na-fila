@@ -211,7 +211,6 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const bodySchema = z.object({
         name: z.string().min(1).max(200).optional(),
-        slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
         domain: z.string().optional().nullable(),
         path: z.string().optional().nullable(),
         apiBase: z.string().url().optional().nullable(),
@@ -238,32 +237,9 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         throw new NotFoundError('Shop not found');
       }
 
-      if (body.slug && body.slug !== shop.slug) {
-        const existingShop = await db.query.shops.findFirst({
-          where: and(
-            eq(schema.shops.projectId, shop.projectId),
-            eq(schema.shops.slug, body.slug)
-          ),
-        });
-        if (existingShop) {
-          throw new ValidationError('Slug already exists', [
-            { field: 'slug', message: 'This slug is already in use in this project' },
-          ]);
-        }
-        // Project slug is used in URLs and must be globally unique
-        const existingProject = await db.query.projects.findFirst({
-          where: eq(schema.projects.slug, body.slug),
-        });
-        if (existingProject && existingProject.id !== shop.projectId) {
-          throw new ValidationError('Slug already exists', [
-            { field: 'slug', message: 'This slug is already in use by another barbershop' },
-          ]);
-        }
-      }
-
+      // Slug cannot be changed after creation (set only at creation time)
       const updatePayload: Record<string, unknown> = {
         ...(body.name && { name: body.name }),
-        ...(body.slug && { slug: body.slug }),
         ...(body.domain !== undefined && { domain: body.domain }),
         ...(body.path !== undefined && { path: body.path }),
         ...(body.apiBase !== undefined && { apiBase: body.apiBase }),
@@ -347,11 +323,6 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
           .set({ name: body.name, updatedAt: new Date() })
           .where(eq(schema.projects.id, shop.projectId));
       }
-      // Do not update project.slug when the user changes the slug in settings. Only shop.slug is
-      // updated. So the barbershop stays findable by the original slug (project.slug) and by the
-      // new slug (shop.slug); getShopBySlug tries both. The server injects shop.slug as __SHOP_SLUG__
-      // so the frontend uses the current slug for API calls. This avoids breaking the shop when slug
-      // is edited (same URL, both slugs work for API).
       // Keep project path in sync when path field is explicitly set in settings
       if (body.path !== undefined && body.path !== null) {
         const raw = String(body.path).trim().replace(/\/+$/, '');

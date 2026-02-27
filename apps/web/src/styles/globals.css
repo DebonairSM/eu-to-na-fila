@@ -384,6 +384,19 @@
   animation: bounce 2s ease-in-out infinite;
 }
 
+/* Subtle glow pulse for refresh button */
+@keyframes refresh-soft-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--shop-accent) 25%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 12px 2px color-mix(in srgb, var(--shop-accent) 18%, transparent);
+  }
+}
+.animate-refresh-soft-pulse {
+  animation: refresh-soft-pulse 2.5s ease-in-out infinite;
+}
+
 /* Shop theme utilities - use var(--shop-accent) / var(--shop-primary) for per-shop branding */
 .text-shop-accent {
   color: var(--shop-accent);

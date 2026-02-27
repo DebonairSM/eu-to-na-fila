@@ -480,6 +480,97 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       totalCompleted: row.totalCompleted,
     }));
 
+    // Per-barber, per-day-of-week productivity (all-time): aggregate from barberServiceWeekdayStats
+    const allTimeByBarberDay = new Map<string, { totalCompleted: number; weightedDuration: number }>();
+    for (const row of weekdayStatsRows) {
+      const key = `${row.barberId}:${row.dayOfWeek}`;
+      const cur = allTimeByBarberDay.get(key);
+      const completed = row.totalCompleted;
+      const dur = Number(row.avgDuration);
+      if (cur) {
+        cur.totalCompleted += completed;
+        cur.weightedDuration += completed * dur;
+      } else {
+        allTimeByBarberDay.set(key, { totalCompleted: completed, weightedDuration: completed * dur });
+      }
+    }
+    const tz = settings.timezone ?? 'America/Sao_Paulo';
+    const barberProductivityByDayAllTime: Array<{
+      barberId: number;
+      barberName: string;
+      dayOfWeek: number;
+      dayName: string;
+      avgDurationMinutes: number;
+      totalCompleted: number;
+    }> = [];
+    for (const [key, agg] of allTimeByBarberDay) {
+      const [barberIdStr, dayStr] = key.split(':');
+      const barberId = parseInt(barberIdStr, 10);
+      const dayOfWeek = parseInt(dayStr, 10);
+      const avgDurationMinutes =
+        agg.totalCompleted > 0
+          ? Math.round((agg.weightedDuration / agg.totalCompleted) * 10) / 10
+          : 0;
+      barberProductivityByDayAllTime.push({
+        barberId,
+        barberName: barberMap.get(barberId)?.name ?? `Barber ${barberId}`,
+        dayOfWeek,
+        dayName: dayNames[dayOfWeek],
+        avgDurationMinutes,
+        totalCompleted: agg.totalCompleted,
+      });
+    }
+
+    // Per-barber, per-day productivity for the selected period (from completed tickets in range)
+    let barberProductivityByDayInPeriod: Array<{
+      barberId: number;
+      barberName: string;
+      dayOfWeek: number;
+      dayName: string;
+      avgDurationMinutes: number;
+      totalCompleted: number;
+    }> = [];
+    if (periodDays > 0) {
+      const completedInPeriod = tickets.filter(
+        (t) =>
+          t.status === 'completed' &&
+          t.barberId != null &&
+          t.startedAt != null &&
+          t.completedAt != null
+      ) as Array<typeof tickets[0] & { barberId: number; startedAt: Date; completedAt: Date }>;
+      const periodByBarberDay = new Map<string, { totalCompleted: number; totalDurationMin: number }>();
+      for (const t of completedInPeriod) {
+        const completedAt = new Date(t.completedAt);
+        const startedAt = new Date(t.startedAt);
+        const dayOfWeek = toZonedTime(completedAt, tz).getDay();
+        const durationMin = (completedAt.getTime() - startedAt.getTime()) / (1000 * 60);
+        const key = `${t.barberId}:${dayOfWeek}`;
+        const cur = periodByBarberDay.get(key);
+        if (cur) {
+          cur.totalCompleted += 1;
+          cur.totalDurationMin += durationMin;
+        } else {
+          periodByBarberDay.set(key, { totalCompleted: 1, totalDurationMin: durationMin });
+        }
+      }
+      for (const [key, agg] of periodByBarberDay) {
+        const [barberIdStr, dayStr] = key.split(':');
+        const barberId = parseInt(barberIdStr, 10);
+        const dayOfWeek = parseInt(dayStr, 10);
+        barberProductivityByDayInPeriod.push({
+          barberId,
+          barberName: barberMap.get(barberId)?.name ?? `Barber ${barberId}`,
+          dayOfWeek,
+          dayName: dayNames[dayOfWeek],
+          avgDurationMinutes:
+            agg.totalCompleted > 0
+              ? Math.round((agg.totalDurationMin / agg.totalCompleted) * 10) / 10
+              : 0,
+          totalCompleted: agg.totalCompleted,
+        });
+      }
+    }
+
     // Trends
     const weekOverWeek = previousPeriodCount > 0 
       ? Math.round(((total - previousPeriodCount) / previousPeriodCount) * 100) 
@@ -768,6 +859,8 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       },
       barbers: barberStats,
       barberServiceWeekdayStats,
+      barberProductivityByDayAllTime,
+      barberProductivityByDayInPeriod,
       ticketsByDay,
       hourlyDistribution,
       peakHour: peakHour ? { hour: parseInt(peakHour[0]), count: peakHour[1] } : null,

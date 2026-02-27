@@ -328,33 +328,74 @@ export function StatusPage() {
 
       <Container className="pt-24 pb-20">
         <div className="lg:hidden space-y-8">
-          <div className="flex items-start justify-center gap-2">
-            <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} ticketNumber={(ticket as { ticketNumber?: string | null }).ticketNumber} scheduledTime={(ticket as { scheduledTime?: string | null }).scheduledTime} />
-            <button
-              type="button"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              aria-label={t('status.refresh')}
-              className="shrink-0 p-2 rounded-lg border border-[var(--shop-border-color)] text-[var(--shop-text-secondary)] hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-colors disabled:opacity-50"
-            >
-              <span className="material-symbols-outlined">{isRefreshing ? 'progress_activity' : 'refresh'}</span>
-            </button>
-          </div>
+          <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} ticketNumber={(ticket as { ticketNumber?: string | null }).ticketNumber} scheduledTime={(ticket as { scheduledTime?: string | null }).scheduledTime} />
 
           {isWaiting && (
-            <WaitingCard
-              waitTime={waitTime}
-              position={positionInfo?.position}
-              total={positionInfo?.total}
-              ahead={positionInfo?.ahead}
-              preferredBarberName={preferredBarberName ?? undefined}
-              generalLineWaitTime={generalLineFaster ? generalLineWaitTime ?? undefined : undefined}
-            />
+            <>
+              <WaitingCard
+                waitTime={waitTime}
+                position={positionInfo?.position}
+                total={positionInfo?.total}
+                ahead={positionInfo?.ahead}
+                preferredBarberName={preferredBarberName ?? undefined}
+                generalLineWaitTime={generalLineFaster ? generalLineWaitTime ?? undefined : undefined}
+              />
+              <div className="flex justify-center -mt-2">
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  aria-label={t('status.refresh')}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[var(--shop-accent)] text-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] hover:bg-[var(--shop-accent)] hover:text-[var(--shop-text-on-accent)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 disabled:hover:scale-100 disabled:active:scale-100 ${!isRefreshing ? 'animate-refresh-soft-pulse' : ''}`}
+                >
+                  <span className={`material-symbols-outlined text-xl ${isRefreshing ? 'animate-spin' : ''}`}>
+                    {isRefreshing ? 'progress_activity' : 'refresh'}
+                  </span>
+                  <span className="text-sm font-medium">{t('status.refresh')}</span>
+                </button>
+              </div>
+            </>
           )}
 
-          {isInProgress && <InProgressCard barberName={barber?.name} />}
+          {isInProgress && (
+            <>
+              <InProgressCard barberName={barber?.name} />
+              <div className="flex justify-center -mt-2">
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  aria-label={t('status.refresh')}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[var(--shop-accent)] text-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] hover:bg-[var(--shop-accent)] hover:text-[var(--shop-text-on-accent)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 ${!isRefreshing ? 'animate-refresh-soft-pulse' : ''}`}
+                >
+                  <span className={`material-symbols-outlined text-xl ${isRefreshing ? 'animate-spin' : ''}`}>
+                    {isRefreshing ? 'progress_activity' : 'refresh'}
+                  </span>
+                  <span className="text-sm font-medium">{t('status.refresh')}</span>
+                </button>
+              </div>
+            </>
+          )}
 
-          {isCompleted && <CompletedCard barberName={barber?.name} />}
+          {isCompleted && (
+            <>
+              <CompletedCard barberName={barber?.name} />
+              <div className="flex justify-center -mt-2">
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  aria-label={t('status.refresh')}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[var(--shop-accent)] text-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] hover:bg-[var(--shop-accent)] hover:text-[var(--shop-text-on-accent)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 ${!isRefreshing ? 'animate-refresh-soft-pulse' : ''}`}
+                >
+                  <span className={`material-symbols-outlined text-xl ${isRefreshing ? 'animate-spin' : ''}`}>
+                    {isRefreshing ? 'progress_activity' : 'refresh'}
+                  </span>
+                  <span className="text-sm font-medium">{t('status.refresh')}</span>
+                </button>
+              </div>
+            </>
+          )}
 
           <ActionButtons
             status={ticket.status}
@@ -384,33 +425,74 @@ export function StatusPage() {
 
         <div className="hidden lg:block">
           <div className="max-w-2xl mx-auto space-y-10">
-            <div className="flex items-start justify-center gap-2">
-              <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} ticketNumber={(ticket as { ticketNumber?: string | null }).ticketNumber} scheduledTime={(ticket as { scheduledTime?: string | null }).scheduledTime} />
-              <button
-                type="button"
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                aria-label={t('status.refresh')}
-                className="shrink-0 p-2 rounded-lg border border-[var(--shop-border-color)] text-[var(--shop-text-secondary)] hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] transition-colors disabled:opacity-50"
-              >
-                <span className="material-symbols-outlined">{isRefreshing ? 'progress_activity' : 'refresh'}</span>
-              </button>
-            </div>
+            <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} ticketNumber={(ticket as { ticketNumber?: string | null }).ticketNumber} scheduledTime={(ticket as { scheduledTime?: string | null }).scheduledTime} />
 
             {isWaiting && (
-              <WaitingCard
-                waitTime={waitTime}
-                position={positionInfo?.position}
-                total={positionInfo?.total}
-                ahead={positionInfo?.ahead}
-                preferredBarberName={preferredBarberName ?? undefined}
-                generalLineWaitTime={generalLineFaster ? generalLineWaitTime ?? undefined : undefined}
-              />
+              <>
+                <WaitingCard
+                  waitTime={waitTime}
+                  position={positionInfo?.position}
+                  total={positionInfo?.total}
+                  ahead={positionInfo?.ahead}
+                  preferredBarberName={preferredBarberName ?? undefined}
+                  generalLineWaitTime={generalLineFaster ? generalLineWaitTime ?? undefined : undefined}
+                />
+                <div className="flex justify-center -mt-2">
+                  <button
+                    type="button"
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    aria-label={t('status.refresh')}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[var(--shop-accent)] text-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] hover:bg-[var(--shop-accent)] hover:text-[var(--shop-text-on-accent)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 disabled:hover:scale-100 disabled:active:scale-100 ${!isRefreshing ? 'animate-refresh-soft-pulse' : ''}`}
+                  >
+                    <span className={`material-symbols-outlined text-xl ${isRefreshing ? 'animate-spin' : ''}`}>
+                      {isRefreshing ? 'progress_activity' : 'refresh'}
+                    </span>
+                    <span className="text-sm font-medium">{t('status.refresh')}</span>
+                  </button>
+                </div>
+              </>
             )}
 
-            {isInProgress && <InProgressCard barberName={barber?.name} />}
+            {isInProgress && (
+              <>
+                <InProgressCard barberName={barber?.name} />
+                <div className="flex justify-center -mt-2">
+                  <button
+                    type="button"
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    aria-label={t('status.refresh')}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[var(--shop-accent)] text-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] hover:bg-[var(--shop-accent)] hover:text-[var(--shop-text-on-accent)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 ${!isRefreshing ? 'animate-refresh-soft-pulse' : ''}`}
+                  >
+                    <span className={`material-symbols-outlined text-xl ${isRefreshing ? 'animate-spin' : ''}`}>
+                      {isRefreshing ? 'progress_activity' : 'refresh'}
+                    </span>
+                    <span className="text-sm font-medium">{t('status.refresh')}</span>
+                  </button>
+                </div>
+              </>
+            )}
 
-            {isCompleted && <CompletedCard barberName={barber?.name} />}
+            {isCompleted && (
+              <>
+                <CompletedCard barberName={barber?.name} />
+                <div className="flex justify-center -mt-2">
+                  <button
+                    type="button"
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    aria-label={t('status.refresh')}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[var(--shop-accent)] text-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] hover:bg-[var(--shop-accent)] hover:text-[var(--shop-text-on-accent)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 ${!isRefreshing ? 'animate-refresh-soft-pulse' : ''}`}
+                  >
+                    <span className={`material-symbols-outlined text-xl ${isRefreshing ? 'animate-spin' : ''}`}>
+                      {isRefreshing ? 'progress_activity' : 'refresh'}
+                    </span>
+                    <span className="text-sm font-medium">{t('status.refresh')}</span>
+                  </button>
+                </div>
+              </>
+            )}
 
             <ActionButtons
               status={ticket.status}

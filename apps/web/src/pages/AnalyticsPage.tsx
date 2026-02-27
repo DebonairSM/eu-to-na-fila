@@ -15,12 +15,13 @@ import { ServiceBreakdownChart } from '@/components/ServiceBreakdownChart';
 import { LocationChart } from '@/components/LocationChart';
 import { DemographicsInsights } from '@/components/DemographicsInsights';
 import { DayOfWeekChart } from '@/components/DayOfWeekChart';
+import { BarberProductivityByDayChart } from '@/components/BarberProductivityByDayChart';
 import { WaitTimeTrendChart } from '@/components/WaitTimeTrendChart';
 import { CancellationChart } from '@/components/CancellationChart';
 import { ServiceTimeDistributionChart } from '@/components/ServiceTimeDistributionChart';
 import { TypeBreakdownChart } from '@/components/TypeBreakdownChart';
 import { ClientInfoModal } from '@/components/ClientInfoModal';
-import { DAY_NAMES_PT_FULL } from '@/lib/constants';
+import { DAY_NAMES_PT, DAY_NAMES_PT_FULL } from '@/lib/constants';
 import { downloadAnalyticsPdf } from '@/lib/analyticsPdf';
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatDate } from '@/lib/format';
@@ -59,6 +60,22 @@ interface AnalyticsData {
     barberName: string;
     serviceId: number;
     serviceName: string;
+    dayOfWeek: number;
+    dayName: string;
+    avgDurationMinutes: number;
+    totalCompleted: number;
+  }>;
+  barberProductivityByDayAllTime?: Array<{
+    barberId: number;
+    barberName: string;
+    dayOfWeek: number;
+    dayName: string;
+    avgDurationMinutes: number;
+    totalCompleted: number;
+  }>;
+  barberProductivityByDayInPeriod?: Array<{
+    barberId: number;
+    barberName: string;
     dayOfWeek: number;
     dayName: string;
     avgDurationMinutes: number;
@@ -154,6 +171,7 @@ export function AnalyticsPage() {
   const [historyPage, setHistoryPage] = useState(1);
   const [historyData, setHistoryData] = useState<BarberServiceHistoryResponse | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [productivityChartScope, setProductivityChartScope] = useState<'all_time' | 'period'>('all_time');
   const contentStartRef = useRef<HTMLDivElement>(null);
 
   const formatActivityMinutes = (minutes: number): string => {
@@ -859,6 +877,32 @@ export function AnalyticsPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {data.barberProductivityByDayAllTime && data.barberProductivityByDayAllTime.length > 0 && (
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
+                  <div className="mb-6 flex items-center gap-4">
+                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">bar_chart</span>
+                    <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                      {t('analytics.productivityByDayTitle')}
+                    </h2>
+                  </div>
+                  <p className="text-sm text-white/60 mb-6">
+                    {t('analytics.productivityByDayIntro')}
+                  </p>
+                  <BarberProductivityByDayChart
+                    allTime={data.barberProductivityByDayAllTime}
+                    inPeriod={data.barberProductivityByDayInPeriod}
+                    scope={productivityChartScope}
+                    onScopeChange={setProductivityChartScope}
+                    dayLabels={DAY_NAMES_PT}
+                    labelAvgMinutes={t('analytics.avgMin')}
+                    labelAttendances={t('analytics.attendances')}
+                    labelAllTime={t('analytics.dataAllTime')}
+                    labelThisPeriod={t('analytics.dataThisPeriod')}
+                  />
                 </div>
               )}
 

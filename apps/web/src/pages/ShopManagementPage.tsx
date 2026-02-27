@@ -628,7 +628,6 @@ export function ShopManagementPage() {
     try {
       await api.updateCompanyShop(user.companyId, editingShop.id, {
         name: formData.name,
-        slug: formData.slug || undefined,
         domain: formData.domain || null,
         path: formData.path || null,
         apiBase: formData.apiBase || null,
@@ -998,11 +997,13 @@ export function ShopManagementPage() {
                               id="editSlugRoot"
                               type="text"
                               value={formData.slug}
-                              onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+                              onChange={(e) => !editingShop && setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
                               required
                               pattern="[a-z0-9\-]+"
-                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
+                              disabled={!!editingShop}
+                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20 disabled:opacity-70 disabled:cursor-not-allowed"
                             />
+                            {editingShop && <p className="text-white/50 text-xs mt-1">{t('management.slugReadOnly')}</p>}
                           </div>
                         </div>
                       </div>
@@ -2055,7 +2056,8 @@ export function ShopManagementPage() {
                       </div>
                       <div>
                         <label htmlFor="editSlug" className="block text-white/70 text-sm mb-1.5">{t('management.slug')} *</label>
-                        <input id="editSlug" type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} required pattern="[a-z0-9\-]+" className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" />
+                        <input id="editSlug" type="text" value={formData.slug} onChange={(e) => !editingShop && setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} required pattern="[a-z0-9\-]+" disabled={!!editingShop} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 disabled:opacity-70 disabled:cursor-not-allowed" />
+                        {editingShop && <p className="text-white/50 text-xs mt-1">{t('management.slugReadOnly')}</p>}
                       </div>
                     </div>
                   </div>
