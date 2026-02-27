@@ -94,7 +94,7 @@ export const services = pgTable('services', {
   price: integer('price'), // in cents
   isActive: boolean('is_active').notNull().default(true),
   sortOrder: integer('sort_order').notNull().default(0),
-  /** main = at most one per shop; complementary = can have many */
+  /** main or complementary; shops can have multiple mains, clients typically choose one (or none) when joining */
   kind: text('kind').notNull().default('complementary'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

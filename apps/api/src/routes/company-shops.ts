@@ -868,26 +868,19 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
           })
           .returning();
 
-        // At most one main per shop: only the first service marked main gets kind 'main'
-        let mainAssigned = false;
         const newServices = await tx
           .insert(schema.services)
           .values(
-            body.services.map((s, index) => {
-              const wantMain = s.kind === 'main';
-              const kind = wantMain && !mainAssigned ? 'main' : 'complementary';
-              if (kind === 'main') mainAssigned = true;
-              return {
-                shopId: newShop.id,
-                name: s.name,
-                description: s.description || null,
-                duration: s.duration,
-                price: s.price ?? null,
-                isActive: true,
-                sortOrder: index,
-                kind,
-              };
-            })
+            body.services.map((s, index) => ({
+              shopId: newShop.id,
+              name: s.name,
+              description: s.description || null,
+              duration: s.duration,
+              price: s.price ?? null,
+              isActive: true,
+              sortOrder: index,
+              kind: s.kind === 'main' ? 'main' : 'complementary',
+            }))
           )
           .returning();
 

@@ -107,28 +107,47 @@ export class TicketService {
         ...(dataExt.mainServiceId != null ? [dataExt.mainServiceId] : []),
         ...(dataExt.complementaryServiceIds ?? []),
       ];
-      if (allIds.length === 0) throw new ValidationError('Select at least one service.');
-      const services = await this.db.query.services.findMany({
-        where: and(inArray(schema.services.id, allIds), eq(schema.services.shopId, shopId)),
-        columns: { id: true, isActive: true, kind: true },
-      });
-      const serviceMap = new Map(services.map((s) => [s.id, s]));
-      for (const id of allIds) {
-        const svc = serviceMap.get(id);
-        if (!svc) throw new NotFoundError('Service not found');
-        if (!svc.isActive) throw new ConflictError('Service is not active');
+      if (allIds.length === 0) {
+        // No main and no complementary selected: use first active service of shop for service_id
+        const first = await this.db.query.services.findFirst({
+          where: and(eq(schema.services.shopId, shopId), eq(schema.services.isActive, true)),
+          columns: { id: true },
+          orderBy: (s, { asc }) => [asc(s.sortOrder), asc(s.id)],
+        });
+        if (!first) throw new ValidationError('Shop has no active services.');
+        primaryServiceId = first.id;
+      } else {
+        const services = await this.db.query.services.findMany({
+          where: and(inArray(schema.services.id, allIds), eq(schema.services.shopId, shopId)),
+          columns: { id: true, isActive: true, kind: true },
+        });
+        const serviceMap = new Map(services.map((s) => [s.id, s]));
+        for (const id of allIds) {
+          const svc = serviceMap.get(id);
+          if (!svc) throw new NotFoundError('Service not found');
+          if (!svc.isActive) throw new ConflictError('Service is not active');
+        }
+        if (dataExt.mainServiceId != null) {
+          const mainSvc = serviceMap.get(dataExt.mainServiceId);
+          if (!mainSvc || (mainSvc as { kind?: string }).kind !== 'main') throw new ValidationError('Main service must be of type main.');
+        }
+        for (const id of dataExt.complementaryServiceIds ?? []) {
+          const compSvc = serviceMap.get(id);
+          if (!compSvc || (compSvc as { kind?: string }).kind !== 'complementary') throw new ValidationError('Complementary services must be of type complementary.');
+        }
+        primaryServiceId = dataExt.mainServiceId ?? dataExt.complementaryServiceIds![0];
       }
-      if (dataExt.mainServiceId != null) {
-        const mainSvc = serviceMap.get(dataExt.mainServiceId);
-        if (!mainSvc || (mainSvc as { kind?: string }).kind !== 'main') throw new ValidationError('Main service must be of type main.');
-      }
-      for (const id of dataExt.complementaryServiceIds ?? []) {
-        const compSvc = serviceMap.get(id);
-        if (!compSvc || (compSvc as { kind?: string }).kind !== 'complementary') throw new ValidationError('Complementary services must be of type complementary.');
-      }
-      primaryServiceId = dataExt.mainServiceId ?? dataExt.complementaryServiceIds![0];
+    } else if (data.serviceId != null) {
+      primaryServiceId = data.serviceId;
     } else {
-      primaryServiceId = data.serviceId!;
+      // Legacy path with no serviceId: use first active service
+      const first = await this.db.query.services.findFirst({
+        where: and(eq(schema.services.shopId, shopId), eq(schema.services.isActive, true)),
+        columns: { id: true },
+        orderBy: (s, { asc }) => [asc(s.sortOrder), asc(s.id)],
+      });
+      if (!first) throw new ValidationError('Shop has no active services.');
+      primaryServiceId = first.id;
     }
 
     const service = await this.db.query.services.findFirst({

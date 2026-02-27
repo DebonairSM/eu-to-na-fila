@@ -127,6 +127,13 @@
       "when": 1771500000000,
       "tag": "0026_ticket_main_complementary_services",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1771600000000,
+      "tag": "0027_allow_multiple_main_services",
+      "breakpoints": true
     }
   ]
 }

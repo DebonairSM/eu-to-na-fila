@@ -85,17 +85,8 @@ export function useJoinForm() {
     const comps = activeServices.filter((s) => (s as { kind?: string }).kind !== 'main');
     const validIds = new Set(activeServices.map((s) => s.id));
     if (useMainComplementary) {
-      setMainServiceId((m) => {
-        if (m != null && validIds.has(m)) return m;
-        if (mains.length > 0) return mains[0].id;
-        return null;
-      });
-      setSelectedComplementaryIds((prev) => {
-        const sanitized = prev.filter((id) => validIds.has(id));
-        if (sanitized.length > 0) return sanitized;
-        if (comps.length > 0) return [comps[0].id];
-        return [];
-      });
+      setMainServiceId((m) => (m != null && validIds.has(m) ? m : null));
+      setSelectedComplementaryIds((prev) => prev.filter((id) => validIds.has(id)));
     } else {
       setSelectedServiceId((s) => (s != null && validIds.has(s) ? s : activeServices[0].id));
     }
@@ -431,12 +422,6 @@ export function useJoinForm() {
     if (useMainComplementary) {
       const hasMain = mainServiceId != null && validServiceIds.has(mainServiceId);
       const validComp = selectedComplementaryIds.filter((id) => validServiceIds.has(id));
-      if (!hasMain && validComp.length === 0) {
-        setClosedReason(null);
-        setSubmitError(t('join.selectService'));
-        setIsSubmitting(false);
-        return;
-      }
       if (hasMain) payload.mainServiceId = mainServiceId!;
       if (validComp.length > 0) payload.complementaryServiceIds = validComp;
     } else {

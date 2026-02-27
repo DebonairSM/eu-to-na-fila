@@ -292,7 +292,7 @@ export function JoinForm() {
                 !!nameCollisionError ||
                 isLoadingServices ||
                 !hasServices ||
-                (hasServices && !hasServiceSelection) ||
+                (hasServices && !useMainComplementary && !hasServiceSelection) ||
                 (settings.requirePhone && !customerPhone.trim())
               }
             >

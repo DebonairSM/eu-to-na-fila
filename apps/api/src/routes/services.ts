@@ -130,14 +130,6 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    // If setting as main, clear main from any other service in this shop (one main per shop)
-    if (body.kind === 'main') {
-      await db
-        .update(schema.services)
-        .set({ kind: 'complementary', updatedAt: new Date() })
-        .where(and(eq(schema.services.shopId, shop.id)));
-    }
-
     const insertValues = {
       shopId: shop.id,
       name: body.name,
@@ -306,14 +298,6 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       if (request.user.companyId == null || !shop || shop.companyId !== request.user.companyId) {
         throw new ForbiddenError('Access denied to this shop');
       }
-    }
-
-    // If setting this service to main, clear main from any other service in this shop
-    if (body.kind === 'main') {
-      await db
-        .update(schema.services)
-        .set({ kind: 'complementary', updatedAt: new Date() })
-        .where(and(eq(schema.services.shopId, service.shopId)));
     }
 
     const updateData: {

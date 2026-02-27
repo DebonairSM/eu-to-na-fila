@@ -196,18 +196,10 @@ function StepServices({
     onChange([...services, { id: uid(), name: '', description: '', duration: 30, price: 0, kind: 'complementary' }]);
   };
   const setMainService = (id: string) => {
-    onChange(services.map((s) => ({ ...s, kind: s.id === id ? 'main' : 'complementary' })));
+    onChange(services.map((s) => ({ ...s, kind: s.id === id ? 'main' : s.kind })));
   };
   const setComplementary = (id: string) => {
-    const current = services.find((s) => s.id === id);
-    if (current?.kind !== 'main') {
-      updateService(id, { kind: 'complementary' });
-      return;
-    }
-    const others = services.filter((s) => s.id !== id);
-    const newMainId = others[0]?.id;
-    if (newMainId) onChange(services.map((s) => ({ ...s, kind: s.id === newMainId ? 'main' : 'complementary' })));
-    else updateService(id, { kind: 'complementary' });
+    onChange(services.map((s) => ({ ...s, kind: s.id === id ? 'complementary' : s.kind })));
   };
   const removeService = (id: string) => {
     if (services.length <= 1) return;

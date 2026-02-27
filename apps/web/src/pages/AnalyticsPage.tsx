@@ -854,6 +854,8 @@ export function AnalyticsPage() {
                     labelAllTime={t('analytics.dataAllTime')}
                     labelThisPeriod={t('analytics.dataThisPeriod')}
                     labelWeek={t('analytics.week')}
+                    labelWeekPrev={t('analytics.weekPrev')}
+                    labelWeekNext={t('analytics.weekNext')}
                     labelAllBarbers={t('analytics.allBarbersAverage')}
                     labelBarber={t('analytics.barber')}
                   />
@@ -989,54 +991,6 @@ export function AnalyticsPage() {
                         </div>
                       </div>
                     ))}
-                  </div>
-                </div>
-              )}
-
-              {data.barberServiceWeekdayStats && data.barberServiceWeekdayStats.length > 0 && (
-                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
-                  <div className="mb-6 flex items-center gap-4">
-                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">schedule</span>
-                    <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
-                      {t('analytics.timeByWeekdayTitle')}
-                    </h2>
-                  </div>
-                  <p className="text-sm text-white/60 mb-6">
-                    {t('analytics.timeByWeekdayIntro')}
-                  </p>
-                  <div className="space-y-8">
-                    {data.barbers.map((barber) => {
-                      const barberStats = data.barberServiceWeekdayStats!.filter(s => s.barberId === barber.id);
-                      if (barberStats.length === 0) return null;
-                      return (
-                        <div key={barber.id} className="bg-[rgba(36,36,36,0.8)] border border-[var(--shop-border-color)] rounded-2xl p-6">
-                          <h4 className="text-lg text-white mb-4">{barber.name}</h4>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                              <thead>
-                                <tr className="text-white/50 border-b border-[var(--shop-border-color)]">
-                                  <th className="py-2 pr-4">{t('analytics.day')}</th>
-                                  <th className="py-2 pr-4">{t('analytics.service')}</th>
-                                  <th className="py-2 pr-4 text-right">{t('analytics.avgMin')}</th>
-                                  <th className="py-2 text-right">{t('analytics.attendances')}</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {barberStats.map((row, i) => (
-                                  <tr key={`${row.serviceId}-${row.dayOfWeek}-${i}`} className="border-b border-white/5">
-                                    <td className="py-2 pr-4 text-white/80">{row.dayName}</td>
-                                    <td className="py-2 pr-4 text-white/90">{row.serviceName}</td>
-                                    <td className="py-2 pr-4 text-right text-[var(--shop-accent)] font-medium">{row.avgDurationMinutes}</td>
-                                    <td className="py-2 text-right text-white/70">{row.totalCompleted}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      );
-                    })}
                   </div>
                 </div>
               )}

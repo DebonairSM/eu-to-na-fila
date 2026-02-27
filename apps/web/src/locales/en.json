@@ -437,6 +437,8 @@
     "dataAllTime": "All time",
     "dataThisPeriod": "This period",
     "week": "Week",
+    "weekPrev": "Previous week",
+    "weekNext": "Next week",
     "weekThis": "This week",
     "weekLast": "Last week",
     "weekN": "{{n}} weeks ago",

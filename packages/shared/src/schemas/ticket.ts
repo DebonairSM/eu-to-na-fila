@@ -51,14 +51,7 @@ export const createTicketSchema = z.object({
   customerPhone: z.string().optional(),
   preferredBarberId: z.number().optional(),
   deviceId: z.string().optional(),
-}).refine(
-  (data) => {
-    const hasNew = (data.mainServiceId != null) || ((data.complementaryServiceIds?.length ?? 0) > 0);
-    if (hasNew) return true;
-    return data.serviceId != null;
-  },
-  { message: 'Provide either serviceId or (mainServiceId and/or complementaryServiceIds)' }
-);
+});
 export type CreateTicket = z.infer<typeof createTicketSchema>;
 
 /** Staff or public book: create an appointment (type=appointment, status=pending). */

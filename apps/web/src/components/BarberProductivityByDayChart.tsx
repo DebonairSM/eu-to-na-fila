@@ -28,6 +28,8 @@ interface BarberProductivityByDayChartProps {
   labelAllTime: string;
   labelThisPeriod: string;
   labelWeek: string;
+  labelWeekPrev: string;
+  labelWeekNext: string;
   labelAllBarbers: string;
   labelBarber: string;
 }
@@ -94,6 +96,8 @@ export function BarberProductivityByDayChart({
   labelAllTime,
   labelThisPeriod,
   labelWeek,
+  labelWeekPrev,
+  labelWeekNext,
   labelAllBarbers,
   labelBarber,
 }: BarberProductivityByDayChartProps) {
@@ -140,53 +144,53 @@ export function BarberProductivityByDayChart({
 
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-sm text-white/70">Data:</span>
-        <button
-          type="button"
-          onClick={() => onTimeScopeChange('all_time')}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            timeScope === 'all_time'
-              ? 'bg-[var(--shop-accent)] text-black'
-              : 'bg-white/10 text-white/80 hover:bg-white/15'
-          }`}
+        <select
+          value={timeScope}
+          onChange={(e) => onTimeScopeChange(e.target.value as ProductivityTimeScope)}
+          className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[var(--shop-accent)]"
         >
-          {labelAllTime}
-        </button>
-        {hasPeriod && (
-          <button
-            type="button"
-            onClick={() => onTimeScopeChange('period')}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              timeScope === 'period'
-                ? 'bg-[var(--shop-accent)] text-black'
-                : 'bg-white/10 text-white/80 hover:bg-white/15'
-            }`}
-          >
-            {labelThisPeriod}
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => onTimeScopeChange('week')}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            timeScope === 'week'
-              ? 'bg-[var(--shop-accent)] text-black'
-              : 'bg-white/10 text-white/80 hover:bg-white/15'
-          }`}
-        >
-          {labelWeek}
-        </button>
+          <option value="all_time">{labelAllTime}</option>
+          {hasPeriod && <option value="period">{labelThisPeriod}</option>}
+          <option value="week">{labelWeek}</option>
+        </select>
         {timeScope === 'week' && weekOptions && weekOptions.length > 0 && (
-          <select
-            value={selectedWeekStart ?? ''}
-            onChange={(e) => onWeekSelect(e.target.value || null)}
-            className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[var(--shop-accent)]"
-          >
-            {weekOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                const idx = weekOptions.findIndex((o) => o.value === (selectedWeekStart ?? ''));
+                if (idx < weekOptions.length - 1) onWeekSelect(weekOptions[idx + 1]!.value);
+              }}
+              disabled={weekOptions.findIndex((o) => o.value === (selectedWeekStart ?? '')) >= weekOptions.length - 1}
+              className="p-1.5 rounded-lg text-white/80 hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label={labelWeekPrev}
+            >
+              <span className="material-symbols-outlined text-xl">chevron_left</span>
+            </button>
+            <select
+              value={selectedWeekStart ?? ''}
+              onChange={(e) => onWeekSelect(e.target.value || null)}
+              className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[var(--shop-accent)] min-w-[180px]"
+            >
+              {weekOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => {
+                const idx = weekOptions.findIndex((o) => o.value === (selectedWeekStart ?? ''));
+                if (idx > 0) onWeekSelect(weekOptions[idx - 1]!.value);
+              }}
+              disabled={weekOptions.findIndex((o) => o.value === (selectedWeekStart ?? '')) <= 0}
+              className="p-1.5 rounded-lg text-white/80 hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label={labelWeekNext}
+            >
+              <span className="material-symbols-outlined text-xl">chevron_right</span>
+            </button>
+          </>
         )}
         {timeScope === 'week' && weekLabel && (
           <span className="text-sm text-white/60">{weekLabel}</span>
