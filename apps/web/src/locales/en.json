@@ -779,6 +779,7 @@
     "shopOutsideCheckInHours": "Shop is outside check-in hours. Check-in is allowed during opening hours or within the configured hours before opening.",
     "nextError": "Error getting next. Try again.",
     "checkInError": "Error checking in. Try again.",
+    "checkInAvailableIn": "Available in {{seconds}} s",
     "fillNameServiceDateTime": "Fill in name, service and date/time.",
     "dateAndTime": "Date and time",
     "appointmentError": "Error creating appointment. Try again.",

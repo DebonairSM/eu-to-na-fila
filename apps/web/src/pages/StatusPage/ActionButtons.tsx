@@ -16,6 +16,8 @@ interface ActionButtonsProps {
   showCheckIn?: boolean;
   onCheckIn?: () => Promise<void>;
   isCheckingIn?: boolean;
+  /** Seconds remaining before check-in can be tried again (rate limit cooldown) */
+  checkInCooldownRemaining?: number;
   /** When true, cancel uses appointment-specific labels and Edit button is shown */
   isPendingAppointment?: boolean;
   onEditAppointment?: () => void;
@@ -33,12 +35,14 @@ export function ActionButtons({
   showCheckIn,
   onCheckIn,
   isCheckingIn,
+  checkInCooldownRemaining = 0,
   isPendingAppointment,
   onEditAppointment,
 }: ActionButtonsProps) {
   const { t } = useLocale();
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const isCompleted = status === 'completed';
+  const checkInDisabled = isCheckingIn || checkInCooldownRemaining > 0;
 
   const handleLeaveClick = () => {
     setShowLeaveConfirm(true);
@@ -72,12 +76,17 @@ export function ActionButtons({
             size="lg"
             fullWidth
             onClick={onCheckIn}
-            disabled={isCheckingIn}
+            disabled={checkInDisabled}
           >
             {isCheckingIn ? (
               <>
                 <span className="material-symbols-outlined animate-spin text-xl">hourglass_empty</span>
                 {t('barber.checkingIn')}
+              </>
+            ) : checkInCooldownRemaining > 0 ? (
+              <>
+                <span className="material-symbols-outlined text-xl">schedule</span>
+                {t('barber.checkInAvailableIn').replace('{{seconds}}', String(checkInCooldownRemaining))}
               </>
             ) : (
               <>

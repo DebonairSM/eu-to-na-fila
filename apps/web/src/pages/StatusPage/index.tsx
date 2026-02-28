@@ -11,7 +11,7 @@ import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useBarbers } from '@/hooks/useBarbers';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { getErrorMessage } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
@@ -44,6 +44,8 @@ export function StatusPage() {
   const { barber, isLeaving, handleLeaveQueue, handleShareTicket, leaveError, clearLeaveError } = useStatusDisplay(ticket);
   const [checkInError, setCheckInError] = useState<string | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [checkInCooldownUntil, setCheckInCooldownUntil] = useState<number | null>(null);
+  const [checkInCooldownRemaining, setCheckInCooldownRemaining] = useState(0);
   const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
   const [rescheduleDate, setRescheduleDate] = useState<Date | undefined>(undefined);
   const [rescheduleSlotTime, setRescheduleSlotTime] = useState<string | null>(null);
@@ -175,11 +177,28 @@ export function StatusPage() {
       await api.checkInAppointment(shopSlug, ticketIdFromParams);
       await refetch();
     } catch (error) {
+      if (error instanceof ApiError && error.statusCode === 429) {
+        setCheckInCooldownUntil(Date.now() + 20000);
+      }
       setCheckInError(getErrorMessage(error, t('barber.checkInError')));
     } finally {
       setIsCheckingIn(false);
     }
   }, [shopSlug, ticketIdFromParams, refetch, t]);
+
+  useEffect(() => {
+    if (checkInCooldownUntil == null) {
+      setCheckInCooldownRemaining(0);
+      return;
+    }
+    const tick = () => {
+      const remaining = Math.ceil((checkInCooldownUntil - Date.now()) / 1000);
+      setCheckInCooldownRemaining(remaining <= 0 ? 0 : remaining);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [checkInCooldownUntil]);
 
   const settings = shopConfig.settings;
   const operatingHours = settings?.operatingHours as Record<string, { open?: string; close?: string } | null> | undefined;
@@ -409,6 +428,7 @@ export function StatusPage() {
             showCheckIn={canCheckInAsClient}
             onCheckIn={handleCheckIn}
             isCheckingIn={isCheckingIn}
+            checkInCooldownRemaining={checkInCooldownRemaining}
             isPendingAppointment={isPendingAppointment}
             onEditAppointment={handleOpenReschedule}
           />
@@ -506,6 +526,7 @@ export function StatusPage() {
               showCheckIn={canCheckInAsClient}
               onCheckIn={handleCheckIn}
               isCheckingIn={isCheckingIn}
+              checkInCooldownRemaining={checkInCooldownRemaining}
             />
           </div>
         </div>

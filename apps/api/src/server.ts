@@ -336,22 +336,6 @@ fastify.get('/robots.txt', async (_request, reply) => {
 // API routes under /api prefix
 fastify.register(
   async (instance) => {
-    // Per-second rate limit: 1 request per second per client to mitigate abuse.
-    instance.register(fastifyRateLimit, {
-      max: 1,
-      timeWindow: '1 second',
-      addHeaders: {
-        'x-ratelimit-limit': true,
-        'x-ratelimit-remaining': true,
-        'x-ratelimit-reset': true,
-      },
-      skip: (request: FastifyRequest) => {
-        // Stripe may send multiple webhook events in quick succession
-        if (request.url.includes('/stripe/webhook')) return true;
-        return false;
-      },
-    } as any);
-
     // Register route modules
     instance.register(queueRoutes);
     instance.register(ticketRoutes);

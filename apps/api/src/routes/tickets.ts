@@ -8,6 +8,7 @@ import { ticketService, queueService } from '../services/index.js';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError, ForbiddenError, InternalError } from '../lib/errors.js';
 import { requireAuth, requireRole, optionalAuth } from '../middleware/auth.js';
+import { createRateLimit } from '../middleware/rateLimit.js';
 import { getShopBySlug, getShopFrontendPath } from '../lib/shop.js';
 import { shapeTicketResponse } from '../lib/ticketResponse.js';
 import { parseSettings } from '../lib/settings.js';
@@ -297,10 +298,19 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Check in an appointment (pending -> waiting). Customer only; must be the ticket owner.
+   * Rate limited to 1 request per 20 seconds per user.
    * @route POST /api/shops/:slug/tickets/:id/check-in
    */
+  const checkInRateLimit = createRateLimit({
+    max: 1,
+    timeWindow: '20 seconds',
+    keyGenerator: (req) => {
+      const user = (req as { user?: { id?: number } }).user;
+      return user?.id != null ? `user:${user.id}` : req.ip ?? 'unknown';
+    },
+  });
   fastify.post('/shops/:slug/tickets/:id/check-in', {
-    preHandler: [requireAuth(), requireRole(['customer'])],
+    preHandler: [requireAuth(), requireRole(['customer']), checkInRateLimit],
   }, async (request, reply) => {
     const paramsSchema = z.object({
       slug: z.string().min(1),

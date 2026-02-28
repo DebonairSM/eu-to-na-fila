@@ -779,6 +779,7 @@
     "shopOutsideCheckInHours": "A barbearia está fora do horário de check-in. O check-in é permitido no horário de funcionamento ou nas horas configuradas antes da abertura.",
     "nextError": "Erro ao obter próximo. Tente novamente.",
     "checkInError": "Erro ao fazer check-in. Tente novamente.",
+    "checkInAvailableIn": "Disponível em {{seconds}} s",
     "fillNameServiceDateTime": "Preencha nome, serviço e data/hora.",
     "dateAndTime": "Data e hora",
     "appointmentError": "Erro ao criar agendamento. Tente novamente.",
