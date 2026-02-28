@@ -81,8 +81,6 @@ export function useJoinForm() {
       setSelectedComplementaryIds([]);
       return;
     }
-    const mains = activeServices.filter((s) => (s as { kind?: string }).kind === 'main');
-    const comps = activeServices.filter((s) => (s as { kind?: string }).kind !== 'main');
     const validIds = new Set(activeServices.map((s) => s.id));
     if (useMainComplementary) {
       setMainServiceId((m) => (m != null && validIds.has(m) ? m : null));
