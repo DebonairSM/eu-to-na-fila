@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useJoinForm } from './hooks/useJoinForm';
 import { ActiveBarbersInfo } from './ActiveBarbersInfo';
 import { Card, CardContent, Input, InputLabel, InputError, Button } from '@/components/design-system';
@@ -169,9 +168,13 @@ export function JoinForm() {
                 </p>
               ) : (
                 <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
-                  <Link to={`/shop/login?redirect=${encodeURIComponent('/checkin/confirm')}`} className="text-[var(--shop-accent)] hover:underline">
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/shop/login?redirect=${encodeURIComponent('/checkin/confirm')}`)}
+                    className="text-[var(--shop-accent)] hover:underline bg-transparent border-0 p-0 cursor-pointer font-inherit"
+                  >
                     {t('schedule.checkInWithLogin')}
-                  </Link>
+                  </button>
                 </p>
               )}
             </div>

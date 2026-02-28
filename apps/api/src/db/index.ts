@@ -12,6 +12,11 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
 });
 
+// Prevent unhandled pool errors (e.g. connection loss) from crashing the process
+pool.on('error', (err: Error) => {
+  console.error('[db] Pool error:', err?.message ?? String(err));
+});
+
 export const db = drizzle(pool, { schema });
 export { schema };
 export { pool }; // Export pool for raw SQL queries in tests

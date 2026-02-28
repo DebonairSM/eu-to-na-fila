@@ -28,6 +28,7 @@ import { stripeWebhookRoutes } from './routes/stripe-webhook.js';
 import { clientsRoutes } from './routes/clients.js';
 import { projectsRoutes } from './routes/projects.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import { toLoggableError } from './lib/errors.js';
 import { registerWebSocket } from './websocket/handler.js';
 import { getPublicPath } from './lib/paths.js';
 import { getProjectByPathname, getProjectBySlug, getShopByProjectSlug } from './lib/shop.js';
@@ -206,7 +207,7 @@ if (!existsSync(projectsMineiroPath)) {
       fastify.log.info(`Assets directory found with ${assetFiles.length} files: ${assetFiles.slice(0, 5).join(', ')}${assetFiles.length > 5 ? '...' : ''}`);
     }
   } catch (error) {
-    fastify.log.warn({ err: error }, 'Error reading static files directory');
+    fastify.log.warn({ err: toLoggableError(error) }, 'Error reading static files directory');
   }
 }
 
@@ -272,7 +273,7 @@ if (!existsSync(companiesPath)) {
     mkdirSync(companiesPath, { recursive: true });
     fastify.log.info(`Created companies directory: ${companiesPath}`);
   } catch (error) {
-    fastify.log.warn({ err: error }, 'Could not create companies directory');
+    fastify.log.warn({ err: toLoggableError(error) }, 'Could not create companies directory');
   }
 }
 
@@ -294,7 +295,7 @@ fastify.get('/health', async () => {
   } catch (error) {
     health.checks.database = 'error';
     health.status = 'degraded';
-    fastify.log.error({ err: error }, 'Health check: database error');
+    fastify.log.error({ err: toLoggableError(error) }, 'Health check: database error');
   }
 
   // Check memory usage
@@ -335,6 +336,22 @@ fastify.get('/robots.txt', async (_request, reply) => {
 // API routes under /api prefix
 fastify.register(
   async (instance) => {
+    // Per-second rate limit: 1 request per second per client to mitigate abuse.
+    instance.register(fastifyRateLimit, {
+      max: 1,
+      timeWindow: '1 second',
+      addHeaders: {
+        'x-ratelimit-limit': true,
+        'x-ratelimit-remaining': true,
+        'x-ratelimit-reset': true,
+      },
+      skip: (request: FastifyRequest) => {
+        // Stripe may send multiple webhook events in quick succession
+        if (request.url.includes('/stripe/webhook')) return true;
+        return false;
+      },
+    } as any);
+
     // Register route modules
     instance.register(queueRoutes);
     instance.register(ticketRoutes);
@@ -564,7 +581,7 @@ fastify.setNotFoundHandler(async (request, reply) => {
         fileContent = fileContent.replace('</body>', `${inject}\n</body>`);
         return reply.type('text/html').send(fileContent);
       } catch (error) {
-        fastify.log.error({ err: error, path: indexPath }, 'Error reading index.html for SPA fallback');
+        fastify.log.error({ err: toLoggableError(error), path: indexPath }, 'Error reading index.html for SPA fallback');
       }
     }
   }
@@ -588,7 +605,7 @@ fastify.setNotFoundHandler(async (request, reply) => {
         const fileContent = readFileSync(indexPath, 'utf-8');
         return reply.type('text/html').send(fileContent);
       } catch (error) {
-        fastify.log.error({ err: error, path: indexPath }, 'Error reading index.html for SPA fallback');
+        fastify.log.error({ err: toLoggableError(error), path: indexPath }, 'Error reading index.html for SPA fallback');
       }
     }
   }
@@ -601,7 +618,7 @@ fastify.setNotFoundHandler(async (request, reply) => {
         const fileContent = readFileSync(rootIndexPath, 'utf-8');
         return reply.type('text/html').send(fileContent);
       } catch (error) {
-        fastify.log.error({ err: error, path: rootIndexPath }, 'Error reading root.html for SPA fallback');
+        fastify.log.error({ err: toLoggableError(error), path: rootIndexPath }, 'Error reading root.html for SPA fallback');
       }
     }
   }
@@ -622,7 +639,7 @@ fastify.addHook('onReady', async () => {
   try {
     await db.query.shops.findFirst();
   } catch (error) {
-    fastify.log.error({ err: error }, 'Database connection test failed on startup');
+    fastify.log.error({ err: toLoggableError(error) }, 'Database connection test failed on startup');
   }
   
   // Log path resolution for debugging
@@ -652,7 +669,7 @@ fastify.addHook('onReady', async () => {
       fastify.log.warn(`[Ads] Companies directory does not exist: ${companiesPath}`);
     }
   } catch (error) {
-    fastify.log.warn({ err: error }, 'Error checking companies directory structure');
+    fastify.log.warn({ err: toLoggableError(error) }, 'Error checking companies directory structure');
   }
 });
 

@@ -261,3 +261,22 @@ export class RateLimitError extends AppError {
   }
 }
 
+/**
+ * Serialize an unknown value to a safe object for logging.
+ * Avoids logging non-Error values (e.g. pg Client) that would dump internal state.
+ */
+export function toLoggableError(err: unknown): { message: string; name?: string; stack?: string; code?: string } {
+  if (err instanceof Error) {
+    return {
+      message: err.message,
+      name: err.name,
+      stack: err.stack,
+      code: (err as NodeJS.ErrnoException).code,
+    };
+  }
+  if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message: unknown }).message === 'string') {
+    return { message: (err as { message: string }).message };
+  }
+  return { message: String(err) };
+}
+

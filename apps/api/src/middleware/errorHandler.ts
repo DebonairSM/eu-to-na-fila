@@ -1,5 +1,5 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
-import { AppError } from '../lib/errors.js';
+import { AppError, toLoggableError } from '../lib/errors.js';
 import { ZodError } from 'zod';
 
 /**
@@ -36,10 +36,10 @@ export async function errorHandler(
     return;
   }
   
-  // Log the error with context
+  // Log the error with context (use safe serialization to avoid logging non-Error values like pg Client)
   request.log.error(
     {
-      err: error,
+      err: toLoggableError(error),
       url: request.url,
       method: request.method,
       params: request.params,
