@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { Navigation } from '@/components/Navigation';
@@ -14,7 +14,7 @@ const STORAGE_KEY = STORAGE_KEYS.ACTIVE_TICKET_ID;
 
 /**
  * Route guard for JoinPage that blocks rendering until active ticket check completes.
- * 
+ *
  * This component ensures users with active tickets are immediately redirected to their
  * status page before any form UI can render. It performs device-based checks first
  * (most reliable), then falls back to localStorage checks.
@@ -25,8 +25,15 @@ export function JoinPageGuard() {
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
   const { t } = useLocale();
+  const hasRunForSlugRef = useRef<string | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    if (!shopSlug) return;
+    if (hasRunForSlugRef.current === shopSlug) return;
+    hasRunForSlugRef.current = shopSlug;
+    mountedRef.current = true;
+
     const checkActiveTicket = async () => {
       // Step 1: Check by deviceId FIRST (most reliable server-side check)
       // This is the primary method and should always be tried first
@@ -35,7 +42,7 @@ export function JoinPageGuard() {
         const activeTicket = await api.getActiveTicketByDevice(shopSlug, deviceId);
         
         if (activeTicket && (activeTicket.status === 'waiting' || activeTicket.status === 'in_progress')) {
-          // Device has an active ticket - store it and redirect to that ticket's shop status
+          if (!mountedRef.current) return;
           console.log('[JoinPageGuard] Found active ticket by deviceId, redirecting to status:', activeTicket.id);
           localStorage.setItem(STORAGE_KEY, activeTicket.id.toString());
           redirectToStatusPage(activeTicket.id, activeTicket.shopSlug, navigate, shopSlug);
@@ -51,6 +58,7 @@ export function JoinPageGuard() {
           const activeTicket = await api.getActiveTicketByDevice(shopSlug, deviceId);
           
           if (activeTicket && (activeTicket.status === 'waiting' || activeTicket.status === 'in_progress')) {
+            if (!mountedRef.current) return;
             console.log('[JoinPageGuard] Found active ticket by deviceId on retry, redirecting:', activeTicket.id);
             localStorage.setItem(STORAGE_KEY, activeTicket.id.toString());
             redirectToStatusPage(activeTicket.id, activeTicket.shopSlug, navigate, shopSlug);
@@ -70,7 +78,7 @@ export function JoinPageGuard() {
           try {
             const ticket = await api.getTicket(ticketId);
             if (ticket && (ticket.status === 'waiting' || ticket.status === 'in_progress')) {
-              // Found active ticket in localStorage - redirect to that ticket's shop status
+              if (!mountedRef.current) return;
               console.log('[JoinPageGuard] Found active ticket in localStorage, redirecting to status:', ticketId);
               redirectToStatusPage(ticketId, ticket.shopSlug, navigate, shopSlug);
               return;
@@ -90,12 +98,17 @@ export function JoinPageGuard() {
         }
       }
 
-      // No active ticket found - safe to render JoinPage
-      setShouldRenderJoinPage(true);
-      setIsChecking(false);
+      // No active ticket found - safe to render JoinPage (only if still mounted)
+      if (mountedRef.current) {
+        setShouldRenderJoinPage(true);
+        setIsChecking(false);
+      }
     };
 
     checkActiveTicket();
+    return () => {
+      mountedRef.current = false;
+    };
   }, [navigate, shopSlug]);
 
   // Block rendering until check completes
