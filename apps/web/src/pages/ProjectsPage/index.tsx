@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { RootSiteNav } from '@/components/RootSiteNav';
+import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { useLocale } from '@/contexts/LocaleContext';
 import { LOGO_URL } from '@/lib/logo';
 import { api } from '@/lib/api';
@@ -77,7 +78,7 @@ export function ProjectsPage() {
           <div className="text-center py-12 text-gray-400">Carregando projetos...</div>
         )}
         {error && (
-          <div className="text-center py-12 text-red-400">{error}</div>
+          <ErrorDisplay error={error} onRetry={fetchProjects} className="mb-8" />
         )}
         {!loading && !error && projectCards.length === 0 && (
           <div className="text-center py-12 text-gray-400">{t('projects.noProjects')}</div>

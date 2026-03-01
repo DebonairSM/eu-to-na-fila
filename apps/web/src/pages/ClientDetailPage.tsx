@@ -5,6 +5,7 @@ import { config } from '@/lib/config';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { Navigation } from '@/components/Navigation';
+import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Button } from '@/components/ui/button';
 import { formatNameForDisplay } from '@/lib/utils';
 import { getErrorMessage } from '@/lib/utils';
@@ -193,7 +194,10 @@ export function ClientDetailPage() {
       <div className="min-h-screen bg-black text-white">
         <Navigation />
         <div className="container max-w-2xl mx-auto pt-24 px-4">
-          <p className="text-red-400">{error ?? 'Client not found'}</p>
+          <ErrorDisplay
+            error={error ?? 'Client not found'}
+            onRetry={fetchClient}
+          />
           <Button variant="outline" onClick={() => navigate('/manage')} className="mt-4">
             Back to queue
           </Button>

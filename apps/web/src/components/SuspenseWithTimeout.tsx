@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useShopHomeContent } from '@/contexts/ShopConfigContext';
 import { getShopBasePath } from '@/lib/config';
+import { LoadingSpinner } from './LoadingSpinner';
 import { Button } from './ui/button';
 
 const NAVIGATION_TIMEOUT_MS = 10000;
@@ -80,15 +81,15 @@ export function SuspenseWithTimeoutFallback({ timeoutMs = NAVIGATION_TIMEOUT_MS 
     <div
       className="min-h-screen text-white flex flex-col"
       style={{ backgroundColor: 'var(--shop-background, #0a0a0a)' }}
+      role="status"
+      aria-live="polite"
     >
       <div
         className="h-1 w-full animate-pulse shrink-0"
         style={{ backgroundColor: 'color-mix(in srgb, var(--shop-accent, #D4AF37) 40%, transparent)' }}
       />
       <div className="flex-1 flex items-center justify-center p-6">
-        <p className="text-sm" style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.6))' }}>
-          {loadingText}
-        </p>
+        <LoadingSpinner text={loadingText} />
       </div>
     </div>
   );

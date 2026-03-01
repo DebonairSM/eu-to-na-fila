@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { useJoinForm } from './hooks/useJoinForm';
 import { ActiveBarbersInfo } from './ActiveBarbersInfo';
 import { RefreshButton } from '@/components/RefreshButton';
@@ -12,7 +13,6 @@ function serviceSubtotal(services: Service[]): number {
 }
 
 function ServiceChip({
-  service,
   selected,
   onToggle,
   label,
@@ -86,6 +86,7 @@ export function JoinForm() {
     refreshJoinData,
   } = useJoinForm();
   const { locale, t } = useLocale();
+  const nameErrorId = useId();
 
   const selectedServicesForSubtotal: Service[] = useMainComplementary
     ? [
@@ -219,6 +220,7 @@ export function JoinForm() {
                 data-form-type="other"
                 required
                 error={!!validationError}
+                aria-describedby={validationError ? nameErrorId : undefined}
                 className="w-full max-w-full"
                 onFocus={(e) => {
                   const input = e.target as HTMLInputElement;
@@ -226,7 +228,7 @@ export function JoinForm() {
                   setTimeout(() => input.removeAttribute('readonly'), 100);
                 }}
               />
-              <InputError message={validationError || ''} />
+              <InputError id={nameErrorId} message={validationError || ''} />
               {isLoggedInAsCustomer ? (
                 <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
                   {t('join.nameChangeHint')}

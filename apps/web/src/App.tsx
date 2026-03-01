@@ -5,6 +5,7 @@ import { useAuthContext } from './contexts/AuthContext';
 import { useShopHomeContent } from './contexts/ShopConfigContext';
 import { useLocale } from './contexts/LocaleContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { LoadingSpinner } from './components/LoadingSpinner';
 import { SuspenseWithTimeoutFallback } from './components/SuspenseWithTimeout';
 import { NetworkStatusBanner } from './components/NetworkStatusBanner';
 import { api } from './lib/api';
@@ -62,8 +63,13 @@ function ProtectedRoute({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--shop-background, #0a0a0a)', color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}>
-        <p className="text-sm">{loadingText}</p>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: 'var(--shop-background, #0a0a0a)', color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
+        role="status"
+        aria-live="polite"
+      >
+        <LoadingSpinner text={loadingText} />
       </div>
     );
   }
@@ -263,9 +269,11 @@ function App() {
       <a href="#main-content" className="skip-link">
         {skipLinkText}
       </a>
-      <Suspense fallback={<SuspenseWithTimeoutFallback />}>
-        <AppContent />
-      </Suspense>
+      <div id="main-content" tabIndex={-1} className="outline-none">
+        <Suspense fallback={<SuspenseWithTimeoutFallback />}>
+          <AppContent />
+        </Suspense>
+      </div>
     </ErrorBoundary>
   );
 }

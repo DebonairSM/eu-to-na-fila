@@ -12,6 +12,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         ref={ref}
+        aria-invalid={error ? true : undefined}
         className={cn(
           // Base styles
           'flex w-full rounded-lg',
@@ -59,15 +60,23 @@ InputLabel.displayName = 'InputLabel';
 
 interface InputErrorProps extends React.HTMLAttributes<HTMLParagraphElement> {
   message: string;
+  /** Optional id for linking from input aria-describedby; defaults to React useId() */
+  id?: string;
 }
 
 const InputError = React.forwardRef<HTMLParagraphElement, InputErrorProps>(
-  ({ className, message, ...props }, ref) => {
+  ({ className, message, id: idProp, ...props }, ref) => {
+    const generatedId = React.useId();
+    const id = idProp ?? generatedId;
+
     if (!message) return null;
 
     return (
       <p
         ref={ref}
+        id={id}
+        role="alert"
+        aria-live="polite"
         className={cn(
           'mt-2 text-sm text-[#ef4444] flex items-center gap-1',
           'animate-in slide-in-from-top-4',
@@ -75,7 +84,7 @@ const InputError = React.forwardRef<HTMLParagraphElement, InputErrorProps>(
         )}
         {...props}
       >
-        <span className="material-symbols-outlined text-base">error</span>
+        <span className="material-symbols-outlined text-base" aria-hidden>error</span>
         {message}
       </p>
     );

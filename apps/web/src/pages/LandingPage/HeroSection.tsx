@@ -84,7 +84,6 @@ export function HeroSection() {
 
   return (
     <section
-      id="main-content"
       className={cn(
         'hero relative min-h-screen overflow-hidden',
         heroBanner ? 'flex flex-col justify-end pt-16 lg:pt-0 lg:min-h-[85vh]' : 'flex items-start justify-center pt-16 lg:items-center lg:pt-0'

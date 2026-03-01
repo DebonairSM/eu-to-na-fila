@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
@@ -55,6 +55,7 @@ export function SchedulePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [slots, setSlots] = useState<Array<{ time: string; available: boolean }>>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
+  const nameErrorId = useId();
 
   const dateStr = selectedDate
     ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
@@ -294,9 +295,10 @@ export function SchedulePage() {
                     placeholder={t('join.namePlaceholder')}
                     required
                     error={!!validationError}
+                    aria-describedby={validationError ? nameErrorId : undefined}
                     className="w-full mt-1"
                   />
-                  <InputError message={validationError || ''} />
+                  <InputError id={nameErrorId} message={validationError || ''} />
                   {isCustomer ? (
                     <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
                       {t('join.nameChangeHint')}

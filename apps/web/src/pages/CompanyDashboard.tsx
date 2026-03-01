@@ -5,6 +5,7 @@ import { useLogout } from '@/hooks/useLogout';
 import { useLocale } from '@/contexts/LocaleContext';
 import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
+import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
@@ -70,9 +71,7 @@ export function CompanyDashboard() {
         )}
 
         {error && (
-          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
-            {error}
-          </div>
+          <ErrorDisplay error={error} onRetry={loadDashboardData} className="mb-6" />
         )}
 
         {dashboardData && !loading && (
@@ -175,9 +174,7 @@ export function CompanyDashboard() {
           )}
 
           {error && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
-              {error}
-            </div>
+            <ErrorDisplay error={error} onRetry={loadDashboardData} className="mb-6" />
           )}
 
           {dashboardData && !loading && (

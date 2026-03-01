@@ -1,6 +1,7 @@
 import { useParams, useSearchParams, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Navigation } from '@/components/Navigation';
+import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Container, Heading, Text, Button, Input, InputLabel } from '@/components/design-system';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
@@ -82,18 +83,24 @@ export function AppointmentConfirmPage() {
 
   const ticketId = id ? parseInt(id, 10) : null;
 
-  useEffect(() => {
+  const fetchTicket = useCallback(() => {
     if (!ticketId) {
       setLoading(false);
       setError('Invalid ticket');
       return;
     }
+    setLoading(true);
+    setError(null);
     api
       .getTicket(ticketId)
       .then((data) => setTicket(data as TicketWithDetails))
       .catch(() => setError('Ticket not found'))
       .finally(() => setLoading(false));
   }, [ticketId]);
+
+  useEffect(() => {
+    fetchTicket();
+  }, [fetchTicket]);
 
   const homeContent = config?.homeContent;
   const location = homeContent?.location;
@@ -157,8 +164,11 @@ export function AppointmentConfirmPage() {
       <div className="min-h-screen bg-[#0a0a0a]">
         <Navigation />
         <Container className="pt-20 pb-10">
-          <Heading level={1} className="mb-4">{t('status.ticketNotFound')}</Heading>
-          <Link to="/home" className="text-[var(--shop-accent)] hover:underline">
+          <ErrorDisplay
+            error={error ?? t('status.ticketNotFound')}
+            onRetry={fetchTicket}
+          />
+          <Link to="/home" className="inline-block mt-4 text-[var(--shop-accent)] hover:underline">
             {t('status.backHome')}
           </Link>
         </Container>
