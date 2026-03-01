@@ -19,6 +19,10 @@ const CUSTOMER_NAME_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_NAME;
 const CUSTOMER_PHONE_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_PHONE;
 const REMEMBER_PHONE_DEBOUNCE_MS = 400;
 
+/** Join page: at most one getWaitTimes per shop per 20 seconds (survives remounts). */
+const WAIT_TIMES_INTERVAL_MS = 20000;
+const lastWaitTimesCallBySlug: Record<string, number> = {};
+
 function isSufficientName(name: string | undefined): boolean {
   if (!name || !name.trim()) return false;
   const n = name.trim();
@@ -62,7 +66,7 @@ export function useJoinForm() {
   const needsProfileCompletion = isCustomer && user?.name && !isSufficientName(user.name);
   const settings = shopConfig.settings;
   const { validateName } = useProfanityFilter();
-  const { data, refetch: refetchQueue } = useQueue(5000); // 5s for join page (less critical, just for wait time estimates)
+  const { data, refetch: refetchQueue } = useQueue(20000); // 20s on join page to limit API rate
   const { barbers, refetch: refetchBarbers } = useBarbers();
   const { activeServices, isLoading: isLoadingServices, refetch: refetchServices } = useServices();
   const [isRefreshingJoinData, setIsRefreshingJoinData] = useState(false);
@@ -85,7 +89,6 @@ export function useJoinForm() {
   }, [settings.allowBarberPreference]);
 
   // Fetch wait times on mount and periodically (with Page Visibility API support)
-  const WAIT_TIMES_INTERVAL_MS = 20000; // At most once every 20 seconds
   const lastWaitTimesFetchAtRef = useRef(0);
   const waitTimesInFlightRef = useRef(false);
 
@@ -96,8 +99,11 @@ export function useJoinForm() {
     const fetchWaitTimes = async () => {
       if (document.hidden) return;
       const now = Date.now();
+      // Module-level throttle: at most once per 20s per shop (survives remounts)
+      if (lastWaitTimesCallBySlug[shopSlug] != null && now - lastWaitTimesCallBySlug[shopSlug] < WAIT_TIMES_INTERVAL_MS) return;
       if (now - lastWaitTimesFetchAtRef.current < WAIT_TIMES_INTERVAL_MS) return;
       if (waitTimesInFlightRef.current) return;
+      lastWaitTimesCallBySlug[shopSlug] = now;
       lastWaitTimesFetchAtRef.current = now;
       waitTimesInFlightRef.current = true;
 
