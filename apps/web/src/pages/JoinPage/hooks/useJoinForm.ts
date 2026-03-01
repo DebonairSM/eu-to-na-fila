@@ -50,9 +50,7 @@ export function useJoinForm() {
     }>;
   } | null>(null);
   const [isLoadingWaitTimes, setIsLoadingWaitTimes] = useState(true);
-  const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
-  const [mainServiceId, setMainServiceId] = useState<number | null>(null);
-  const [selectedComplementaryIds, setSelectedComplementaryIds] = useState<number[]>([]);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
   const combinedNameRef = useRef(combinedName);
   combinedNameRef.current = combinedName;
   const navigate = useNavigate();
@@ -69,27 +67,17 @@ export function useJoinForm() {
   const { activeServices, isLoading: isLoadingServices, refetch: refetchServices } = useServices();
   const [isRefreshingJoinData, setIsRefreshingJoinData] = useState(false);
 
-  const mainServices = activeServices.filter((s) => (s as { kind?: string }).kind === 'main');
-  const complementaryServices = activeServices.filter((s) => (s as { kind?: string }).kind !== 'main');
-  const useMainComplementary = mainServices.length > 0 || complementaryServices.length > 1;
   const validServiceIds = new Set(activeServices.map((s) => s.id));
 
-  // Default selection when list loads or changes; keep valid selection
+  // Keep only valid selected ids when service list changes
   useEffect(() => {
     if (activeServices.length === 0) {
-      setSelectedServiceId(null);
-      setMainServiceId(null);
-      setSelectedComplementaryIds([]);
+      setSelectedServiceIds([]);
       return;
     }
     const validIds = new Set(activeServices.map((s) => s.id));
-    if (useMainComplementary) {
-      setMainServiceId((m) => (m != null && validIds.has(m) ? m : null));
-      setSelectedComplementaryIds((prev) => prev.filter((id) => validIds.has(id)));
-    } else {
-      setSelectedServiceId((s) => (s != null && validIds.has(s) ? s : activeServices[0].id));
-    }
-  }, [activeServices, useMainComplementary]);
+    setSelectedServiceIds((prev) => prev.filter((id) => validIds.has(id)));
+  }, [activeServices]);
 
   // Clear preferred barber when shop no longer allows it so UI updates immediately
   useEffect(() => {
@@ -97,15 +85,21 @@ export function useJoinForm() {
   }, [settings.allowBarberPreference]);
 
   // Fetch wait times on mount and periodically (with Page Visibility API support)
+  const WAIT_TIMES_INTERVAL_MS = 20000; // At most once every 20 seconds
+  const lastWaitTimesFetchAtRef = useRef(0);
+  const waitTimesInFlightRef = useRef(false);
+
   useEffect(() => {
     let mounted = true;
     let intervalId: number | null = null;
 
     const fetchWaitTimes = async () => {
-      // Skip if page is hidden
-      if (document.hidden) {
-        return;
-      }
+      if (document.hidden) return;
+      const now = Date.now();
+      if (now - lastWaitTimesFetchAtRef.current < WAIT_TIMES_INTERVAL_MS) return;
+      if (waitTimesInFlightRef.current) return;
+      lastWaitTimesFetchAtRef.current = now;
+      waitTimesInFlightRef.current = true;
 
       try {
         setIsLoadingWaitTimes(true);
@@ -119,16 +113,16 @@ export function useJoinForm() {
           logError('Failed to fetch wait times', error);
           setIsLoadingWaitTimes(false);
         }
+      } finally {
+        waitTimesInFlightRef.current = false;
       }
     };
 
-    // Initial fetch
     fetchWaitTimes();
 
-    // Set up polling
     const startPolling = () => {
-      if (intervalId) return; // Already polling
-      intervalId = window.setInterval(fetchWaitTimes, 30000); // Refresh every 30 seconds
+      if (intervalId) return;
+      intervalId = window.setInterval(fetchWaitTimes, WAIT_TIMES_INTERVAL_MS);
     };
 
     const stopPolling = () => {
@@ -418,21 +412,14 @@ export function useJoinForm() {
       ...(selectedBarberId ? { preferredBarberId: selectedBarberId } : {}),
     };
 
-    if (useMainComplementary) {
-      const hasMain = mainServiceId != null && validServiceIds.has(mainServiceId);
-      const validComp = selectedComplementaryIds.filter((id) => validServiceIds.has(id));
-      if (hasMain) payload.mainServiceId = mainServiceId!;
-      if (validComp.length > 0) payload.complementaryServiceIds = validComp;
-    } else {
-      const serviceId = selectedServiceId !== null && validServiceIds.has(selectedServiceId) ? selectedServiceId : null;
-      if (serviceId == null) {
-        setClosedReason(null);
-        setSubmitError(t('join.selectService'));
-        setIsSubmitting(false);
-        return;
-      }
-      payload.serviceId = serviceId;
+    const validSelected = selectedServiceIds.filter((id) => validServiceIds.has(id));
+    if (validSelected.length === 0) {
+      setClosedReason(null);
+      setSubmitError(t('join.selectService'));
+      setIsSubmitting(false);
+      return;
     }
+    payload.complementaryServiceIds = validSelected;
 
     try {
       const ticket = await api.createTicket(shopSlug, payload);
@@ -509,18 +496,9 @@ export function useJoinForm() {
     hasServices: activeServices.length > 0,
     isLoadingServices,
     activeServices,
-    selectedServiceId,
-    setSelectedServiceId,
-    mainServiceId,
-    setMainServiceId,
-    selectedComplementaryIds,
-    setSelectedComplementaryIds,
-    mainServices,
-    complementaryServices,
-    useMainComplementary,
-    hasServiceSelection: useMainComplementary
-      ? (mainServiceId != null && validServiceIds.has(mainServiceId)) || selectedComplementaryIds.some((id) => validServiceIds.has(id))
-      : selectedServiceId != null && validServiceIds.has(selectedServiceId),
+    selectedServiceIds,
+    setSelectedServiceIds,
+    hasServiceSelection: selectedServiceIds.some((id) => validServiceIds.has(id)),
     settings,
     needsProfileCompletion,
     isLoggedInAsCustomer: isCustomer,

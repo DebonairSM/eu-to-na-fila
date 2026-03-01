@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
@@ -80,8 +80,9 @@ export function StatusPage() {
     window.location.assign(`${basePath}/status/${ticket.id}`);
   }, [isLoading, ticket, ticketShopSlug, shopSlug]);
 
-  // Poll general-line wait time at most once per 3 seconds when waiting with a preferred barber
-  const WAIT_TIME_POLL_MS = 3000;
+  // Poll general-line wait time at most once per 20 seconds when waiting with a preferred barber
+  const WAIT_TIME_POLL_MS = 20000;
+  const lastWaitTimeFetchAtRef = useRef(0);
   useEffect(() => {
     if (!shopSlug || ticket?.status !== 'waiting' || preferredBarberId == null) {
       setGeneralLineWaitTime(null);
@@ -92,6 +93,9 @@ export function StatusPage() {
 
     const fetchWaitTime = () => {
       if (cancelled || document.hidden) return;
+      const now = Date.now();
+      if (now - lastWaitTimeFetchAtRef.current < WAIT_TIME_POLL_MS) return;
+      lastWaitTimeFetchAtRef.current = now;
       api.getWaitTimes(shopSlug).then((res) => {
         if (!cancelled) setGeneralLineWaitTime(res.standardWaitTime ?? null);
       }).catch(() => {

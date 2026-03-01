@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/design-system';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { RefreshButton } from '@/components/RefreshButton';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { Barber } from '@eutonafila/shared';
 import { formatDurationMinutes } from '@/lib/formatDuration';
@@ -19,6 +20,10 @@ interface ActiveBarbersInfoProps {
   } | null;
   selectedBarberId?: number | null;
   isLoading?: boolean;
+  onRefresh?: () => void | Promise<void>;
+  isRefreshing?: boolean;
+  refreshAriaLabel?: string;
+  refreshLabel?: string;
 }
 
 export function ActiveBarbersInfo({
@@ -26,6 +31,10 @@ export function ActiveBarbersInfo({
   waitTimes,
   selectedBarberId = null,
   isLoading = false,
+  onRefresh,
+  isRefreshing = false,
+  refreshAriaLabel,
+  refreshLabel,
 }: ActiveBarbersInfoProps) {
   const { t } = useLocale();
   const presentBarbers = barbers.filter((b) => b.isActive && b.isPresent);
@@ -110,6 +119,17 @@ export function ActiveBarbersInfo({
             ))
           )}
         </div>
+
+        {onRefresh && refreshAriaLabel != null && (
+          <div className="flex justify-center mt-6">
+            <RefreshButton
+              isRefreshing={isRefreshing}
+              onRefresh={onRefresh}
+              ariaLabel={refreshAriaLabel}
+              label={refreshLabel ?? refreshAriaLabel}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

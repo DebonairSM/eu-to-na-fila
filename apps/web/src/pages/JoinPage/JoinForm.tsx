@@ -1,7 +1,6 @@
 import { useId } from 'react';
 import { useJoinForm } from './hooks/useJoinForm';
 import { ActiveBarbersInfo } from './ActiveBarbersInfo';
-import { RefreshButton } from '@/components/RefreshButton';
 import { Card, CardContent, Input, InputLabel, InputError, Button } from '@/components/design-system';
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatCurrency } from '@/lib/format';
@@ -68,15 +67,8 @@ export function JoinForm() {
     hasServices,
     isLoadingServices,
     activeServices,
-    selectedServiceId,
-    setSelectedServiceId,
-    mainServiceId,
-    setMainServiceId,
-    selectedComplementaryIds,
-    setSelectedComplementaryIds,
-    mainServices,
-    complementaryServices,
-    useMainComplementary,
+    selectedServiceIds,
+    setSelectedServiceIds,
     hasServiceSelection,
     settings,
     needsProfileCompletion,
@@ -88,101 +80,32 @@ export function JoinForm() {
   const { locale, t } = useLocale();
   const nameErrorId = useId();
 
-  const selectedServicesForSubtotal: Service[] = useMainComplementary
-    ? [
-        ...(mainServiceId ? activeServices.filter((s) => s.id === mainServiceId) : []),
-        ...activeServices.filter((s) => selectedComplementaryIds.includes(s.id)),
-      ]
-    : selectedServiceId != null
-      ? activeServices.filter((s) => s.id === selectedServiceId)
-      : [];
+  const selectedServicesForSubtotal: Service[] = activeServices.filter((s) => selectedServiceIds.includes(s.id));
   const subtotal = serviceSubtotal(selectedServicesForSubtotal);
   const showSubtotal = subtotal > 0;
 
   return (
     <Card variant="default" className="join-form-card shadow-lg min-w-[320px]">
       <CardContent className="p-6 sm:p-8">
-        <div className="flex justify-end mb-4">
-          <RefreshButton
-            isRefreshing={isRefreshingJoinData}
-            onRefresh={refreshJoinData}
-            ariaLabel={t('status.refresh')}
-            label={t('status.refresh')}
-          />
-        </div>
         <form onSubmit={handleSubmit} autoComplete="off">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
-            {hasServices && useMainComplementary && (
-              <>
-                {mainServices.length > 0 && (
-                  <div className="min-w-0 sm:col-span-2">
-                    <InputLabel className="mb-2 block">{t('join.mainServiceLabel')}</InputLabel>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {mainServices.map((s) => {
-                        const label = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}`;
-                        const selected = mainServiceId === s.id;
-                        return (
-                          <ServiceChip
-                            key={s.id}
-                            service={s}
-                            selected={selected}
-                            onToggle={() => setMainServiceId(selected ? null : s.id)}
-                            label={label}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {complementaryServices.length > 0 && (
-                  <div className="min-w-0 sm:col-span-2">
-                    <InputLabel className="mb-2 block">{t('join.complementaryServicesLabel')}</InputLabel>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {complementaryServices.map((s) => {
-                        const label = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}`;
-                        const selected = selectedComplementaryIds.includes(s.id);
-                        return (
-                          <ServiceChip
-                            key={s.id}
-                            service={s}
-                            selected={selected}
-                            onToggle={() =>
-                              setSelectedComplementaryIds((prev) =>
-                                prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id]
-                              )
-                            }
-                            label={label}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {showSubtotal && (
-                  <div className="min-w-0 sm:col-span-2 pt-2 border-t border-[rgba(255,255,255,0.1)]">
-                    <p className="text-sm text-[var(--shop-text-secondary)] flex justify-end gap-2">
-                      <span>{t('join.subtotal')}</span>
-                      <span className="font-medium text-[var(--shop-text-primary)]">
-                        {formatCurrency(subtotal, locale)}
-                      </span>
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-            {hasServices && !useMainComplementary && activeServices.length >= 2 && (
+            {hasServices && (
               <div className="min-w-0 sm:col-span-2">
                 <InputLabel className="mb-2 block">{t('join.serviceLabel')}</InputLabel>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {activeServices.map((s) => {
                     const label = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}`;
-                    const selected = selectedServiceId === s.id;
+                    const selected = selectedServiceIds.includes(s.id);
                     return (
                       <ServiceChip
                         key={s.id}
                         service={s}
                         selected={selected}
-                        onToggle={() => setSelectedServiceId(selected ? null : s.id)}
+                        onToggle={() =>
+                          setSelectedServiceIds((prev) =>
+                            prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id]
+                          )
+                        }
                         label={label}
                       />
                     );
@@ -350,6 +273,10 @@ export function JoinForm() {
               waitTimes={waitTimes}
               selectedBarberId={selectedBarberId}
               isLoading={isLoadingWaitTimes}
+              onRefresh={refreshJoinData}
+              isRefreshing={isRefreshingJoinData}
+              refreshAriaLabel={t('status.refresh')}
+              refreshLabel={t('status.refresh')}
             />
 
             {!isLoadingServices && !hasServices && (
@@ -369,7 +296,7 @@ export function JoinForm() {
                 !!nameCollisionError ||
                 isLoadingServices ||
                 !hasServices ||
-                (hasServices && !useMainComplementary && !hasServiceSelection) ||
+                (hasServices && !hasServiceSelection) ||
                 (settings.requirePhone && !customerPhone.trim())
               }
             >

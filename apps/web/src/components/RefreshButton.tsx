@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import type { ButtonHTMLAttributes } from 'react';
 
 export type RefreshButtonProps = {
@@ -27,8 +28,19 @@ export function RefreshButton({
   ...rest
 }: RefreshButtonProps) {
   const displayLabel = label ?? ariaLabel;
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const wasRefreshingRef = useRef(isRefreshing);
+
+  useEffect(() => {
+    if (wasRefreshingRef.current && !isRefreshing && document.activeElement === buttonRef.current) {
+      (document.activeElement as HTMLElement).blur();
+    }
+    wasRefreshingRef.current = isRefreshing;
+  }, [isRefreshing]);
+
   return (
     <button
+      ref={buttonRef}
       type="button"
       onClick={onRefresh}
       disabled={isRefreshing}

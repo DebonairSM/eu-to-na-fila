@@ -127,13 +127,14 @@ export class TicketService {
           if (!svc) throw new NotFoundError('Service not found');
           if (!svc.isActive) throw new ConflictError('Service is not active');
         }
+        // Only validate main/complementary kind when client sent mainServiceId (legacy main+complementary flow)
         if (dataExt.mainServiceId != null) {
           const mainSvc = serviceMap.get(dataExt.mainServiceId);
           if (!mainSvc || (mainSvc as { kind?: string }).kind !== 'main') throw new ValidationError('Main service must be of type main.');
-        }
-        for (const id of dataExt.complementaryServiceIds ?? []) {
-          const compSvc = serviceMap.get(id);
-          if (!compSvc || (compSvc as { kind?: string }).kind !== 'complementary') throw new ValidationError('Complementary services must be of type complementary.');
+          for (const id of dataExt.complementaryServiceIds ?? []) {
+            const compSvc = serviceMap.get(id);
+            if (!compSvc || (compSvc as { kind?: string }).kind !== 'complementary') throw new ValidationError('Complementary services must be of type complementary.');
+          }
         }
         primaryServiceId = dataExt.mainServiceId ?? dataExt.complementaryServiceIds![0];
       }
