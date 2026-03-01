@@ -68,20 +68,21 @@ export function useJoinForm() {
   const { validateName } = useProfanityFilter();
   const { data, refetch: refetchQueue } = useQueue(20000); // 20s on join page to limit API rate
   const { barbers, refetch: refetchBarbers } = useBarbers();
-  const { activeServices, isLoading: isLoadingServices, refetch: refetchServices } = useServices();
+  const { services: servicesList, activeServices, isLoading: isLoadingServices, refetch: refetchServices } = useServices();
   const [isRefreshingJoinData, setIsRefreshingJoinData] = useState(false);
 
   const validServiceIds = new Set(activeServices.map((s) => s.id));
 
-  // Keep only valid selected ids when service list changes
+  // Keep only valid selected ids when service list changes (depend on servicesList, not activeServices, to avoid infinite loop: activeServices is a new array every render)
   useEffect(() => {
-    if (activeServices.length === 0) {
+    const active = (Array.isArray(servicesList) ? servicesList : []).filter((s) => s.isActive);
+    if (active.length === 0) {
       setSelectedServiceIds([]);
       return;
     }
-    const validIds = new Set(activeServices.map((s) => s.id));
+    const validIds = new Set(active.map((s) => s.id));
     setSelectedServiceIds((prev) => prev.filter((id) => validIds.has(id)));
-  }, [activeServices]);
+  }, [servicesList]);
 
   // Clear preferred barber when shop no longer allows it so UI updates immediately
   useEffect(() => {
