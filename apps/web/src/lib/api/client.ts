@@ -1,9 +1,12 @@
 import type { ApiErrorResponse } from '@eutonafila/shared';
 import { ApiError } from './errors.js';
+import { getShopBasePath } from '../config.js';
 
 /**
  * Base API client. Handles HTTP requests, auth tokens, and error transformation.
  * Domain modules extend this via mixins.
+ * When baseUrl is relative (e.g. /api), it is resolved against the current shop path
+ * so that from /barbershop/status we request /barbershop/api.
  */
 const REMEMBER_ME_FLAG = 'eutonafila_remember_me';
 
@@ -40,7 +43,7 @@ export class BaseApiClient {
   }
 
   getBaseUrl(): string {
-    return this.baseUrl;
+    return this.getEffectiveBaseUrl();
   }
 
   setAuthToken(token: string): void {
@@ -61,13 +64,23 @@ export class BaseApiClient {
   private static readonly RETRY_DELAY_MS = 1000;
   private static readonly RETRYABLE_STATUSES = [502, 503, 504];
 
+  /** Resolve effective base URL: when baseUrl is relative, prefix with current shop path. */
+  protected getEffectiveBaseUrl(): string {
+    if (this.baseUrl.startsWith('http://') || this.baseUrl.startsWith('https://')) {
+      return this.baseUrl;
+    }
+    const base = typeof window !== 'undefined' ? getShopBasePath() : '';
+    const suffix = this.baseUrl.startsWith('/') ? this.baseUrl : `/${this.baseUrl}`;
+    return base === '/' || base === '' ? suffix : `${base}${suffix}`;
+  }
+
   protected async request<T>(
     path: string,
     options: RequestInit = {},
     timeoutMs = 30000,
     isRetry = false
   ): Promise<T> {
-    const url = `${this.baseUrl}${path}`;
+    const url = `${this.getEffectiveBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
     const headers: Record<string, string> = {};
     const method = options.method || 'GET';
     const methodsWithBody = ['POST', 'PATCH', 'PUT'];
