@@ -29,10 +29,18 @@ export function JoinPageGuard() {
   const mountedRef = useRef(true);
 
   useEffect(() => {
-    if (!shopSlug) return;
-    if (hasRunForSlugRef.current === shopSlug) return;
-    hasRunForSlugRef.current = shopSlug;
     mountedRef.current = true;
+
+    // No slug yet (e.g. initial load): show join page so we don't block forever
+    if (!shopSlug) {
+      if (mountedRef.current) {
+        setShouldRenderJoinPage(true);
+        setIsChecking(false);
+      }
+      return () => { mountedRef.current = false; };
+    }
+    if (hasRunForSlugRef.current === shopSlug) return () => { mountedRef.current = false; };
+    hasRunForSlugRef.current = shopSlug;
 
     const checkActiveTicket = async () => {
       // Step 1: Check by deviceId FIRST (most reliable server-side check)
@@ -105,9 +113,18 @@ export function JoinPageGuard() {
       }
     };
 
+    // Fail open: if the check doesn't complete in 8s (e.g. API hang), show join page
+    const timeoutId = window.setTimeout(() => {
+      if (mountedRef.current) {
+        setShouldRenderJoinPage(true);
+        setIsChecking(false);
+      }
+    }, 8000);
+
     checkActiveTicket();
     return () => {
       mountedRef.current = false;
+      window.clearTimeout(timeoutId);
     };
   }, [navigate, shopSlug]);
 
