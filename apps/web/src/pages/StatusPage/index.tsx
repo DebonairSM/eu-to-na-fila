@@ -23,6 +23,7 @@ import { InProgressCard } from './InProgressCard';
 import { CompletedCard } from './CompletedCard';
 import { ActionButtons } from './ActionButtons';
 import { Modal } from '@/components/Modal';
+import { RefreshButton } from '@/components/RefreshButton';
 import { Button, InputLabel } from '@/components/design-system';
 import { Container, SlideIn } from '@/components/design-system';
 import { hasHoursForDay } from '@/lib/operatingHours';
@@ -360,18 +361,12 @@ export function StatusPage() {
                 generalLineWaitTime={generalLineFaster ? generalLineWaitTime ?? undefined : undefined}
               />
               <div className="flex justify-center -mt-2">
-                <button
-                  type="button"
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  aria-label={t('status.refresh')}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[var(--shop-accent)] text-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] hover:bg-[var(--shop-accent)] hover:text-[var(--shop-text-on-accent)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 disabled:hover:scale-100 disabled:active:scale-100 ${!isRefreshing ? 'animate-refresh-soft-pulse' : ''}`}
-                >
-                  <span className={`material-symbols-outlined text-xl ${isRefreshing ? 'animate-spin' : ''}`}>
-                    {isRefreshing ? 'progress_activity' : 'refresh'}
-                  </span>
-                  <span className="text-sm font-medium">{t('status.refresh')}</span>
-                </button>
+                <RefreshButton
+                  isRefreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  ariaLabel={t('status.refresh')}
+                  label={t('status.refresh')}
+                />
               </div>
             </>
           )}
@@ -380,18 +375,12 @@ export function StatusPage() {
             <>
               <InProgressCard barberName={barber?.name} />
               <div className="flex justify-center -mt-2">
-                <button
-                  type="button"
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  aria-label={t('status.refresh')}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[var(--shop-accent)] text-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] hover:bg-[var(--shop-accent)] hover:text-[var(--shop-text-on-accent)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 ${!isRefreshing ? 'animate-refresh-soft-pulse' : ''}`}
-                >
-                  <span className={`material-symbols-outlined text-xl ${isRefreshing ? 'animate-spin' : ''}`}>
-                    {isRefreshing ? 'progress_activity' : 'refresh'}
-                  </span>
-                  <span className="text-sm font-medium">{t('status.refresh')}</span>
-                </button>
+                <RefreshButton
+                  isRefreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  ariaLabel={t('status.refresh')}
+                  label={t('status.refresh')}
+                />
               </div>
             </>
           )}
@@ -400,18 +389,12 @@ export function StatusPage() {
             <>
               <CompletedCard barberName={barber?.name} />
               <div className="flex justify-center -mt-2">
-                <button
-                  type="button"
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  aria-label={t('status.refresh')}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[var(--shop-accent)] text-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] hover:bg-[var(--shop-accent)] hover:text-[var(--shop-text-on-accent)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 ${!isRefreshing ? 'animate-refresh-soft-pulse' : ''}`}
-                >
-                  <span className={`material-symbols-outlined text-xl ${isRefreshing ? 'animate-spin' : ''}`}>
-                    {isRefreshing ? 'progress_activity' : 'refresh'}
-                  </span>
-                  <span className="text-sm font-medium">{t('status.refresh')}</span>
-                </button>
+                <RefreshButton
+                  isRefreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  ariaLabel={t('status.refresh')}
+                  label={t('status.refresh')}
+                />
               </div>
             </>
           )}
@@ -458,18 +441,12 @@ export function StatusPage() {
                   generalLineWaitTime={generalLineFaster ? generalLineWaitTime ?? undefined : undefined}
                 />
                 <div className="flex justify-center -mt-2">
-                  <button
-                    type="button"
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                    aria-label={t('status.refresh')}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[var(--shop-accent)] text-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] hover:bg-[var(--shop-accent)] hover:text-[var(--shop-text-on-accent)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 disabled:hover:scale-100 disabled:active:scale-100 ${!isRefreshing ? 'animate-refresh-soft-pulse' : ''}`}
-                  >
-                    <span className={`material-symbols-outlined text-xl ${isRefreshing ? 'animate-spin' : ''}`}>
-                      {isRefreshing ? 'progress_activity' : 'refresh'}
-                    </span>
-                    <span className="text-sm font-medium">{t('status.refresh')}</span>
-                  </button>
+                  <RefreshButton
+                    isRefreshing={isRefreshing}
+                    onRefresh={handleRefresh}
+                    ariaLabel={t('status.refresh')}
+                    label={t('status.refresh')}
+                  />
                 </div>
               </>
             )}
@@ -478,18 +455,12 @@ export function StatusPage() {
               <>
                 <InProgressCard barberName={barber?.name} />
                 <div className="flex justify-center -mt-2">
-                  <button
-                    type="button"
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                    aria-label={t('status.refresh')}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[var(--shop-accent)] text-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] hover:bg-[var(--shop-accent)] hover:text-[var(--shop-text-on-accent)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 ${!isRefreshing ? 'animate-refresh-soft-pulse' : ''}`}
-                  >
-                    <span className={`material-symbols-outlined text-xl ${isRefreshing ? 'animate-spin' : ''}`}>
-                      {isRefreshing ? 'progress_activity' : 'refresh'}
-                    </span>
-                    <span className="text-sm font-medium">{t('status.refresh')}</span>
-                  </button>
+                  <RefreshButton
+                    isRefreshing={isRefreshing}
+                    onRefresh={handleRefresh}
+                    ariaLabel={t('status.refresh')}
+                    label={t('status.refresh')}
+                  />
                 </div>
               </>
             )}
@@ -498,18 +469,12 @@ export function StatusPage() {
               <>
                 <CompletedCard barberName={barber?.name} />
                 <div className="flex justify-center -mt-2">
-                  <button
-                    type="button"
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                    aria-label={t('status.refresh')}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[var(--shop-accent)] text-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] hover:bg-[var(--shop-accent)] hover:text-[var(--shop-text-on-accent)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 ${!isRefreshing ? 'animate-refresh-soft-pulse' : ''}`}
-                  >
-                    <span className={`material-symbols-outlined text-xl ${isRefreshing ? 'animate-spin' : ''}`}>
-                      {isRefreshing ? 'progress_activity' : 'refresh'}
-                    </span>
-                    <span className="text-sm font-medium">{t('status.refresh')}</span>
-                  </button>
+                  <RefreshButton
+                    isRefreshing={isRefreshing}
+                    onRefresh={handleRefresh}
+                    ariaLabel={t('status.refresh')}
+                    label={t('status.refresh')}
+                  />
                 </div>
               </>
             )}

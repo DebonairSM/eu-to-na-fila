@@ -71,6 +71,7 @@
     "barberLabel": "Barbeiro *",
     "barberLabelOptional": "Barbeiro preferido (opcional)",
     "selectOption": "Selecione...",
+    "subtotal": "Subtotal",
     "nameInUse": "Nome já está em uso",
     "activeTicketFound": "Ticket ativo encontrado",
     "viewStatus": "Ver status",

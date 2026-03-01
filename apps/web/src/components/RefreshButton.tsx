@@ -1,0 +1,49 @@
+import type { ButtonHTMLAttributes } from 'react';
+
+export type RefreshButtonProps = {
+  isRefreshing: boolean;
+  onRefresh: () => void | Promise<void>;
+  /** Accessible label (e.g. from t('status.refresh')) */
+  ariaLabel: string;
+  /** Visible label, defaults to same as ariaLabel */
+  label?: string;
+  /** Optional extra class for the wrapper (e.g. for layout) */
+  className?: string;
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick' | 'disabled' | 'aria-label'>;
+
+const baseClasses =
+  'flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[var(--shop-accent)] text-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] hover:bg-[var(--shop-accent)] hover:text-[var(--shop-text-on-accent)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 disabled:hover:scale-100 disabled:active:scale-100 disabled:cursor-not-allowed';
+
+/**
+ * Shared refresh button with reload animation.
+ * When idle: subtle pulse. When loading: icon spins; button resets to idle when loading ends.
+ */
+export function RefreshButton({
+  isRefreshing,
+  onRefresh,
+  ariaLabel,
+  label,
+  className = '',
+  ...rest
+}: RefreshButtonProps) {
+  const displayLabel = label ?? ariaLabel;
+  return (
+    <button
+      type="button"
+      onClick={onRefresh}
+      disabled={isRefreshing}
+      aria-label={ariaLabel}
+      aria-busy={isRefreshing}
+      className={`${baseClasses} ${!isRefreshing ? 'refresh-button-idle' : 'refresh-button-loading'} ${className}`.trim()}
+      {...rest}
+    >
+      <span
+        className={`material-symbols-outlined text-xl select-none ${isRefreshing ? 'refresh-icon-spin' : ''}`}
+        aria-hidden
+      >
+        {isRefreshing ? 'progress_activity' : 'refresh'}
+      </span>
+      <span className="text-sm font-medium">{displayLabel}</span>
+    </button>
+  );
+}

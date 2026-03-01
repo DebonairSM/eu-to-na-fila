@@ -71,6 +71,7 @@
     "barberLabel": "Barber *",
     "barberLabelOptional": "Preferred barber (optional)",
     "selectOption": "Select...",
+    "subtotal": "Subtotal",
     "nameInUse": "Name is already in use",
     "activeTicketFound": "Active ticket found",
     "viewStatus": "View status",

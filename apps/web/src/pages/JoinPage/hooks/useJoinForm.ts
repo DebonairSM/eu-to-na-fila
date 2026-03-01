@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, ApiError } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
@@ -64,9 +64,10 @@ export function useJoinForm() {
   const needsProfileCompletion = isCustomer && user?.name && !isSufficientName(user.name);
   const settings = shopConfig.settings;
   const { validateName } = useProfanityFilter();
-  const { data } = useQueue(5000); // 5s for join page (less critical, just for wait time estimates)
-  const { barbers } = useBarbers();
-  const { activeServices, isLoading: isLoadingServices } = useServices();
+  const { data, refetch: refetchQueue } = useQueue(5000); // 5s for join page (less critical, just for wait time estimates)
+  const { barbers, refetch: refetchBarbers } = useBarbers();
+  const { activeServices, isLoading: isLoadingServices, refetch: refetchServices } = useServices();
+  const [isRefreshingJoinData, setIsRefreshingJoinData] = useState(false);
 
   const mainServices = activeServices.filter((s) => (s as { kind?: string }).kind === 'main');
   const complementaryServices = activeServices.filter((s) => (s as { kind?: string }).kind !== 'main');
@@ -472,6 +473,16 @@ export function useJoinForm() {
     }
   };
 
+  const refreshJoinData = useCallback(async () => {
+    if (isRefreshingJoinData) return;
+    setIsRefreshingJoinData(true);
+    try {
+      await Promise.all([refetchBarbers(), refetchServices(), refetchQueue()]);
+    } finally {
+      setIsRefreshingJoinData(false);
+    }
+  }, [refetchBarbers, refetchServices, refetchQueue, isRefreshingJoinData]);
+
   return {
     combinedName,
     handleCombinedNameChange,
@@ -515,5 +526,7 @@ export function useJoinForm() {
     isLoggedInAsCustomer: isCustomer,
     customerName: user?.name,
     logout,
+    isRefreshingJoinData,
+    refreshJoinData,
   };
 }

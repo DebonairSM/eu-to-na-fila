@@ -27,13 +27,15 @@ export function JoinPageGuard() {
   const { t } = useLocale();
   const hasRunForSlugRef = useRef<string | null>(null);
   const mountedRef = useRef(true);
+  const didShowForNoSlugRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
 
-    // No slug yet (e.g. initial load): show join page so we don't block forever
+    // No slug yet (e.g. initial load): show join page once so we don't block forever (and avoid setState loop)
     if (!shopSlug) {
-      if (mountedRef.current) {
+      if (!didShowForNoSlugRef.current && mountedRef.current) {
+        didShowForNoSlugRef.current = true;
         setShouldRenderJoinPage(true);
         setIsChecking(false);
       }

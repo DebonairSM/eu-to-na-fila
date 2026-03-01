@@ -1,10 +1,49 @@
 import { useJoinForm } from './hooks/useJoinForm';
 import { ActiveBarbersInfo } from './ActiveBarbersInfo';
+import { RefreshButton } from '@/components/RefreshButton';
 import { Card, CardContent, Input, InputLabel, InputError, Button } from '@/components/design-system';
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatCurrency } from '@/lib/format';
 import { formatDurationMinutes } from '@/lib/formatDuration';
-import { truncateOptionLabel } from '@/lib/utils';
+import type { Service } from '@eutonafila/shared';
+
+function serviceSubtotal(services: Service[]): number {
+  return services.reduce((sum, s) => sum + ((s.price != null && s.price > 0 ? s.price : 0)), 0);
+}
+
+function ServiceChip({
+  service,
+  selected,
+  onToggle,
+  label,
+}: {
+  service: Service;
+  selected: boolean;
+  onToggle: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`
+        w-full text-left rounded-xl border-2 px-4 py-3 transition-all
+        flex items-center justify-between gap-2
+        ${selected
+          ? 'border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_12%,transparent)]'
+          : 'border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.25)]'
+        }
+      `}
+    >
+      <span className="text-sm font-medium text-[var(--shop-text-primary)] truncate">{label}</span>
+      {selected && (
+        <span className="material-symbols-outlined text-[var(--shop-accent)] text-lg flex-shrink-0" aria-hidden>
+          check_circle
+        </span>
+      )}
+    </button>
+  );
+}
 
 export function JoinForm() {
   const {
@@ -43,88 +82,121 @@ export function JoinForm() {
     needsProfileCompletion,
     isLoggedInAsCustomer,
     logout,
+    isRefreshingJoinData,
+    refreshJoinData,
   } = useJoinForm();
   const { locale, t } = useLocale();
+
+  const selectedServicesForSubtotal: Service[] = useMainComplementary
+    ? [
+        ...(mainServiceId ? activeServices.filter((s) => s.id === mainServiceId) : []),
+        ...activeServices.filter((s) => selectedComplementaryIds.includes(s.id)),
+      ]
+    : selectedServiceId != null
+      ? activeServices.filter((s) => s.id === selectedServiceId)
+      : [];
+  const subtotal = serviceSubtotal(selectedServicesForSubtotal);
+  const showSubtotal = subtotal > 0;
 
   return (
     <Card variant="default" className="join-form-card shadow-lg min-w-[320px]">
       <CardContent className="p-6 sm:p-8">
+        <div className="flex justify-end mb-4">
+          <RefreshButton
+            isRefreshing={isRefreshingJoinData}
+            onRefresh={refreshJoinData}
+            ariaLabel={t('status.refresh')}
+            label={t('status.refresh')}
+          />
+        </div>
         <form onSubmit={handleSubmit} autoComplete="off">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
             {hasServices && useMainComplementary && (
               <>
                 {mainServices.length > 0 && (
                   <div className="min-w-0 sm:col-span-2">
-                    <InputLabel htmlFor="mainService">{t('join.mainServiceLabel')}</InputLabel>
-                    <select
-                      id="mainService"
-                      value={mainServiceId ?? ''}
-                      onChange={(e) => setMainServiceId(e.target.value ? parseInt(e.target.value, 10) : null)}
-                      className="form-control-select select-readable w-full max-w-full"
-                    >
-                      <option value="">{t('join.selectOption')}</option>
+                    <InputLabel className="mb-2 block">{t('join.mainServiceLabel')}</InputLabel>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {mainServices.map((s) => {
-                        const fullLabel = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}${s.price != null && s.price > 0 ? ` – ${formatCurrency(s.price, locale)}` : ''}`;
+                        const label = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}`;
+                        const selected = mainServiceId === s.id;
                         return (
-                          <option key={s.id} value={s.id} title={fullLabel}>
-                            {truncateOptionLabel(fullLabel)}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
-                )}
-                {complementaryServices.length > 0 && (
-                  <div className="min-w-0 sm:col-span-2">
-                    <InputLabel>{t('join.complementaryServicesLabel')}</InputLabel>
-                    <div className="space-y-2 mt-1">
-                      {complementaryServices.map((s) => {
-                        const fullLabel = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}${s.price != null && s.price > 0 ? ` – ${formatCurrency(s.price, locale)}` : ''}`;
-                        const checked = selectedComplementaryIds.includes(s.id);
-                        return (
-                          <label key={s.id} className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => {
-                                setSelectedComplementaryIds((prev) =>
-                                  prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id]
-                                );
-                              }}
-                              className="rounded border-white/20"
-                            />
-                            <span className="text-sm text-[var(--shop-text-primary)]">{truncateOptionLabel(fullLabel)}</span>
-                          </label>
+                          <ServiceChip
+                            key={s.id}
+                            service={s}
+                            selected={selected}
+                            onToggle={() => setMainServiceId(selected ? null : s.id)}
+                            label={label}
+                          />
                         );
                       })}
                     </div>
                   </div>
                 )}
+                {complementaryServices.length > 0 && (
+                  <div className="min-w-0 sm:col-span-2">
+                    <InputLabel className="mb-2 block">{t('join.complementaryServicesLabel')}</InputLabel>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {complementaryServices.map((s) => {
+                        const label = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}`;
+                        const selected = selectedComplementaryIds.includes(s.id);
+                        return (
+                          <ServiceChip
+                            key={s.id}
+                            service={s}
+                            selected={selected}
+                            onToggle={() =>
+                              setSelectedComplementaryIds((prev) =>
+                                prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id]
+                              )
+                            }
+                            label={label}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {showSubtotal && (
+                  <div className="min-w-0 sm:col-span-2 pt-2 border-t border-[rgba(255,255,255,0.1)]">
+                    <p className="text-sm text-[var(--shop-text-secondary)] flex justify-end gap-2">
+                      <span>{t('join.subtotal')}</span>
+                      <span className="font-medium text-[var(--shop-text-primary)]">
+                        {formatCurrency(subtotal, locale)}
+                      </span>
+                    </p>
+                  </div>
+                )}
               </>
             )}
             {hasServices && !useMainComplementary && activeServices.length >= 2 && (
-              <div className="min-w-0">
-                <InputLabel htmlFor="service">{t('join.serviceLabel')}</InputLabel>
-                <select
-                  id="service"
-                  value={selectedServiceId ?? ''}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setSelectedServiceId(v ? parseInt(v, 10) : null);
-                  }}
-                  required
-                  className="form-control-select select-readable w-full max-w-full"
-                >
-                  <option value="">{t('join.selectOption')}</option>
+              <div className="min-w-0 sm:col-span-2">
+                <InputLabel className="mb-2 block">{t('join.serviceLabel')}</InputLabel>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {activeServices.map((s) => {
-                    const fullLabel = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}${s.price != null && s.price > 0 ? ` – ${formatCurrency(s.price, locale)}` : ''}`;
+                    const label = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}`;
+                    const selected = selectedServiceId === s.id;
                     return (
-                      <option key={s.id} value={s.id} title={fullLabel}>
-                        {truncateOptionLabel(fullLabel)}
-                      </option>
+                      <ServiceChip
+                        key={s.id}
+                        service={s}
+                        selected={selected}
+                        onToggle={() => setSelectedServiceId(selected ? null : s.id)}
+                        label={label}
+                      />
                     );
                   })}
-                </select>
+                </div>
+                {showSubtotal && (
+                  <div className="pt-2 mt-2 border-t border-[rgba(255,255,255,0.1)]">
+                    <p className="text-sm text-[var(--shop-text-secondary)] flex justify-end gap-2">
+                      <span>{t('join.subtotal')}</span>
+                      <span className="font-medium text-[var(--shop-text-primary)]">
+                        {formatCurrency(subtotal, locale)}
+                      </span>
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
