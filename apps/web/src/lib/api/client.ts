@@ -64,13 +64,21 @@ export class BaseApiClient {
   private static readonly RETRY_DELAY_MS = 1000;
   private static readonly RETRYABLE_STATUSES = [502, 503, 504];
 
-  /** Resolve effective base URL: when baseUrl is relative, prefix with current shop path. */
+  /**
+   * Resolve effective base URL.
+   * - Absolute URL (http/https): used as-is.
+   * - Dev: use /api so Vite proxy (mounted at /api) works.
+   * - Production with relative base: prefix with shop path so e.g. /barbershop/status -> /barbershop/api.
+   */
   protected getEffectiveBaseUrl(): string {
     if (this.baseUrl.startsWith('http://') || this.baseUrl.startsWith('https://')) {
       return this.baseUrl;
     }
-    const base = typeof window !== 'undefined' ? getShopBasePath() : '';
     const suffix = this.baseUrl.startsWith('/') ? this.baseUrl : `/${this.baseUrl}`;
+    if (import.meta.env.DEV) {
+      return suffix;
+    }
+    const base = typeof window !== 'undefined' ? getShopBasePath() : '';
     return base === '/' || base === '' ? suffix : `${base}${suffix}`;
   }
 
