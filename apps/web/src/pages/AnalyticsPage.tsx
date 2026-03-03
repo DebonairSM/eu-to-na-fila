@@ -735,78 +735,140 @@ export function AnalyticsPage() {
             </>
           )}
 
-          {/* Time Analysis View */}
-          {activeView === 'time' && (
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden min-h-[420px] flex flex-col">
+          {/* Time Analysis View — month-scoped with prev/next month navigation */}
+          {activeView === 'time' && (() => {
+            const timeData = temporalChartData ?? data;
+            const isCurrentMonth =
+              temporalChartMonth.year === now.getFullYear() && temporalChartMonth.month === now.getMonth() + 1;
+            const monthLabel = new Date(temporalChartMonth.year, temporalChartMonth.month - 1, 1).toLocaleDateString(
+              locale,
+              { month: 'long', year: 'numeric' }
+            );
+            const goPrevMonth = () => {
+              setTemporalChartMonth((prev) => {
+                if (prev.month <= 1) return { year: prev.year - 1, month: 12 };
+                return { year: prev.year, month: prev.month - 1 };
+              });
+            };
+            const goNextMonth = () => {
+              if (isCurrentMonth) return;
+              setTemporalChartMonth((prev) => {
+                if (prev.month >= 12) return { year: prev.year + 1, month: 1 };
+                return { year: prev.year, month: prev.month + 1 };
+              });
+            };
+            return (
+              <>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                  <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden min-h-[420px] flex flex-col">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
+                    <div className="mb-6 flex items-center justify-between gap-4 flex-shrink-0 flex-wrap">
+                      <div className="flex items-center gap-4">
+                        <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">bar_chart</span>
+                        <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                          {t('analytics.attendancesByDay')}
+                        </h2>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={goPrevMonth}
+                          className="p-2 rounded-lg border border-[var(--shop-border-color)] text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                          aria-label={t('analytics.monthPrev')}
+                        >
+                          <span className="material-symbols-outlined">chevron_left</span>
+                        </button>
+                        <span className="min-w-[140px] text-center font-medium text-white capitalize">{monthLabel}</span>
+                        <button
+                          type="button"
+                          onClick={goNextMonth}
+                          disabled={isCurrentMonth}
+                          className="p-2 rounded-lg border border-[var(--shop-border-color)] text-white/80 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                          aria-label={t('analytics.monthNext')}
+                        >
+                          <span className="material-symbols-outlined">chevron_right</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex-1 min-h-[280px]">
+                      {temporalChartLoading ? (
+                        <div className="flex items-center justify-center min-h-[280px]">
+                          <LoadingSpinner size="md" text={t('analytics.loading')} />
+                        </div>
+                      ) : (
+                        <DailyChart
+                          data={timeData.ticketsByDay}
+                          since={timeData.period.since.split('T')[0]}
+                          until={timeData.period.until.split('T')[0]}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden min-h-[420px] flex flex-col">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
+                    <div className="mb-6 flex items-center gap-4 flex-shrink-0">
+                      <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">schedule</span>
+                      <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                        Atendimentos por Hora
+                      </h2>
+                    </div>
+                    <div className="flex-1 min-h-[280px]">
+                      {temporalChartLoading ? (
+                        <div className="flex items-center justify-center min-h-[280px]">
+                          <LoadingSpinner size="md" text={t('analytics.loading')} />
+                        </div>
+                      ) : (
+                        <HourlyChart data={timeData.hourlyDistribution} peakHour={timeData.peakHour} />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
-                  <div className="mb-6 flex items-center gap-4 flex-shrink-0">
-                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">bar_chart</span>
+                  <div className="mb-6 flex items-center gap-4">
+                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">calendar_month</span>
                     <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
-                      Atendimentos por Dia
+                      Padrão Semanal
                     </h2>
                   </div>
-                  <div className="flex-1 min-h-[280px]">
-                    <DailyChart
-                      data={data.ticketsByDay}
-                      since={data.period.since.split('T')[0]}
-                      until={data.period.until.split('T')[0]}
-                    />
-                  </div>
+                  {temporalChartLoading ? (
+                    <div className="flex items-center justify-center min-h-[200px]">
+                      <LoadingSpinner size="md" text={t('analytics.loading')} />
+                    </div>
+                  ) : (
+                    <DayOfWeekChart data={timeData.dayOfWeekDistribution} />
+                  )}
                 </div>
 
-                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden min-h-[420px] flex flex-col">
+                <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
-                  <div className="mb-6 flex items-center gap-4 flex-shrink-0">
-                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">schedule</span>
+                  <div className="mb-6 flex items-center gap-4">
+                    <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">trending_up</span>
                     <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
-                      Atendimentos por Hora
+                      Tendência de Tempo de Espera
                     </h2>
                   </div>
-                  <div className="flex-1 min-h-[280px]">
-                    <HourlyChart data={data.hourlyDistribution} peakHour={data.peakHour} />
+                  <WaitTimeTrendChart data={timeData.waitTimeTrends} />
+                </div>
+
+                {timeData.peakHour && (
+                  <div className="bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_5%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-3xl p-10 text-center">
+                    <p className="text-sm text-white/70 uppercase tracking-wider mb-3">
+                      Horário de Pico
+                    </p>
+                    <div className="font-['Playfair_Display',serif] text-6xl font-semibold text-[var(--shop-accent)] mb-3">
+                      {timeData.peakHour.hour}:00
+                    </div>
+                    <p className="text-base text-white/70">
+                      {timeData.peakHour.count} {timeData.peakHour.count === 1 ? 'atendimento' : 'atendimentos'}
+                    </p>
                   </div>
-                </div>
-              </div>
-
-              <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
-                <div className="mb-6 flex items-center gap-4">
-                  <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">calendar_month</span>
-                  <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
-                    Padrão Semanal
-                  </h2>
-                </div>
-                <DayOfWeekChart data={data.dayOfWeekDistribution} />
-              </div>
-
-              <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
-                <div className="mb-6 flex items-center gap-4">
-                  <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">trending_up</span>
-                  <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
-                    Tendência de Tempo de Espera
-                  </h2>
-                </div>
-                <WaitTimeTrendChart data={data.waitTimeTrends} />
-              </div>
-
-              {data.peakHour && (
-                <div className="bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_5%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-3xl p-10 text-center">
-                  <p className="text-sm text-white/70 uppercase tracking-wider mb-3">
-                    Horário de Pico
-                  </p>
-                  <div className="font-['Playfair_Display',serif] text-6xl font-semibold text-[var(--shop-accent)] mb-3">
-                    {data.peakHour.hour}:00
-                  </div>
-                  <p className="text-base text-white/70">
-                    {data.peakHour.count} {data.peakHour.count === 1 ? 'atendimento' : 'atendimentos'}
-                  </p>
-                </div>
-              )}
-            </>
-          )}
+                )}
+              </>
+            );
+          })()}
 
           {/* Services View */}
           {activeView === 'services' && (
