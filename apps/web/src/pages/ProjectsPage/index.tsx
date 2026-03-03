@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useLocale } from '@/contexts/LocaleContext';
 import { LOGO_URL } from '@/lib/logo';
 import { api } from '@/lib/api';
@@ -75,7 +76,9 @@ export function ProjectsPage() {
         </header>
 
         {loading && (
-          <div className="text-center py-12 text-gray-400">Carregando projetos...</div>
+          <div className="text-center py-12">
+            <LoadingSpinner text={t('projects.loading')} />
+          </div>
         )}
         {error && (
           <ErrorDisplay error={error} onRetry={fetchProjects} className="mb-8" />

@@ -419,15 +419,6 @@ export function StatusPage() {
             isPendingAppointment={isPendingAppointment}
             onEditAppointment={handleOpenReschedule}
           />
-
-          {shareSuccess && (
-            <SlideIn direction="up">
-              <div className="fixed bottom-24 left-4 right-4 bg-white text-black px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50">
-                <span className="material-symbols-outlined">check_circle</span>
-                <span>{t('status.shareSuccess')}</span>
-              </div>
-            </SlideIn>
-          )}
         </div>
 
         <div className="hidden lg:block">

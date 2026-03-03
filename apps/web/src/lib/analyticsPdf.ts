@@ -66,11 +66,74 @@ export interface AnalyticsDataForPdf {
   barberEfficiency: Array<{ name: string; ticketsPerDay: number; completionRate: number }>;
 }
 
+export type AnalyticsPdfLabels = {
+  title?: string;
+  period?: string;
+  summary?: string;
+  metric?: string;
+  value?: string;
+  totalTickets?: string;
+  completed?: string;
+  cancelled?: string;
+  completionRate?: string;
+  cancellationRate?: string;
+  avgPerDay?: string;
+  avgServiceTime?: string;
+  revenue?: string;
+  barbers?: string;
+  barber?: string;
+  served?: string;
+  avgMinutes?: string;
+  services?: string;
+  service?: string;
+  quantity?: string;
+  attendancesByDayOfWeek?: string;
+  day?: string;
+  attendances?: string;
+  cancellations?: string;
+  avgTimeBeforeCancellation?: string;
+  efficiencyByBarber?: string;
+  ticketsPerDay?: string;
+  completionRatePct?: string;
+};
+
+const DEFAULT_PDF_LABELS_PT: Required<AnalyticsPdfLabels> = {
+  title: 'Relatório de desempenho',
+  period: 'Período',
+  summary: 'Resumo',
+  metric: 'Métrica',
+  value: 'Valor',
+  totalTickets: 'Total de tickets',
+  completed: 'Concluídos',
+  cancelled: 'Cancelados',
+  completionRate: 'Taxa de conclusão',
+  cancellationRate: 'Taxa de cancelamento',
+  avgPerDay: 'Média por dia',
+  avgServiceTime: 'Tempo médio de serviço',
+  revenue: 'Receita',
+  barbers: 'Barbeiros',
+  barber: 'Barbeiro',
+  served: 'Atendidos',
+  avgMinutes: 'Tempo médio (min)',
+  services: 'Serviços',
+  service: 'Serviço',
+  quantity: 'Quantidade',
+  attendancesByDayOfWeek: 'Atendimentos por dia da semana',
+  day: 'Dia',
+  attendances: 'Atendimentos',
+  cancellations: 'Cancelamentos',
+  avgTimeBeforeCancellation: 'Tempo médio até cancelamento',
+  efficiencyByBarber: 'Eficiência por barbeiro',
+  ticketsPerDay: 'Tickets/dia',
+  completionRatePct: 'Taxa conclusão %',
+};
+
 export function downloadAnalyticsPdf(
   data: AnalyticsDataForPdf,
-  options: { shopName?: string; periodLabel: string; locale?: string; title?: string }
+  options: { shopName?: string; periodLabel: string; locale?: string; title?: string; labels?: AnalyticsPdfLabels }
 ): void {
   const locale = options.locale ?? 'pt-BR';
+  const L = { ...DEFAULT_PDF_LABELS_PT, ...options.labels };
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   let y = 20;
   const margin = 20;
@@ -79,7 +142,7 @@ export function downloadAnalyticsPdf(
   // Title
   doc.setFontSize(22);
   doc.setTextColor(0, 0, 0);
-  doc.text(normalizeForPdf(options.title ?? 'Relatório de desempenho'), margin, y);
+  doc.text(normalizeForPdf(options.title ?? L.title), margin, y);
   y += 10;
 
   if (options.shopName) {
@@ -90,7 +153,7 @@ export function downloadAnalyticsPdf(
   }
 
   doc.setFontSize(10);
-  doc.text(normalizeForPdf(`Período: ${options.periodLabel}`), margin, y);
+  doc.text(normalizeForPdf(`${L.period}: ${options.periodLabel}`), margin, y);
   if (data.period.days > 0) {
     doc.text(
       normalizeForPdf(
@@ -106,25 +169,25 @@ export function downloadAnalyticsPdf(
   y = ensureSpace(doc, y);
   doc.setFontSize(14);
   doc.setTextColor(...primary);
-  doc.text(normalizeForPdf('Resumo'), margin, y);
+  doc.text(normalizeForPdf(L.summary), margin, y);
   y += 8;
 
   const summaryRows = [
-    ['Total de tickets', String(data.summary.total)],
-    ['Concluídos', String(data.summary.completed)],
-    ['Cancelados', String(data.summary.cancelled)],
-    ['Taxa de conclusão', `${data.summary.completionRate}%`],
-    ['Taxa de cancelamento', `${data.summary.cancellationRate}%`],
-    ['Média por dia', String(data.summary.avgPerDay)],
-    ['Tempo médio de serviço', `${data.summary.avgServiceTime} min`],
+    [L.totalTickets, String(data.summary.total)],
+    [L.completed, String(data.summary.completed)],
+    [L.cancelled, String(data.summary.cancelled)],
+    [L.completionRate, `${data.summary.completionRate}%`],
+    [L.cancellationRate, `${data.summary.cancellationRate}%`],
+    [L.avgPerDay, String(data.summary.avgPerDay)],
+    [L.avgServiceTime, `${data.summary.avgServiceTime} min`],
     ...(data.summary.revenueCents != null && data.summary.revenueCents > 0
-      ? [['Receita', `R$ ${(data.summary.revenueCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`]]
+      ? [[L.revenue, `R$ ${(data.summary.revenueCents / 100).toLocaleString(locale, { minimumFractionDigits: 2 })}`]]
       : []),
   ].map((row) => [normalizeForPdf(row[0]), row[1]] as [string, string]);
 
   autoTable(doc, {
     startY: y,
-    head: [['Métrica', 'Valor']].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string]),
+    head: [[L.metric, L.value]].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string]),
     body: summaryRows,
     theme: 'grid',
     headStyles: { fillColor: [212, 175, 55], textColor: [0, 0, 0] },
@@ -137,12 +200,12 @@ export function downloadAnalyticsPdf(
     y = ensureSpace(doc, y);
     doc.setFontSize(14);
     doc.setTextColor(...primary);
-    doc.text(normalizeForPdf('Barbeiros'), margin, y);
+    doc.text(normalizeForPdf(L.barbers), margin, y);
     y += 8;
 
     autoTable(doc, {
       startY: y,
-      head: [['Barbeiro', 'Atendidos', 'Tempo médio (min)']].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string, string]),
+      head: [[L.barber, L.served, L.avgMinutes]].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string, string]),
       body: data.barbers.map((b) => [
         normalizeForPdf(b.name),
         String(b.totalServed),
@@ -160,12 +223,12 @@ export function downloadAnalyticsPdf(
     y = ensureSpace(doc, y);
     doc.setFontSize(14);
     doc.setTextColor(...primary);
-    doc.text(normalizeForPdf('Serviços'), margin, y);
+    doc.text(normalizeForPdf(L.services), margin, y);
     y += 8;
 
     autoTable(doc, {
       startY: y,
-      head: [['Serviço', 'Quantidade', '%']].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string, string]),
+      head: [[L.service, L.quantity, '%']].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string, string]),
       body: data.serviceBreakdown.map((s) => [
         normalizeForPdf(s.serviceName),
         String(s.count),
@@ -184,12 +247,12 @@ export function downloadAnalyticsPdf(
     y = ensureSpace(doc, y);
     doc.setFontSize(14);
     doc.setTextColor(...primary);
-    doc.text(normalizeForPdf('Atendimentos por dia da semana'), margin, y);
+    doc.text(normalizeForPdf(L.attendancesByDayOfWeek), margin, y);
     y += 8;
 
     autoTable(doc, {
       startY: y,
-      head: [['Dia', 'Atendimentos']].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string]),
+      head: [[L.day, L.attendances]].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string]),
       body: dayEntries.map(([day, n]) => [normalizeForPdf(dayNameForPdf(day, locale)), String(n)]),
       theme: 'grid',
       headStyles: { fillColor: [60, 60, 60], textColor: [255, 255, 255] },
@@ -202,13 +265,13 @@ export function downloadAnalyticsPdf(
   y = ensureSpace(doc, y);
   doc.setFontSize(14);
   doc.setTextColor(...primary);
-  doc.text(normalizeForPdf('Cancelamentos'), margin, y);
+  doc.text(normalizeForPdf(L.cancellations), margin, y);
   y += 8;
   doc.setFontSize(10);
   doc.setTextColor(0, 0, 0);
   doc.text(
     normalizeForPdf(
-      `Tempo médio até cancelamento: ${data.cancellationAnalysis.avgTimeBeforeCancellation} min`
+      `${L.avgTimeBeforeCancellation}: ${data.cancellationAnalysis.avgTimeBeforeCancellation} min`
     ),
     margin,
     y
@@ -220,12 +283,12 @@ export function downloadAnalyticsPdf(
     y = ensureSpace(doc, y);
     doc.setFontSize(14);
     doc.setTextColor(...primary);
-    doc.text(normalizeForPdf('Eficiência por barbeiro'), margin, y);
+    doc.text(normalizeForPdf(L.efficiencyByBarber), margin, y);
     y += 8;
 
     autoTable(doc, {
       startY: y,
-      head: [['Barbeiro', 'Tickets/dia', 'Taxa conclusão %']].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string, string]),
+      head: [[L.barber, L.ticketsPerDay, L.completionRatePct]].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string, string]),
       body: data.barberEfficiency.map((b) => [
         normalizeForPdf(b.name),
         String(b.ticketsPerDay),

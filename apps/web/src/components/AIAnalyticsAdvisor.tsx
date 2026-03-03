@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { useLocale } from '@/contexts/LocaleContext';
-import { DAY_NAMES_PT_FULL } from '@/lib/constants';
 import { formatDurationMinutes } from '@/lib/formatDuration';
 
 interface AnalyticsData {
@@ -187,14 +186,18 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
     const minDay = dayEntries.reduce((min, [day, count]) => count < min.count && count > 0 ? { day, count } : min, { day: '', count: Infinity });
     
     if (maxDay.count > minDay.count * 2 && minDay.count > 0) {
-      const maxDayPt = DAY_NAMES_PT_FULL[maxDay.day] ?? maxDay.day;
-      const minDayPt = DAY_NAMES_PT_FULL[minDay.day] ?? minDay.day;
+      const maxDayLabel = t(`common.dayFull.${maxDay.day}`) || maxDay.day;
+      const minDayLabel = t(`common.dayFull.${minDay.day}`) || minDay.day;
       result.push({
         type: 'insight',
         category: 'traffic',
         severity: 'info',
-        title: 'Padrão semanal',
-        message: `${maxDayPt} é o dia mais movimentado (${maxDay.count} tickets), enquanto ${minDayPt} é o mais calmo (${minDay.count}).`,
+        title: t('analytics.weeklyPatternTitle'),
+        message: t('analytics.weeklyPatternMessage')
+          .replace('{busiest}', maxDayLabel)
+          .replace('{busiestCount}', String(maxDay.count))
+          .replace('{quietest}', minDayLabel)
+          .replace('{quietestCount}', String(minDay.count)),
         icon: 'calendar_month',
       });
     }
@@ -245,7 +248,7 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
     }
 
     return result;
-  }, [data]);
+  }, [data, t]);
 
   const insightsByType = {
     insight: insights.filter(i => i.type === 'insight'),

@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { RootSiteFooter } from '@/components/RootSiteFooter';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useLocale } from '@/contexts/LocaleContext';
 import { api } from '@/lib/api';
+import { validateRequired, validateEmail } from '@/lib/validation';
 import type { ShopForAds } from '@/lib/api/propagandas';
 
 const DURATIONS = [10, 15, 20, 30] as const;
@@ -54,9 +56,8 @@ export function PropagandasBuyPage() {
 
   const validate = (): string | null => {
     if (!DURATIONS.includes(duration)) return t('propagandas.invalidDuration');
-    if (!name.trim()) return t('propagandas.invalidName');
-    const emailTrim = email.trim();
-    if (!emailTrim || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) return t('propagandas.invalidEmail');
+    if (!validateRequired(name)) return t('propagandas.invalidName');
+    if (!validateEmail(email)) return t('propagandas.invalidEmail');
     return null;
   };
 
@@ -156,7 +157,12 @@ export function PropagandasBuyPage() {
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 {t('propagandas.barbershopsLabel')}
               </label>
-              {shopsLoading && <p className="text-gray-500 text-sm">{t('common.loading')}</p>}
+              {shopsLoading && (
+                <div className="flex items-center gap-2 text-gray-500 text-sm">
+                  <LoadingSpinner size="sm" className="flex-shrink-0" />
+                  <span>{t('common.loading')}</span>
+                </div>
+              )}
               {shopsError && <p className="text-red-400 text-sm">{shopsError}</p>}
               {!shopsLoading && !shopsError && shops.length === 0 && (
                 <p className="text-gray-500 text-sm">{t('propagandas.barbershopsEmpty')}</p>

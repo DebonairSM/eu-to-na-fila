@@ -21,6 +21,7 @@ import { ClipNotesPanel } from '@/components/ClipNotesPanel';
 import { QueueCard } from '@/components/QueueCard';
 import { QRCode } from '@/components/QRCode';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
+import { Skeleton } from '@/components/design-system';
 import { Button } from '@/components/ui/button';
 import { KioskAdsPlayer } from '@/components/KioskAdsPlayer';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
@@ -968,7 +969,7 @@ export function BarberQueueManager() {
                               setEditAppointmentTicketId(ticket.id);
                               setEditAppointmentTime(scheduledStr);
                             }}
-                            className="p-1.5 rounded bg-white/10 text-white/60 hover:text-white/80"
+                            className="min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 rounded bg-white/10 text-white/60 hover:text-white/80"
                             title={t('barber.rescheduleAppointment')}
                             aria-label={t('barber.rescheduleAppointment')}
                           >
@@ -980,7 +981,7 @@ export function BarberQueueManager() {
                               setCustomerToRemove(ticket.id);
                               removeConfirmModal.open();
                             }}
-                            className="p-1.5 rounded bg-white/10 text-white/60 hover:text-red-300"
+                            className="min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 rounded bg-white/10 text-white/60 hover:text-red-300"
                             title={t('barber.cancelAppointment')}
                             aria-label={t('barber.cancelAppointmentAria').replace('{name}', formatNameForDisplay(ticket.customerName))}
                           >
@@ -999,11 +1000,7 @@ export function BarberQueueManager() {
           {queueLoading ? (
             <div className="space-y-3" aria-busy="true" aria-live="polite">
               {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-16 rounded-md border border-white/8 bg-white/5 animate-pulse"
-                  aria-hidden="true"
-                />
+                <Skeleton key={i} variant="listRow" />
               ))}
             </div>
           ) : queueError ? (

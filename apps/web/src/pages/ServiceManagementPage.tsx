@@ -8,6 +8,7 @@ import { useModal } from '@/hooks/useModal';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
+import { Skeleton } from '@/components/design-system';
 import { Modal } from '@/components/Modal';
 import { formatDurationMinutes } from '@/lib/formatDuration';
 import { formatCurrency } from '@/lib/format';
@@ -205,10 +206,7 @@ export function ServiceManagementPage() {
         {isLoading ? (
           <div className="space-y-4" aria-busy="true">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-24 rounded-xl bg-white/5 border border-white/10 animate-pulse"
-              />
+              <Skeleton key={i} variant="card" className="h-24" />
             ))}
           </div>
         ) : error ? (

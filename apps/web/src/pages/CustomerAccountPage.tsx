@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Container, Heading, Text, Card, CardContent, Button, Input, InputLabel } from '@/components/design-system';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
@@ -289,7 +290,7 @@ export function CustomerAccountPage() {
           </div>
 
           {loading ? (
-            <Text variant="secondary">{t('common.loading')}</Text>
+            <LoadingSpinner text={t('common.loading')} />
           ) : error ? (
             <Text variant="secondary">{error}</Text>
           ) : (

@@ -2,6 +2,7 @@ import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Container, Heading, Text, Button, Input, InputLabel } from '@/components/design-system';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
@@ -153,7 +154,7 @@ export function AppointmentConfirmPage() {
       <div className="min-h-screen bg-[#0a0a0a]">
         <Navigation />
         <Container className="pt-20 pb-10 flex items-center justify-center min-h-[50vh]">
-          <Text variant="secondary">{t('common.loading')}</Text>
+          <LoadingSpinner text={t('common.loading')} />
         </Container>
       </div>
     );

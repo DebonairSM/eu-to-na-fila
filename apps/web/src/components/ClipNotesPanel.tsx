@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useLocale } from '@/contexts/LocaleContext';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { getErrorMessage } from '@/lib/utils';
 import type { ClientClipNote } from '@/lib/api/clients';
 
@@ -67,8 +68,8 @@ export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient 
 
   if (loading) {
     return (
-      <div className="py-4 text-sm text-[var(--shop-text-secondary)]">
-        {t('barber.clipNotes')}...
+      <div className="py-4">
+        <LoadingSpinner size="sm" text={t('common.loading')} />
       </div>
     );
   }

@@ -1,4 +1,4 @@
-import { DAY_NAMES_PT } from '@/lib/constants';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface DayOfWeekChartProps {
   data: Record<string, number>;
@@ -7,6 +7,7 @@ interface DayOfWeekChartProps {
 const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export function DayOfWeekChart({ data }: DayOfWeekChartProps) {
+  const { t } = useLocale();
   const maxValue = Math.max(1, ...dayOrder.map((day) => data[day] ?? 0));
   const barAreaHeight = 200;
 
@@ -19,7 +20,7 @@ export function DayOfWeekChart({ data }: DayOfWeekChartProps) {
         return (
           <div key={day} className="flex-1 flex flex-col items-center min-w-[40px] sm:min-w-[50px] group">
             <div className="mb-3 text-[0.7rem] sm:text-xs text-[rgba(255,255,255,0.7)] text-center font-medium flex-shrink-0">
-              {DAY_NAMES_PT[day] ?? day}
+              {t(`common.dayShort.${day}`) || day}
             </div>
             <div className="w-full flex items-end flex-shrink-0" style={{ height: barAreaHeight }}>
               <div

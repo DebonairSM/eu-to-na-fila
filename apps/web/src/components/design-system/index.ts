@@ -40,3 +40,6 @@ export type { SlideInProps } from './Motion/SlideIn';
 
 export { StatusTransition } from './Motion/StatusTransition';
 export type { StatusTransitionProps } from './Motion/StatusTransition';
+
+export { Skeleton } from './Skeleton/Skeleton';
+export type { SkeletonProps } from './Skeleton/Skeleton';

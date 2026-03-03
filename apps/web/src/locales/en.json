@@ -13,7 +13,25 @@
     "minutes": "minutes",
     "error": "Error",
     "retry": "Try again",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "dayShort": {
+      "Sunday": "Sun",
+      "Monday": "Mon",
+      "Tuesday": "Tue",
+      "Wednesday": "Wed",
+      "Thursday": "Thu",
+      "Friday": "Fri",
+      "Saturday": "Sat"
+    },
+    "dayFull": {
+      "Sunday": "Sunday",
+      "Monday": "Monday",
+      "Tuesday": "Tuesday",
+      "Wednesday": "Wednesday",
+      "Thursday": "Thursday",
+      "Friday": "Friday",
+      "Saturday": "Saturday"
+    }
   },
   "accessibility": {
     "skipLink": "Skip to main content",
@@ -409,6 +427,7 @@
     "month": "Month",
     "year": "Year",
     "cancellationAnalysisTitle": "Cancellation analysis",
+    "cancellationRateByDay": "Cancellation rate by day",
     "trendWeekly": "Weekly trend",
     "minPerDay": "min/day",
     "advisorTitle": "Reports assistant",
@@ -444,6 +463,13 @@
     "weekN": "{{n}} weeks ago",
     "monthPrev": "Previous month",
     "monthNext": "Next month",
+    "busiestDay": "Busiest day",
+    "quietestDay": "Quietest day",
+    "attendanceOne": "attendance",
+    "attendanceMany": "attendances",
+    "peakHourLabel": "Peak hour",
+    "weeklyPatternTitle": "Weekly pattern",
+    "weeklyPatternMessage": "{busiest} is the busiest day ({busiestCount} tickets), while {quietest} is the quietest ({quietestCount}).",
     "attendancesByDay": "Attendances per day",
     "barber": "Barber",
     "allBarbersAverage": "All barbers (average)",
@@ -468,11 +494,46 @@
     "downloadFrom": "From",
     "downloadTo": "To",
     "downloadCsv": "Download CSV",
-    "downloading": "Downloading…"
+    "downloading": "Downloading…",
+    "pdf": {
+      "title": "Performance report",
+      "period": "Period",
+      "summary": "Summary",
+      "metric": "Metric",
+      "value": "Value",
+      "totalTickets": "Total tickets",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "completionRate": "Completion rate",
+      "cancellationRate": "Cancellation rate",
+      "avgPerDay": "Avg/day",
+      "avgServiceTime": "Avg service time (min)",
+      "revenue": "Revenue",
+      "barbers": "Barbers",
+      "barber": "Barber",
+      "served": "Served",
+      "avgMinutes": "Avg (min)",
+      "services": "Services",
+      "service": "Service",
+      "quantity": "Quantity",
+      "attendancesByDayOfWeek": "Attendances by day of week",
+      "day": "Day",
+      "attendances": "Attendances",
+      "cancellations": "Cancellations",
+      "avgTimeBeforeCancellation": "Avg time before cancellation (min)",
+      "efficiencyByBarber": "Efficiency by barber",
+      "ticketsPerDay": "Tickets/day",
+      "completionRatePct": "Completion rate %"
+    }
   },
   "chart": {
     "noData": "No data available",
-    "averageWaitTime": "Average wait time"
+    "averageWaitTime": "Average wait time",
+    "waitTimeScopeHourly": "By hour of day",
+    "waitTimeScopeDaily": "By day",
+    "waitTimeScopeWeekly": "By week",
+    "waitTimeScopeMonthly": "By month",
+    "waitTimeScopeYearly": "By year"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -588,6 +649,7 @@
     "kioskPasswordPlaceholder": "Enter a password",
     "features": "Features",
     "addFeature": "Add feature",
+    "removeFeature": "Remove feature",
     "selectFeature": "Select feature",
     "customFeature": "Custom",
     "customFeatureIcon": "Icon (Material Symbol)",
@@ -714,6 +776,7 @@
   "projects": {
     "title": "Projects",
     "subtitle": "Our projects",
+    "loading": "Loading projects...",
     "loadError": "Error loading projects",
     "noProjects": "No projects registered.",
     "defaultDescription": "Real-time virtual queue for barbershops. Clients join, track and get called in turn. Live position, wait estimate, notifications. Owner panel, analytics and public page per shop. Includes PWA for kiosks."

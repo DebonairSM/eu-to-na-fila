@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { RootSiteFooter } from '@/components/RootSiteFooter';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useLocale } from '@/contexts/LocaleContext';
 import { api } from '@/lib/api';
 
@@ -83,8 +84,8 @@ export function PropagandasBuyCompletePage() {
         <RootSiteNav />
         <main className="py-20">
           <Container size="2xl">
-            <div className="max-w-xl mx-auto text-center">
-              <p className="text-gray-400">{t('common.loading')}</p>
+            <div className="max-w-xl mx-auto text-center flex flex-col items-center justify-center min-h-[200px]">
+              <LoadingSpinner text={t('common.loading')} />
             </div>
           </Container>
         </main>

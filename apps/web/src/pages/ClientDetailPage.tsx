@@ -6,6 +6,7 @@ import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { Navigation } from '@/components/Navigation';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import { formatNameForDisplay } from '@/lib/utils';
 import { getErrorMessage } from '@/lib/utils';
@@ -182,8 +183,8 @@ export function ClientDetailPage() {
     return (
       <div className="min-h-screen bg-black text-white">
         <Navigation />
-        <div className="container max-w-2xl mx-auto pt-24 px-4">
-          <p className="text-[var(--shop-text-secondary)]">Loading...</p>
+        <div className="container max-w-2xl mx-auto pt-24 px-4 flex flex-col items-center justify-center min-h-[50vh]">
+          <LoadingSpinner text={t('common.loading')} />
         </div>
       </div>
     );

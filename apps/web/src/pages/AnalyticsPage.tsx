@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
@@ -21,10 +21,11 @@ import { CancellationChart } from '@/components/CancellationChart';
 import { ServiceTimeDistributionChart } from '@/components/ServiceTimeDistributionChart';
 import { TypeBreakdownChart } from '@/components/TypeBreakdownChart';
 import { ClientInfoModal } from '@/components/ClientInfoModal';
-import { DAY_NAMES_PT, DAY_NAMES_PT_FULL } from '@/lib/constants';
+import { DAY_ORDER_API } from '@/lib/constants';
 import { downloadAnalyticsPdf } from '@/lib/analyticsPdf';
 import { downloadBarberServiceHistoryCsv } from '@/lib/barberHistoryCsv';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useDialogA11y } from '@/hooks/useDialogA11y';
 import { formatDate } from '@/lib/format';
 import { formatNameForDisplay } from '@/lib/utils';
 
@@ -88,6 +89,10 @@ interface AnalyticsData {
   serviceBreakdown: Array<{ serviceId: number; serviceName: string; count: number; percentage: number; revenueCents?: number }>;
   dayOfWeekDistribution: Record<string, number>;
   waitTimeTrends: Record<string, number>;
+  waitTimeTrendsByHour?: Record<string, number>;
+  waitTimeTrendsByWeek?: Record<string, number>;
+  waitTimeTrendsByMonth?: Record<string, number>;
+  waitTimeTrendsByYear?: Record<string, number>;
   cancellationAnalysis: {
     rateByDay: Record<string, number>;
     rateByHour: Record<number, number>;
@@ -158,6 +163,13 @@ export function AnalyticsPage() {
   const { locale, t } = useLocale();
   const navigate = useNavigate();
   const now = new Date();
+  const dayLabelsShort = useMemo(
+    () =>
+      Object.fromEntries(
+        DAY_ORDER_API.map((day) => [day, t(`common.dayShort.${day}`)])
+      ) as Record<string, string>,
+    [t]
+  );
   const [periodSelect, setPeriodSelect] = useState<PeriodSelect>('30');
   const [monthYear, setMonthYear] = useState({ year: now.getFullYear(), month: now.getMonth() + 1 });
   const [data, setData] = useState<AnalyticsData | null>(null);
@@ -183,6 +195,8 @@ export function AnalyticsPage() {
   const [downloadSince, setDownloadSince] = useState('');
   const [downloadUntil, setDownloadUntil] = useState('');
   const contentStartRef = useRef<HTMLDivElement>(null);
+  const downloadDialogRef = useDialogA11y(downloadBarberModal != null, () => setDownloadBarberModal(null));
+  const historyDialogRef = useDialogA11y(historyBarber != null, () => setHistoryBarber(null));
 
   // Temporal view: "Atendimentos por dia" is month-scoped with prev/next month (default last month)
   const lastMonthDefault = (() => {
@@ -466,7 +480,37 @@ export function AnalyticsPage() {
                       shopName: shopConfig.name,
                       periodLabel: periodLabel(data.period.days, data.period.since, data.period.until),
                       locale,
-                      title: t('analytics.pdfTitle'),
+                      title: t('analytics.pdf.title'),
+                      labels: {
+                        title: t('analytics.pdf.title'),
+                        period: t('analytics.pdf.period'),
+                        summary: t('analytics.pdf.summary'),
+                        metric: t('analytics.pdf.metric'),
+                        value: t('analytics.pdf.value'),
+                        totalTickets: t('analytics.pdf.totalTickets'),
+                        completed: t('analytics.pdf.completed'),
+                        cancelled: t('analytics.pdf.cancelled'),
+                        completionRate: t('analytics.pdf.completionRate'),
+                        cancellationRate: t('analytics.pdf.cancellationRate'),
+                        avgPerDay: t('analytics.pdf.avgPerDay'),
+                        avgServiceTime: t('analytics.pdf.avgServiceTime'),
+                        revenue: t('analytics.pdf.revenue'),
+                        barbers: t('analytics.pdf.barbers'),
+                        barber: t('analytics.pdf.barber'),
+                        served: t('analytics.pdf.served'),
+                        avgMinutes: t('analytics.pdf.avgMinutes'),
+                        services: t('analytics.pdf.services'),
+                        service: t('analytics.pdf.service'),
+                        quantity: t('analytics.pdf.quantity'),
+                        attendancesByDayOfWeek: t('analytics.pdf.attendancesByDayOfWeek'),
+                        day: t('analytics.pdf.day'),
+                        attendances: t('analytics.pdf.attendances'),
+                        cancellations: t('analytics.pdf.cancellations'),
+                        avgTimeBeforeCancellation: t('analytics.pdf.avgTimeBeforeCancellation'),
+                        efficiencyByBarber: t('analytics.pdf.efficiencyByBarber'),
+                        ticketsPerDay: t('analytics.pdf.ticketsPerDay'),
+                        completionRatePct: t('analytics.pdf.completionRatePct'),
+                      },
                     }
                   );
                 }}
@@ -673,25 +717,25 @@ export function AnalyticsPage() {
                 const quietest = withData.length > 1
                   ? withData.reduce((a, b) => (b[1] < a[1] ? b : a))
                   : null;
-                const busiestName = DAY_NAMES_PT_FULL[busiest[0]] ?? busiest[0];
-                const quietestName = quietest ? (DAY_NAMES_PT_FULL[quietest[0]] ?? quietest[0]) : null;
+                const busiestName = t(`common.dayFull.${busiest[0]}`) || busiest[0];
+                const quietestName = quietest ? (t(`common.dayFull.${quietest[0]}`) || quietest[0]) : null;
                 return (
                   <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-6 flex flex-wrap items-center justify-center gap-6 sm:gap-10">
                     <div className="flex items-center gap-3">
                       <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">calendar_today</span>
                       <div className="text-left">
-                        <p className="text-xs text-white/50 uppercase tracking-wider">Dia mais movimentado</p>
+                        <p className="text-xs text-white/50 uppercase tracking-wider">{t('analytics.busiestDay')}</p>
                         <p className="text-lg font-semibold text-white">{busiestName}</p>
-                        <p className="text-sm text-white/60">{busiest[1]} {busiest[1] === 1 ? 'atendimento' : 'atendimentos'}</p>
+                        <p className="text-sm text-white/60">{busiest[1]} {busiest[1] === 1 ? t('analytics.attendanceOne') : t('analytics.attendanceMany')}</p>
                       </div>
                     </div>
                     {quietest && quietestName && quietest[0] !== busiest[0] && (
                       <div className="flex items-center gap-3">
                         <span className="material-symbols-outlined text-white/50 text-2xl">event_available</span>
                         <div className="text-left">
-                          <p className="text-xs text-white/50 uppercase tracking-wider">Dia mais calmo</p>
+                          <p className="text-xs text-white/50 uppercase tracking-wider">{t('analytics.quietestDay')}</p>
                           <p className="text-lg font-semibold text-white/80">{quietestName}</p>
-                          <p className="text-sm text-white/50">{quietest[1]} {quietest[1] === 1 ? 'atendimento' : 'atendimentos'}</p>
+                          <p className="text-sm text-white/50">{quietest[1]} {quietest[1] === 1 ? t('analytics.attendanceOne') : t('analytics.attendanceMany')}</p>
                         </div>
                       </div>
                     )}
@@ -851,19 +895,25 @@ export function AnalyticsPage() {
                       Tendência de Tempo de Espera
                     </h2>
                   </div>
-                  <WaitTimeTrendChart data={timeData.waitTimeTrends} />
+                  <WaitTimeTrendChart
+                          data={timeData.waitTimeTrends}
+                          dataByHour={timeData.waitTimeTrendsByHour}
+                          dataByWeek={timeData.waitTimeTrendsByWeek}
+                          dataByMonth={timeData.waitTimeTrendsByMonth}
+                          dataByYear={timeData.waitTimeTrendsByYear}
+                        />
                 </div>
 
                 {timeData.peakHour && (
                   <div className="bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_5%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-3xl p-10 text-center">
                     <p className="text-sm text-white/70 uppercase tracking-wider mb-3">
-                      Horário de Pico
+                      {t('analytics.peakHourLabel')}
                     </p>
                     <div className="font-['Playfair_Display',serif] text-6xl font-semibold text-[var(--shop-accent)] mb-3">
                       {timeData.peakHour.hour}:00
                     </div>
                     <p className="text-base text-white/70">
-                      {timeData.peakHour.count} {timeData.peakHour.count === 1 ? 'atendimento' : 'atendimentos'}
+                      {timeData.peakHour.count} {timeData.peakHour.count === 1 ? t('analytics.attendanceOne') : t('analytics.attendanceMany')}
                     </p>
                   </div>
                 )}
@@ -934,7 +984,7 @@ export function AnalyticsPage() {
                     barbers={data.barbers.map((b) => ({ id: b.id, name: b.name }))}
                     selectedBarberId={selectedBarberId}
                     onBarberChange={setSelectedBarberId}
-                    dayLabels={DAY_NAMES_PT}
+                    dayLabels={dayLabelsShort}
                     labelAvgMinutes={t('analytics.avgMin')}
                     labelAttendances={t('analytics.attendances')}
                     labelAllTime={t('analytics.dataAllTime')}
@@ -1277,7 +1327,10 @@ export function AnalyticsPage() {
             aria-modal="true"
             aria-labelledby="download-barber-history-title"
           >
-            <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl shadow-xl max-w-md w-full p-6">
+            <div
+              ref={downloadDialogRef}
+              className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl shadow-xl max-w-md w-full p-6"
+            >
               <h2 id="download-barber-history-title" className="font-['Playfair_Display',serif] text-xl text-white mb-4">
                 {t('analytics.downloadServiceHistory')} – {downloadBarberModal.name}
               </h2>
@@ -1388,7 +1441,10 @@ export function AnalyticsPage() {
             aria-modal="true"
             aria-labelledby="barber-history-title"
           >
-            <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl shadow-xl max-w-3xl w-full max-h-[85vh] flex flex-col">
+            <div
+              ref={historyDialogRef}
+              className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl shadow-xl max-w-3xl w-full max-h-[85vh] flex flex-col"
+            >
               <div className="flex items-center justify-between p-6 border-b border-[var(--shop-border-color)]">
                 <h2 id="barber-history-title" className="font-['Playfair_Display',serif] text-xl text-white">
                   {t('analytics.serviceHistory')} – {historyBarber.name}

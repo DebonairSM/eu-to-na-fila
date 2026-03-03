@@ -322,38 +322,76 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       dayOfWeekDistribution[dayName]++;
     });
 
-    // Wait time trends (average actual wait time per day)
-    // Use actual wait time: startedAt - createdAt (for completed/in_progress tickets)
+    // Wait time trends: average actual wait time by day, hour of day, week, month, year (shop timezone for hour/week/month/year)
     const waitTimeByDay: Record<string, { total: number; count: number }> = {};
+    const waitTimeByHour: Record<string, { total: number; count: number }> = {};
+    const waitTimeByWeek: Record<string, { total: number; count: number }> = {};
+    const waitTimeByMonth: Record<string, { total: number; count: number }> = {};
+    const waitTimeByYear: Record<string, { total: number; count: number }> = {};
+
+    function getMondayKey(d: Date): string {
+      const day = d.getDay();
+      const monOffset = day === 0 ? -6 : 1 - day;
+      const mon = new Date(d);
+      mon.setDate(d.getDate() + monOffset);
+      const y = mon.getFullYear();
+      const m = String(mon.getMonth() + 1).padStart(2, '0');
+      const dayStr = String(mon.getDate()).padStart(2, '0');
+      return `${y}-${m}-${dayStr}`;
+    }
+
     tickets.forEach(t => {
       let actualWaitTime: number | null = null;
-      
-      // Use actual wait time if available (startedAt - createdAt)
+
       if (t.startedAt && t.createdAt) {
-        actualWaitTime = (new Date(t.startedAt).getTime() - new Date(t.createdAt).getTime()) / (1000 * 60); // minutes
-        if (actualWaitTime < 0 || actualWaitTime > 480) { // Reasonable range: 0-8 hours
-          actualWaitTime = null;
-        }
+        actualWaitTime = (new Date(t.startedAt).getTime() - new Date(t.createdAt).getTime()) / (1000 * 60);
+        if (actualWaitTime < 0 || actualWaitTime > 480) actualWaitTime = null;
       }
-      
-      // Fallback to estimated wait time if actual not available
       if (actualWaitTime === null && t.estimatedWaitTime !== null && t.estimatedWaitTime !== undefined) {
         actualWaitTime = t.estimatedWaitTime;
       }
-      
+
       if (actualWaitTime !== null) {
         const day = t.createdAt.toISOString().split('T')[0];
-        if (!waitTimeByDay[day]) {
-          waitTimeByDay[day] = { total: 0, count: 0 };
-        }
+        if (!waitTimeByDay[day]) waitTimeByDay[day] = { total: 0, count: 0 };
         waitTimeByDay[day].total += actualWaitTime;
         waitTimeByDay[day].count++;
+
+        const localInShop = toZonedTime(new Date(t.createdAt), tz);
+        const hourKey = String(localInShop.getHours());
+        if (!waitTimeByHour[hourKey]) waitTimeByHour[hourKey] = { total: 0, count: 0 };
+        waitTimeByHour[hourKey].total += actualWaitTime;
+        waitTimeByHour[hourKey].count++;
+
+        const weekKey = getMondayKey(localInShop);
+        if (!waitTimeByWeek[weekKey]) waitTimeByWeek[weekKey] = { total: 0, count: 0 };
+        waitTimeByWeek[weekKey].total += actualWaitTime;
+        waitTimeByWeek[weekKey].count++;
+
+        const monthKey = `${localInShop.getFullYear()}-${String(localInShop.getMonth() + 1).padStart(2, '0')}`;
+        if (!waitTimeByMonth[monthKey]) waitTimeByMonth[monthKey] = { total: 0, count: 0 };
+        waitTimeByMonth[monthKey].total += actualWaitTime;
+        waitTimeByMonth[monthKey].count++;
+
+        const yearKey = String(localInShop.getFullYear());
+        if (!waitTimeByYear[yearKey]) waitTimeByYear[yearKey] = { total: 0, count: 0 };
+        waitTimeByYear[yearKey].total += actualWaitTime;
+        waitTimeByYear[yearKey].count++;
       }
     });
-    const waitTimeTrends: Record<string, number> = {};
-    Object.entries(waitTimeByDay).forEach(([day, data]) => {
-      waitTimeTrends[day] = data.count > 0 ? Math.round(data.total / data.count) : 0;
-    });
+
+    const toAvg = (rec: Record<string, { total: number; count: number }>): Record<string, number> => {
+      const out: Record<string, number> = {};
+      Object.entries(rec).forEach(([k, data]) => {
+        out[k] = data.count > 0 ? Math.round(data.total / data.count) : 0;
+      });
+      return out;
+    };
+    const waitTimeTrends = toAvg(waitTimeByDay);
+    const waitTimeTrendsByHour = toAvg(waitTimeByHour);
+    const waitTimeTrendsByWeek = toAvg(waitTimeByWeek);
+    const waitTimeTrendsByMonth = toAvg(waitTimeByMonth);
+    const waitTimeTrendsByYear = toAvg(waitTimeByYear);
 
     // Cancellation analysis
     const cancelledTickets = tickets.filter(t => t.status === 'cancelled');
@@ -866,6 +904,10 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       serviceBreakdown,
       dayOfWeekDistribution,
       waitTimeTrends,
+      waitTimeTrendsByHour,
+      waitTimeTrendsByWeek,
+      waitTimeTrendsByMonth,
+      waitTimeTrendsByYear,
       cancellationAnalysis,
       serviceTimeDistribution,
       barberEfficiency,

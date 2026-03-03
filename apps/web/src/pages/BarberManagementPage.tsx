@@ -7,10 +7,12 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useModal } from '@/hooks/useModal';
+import { useDialogA11y } from '@/hooks/useDialogA11y';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
+import { Skeleton } from '@/components/design-system';
 import { Modal } from '@/components/Modal';
 import { getErrorMessage } from '@/lib/utils';
 import type { Barber } from '@eutonafila/shared';
@@ -25,7 +27,9 @@ export function BarberManagementPage() {
   const addModal = useModal();
   const editModal = useModal();
   const deleteConfirmModal = useModal();
-  
+  const addDialogRef = useDialogA11y(addModal.isOpen, addModal.close);
+  const editDialogRef = useDialogA11y(editModal.isOpen, editModal.close);
+
   const [barberToDelete, setBarberToDelete] = useState<number | null>(null);
   const [editingBarber, setEditingBarber] = useState<Barber | null>(null);
   const [formData, setFormData] = useState({
@@ -300,11 +304,7 @@ export function BarberManagementPage() {
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10" aria-busy="true" aria-live="polite">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
-                key={i}
-                className="h-[200px] rounded-xl bg-white/5 border border-white/10 animate-pulse"
-                aria-hidden="true"
-              />
+              <Skeleton key={i} variant="card" className="h-[200px]" />
             ))}
           </div>
         ) : error ? (
@@ -438,7 +438,7 @@ export function BarberManagementPage() {
             aria-modal="true"
             aria-labelledby="add-modal-title"
           >
-            <div className="modal-content bg-[var(--shop-surface-secondary)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
+            <div ref={addDialogRef} className="modal-content bg-[var(--shop-surface-secondary)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
             <h2 id="add-modal-title" className="modal-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-[var(--shop-accent)] mb-5 sm:mb-6">
               {t('barber.addBarber')}
             </h2>
@@ -542,7 +542,7 @@ export function BarberManagementPage() {
             aria-modal="true"
             aria-labelledby="edit-modal-title"
           >
-            <div className="modal-content bg-[var(--shop-surface-secondary)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
+            <div ref={editDialogRef} className="modal-content bg-[var(--shop-surface-secondary)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-[500px] w-full min-w-[320px] animate-in slide-in-from-bottom-4">
             <h2 id="edit-modal-title" className="modal-title font-['Playfair_Display',serif] text-xl sm:text-2xl text-[var(--shop-accent)] mb-5 sm:mb-6">
               {t('barber.editBarber')}
             </h2>

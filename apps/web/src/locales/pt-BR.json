@@ -13,7 +13,25 @@
     "minutes": "minutos",
     "error": "Erro",
     "retry": "Tentar novamente",
-    "dismiss": "Fechar"
+    "dismiss": "Fechar",
+    "dayShort": {
+      "Sunday": "Dom",
+      "Monday": "Seg",
+      "Tuesday": "Ter",
+      "Wednesday": "Qua",
+      "Thursday": "Qui",
+      "Friday": "Sex",
+      "Saturday": "Sáb"
+    },
+    "dayFull": {
+      "Sunday": "Domingo",
+      "Monday": "Segunda-feira",
+      "Tuesday": "Terça-feira",
+      "Wednesday": "Quarta-feira",
+      "Thursday": "Quinta-feira",
+      "Friday": "Sexta-feira",
+      "Saturday": "Sábado"
+    }
   },
   "accessibility": {
     "skipLink": "Pular para o conteúdo principal",
@@ -409,6 +427,7 @@
     "month": "Mês",
     "year": "Ano",
     "cancellationAnalysisTitle": "Análise de Cancelamentos",
+    "cancellationRateByDay": "Taxa de cancelamento por dia",
     "trendWeekly": "Tendência Semanal",
     "minPerDay": "min/dia",
     "advisorTitle": "Assistente de Relatórios",
@@ -444,6 +463,13 @@
     "weekN": "{{n}} semanas atrás",
     "monthPrev": "Mês anterior",
     "monthNext": "Próximo mês",
+    "busiestDay": "Dia mais movimentado",
+    "quietestDay": "Dia mais calmo",
+    "attendanceOne": "atendimento",
+    "attendanceMany": "atendimentos",
+    "peakHourLabel": "Horário de Pico",
+    "weeklyPatternTitle": "Padrão semanal",
+    "weeklyPatternMessage": "{busiest} é o dia mais movimentado ({busiestCount} tickets), enquanto {quietest} é o mais calmo ({quietestCount}).",
     "attendancesByDay": "Atendimentos por dia",
     "barber": "Barbeiro",
     "allBarbersAverage": "Todos os barbeiros (média)",
@@ -468,11 +494,46 @@
     "downloadFrom": "De",
     "downloadTo": "Até",
     "downloadCsv": "Baixar CSV",
-    "downloading": "Baixando…"
+    "downloading": "Baixando…",
+    "pdf": {
+      "title": "Relatório de desempenho",
+      "period": "Período",
+      "summary": "Resumo",
+      "metric": "Métrica",
+      "value": "Valor",
+      "totalTickets": "Total de tickets",
+      "completed": "Concluídos",
+      "cancelled": "Cancelados",
+      "completionRate": "Taxa de conclusão",
+      "cancellationRate": "Taxa de cancelamento",
+      "avgPerDay": "Média por dia",
+      "avgServiceTime": "Tempo médio de serviço",
+      "revenue": "Receita",
+      "barbers": "Barbeiros",
+      "barber": "Barbeiro",
+      "served": "Atendidos",
+      "avgMinutes": "Tempo médio (min)",
+      "services": "Serviços",
+      "service": "Serviço",
+      "quantity": "Quantidade",
+      "attendancesByDayOfWeek": "Atendimentos por dia da semana",
+      "day": "Dia",
+      "attendances": "Atendimentos",
+      "cancellations": "Cancelamentos",
+      "avgTimeBeforeCancellation": "Tempo médio até cancelamento",
+      "efficiencyByBarber": "Eficiência por barbeiro",
+      "ticketsPerDay": "Tickets/dia",
+      "completionRatePct": "Taxa conclusão %"
+    }
   },
   "chart": {
     "noData": "Nenhum dado disponível",
-    "averageWaitTime": "Tempo médio de espera"
+    "averageWaitTime": "Tempo médio de espera",
+    "waitTimeScopeHourly": "Por hora do dia",
+    "waitTimeScopeDaily": "Por dia",
+    "waitTimeScopeWeekly": "Por semana",
+    "waitTimeScopeMonthly": "Por mês",
+    "waitTimeScopeYearly": "Por ano"
   },
   "errors": {
     "generic": "Algo deu errado. Tente novamente.",
@@ -588,6 +649,7 @@
     "kioskPasswordPlaceholder": "Digite uma senha",
     "features": "Características",
     "addFeature": "Adicionar característica",
+    "removeFeature": "Remover característica",
     "selectFeature": "Selecionar característica",
     "customFeature": "Personalizado",
     "customFeatureIcon": "Ícone (Material Symbol)",
@@ -714,6 +776,7 @@
   "projects": {
     "title": "Projetos",
     "subtitle": "Nossos projetos",
+    "loading": "Carregando projetos...",
     "loadError": "Erro ao carregar projetos",
     "noProjects": "Nenhum projeto cadastrado.",
     "defaultDescription": "Fila virtual em tempo real para barbearias. Clientes entram, acompanham e são chamados na vez. Posição ao vivo, estimativa de espera, notificações. Painel para o dono, relatórios e página pública por barbearia. Inclui PWA para totens."

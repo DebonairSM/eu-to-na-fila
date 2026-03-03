@@ -6,6 +6,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
@@ -62,11 +63,8 @@ export function CompanyDashboard() {
         </div>
 
         {loading && (
-          <div className="text-center text-gray-400 py-12">
-            <div className="inline-block animate-spin text-blue-400 text-4xl mb-4">
-              <span className="material-symbols-outlined">refresh</span>
-            </div>
-            <p>{t('company.loading')}</p>
+          <div className="text-center py-12">
+            <LoadingSpinner text={t('company.loading')} />
           </div>
         )}
 
@@ -165,11 +163,8 @@ export function CompanyDashboard() {
           </div>
 
           {loading && (
-            <div className="text-center text-white/60 py-12">
-              <div className="inline-block animate-spin text-[#D4AF37] text-4xl mb-4">
-                <span className="material-symbols-outlined">refresh</span>
-              </div>
-              <p>{t('company.loading')}</p>
+            <div className="text-center py-12">
+              <LoadingSpinner text={t('company.loading')} />
             </div>
           )}
 

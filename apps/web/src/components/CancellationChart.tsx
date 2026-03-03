@@ -1,4 +1,4 @@
-import { DAY_NAMES_PT } from '@/lib/constants';
+import { useLocale } from '@/contexts/LocaleContext';
 import { formatDurationMinutes } from '@/lib/formatDuration';
 
 interface CancellationChartProps {
@@ -12,6 +12,7 @@ interface CancellationChartProps {
 const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export function CancellationChart({ data }: CancellationChartProps) {
+  const { t } = useLocale();
   const maxRateByDay = Math.max(1, ...dayOrder.map((d) => data.rateByDay[d] ?? 0));
   const maxRateByHour = Math.max(1, ...Array.from({ length: 24 }, (_, i) => data.rateByHour[i] ?? 0));
   const dayBarAreaHeight = 200;
@@ -20,7 +21,7 @@ export function CancellationChart({ data }: CancellationChartProps) {
   return (
     <div className="space-y-8">
       <div>
-        <h3 className="text-lg font-semibold text-white mb-4">Taxa de cancelamento por dia</h3>
+        <h3 className="text-lg font-semibold text-white mb-4">{t('analytics.cancellationRateByDay')}</h3>
         <div className="flex items-end gap-2 sm:gap-3 py-5" style={{ minHeight: dayBarAreaHeight + 56 }}>
           {dayOrder.map((day) => {
             const rate = data.rateByDay[day] || 0;
@@ -29,7 +30,7 @@ export function CancellationChart({ data }: CancellationChartProps) {
             return (
               <div key={day} className="flex-1 flex flex-col items-center min-w-[40px] group">
                 <div className="mb-3 text-[0.7rem] text-[rgba(255,255,255,0.7)] text-center font-medium flex-shrink-0">
-                  {DAY_NAMES_PT[day] ?? day}
+                  {t(`common.dayShort.${day}`) || day}
                 </div>
                 <div className="w-full flex items-end flex-shrink-0" style={{ height: dayBarAreaHeight }}>
                   <div

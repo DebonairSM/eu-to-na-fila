@@ -6,11 +6,13 @@ import { useLogout } from '@/hooks/useLogout';
 import { useActiveTicket } from '@/hooks/useActiveTicket';
 import { useShopConfig, useShopHomeContent } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useDialogA11y } from '@/hooks/useDialogA11y';
 import { Container } from '@/components/design-system';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useDialogA11y(isMobileMenuOpen, () => setIsMobileMenuOpen(false));
   const [isScrolled, setIsScrolled] = useState(false);
   const { user } = useAuthContext();
   const { logoutAndGoHome } = useLogout();
@@ -287,6 +289,7 @@ export function Navigation() {
             aria-hidden="true"
           />
           <div
+            ref={mobileMenuRef}
             className="fixed top-0 left-0 w-64 max-w-[70vw] h-full z-[10000] p-4 flex flex-col overflow-y-auto lg:hidden shadow-2xl animate-in slide-in-from-left-4"
             role="dialog"
             aria-modal="true"

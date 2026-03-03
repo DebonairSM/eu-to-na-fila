@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useDialogA11y } from '@/hooks/useDialogA11y';
 import { formatNameForDisplay } from '@/lib/utils';
 import type { ClientDetailResponse } from '@/lib/api/clients';
 
@@ -16,6 +18,7 @@ export function ClientInfoModal({ clientId, onClose }: ClientInfoModalProps) {
   const [data, setData] = useState<ClientDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dialogRef = useDialogA11y(!!clientId, onClose);
 
   useEffect(() => {
     if (!shopSlug || !clientId) {
@@ -45,6 +48,7 @@ export function ClientInfoModal({ clientId, onClose }: ClientInfoModalProps) {
       aria-labelledby="client-info-title"
     >
       <div
+        ref={dialogRef}
         className="w-full max-w-md rounded-2xl bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -63,7 +67,7 @@ export function ClientInfoModal({ clientId, onClose }: ClientInfoModalProps) {
         </div>
         <div className="p-6 space-y-4">
           {loading && (
-            <p className="text-white/70 text-sm">{t('common.loading')}</p>
+            <LoadingSpinner size="sm" text={t('common.loading')} className="py-4" />
           )}
           {error && (
             <p className="text-red-400 text-sm">{error}</p>

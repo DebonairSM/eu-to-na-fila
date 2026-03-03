@@ -9,6 +9,7 @@ import type { AdOrder } from '@/lib/api/companies';
 import { getErrorMessage } from '@/lib/utils';
 import { isRootBuild } from '@/lib/build';
 import { Container } from '@/components/design-system/Spacing/Container';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { ShopAdminView } from '@eutonafila/shared';
 
 interface Ad {
@@ -515,11 +516,8 @@ export function AdManagementPage() {
             </div>
 
           {loading ? (
-            <div className="text-center text-gray-400 py-12">
-              <div className="inline-block animate-spin text-blue-400 text-4xl mb-4">
-                <span className="material-symbols-outlined">refresh</span>
-              </div>
-              <p>Carregando...</p>
+            <div className="text-center py-12">
+              <LoadingSpinner text={t('ads.loading')} />
             </div>
           ) : (
             <div className="space-y-4">
@@ -855,11 +853,8 @@ export function AdManagementPage() {
           </div>
 
           {loading ? (
-            <div className="text-center text-white/60 py-12">
-              <div className="inline-block animate-spin text-[#D4AF37] text-4xl mb-4">
-                <span className="material-symbols-outlined">refresh</span>
-              </div>
-              <p>{t('ads.loading')}</p>
+            <div className="text-center py-12">
+              <LoadingSpinner text={t('ads.loading')} />
             </div>
           ) : (
             <div className="space-y-4">

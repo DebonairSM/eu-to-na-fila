@@ -7,6 +7,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useModal } from '@/hooks/useModal';
+import { useDialogA11y } from '@/hooks/useDialogA11y';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { Modal } from '@/components/Modal';
@@ -214,7 +215,7 @@ function StepServices({
             <div className="flex items-center justify-between mb-3">
               <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.serviceN')} {index + 1}</span>
               {services.length > 1 && (
-                <button type="button" onClick={() => removeService(service.id)} className="text-red-400/60 hover:text-red-400 transition-colors p-1" aria-label={t('createShop.removeService')}>
+                <button type="button" onClick={() => removeService(service.id)} className="text-red-400/60 hover:text-red-400 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center rounded" aria-label={t('createShop.removeService')}>
                   <span className="material-symbols-outlined text-lg">close</span>
                 </button>
               )}
@@ -270,7 +271,7 @@ function StepBarbers({ barbers, onChange, errors }: { barbers: BarberItem[]; onC
         {barbers.map((barber, index) => (
           <div key={barber.id} className="p-4 rounded-xl border border-white/10 bg-white/5 hover:border-white/20 transition-all relative">
             {barbers.length > 1 && (
-              <button type="button" onClick={() => removeBarber(barber.id)} className="absolute top-3 right-3 text-red-400/60 hover:text-red-400 transition-colors p-1" aria-label={t('createShop.removeBarber')}>
+              <button type="button" onClick={() => removeBarber(barber.id)} className="absolute top-3 right-3 text-red-400/60 hover:text-red-400 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center rounded" aria-label={t('createShop.removeBarber')}>
                 <span className="material-symbols-outlined text-lg">close</span>
               </button>
             )}
@@ -306,6 +307,7 @@ export function ShopManagementPage() {
   const editModal = useModal();
   const deleteConfirmModal = useModal();
   const resetDataConfirmModal = useModal();
+  const editDialogRef = useDialogA11y(editModal.isOpen, editModal.close);
 
   const [shops, setShops] = useState<Shop[]>([]);
   const [isResettingData, setIsResettingData] = useState(false);
@@ -929,7 +931,7 @@ export function ShopManagementPage() {
               aria-modal="true"
               aria-labelledby="edit-modal-title-root"
             >
-              <div className="modal-content bg-[#242424] border border-white/20 rounded-2xl p-5 sm:p-6 lg:p-8 max-w-[min(90vw,720px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 shadow-2xl">
+              <div ref={editDialogRef} className="modal-content bg-[#242424] border border-white/20 rounded-2xl p-5 sm:p-6 lg:p-8 max-w-[min(90vw,720px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 shadow-2xl">
                 <header className="flex-shrink-0 mb-6">
                   <h2 id="edit-modal-title-root" className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
                     {editingShop ? t('management.editShop') ?? 'Editar Barbearia' : t('createShop.createShop')}
@@ -1113,7 +1115,7 @@ export function ShopManagementPage() {
                                                 [next[index - 1], next[index]] = [next[index], next[index - 1]];
                                                 return next;
                                               })}
-                                              className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30"
+                                              className="min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30"
                                               disabled={index === 0}
                                               aria-label={t('createShop.moveServiceUp')}
                                             >
@@ -1127,7 +1129,7 @@ export function ShopManagementPage() {
                                                 [next[index], next[index + 1]] = [next[index + 1], next[index]];
                                                 return next;
                                               })}
-                                              className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30"
+                                              className="min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30"
                                               disabled={index === editServices.length - 1}
                                               aria-label={t('createShop.moveServiceDown')}
                                             >
@@ -1152,7 +1154,7 @@ export function ShopManagementPage() {
                                               setEditServices((prev) => prev.filter((x) => x.id !== s.id));
                                             }
                                           }}
-                                          className="p-1 text-red-400/60 hover:text-red-400 transition-colors"
+                                          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded text-red-400/60 hover:text-red-400 transition-colors"
                                           aria-label={t('createShop.removeService')}
                                         >
                                           <span className="material-symbols-outlined text-lg">close</span>
@@ -1380,7 +1382,7 @@ export function ShopManagementPage() {
                                 <div key={idx} className="flex gap-2 items-start">
                                   <span className="material-symbols-outlined text-white/60 text-xl mt-2">{feature.icon}</span>
                                   <input type="text" value={feature.text} readOnly className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm" />
-                                  <button type="button" onClick={() => { const newFeatures = contentForm.about.features.filter((_, i) => i !== idx); setContentForm({ about: { ...contentForm.about, features: newFeatures } }); }} className="px-3 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-sm"><span className="material-symbols-outlined text-base">delete</span></button>
+                                  <button type="button" onClick={() => { const newFeatures = contentForm.about.features.filter((_, i) => i !== idx); setContentForm({ about: { ...contentForm.about, features: newFeatures } }); }} className="px-3 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-sm min-h-[44px] min-w-[44px] inline-flex items-center justify-center" aria-label={t('management.removeFeature')}><span className="material-symbols-outlined text-base">delete</span></button>
                                 </div>
                               ))}
                               <button type="button" onClick={() => { setCustomFeatureForm({ icon: '', text: '' }); setFeatureSelectorOpen(true); }} className="w-full py-2 border border-dashed border-white/20 rounded-lg text-white/60 hover:text-white hover:border-white/40 transition-colors text-sm flex items-center justify-center gap-2">
@@ -1991,14 +1993,14 @@ export function ShopManagementPage() {
 
       {/* Edit Shop Modal */}
       {editModal.isOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-5"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(4px)' }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="edit-modal-title"
         >
-          <div className="modal-content bg-[#242424] border border-white/10 rounded-2xl p-5 sm:p-6 lg:p-8 max-w-[min(90vw,720px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 shadow-2xl">
+          <div ref={editDialogRef} className="modal-content bg-[#242424] border border-white/10 rounded-2xl p-5 sm:p-6 lg:p-8 max-w-[min(90vw,720px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 shadow-2xl">
             <header className="flex-shrink-0 mb-6">
             <h2 id="edit-modal-title" className="modal-title text-xl sm:text-2xl font-semibold text-white tracking-tight">
               {editingShop ? t('management.editShop') ?? 'Editar Barbearia' : t('createShop.createShop')}
@@ -2146,7 +2148,7 @@ export function ShopManagementPage() {
                                             [next[index - 1], next[index]] = [next[index], next[index - 1]];
                                             return next;
                                           })}
-                                          className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30"
+                                          className="min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30"
                                           disabled={index === 0}
                                           aria-label={t('createShop.moveServiceUp')}
                                         >
@@ -2160,7 +2162,7 @@ export function ShopManagementPage() {
                                             [next[index], next[index + 1]] = [next[index + 1], next[index]];
                                             return next;
                                           })}
-                                          className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30"
+                                          className="min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30"
                                           disabled={index === editServices.length - 1}
                                           aria-label={t('createShop.moveServiceDown')}
                                         >
@@ -2185,7 +2187,7 @@ export function ShopManagementPage() {
                                           setEditServices((prev) => prev.filter((x) => x.id !== s.id));
                                         }
                                       }}
-                                      className="p-1 text-red-400/60 hover:text-red-400 transition-colors"
+                                      className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded text-red-400/60 hover:text-red-400 transition-colors"
                                       aria-label={t('createShop.removeService')}
                                     >
                                       <span className="material-symbols-outlined text-lg">close</span>
@@ -2434,7 +2436,8 @@ export function ShopManagementPage() {
                                   const newFeatures = contentForm.about.features.filter((_, i) => i !== idx);
                                   setContentForm({ about: { ...contentForm.about, features: newFeatures } });
                                 }}
-                                className="px-3 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-sm"
+                                className="px-3 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-sm min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                                aria-label={t('management.removeFeature')}
                               >
                                 <span className="material-symbols-outlined text-base">delete</span>
                               </button>

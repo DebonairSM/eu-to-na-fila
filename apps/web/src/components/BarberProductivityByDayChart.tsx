@@ -162,7 +162,7 @@ export function BarberProductivityByDayChart({
                 if (idx < weekOptions.length - 1) onWeekSelect(weekOptions[idx + 1]!.value);
               }}
               disabled={weekOptions.findIndex((o) => o.value === (selectedWeekStart ?? '')) >= weekOptions.length - 1}
-              className="p-1.5 rounded-lg text-white/80 hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 rounded-lg text-white/80 hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               aria-label={labelWeekPrev}
             >
               <span className="material-symbols-outlined text-xl">chevron_left</span>
@@ -185,7 +185,7 @@ export function BarberProductivityByDayChart({
                 if (idx > 0) onWeekSelect(weekOptions[idx - 1]!.value);
               }}
               disabled={weekOptions.findIndex((o) => o.value === (selectedWeekStart ?? '')) <= 0}
-              className="p-1.5 rounded-lg text-white/80 hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 rounded-lg text-white/80 hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               aria-label={labelWeekNext}
             >
               <span className="material-symbols-outlined text-xl">chevron_right</span>
