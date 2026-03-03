@@ -21,7 +21,14 @@ const REMEMBER_PHONE_DEBOUNCE_MS = 400;
 
 /** Join page: at most one getWaitTimes per shop per 20 seconds (survives remounts). */
 const WAIT_TIMES_INTERVAL_MS = 20000;
+/** Timeout so we never leave the user stuck on the wait-time spinner (e.g. API hang or no barbers). */
+const WAIT_TIMES_TIMEOUT_MS = 12000;
 const lastWaitTimesCallBySlug: Record<string, number> = {};
+
+const EMPTY_WAIT_TIMES = {
+  standardWaitTime: null as number | null,
+  barberWaitTimes: [] as Array<{ barberId: number; barberName: string; waitTime: number | null; isPresent: boolean }>,
+};
 
 function isSufficientName(name: string | undefined): boolean {
   if (!name || !name.trim()) return false;
@@ -110,7 +117,11 @@ export function useJoinForm() {
 
       try {
         setIsLoadingWaitTimes(true);
-        const times = await api.getWaitTimes(shopSlug);
+        const timesPromise = api.getWaitTimes(shopSlug);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Wait times request timed out')), WAIT_TIMES_TIMEOUT_MS)
+        );
+        const times = await Promise.race([timesPromise, timeoutPromise]);
         if (mounted) {
           setWaitTimes(times);
           setIsLoadingWaitTimes(false);
@@ -118,6 +129,7 @@ export function useJoinForm() {
       } catch (error) {
         if (mounted) {
           logError('Failed to fetch wait times', error);
+          setWaitTimes(EMPTY_WAIT_TIMES);
           setIsLoadingWaitTimes(false);
         }
       } finally {

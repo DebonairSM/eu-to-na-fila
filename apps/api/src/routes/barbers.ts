@@ -132,7 +132,12 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     if (shop) {
       const settings = parseSettings(shop.settings);
       const timezone = settings.timezone ?? 'America/Sao_Paulo';
-      const { canMarkPresent, shouldAutoAbsent } = getBarberPresenceWindow(settings.operatingHours, timezone);
+      const { canMarkPresent, shouldAutoAbsent } = getBarberPresenceWindow(
+        settings.operatingHours,
+        timezone,
+        new Date(),
+        settings.temporaryStatusOverride ?? undefined
+      );
       if (shouldAutoAbsent) {
         await db
           .update(schema.barbers)

@@ -89,6 +89,7 @@
     "noBarberActive": "Nenhum barbeiro ativo no momento",
     "noBarberAvailable": "Nenhum barbeiro disponível",
     "unavailable": "Indisponível",
+    "estimatedTimeNoBarbers": "Será definido quando houver barbeiro disponível",
     "invalidName": "Nome inválido",
     "nameAlreadyInQueue": "Este nome já está na fila. Por favor, use um nome diferente.",
     "phoneRequired": "Telefone é obrigatório.",

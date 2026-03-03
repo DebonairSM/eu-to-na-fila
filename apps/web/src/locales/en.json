@@ -89,6 +89,7 @@
     "noBarberActive": "No barber active at the moment",
     "noBarberAvailable": "No barber available",
     "unavailable": "Unavailable",
+    "estimatedTimeNoBarbers": "Will be determined once a barber is available",
     "invalidName": "Invalid name",
     "nameAlreadyInQueue": "This name is already in the queue. Please use a different name.",
     "phoneRequired": "Phone is required.",

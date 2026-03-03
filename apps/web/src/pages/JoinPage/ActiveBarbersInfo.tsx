@@ -87,7 +87,7 @@ export function ActiveBarbersInfo({
                 : 'text-4xl sm:text-5xl text-[var(--shop-accent)]'
             }`}
           >
-            {formatWaitTime(displayWaitTime)}
+            {hasActiveBarbers ? formatWaitTime(displayWaitTime) : t('join.estimatedTimeNoBarbers')}
           </p>
           {selectedBarberId != null && selectedBarber && (
             <p className="text-xs text-[var(--shop-text-secondary)] mt-1">

@@ -174,12 +174,22 @@ export interface BarberPresenceWindowResult {
  * Barber presence rules around shop closing.
  * - Barbers cannot mark themselves present from 1h before closing until 1h after closing.
  * - 1h after closing, barbers are automatically counted absent.
+ * - When temporaryStatusOverride is set with isOpen: true (e.g. "open an extra hour"), barbers can mark themselves present for the whole override period (until the override "until" time).
  */
 export function getBarberPresenceWindow(
   operatingHours: OperatingHours | undefined,
   timezone: string,
-  now: Date = new Date()
+  now: Date = new Date(),
+  temporaryOverride?: { isOpen: boolean; until: string } | null
 ): BarberPresenceWindowResult {
+  // When shop has a temporary "open longer" override, allow barbers to mark present for the whole override period
+  if (temporaryOverride?.isOpen && temporaryOverride.until) {
+    const overrideUntil = new Date(temporaryOverride.until);
+    if (now < overrideUntil) {
+      return { canMarkPresent: true, shouldAutoAbsent: false };
+    }
+  }
+
   if (!operatingHours) {
     return { canMarkPresent: true, shouldAutoAbsent: false };
   }

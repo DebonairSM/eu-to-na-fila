@@ -252,6 +252,22 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
+    // Fetch active barbers first. When there are none, return immediately so the join page
+    // does not hang (no barbers => no meaningful wait time).
+    const barbers = await db.query.barbers.findMany({
+      where: and(
+        eq(schema.barbers.shopId, shop.id),
+        eq(schema.barbers.isActive, true)
+      ),
+    });
+
+    if (barbers.length === 0) {
+      return {
+        standardWaitTime: null,
+        barberWaitTimes: [],
+      };
+    }
+
     const now = new Date();
     const settings = parseSettings(shop.settings);
 
@@ -264,14 +280,6 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
           await queueService.calculatePosition(shop.id, now),
           settings.defaultServiceDuration
         );
-
-    // Get all active barbers for per-barber wait times (for barber-specific display if needed)
-    const barbers = await db.query.barbers.findMany({
-      where: and(
-        eq(schema.barbers.shopId, shop.id),
-        eq(schema.barbers.isActive, true)
-      ),
-    });
 
     const barberWaitTimes = await Promise.all(
       barbers.map(async (barber) => {
