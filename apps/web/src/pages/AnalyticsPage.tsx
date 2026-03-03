@@ -372,6 +372,28 @@ export function AnalyticsPage() {
 
   const stats = data.summary;
 
+  // Time view: month-scoped data and navigation (used so TS sees temporal state as used)
+  const timeData = temporalChartData ?? data;
+  const isCurrentTemporalMonth =
+    temporalChartMonth.year === now.getFullYear() && temporalChartMonth.month === now.getMonth() + 1;
+  const temporalMonthLabel = new Date(temporalChartMonth.year, temporalChartMonth.month - 1, 1).toLocaleDateString(
+    locale,
+    { month: 'long', year: 'numeric' }
+  );
+  const goTemporalPrevMonth = () => {
+    setTemporalChartMonth((prev) => {
+      if (prev.month <= 1) return { year: prev.year - 1, month: 12 };
+      return { year: prev.year, month: prev.month - 1 };
+    });
+  };
+  const goTemporalNextMonth = () => {
+    if (isCurrentTemporalMonth) return;
+    setTemporalChartMonth((prev) => {
+      if (prev.month >= 12) return { year: prev.year + 1, month: 1 };
+      return { year: prev.year, month: prev.month + 1 };
+    });
+  };
+
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-[var(--shop-background)] via-[var(--shop-surface-secondary)] to-[var(--shop-surface-secondary)]">
       <Navigation />
@@ -736,28 +758,7 @@ export function AnalyticsPage() {
           )}
 
           {/* Time Analysis View — month-scoped with prev/next month navigation */}
-          {activeView === 'time' && (() => {
-            const timeData = temporalChartData ?? data;
-            const isCurrentMonth =
-              temporalChartMonth.year === now.getFullYear() && temporalChartMonth.month === now.getMonth() + 1;
-            const monthLabel = new Date(temporalChartMonth.year, temporalChartMonth.month - 1, 1).toLocaleDateString(
-              locale,
-              { month: 'long', year: 'numeric' }
-            );
-            const goPrevMonth = () => {
-              setTemporalChartMonth((prev) => {
-                if (prev.month <= 1) return { year: prev.year - 1, month: 12 };
-                return { year: prev.year, month: prev.month - 1 };
-              });
-            };
-            const goNextMonth = () => {
-              if (isCurrentMonth) return;
-              setTemporalChartMonth((prev) => {
-                if (prev.month >= 12) return { year: prev.year + 1, month: 1 };
-                return { year: prev.year, month: prev.month + 1 };
-              });
-            };
-            return (
+          {activeView === 'time' && (
               <>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                   <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden min-h-[420px] flex flex-col">
@@ -772,17 +773,17 @@ export function AnalyticsPage() {
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={goPrevMonth}
+                          onClick={goTemporalPrevMonth}
                           className="p-2 rounded-lg border border-[var(--shop-border-color)] text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                           aria-label={t('analytics.monthPrev')}
                         >
                           <span className="material-symbols-outlined">chevron_left</span>
                         </button>
-                        <span className="min-w-[140px] text-center font-medium text-white capitalize">{monthLabel}</span>
+                        <span className="min-w-[140px] text-center font-medium text-white capitalize">{temporalMonthLabel}</span>
                         <button
                           type="button"
-                          onClick={goNextMonth}
-                          disabled={isCurrentMonth}
+                          onClick={goTemporalNextMonth}
+                          disabled={isCurrentTemporalMonth}
                           className="p-2 rounded-lg border border-[var(--shop-border-color)] text-white/80 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                           aria-label={t('analytics.monthNext')}
                         >
@@ -867,8 +868,7 @@ export function AnalyticsPage() {
                   </div>
                 )}
               </>
-            );
-          })()}
+          )}
 
           {/* Services View */}
           {activeView === 'services' && (
