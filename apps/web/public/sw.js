@@ -170,6 +170,11 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
+    // Don't intercept queue API - always fetch from network, never cache (queue changes constantly).
+    if (url.origin === self.location.origin && /^\/api\/shops\/[^/]+\/queue$/.test(url.pathname)) {
+      return;
+    }
+
     // Handle API requests (network first, fallback to cache)
     // Only intercept same-origin /api/ so we don't treat external URLs like ui-avatars.com/api/ as API
     if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) {
