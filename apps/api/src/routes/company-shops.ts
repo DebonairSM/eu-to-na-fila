@@ -776,7 +776,6 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
           description: z.string().max(500).optional(),
           duration: z.number().int().positive(),
           price: z.number().int().nonnegative().optional(),
-          kind: z.enum(['main', 'complementary']).default('complementary'),
         })).min(1),
         barbers: z.array(z.object({
           name: z.string().min(1).max(100),
@@ -879,7 +878,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
               price: s.price ?? null,
               isActive: true,
               sortOrder: index,
-              kind: s.kind === 'main' ? 'main' : 'complementary',
+              kind: 'complementary',
             }))
           )
           .returning();

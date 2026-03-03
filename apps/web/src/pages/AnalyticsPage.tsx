@@ -184,6 +184,16 @@ export function AnalyticsPage() {
   const [downloadUntil, setDownloadUntil] = useState('');
   const contentStartRef = useRef<HTMLDivElement>(null);
 
+  // Temporal view: "Atendimentos por dia" is month-scoped with prev/next month (default last month)
+  const lastMonthDefault = (() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return { year: d.getFullYear(), month: d.getMonth() + 1 };
+  })();
+  const [temporalChartMonth, setTemporalChartMonth] = useState(lastMonthDefault);
+  const [temporalChartData, setTemporalChartData] = useState<AnalyticsData | null>(null);
+  const [temporalChartLoading, setTemporalChartLoading] = useState(false);
+
   // Week options for productivity chart (Monday-based): this week, last week, 2 weeks ago, ... 5 weeks ago
   const weekOptionsForProductivity = (() => {
     const options: { value: string; label: string }[] = [];
@@ -323,6 +333,20 @@ export function AnalyticsPage() {
   useEffect(() => {
     contentStartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [activeView]);
+
+  // Fetch month-scoped data for temporal view ("Atendimentos por dia" and related charts)
+  useEffect(() => {
+    if (activeView !== 'time' || !shopSlug) {
+      return;
+    }
+    const { since, until } = getMonthRange(temporalChartMonth.year, temporalChartMonth.month);
+    setTemporalChartLoading(true);
+    api
+      .getAnalytics(shopSlug, { since, until })
+      .then(setTemporalChartData)
+      .catch(() => setTemporalChartData(null))
+      .finally(() => setTemporalChartLoading(false));
+  }, [activeView, shopSlug, temporalChartMonth.year, temporalChartMonth.month]);
 
   if (isLoading) {
     return (

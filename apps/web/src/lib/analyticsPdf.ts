@@ -1,6 +1,18 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+/** jsPDF default fonts do not support accents; normalize to ASCII for correct PDF rendering. */
+function normalizeForPdf(text: string): string {
+  if (!text) return text;
+  return (
+    text
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+      .replace(/[ºª]/g, '')
+      .trim() || text
+  );
+}
+
 const DAY_TO_ISO: Record<string, string> = {
   Sunday: '2024-01-07',
   Monday: '2024-01-01',
@@ -10,6 +22,8 @@ const DAY_TO_ISO: Record<string, string> = {
   Friday: '2024-01-05',
   Saturday: '2024-01-06',
 };
+
+const NEW_PAGE_Y = 240;
 
 function formatDateForPdf(iso: string, locale: string): string {
   return new Date(iso).toLocaleDateString(locale, {
@@ -23,6 +37,14 @@ function dayNameForPdf(dayKey: string, locale: string): string {
   const iso = DAY_TO_ISO[dayKey];
   if (!iso) return dayKey;
   return new Date(iso).toLocaleDateString(locale, { weekday: 'long' });
+}
+
+function ensureSpace(doc: jsPDF, y: number): number {
+  if (y > NEW_PAGE_Y) {
+    doc.addPage();
+    return 20;
+  }
+  return y;
 }
 
 export interface AnalyticsDataForPdf {
@@ -57,21 +79,23 @@ export function downloadAnalyticsPdf(
   // Title
   doc.setFontSize(22);
   doc.setTextColor(0, 0, 0);
-  doc.text(options.title ?? 'Relatório de desempenho', margin, y);
+  doc.text(normalizeForPdf(options.title ?? 'Relatório de desempenho'), margin, y);
   y += 10;
 
   if (options.shopName) {
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
-    doc.text(options.shopName, margin, y);
+    doc.text(normalizeForPdf(options.shopName), margin, y);
     y += 6;
   }
 
   doc.setFontSize(10);
-  doc.text(`Período: ${options.periodLabel}`, margin, y);
+  doc.text(normalizeForPdf(`Período: ${options.periodLabel}`), margin, y);
   if (data.period.days > 0) {
     doc.text(
-      `${formatDateForPdf(data.period.since, locale)} – ${formatDateForPdf(data.period.until, locale)}`,
+      normalizeForPdf(
+        `${formatDateForPdf(data.period.since, locale)} – ${formatDateForPdf(data.period.until, locale)}`
+      ),
       margin + 60,
       y
     );
@@ -79,9 +103,10 @@ export function downloadAnalyticsPdf(
   y += 14;
 
   // Summary
+  y = ensureSpace(doc, y);
   doc.setFontSize(14);
   doc.setTextColor(...primary);
-  doc.text('Resumo', margin, y);
+  doc.text(normalizeForPdf('Resumo'), margin, y);
   y += 8;
 
   const summaryRows = [
@@ -95,11 +120,11 @@ export function downloadAnalyticsPdf(
     ...(data.summary.revenueCents != null && data.summary.revenueCents > 0
       ? [['Receita', `R$ ${(data.summary.revenueCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`]]
       : []),
-  ];
+  ].map((row) => [normalizeForPdf(row[0]), row[1]] as [string, string]);
 
   autoTable(doc, {
     startY: y,
-    head: [['Métrica', 'Valor']],
+    head: [['Métrica', 'Valor']].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string]),
     body: summaryRows,
     theme: 'grid',
     headStyles: { fillColor: [212, 175, 55], textColor: [0, 0, 0] },
@@ -109,15 +134,20 @@ export function downloadAnalyticsPdf(
 
   // Barbers
   if (data.barbers.length > 0) {
+    y = ensureSpace(doc, y);
     doc.setFontSize(14);
     doc.setTextColor(...primary);
-    doc.text('Barbeiros', margin, y);
+    doc.text(normalizeForPdf('Barbeiros'), margin, y);
     y += 8;
 
     autoTable(doc, {
       startY: y,
-      head: [['Barbeiro', 'Atendidos', 'Tempo médio (min)']],
-      body: data.barbers.map((b) => [b.name, String(b.totalServed), String(b.avgServiceTime)]),
+      head: [['Barbeiro', 'Atendidos', 'Tempo médio (min)']].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string, string]),
+      body: data.barbers.map((b) => [
+        normalizeForPdf(b.name),
+        String(b.totalServed),
+        String(b.avgServiceTime),
+      ]),
       theme: 'grid',
       headStyles: { fillColor: [60, 60, 60], textColor: [255, 255, 255] },
       margin: { left: margin, right: margin },
@@ -127,20 +157,17 @@ export function downloadAnalyticsPdf(
 
   // Service breakdown
   if (data.serviceBreakdown.length > 0) {
-    if (y > 240) {
-      doc.addPage();
-      y = 20;
-    }
+    y = ensureSpace(doc, y);
     doc.setFontSize(14);
     doc.setTextColor(...primary);
-    doc.text('Serviços', margin, y);
+    doc.text(normalizeForPdf('Serviços'), margin, y);
     y += 8;
 
     autoTable(doc, {
       startY: y,
-      head: [['Serviço', 'Quantidade', '%']],
+      head: [['Serviço', 'Quantidade', '%']].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string, string]),
       body: data.serviceBreakdown.map((s) => [
-        s.serviceName,
+        normalizeForPdf(s.serviceName),
         String(s.count),
         `${s.percentage}%`,
       ]),
@@ -154,19 +181,16 @@ export function downloadAnalyticsPdf(
   // Day of week
   const dayEntries = Object.entries(data.dayOfWeekDistribution).filter(([, n]) => n > 0);
   if (dayEntries.length > 0) {
-    if (y > 250) {
-      doc.addPage();
-      y = 20;
-    }
+    y = ensureSpace(doc, y);
     doc.setFontSize(14);
     doc.setTextColor(...primary);
-    doc.text('Atendimentos por dia da semana', margin, y);
+    doc.text(normalizeForPdf('Atendimentos por dia da semana'), margin, y);
     y += 8;
 
     autoTable(doc, {
       startY: y,
-      head: [['Dia', 'Atendimentos']],
-      body: dayEntries.map(([day, n]) => [dayNameForPdf(day, locale), String(n)]),
+      head: [['Dia', 'Atendimentos']].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string]),
+      body: dayEntries.map(([day, n]) => [normalizeForPdf(dayNameForPdf(day, locale)), String(n)]),
       theme: 'grid',
       headStyles: { fillColor: [60, 60, 60], textColor: [255, 255, 255] },
       margin: { left: margin, right: margin },
@@ -175,31 +199,35 @@ export function downloadAnalyticsPdf(
   }
 
   // Cancellation
+  y = ensureSpace(doc, y);
   doc.setFontSize(14);
   doc.setTextColor(...primary);
-  doc.text('Cancelamentos', margin, y);
+  doc.text(normalizeForPdf('Cancelamentos'), margin, y);
   y += 8;
   doc.setFontSize(10);
   doc.setTextColor(0, 0, 0);
   doc.text(
-    `Tempo médio até cancelamento: ${data.cancellationAnalysis.avgTimeBeforeCancellation} min`,
+    normalizeForPdf(
+      `Tempo médio até cancelamento: ${data.cancellationAnalysis.avgTimeBeforeCancellation} min`
+    ),
     margin,
     y
   );
   y += 10;
 
-  // Barber efficiency (if present)
-  if (data.barberEfficiency.length > 0 && y < 250) {
+  // Barber efficiency (always include when data present; add page if needed)
+  if (data.barberEfficiency.length > 0) {
+    y = ensureSpace(doc, y);
     doc.setFontSize(14);
     doc.setTextColor(...primary);
-    doc.text('Eficiência por barbeiro', margin, y);
+    doc.text(normalizeForPdf('Eficiência por barbeiro'), margin, y);
     y += 8;
 
     autoTable(doc, {
       startY: y,
-      head: [['Barbeiro', 'Tickets/dia', 'Taxa conclusão %']],
+      head: [['Barbeiro', 'Tickets/dia', 'Taxa conclusão %']].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string, string]),
       body: data.barberEfficiency.map((b) => [
-        b.name,
+        normalizeForPdf(b.name),
         String(b.ticketsPerDay),
         String(b.completionRate),
       ]),

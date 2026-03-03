@@ -58,7 +58,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
           .from(schema.services)
           .where(eq(schema.services.shopId, shop.id))
           .orderBy(asc(schema.services.id));
-        services = services.map((s) => ({ ...s, sortOrder: 0, kind: 'complementary' as const }));
+        services = services.map((s) => ({ ...s, sortOrder: 0 }));
       } else {
         throw err;
       }
@@ -96,7 +96,6 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       price: z.number().int().min(0).optional(),
       isActive: z.boolean().default(true),
       sortOrder: z.number().int().min(0).optional(),
-      kind: z.enum(['main', 'complementary']).default('complementary'),
     });
 
     const { slug } = validateRequest(paramsSchema, request.params);
@@ -138,7 +137,7 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       price: body.price ?? null,
       isActive: body.isActive ?? true,
       sortOrder,
-      kind: body.kind ?? 'complementary',
+      kind: 'complementary',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -274,7 +273,6 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       price: z.number().int().min(0).optional().nullable(),
       isActive: z.boolean().optional(),
       sortOrder: z.number().int().min(0).optional(),
-      kind: z.enum(['main', 'complementary']).optional(),
     });
 
     const { id } = validateRequest(paramsSchema, request.params);
@@ -307,7 +305,6 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
       price?: number | null;
       isActive?: boolean;
       sortOrder?: number;
-      kind?: string;
       updatedAt: Date;
     } = { updatedAt: new Date() };
 
@@ -317,7 +314,6 @@ export const serviceRoutes: FastifyPluginAsync = async (fastify) => {
     if (body.price !== undefined) updateData.price = body.price;
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
     if (body.sortOrder !== undefined) updateData.sortOrder = body.sortOrder;
-    if (body.kind !== undefined) updateData.kind = body.kind;
 
     const returningCols = {
       id: schema.services.id,

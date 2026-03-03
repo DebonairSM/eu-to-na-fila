@@ -33,6 +33,7 @@ import { registerWebSocket } from './websocket/handler.js';
 import { getPublicPath } from './lib/paths.js';
 import { getProjectByPathname, getProjectBySlug, getShopByProjectSlug } from './lib/shop.js';
 import { startQueueCountdown } from './jobs/queueCountdown.js';
+import { startBarberPresenceJob } from './jobs/barberPresenceJob.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -667,6 +668,8 @@ fastify.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {
 
   // Start periodic queue recalculation (every 60s) so wait times tick down
   startQueueCountdown();
+  // Auto-set barbers absent 1h after closing (every 15min); barbers are never auto-set present
+  startBarberPresenceJob();
 }).catch((err) => {
   console.error('❌ Failed to start server:', err);
   process.exit(1);

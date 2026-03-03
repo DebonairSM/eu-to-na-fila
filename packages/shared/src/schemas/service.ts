@@ -1,8 +1,5 @@
 import { z } from 'zod';
 
-export const serviceKindSchema = z.enum(['main', 'complementary']);
-export type ServiceKind = z.infer<typeof serviceKindSchema>;
-
 export const serviceSchema = z.object({
   id: z.number(),
   shopId: z.number(),
@@ -12,7 +9,6 @@ export const serviceSchema = z.object({
   price: z.number().positive().optional(),
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().min(0).default(0),
-  kind: serviceKindSchema.default('complementary'),
   createdAt: z.date().or(z.string()),
   updatedAt: z.date().or(z.string()),
 });

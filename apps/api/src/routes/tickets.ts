@@ -69,10 +69,9 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       );
     }
 
-    // Validate body: legacy single serviceId or mainServiceId + complementaryServiceIds (all optional; backend uses first shop service if none selected)
+    // Validate body: single serviceId or complementaryServiceIds (selected services; first is primary)
     const bodySchema = z.object({
       serviceId: z.number().optional(),
-      mainServiceId: z.number().optional(),
       complementaryServiceIds: z.array(z.number().int().positive()).optional(),
       customerName: z.string().min(1).max(200),
       customerPhone: z.string().optional(),
@@ -103,17 +102,15 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    const mainServiceId = data.mainServiceId ?? undefined;
     const complementaryServiceIds = data.complementaryServiceIds && data.complementaryServiceIds.length > 0 ? data.complementaryServiceIds : undefined;
-    const serviceId = (mainServiceId != null || complementaryServiceIds?.length)
-      ? (mainServiceId ?? complementaryServiceIds?.[0])
+    const serviceId = complementaryServiceIds?.length
+      ? complementaryServiceIds[0]
       : data.serviceId ?? undefined;
 
     const createData = {
       ...data,
       shopId: shop.id,
       serviceId,
-      mainServiceId,
       complementaryServiceIds: complementaryServiceIds ?? [],
     };
     if (request.user?.role === 'customer' && request.user.clientId != null) {

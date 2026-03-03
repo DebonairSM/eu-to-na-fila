@@ -28,7 +28,7 @@ export interface CompaniesApi {
     theme?: Partial<ShopTheme>; homeContent?: Partial<HomeContent>;
     homeContentByLocale?: Record<string, Partial<HomeContent>>;
     settings?: Partial<ShopSettings>;
-    services: Array<{ name: string; description?: string; duration: number; price?: number; kind?: 'main' | 'complementary' }>;
+    services: Array<{ name: string; description?: string; duration: number; price?: number }>;
     barbers: Array<{ name: string; email?: string; phone?: string }>;
   }): Promise<{
     shop: ShopAdminView;

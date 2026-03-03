@@ -97,6 +97,7 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Toggle barber presence.
+   * Barbers are never automatically marked present when the shop reopens; only explicit staff action sets isPresent to true.
    * When setting isPresent to false, unassigns any customer currently being served.
    * Requires staff or owner authentication.
    * 

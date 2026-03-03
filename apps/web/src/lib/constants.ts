@@ -40,6 +40,9 @@ export const TIMEOUTS = {
   NAVIGATION_SCROLL_DELAY: 300,
 } as const;
 
+/** Timeout for wait-time related API calls (getWaitTimes, getWaitDebug, getMetrics). Abort slow requests so UI can show fallback. */
+export const API_TIMEOUT_WAIT_TIMES_MS = 8000;
+
 /**
  * Kiosk mode view durations in milliseconds
  */

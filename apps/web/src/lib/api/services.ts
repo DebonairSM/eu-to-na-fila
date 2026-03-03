@@ -3,8 +3,8 @@ import type { BaseApiClient } from './client.js';
 
 export interface ServicesApi {
   getServices(shopSlug: string): Promise<Service[]>;
-  createService(shopSlug: string, data: { name: string; description?: string; duration: number; price?: number; isActive?: boolean; sortOrder?: number; kind?: 'main' | 'complementary' }): Promise<Service>;
-  updateService(serviceId: number, data: { name?: string; description?: string | null; duration?: number; price?: number | null; isActive?: boolean; sortOrder?: number; kind?: 'main' | 'complementary' }): Promise<Service>;
+  createService(shopSlug: string, data: { name: string; description?: string; duration: number; price?: number; isActive?: boolean; sortOrder?: number }): Promise<Service>;
+  updateService(serviceId: number, data: { name?: string; description?: string | null; duration?: number; price?: number | null; isActive?: boolean; sortOrder?: number }): Promise<Service>;
   reorderServices(shopSlug: string, ids: number[]): Promise<{ ok: boolean }>;
   deleteService(serviceId: number): Promise<{ success: boolean; message: string }>;
 }

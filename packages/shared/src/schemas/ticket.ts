@@ -43,9 +43,9 @@ export type Ticket = z.infer<typeof ticketSchema>;
 
 export const createTicketSchema = z.object({
   shopId: z.number(),
-  /** Legacy: single service. Ignored when mainServiceId or complementaryServiceIds is provided. */
+  /** Single service (optional; used when only one service is selected). */
   serviceId: z.number().optional(),
-  mainServiceId: z.number().optional(),
+  /** Selected service ids; first is used as primary for display. Backend uses first as service_id, all stored as complementary_service_ids. */
   complementaryServiceIds: z.array(z.number().int().positive()).optional(),
   customerName: z.string().min(1).max(200),
   customerPhone: z.string().optional(),

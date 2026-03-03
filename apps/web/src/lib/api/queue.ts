@@ -1,5 +1,6 @@
 import type { GetQueueResponse, GetMetricsResponse, GetStatisticsResponse, Ticket } from '@eutonafila/shared';
 import type { BaseApiClient } from './client.js';
+import { API_TIMEOUT_WAIT_TIMES_MS } from '../constants';
 
 export interface QueueNextResponse {
   next: Ticket | null;
@@ -22,9 +23,9 @@ export function createQueueApi(client: BaseApiClient): QueueApi {
   return {
     getQueue: (shopSlug) => c.get(`/shops/${shopSlug}/queue`),
     getQueueNext: (shopSlug) => c.get(`/shops/${shopSlug}/queue/next`),
-    getMetrics: (shopSlug) => c.get(`/shops/${shopSlug}/metrics`),
-    getWaitDebug: (shopSlug) => c.get(`/shops/${shopSlug}/wait-debug`),
-    getWaitTimes: (shopSlug) => c.get(`/shops/${shopSlug}/wait-times`),
+    getMetrics: (shopSlug) => c.get(`/shops/${shopSlug}/metrics`, API_TIMEOUT_WAIT_TIMES_MS),
+    getWaitDebug: (shopSlug) => c.get(`/shops/${shopSlug}/wait-debug`, API_TIMEOUT_WAIT_TIMES_MS),
+    getWaitTimes: (shopSlug) => c.get(`/shops/${shopSlug}/wait-times`, API_TIMEOUT_WAIT_TIMES_MS),
     getStatistics: (shopSlug, since) => {
       const params = since ? `?since=${since.toISOString()}` : '';
       return c.get(`/shops/${shopSlug}/statistics${params}`);

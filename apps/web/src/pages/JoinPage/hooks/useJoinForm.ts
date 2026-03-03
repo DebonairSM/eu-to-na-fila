@@ -12,7 +12,7 @@ import { useServices } from '@/hooks/useServices';
 import { getShopStatus } from '@eutonafila/shared';
 import { getErrorMessage, formatName, getOrCreateDeviceId, redirectToStatusPage } from '@/lib/utils';
 import { logError } from '@/lib/logger';
-import { STORAGE_KEYS } from '@/lib/constants';
+import { STORAGE_KEYS, API_TIMEOUT_WAIT_TIMES_MS } from '@/lib/constants';
 
 const STORAGE_KEY = STORAGE_KEYS.ACTIVE_TICKET_ID;
 const CUSTOMER_NAME_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_NAME;
@@ -21,8 +21,8 @@ const REMEMBER_PHONE_DEBOUNCE_MS = 400;
 
 /** Join page: at most one getWaitTimes per shop per 20 seconds (survives remounts). */
 const WAIT_TIMES_INTERVAL_MS = 20000;
-/** Timeout so we never leave the user stuck on the wait-time spinner (e.g. API hang or no barbers). */
-const WAIT_TIMES_TIMEOUT_MS = 12000;
+/** Timeout so we never leave the user stuck on the wait-time spinner (matches API abort timeout). */
+const WAIT_TIMES_TIMEOUT_MS = API_TIMEOUT_WAIT_TIMES_MS;
 const lastWaitTimesCallBySlug: Record<string, number> = {};
 
 const EMPTY_WAIT_TIMES = {
@@ -419,7 +419,6 @@ export function useJoinForm() {
     let payload: {
       customerName: string;
       serviceId?: number;
-      mainServiceId?: number;
       complementaryServiceIds?: number[];
       customerPhone?: string;
       preferredBarberId?: number;
