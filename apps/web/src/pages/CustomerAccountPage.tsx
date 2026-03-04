@@ -9,7 +9,6 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { useCustomerProfileAndAppointments } from '@/hooks/useCustomerProfileAndAppointments';
 import { useLogout } from '@/hooks/useLogout';
 import { api } from '@/lib/api';
-import type { CustomerProfile, CustomerAppointmentsResponse } from '@/lib/api/auth';
 import { config } from '@/lib/config';
 import { formatDurationMinutes } from '@/lib/formatDuration';
 import { cn, getErrorMessage } from '@/lib/utils';
