@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import type { UpdateTicketStatus } from '@eutonafila/shared';
 import { createAppointmentSchema, getShopStatus } from '@eutonafila/shared';
-import { db, schema } from '../db/index.js';
+import { db, schema, pool } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import { ticketService, queueService } from '../services/index.js';
 import { validateRequest } from '../lib/validation.js';
@@ -19,6 +19,60 @@ import { env } from '../env.js';
 import { getHomeContentForLocale } from '@eutonafila/shared';
 
 const reminderSentTicketIds = new Set<number>();
+
+/** In-memory cache for GET tickets/active to reduce DB load and pool contention. TTL 10s. */
+const ACTIVE_TICKET_CACHE_TTL_MS = 10_000;
+const activeTicketCache = new Map<string, { data: Record<string, unknown> | null; expires: number }>();
+
+function getCachedActiveTicket(slug: string, deviceId: string): Record<string, unknown> | null | undefined {
+  const key = `${slug}:${deviceId}`;
+  const entry = activeTicketCache.get(key);
+  if (!entry || Date.now() > entry.expires) return undefined;
+  return entry.data;
+}
+
+function setCachedActiveTicket(slug: string, deviceId: string, data: Record<string, unknown> | null): void {
+  const key = `${slug}:${deviceId}`;
+  activeTicketCache.set(key, { data, expires: Date.now() + ACTIVE_TICKET_CACHE_TTL_MS });
+}
+
+function invalidateActiveTicketCache(slug: string, deviceId: string): void {
+  activeTicketCache.delete(`${slug}:${deviceId}`);
+}
+
+/** Map DB row (snake_case) to ticket-like object for shapeTicketResponse. */
+function rowToTicketLike(row: Record<string, unknown>): Record<string, unknown> {
+  const t: Record<string, unknown> = {
+    id: row.id,
+    shopId: row.shop_id,
+    serviceId: row.service_id,
+    mainServiceId: row.main_service_id,
+    complementaryServiceIds: row.complementary_service_ids,
+    barberId: row.barber_id,
+    preferredBarberId: row.preferred_barber_id,
+    clientId: row.client_id,
+    customerName: row.customer_name,
+    customerPhone: row.customer_phone,
+    deviceId: row.device_id,
+    status: row.status,
+    position: row.position,
+    estimatedWaitTime: row.estimated_wait_time,
+    type: row.type,
+    scheduledTime: row.scheduled_time,
+    checkInTime: row.check_in_time,
+    ticketNumber: row.ticket_number,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    startedAt: row.started_at,
+    completedAt: row.completed_at,
+    cancelledAt: row.cancelled_at,
+    barberAssignedAt: row.barber_assigned_at,
+  };
+  t.shop = row.shop_slug != null ? { slug: row.shop_slug } : undefined;
+  t.service = row.service_id != null && row.service_name != null ? { id: row.service_id, name: row.service_name } : undefined;
+  t.barber = row.barber_id != null && row.barber_name != null ? { id: row.barber_id, name: row.barber_name } : undefined;
+  return t;
+}
 
 /**
  * Ticket routes.
@@ -97,7 +151,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     if (data.deviceId && data.deviceId.trim().length > 0) {
       const existingTicketByDevice = await ticketService.findActiveTicketByDevice(shop.id, data.deviceId);
       if (existingTicketByDevice) {
-        // Device already has an active ticket - return it with 200 status (existing resource)
+        invalidateActiveTicketCache(slug, data.deviceId);
         const out = shapeTicketResponse(existingTicketByDevice as Record<string, unknown>) as Record<string, unknown>;
         out.shopSlug = shop.slug;
         return reply.status(200).send(out);
@@ -139,7 +193,10 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(200).send(shapeWithShop(ticket as Record<string, unknown>));
     }
 
-    // New ticket created - return 201
+    // New ticket created - return 201; invalidate active-ticket cache so next GET sees it
+    if (data.deviceId && data.deviceId.trim().length > 0) {
+      invalidateActiveTicketCache(slug, data.deviceId);
+    }
     return reply.status(201).send(shapeWithShop(ticket as Record<string, unknown>));
   });
 
@@ -380,6 +437,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * Get active ticket for a device.
    * Used to check if device already has an active ticket before attempting to create one.
+   * Single DB query + short TTL cache to avoid pool queueing under load.
    *
    * @route GET /api/shops/:slug/tickets/active
    * @param slug - Shop slug identifier
@@ -399,13 +457,38 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     });
     const { deviceId } = validateRequest(querySchema, request.query);
 
-    const shop = await getShopBySlug(slug);
-    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    const cached = getCachedActiveTicket(slug, deviceId);
+    if (cached !== undefined) return cached;
 
-    const ticket = await ticketService.findActiveTicketByDevice(shop.id, deviceId);
-    if (!ticket) return null;
-    const out = shapeTicketResponse(ticket as Record<string, unknown>) as Record<string, unknown>;
-    out.shopSlug = shop.slug;
+    const result = await pool.query<Record<string, unknown>>(
+      `SELECT t.id, t.shop_id, t.service_id, t.main_service_id, t.complementary_service_ids,
+        t.barber_id, t.preferred_barber_id, t.client_id, t.customer_name, t.customer_phone,
+        t.device_id, t.status, t.position, t.estimated_wait_time, t.type, t.scheduled_time,
+        t.check_in_time, t.ticket_number, t.created_at, t.updated_at, t.started_at,
+        t.completed_at, t.cancelled_at, t.barber_assigned_at,
+        s.slug AS shop_slug, svc.name AS service_name, b.name AS barber_name
+       FROM tickets t
+       INNER JOIN shops s ON t.shop_id = s.id
+       LEFT JOIN projects p ON s.project_id = p.id
+       LEFT JOIN services svc ON t.service_id = svc.id
+       LEFT JOIN barbers b ON t.barber_id = b.id
+       WHERE (p.slug = $1 OR s.slug = $1) AND t.device_id = $2
+         AND t.status IN ('waiting','in_progress')
+       ORDER BY t.created_at DESC
+       LIMIT 1`,
+      [slug, deviceId]
+    );
+
+    const row = result.rows[0];
+    if (!row) {
+      setCachedActiveTicket(slug, deviceId, null);
+      return null;
+    }
+
+    const ticketLike = rowToTicketLike(row);
+    const out = shapeTicketResponse(ticketLike) as Record<string, unknown>;
+    out.shopSlug = row.shop_slug;
+    setCachedActiveTicket(slug, deviceId, out);
     return out;
   });
 
