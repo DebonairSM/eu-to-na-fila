@@ -1,11 +1,22 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
 import { Container, Heading, Text } from '@/components/design-system';
+import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
-import { cn } from '@/lib/utils';
+import { cn, hasScheduleEnabled } from '@/lib/utils';
 
 export function CheckInConfirmPage() {
   const { t } = useLocale();
+  const navigate = useNavigate();
+  const { config: shopConfig, isLoading: configLoading } = useShopConfig();
+
+  useEffect(() => {
+    if (configLoading) return;
+    if (!hasScheduleEnabled(shopConfig.settings ?? {})) {
+      navigate('/join', { replace: true });
+    }
+  }, [configLoading, shopConfig.settings, navigate]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">

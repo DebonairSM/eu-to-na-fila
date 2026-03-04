@@ -229,7 +229,8 @@
     "cancelAppointment": "Cancelar agendamento",
     "confirmCancelAppointmentTitle": "Cancelar agendamento?",
     "confirmCancelAppointmentMessage": "Tem certeza que deseja cancelar este agendamento?",
-    "confirmCancelAppointmentConfirm": "Sim, cancelar"
+    "confirmCancelAppointmentConfirm": "Sim, cancelar",
+    "linkToAccount": "Vincular a uma conta"
   },
   "auth": {
     "login": "Entrar",

@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { hasScheduleEnabled } from '@/lib/utils';
 
 /**
  * Handles redirect from backend after Google OAuth or other shop auth.
  * Expects query params: token, shop (and optionally redirect).
  * Persists token, logs in as customer, then redirects.
+ * When redirect is not provided: goes to /checkin/confirm only if scheduling is enabled, otherwise /join.
  */
 export function ShopCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -35,8 +37,18 @@ export function ShopCallbackPage() {
       name: (nameParam && nameParam.trim()) || 'Customer',
       clientId: Number.isNaN(clientId) ? undefined : clientId,
     });
-    const target = redirect && redirect.startsWith('/') ? redirect : '/checkin/confirm';
-    navigate(target, { replace: true });
+
+    const go = (target: string) => navigate(target, { replace: true });
+    if (redirect && redirect.startsWith('/')) {
+      go(redirect);
+      return;
+    }
+    api.getShopConfig(shop).then((config) => {
+      const target = hasScheduleEnabled(config.settings ?? {}) ? '/checkin/confirm' : '/join';
+      go(target);
+    }).catch(() => {
+      go('/join');
+    });
   }, [searchParams, navigate, login]);
 
   if (error) {

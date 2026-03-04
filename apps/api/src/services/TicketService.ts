@@ -84,7 +84,7 @@ export class TicketService {
         eq(schema.tickets.deviceId, deviceId),
         or(eq(schema.tickets.status, 'waiting'), eq(schema.tickets.status, 'in_progress'))
       ),
-      with: { shop: true, service: { columns: schema.serviceColumnsWithoutSortOrder }, barber: true },
+      with: { service: { columns: schema.serviceColumnsWithoutSortOrder }, barber: true },
       orderBy: (tickets, { desc }) => [desc(tickets.createdAt)],
     });
     return ticket as Ticket | null;

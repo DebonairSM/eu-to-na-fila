@@ -229,7 +229,8 @@
     "cancelAppointment": "Cancel appointment",
     "confirmCancelAppointmentTitle": "Cancel appointment?",
     "confirmCancelAppointmentMessage": "Are you sure you want to cancel this appointment?",
-    "confirmCancelAppointmentConfirm": "Yes, cancel"
+    "confirmCancelAppointmentConfirm": "Yes, cancel",
+    "linkToAccount": "Link to account"
   },
   "auth": {
     "login": "Log in",

@@ -6,17 +6,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useActiveTicket } from '@/hooks/useActiveTicket';
 import { ShopStatusBanner } from '@/components/ShopStatusBanner';
-
-function hasScheduleEnabled(settings: { allowAppointments?: boolean; operatingHours?: unknown }): boolean {
-  if (!settings?.allowAppointments) return false;
-  const hours = settings.operatingHours as Record<string, { open?: string; close?: string } | null> | undefined;
-  if (!hours || typeof hours !== 'object') return false;
-  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
-  return days.some((d) => {
-    const h = hours[d];
-    return h != null && typeof h === 'object' && h.open != null && h.close != null;
-  });
-}
+import { hasScheduleEnabled } from '@/lib/utils';
 
 /**
  * JoinPage component - renders the join form.

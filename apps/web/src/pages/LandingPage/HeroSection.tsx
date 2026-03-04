@@ -3,18 +3,7 @@ import { Button, Heading, Text, FadeIn, SlideIn, Container } from '@/components/
 import { useShopConfig, useShopHomeContent } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { getLayoutBehavior } from '@/lib/layouts';
-import { cn } from '@/lib/utils';
-
-function hasScheduleEnabled(settings: { allowAppointments?: boolean; operatingHours?: unknown }): boolean {
-  if (!settings?.allowAppointments) return false;
-  const hours = settings.operatingHours as Record<string, { open?: string; close?: string } | null> | undefined;
-  if (!hours || typeof hours !== 'object') return false;
-  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
-  return days.some((d) => {
-    const h = hours[d];
-    return h != null && typeof h === 'object' && h.open != null && h.close != null;
-  });
-}
+import { cn, hasScheduleEnabled } from '@/lib/utils';
 
 export function HeroSection() {
   const { t } = useLocale();

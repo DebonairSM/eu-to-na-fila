@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { useJoinForm } from './hooks/useJoinForm';
 import { ActiveBarbersInfo } from './ActiveBarbersInfo';
 import { Card, CardContent, Input, InputLabel, InputError, Button } from '@/components/design-system';
+import { hasScheduleEnabled } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatCurrency } from '@/lib/format';
 import { formatDurationMinutes } from '@/lib/formatDuration';
@@ -167,7 +168,7 @@ export function JoinForm() {
                 <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
                   <button
                     type="button"
-                    onClick={() => navigate(`/shop/login?redirect=${encodeURIComponent('/checkin/confirm')}`)}
+                    onClick={() => navigate(`/shop/login?redirect=${encodeURIComponent(hasScheduleEnabled(settings) ? '/checkin/confirm' : '/join')}`)}
                     className="text-[var(--shop-accent)] hover:underline bg-transparent border-0 p-0 cursor-pointer font-inherit"
                   >
                     {t('schedule.checkInWithLogin')}

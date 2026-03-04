@@ -21,6 +21,8 @@ interface ActionButtonsProps {
   /** When true, cancel uses appointment-specific labels and Edit button is shown */
   isPendingAppointment?: boolean;
   onEditAppointment?: () => void;
+  /** When set, show a "Link to account" button that navigates to this href (login with redirect) */
+  linkToAccountHref?: string | null;
 }
 
 export function ActionButtons({
@@ -38,6 +40,7 @@ export function ActionButtons({
   checkInCooldownRemaining = 0,
   isPendingAppointment,
   onEditAppointment,
+  linkToAccountHref,
 }: ActionButtonsProps) {
   const { t } = useLocale();
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -172,6 +175,15 @@ export function ActionButtons({
             <span className="material-symbols-outlined text-xl">share</span>
             {t('status.shareTicket')}
           </Button>
+        )}
+
+        {linkToAccountHref && (
+          <Link to={linkToAccountHref}>
+            <Button variant="outline" fullWidth>
+              <span className="material-symbols-outlined text-xl">person_add</span>
+              {t('status.linkToAccount')}
+            </Button>
+          </Link>
         )}
       </Stack>
 

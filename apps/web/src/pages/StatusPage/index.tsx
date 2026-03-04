@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
@@ -41,7 +41,12 @@ export function StatusPage() {
   const [shareSuccess, setShareSuccess] = useState(false);
   const [generalLineWaitTime, setGeneralLineWaitTime] = useState<number | null>(null);
   const { config: shopConfig } = useShopConfig();
-  const { user } = useAuthContext();
+  const { user, isCustomer } = useAuthContext();
+  const location = useLocation();
+  const linkToAccountHref =
+    ticket && !isCustomer
+      ? `/shop/login?redirect=${encodeURIComponent(location.pathname)}`
+      : null;
   const { barber, isLeaving, handleLeaveQueue, handleShareTicket, leaveError, clearLeaveError } = useStatusDisplay(ticket);
   const [checkInError, setCheckInError] = useState<string | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
@@ -418,6 +423,7 @@ export function StatusPage() {
             checkInCooldownRemaining={checkInCooldownRemaining}
             isPendingAppointment={isPendingAppointment}
             onEditAppointment={handleOpenReschedule}
+            linkToAccountHref={linkToAccountHref}
           />
         </div>
 
@@ -487,6 +493,7 @@ export function StatusPage() {
               onCheckIn={handleCheckIn}
               isCheckingIn={isCheckingIn}
               checkInCooldownRemaining={checkInCooldownRemaining}
+              linkToAccountHref={linkToAccountHref}
             />
           </div>
         </div>

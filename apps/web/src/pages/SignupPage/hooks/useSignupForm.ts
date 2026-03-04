@@ -2,9 +2,10 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
-import { getErrorMessage } from '@/lib/utils';
+import { getErrorMessage, hasScheduleEnabled } from '@/lib/utils';
 
 export function useSignupForm() {
   const [email, setEmail] = useState('');
@@ -18,9 +19,11 @@ export function useSignupForm() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
+  const { config: shopConfig } = useShopConfig();
   const { login } = useAuthContext();
   const { t } = useLocale();
   const isSubmittingRef = useRef(false);
+  const defaultPostSignupPath = hasScheduleEnabled(shopConfig.settings ?? {}) ? '/checkin/confirm' : '/join';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +68,7 @@ export function useSignupForm() {
           name: res.name?.trim() || name.trim() || email.trim(),
           clientId: result.clientId,
         });
-        navigate('/checkin/confirm');
+        navigate(defaultPostSignupPath);
         return;
       }
       setError(t('auth.signupError'));
@@ -78,7 +81,7 @@ export function useSignupForm() {
   };
 
   const goToGoogleAuth = () => {
-    const url = api.getCustomerGoogleAuthUrl(shopSlug, '/checkin/confirm');
+    const url = api.getCustomerGoogleAuthUrl(shopSlug, defaultPostSignupPath);
     window.location.href = url;
   };
 

@@ -2,9 +2,10 @@ import { useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
-import { getErrorMessage } from '@/lib/utils';
+import { getErrorMessage, hasScheduleEnabled } from '@/lib/utils';
 
 export type LoginMode = 'customer' | 'staff';
 
@@ -21,8 +22,10 @@ export function useLoginForm() {
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get('redirect');
   const shopSlug = useShopSlug();
+  const { config: shopConfig } = useShopConfig();
   const { login } = useAuthContext();
   const { t } = useLocale();
+  const defaultPostLoginPath = hasScheduleEnabled(shopConfig.settings ?? {}) ? '/checkin/confirm' : '/join';
 
   const isSubmittingRef = useRef(false);
 
@@ -106,7 +109,7 @@ export function useLoginForm() {
             },
             { rememberMe }
           );
-          navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/checkin/confirm');
+          navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : defaultPostLoginPath);
           return;
         }
       }
@@ -121,7 +124,7 @@ export function useLoginForm() {
   };
 
   const goToGoogleAuth = () => {
-    const redirectUri = redirectTo && redirectTo.startsWith('/') ? redirectTo : '/checkin/confirm';
+    const redirectUri = redirectTo && redirectTo.startsWith('/') ? redirectTo : defaultPostLoginPath;
     const url = api.getCustomerGoogleAuthUrl(shopSlug, redirectUri);
     window.location.href = url;
   };

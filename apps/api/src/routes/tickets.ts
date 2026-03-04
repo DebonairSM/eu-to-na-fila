@@ -98,7 +98,9 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       const existingTicketByDevice = await ticketService.findActiveTicketByDevice(shop.id, data.deviceId);
       if (existingTicketByDevice) {
         // Device already has an active ticket - return it with 200 status (existing resource)
-        return reply.status(200).send(shapeTicketResponse(existingTicketByDevice as Record<string, unknown>));
+        const out = shapeTicketResponse(existingTicketByDevice as Record<string, unknown>) as Record<string, unknown>;
+        out.shopSlug = shop.slug;
+        return reply.status(200).send(out);
       }
     }
 
@@ -402,7 +404,9 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
 
     const ticket = await ticketService.findActiveTicketByDevice(shop.id, deviceId);
     if (!ticket) return null;
-    return shapeTicketResponse(ticket as Record<string, unknown>);
+    const out = shapeTicketResponse(ticket as Record<string, unknown>) as Record<string, unknown>;
+    out.shopSlug = shop.slug;
+    return out;
   });
 
   /**
