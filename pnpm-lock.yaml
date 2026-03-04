@@ -41,8 +41,8 @@ importers:
         specifier: ^7.0.1
         version: 7.0.4
       '@fastify/websocket':
-        specifier: 5.0.1
-        version: 5.0.1
+        specifier: ^8.3.1
+        version: 8.3.1
       '@supabase/supabase-js':
         specifier: ^2.39.0
         version: 2.91.1
@@ -976,8 +976,8 @@ packages:
   '@fastify/swagger@8.15.0':
     resolution: {integrity: sha512-zy+HEEKFqPMS2sFUsQU5X0MHplhKJvWeohBwTCkBAJA/GDYGLGUWQaETEhptiqxK7Hs0fQB9B4MDb3pbwIiCwA==}
 
-  '@fastify/websocket@5.0.1':
-    resolution: {integrity: sha512-voOrfqhj9TIEnviQ9lzGBXdCIpIJpK69HLgvPPv7m9JNQ7GfSJAbG2y6YRuoYk8u6zpDuleHoLCmaJBDl5Chtw==}
+  '@fastify/websocket@8.3.1':
+    resolution: {integrity: sha512-hsQYHHJme/kvP3ZS4v/WMUznPBVeeQHHwAoMy1LiN6m/HuPfbdXq1MBJ4Nt8qX1YI+eVbog4MnOsU7MTozkwYA==}
 
   '@hono/node-server@1.19.6':
     resolution: {integrity: sha512-Shz/KjlIeAhfiuE93NDKVdZ7HdBVLQAfdbaXEaoAVO3ic9ibRSLGIQGkcBbFyuLr+7/1D5ZCINM8B+6IvXeMtw==}
@@ -2224,9 +2224,6 @@ packages:
 
   fast-uri@3.1.0:
     resolution: {integrity: sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA==}
-
-  fastify-plugin@3.0.1:
-    resolution: {integrity: sha512-qKcDXmuZadJqdTm6vlCqioEbyewF60b/0LOFCcYN1B6BIZGlYJumWWOYs70SFYLDAH4YqdE1cxH/RKMG7rFxgA==}
 
   fastify-plugin@4.5.1:
     resolution: {integrity: sha512-stRHYGeuqpEZTL1Ef0Ovr2ltazUT9g844X5z/zEBFLG8RYlpDiOCIG+ATvYEp+/zmc7sN29mcIMp8gvYplYPIQ==}
@@ -4322,9 +4319,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@fastify/websocket@5.0.1':
+  '@fastify/websocket@8.3.1':
     dependencies:
-      fastify-plugin: 3.0.1
+      fastify-plugin: 4.5.1
       ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
@@ -5612,8 +5609,6 @@ snapshots:
   fast-uri@2.4.0: {}
 
   fast-uri@3.1.0: {}
-
-  fastify-plugin@3.0.1: {}
 
   fastify-plugin@4.5.1: {}
 
