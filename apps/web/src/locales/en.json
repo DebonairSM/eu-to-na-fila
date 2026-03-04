@@ -278,7 +278,10 @@
     "creatingAccount": "Creating account...",
     "signupError": "Could not create account. Try again.",
     "alreadyHaveAccount": "Already have an account? Log in",
-    "orUseEmail": "Or use email"
+    "orUseEmail": "Or use email",
+    "ageOptional": "Age (optional)",
+    "birthdayOptional": "Birthday (optional)",
+    "demographicsHint": "Optional: age or birthday helps us understand our client base."
   },
   "root": {
     "projects": "Projects",

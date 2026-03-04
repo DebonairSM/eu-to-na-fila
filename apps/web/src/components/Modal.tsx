@@ -10,6 +10,7 @@ export interface ModalProps {
   children: React.ReactNode;
   className?: string;
   title?: string;
+  titleClassName?: string;
   showCloseButton?: boolean;
 }
 
@@ -19,6 +20,7 @@ export function Modal({
   children,
   className,
   title,
+  titleClassName,
   showCloseButton = false,
 }: ModalProps) {
   const { t } = useLocale();
@@ -133,7 +135,7 @@ export function Modal({
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between mb-6 pb-6 border-b border-border">
             {title && (
-              <h2 id="modal-title" className="text-xl font-semibold">
+              <h2 id="modal-title" className={cn('text-xl font-semibold', titleClassName)}>
                 {title}
               </h2>
             )}

@@ -12,6 +12,10 @@ export function SignupForm() {
     setConfirmPassword,
     name,
     setName,
+    age,
+    setAge,
+    dateOfBirth,
+    setDateOfBirth,
     showPassword,
     setShowPassword,
     isLoading,
@@ -89,6 +93,50 @@ export function SignupForm() {
           >
             {t('auth.nameOptional')}
           </label>
+        </div>
+
+        <p className="text-xs text-[var(--shop-text-secondary)]">
+          {t('auth.demographicsHint')}
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="relative">
+            <input
+              id="signup-age"
+              type="number"
+              min={1}
+              max={120}
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              placeholder=" "
+              autoComplete="off"
+              className="w-full px-4 py-4 pt-6 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)] text-base placeholder:text-[var(--shop-text-secondary)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
+            />
+            <label
+              htmlFor="signup-age"
+              className={`absolute left-4 text-sm text-[var(--shop-text-secondary)] pointer-events-none transition-all ${
+                age ? 'top-2 text-xs text-[var(--shop-accent)]' : 'top-4'
+              }`}
+            >
+              {t('auth.ageOptional')}
+            </label>
+          </div>
+          <div className="relative">
+            <input
+              id="signup-birthday"
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              className="w-full px-4 py-4 pt-6 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)] text-base placeholder:text-[var(--shop-text-secondary)] transition-all min-h-[52px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
+            />
+            <label
+              htmlFor="signup-birthday"
+              className={`absolute left-4 text-sm text-[var(--shop-text-secondary)] pointer-events-none transition-all ${
+                dateOfBirth ? 'top-2 text-xs text-[var(--shop-accent)]' : 'top-4'
+              }`}
+            >
+              {t('auth.birthdayOptional')}
+            </label>
+          </div>
         </div>
 
         <div className="relative">

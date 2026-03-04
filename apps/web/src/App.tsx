@@ -1,11 +1,11 @@
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { getShopBasePath } from '@/lib/config';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Suspense, useEffect } from 'react';
 import { useAuthContext } from './contexts/AuthContext';
 import { useShopHomeContent } from './contexts/ShopConfigContext';
 import { useLocale } from './contexts/LocaleContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoadingSpinner } from './components/LoadingSpinner';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { SuspenseWithTimeoutFallback } from './components/SuspenseWithTimeout';
 import { NetworkStatusBanner } from './components/NetworkStatusBanner';
 import { api } from './lib/api';
@@ -39,67 +39,27 @@ const ClientDetailPage = lazyWithRetry(() => import('./pages/ClientDetailPage').
 const CustomerAccountPage = lazyWithRetry(() => import('./pages/CustomerAccountPage').then((m) => ({ default: m.CustomerAccountPage })));
 const ClientSearchPage = lazyWithRetry(() => import('./pages/ClientSearchPage').then((m) => ({ default: m.ClientSearchPage })));
 
-// Protected Route Component
-function ProtectedRoute({
-  children,
-  requireOwner = false,
-  requireCompanyAdmin = false,
-  requireBarber = false,
-}: {
-  children: React.ReactNode;
-  requireOwner?: boolean;
-  requireCompanyAdmin?: boolean;
-  requireBarber?: boolean;
-}) {
-  const { isAuthenticated, isOwner, isCompanyAdmin, isBarber, isKioskOnly, isLoading } = useAuthContext();
-  const location = useLocation();
-  const basePath = getShopBasePath();
-  const stripBase = basePath === '/' ? location.pathname : location.pathname.replace(new RegExp(`^${basePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\/|$)`), '/');
-  const pathname = stripBase || '/';
-
-  const homeContent = useShopHomeContent();
-  const { t } = useLocale();
-  const loadingText = homeContent?.accessibility?.loading ?? t('accessibility.loading');
-
-  if (isLoading) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: 'var(--shop-background, #0a0a0a)', color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
-        role="status"
-        aria-live="polite"
-      >
-        <LoadingSpinner text={loadingText} />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/shop/login" replace />;
-  }
-
-  if (isKioskOnly && pathname !== '/manage') {
-    return <Navigate to="/manage?kiosk=true" replace />;
-  }
-
-  if (requireOwner && !isOwner) {
-    return <Navigate to="/staff" replace />;
-  }
-
-  if (requireCompanyAdmin && !isCompanyAdmin) {
-    return <Navigate to="/home" replace />;
-  }
-
-  if (requireBarber && !isBarber) {
-    return <Navigate to={isOwner ? '/owner' : '/manage'} replace />;
-  }
-
-  return <>{children}</>;
-}
-
 function AppContent() {
   const { logout } = useAuthContext();
   const navigate = useNavigate();
+  const homeContent = useShopHomeContent();
+  const { t } = useLocale();
+  const loadingText = homeContent?.accessibility?.loading ?? t('accessibility.loading');
+  const shopProtectedLoading = (
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ backgroundColor: 'var(--shop-background, #0a0a0a)', color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
+      role="status"
+      aria-live="polite"
+    >
+      <LoadingSpinner text={loadingText} />
+    </div>
+  );
+  const shopProtectedProps = {
+    loginPath: '/shop/login',
+    loadingComponent: shopProtectedLoading,
+    applyKioskRedirect: true,
+  };
 
   // Set up global auth error handler (defer navigation to avoid black screen)
   useEffect(() => {
@@ -134,7 +94,7 @@ function AppContent() {
       <Route
         path="/staff"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute {...shopProtectedProps}>
             <StaffPage />
           </ProtectedRoute>
         }
@@ -142,7 +102,7 @@ function AppContent() {
       <Route
         path="/owner"
         element={
-          <ProtectedRoute requireOwner>
+          <ProtectedRoute {...shopProtectedProps} requireOwner>
             <OwnerDashboard />
           </ProtectedRoute>
         }
@@ -150,7 +110,7 @@ function AppContent() {
       <Route
         path="/barber"
         element={
-          <ProtectedRoute requireBarber>
+          <ProtectedRoute {...shopProtectedProps} requireBarber>
             <BarberDashboard />
           </ProtectedRoute>
         }
@@ -158,7 +118,7 @@ function AppContent() {
       <Route
         path="/manage"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute {...shopProtectedProps}>
             <BarberQueueManager />
           </ProtectedRoute>
         }
@@ -166,7 +126,7 @@ function AppContent() {
       <Route
         path="/clients"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute {...shopProtectedProps}>
             <ClientSearchPage />
           </ProtectedRoute>
         }
@@ -174,7 +134,7 @@ function AppContent() {
       <Route
         path="/clients/:id"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute {...shopProtectedProps}>
             <ClientDetailPage />
           </ProtectedRoute>
         }
@@ -182,7 +142,7 @@ function AppContent() {
       <Route
         path="/analytics"
         element={
-          <ProtectedRoute requireOwner>
+          <ProtectedRoute {...shopProtectedProps} requireOwner>
             <AnalyticsPage />
           </ProtectedRoute>
         }
@@ -190,7 +150,7 @@ function AppContent() {
       <Route
         path="/my-stats"
         element={
-          <ProtectedRoute requireBarber>
+          <ProtectedRoute {...shopProtectedProps} requireBarber>
             <BarberAnalyticsPage />
           </ProtectedRoute>
         }
@@ -198,7 +158,7 @@ function AppContent() {
       <Route
         path="/barbers"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute {...shopProtectedProps}>
             <BarberManagementPage />
           </ProtectedRoute>
         }
@@ -206,7 +166,7 @@ function AppContent() {
       <Route
         path="/services"
         element={
-          <ProtectedRoute requireOwner>
+          <ProtectedRoute {...shopProtectedProps} requireOwner>
             <ServiceManagementPage />
           </ProtectedRoute>
         }
@@ -214,7 +174,7 @@ function AppContent() {
       <Route
         path="/company/dashboard"
         element={
-          <ProtectedRoute requireCompanyAdmin>
+          <ProtectedRoute {...shopProtectedProps} requireCompanyAdmin>
             <CompanyDashboard />
           </ProtectedRoute>
         }
@@ -223,7 +183,7 @@ function AppContent() {
       <Route
         path="/company/shops"
         element={
-          <ProtectedRoute requireCompanyAdmin>
+          <ProtectedRoute {...shopProtectedProps} requireCompanyAdmin>
             <ShopManagementPage />
           </ProtectedRoute>
         }
@@ -231,7 +191,7 @@ function AppContent() {
       <Route
         path="/company/ads"
         element={
-          <ProtectedRoute requireCompanyAdmin>
+          <ProtectedRoute {...shopProtectedProps} requireCompanyAdmin>
             <AdManagementPage />
           </ProtectedRoute>
         }

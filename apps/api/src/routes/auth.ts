@@ -464,6 +464,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       email: z.string().email('Invalid email'),
       password: z.string().min(1).max(200),
       name: z.string().max(200).optional(),
+      dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
     });
     const { slug } = validateRequest(paramsSchema, request.params);
     const body = validateRequest(bodySchema, request.body);
@@ -496,11 +497,13 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const passwordHash = await hashPassword(body.password);
       const name = (body.name && body.name.trim()) || existing.name;
-      await db.update(schema.clients).set({
+      const updateData: { name: string; passwordHash: string; updatedAt: Date; dateOfBirth?: string | null } = {
         name,
         passwordHash,
         updatedAt: new Date(),
-      }).where(eq(schema.clients.id, existing.id));
+      };
+      if (body.dateOfBirth !== undefined) updateData.dateOfBirth = body.dateOfBirth || null;
+      await db.update(schema.clients).set(updateData).where(eq(schema.clients.id, existing.id));
 
       logAuthSuccess(request, shop.id, 'customer');
       const token = signToken({
@@ -520,6 +523,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       name,
       email: normalizedEmail,
       passwordHash,
+      ...(body.dateOfBirth && { dateOfBirth: body.dateOfBirth }),
       createdAt: new Date(),
       updatedAt: new Date(),
     }).returning();

@@ -43,7 +43,7 @@ export interface AuthApi {
   /** Unified staff login: identifies owner/staff/barber/kiosk from credentials. */
   authenticateStaff(shopSlug: string, username: string, password: string): Promise<{ valid: boolean; role: StaffAuthRole | null; token?: string; barberId?: number; barberName?: string; pinResetRequired?: boolean }>;
   companyAuthenticate(username: string, password: string): Promise<{ valid: boolean; role: 'company_admin' | null; token?: string; companyId?: number; userId?: number }>;
-  registerCustomer(shopSlug: string, data: { email: string; password: string; name?: string }): Promise<{ valid: boolean; role: 'customer'; token: string; clientId: number }>;
+  registerCustomer(shopSlug: string, data: { email: string; password: string; name?: string; dateOfBirth?: string | null }): Promise<{ valid: boolean; role: 'customer'; token: string; clientId: number }>;
   loginCustomer(shopSlug: string, data: { email: string; password: string; remember_me?: boolean }): Promise<{ valid: boolean; role: 'customer' | null; token?: string; clientId?: number; name?: string }>;
   getCustomerProfile(shopSlug: string): Promise<CustomerProfile>;
   updateCustomerProfile(shopSlug: string, data: {

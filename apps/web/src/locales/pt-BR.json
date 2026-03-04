@@ -278,7 +278,10 @@
     "creatingAccount": "Criando conta...",
     "signupError": "Não foi possível criar a conta. Tente novamente.",
     "alreadyHaveAccount": "Já tem uma conta? Entrar",
-    "orUseEmail": "Ou use e-mail"
+    "orUseEmail": "Ou use e-mail",
+    "ageOptional": "Idade (opcional)",
+    "birthdayOptional": "Data de nascimento (opcional)",
+    "demographicsHint": "Opcional: idade ou data de nascimento nos ajuda a entender nosso público."
   },
   "root": {
     "projects": "Projetos",

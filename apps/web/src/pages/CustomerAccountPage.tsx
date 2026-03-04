@@ -6,6 +6,7 @@ import { Container, Heading, Text, Card, CardContent, Button, Input, InputLabel 
 import { useLocale } from '@/contexts/LocaleContext';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useCustomerProfileAndAppointments } from '@/hooks/useCustomerProfileAndAppointments';
 import { useLogout } from '@/hooks/useLogout';
 import { api } from '@/lib/api';
 import type { CustomerProfile, CustomerAppointmentsResponse } from '@/lib/api/auth';
@@ -30,12 +31,9 @@ export function CustomerAccountPage() {
   const { user, isCustomer } = useAuthContext();
   const { logoutAndGoHome } = useLogout();
   const { t } = useLocale();
-  const [profile, setProfile] = useState<CustomerProfile | null>(null);
-  const [appointments, setAppointments] = useState<CustomerAppointmentsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { profile, appointments, isLoading: loading, error, refetch } = useCustomerProfileAndAppointments();
 
-  // Editable profile state
+  // Editable profile state (synced from profile when it loads)
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editState, setEditState] = useState('');
@@ -61,38 +59,18 @@ export function CustomerAccountPage() {
   const refFileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (!isCustomer || !shopSlug) return;
-    let mounted = true;
-    setLoading(true);
-    setError(null);
-    Promise.all([
-      api.getCustomerProfile(shopSlug),
-      api.getCustomerAppointments(shopSlug),
-    ])
-      .then(([p, a]) => {
-        if (mounted) {
-          setProfile(p);
-          setEditName(p.name);
-          setEditPhone(p.phone ?? '');
-          setEditState(p.state ?? '');
-          setEditCity(p.city ?? '');
-          setEditAddress(p.address ?? '');
-          setEditDateOfBirth(p.dateOfBirth ?? '');
-          setEditGender(p.gender ?? '');
-          setEmailReminders(p.preferences?.emailReminders ?? true);
-          setRefNote(p.nextServiceNote ?? '');
-          setRefImageUrl(p.nextServiceImageUrl ?? null);
-          setAppointments(a);
-        }
-      })
-      .catch(() => {
-        if (mounted) setError(t('common.error'));
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-    return () => { mounted = false; };
-  }, [isCustomer, shopSlug, t]);
+    if (!profile) return;
+    setEditName(profile.name);
+    setEditPhone(profile.phone ?? '');
+    setEditState(profile.state ?? '');
+    setEditCity(profile.city ?? '');
+    setEditAddress(profile.address ?? '');
+    setEditDateOfBirth(profile.dateOfBirth ?? '');
+    setEditGender(profile.gender ?? '');
+    setEmailReminders(profile.preferences?.emailReminders ?? true);
+    setRefNote(profile.nextServiceNote ?? '');
+    setRefImageUrl(profile.nextServiceImageUrl ?? null);
+  }, [profile]);
 
   // Create object URL for auth-required reference images (our API); use URL directly for public (Supabase)
   const refObjUrlRef = useRef<string | null>(null);
@@ -140,7 +118,7 @@ export function CustomerAccountPage() {
     setProfileError(null);
     setProfileSaved(false);
     try {
-      const updated = await api.updateCustomerProfile(shopSlug, {
+      await api.updateCustomerProfile(shopSlug, {
         name: editName.trim(),
         phone: editPhone.trim() || null,
         state: editState.trim() || null,
@@ -149,7 +127,7 @@ export function CustomerAccountPage() {
         dateOfBirth: editDateOfBirth.trim() || null,
         gender: editGender.trim() || null,
       });
-      setProfile(updated);
+      await refetch();
       setProfileSaved(true);
       setTimeout(() => setProfileSaved(false), 2000);
     } catch (err) {
@@ -165,10 +143,10 @@ export function CustomerAccountPage() {
     setEmailReminders(next);
     setPrefsSaving(true);
     try {
-      const updated = await api.updateCustomerProfile(shopSlug, {
+      await api.updateCustomerProfile(shopSlug, {
         preferences: { emailReminders: next },
       });
-      setProfile(updated);
+      await refetch();
     } catch {
       setEmailReminders(!next);
     } finally {
@@ -182,10 +160,10 @@ export function CustomerAccountPage() {
     setRefSaving(true);
     setRefError(null);
     try {
-      const updated = await api.updateCustomerProfile(shopSlug, {
+      await api.updateCustomerProfile(shopSlug, {
         nextServiceNote: refNote.trim() || null,
       });
-      setProfile(updated);
+      await refetch();
     } catch (err) {
       setRefError(getErrorMessage(err, t('common.error')));
     } finally {
@@ -201,8 +179,8 @@ export function CustomerAccountPage() {
     try {
       const { url } = await api.uploadClientReferenceImage(shopSlug, file);
       setRefImageUrl(url);
-      const updated = await api.updateCustomerProfile(shopSlug, { nextServiceImageUrl: url });
-      setProfile(updated);
+      await api.updateCustomerProfile(shopSlug, { nextServiceImageUrl: url });
+      await refetch();
     } catch (err) {
       setRefError(getErrorMessage(err, t('common.error')));
     } finally {
@@ -216,8 +194,8 @@ export function CustomerAccountPage() {
     setRefSaving(true);
     setRefError(null);
     try {
-      const updated = await api.updateCustomerProfile(shopSlug, { nextServiceImageUrl: null });
-      setProfile(updated);
+      await api.updateCustomerProfile(shopSlug, { nextServiceImageUrl: null });
+      await refetch();
       setRefImageUrl(null);
     } catch (err) {
       setRefError(getErrorMessage(err, t('common.error')));
@@ -292,7 +270,7 @@ export function CustomerAccountPage() {
           {loading ? (
             <LoadingSpinner text={t('common.loading')} />
           ) : error ? (
-            <Text variant="secondary">{error}</Text>
+            <Text variant="secondary">{t('common.error')}</Text>
           ) : (
             <>
               <Card variant="default" className="shadow-lg">

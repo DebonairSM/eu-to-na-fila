@@ -11,6 +11,8 @@ export function useSignupForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +36,17 @@ export function useSignupForm() {
       return;
     }
 
+    let resolvedDateOfBirth: string | undefined;
+    if (dateOfBirth.trim()) {
+      resolvedDateOfBirth = dateOfBirth.trim();
+    } else if (age.trim()) {
+      const ageNum = parseInt(age.trim(), 10);
+      if (!Number.isNaN(ageNum) && ageNum >= 1 && ageNum <= 120) {
+        const y = new Date().getFullYear() - ageNum;
+        resolvedDateOfBirth = `${y}-01-01`;
+      }
+    }
+
     setIsLoading(true);
     isSubmittingRef.current = true;
     try {
@@ -41,6 +54,7 @@ export function useSignupForm() {
         email: email.trim(),
         password,
         name: name.trim() || undefined,
+        ...(resolvedDateOfBirth && { dateOfBirth: resolvedDateOfBirth }),
       });
       if (result.valid && result.token && result.role === 'customer') {
         const res = result as { name?: string };
@@ -77,6 +91,10 @@ export function useSignupForm() {
     setConfirmPassword,
     name,
     setName,
+    age,
+    setAge,
+    dateOfBirth,
+    setDateOfBirth,
     showPassword,
     setShowPassword,
     isLoading,

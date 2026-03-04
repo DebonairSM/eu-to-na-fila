@@ -2,7 +2,23 @@
 
 This directory contains custom React hooks for the queue management system.
 
+## Guideline: Prefer hooks for new API usage
+
+For **new** features, prefer encapsulating API calls in custom hooks rather than calling `api.*` directly in components. Hooks should:
+
+- Use `useShopSlug()` or `useAuthContext()` inside the hook where needed, so callers do not pass shop slug or auth state for read operations.
+- Expose a clear interface: e.g. `{ data, isLoading, error, refetch }` for reads, or mutation callbacks for writes.
+- Centralize loading and error handling.
+
+Existing code may continue to call `api.*` in components; there is no requirement to refactor all pages. New code should add or reuse a hook.
+
 ## Available Hooks
+
+### `useCustomerProfileAndAppointments`
+
+Fetches customer profile and appointments in parallel for the current shop (uses `useShopSlug()`). Use on the customer account page.
+
+**Returns:** `{ profile, appointments, isLoading, error, refetch }`
 
 ### `useQueuePolling`
 

@@ -46,9 +46,9 @@ function App() {
           <Route path="/propagandas/buy" element={<Navigate to="/" replace />} />
           <Route path="/propagandas/buy/complete" element={<Navigate to="/" replace />} />
           <Route path="/company/login" element={<CompanyLoginPage />} />
-          <Route path="/company/dashboard" element={<ProtectedRoute loginPath="/company/login" loadingComponent={<RootLoadingScreen />} requireCompanyAdmin><CompanyDashboard /></ProtectedRoute>} />
-          <Route path="/company/ads" element={<ProtectedRoute loginPath="/company/login" loadingComponent={<RootLoadingScreen />} requireCompanyAdmin><AdManagementPage /></ProtectedRoute>} />
-          <Route path="/company/shops" element={<ProtectedRoute loginPath="/company/login" loadingComponent={<RootLoadingScreen />} requireCompanyAdmin><ShopManagementPage /></ProtectedRoute>} />
+          <Route path="/company/dashboard" element={<ProtectedRoute loginPath="/company/login" loadingComponent={<RootLoadingScreen />} requireCompanyAdmin companyAdminRedirect="/company/login"><CompanyDashboard /></ProtectedRoute>} />
+          <Route path="/company/ads" element={<ProtectedRoute loginPath="/company/login" loadingComponent={<RootLoadingScreen />} requireCompanyAdmin companyAdminRedirect="/company/login"><AdManagementPage /></ProtectedRoute>} />
+          <Route path="/company/shops" element={<ProtectedRoute loginPath="/company/login" loadingComponent={<RootLoadingScreen />} requireCompanyAdmin companyAdminRedirect="/company/login"><ShopManagementPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
           </Suspense>

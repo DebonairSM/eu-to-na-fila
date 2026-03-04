@@ -61,8 +61,8 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       const d = days ?? 7;
       since = new Date();
       if (d > 0) {
-        since.setDate(since.getDate() - d);
-        since.setHours(0, 0, 0, 0);
+        since.setUTCDate(since.getUTCDate() - d);
+        since.setUTCHours(0, 0, 0, 0);
       } else {
         since.setTime(0);
       }
@@ -70,8 +70,8 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       periodDays = d;
       previousPeriodStart = new Date();
       if (d > 0) {
-        previousPeriodStart.setDate(previousPeriodStart.getDate() - (d * 2));
-        previousPeriodStart.setHours(0, 0, 0, 0);
+        previousPeriodStart.setUTCDate(previousPeriodStart.getUTCDate() - (d * 2));
+        previousPeriodStart.setUTCHours(0, 0, 0, 0);
       } else {
         previousPeriodStart.setTime(0);
       }
@@ -1152,8 +1152,8 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const since = new Date();
     if (days > 0) {
-      since.setDate(since.getDate() - days);
-      since.setHours(0, 0, 0, 0);
+      since.setUTCDate(since.getUTCDate() - days);
+      since.setUTCHours(0, 0, 0, 0);
     } else {
       since.setTime(0);
     }
