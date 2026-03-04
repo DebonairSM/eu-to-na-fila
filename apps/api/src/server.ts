@@ -2,6 +2,7 @@ import './dns-config.js';
 import Fastify, { type FastifyRequest, type FastifyPluginCallback } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fastifyHelmet from '@fastify/helmet';
+import fastifyCompress from '@fastify/compress';
 import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyWebSocketModule from '@fastify/websocket';
@@ -129,6 +130,8 @@ fastify.register(fastifyCors, {
   },
   credentials: true,
 });
+
+await fastify.register(fastifyCompress, { global: true });
 
 // Normalize websocket plugin import for ESM/TypeScript interop
 // Handles both default export and direct module export scenarios

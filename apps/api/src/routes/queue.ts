@@ -237,7 +237,8 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Get wait times for standard queue and all barbers.
-   * 
+   * Uses a single batched load and in-memory computation to avoid N+1 and repeated queries.
+   *
    * @route GET /api/shops/:slug/wait-times
    * @param slug - Shop slug identifier
    * @returns Wait times for standard queue and each barber
@@ -252,62 +253,8 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    // Fetch active barbers first. When there are none, return immediately so the join page
-    // does not hang (no barbers => no meaningful wait time).
-    const barbers = await db.query.barbers.findMany({
-      where: and(
-        eq(schema.barbers.shopId, shop.id),
-        eq(schema.barbers.isActive, true)
-      ),
-    });
-
-    if (barbers.length === 0) {
-      return {
-        standardWaitTime: null,
-        barberWaitTimes: [],
-      };
-    }
-
-    const now = new Date();
     const settings = parseSettings(shop.settings);
-
-    // Standard queue: "if the next customer joins the general line now, what's their wait?"
-    // When allowAppointments, include only at-risk pending appointments in the estimate.
-    const standardWaitTime = settings.allowAppointments
-      ? await queueService.calculateStandardWaitTimeIncludingAtRiskAppointments(shop.id, settings)
-      : await queueService.calculateWaitTime(
-          shop.id,
-          await queueService.calculatePosition(shop.id, now),
-          settings.defaultServiceDuration
-        );
-
-    const barberWaitTimes = await Promise.all(
-      barbers.map(async (barber) => {
-        const position = await queueService.calculatePositionForPreferredBarber(
-          shop.id,
-          barber.id,
-          now
-        );
-        const waitTime = await queueService.calculateWaitTimeForPreferredBarber(
-          shop.id,
-          barber.id,
-          position,
-          now
-        );
-
-        return {
-          barberId: barber.id,
-          barberName: barber.name,
-          waitTime,
-          isPresent: barber.isPresent,
-        };
-      })
-    );
-
-    return {
-      standardWaitTime,
-      barberWaitTimes,
-    };
+    return queueService.getWaitTimesForShop(shop.id, settings);
   });
 
   /**

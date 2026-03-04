@@ -295,6 +295,87 @@ export class QueueService {
     return ticketsAhead.length + 1;
   }
 
+  /**
+   * Run wave simulation in-memory (no DB). Used by getWaitTimesForShop for batched wait-times.
+   */
+  private runWaveWaitTimeInMemory(
+    presentBarbers: Array<{ id: number }>,
+    inProgressWithBarbers: Array<{ barberId: number; serviceId: number; startedAt: Date | null; updatedAt: Date | null }>,
+    ticketsAhead: Array<{ serviceId: number; preferredBarberId: number | null }>,
+    serviceDurations: Map<number, number>,
+    barberStats: Map<string, number>,
+    defaultServiceDuration: number,
+    now: Date = new Date()
+  ): number {
+    if (ticketsAhead.length === 0) return 0;
+    const getDuration = (serviceId: number, barberId?: number) => {
+      if (barberId) {
+        const avg = barberStats.get(`${barberId}:${serviceId}`);
+        if (avg !== undefined) return avg;
+      }
+      return serviceDurations.get(serviceId) ?? defaultServiceDuration;
+    };
+    const barberAvailability: number[] = [];
+    for (const barber of presentBarbers) {
+      const inProgress = inProgressWithBarbers.find((t) => t.barberId === barber.id);
+      if (inProgress) {
+        const startTime = inProgress.startedAt
+          ? new Date(inProgress.startedAt)
+          : inProgress.updatedAt
+            ? new Date(inProgress.updatedAt)
+            : now;
+        const elapsedMinutes = Math.max(0, (now.getTime() - startTime.getTime()) / 60000);
+        const serviceDuration = getDuration(inProgress.serviceId, barber.id);
+        barberAvailability.push(Math.max(0, serviceDuration - elapsedMinutes));
+      } else {
+        barberAvailability.push(0);
+      }
+    }
+    if (barberAvailability.length === 0) barberAvailability.push(0);
+    for (const ticket of ticketsAhead) {
+      const minTime = Math.min(...barberAvailability);
+      const minIdx = barberAvailability.indexOf(minTime);
+      const barberId = presentBarbers[minIdx]?.id;
+      barberAvailability[minIdx] += getDuration(ticket.serviceId, barberId);
+    }
+    return Math.ceil(Math.min(...barberAvailability));
+  }
+
+  /**
+   * Compute wait time for a single barber's line in-memory (no DB). Used by getWaitTimesForShop.
+   */
+  private computePreferredBarberWaitInMemory(
+    preferredBarberId: number,
+    ticketsAhead: Array<{ serviceId: number }>,
+    inProgressTicket: { serviceId: number; startedAt: Date | null; updatedAt: Date | null } | null,
+    serviceDurations: Map<number, number>,
+    barberStats: Map<string, number>,
+    defaultServiceDuration: number,
+    now: Date = new Date()
+  ): number {
+    const getDuration = (serviceId: number) => {
+      const avg = barberStats.get(`${preferredBarberId}:${serviceId}`);
+      if (avg !== undefined) return avg;
+      return serviceDurations.get(serviceId) ?? defaultServiceDuration;
+    };
+    let barberAvailability = 0;
+    if (inProgressTicket) {
+      const startTime = inProgressTicket.startedAt
+        ? new Date(inProgressTicket.startedAt)
+        : inProgressTicket.updatedAt
+          ? new Date(inProgressTicket.updatedAt)
+          : now;
+      const elapsedMinutes = Math.max(0, (now.getTime() - startTime.getTime()) / 60000);
+      const serviceDuration = getDuration(inProgressTicket.serviceId);
+      barberAvailability = Math.max(0, serviceDuration - elapsedMinutes);
+    }
+    let totalWait = barberAvailability;
+    for (const ticket of ticketsAhead) {
+      totalWait += getDuration(ticket.serviceId);
+    }
+    return Math.ceil(totalWait);
+  }
+
   /** Run wave simulation for a given list of tickets ahead; returns wait in minutes. */
   private async runWaveWaitTime(
     shopId: number,
@@ -544,6 +625,193 @@ export class QueueService {
       const timeB = t(b.checkInTime) || t(b.createdAt);
       return timeA - timeB;
     });
+  }
+
+  /**
+   * Batched wait times for the join page: one load phase, then all computations in memory.
+   * Avoids N+1 and repeated queries (getGeneralLineWaitingTickets, runWaveWaitTime, per-barber calls).
+   */
+  async getWaitTimesForShop(
+    shopId: number,
+    settings: ShopSettings
+  ): Promise<{
+    standardWaitTime: number | null;
+    barberWaitTimes: Array<{ barberId: number; barberName: string; waitTime: number | null; isPresent: boolean }>;
+  }> {
+    const now = new Date();
+    const defaultDuration = settings.defaultServiceDuration ?? 20;
+
+    const [barbersRows, waitingTickets, inProgressTickets] = await Promise.all([
+      this.db.query.barbers.findMany({
+        where: and(eq(schema.barbers.shopId, shopId), eq(schema.barbers.isActive, true)),
+        columns: { id: true, name: true, isPresent: true },
+      }),
+      this.db.query.tickets.findMany({
+        where: and(eq(schema.tickets.shopId, shopId), eq(schema.tickets.status, 'waiting')),
+        orderBy: [asc(schema.tickets.createdAt)],
+      }),
+      this.db.query.tickets.findMany({
+        where: and(
+          eq(schema.tickets.shopId, shopId),
+          eq(schema.tickets.status, 'in_progress')
+        ),
+      }),
+    ]);
+
+    if (barbersRows.length === 0) {
+      return { standardWaitTime: null, barberWaitTimes: [] };
+    }
+
+    const activeBarberIds = new Set(barbersRows.map((b) => b.id));
+    const presentBarbers = barbersRows.filter((b) => b.isPresent).map((b) => ({ id: b.id }));
+    const inProgressWithBarbers = inProgressTickets
+      .filter((t): t is typeof t & { barberId: number } => t.barberId !== null)
+      .map((t) => ({
+        barberId: t.barberId!,
+        serviceId: t.serviceId,
+        startedAt: t.startedAt,
+        updatedAt: t.updatedAt,
+      }));
+
+    const generalLineTickets = waitingTickets.filter(
+      (t) => t.preferredBarberId === null || !activeBarberIds.has(t.preferredBarberId!)
+    );
+    const perBarberWaiting = new Map<number, typeof waitingTickets>();
+    for (const t of waitingTickets) {
+      if (t.preferredBarberId && activeBarberIds.has(t.preferredBarberId)) {
+        const list = perBarberWaiting.get(t.preferredBarberId) ?? [];
+        list.push(t);
+        perBarberWaiting.set(t.preferredBarberId, list);
+      }
+    }
+
+    let pendingAppointments: typeof waitingTickets = [];
+    if (settings.allowAppointments) {
+      pendingAppointments = await this.db.query.tickets.findMany({
+        where: and(
+          eq(schema.tickets.shopId, shopId),
+          eq(schema.tickets.status, 'pending'),
+          eq(schema.tickets.type, 'appointment'),
+          gt(schema.tickets.scheduledTime, now)
+        ),
+        orderBy: [asc(schema.tickets.scheduledTime)],
+      });
+    }
+
+    const serviceIds = new Set<number>();
+    for (const t of waitingTickets) serviceIds.add(t.serviceId);
+    for (const t of inProgressTickets) serviceIds.add(t.serviceId);
+    for (const t of pendingAppointments) serviceIds.add(t.serviceId);
+    const barberIds = barbersRows.map((b) => b.id);
+
+    const [serviceDurations, barberStats] = await Promise.all([
+      this.loadAllServiceDurationsForShop(shopId),
+      this.loadBarberWeekdayStats(barberIds, [...serviceIds]),
+    ]);
+
+    let standardWaitTime: number | null;
+    if (pendingAppointments.length === 0) {
+      const ticketsAhead = generalLineTickets.map((t) => ({
+        serviceId: t.serviceId,
+        preferredBarberId: t.preferredBarberId,
+      }));
+      standardWaitTime =
+        ticketsAhead.length === 0
+          ? 0
+          : this.runWaveWaitTimeInMemory(
+              presentBarbers,
+              inProgressWithBarbers,
+              ticketsAhead,
+              serviceDurations,
+              barberStats,
+              defaultDuration,
+              now
+            );
+    } else {
+      const generalWithType = generalLineTickets.map((t) => ({
+        type: (t as { type?: string }).type ?? 'walkin',
+        scheduledTime: (t as { scheduledTime?: Date | string | null }).scheduledTime ?? null,
+        checkInTime: (t as { checkInTime?: Date | string | null }).checkInTime ?? null,
+        createdAt: t.createdAt,
+        id: t.id,
+        serviceId: t.serviceId,
+        preferredBarberId: t.preferredBarberId,
+      }));
+      const pendingAsWaiting = pendingAppointments.map((a) => ({
+        type: 'appointment' as const,
+        scheduledTime: a.scheduledTime,
+        checkInTime: now,
+        createdAt: now as unknown as Date,
+        id: a.id,
+        serviceId: a.serviceId,
+        preferredBarberId: a.preferredBarberId,
+      }));
+      const merged = this.sortWaitingTicketsByWeighted(
+        [...generalWithType, ...pendingAsWaiting] as Array<{
+          type?: string | null;
+          scheduledTime?: Date | string | null;
+          checkInTime?: Date | string | null;
+          createdAt: Date | string;
+          id?: number;
+          serviceId: number;
+          preferredBarberId: number | null;
+        }>,
+        now
+      );
+      const ticketsAhead = merged.map((t) => ({
+        serviceId: t.serviceId,
+        preferredBarberId: t.preferredBarberId,
+      }));
+      standardWaitTime =
+        ticketsAhead.length === 0
+          ? 0
+          : this.runWaveWaitTimeInMemory(
+              presentBarbers,
+              inProgressWithBarbers,
+              ticketsAhead,
+              serviceDurations,
+              barberStats,
+              defaultDuration,
+              now
+            );
+    }
+
+    const barberWaitTimes = barbersRows.map((barber) => {
+      const waitingForBarber = perBarberWaiting.get(barber.id) ?? [];
+      const ticketsAhead = waitingForBarber.map((t) => ({ serviceId: t.serviceId }));
+      const inProgressForBarber = inProgressTickets.find(
+        (t) => t.barberId === barber.id
+      );
+      const waitTime =
+        ticketsAhead.length === 0 && !inProgressForBarber
+          ? 0
+          : this.computePreferredBarberWaitInMemory(
+              barber.id,
+              ticketsAhead,
+              inProgressForBarber
+                ? {
+                    serviceId: inProgressForBarber.serviceId,
+                    startedAt: inProgressForBarber.startedAt,
+                    updatedAt: inProgressForBarber.updatedAt,
+                  }
+                : null,
+              serviceDurations,
+              barberStats,
+              defaultDuration,
+              now
+            );
+      return {
+        barberId: barber.id,
+        barberName: barber.name,
+        waitTime,
+        isPresent: barber.isPresent,
+      };
+    });
+
+    return {
+      standardWaitTime,
+      barberWaitTimes,
+    };
   }
 
   async recalculatePositions(shopId: number, settings?: ShopSettings): Promise<number> {
