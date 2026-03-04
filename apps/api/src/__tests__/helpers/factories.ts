@@ -41,6 +41,7 @@ interface CreateTicketData {
   serviceId: number;
   customerName?: string;
   customerPhone?: string;
+  deviceId?: string | null;
   barberId?: number | null;
   preferredBarberId?: number | null;
   status?: 'waiting' | 'in_progress' | 'completed' | 'cancelled';
@@ -145,6 +146,7 @@ export async function createTicket(data: CreateTicketData): Promise<Ticket> {
       serviceId: data.serviceId,
       customerName: data.customerName || `Customer ${Date.now()}`,
       customerPhone: data.customerPhone,
+      deviceId: data.deviceId ?? null,
       barberId: data.barberId ?? null,
       preferredBarberId: data.preferredBarberId ?? null,
       status: data.status || 'waiting',

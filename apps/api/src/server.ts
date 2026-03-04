@@ -176,6 +176,10 @@ fastify.register(fastifyRateLimit, {
     if (request.url.startsWith('/api/ads/public/manifest')) {
       return true;
     }
+    // Skip global rate limit for GET active ticket by device - join page polls this; keep it isolated
+    if (request.url.startsWith('/api/shops/') && request.url.includes('/tickets/active')) {
+      return true;
+    }
     // Skip global rate limit for static files (SPA assets, PWA manifest, service worker)
     // These are served as static files and shouldn't be rate limited
     if (request.url.startsWith('/projects/mineiro/') || request.url.startsWith('/companies/') || /^\/[^/]+\//.test(request.url?.split('?')[0] ?? '')) {

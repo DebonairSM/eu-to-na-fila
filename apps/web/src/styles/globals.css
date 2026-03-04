@@ -418,6 +418,19 @@
   animation: refresh-icon-spin 0.8s linear infinite;
 }
 
+/* One-time spin when button is clicked (idle state) for immediate feedback */
+@keyframes refresh-icon-spin-once {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.refresh-icon-spin-once {
+  animation: refresh-icon-spin-once 0.35s ease-out forwards;
+}
+
 /* Shop theme utilities - use var(--shop-accent) / var(--shop-primary) for per-shop branding */
 .text-shop-accent {
   color: var(--shop-accent);
