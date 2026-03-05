@@ -38,7 +38,6 @@ export function SchedulePage() {
   const needsProfileCompletion = isCustomer && user?.name && !isSufficientName(user.name);
   const { activeServices, isLoading: isLoadingServices } = useServices();
   const { barbers } = useBarbers();
-  const safeBarbers = Array.isArray(barbers) ? barbers : [];
   const { activeTicket } = useActiveTicket();
   const { validateName } = useProfanityFilter();
 
