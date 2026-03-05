@@ -7,6 +7,8 @@
 3. Render will automatically detect and use `render.yaml`
 4. Review the configuration and click **Apply**
 
+The Blueprint build command runs `pnpm build:render` then verifies `apps/api/dist/server.js` and `apps/api/public/projects/mineiro/index.html` exist; if either is missing, the build fails.
+
 **If you don't see migrations in the logs:** Check that the service **Start Command** is exactly `pnpm start:render`. In Render dashboard: your service → **Settings** → **Build & Deploy** → **Start Command**. If it's empty or different, Render may be using a default and migrations won't run. After fixing, redeploy. You should see `[start:render] Running db:migrate...`, `[db:migrate] Migrations complete!`, then `[start:render] Starting API...` in the **Logs** tab.
 
 ## Option 2: Manual Configuration

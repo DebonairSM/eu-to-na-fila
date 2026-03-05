@@ -35,10 +35,7 @@ test.describe('Ads Manifest API', () => {
     });
 
     test('should only return enabled ads', async ({ request }) => {
-      if (!adminToken) {
-        test.skip();
-        return;
-      }
+      test.skip(!adminToken, 'Requires company admin token');
 
       // Create an enabled ad
       const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
@@ -120,10 +117,7 @@ test.describe('Ads Manifest API', () => {
     });
 
     test('should support shop-specific ads', async ({ request }) => {
-      if (!adminToken) {
-        test.skip();
-        return;
-      }
+      test.skip(!adminToken, 'Requires company admin token');
 
       // Create a shop-specific ad
       const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';

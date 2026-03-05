@@ -1,12 +1,10 @@
 import type { ApiErrorResponse } from '@eutonafila/shared';
 import { ApiError } from './errors.js';
-import { getShopBasePath } from '../config.js';
 
 /**
  * Base API client. Handles HTTP requests, auth tokens, and error transformation.
  * Domain modules extend this via mixins.
- * When baseUrl is relative (e.g. /api), it is resolved against the current shop path
- * so that from /barbershop/status we request /barbershop/api.
+ * When baseUrl is relative (e.g. /api), it is used as-is so requests go to /api/... on the same origin.
  */
 const REMEMBER_ME_FLAG = 'eutonafila_remember_me';
 
@@ -67,19 +65,16 @@ export class BaseApiClient {
   /**
    * Resolve effective base URL.
    * - Absolute URL (http/https): used as-is.
-   * - Dev: use /api so Vite proxy (mounted at /api) works.
-   * - Production with relative base: prefix with shop path so e.g. /barbershop/status -> /barbershop/api.
+   * - Relative base (e.g. /api): use as-is so requests go to /api/... on the same origin.
+   *   The server mounts the API at /api only, not under the project path (e.g. /projects/mineiro/api),
+   *   so we must not prefix with shop path or API requests would hit the SPA fallback and return HTML.
    */
   protected getEffectiveBaseUrl(): string {
     if (this.baseUrl.startsWith('http://') || this.baseUrl.startsWith('https://')) {
       return this.baseUrl;
     }
     const suffix = this.baseUrl.startsWith('/') ? this.baseUrl : `/${this.baseUrl}`;
-    if (import.meta.env.DEV) {
-      return suffix;
-    }
-    const base = typeof window !== 'undefined' ? getShopBasePath() : '';
-    return base === '/' || base === '' ? suffix : `${base}${suffix}`;
+    return suffix;
   }
 
   protected async request<T>(
@@ -116,18 +111,21 @@ export class BaseApiClient {
 
       const responseText = await response.text();
       const hasBody = responseText.trim().length > 0;
+      const looksLikeHtml = responseText.trimStart().toLowerCase().startsWith('<!');
 
       let data: unknown = null;
       if (hasBody) {
         try {
           data = JSON.parse(responseText);
         } catch {
+          if (import.meta.env.DEV && looksLikeHtml) {
+            console.warn('[api] Request returned HTML instead of JSON. URL:', url, 'Check API base URL (e.g. /api on same origin).');
+          }
           if (response.ok) {
-            throw new ApiError(
-              `Server returned invalid response (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`,
-              response.status,
-              'INVALID_RESPONSE'
-            );
+            const message = looksLikeHtml
+              ? 'API route returned HTML instead of JSON; check that the API base URL is correct (e.g. /api on same origin).'
+              : `Server returned invalid response (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`;
+            throw new ApiError(message, response.status, 'INVALID_RESPONSE');
           }
           if (response.status === 502) {
             data = {
@@ -144,8 +142,11 @@ export class BaseApiClient {
               code: 'SERVER_ERROR',
             };
           } else {
+            const errMsg = looksLikeHtml
+              ? 'API route returned HTML instead of JSON; check that the API base URL is correct.'
+              : `Server returned invalid response (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`;
             data = {
-              error: `Server returned invalid response (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`,
+              error: errMsg,
               statusCode: response.status,
               code: 'INVALID_RESPONSE',
             };

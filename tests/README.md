@@ -84,6 +84,22 @@ See `playwright.config.ts` for:
 - Dev server setup
 - Screenshot/video on failure
 
+## Skipped tests
+
+Some tests are skipped conditionally and appear as "skipped" in reports:
+
+| File / area | Reason |
+|-------------|--------|
+| `tests/api/ads-upload.spec.ts` | Most tests skip when company admin token is not available (see [helpers/auth](../tests/helpers/auth.js)). |
+| `tests/api/ads-management.spec.ts` | Same: require company admin token. |
+| `tests/api/ads-manifest.spec.ts` | Two tests skip when no company admin token (create/assert on ads). |
+| `tests/api/ads-endpoints.spec.ts` | Same: require company admin token. |
+| `tests/api/ads-upload-flow.spec.ts` | Same: require company admin token. |
+| `tests/kiosk/ads-rotation.spec.ts` | Two tests run only on Chromium to save CI time (`test.skip(projectName !== 'chromium', ...)`). |
+| `tests/kiosk/ads-interaction.spec.ts` | Two tests run only on Chromium for the same reason. |
+
+To run ads API tests that require auth, ensure a company admin account exists and credentials are provided (see [helpers/auth](helpers/auth.js) and Playwright env / config).
+
 ## Known Limitations
 
 1. **Multi-browser testing**: Firefox and WebKit may have different behaviors

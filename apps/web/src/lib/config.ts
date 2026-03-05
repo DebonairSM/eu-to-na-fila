@@ -1,4 +1,4 @@
-/** API base URL: relative in dev (Vite proxy), or set VITE_API_BASE_URL in production if API is on another origin. */
+/** API base URL for the API client only. Relative (e.g. /api) is used as-is, not prefixed with shop path; see getEffectiveBaseUrl in lib/api/client.ts. Set VITE_API_BASE_URL in production if the API is on another origin. */
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? '/api';
 
 /** Base path for the current shop (e.g. /shops or /shop). Uses server-injected __SHOP_PATH__ when set. */
