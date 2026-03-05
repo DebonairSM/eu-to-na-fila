@@ -37,11 +37,11 @@ export function ActiveBarbersInfo({
   refreshLabel,
 }: ActiveBarbersInfoProps) {
   const { t } = useLocale();
-  const safeBarbers = Array.isArray(barbers) ? barbers : [];
-  const presentBarbers = safeBarbers.filter((b) => b.isActive && b.isPresent);
+  const barbersList = Array.isArray(barbers) ? barbers : [];
+  const presentBarbers = barbersList.filter((b) => b.isActive && b.isPresent);
   const standardWaitTime = waitTimes?.standardWaitTime ?? null;
   const barberWaitTimes = waitTimes?.barberWaitTimes ?? [];
-  const selectedBarber = selectedBarberId ? safeBarbers.find((b) => b.id === selectedBarberId) : null;
+  const selectedBarber = selectedBarberId ? barbersList.find((b) => b.id === selectedBarberId) : null;
   const selectedBarberWait = selectedBarberId
     ? barberWaitTimes.find((b) => b.barberId === selectedBarberId)?.waitTime ?? null
     : null;

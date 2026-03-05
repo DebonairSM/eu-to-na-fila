@@ -206,9 +206,9 @@ export function BarberQueueManager() {
 
   // Preload barber avatar images when barbers data is available
   useEffect(() => {
-    if (safeBarbers.length === 0) return;
+    if (barbers.length === 0) return;
 
-    safeBarbers.forEach((barber) => {
+    barbers.forEach((barber) => {
       // Preload custom avatar URL if available
       if (barber.avatarUrl) {
         const img = new Image();
@@ -232,7 +232,7 @@ export function BarberQueueManager() {
         }, 5000);
       }
     });
-  }, [safeBarbers]);
+  }, [barbers]);
 
   const tickets = queueData?.tickets || [];
 
@@ -1161,7 +1161,7 @@ export function BarberQueueManager() {
               </select>
             </div>
           )}
-          {settings.allowBarberPreference && safeBarbers.length > 0 && (
+          {settings.allowBarberPreference && barbers.length > 0 && (
             <div>
               <label htmlFor="checkInBarber" className="block text-sm font-medium mb-2">{t('join.barberLabelOptional')}</label>
               <select
@@ -1314,7 +1314,7 @@ export function BarberQueueManager() {
                 />
               </div>
             )}
-            {settings.allowBarberPreference && safeBarbers.length > 0 && (
+            {settings.allowBarberPreference && barbers.length > 0 && (
               <div>
                 <label htmlFor="appointmentBarber" className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('join.barberLabelOptional')}</label>
                 <select

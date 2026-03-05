@@ -113,8 +113,8 @@ export function BarberProductivityByDayChart({
   const filtered =
     selectedBarberId === null ? aggregateToAverage(rawData, labelAllBarbers) : filterByBarber(rawData, selectedBarberId);
   const byBarber = buildBarberDayMap(filtered);
-  const safeBarbers = Array.isArray(barbers) ? barbers : [];
-  const barbersToShow = selectedBarberId === null ? [{ barberId: 0, barberName: labelAllBarbers }] : safeBarbers.filter((b) => b.id === selectedBarberId).map((b) => ({ barberId: b.id, barberName: b.name }));
+  const barbersList = Array.isArray(barbers) ? barbers : [];
+  const barbersToShow = selectedBarberId === null ? [{ barberId: 0, barberName: labelAllBarbers }] : barbersList.filter((b) => b.id === selectedBarberId).map((b) => ({ barberId: b.id, barberName: b.name }));
   const barAreaHeight = 180;
 
   if (barbersToShow.length === 0 && rawData.length === 0) {

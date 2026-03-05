@@ -243,11 +243,11 @@ export function SchedulePage() {
                       className="form-control-select select-readable w-full mt-1"
                     >
                       <option value="">{t('join.selectOption')}</option>
-                      {safeBarbers.filter((b) => b.isActive).map((b) => (
+                      {(Array.isArray(barbers) ? barbers : []).filter((b) => b.isActive).map((b) => (
                         <option key={b.id} value={b.id}>{b.name}</option>
                       ))}
                     </select>
-                    {settings?.requireBarberChoice && safeBarbers.filter((b) => b.isActive).length === 0 && (
+                    {settings?.requireBarberChoice && (Array.isArray(barbers) ? barbers : []).filter((b) => b.isActive).length === 0 && (
                       <p className="text-sm text-[#ef4444] mt-1">{t('join.noBarberActive')}</p>
                     )}
                   </div>

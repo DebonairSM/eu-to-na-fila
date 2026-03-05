@@ -92,8 +92,7 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
 
     // Peak Hour Staffing
     if (peakHour) {
-      const safeBarbers = Array.isArray(barbers) ? barbers : [];
-      const presentBarbers = safeBarbers.filter(b => b.isPresent).length;
+      const presentBarbers = (Array.isArray(barbers) ? barbers : []).filter(b => b.isPresent).length;
       const peakHourTraffic = peakHour.count;
       const avgBarberCapacity = summary.avgPerDay / Math.max(presentBarbers, 1);
       

@@ -80,7 +80,6 @@ export function JoinForm() {
   } = useJoinForm();
   const { locale, t } = useLocale();
   const nameErrorId = useId();
-  const safeBarbers = Array.isArray(barbers) ? barbers : [];
 
   const selectedServicesForSubtotal: Service[] = activeServices.filter((s) => selectedServiceIds.includes(s.id));
   const subtotal = serviceSubtotal(selectedServicesForSubtotal);
@@ -209,11 +208,11 @@ export function JoinForm() {
                   className="form-control-select select-readable w-full max-w-full"
                 >
                   <option value="">{t('join.selectOption')}</option>
-                  {safeBarbers.filter(b => b.isActive).map((b) => (
+                  {(Array.isArray(barbers) ? barbers : []).filter(b => b.isActive).map((b) => (
                     <option key={b.id} value={b.id}>{b.name}</option>
                   ))}
                 </select>
-                {settings.requireBarberChoice && safeBarbers.filter(b => b.isActive).length === 0 && (
+                {settings.requireBarberChoice && (Array.isArray(barbers) ? barbers : []).filter(b => b.isActive).length === 0 && (
                   <p className="text-sm text-[#ef4444] mt-1">{t('join.noBarberActive')}</p>
                 )}
               </div>
@@ -271,7 +270,7 @@ export function JoinForm() {
             )}
 
             <ActiveBarbersInfo
-              barbers={safeBarbers}
+              barbers={barbers}
               waitTimes={waitTimes}
               selectedBarberId={selectedBarberId}
               isLoading={isLoadingWaitTimes}

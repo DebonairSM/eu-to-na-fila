@@ -26,7 +26,11 @@ export function useBarbers(pollInterval?: number) {
     try {
       setError(null);
       const raw = await api.getBarbers(shopSlug);
-      const barbersList = Array.isArray(raw) ? raw : [];
+      const barbersList = Array.isArray(raw)
+        ? raw
+        : (raw && typeof raw === 'object' && Array.isArray((raw as { barbers?: unknown }).barbers))
+          ? (raw as { barbers: Barber[] }).barbers
+          : [];
 
       if (effectivePollInterval != null && effectivePollInterval > 0) {
         const dataString = JSON.stringify(barbersList);
