@@ -25,12 +25,7 @@ export function useBarbers(pollInterval?: number) {
 
     try {
       setError(null);
-      const raw = await api.getBarbers(shopSlug);
-      const barbersList = Array.isArray(raw)
-        ? raw
-        : (raw && typeof raw === 'object' && Array.isArray((raw as { barbers?: unknown }).barbers))
-          ? (raw as { barbers: Barber[] }).barbers
-          : [];
+      const barbersList = await api.getBarbers(shopSlug);
 
       if (effectivePollInterval != null && effectivePollInterval > 0) {
         const dataString = JSON.stringify(barbersList);
@@ -87,12 +82,11 @@ export function useBarbers(pollInterval?: number) {
     async (barberId: number, isPresent: boolean) => {
       try {
         // Update optimistically
-        setBarbers((prev) => {
-          const list = Array.isArray(prev) ? prev : [];
-          return list.map((b) =>
+        setBarbers((prev) =>
+          prev.map((b) =>
             b.id === barberId ? { ...b, isPresent } : b
-          );
-        });
+          )
+        );
 
         // Call API - backend handles unassigning customers automatically
         await api.toggleBarberPresence(barberId, isPresent);
@@ -107,12 +101,11 @@ export function useBarbers(pollInterval?: number) {
     [fetchBarbers]
   );
 
-  const safeBarbers = Array.isArray(barbers) ? barbers : [];
-  const presentBarbers = safeBarbers.filter((b) => b.isPresent);
-  const absentBarbers = safeBarbers.filter((b) => !b.isPresent);
+  const presentBarbers = barbers.filter((b) => b.isPresent);
+  const absentBarbers = barbers.filter((b) => !b.isPresent);
 
   return {
-    barbers: safeBarbers,
+    barbers,
     presentBarbers,
     absentBarbers,
     isLoading,

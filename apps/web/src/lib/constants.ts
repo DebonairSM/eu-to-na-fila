@@ -44,7 +44,7 @@ export const TIMEOUTS = {
 export const API_TIMEOUT_WAIT_TIMES_MS = 8000;
 
 /** Timeout for GET active ticket by device. Fail fast so join/guard don't hang. */
-export const API_TIMEOUT_ACTIVE_TICKET_MS = 10000;
+export const API_TIMEOUT_ACTIVE_TICKET_MS = 5000;
 
 /**
  * Kiosk mode view durations in milliseconds

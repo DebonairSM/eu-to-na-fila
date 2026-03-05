@@ -24,8 +24,11 @@ export function useActiveTicket(): { activeTicket: Ticket | null; isLoading: boo
         } else if (mounted) {
           setActiveTicket(null);
         }
-      } catch {
-        if (mounted) setActiveTicket(null);
+      } catch (error) {
+        if (mounted) {
+          console.warn('[useActiveTicket] Failed to fetch active ticket', { shopSlug, error });
+          setActiveTicket(null);
+        }
       } finally {
         if (mounted) setIsLoading(false);
       }

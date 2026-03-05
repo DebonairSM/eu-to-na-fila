@@ -48,7 +48,8 @@ export function createTicketsApi(client: BaseApiClient): TicketsApi {
       try {
         return await c.get(
           `/shops/${shopSlug}/tickets/active?deviceId=${encodeURIComponent(deviceId)}`,
-          API_TIMEOUT_ACTIVE_TICKET_MS
+          API_TIMEOUT_ACTIVE_TICKET_MS,
+          { disableRetry: true }
         );
       } catch (error) {
         if (error instanceof ApiError && (error.statusCode === 404 || error.statusCode === 429)) return null;

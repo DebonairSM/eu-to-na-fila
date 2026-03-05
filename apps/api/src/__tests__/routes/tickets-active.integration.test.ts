@@ -135,4 +135,22 @@ describe('GET /shops/:slug/tickets/active', () => {
     const data = JSON.parse(response.body || 'null');
     expect(data).toBeNull();
   });
+
+  it('rate limits after 10 requests per minute per slug/device key', async () => {
+    if (!dbAvailable) return;
+    const shop = await createShop({ slug: 'active-limit-shop' });
+    await createService({ shopId: shop.id });
+    const deviceId = `active-limit-device-${Date.now()}`;
+    let lastResponse = null as Awaited<ReturnType<typeof app.inject>> | null;
+
+    for (let i = 0; i < 11; i++) {
+      lastResponse = await app.inject({
+        method: 'GET',
+        url: `/shops/${shop.slug}/tickets/active?deviceId=${encodeURIComponent(deviceId)}`,
+      });
+    }
+
+    expect(lastResponse).not.toBeNull();
+    expect(lastResponse!.statusCode).toBe(429);
+  });
 });

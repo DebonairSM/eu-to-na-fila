@@ -71,7 +71,7 @@ export function SchedulePage() {
     api
       .getAppointmentSlots(shopSlug, dateStr, selectedServiceId, selectedBarberId ?? undefined)
       .then((res) => {
-        setSlots(Array.isArray(res?.slots) ? res.slots : []);
+        setSlots(res.slots);
         setSlotsLoading(false);
       })
       .catch(() => {
@@ -176,8 +176,7 @@ export function SchedulePage() {
     return !hasHoursForDay(operatingHours, date);
   };
 
-  const safeSlots = Array.isArray(slots) ? slots : [];
-  const availableSlots = safeSlots.filter((s) => s.available);
+  const availableSlots = slots.filter((s) => s.available);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
@@ -231,7 +230,7 @@ export function SchedulePage() {
                   </select>
                 </div>
 
-                {settings?.allowBarberPreference && (safeBarbers.length > 0 || settings?.requireBarberChoice) && (
+                {settings?.allowBarberPreference && (barbers.length > 0 || settings?.requireBarberChoice) && (
                   <div>
                     <InputLabel htmlFor="schedule-barber">
                       {settings?.requireBarberChoice ? t('join.barberLabel') : t('join.barberLabelOptional')}
@@ -244,11 +243,11 @@ export function SchedulePage() {
                       className="form-control-select select-readable w-full mt-1"
                     >
                       <option value="">{t('join.selectOption')}</option>
-                      {safeBarbers.filter((b) => b.isActive).map((b) => (
+                      {barbers.filter((b) => b.isActive).map((b) => (
                         <option key={b.id} value={b.id}>{b.name}</option>
                       ))}
                     </select>
-                    {settings?.requireBarberChoice && safeBarbers.filter((b) => b.isActive).length === 0 && (
+                    {settings?.requireBarberChoice && barbers.filter((b) => b.isActive).length === 0 && (
                       <p className="text-sm text-[#ef4444] mt-1">{t('join.noBarberActive')}</p>
                     )}
                   </div>
@@ -263,7 +262,7 @@ export function SchedulePage() {
                       <Text size="sm" variant="secondary">{t('schedule.noSlots')}</Text>
                     ) : (
                       <div className="flex flex-wrap gap-2">
-                        {safeSlots.map((slot) => (
+                        {slots.map((slot) => (
                           <button
                             key={slot.time}
                             type="button"

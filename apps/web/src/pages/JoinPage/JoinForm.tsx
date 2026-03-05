@@ -208,11 +208,11 @@ export function JoinForm() {
                   className="form-control-select select-readable w-full max-w-full"
                 >
                   <option value="">{t('join.selectOption')}</option>
-                  {(Array.isArray(barbers) ? barbers : []).filter(b => b.isActive).map((b) => (
+                  {barbers.filter(b => b.isActive).map((b) => (
                     <option key={b.id} value={b.id}>{b.name}</option>
                   ))}
                 </select>
-                {settings.requireBarberChoice && (Array.isArray(barbers) ? barbers : []).filter(b => b.isActive).length === 0 && (
+                {settings.requireBarberChoice && barbers.filter(b => b.isActive).length === 0 && (
                   <p className="text-sm text-[#ef4444] mt-1">{t('join.noBarberActive')}</p>
                 )}
               </div>

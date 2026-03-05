@@ -23,8 +23,7 @@ export function BarberManagementPage() {
   const { t } = useLocale();
   const navigate = useNavigate();
   const { barbers, isLoading, error, refetch } = useBarbers();
-  const safeBarbers = Array.isArray(barbers) ? barbers : [];
-  const displayBarbers = isBarber && user ? safeBarbers.filter((b) => b.id === user.id) : safeBarbers;
+  const displayBarbers = isBarber && user ? barbers.filter((b) => b.id === user.id) : barbers;
   const addModal = useModal();
   const editModal = useModal();
   const deleteConfirmModal = useModal();

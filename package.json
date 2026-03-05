@@ -18,7 +18,7 @@
     "build:fast": "pnpm build:shared && pnpm build:api && pnpm build:web:fast && pnpm --filter web build:root && pnpm integrate:web",
     "start": "pnpm --filter api start",
     "start:api": "node scripts/start-api.js",
-    "start:render": "echo [start:render] Running db:migrate... && pnpm db:migrate && echo [start:render] Starting API... && node scripts/start-api.js",
+    "start:render": "echo [start:render] Running db:migrate... && pnpm db:migrate && echo [start:render] Starting API... && pnpm --filter api start",
     "start:full": "pnpm db:migrate && pnpm db:seed && pnpm --filter api start",
     "db:migrate": "pnpm --filter api db:migrate",
     "db:seed": "pnpm --filter api db:seed",

@@ -56,8 +56,7 @@ export function BarberSelector({
 }: BarberSelectorProps) {
   const { t } = useLocale();
   const sortedDisplayedBarbers = useMemo(() => {
-    const list = Array.isArray(barbers) ? barbers : [];
-    const displayedBarbers = showAllBarbers ? list : list.filter((b) => b.isPresent);
+    const displayedBarbers = showAllBarbers ? barbers : barbers.filter((b) => b.isPresent);
     return [...displayedBarbers];
   }, [barbers, showAllBarbers]);
 

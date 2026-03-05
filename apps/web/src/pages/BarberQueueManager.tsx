@@ -58,8 +58,7 @@ export function BarberQueueManager() {
   const { activeServices } = useServices();
   const { isBarber, user } = useAuthContext();
   const { t } = useLocale();
-  const safeBarbers = Array.isArray(barbers) ? barbers : [];
-  const displayBarbers = isBarber && user ? safeBarbers.filter((b) => b.id === user.id) : safeBarbers;
+  const displayBarbers = isBarber && user ? barbers.filter((b) => b.id === user.id) : barbers;
   const singleBarberId = displayBarbers.length === 1 ? displayBarbers[0].id : null;
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
@@ -159,7 +158,7 @@ export function BarberQueueManager() {
     setAppointmentSlotsLoading(true);
     api
       .getAppointmentSlots(shopSlug, appointmentDateStr, appointmentForm.serviceId, appointmentForm.preferredBarberId ?? undefined)
-      .then((res) => setAppointmentSlots(Array.isArray(res?.slots) ? res.slots : []))
+      .then((res) => setAppointmentSlots(res.slots))
       .catch(() => setAppointmentSlots([]))
       .finally(() => setAppointmentSlotsLoading(false));
   }, [appointmentModalOpen, appointmentDateStr, appointmentForm.serviceId, appointmentForm.preferredBarberId, shopSlug, useSlotsForAppointment]);
@@ -206,9 +205,9 @@ export function BarberQueueManager() {
 
   // Preload barber avatar images when barbers data is available
   useEffect(() => {
-    if (safeBarbers.length === 0) return;
+    if (barbers.length === 0) return;
 
-    safeBarbers.forEach((barber) => {
+    barbers.forEach((barber) => {
       // Preload custom avatar URL if available
       if (barber.avatarUrl) {
         const img = new Image();
@@ -232,9 +231,9 @@ export function BarberQueueManager() {
         }, 5000);
       }
     });
-  }, [safeBarbers]);
+  }, [barbers]);
 
-  const tickets = Array.isArray(queueData?.tickets) ? queueData.tickets : [];
+  const tickets = queueData?.tickets || [];
 
   // Memoize sorted tickets and counts (API returns weighted order when allowAppointments)
   const { sortedTickets, waitingCount, servingCount, pendingTickets } = useMemo(() => {
@@ -287,7 +286,7 @@ export function BarberQueueManager() {
     setRescheduleSlotsLoading(true);
     api
       .getAppointmentSlots(shopSlug, rescheduleDateStr, editTicketServiceId, editTicketBarberId)
-      .then((res) => setRescheduleSlots(Array.isArray(res?.slots) ? res.slots : []))
+      .then((res) => setRescheduleSlots(res.slots))
       .catch(() => setRescheduleSlots([]))
       .finally(() => setRescheduleSlotsLoading(false));
   }, [editAppointmentTicketId, rescheduleDateStr, editTicketServiceId, editTicketBarberId, shopSlug, useSlotsForAppointment]);
@@ -503,8 +502,8 @@ export function BarberQueueManager() {
 
   const getAssignedBarber = useCallback((ticket: { barberId?: number | null }) => {
     if (!ticket.barberId) return null;
-    return safeBarbers.find((b) => b.id === ticket.barberId) || null;
-  }, [safeBarbers]);
+    return barbers.find((b) => b.id === ticket.barberId) || null;
+  }, [barbers]);
 
   // Auto-clear error messages after timeout
   useErrorTimeout(errorMessage, () => setErrorMessage(null));
@@ -782,7 +781,7 @@ export function BarberQueueManager() {
                     </select>
                   </div>
                 )}
-                {settings.allowBarberPreference && safeBarbers.filter((b) => b.isActive).length > 0 && (
+                {settings.allowBarberPreference && barbers.filter((b) => b.isActive).length > 0 && (
                   <div>
                     <label htmlFor="kioskCheckInBarber" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
                       {t('join.barberLabelOptional')}
@@ -794,7 +793,7 @@ export function BarberQueueManager() {
                       className="select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[48px] px-4 py-3 text-lg rounded-2xl border-2 border-[var(--shop-border-color)] focus:outline-none focus:border-[var(--shop-accent)] bg-white text-gray-900"
                     >
                       <option value="">{t('join.selectOption')}</option>
-                      {safeBarbers.filter((b) => b.isActive).map((b) => (
+                      {barbers.filter((b) => b.isActive).map((b) => (
                         <option key={b.id} value={b.id} title={b.name}>{truncateOptionLabel(b.name)}</option>
                       ))}
                     </select>
@@ -1024,7 +1023,7 @@ export function BarberQueueManager() {
                   // Calculate display position based on index in sorted waiting tickets
                   const displayPosition = isServing ? null : index + 1;
                   const preferredBarberId = (ticket as { preferredBarberId?: number }).preferredBarberId;
-                  const preferredBarberName = settings.allowBarberPreference && preferredBarberId != null ? safeBarbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
+                  const preferredBarberName = settings.allowBarberPreference && preferredBarberId != null ? barbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
                     return (
                       <QueueCard
                         key={ticket.id}
@@ -1161,7 +1160,7 @@ export function BarberQueueManager() {
               </select>
             </div>
           )}
-          {settings.allowBarberPreference && safeBarbers.length > 0 && (
+          {settings.allowBarberPreference && barbers.length > 0 && (
             <div>
               <label htmlFor="checkInBarber" className="block text-sm font-medium mb-2">{t('join.barberLabelOptional')}</label>
               <select
@@ -1171,7 +1170,7 @@ export function BarberQueueManager() {
                 className="form-control-select select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
               >
                 <option value="">{t('join.selectOption')}</option>
-                {safeBarbers.filter((b) => b.isActive).map((b) => (
+                {barbers.filter((b) => b.isActive).map((b) => (
                   <option key={b.id} value={b.id} title={b.name}>{truncateOptionLabel(b.name)}</option>
                 ))}
               </select>
@@ -1314,7 +1313,7 @@ export function BarberQueueManager() {
                 />
               </div>
             )}
-            {settings.allowBarberPreference && safeBarbers.length > 0 && (
+            {settings.allowBarberPreference && barbers.length > 0 && (
               <div>
                 <label htmlFor="appointmentBarber" className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('join.barberLabelOptional')}</label>
                 <select
@@ -1324,7 +1323,7 @@ export function BarberQueueManager() {
                   className="form-control-select select-readable w-full min-h-[44px]"
                 >
                   <option value="">{t('join.selectOption')}</option>
-                  {safeBarbers.filter((b) => b.isActive).map((b) => (
+                  {barbers.filter((b) => b.isActive).map((b) => (
                     <option key={b.id} value={b.id}>{b.name}</option>
                   ))}
                 </select>
@@ -1462,7 +1461,7 @@ export function BarberQueueManager() {
         const selectedTicket = tickets.find((t) => t.id === selectedCustomerId);
         const rawPreferredBarberId = (selectedTicket as { preferredBarberId?: number } | undefined)?.preferredBarberId ?? null;
         const preferredBarberId = !isBarber && settings.allowBarberPreference ? rawPreferredBarberId : null;
-        const preferredBarberName = preferredBarberId != null ? safeBarbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
+        const preferredBarberName = preferredBarberId != null ? barbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
         return (
           <BarberSelector
             isOpen={barberSelectorModal.isOpen}

@@ -59,25 +59,8 @@ export function JoinPageGuard() {
           return;
         }
       } catch (error) {
-        // Network error - retry once before falling back
-        console.warn('[JoinPageGuard] Error checking by deviceId, retrying once:', error);
-        
-        try {
-          // Retry the deviceId check once
-          const deviceId = getOrCreateDeviceId();
-          const activeTicket = await api.getActiveTicketByDevice(shopSlug, deviceId);
-          
-          if (activeTicket && (activeTicket.status === 'waiting' || activeTicket.status === 'in_progress')) {
-            if (!mountedRef.current) return;
-            console.log('[JoinPageGuard] Found active ticket by deviceId on retry, redirecting:', activeTicket.id);
-            localStorage.setItem(STORAGE_KEY, activeTicket.id.toString());
-            redirectToStatusPage(activeTicket.id, activeTicket.shopSlug, navigate, shopSlug);
-            return;
-          }
-        } catch (retryError) {
-          // Retry also failed - fall through to localStorage check
-          console.warn('[JoinPageGuard] Retry also failed, falling back to localStorage check:', retryError);
-        }
+        // Fall through to localStorage check. Single request only to avoid stacked delays.
+        console.warn('[JoinPageGuard] Error checking active ticket by deviceId, falling back to localStorage check:', error);
       }
 
       // Step 2: Fallback to localStorage check (if deviceId check didn't find anything)

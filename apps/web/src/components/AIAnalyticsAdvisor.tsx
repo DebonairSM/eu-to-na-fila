@@ -57,7 +57,6 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
   const insights = useMemo(() => {
     const result: Insight[] = [];
     const { summary, barbers, peakHour, serviceBreakdown, cancellationAnalysis, barberEfficiency, trends } = data;
-    const safeBarberEfficiency = Array.isArray(barberEfficiency) ? barberEfficiency : [];
 
     // Cancellation Analysis
     if (summary.cancellationRate > 20) {
@@ -93,7 +92,7 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
 
     // Peak Hour Staffing
     if (peakHour) {
-      const presentBarbers = (Array.isArray(barbers) ? barbers : []).filter(b => b.isPresent).length;
+      const presentBarbers = barbers.filter(b => b.isPresent).length;
       const peakHourTraffic = peakHour.count;
       const avgBarberCapacity = summary.avgPerDay / Math.max(presentBarbers, 1);
       
@@ -152,8 +151,8 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
     }
 
     // Barber Performance
-    const topBarber = [...safeBarberEfficiency].sort((a, b) => b.ticketsPerDay - a.ticketsPerDay)[0];
-    const lowBarber = safeBarberEfficiency.filter(b => b.ticketsPerDay > 0).sort((a, b) => a.ticketsPerDay - b.ticketsPerDay)[0];
+    const topBarber = barberEfficiency.sort((a, b) => b.ticketsPerDay - a.ticketsPerDay)[0];
+    const lowBarber = barberEfficiency.filter(b => b.ticketsPerDay > 0).sort((a, b) => a.ticketsPerDay - b.ticketsPerDay)[0];
     
     if (topBarber && lowBarber && topBarber.ticketsPerDay > lowBarber.ticketsPerDay * 2) {
       result.push({

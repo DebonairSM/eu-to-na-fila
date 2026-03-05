@@ -84,13 +84,14 @@ export class BaseApiClient {
 
   protected async request<T>(
     path: string,
-    options: RequestInit = {},
+    options: (RequestInit & { disableRetry?: boolean }) = {},
     timeoutMs = 30000,
     isRetry = false
   ): Promise<T> {
+    const { disableRetry = false, ...fetchOptions } = options;
     const url = `${this.getEffectiveBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
     const headers: Record<string, string> = {};
-    const method = options.method || 'GET';
+    const method = fetchOptions.method || 'GET';
     const methodsWithBody = ['POST', 'PATCH', 'PUT'];
     if (methodsWithBody.includes(method)) {
       headers['Content-Type'] = 'application/json';
@@ -98,8 +99,8 @@ export class BaseApiClient {
     if (this.authToken) {
       headers['Authorization'] = `Bearer ${this.authToken}`;
     }
-    if (options.headers) {
-      Object.assign(headers, options.headers);
+    if (fetchOptions.headers) {
+      Object.assign(headers, fetchOptions.headers);
     }
 
     const controller = new AbortController();
@@ -107,10 +108,10 @@ export class BaseApiClient {
 
     try {
       const response = await fetch(url, {
-        ...options,
+        ...fetchOptions,
         headers,
         signal: controller.signal,
-        cache: method === 'GET' ? 'no-store' : options.cache,
+        cache: method === 'GET' ? 'no-store' : fetchOptions.cache,
       });
 
       const responseText = await response.text();
@@ -180,6 +181,7 @@ export class BaseApiClient {
             : undefined
         );
         const retryable =
+          !disableRetry &&
           !isRetry &&
           BaseApiClient.RETRYABLE_STATUSES.includes(response.status);
         if (retryable) {
@@ -211,7 +213,7 @@ export class BaseApiClient {
       }
       const isAbort = error instanceof Error && error.name === 'AbortError';
       const isNetwork = error instanceof TypeError;
-      const retryable = !isRetry && (isAbort || isNetwork);
+      const retryable = !disableRetry && !isRetry && (isAbort || isNetwork);
       if (retryable) {
         await new Promise((r) => setTimeout(r, BaseApiClient.RETRY_DELAY_MS));
         return this.request<T>(path, options, timeoutMs, true);
@@ -233,8 +235,12 @@ export class BaseApiClient {
     }
   }
 
-  protected async get<T>(path: string, timeoutMs?: number): Promise<T> {
-    return this.request<T>(path, { method: 'GET' }, timeoutMs ?? 30000);
+  protected async get<T>(path: string, timeoutMs?: number, options?: { disableRetry?: boolean }): Promise<T> {
+    return this.request<T>(
+      path,
+      { method: 'GET', ...(options?.disableRetry ? { disableRetry: true } : {}) },
+      timeoutMs ?? 30000
+    );
   }
 
   protected async post<T>(path: string, body: unknown, timeoutMs?: number): Promise<T> {
