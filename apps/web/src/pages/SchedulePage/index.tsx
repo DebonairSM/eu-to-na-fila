@@ -38,6 +38,7 @@ export function SchedulePage() {
   const needsProfileCompletion = isCustomer && user?.name && !isSufficientName(user.name);
   const { activeServices, isLoading: isLoadingServices } = useServices();
   const { barbers } = useBarbers();
+  const safeBarbers = Array.isArray(barbers) ? barbers : [];
   const { activeTicket } = useActiveTicket();
   const { validateName } = useProfanityFilter();
 
@@ -242,11 +243,11 @@ export function SchedulePage() {
                       className="form-control-select select-readable w-full mt-1"
                     >
                       <option value="">{t('join.selectOption')}</option>
-                      {barbers.filter((b) => b.isActive).map((b) => (
+                      {safeBarbers.filter((b) => b.isActive).map((b) => (
                         <option key={b.id} value={b.id}>{b.name}</option>
                       ))}
                     </select>
-                    {settings?.requireBarberChoice && barbers.filter((b) => b.isActive).length === 0 && (
+                    {settings?.requireBarberChoice && safeBarbers.filter((b) => b.isActive).length === 0 && (
                       <p className="text-sm text-[#ef4444] mt-1">{t('join.noBarberActive')}</p>
                     )}
                   </div>

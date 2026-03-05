@@ -257,7 +257,7 @@ function StepBarbers({ barbers, onChange, errors }: { barbers: BarberItem[]; onC
   const addBarber = () => onChange([...barbers, { id: uid(), name: '', email: '', phone: '' }]);
   const removeBarber = (id: string) => {
     if (barbers.length <= 1) return;
-    onChange(barbers.filter((b) => b.id !== id));
+    onChange((Array.isArray(barbers) ? barbers : []).filter((b) => b.id !== id));
   };
   const updateBarber = (id: string, patch: Partial<BarberItem>) => onChange(barbers.map((b) => (b.id === id ? { ...b, ...patch } : b)));
   return (

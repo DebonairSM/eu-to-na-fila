@@ -58,7 +58,8 @@ export function BarberQueueManager() {
   const { activeServices } = useServices();
   const { isBarber, user } = useAuthContext();
   const { t } = useLocale();
-  const displayBarbers = isBarber && user ? barbers.filter((b) => b.id === user.id) : barbers;
+  const safeBarbers = Array.isArray(barbers) ? barbers : [];
+  const displayBarbers = isBarber && user ? safeBarbers.filter((b) => b.id === user.id) : safeBarbers;
   const singleBarberId = displayBarbers.length === 1 ? displayBarbers[0].id : null;
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
@@ -205,9 +206,9 @@ export function BarberQueueManager() {
 
   // Preload barber avatar images when barbers data is available
   useEffect(() => {
-    if (barbers.length === 0) return;
+    if (safeBarbers.length === 0) return;
 
-    barbers.forEach((barber) => {
+    safeBarbers.forEach((barber) => {
       // Preload custom avatar URL if available
       if (barber.avatarUrl) {
         const img = new Image();
@@ -231,7 +232,7 @@ export function BarberQueueManager() {
         }, 5000);
       }
     });
-  }, [barbers]);
+  }, [safeBarbers]);
 
   const tickets = queueData?.tickets || [];
 
@@ -781,7 +782,7 @@ export function BarberQueueManager() {
                     </select>
                   </div>
                 )}
-                {settings.allowBarberPreference && barbers.filter((b) => b.isActive).length > 0 && (
+                {settings.allowBarberPreference && safeBarbers.filter((b) => b.isActive).length > 0 && (
                   <div>
                     <label htmlFor="kioskCheckInBarber" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
                       {t('join.barberLabelOptional')}
@@ -793,7 +794,7 @@ export function BarberQueueManager() {
                       className="select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[48px] px-4 py-3 text-lg rounded-2xl border-2 border-[var(--shop-border-color)] focus:outline-none focus:border-[var(--shop-accent)] bg-white text-gray-900"
                     >
                       <option value="">{t('join.selectOption')}</option>
-                      {barbers.filter((b) => b.isActive).map((b) => (
+                      {safeBarbers.filter((b) => b.isActive).map((b) => (
                         <option key={b.id} value={b.id} title={b.name}>{truncateOptionLabel(b.name)}</option>
                       ))}
                     </select>
@@ -1160,7 +1161,7 @@ export function BarberQueueManager() {
               </select>
             </div>
           )}
-          {settings.allowBarberPreference && barbers.length > 0 && (
+          {settings.allowBarberPreference && safeBarbers.length > 0 && (
             <div>
               <label htmlFor="checkInBarber" className="block text-sm font-medium mb-2">{t('join.barberLabelOptional')}</label>
               <select
@@ -1170,7 +1171,7 @@ export function BarberQueueManager() {
                 className="form-control-select select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
               >
                 <option value="">{t('join.selectOption')}</option>
-                {barbers.filter((b) => b.isActive).map((b) => (
+                {safeBarbers.filter((b) => b.isActive).map((b) => (
                   <option key={b.id} value={b.id} title={b.name}>{truncateOptionLabel(b.name)}</option>
                 ))}
               </select>
@@ -1313,7 +1314,7 @@ export function BarberQueueManager() {
                 />
               </div>
             )}
-            {settings.allowBarberPreference && barbers.length > 0 && (
+            {settings.allowBarberPreference && safeBarbers.length > 0 && (
               <div>
                 <label htmlFor="appointmentBarber" className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('join.barberLabelOptional')}</label>
                 <select
@@ -1323,7 +1324,7 @@ export function BarberQueueManager() {
                   className="form-control-select select-readable w-full min-h-[44px]"
                 >
                   <option value="">{t('join.selectOption')}</option>
-                  {barbers.filter((b) => b.isActive).map((b) => (
+                  {safeBarbers.filter((b) => b.isActive).map((b) => (
                     <option key={b.id} value={b.id}>{b.name}</option>
                   ))}
                 </select>

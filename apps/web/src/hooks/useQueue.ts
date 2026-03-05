@@ -75,14 +75,15 @@ export function useQueue(pollInterval?: number) {
     };
   }, [fetchQueue, effectiveInterval]);
 
-  const waitingTickets = data?.tickets.filter((t) => t.status === 'waiting') || [];
-  const inProgressTickets = data?.tickets.filter((t) => t.status === 'in_progress') || [];
-  const completedTickets = data?.tickets.filter((t) => t.status === 'completed') || [];
+  const ticketsList = Array.isArray(data?.tickets) ? data.tickets : [];
+  const waitingTickets = ticketsList.filter((t) => t.status === 'waiting');
+  const inProgressTickets = ticketsList.filter((t) => t.status === 'in_progress');
+  const completedTickets = ticketsList.filter((t) => t.status === 'completed');
 
   return {
     data,
     shop: data?.shop,
-    tickets: data?.tickets || [],
+    tickets: ticketsList,
     waitingTickets,
     inProgressTickets,
     completedTickets,

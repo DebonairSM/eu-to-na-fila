@@ -55,10 +55,11 @@ export function BarberSelector({
   canAddNoteInPanel = true,
 }: BarberSelectorProps) {
   const { t } = useLocale();
+  const safeBarbers = Array.isArray(barbers) ? barbers : [];
   const sortedDisplayedBarbers = useMemo(() => {
-    const displayedBarbers = showAllBarbers ? barbers : barbers.filter((b) => b.isPresent);
+    const displayedBarbers = showAllBarbers ? safeBarbers : safeBarbers.filter((b) => b.isPresent);
     return [...displayedBarbers];
-  }, [barbers, showAllBarbers]);
+  }, [safeBarbers, showAllBarbers]);
 
   // Calculate which barbers are busy (have an in_progress ticket)
   // Exclude the current ticket being edited (reassignment to same barber is fine)
