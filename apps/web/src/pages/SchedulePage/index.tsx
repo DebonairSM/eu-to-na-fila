@@ -230,7 +230,7 @@ export function SchedulePage() {
                   </select>
                 </div>
 
-                {settings?.allowBarberPreference && (barbers.length > 0 || settings?.requireBarberChoice) && (
+                {settings?.allowBarberPreference && (safeBarbers.length > 0 || settings?.requireBarberChoice) && (
                   <div>
                     <InputLabel htmlFor="schedule-barber">
                       {settings?.requireBarberChoice ? t('join.barberLabel') : t('join.barberLabelOptional')}
@@ -243,11 +243,11 @@ export function SchedulePage() {
                       className="form-control-select select-readable w-full mt-1"
                     >
                       <option value="">{t('join.selectOption')}</option>
-                      {(Array.isArray(barbers) ? barbers : []).filter((b) => b.isActive).map((b) => (
+                      {safeBarbers.filter((b) => b.isActive).map((b) => (
                         <option key={b.id} value={b.id}>{b.name}</option>
                       ))}
                     </select>
-                    {settings?.requireBarberChoice && (Array.isArray(barbers) ? barbers : []).filter((b) => b.isActive).length === 0 && (
+                    {settings?.requireBarberChoice && safeBarbers.filter((b) => b.isActive).length === 0 && (
                       <p className="text-sm text-[#ef4444] mt-1">{t('join.noBarberActive')}</p>
                     )}
                   </div>
