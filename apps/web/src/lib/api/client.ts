@@ -118,13 +118,14 @@ export class BaseApiClient {
         try {
           data = JSON.parse(responseText);
         } catch {
+          const htmlHint = looksLikeHtml
+            ? `API returned a page instead of JSON. Request was sent to: ${url}. If your API runs on a different host (e.g. another Render service), set VITE_API_BASE_URL to that host (e.g. https://your-api.onrender.com/api) in the web app build environment and redeploy. If API and site are on the same host, ensure the server routes /api/* to the API.`
+            : null;
           if (import.meta.env.DEV && looksLikeHtml) {
-            console.warn('[api] Request returned HTML instead of JSON. URL:', url, 'Check API base URL (e.g. /api on same origin).');
+            console.warn('[api]', htmlHint);
           }
           if (response.ok) {
-            const message = looksLikeHtml
-              ? 'API route returned HTML instead of JSON; check that the API base URL is correct (e.g. /api on same origin).'
-              : `Server returned invalid response (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`;
+            const message = htmlHint ?? `Server returned invalid response (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`;
             throw new ApiError(message, response.status, 'INVALID_RESPONSE');
           }
           if (response.status === 502) {
@@ -142,9 +143,7 @@ export class BaseApiClient {
               code: 'SERVER_ERROR',
             };
           } else {
-            const errMsg = looksLikeHtml
-              ? 'API route returned HTML instead of JSON; check that the API base URL is correct.'
-              : `Server returned invalid response (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`;
+            const errMsg = htmlHint ?? `Server returned invalid response (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`;
             data = {
               error: errMsg,
               statusCode: response.status,
