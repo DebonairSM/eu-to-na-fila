@@ -140,7 +140,8 @@ export function StatusPage() {
   // Memoize position calculation to avoid expensive recalculation on every render
   const positionInfo = useMemo(() => {
     if (!ticket || ticket.status !== 'waiting' || !queueData) return null;
-    const waitingTickets = queueData.tickets.filter((t) => t.status === 'waiting');
+    const queueTickets = Array.isArray(queueData.tickets) ? queueData.tickets : [];
+    const waitingTickets = queueTickets.filter((t) => t.status === 'waiting');
     // Sort waiting tickets by position (or createdAt as fallback) to ensure correct order
     const sortedWaitingTickets = [...waitingTickets].sort((a, b) => {
       // First try to sort by position
@@ -241,7 +242,7 @@ export function StatusPage() {
     setRescheduleSlotsLoading(true);
     api
       .getAppointmentSlots(shopSlug, rescheduleDateStr, ticket.serviceId, preferredBarberId ?? undefined)
-      .then((res) => setRescheduleSlots(res.slots))
+      .then((res) => setRescheduleSlots(Array.isArray(res?.slots) ? res.slots : []))
       .catch(() => setRescheduleSlots([]))
       .finally(() => setRescheduleSlotsLoading(false));
   }, [rescheduleModalOpen, shopSlug, rescheduleDateStr, ticket?.serviceId, preferredBarberId]);

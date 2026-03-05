@@ -1,5 +1,6 @@
 import type { Barber } from '@eutonafila/shared';
 import type { BaseApiClient } from './client.js';
+import { ApiError } from './errors.js';
 
 export interface BarbersApi {
   getBarbers(shopSlug: string): Promise<Barber[]>;
@@ -13,7 +14,14 @@ export interface BarbersApi {
 export function createBarbersApi(client: BaseApiClient): BarbersApi {
   const c = client as any;
   return {
-    getBarbers: (shopSlug) => c.get(`/shops/${shopSlug}/barbers`),
+    getBarbers: async (shopSlug) => {
+      const raw = await c.get(`/shops/${shopSlug}/barbers`);
+      if (Array.isArray(raw)) return raw as Barber[];
+      if (raw && typeof raw === 'object' && Array.isArray((raw as { barbers?: unknown }).barbers)) {
+        return (raw as { barbers: Barber[] }).barbers;
+      }
+      throw new ApiError('Invalid barbers response format', 502, 'INVALID_RESPONSE');
+    },
     toggleBarberPresence: (barberId, isPresent) => c.patch(`/barbers/${barberId}/presence`, { isPresent }),
     createBarber: (shopSlug, data) => c.post(`/shops/${shopSlug}/barbers`, data),
     updateBarber: (barberId, data) => c.patch(`/barbers/${barberId}`, data),

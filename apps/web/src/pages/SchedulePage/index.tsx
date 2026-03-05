@@ -71,7 +71,7 @@ export function SchedulePage() {
     api
       .getAppointmentSlots(shopSlug, dateStr, selectedServiceId, selectedBarberId ?? undefined)
       .then((res) => {
-        setSlots(res.slots);
+        setSlots(Array.isArray(res?.slots) ? res.slots : []);
         setSlotsLoading(false);
       })
       .catch(() => {
@@ -176,7 +176,8 @@ export function SchedulePage() {
     return !hasHoursForDay(operatingHours, date);
   };
 
-  const availableSlots = slots.filter((s) => s.available);
+  const safeSlots = Array.isArray(slots) ? slots : [];
+  const availableSlots = safeSlots.filter((s) => s.available);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
@@ -262,7 +263,7 @@ export function SchedulePage() {
                       <Text size="sm" variant="secondary">{t('schedule.noSlots')}</Text>
                     ) : (
                       <div className="flex flex-wrap gap-2">
-                        {slots.map((slot) => (
+                        {safeSlots.map((slot) => (
                           <button
                             key={slot.time}
                             type="button"

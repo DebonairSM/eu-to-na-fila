@@ -1,6 +1,7 @@
 import type { GetQueueResponse, GetMetricsResponse, GetStatisticsResponse, Ticket } from '@eutonafila/shared';
 import type { BaseApiClient } from './client.js';
 import { API_TIMEOUT_WAIT_TIMES_MS } from '../constants';
+import { ApiError } from './errors.js';
 
 export interface QueueNextResponse {
   next: Ticket | null;
@@ -21,11 +22,36 @@ export interface QueueApi {
 export function createQueueApi(client: BaseApiClient): QueueApi {
   const c = client as any; // access protected methods
   return {
-    getQueue: (shopSlug) => c.get(`/shops/${shopSlug}/queue`),
+    getQueue: async (shopSlug) => {
+      const raw = await c.get(`/shops/${shopSlug}/queue`);
+      if (
+        raw &&
+        typeof raw === 'object' &&
+        !Array.isArray(raw) &&
+        Array.isArray((raw as { tickets?: unknown }).tickets)
+      ) {
+        return raw as GetQueueResponse;
+      }
+      throw new ApiError('Invalid queue response format', 502, 'INVALID_RESPONSE');
+    },
     getQueueNext: (shopSlug) => c.get(`/shops/${shopSlug}/queue/next`),
     getMetrics: (shopSlug) => c.get(`/shops/${shopSlug}/metrics`, API_TIMEOUT_WAIT_TIMES_MS),
     getWaitDebug: (shopSlug) => c.get(`/shops/${shopSlug}/wait-debug`, API_TIMEOUT_WAIT_TIMES_MS),
-    getWaitTimes: (shopSlug) => c.get(`/shops/${shopSlug}/wait-times`, API_TIMEOUT_WAIT_TIMES_MS),
+    getWaitTimes: async (shopSlug) => {
+      const raw = await c.get(`/shops/${shopSlug}/wait-times`, API_TIMEOUT_WAIT_TIMES_MS);
+      if (
+        raw &&
+        typeof raw === 'object' &&
+        !Array.isArray(raw) &&
+        Array.isArray((raw as { barberWaitTimes?: unknown }).barberWaitTimes)
+      ) {
+        return raw as {
+          standardWaitTime: number | null;
+          barberWaitTimes: Array<{ barberId: number; barberName: string; waitTime: number | null; isPresent: boolean }>;
+        };
+      }
+      throw new ApiError('Invalid wait times response format', 502, 'INVALID_RESPONSE');
+    },
     getStatistics: (shopSlug, since) => {
       const params = since ? `?since=${since.toISOString()}` : '';
       return c.get(`/shops/${shopSlug}/statistics${params}`);

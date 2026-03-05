@@ -114,42 +114,69 @@ export class BaseApiClient {
       });
 
       const responseText = await response.text();
+      const hasBody = responseText.trim().length > 0;
 
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch {
-        if (response.status === 502) {
-          data = {
-            error: import.meta.env.DEV
-              ? 'API não está respondendo. Rode pnpm dev para subir o servidor.'
-              : 'Serviço temporariamente indisponível. Tente novamente em alguns instantes.',
-            statusCode: 502,
-            code: 'BAD_GATEWAY',
-          };
-        } else if (response.status >= 500 && response.status < 600) {
-          data = {
-            error: `Server error (${response.status} ${response.statusText}). The API server may be down or experiencing issues.`,
-            statusCode: response.status,
-            code: 'SERVER_ERROR',
-          };
-        } else {
-          data = {
-            error: `Server returned invalid response (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`,
-            statusCode: response.status,
-            code: 'INVALID_RESPONSE',
-          };
+      let data: unknown = null;
+      if (hasBody) {
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          if (response.ok) {
+            throw new ApiError(
+              `Server returned invalid response (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`,
+              response.status,
+              'INVALID_RESPONSE'
+            );
+          }
+          if (response.status === 502) {
+            data = {
+              error: import.meta.env.DEV
+                ? 'API não está respondendo. Rode pnpm dev para subir o servidor.'
+                : 'Serviço temporariamente indisponível. Tente novamente em alguns instantes.',
+              statusCode: 502,
+              code: 'BAD_GATEWAY',
+            };
+          } else if (response.status >= 500 && response.status < 600) {
+            data = {
+              error: `Server error (${response.status} ${response.statusText}). The API server may be down or experiencing issues.`,
+              statusCode: response.status,
+              code: 'SERVER_ERROR',
+            };
+          } else {
+            data = {
+              error: `Server returned invalid response (${response.status} ${response.statusText}): ${responseText.substring(0, 100)}`,
+              statusCode: response.status,
+              code: 'INVALID_RESPONSE',
+            };
+          }
         }
       }
 
       if (!response.ok) {
-        const error = data as ApiErrorResponse;
+        const errorObj =
+          data && typeof data === 'object' && !Array.isArray(data)
+            ? (data as Partial<ApiErrorResponse> & { errors?: unknown })
+            : undefined;
+        const message =
+          typeof errorObj?.error === 'string' && errorObj.error.length > 0
+            ? errorObj.error
+            : response.status === 502
+              ? (import.meta.env.DEV
+                  ? 'API não está respondendo. Rode pnpm dev para subir o servidor.'
+                  : 'Serviço temporariamente indisponível. Tente novamente em alguns instantes.')
+              : `Request failed (${response.status} ${response.statusText})`;
+        const code =
+          typeof errorObj?.code === 'string' && errorObj.code.length > 0
+            ? errorObj.code
+            : response.status >= 500
+              ? 'SERVER_ERROR'
+              : 'API_ERROR';
         const apiError = new ApiError(
-          error.error,
-          error.statusCode,
-          error.code,
-          'errors' in error && Array.isArray((error as { errors?: unknown }).errors)
-            ? (error as { errors: Array<{ field: string; message: string }> }).errors
+          message,
+          response.status,
+          code,
+          Array.isArray(errorObj?.errors)
+            ? (errorObj.errors as Array<{ field: string; message: string }>)
             : undefined
         );
         const retryable =
