@@ -13,6 +13,7 @@ import { getShopStatus } from '@eutonafila/shared';
 import { getErrorMessage, formatName, getOrCreateDeviceId, redirectToStatusPage } from '@/lib/utils';
 import { logError } from '@/lib/logger';
 import { STORAGE_KEYS, API_TIMEOUT_WAIT_TIMES_MS } from '@/lib/constants';
+import { takePrefetch } from '@/lib/waitTimesPrefetch';
 
 const STORAGE_KEY = STORAGE_KEYS.ACTIVE_TICKET_ID;
 const CUSTOMER_NAME_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_NAME;
@@ -117,7 +118,8 @@ export function useJoinForm() {
 
       try {
         setIsLoadingWaitTimes(true);
-        const timesPromise = api.getWaitTimes(shopSlug);
+        const prefetched = takePrefetch(shopSlug);
+        const timesPromise = prefetched ?? api.getWaitTimes(shopSlug);
         const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('Wait times request timed out')), WAIT_TIMES_TIMEOUT_MS)
         );

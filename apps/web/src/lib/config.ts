@@ -1,5 +1,7 @@
-/** API base URL for the API client only. Relative (e.g. /api) is used as-is, not prefixed with shop path; see getEffectiveBaseUrl in lib/api/client.ts. Set VITE_API_BASE_URL in production if the API is on another origin. */
-const apiBase = import.meta.env.VITE_API_BASE_URL ?? '/api';
+/** API base URL for the API client only. Relative (e.g. /api) is used as-is, not prefixed with shop path; see getEffectiveBaseUrl in lib/api/client.ts. Set VITE_API_BASE_URL in production if the API is on another origin. Must be exactly "https://..." or "http://..." (two slashes); a single slash after the scheme (e.g. https:/...) is normalized. */
+const rawApiBase = import.meta.env.VITE_API_BASE_URL ?? '/api';
+const apiBase =
+  rawApiBase.replace(/^https:\/(?!\/)/, 'https://').replace(/^http:\/(?!\/)/, 'http://');
 
 /** Base path for the current shop (e.g. /shops or /shop). Uses server-injected __SHOP_PATH__ when set. */
 export function getShopBasePath(): string {
