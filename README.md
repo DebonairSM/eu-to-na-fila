@@ -182,7 +182,7 @@ pnpm start
 
 ### Deploy to Render
 
-See [RENDER_DEPLOY.md](./RENDER_DEPLOY.md) for full instructions. Summary:
+See [RENDER_DEPLOY.md](./RENDER_DEPLOY.md) for full instructions. If the web app and API are separate Render services, set `VITE_API_BASE_URL=https://<api-host>/api` for the **web** app’s build so API requests reach the API server. Summary:
 
 1. Use Blueprint (render.yaml) or manual Web Service
 2. Build: `pnpm install --frozen-lockfile && pnpm build:render && ...` (see render.yaml)

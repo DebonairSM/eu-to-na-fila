@@ -168,6 +168,10 @@ class ApiClient extends BaseApiClient {
 /** Singleton API client instance. */
 export const api = new ApiClient(config.apiBase);
 
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  console.debug('[api] effective base URL:', api.getBaseUrl());
+}
+
 /** Create a new API client with custom base URL. */
 export function createApiClient(baseUrl: string): ApiClient {
   return new ApiClient(baseUrl);

@@ -134,6 +134,20 @@ To enable customer "Sign in with Google" (and account creation via Google):
 
 3. Sign in with Google both signs in existing customers and creates a new customer account for that shop and email when one does not exist.
 
+## Separate frontend and API services
+
+If you deploy the **web app** (SPA) and the **API** as different Render services (e.g. static site for the SPA and a Web Service for the API), the browser will send API requests to the frontend host by default. Those requests never reach the API service, so the API logs show no traffic.
+
+**Fix:** When building the **web** app, set the API base URL so requests go to the API host:
+
+- In the **web app’s** Render (or CI) build environment, set:
+  - `VITE_API_BASE_URL=https://<your-api-host>/api`
+- Examples:
+  - Render API service: `https://eutonafila-api.onrender.com/api`
+  - Custom domain: `https://api.eutonafila.com.br/api`
+
+Rebuild and redeploy the web app after setting this. No code change is required; the client already uses absolute bases when `VITE_API_BASE_URL` is set. After deploy, in the browser Network tab the request URL should be to your API host, and the API service logs should show the request.
+
 ## Access Your App
 
 - **SPA**: `https://your-app.onrender.com/projects/mineiro`
