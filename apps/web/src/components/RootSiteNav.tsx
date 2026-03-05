@@ -25,7 +25,7 @@ export function RootSiteNav() {
               src={LOGO_URL}
               alt="EuTô NaFila"
               className="h-8 sm:h-10 w-auto object-contain shrink-0"
-              fetchPriority="high"
+              fetchpriority="high"
             />
           </Link>
           

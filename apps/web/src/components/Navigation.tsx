@@ -131,7 +131,7 @@ export function Navigation() {
           aria-label={`${shopName} - ${t('nav.home')}`}
         >
           {headerIconUrl ? (
-            <img src={headerIconUrl} alt="" className="h-8 w-8 sm:h-9 sm:w-9 object-contain flex-shrink-0" fetchPriority="high" />
+            <img src={headerIconUrl} alt="" className="h-8 w-8 sm:h-9 sm:w-9 object-contain flex-shrink-0" fetchpriority="high" />
           ) : (
             <span className="material-symbols-outlined text-xl sm:text-2xl leading-none flex items-center justify-center flex-shrink-0">
               content_cut
