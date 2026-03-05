@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ImgHTMLAttributes } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { LOGO_URL } from '@/lib/logo';
@@ -25,7 +25,7 @@ export function RootSiteNav() {
               src={LOGO_URL}
               alt="EuTô NaFila"
               className="h-8 sm:h-10 w-auto object-contain shrink-0"
-              fetchpriority="high"
+              {...({ fetchpriority: 'high' } as ImgHTMLAttributes<HTMLImageElement>)}
             />
           </Link>
           

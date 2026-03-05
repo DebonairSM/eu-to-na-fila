@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ImgHTMLAttributes } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/design-system/Spacing/Container';
@@ -33,7 +33,7 @@ export function CompanyNav() {
               src={LOGO_URL}
               alt="EuTô NaFila"
               className="h-8 sm:h-10 w-auto object-contain flex-shrink-0"
-              fetchpriority="high"
+              {...({ fetchpriority: 'high' } as ImgHTMLAttributes<HTMLImageElement>)}
             />
             <div>
               <p className="text-xs text-white/70">EuTô NaFila</p>
