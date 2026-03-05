@@ -1,6 +1,7 @@
 import type { Ticket, CreateTicket, UpdateTicketStatus } from '@eutonafila/shared';
 import type { BaseApiClient } from './client.js';
 import { ApiError } from './errors.js';
+import { API_TIMEOUT_ACTIVE_TICKET_MS } from '../constants.js';
 
 export interface CreateAppointmentInput {
   serviceId: number;
@@ -45,9 +46,12 @@ export function createTicketsApi(client: BaseApiClient): TicketsApi {
   return {
     async getActiveTicketByDevice(shopSlug, deviceId) {
       try {
-        return await c.get(`/shops/${shopSlug}/tickets/active?deviceId=${encodeURIComponent(deviceId)}`);
+        return await c.get(
+          `/shops/${shopSlug}/tickets/active?deviceId=${encodeURIComponent(deviceId)}`,
+          API_TIMEOUT_ACTIVE_TICKET_MS
+        );
       } catch (error) {
-        if (error instanceof ApiError && error.statusCode === 404) return null;
+        if (error instanceof ApiError && (error.statusCode === 404 || error.statusCode === 429)) return null;
         throw error;
       }
     },

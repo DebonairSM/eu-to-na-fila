@@ -43,6 +43,9 @@ export const TIMEOUTS = {
 /** Timeout for wait-time related API calls (getWaitTimes, getWaitDebug, getMetrics). Abort slow requests so UI can show fallback. */
 export const API_TIMEOUT_WAIT_TIMES_MS = 8000;
 
+/** Timeout for GET active ticket by device. Fail fast so join/guard don't hang. */
+export const API_TIMEOUT_ACTIVE_TICKET_MS = 10000;
+
 /**
  * Kiosk mode view durations in milliseconds
  */
