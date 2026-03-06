@@ -213,7 +213,8 @@ export class BaseApiClient {
       }
       const isAbort = error instanceof Error && error.name === 'AbortError';
       const isNetwork = error instanceof TypeError;
-      const retryable = !disableRetry && !isRetry && (isAbort || isNetwork);
+      // Retry only on network failure, not on timeout - timeout usually means server/network is slow; retry adds delay
+      const retryable = !disableRetry && !isRetry && isNetwork;
       if (retryable) {
         await new Promise((r) => setTimeout(r, BaseApiClient.RETRY_DELAY_MS));
         return this.request<T>(path, options, timeoutMs, true);
