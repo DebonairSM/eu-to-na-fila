@@ -8,6 +8,9 @@ import { ApiError } from './errors.js';
  */
 const REMEMBER_ME_FLAG = 'eutonafila_remember_me';
 
+/** In-flight GET requests by URL so duplicate calls share one network request. */
+const getRequestCache = new Map<string, Promise<unknown>>();
+
 export class BaseApiClient {
   protected baseUrl: string;
   protected authToken?: string;
@@ -85,8 +88,30 @@ export class BaseApiClient {
   ): Promise<T> {
     const { disableRetry = false, ...fetchOptions } = options;
     const url = `${this.getEffectiveBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
-    const headers: Record<string, string> = {};
     const method = fetchOptions.method || 'GET';
+
+    if (method === 'GET' && !isRetry) {
+      const cacheKey = `GET:${url}`;
+      const existing = getRequestCache.get(cacheKey);
+      if (existing) return existing as Promise<T>;
+      const promise = this.executeRequest<T>(path, { ...fetchOptions, method }, url, timeoutMs, disableRetry);
+      getRequestCache.set(cacheKey, promise);
+      promise.finally(() => getRequestCache.delete(cacheKey));
+      return promise;
+    }
+    return this.executeRequest<T>(path, { ...fetchOptions, method }, url, timeoutMs, disableRetry, isRetry);
+  }
+
+  private async executeRequest<T>(
+    path: string,
+    fetchOptions: RequestInit & { disableRetry?: boolean },
+    url: string,
+    timeoutMs: number,
+    disableRetry: boolean,
+    isRetry = false
+  ): Promise<T> {
+    const method = fetchOptions.method || 'GET';
+    const headers: Record<string, string> = {};
     const methodsWithBody = ['POST', 'PATCH', 'PUT'];
     if (methodsWithBody.includes(method)) {
       headers['Content-Type'] = 'application/json';
@@ -187,7 +212,7 @@ export class BaseApiClient {
         if (retryable) {
           clearTimeout(timeoutId);
           await new Promise((r) => setTimeout(r, BaseApiClient.RETRY_DELAY_MS));
-          return this.request<T>(path, options, timeoutMs, true);
+          return this.request<T>(path, { ...fetchOptions, disableRetry }, timeoutMs, true);
         }
         if (apiError.isAuthError() && this.onAuthError) {
           this.onAuthError();
@@ -217,7 +242,7 @@ export class BaseApiClient {
       const retryable = !disableRetry && !isRetry && isNetwork;
       if (retryable) {
         await new Promise((r) => setTimeout(r, BaseApiClient.RETRY_DELAY_MS));
-        return this.request<T>(path, options, timeoutMs, true);
+        return this.request<T>(path, { ...fetchOptions, disableRetry }, timeoutMs, true);
       }
       this.onNetworkFailure?.();
       if (isAbort) {
