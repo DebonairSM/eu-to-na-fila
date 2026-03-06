@@ -5,6 +5,7 @@ import { useShopHomeContent } from './contexts/ShopConfigContext';
 import { useLocale } from './contexts/LocaleContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoadingSpinner } from './components/LoadingSpinner';
+import { WaitTimesProvider } from './contexts/WaitTimesContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { SuspenseWithTimeoutFallback } from './components/SuspenseWithTimeout';
 import { NetworkStatusBanner } from './components/NetworkStatusBanner';
@@ -79,7 +80,7 @@ function AppContent() {
       <Route path="/network" element={<NetworkPage />} />
       <Route path="/shops" element={<NetworkPage />} />
       <Route path="/about" element={<AboutPage />} />
-      <Route path="/join" element={<JoinPageGuard />} />
+      <Route path="/join" element={<WaitTimesProvider><JoinPageGuard /></WaitTimesProvider>} />
       <Route path="/join/kiosk" element={<KioskLoginPage />} />
       <Route path="/schedule" element={<SchedulePage />} />
       <Route path="/appointment/:id/confirm" element={<AppointmentConfirmPage />} />

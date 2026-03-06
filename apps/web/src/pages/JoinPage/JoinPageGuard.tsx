@@ -5,7 +5,6 @@ import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Container } from '@/components/design-system';
 import { STORAGE_KEYS } from '@/lib/constants';
-import { setPrefetch } from '@/lib/waitTimesPrefetch';
 import { getOrCreateDeviceId, redirectToStatusPage } from '@/lib/utils';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -44,9 +43,6 @@ export function JoinPageGuard() {
     }
     if (hasRunForSlugRef.current === shopSlug) return () => { mountedRef.current = false; };
     hasRunForSlugRef.current = shopSlug;
-
-    // Start wait-times request in parallel so the form can reuse it when it mounts
-    setPrefetch(shopSlug, api.getWaitTimes(shopSlug));
 
     const checkActiveTicket = async () => {
       // Step 1: Check by deviceId FIRST (most reliable server-side check)

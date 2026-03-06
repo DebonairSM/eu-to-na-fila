@@ -12,24 +12,13 @@ import { useServices } from '@/hooks/useServices';
 import { getShopStatus } from '@eutonafila/shared';
 import { getErrorMessage, formatName, getOrCreateDeviceId, redirectToStatusPage } from '@/lib/utils';
 import { logError } from '@/lib/logger';
-import { STORAGE_KEYS, API_TIMEOUT_WAIT_TIMES_MS } from '@/lib/constants';
-import { takePrefetch } from '@/lib/waitTimesPrefetch';
+import { STORAGE_KEYS } from '@/lib/constants';
+import { useWaitTimes } from '@/contexts/WaitTimesContext';
 
 const STORAGE_KEY = STORAGE_KEYS.ACTIVE_TICKET_ID;
 const CUSTOMER_NAME_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_NAME;
 const CUSTOMER_PHONE_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_PHONE;
 const REMEMBER_PHONE_DEBOUNCE_MS = 400;
-
-/** Join page: at most one getWaitTimes per shop per 20 seconds (survives remounts). */
-const WAIT_TIMES_INTERVAL_MS = 20000;
-/** Timeout so we never leave the user stuck on the wait-time spinner (matches API abort timeout). */
-const WAIT_TIMES_TIMEOUT_MS = API_TIMEOUT_WAIT_TIMES_MS;
-const lastWaitTimesCallBySlug: Record<string, number> = {};
-
-const EMPTY_WAIT_TIMES = {
-  standardWaitTime: null as number | null,
-  barberWaitTimes: [] as Array<{ barberId: number; barberName: string; waitTime: number | null; isPresent: boolean }>,
-};
 
 function isSufficientName(name: string | undefined): boolean {
   if (!name || !name.trim()) return false;
@@ -52,17 +41,8 @@ export function useJoinForm() {
   const [isAlreadyInQueue, setIsAlreadyInQueue] = useState(false);
   const [existingTicketId, setExistingTicketId] = useState<number | null>(null);
   const [nameCollisionError, setNameCollisionError] = useState<string | null>(null);
-  const [waitTimes, setWaitTimes] = useState<{
-    standardWaitTime: number | null;
-    barberWaitTimes: Array<{
-      barberId: number;
-      barberName: string;
-      waitTime: number | null;
-      isPresent: boolean;
-    }>;
-  } | null>(null);
-  const [isLoadingWaitTimes, setIsLoadingWaitTimes] = useState(true);
   const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
+  const { waitTimes, isLoading: isLoadingWaitTimes, refetch: refetchWaitTimes } = useWaitTimes();
   const combinedNameRef = useRef(combinedName);
   combinedNameRef.current = combinedName;
   const navigate = useNavigate();
@@ -96,83 +76,6 @@ export function useJoinForm() {
   useEffect(() => {
     if (!settings.allowBarberPreference) setSelectedBarberId(null);
   }, [settings.allowBarberPreference]);
-
-  // Fetch wait times on mount and periodically (with Page Visibility API support)
-  const lastWaitTimesFetchAtRef = useRef(0);
-  const waitTimesInFlightRef = useRef(false);
-
-  useEffect(() => {
-    let mounted = true;
-    let intervalId: number | null = null;
-
-    const fetchWaitTimes = async () => {
-      if (document.hidden) return;
-      const now = Date.now();
-      // Module-level throttle: at most once per 20s per shop (survives remounts)
-      if (lastWaitTimesCallBySlug[shopSlug] != null && now - lastWaitTimesCallBySlug[shopSlug] < WAIT_TIMES_INTERVAL_MS) return;
-      if (now - lastWaitTimesFetchAtRef.current < WAIT_TIMES_INTERVAL_MS) return;
-      if (waitTimesInFlightRef.current) return;
-      lastWaitTimesCallBySlug[shopSlug] = now;
-      lastWaitTimesFetchAtRef.current = now;
-      waitTimesInFlightRef.current = true;
-
-      try {
-        setIsLoadingWaitTimes(true);
-        const prefetched = takePrefetch(shopSlug);
-        const timesPromise = prefetched ?? api.getWaitTimes(shopSlug);
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Wait times request timed out')), WAIT_TIMES_TIMEOUT_MS)
-        );
-        const times = await Promise.race([timesPromise, timeoutPromise]);
-        if (mounted) {
-          setWaitTimes(times);
-          setIsLoadingWaitTimes(false);
-        }
-      } catch (error) {
-        if (mounted) {
-          logError('Failed to fetch wait times', error);
-          setWaitTimes(EMPTY_WAIT_TIMES);
-          setIsLoadingWaitTimes(false);
-        }
-      } finally {
-        waitTimesInFlightRef.current = false;
-      }
-    };
-
-    fetchWaitTimes();
-
-    const startPolling = () => {
-      if (intervalId) return;
-      intervalId = window.setInterval(fetchWaitTimes, WAIT_TIMES_INTERVAL_MS);
-    };
-
-    const stopPolling = () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
-    };
-
-    startPolling();
-
-    // Handle Page Visibility API - pause when hidden, resume when visible
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        stopPolling();
-      } else {
-        fetchWaitTimes(); // Fetch immediately when visible
-        startPolling();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      mounted = false;
-      stopPolling();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [shopSlug]);
 
   // Load stored customer name and phone on mount; when logged in, use profile
   useEffect(() => {
@@ -484,11 +387,11 @@ export function useJoinForm() {
     if (isRefreshingJoinData) return;
     setIsRefreshingJoinData(true);
     try {
-      await Promise.all([refetchBarbers(), refetchServices(), refetchQueue()]);
+      await Promise.all([refetchBarbers(), refetchServices(), refetchQueue(), refetchWaitTimes()]);
     } finally {
       setIsRefreshingJoinData(false);
     }
-  }, [refetchBarbers, refetchServices, refetchQueue, isRefreshingJoinData]);
+  }, [refetchBarbers, refetchServices, refetchQueue, refetchWaitTimes, isRefreshingJoinData]);
 
   return {
     combinedName,
