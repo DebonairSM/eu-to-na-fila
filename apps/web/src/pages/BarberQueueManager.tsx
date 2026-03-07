@@ -280,8 +280,8 @@ export function BarberQueueManager() {
       service?: { id: number; name: string };
       complementaryServiceIds?: number[];
     }): string | null => {
-      const ids =
-        ticket.complementaryServiceIds?.length > 0
+      const ids: number[] =
+        ticket.complementaryServiceIds && ticket.complementaryServiceIds.length > 0
           ? ticket.complementaryServiceIds
           : [ticket.serviceId];
       const names = ids
