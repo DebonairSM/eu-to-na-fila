@@ -85,6 +85,19 @@ export function JoinForm() {
   const subtotal = serviceSubtotal(selectedServicesForSubtotal);
   const showSubtotal = subtotal > 0;
 
+  const totalServiceDurationMinutes = selectedServicesForSubtotal.reduce(
+    (sum, s) => sum + (s.duration ?? 0),
+    0
+  );
+  const estimatedWaitMinutes: number | null =
+    settings.allowBarberPreference && selectedBarberId != null && waitTimes?.barberWaitTimes?.length
+      ? waitTimes.barberWaitTimes.find((b) => b.barberId === selectedBarberId)?.waitTime ?? waitTimes.standardWaitTime ?? null
+      : waitTimes?.standardWaitTime ?? null;
+  const totalCompletionMinutes =
+    totalServiceDurationMinutes +
+    (estimatedWaitMinutes != null && estimatedWaitMinutes > 0 ? estimatedWaitMinutes : 0);
+  const showEstimatedTime = selectedServiceIds.length > 0 && totalServiceDurationMinutes > 0;
+
   return (
     <Card variant="default" className="join-form-card shadow-lg min-w-[320px]">
       <CardContent className="p-6 sm:p-8">
@@ -112,14 +125,35 @@ export function JoinForm() {
                     );
                   })}
                 </div>
-                {showSubtotal && (
-                  <div className="pt-2 mt-2 border-t border-[rgba(255,255,255,0.1)]">
-                    <p className="text-sm text-[var(--shop-text-secondary)] flex justify-end gap-2">
-                      <span>{t('join.subtotal')}</span>
-                      <span className="font-medium text-[var(--shop-text-primary)]">
-                        {formatCurrency(subtotal, locale)}
-                      </span>
-                    </p>
+                {(showSubtotal || showEstimatedTime) && (
+                  <div className="pt-2 mt-2 border-t border-[rgba(255,255,255,0.1)] space-y-1">
+                    {showSubtotal && (
+                      <p className="text-sm text-[var(--shop-text-secondary)] flex justify-end gap-2">
+                        <span>{t('join.subtotal')}</span>
+                        <span className="font-medium text-[var(--shop-text-primary)]">
+                          {formatCurrency(subtotal, locale)}
+                        </span>
+                      </p>
+                    )}
+                    {showEstimatedTime && (
+                      <>
+                        <p className="text-sm text-[var(--shop-text-secondary)] flex justify-end gap-2">
+                          <span className="font-medium text-[var(--shop-text-primary)]">
+                            {t('join.estimatedTotalTime', {
+                              duration: formatDurationMinutes(totalCompletionMinutes),
+                            })}
+                          </span>
+                        </p>
+                        {estimatedWaitMinutes != null && estimatedWaitMinutes > 0 && (
+                          <p className="text-xs text-[var(--shop-text-secondary)] flex justify-end">
+                            {t('join.estimatedTotalBreakdown', {
+                              wait: formatDurationMinutes(estimatedWaitMinutes),
+                              service: formatDurationMinutes(totalServiceDurationMinutes),
+                            })}
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
                 )}
               </div>

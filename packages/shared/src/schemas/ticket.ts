@@ -37,6 +37,8 @@ export const ticketSchema = z.object({
   completedAt: z.date().or(z.string()).optional(),
   cancelledAt: z.date().or(z.string()).optional(),
   barberAssignedAt: z.date().or(z.string()).optional(),
+  /** All selected service ids (primary first). When present, use for display; otherwise only serviceId. */
+  complementaryServiceIds: z.array(z.number().int().positive()).optional(),
 });
 
 export type Ticket = z.infer<typeof ticketSchema>;

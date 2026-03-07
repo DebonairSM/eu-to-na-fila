@@ -43,7 +43,7 @@ function getNested(obj: Record<string, unknown>, key: string): string | undefine
 interface LocaleContextValue {
   locale: string;
   setLocale: (next: string) => void;
-  t: (key: string) => string;
+  t: (key: string, vars?: Record<string, string>) => string;
 }
 
 const LocaleContext = createContext<LocaleContextValue | undefined>(undefined);
@@ -70,12 +70,16 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const fallbackMessages = translations[DEFAULT_LOCALE];
 
   const t = useCallback(
-    (key: string): string => {
+    (key: string, vars?: Record<string, string>): string => {
       const value = getNested(messages as Record<string, unknown>, key);
-      if (value != null) return value;
-      const fallback = getNested(fallbackMessages as Record<string, unknown>, key);
-      if (fallback != null) return fallback;
-      return key;
+      const raw = (value != null ? String(value) : getNested(fallbackMessages as Record<string, unknown>, key) != null
+        ? String(getNested(fallbackMessages as Record<string, unknown>, key))
+        : key);
+      if (!vars || Object.keys(vars).length === 0) return raw;
+      return Object.entries(vars).reduce(
+        (s, [k, v]) => s.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), v),
+        raw
+      );
     },
     [messages, fallbackMessages]
   );

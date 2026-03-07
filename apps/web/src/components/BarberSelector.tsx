@@ -33,6 +33,8 @@ export interface BarberSelectorProps {
   canViewFullClient?: boolean;
   /** When false, clip notes panel is read-only (no add note). Use during-service notes modal to add. */
   canAddNoteInPanel?: boolean;
+  /** When set, show a "See all notes" button that opens the full notes modal (e.g. in parent). */
+  onOpenNotesModal?: () => void;
 }
 
 export function BarberSelector({
@@ -53,6 +55,7 @@ export function BarberSelector({
   onClipNotesError,
   canViewFullClient = true,
   canAddNoteInPanel = true,
+  onOpenNotesModal,
 }: BarberSelectorProps) {
   const { t } = useLocale();
   const sortedDisplayedBarbers = useMemo(() => {
@@ -94,13 +97,22 @@ export function BarberSelector({
     >
       <div className="space-y-4 relative">
         {clientId != null && shopSlug && (
-          <ClipNotesPanel
-            shopSlug={shopSlug}
-            clientId={clientId}
-            onError={onClipNotesError}
-            canViewFullClient={canViewFullClient}
-            canAddNote={canAddNoteInPanel}
-          />
+          <>
+            {onOpenNotesModal && (
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={onOpenNotesModal}>
+                  {t('barber.seeAllNotes')}
+                </Button>
+              </div>
+            )}
+            <ClipNotesPanel
+              shopSlug={shopSlug}
+              clientId={clientId}
+              onError={onClipNotesError}
+              canViewFullClient={canViewFullClient}
+              canAddNote={canAddNoteInPanel}
+            />
+          </>
         )}
         {/* Hidden focus target so the first barber doesn't get auto-focused (and show a focus ring) when the modal opens */}
         <button

@@ -30,6 +30,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { getShopBasePath } from '@/lib/config';
 import { POLL_INTERVALS } from '@/lib/constants';
 import { cn, getErrorMessage, formatName, formatNameForDisplay, truncateOptionLabel } from '@/lib/utils';
+import type { ClientClipNote } from '@/lib/api/clients';
 import { hasHoursForDay, hasAnyOperatingHours } from '@/lib/operatingHours';
 import { getShopStatus } from '@eutonafila/shared';
 
@@ -101,6 +102,7 @@ export function BarberQueueManager() {
   const removeConfirmModal = useModal(false);
   const completeConfirmModal = useModal(false);
   const [notesForTicketId, setNotesForTicketId] = useState<number | null>(null);
+  const [latestNotePopup, setLatestNotePopup] = useState<{ ticketId: number; clientId: number; note: ClientClipNote } | null>(null);
   const { validateName } = useProfanityFilter();
   const allowAppointments = shopConfig.settings?.allowAppointments ?? false;
 
@@ -272,9 +274,25 @@ export function BarberQueueManager() {
   // Load reschedule slots when editing appointment
   const editTicketServiceId = editTicket?.serviceId;
 
-  const getTicketServiceName = useCallback(
-    (ticket: { serviceId: number; service?: { id: number; name: string } }) =>
-      ticket.service?.name ?? activeServices.find((s) => s.id === ticket.serviceId)?.name ?? null,
+  const getTicketServiceNames = useCallback(
+    (ticket: {
+      serviceId: number;
+      service?: { id: number; name: string };
+      complementaryServiceIds?: number[];
+    }): string | null => {
+      const ids =
+        ticket.complementaryServiceIds?.length > 0
+          ? ticket.complementaryServiceIds
+          : [ticket.serviceId];
+      const names = ids
+        .map((id) =>
+          id === ticket.serviceId && ticket.service?.name
+            ? ticket.service.name
+            : activeServices.find((s) => s.id === id)?.name
+        )
+        .filter((n): n is string => Boolean(n));
+      return names.length > 0 ? names.join(', ') : null;
+    },
     [activeServices]
   );
   const editTicketBarberId = editTicket ? (editTicket as { preferredBarberId?: number }).preferredBarberId : undefined;
@@ -354,8 +372,12 @@ export function BarberQueueManager() {
   }, [checkInName, checkInPhone, validateName, refetchQueue, checkInModal, shopSlug, t, checkInServiceId, checkInBarberId, activeServices, settings.allowBarberPreference]);
 
   const handleSelectBarber = useCallback(async (barberId: number | null) => {
-    if (!selectedCustomerId) return;
+    if (!selectedCustomerId || !shopSlug) return;
     if (isBarber && barberId !== null && user && barberId !== user.id) return;
+
+    const ticketId = selectedCustomerId;
+    const ticket = tickets.find((t) => t.id === ticketId);
+    const clientId = (ticket as { clientId?: number | null } | undefined)?.clientId ?? null;
 
     try {
       if (barberId === null) {
@@ -373,11 +395,24 @@ export function BarberQueueManager() {
       barberSelectorModal.close();
       setSelectedCustomerId(null);
       setDeadZoneWarning(null);
+
+      if (clientId != null && barberId != null) {
+        try {
+          const res = await api.getClient(shopSlug, clientId);
+          const notes = res.clipNotes ?? [];
+          if (notes.length > 0) {
+            const latest = notes[0];
+            setLatestNotePopup({ ticketId, clientId, note: latest });
+          }
+        } catch {
+          // Non-blocking: show latest note only when fetch succeeds
+        }
+      }
     } catch (error) {
       const errorMsg = getErrorMessage(error, t('barber.assignBarberError'));
       setErrorMessage(errorMsg);
     }
-  }, [selectedCustomerId, refetchQueue, barberSelectorModal, isBarber, user, t]);
+  }, [selectedCustomerId, shopSlug, tickets, refetchQueue, barberSelectorModal, isBarber, user, t]);
 
   const handleCallNext = useCallback(async () => {
     setNextTicketLoading(true);
@@ -486,6 +521,10 @@ export function BarberQueueManager() {
   const handleCompleteService = useCallback(async () => {
     if (!customerToComplete) return;
 
+    const completedTicketId = customerToComplete;
+    const ticket = tickets.find((t) => t.id === completedTicketId);
+    const hadClientId = (ticket as { clientId?: number | null } | undefined)?.clientId != null;
+
     try {
       await api.updateTicket(customerToComplete, {
         status: 'completed',
@@ -493,12 +532,17 @@ export function BarberQueueManager() {
       await refetchQueue();
       completeConfirmModal.close();
       setCustomerToComplete(null);
+
+      if (hadClientId) {
+        setNotesForTicketId(completedTicketId);
+        notesModal.open();
+      }
     } catch (error) {
       const errorMsg = getErrorMessage(error, t('barber.completeError'));
       setErrorMessage(errorMsg);
       completeConfirmModal.close();
     }
-  }, [customerToComplete, refetchQueue, completeConfirmModal, t]);
+  }, [customerToComplete, tickets, refetchQueue, completeConfirmModal, notesModal, t]);
 
   const getAssignedBarber = useCallback((ticket: { barberId?: number | null }) => {
     if (!ticket.barberId) return null;
@@ -636,10 +680,10 @@ export function BarberQueueManager() {
                                 </span>
                               )}
                             </div>
-                            {getTicketServiceName(ticket) && (
+                            {getTicketServiceNames(ticket) && (
                               <p className="text-lg text-white/60 mt-1 truncate flex items-center gap-2">
                                 <span className="material-symbols-outlined text-lg">design_services</span>
-                                {getTicketServiceName(ticket)}
+                                {getTicketServiceNames(ticket)}
                               </p>
                             )}
                             {assignedBarber && (
@@ -1029,7 +1073,7 @@ export function BarberQueueManager() {
                         key={ticket.id}
                         ticket={ticket}
                         assignedBarber={assignedBarber}
-                        serviceName={getTicketServiceName(ticket)}
+                        serviceName={getTicketServiceNames(ticket)}
                         barbers={displayBarbers}
                         preferredBarberName={preferredBarberName ?? undefined}
                         displayPosition={displayPosition}
@@ -1475,14 +1519,53 @@ export function BarberQueueManager() {
             preferredBarberId={preferredBarberId}
             preferredBarberName={preferredBarberName}
             currentBarberId={isBarber && user ? user.id : null}
-            clientId={!isBarber ? ((selectedTicket as { clientId?: number } | undefined)?.clientId ?? null) : null}
+            clientId={(selectedTicket as { clientId?: number } | undefined)?.clientId ?? null}
             shopSlug={shopSlug}
             onClipNotesError={setErrorMessage}
             canViewFullClient={!isBarber}
-            canAddNoteInPanel={!isBarber}
+            canAddNoteInPanel={true}
+            onOpenNotesModal={() => {
+              setNotesForTicketId(selectedCustomerId);
+              barberSelectorModal.close();
+              setSelectedCustomerId(null);
+              setDeadZoneWarning(null);
+              notesModal.open();
+            }}
           />
         );
       })()}
+
+      {/* Latest note popup: shown after assigning barber when client has previous notes; "See all notes" in bottom corner */}
+      {latestNotePopup && (
+        <Modal
+          isOpen={true}
+          onClose={() => setLatestNotePopup(null)}
+          title={t('barber.latestNote')}
+          className="max-w-md"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-[var(--shop-text-primary)] py-1.5 px-2 rounded bg-white/5 border border-white/5">
+              {latestNotePopup.note.note}
+            </p>
+            <p className="text-xs text-[var(--shop-text-secondary)]">
+              {latestNotePopup.note.barber?.name ?? ''} · {new Date(latestNotePopup.note.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+            </p>
+            <div className="flex justify-end pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setNotesForTicketId(latestNotePopup.ticketId);
+                  setLatestNotePopup(null);
+                  notesModal.open();
+                }}
+              >
+                {t('barber.seeAllNotes')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Notes modal: view and add clip notes (opens for any waiting/in-progress ticket; shows message if no client record) */}
       {notesModal.isOpen && notesForTicketId != null && shopSlug && (() => {
