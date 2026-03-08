@@ -1094,7 +1094,6 @@ export function BarberQueueManager() {
                 sortedTickets.map((ticket, index) => {
                   const assignedBarber = getAssignedBarber(ticket);
                   const isServing = ticket.status === 'in_progress';
-                  const isWaiting = ticket.status === 'waiting';
                   const canOpenNotesAsBarber = !isBarber || (user && assignedBarber?.id === user.id);
                   const showNotesButton = isServing && canOpenNotesAsBarber;
                   // Calculate display position based on index in sorted waiting tickets
@@ -1615,7 +1614,7 @@ export function BarberQueueManager() {
               setCustomerToRemove(selectedCustomerId);
               removeConfirmModal.open();
             }}
-            showNotesButton={showNotesBtn}
+            showNotesButton={!!showNotesBtn}
           />
         );
       })()}
