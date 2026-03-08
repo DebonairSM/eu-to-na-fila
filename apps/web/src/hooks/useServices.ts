@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { getCachedServices, setCachedServices } from '@/lib/cache/servicesCache';
 import type { Service } from '@eutonafila/shared';
 
 /**
@@ -29,8 +30,9 @@ import type { Service } from '@eutonafila/shared';
  */
 export function useServices() {
   const shopSlug = useShopSlug();
-  const [services, setServices] = useState<Service[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const cached = getCachedServices(shopSlug);
+  const [services, setServices] = useState<Service[]>(() => cached ?? []);
+  const [isLoading, setIsLoading] = useState(!cached);
   const [error, setError] = useState<Error | null>(null);
 
   const fetchServices = useCallback(async () => {
@@ -38,7 +40,9 @@ export function useServices() {
       setIsLoading(true);
       setError(null);
       const servicesList = await api.getServices(shopSlug);
-      setServices(Array.isArray(servicesList) ? servicesList : []);
+      const list = Array.isArray(servicesList) ? servicesList : [];
+      setCachedServices(shopSlug, list);
+      setServices(list);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch services'));
     } finally {
@@ -47,8 +51,15 @@ export function useServices() {
   }, [shopSlug]);
 
   useEffect(() => {
+    const cachedNow = getCachedServices(shopSlug);
+    if (cachedNow !== undefined) {
+      setServices(cachedNow);
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
     fetchServices();
-  }, [fetchServices]);
+  }, [shopSlug, fetchServices]);
 
   // Filter active services (guard against undefined from state)
   const activeServices = (Array.isArray(services) ? services : []).filter((s) => s.isActive);

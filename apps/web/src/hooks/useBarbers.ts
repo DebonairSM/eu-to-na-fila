@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
+import { getCachedBarbers, setCachedBarbers } from '@/lib/cache/barbersCache';
 import { POLL_INTERVALS } from '@/lib/constants';
 import type { Barber } from '@eutonafila/shared';
 
@@ -8,8 +9,9 @@ const MIN_BARBER_POLL_MS = POLL_INTERVALS.QUEUE_MIN_MS;
 
 export function useBarbers(pollInterval?: number) {
   const shopSlug = useShopSlug();
-  const [barbers, setBarbers] = useState<Barber[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const cached = getCachedBarbers(shopSlug);
+  const [barbers, setBarbers] = useState<Barber[]>(() => cached ?? []);
+  const [isLoading, setIsLoading] = useState(!cached);
   const [error, setError] = useState<Error | null>(null);
   const previousDataRef = useRef<string>('');
 
@@ -26,6 +28,7 @@ export function useBarbers(pollInterval?: number) {
     try {
       setError(null);
       const barbersList = await api.getBarbers(shopSlug);
+      setCachedBarbers(shopSlug, barbersList);
 
       if (effectivePollInterval != null && effectivePollInterval > 0) {
         const dataString = JSON.stringify(barbersList);
@@ -44,7 +47,14 @@ export function useBarbers(pollInterval?: number) {
   }, [effectivePollInterval, shopSlug]);
 
   useEffect(() => {
-    setIsLoading(true);
+    const cachedNow = getCachedBarbers(shopSlug);
+    if (cachedNow !== undefined) {
+      setBarbers(cachedNow);
+      setIsLoading(false);
+      setError(null);
+    } else {
+      setIsLoading(true);
+    }
     fetchBarbers();
 
     if (!effectivePollInterval || effectivePollInterval <= 0) {

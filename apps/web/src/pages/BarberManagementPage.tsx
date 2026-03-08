@@ -15,6 +15,7 @@ import { Navigation } from '@/components/Navigation';
 import { Skeleton } from '@/components/design-system';
 import { Modal } from '@/components/Modal';
 import { getErrorMessage } from '@/lib/utils';
+import { invalidateBarbersCache } from '@/lib/cache/barbersCache';
 import type { Barber } from '@eutonafila/shared';
 
 export function BarberManagementPage() {
@@ -107,6 +108,7 @@ export function BarberManagementPage() {
           ? { username: formData.username.trim(), password: formData.password }
           : {}),
       });
+      invalidateBarbersCache(shopSlug);
       setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
       addModal.close();
       await refetch();
@@ -137,6 +139,7 @@ export function BarberManagementPage() {
         payload.revenueSharePercent = formData.revenueSharePercent;
       }
       await api.updateBarber(editingBarber.id, payload);
+      invalidateBarbersCache(shopSlug);
       setEditingBarber(null);
       setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
       editModal.close();
@@ -152,6 +155,7 @@ export function BarberManagementPage() {
 
     try {
       await api.deleteBarber?.(barberToDelete);
+      invalidateBarbersCache(shopSlug);
       deleteConfirmModal.close();
       setBarberToDelete(null);
       await refetch();
@@ -183,6 +187,7 @@ export function BarberManagementPage() {
       for (const barber of displayBarbers) {
         await api.updateBarber(barber.id, { revenueSharePercent: applyToAllPercent });
       }
+      invalidateBarbersCache(shopSlug);
       await refetch();
     } catch (error) {
       setErrorMessage(getErrorMessage(error, t('barber.updateBarberError')));

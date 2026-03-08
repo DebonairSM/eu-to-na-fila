@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
 import { useModal } from '@/hooks/useModal';
+import { useServices } from '@/hooks/useServices';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
@@ -13,14 +14,13 @@ import { Modal } from '@/components/Modal';
 import { formatDurationMinutes } from '@/lib/formatDuration';
 import { formatCurrency } from '@/lib/format';
 import { getErrorMessage } from '@/lib/utils';
+import { invalidateServicesCache } from '@/lib/cache/servicesCache';
 import type { Service } from '@eutonafila/shared';
 
 export function ServiceManagementPage() {
   const shopSlug = useShopSlug();
   const { t, locale } = useLocale();
-  const [services, setServices] = useState<Service[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const { services, isLoading, error, refetch } = useServices();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const addModal = useModal();
   const editModal = useModal();
@@ -40,23 +40,6 @@ export function ServiceManagementPage() {
   });
 
   useErrorTimeout(errorMessage, () => setErrorMessage(null));
-
-  const loadServices = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const list = await api.getServices(shopSlug);
-      setServices(list);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [shopSlug]);
-
-  useEffect(() => {
-    loadServices();
-  }, [loadServices]);
 
   const openAdd = useCallback(() => {
     setFormData({ name: '', description: '', duration: 30, price: 0 });
@@ -87,12 +70,13 @@ export function ServiceManagementPage() {
         duration: formData.duration,
         price: formData.price > 0 ? Math.round(formData.price * 100) : undefined,
       });
+      invalidateServicesCache(shopSlug);
       addModal.close();
-      await loadServices();
+      await refetch();
     } catch (err) {
       setErrorMessage(getErrorMessage(err, t('barber.createServiceError')));
     }
-  }, [shopSlug, formData, loadServices, addModal, t]);
+  }, [shopSlug, formData, refetch, addModal, t]);
 
   const handleUpdate = useCallback(async () => {
     if (!editingService) return;
@@ -103,36 +87,39 @@ export function ServiceManagementPage() {
         duration: formData.duration,
         price: formData.price > 0 ? Math.round(formData.price * 100) : null,
       });
+      invalidateServicesCache(shopSlug);
       editModal.close();
       setEditingService(null);
-      await loadServices();
+      await refetch();
     } catch (err) {
       setErrorMessage(getErrorMessage(err, t('barber.updateServiceError')));
     }
-  }, [editingService, formData, loadServices, editModal, t]);
+  }, [editingService, formData, refetch, editModal, t]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!serviceToDelete) return;
     try {
       await api.deleteService(serviceToDelete.id);
+      invalidateServicesCache(shopSlug);
       deleteModal.close();
       setServiceToDelete(null);
-      await loadServices();
+      await refetch();
     } catch (err) {
       setErrorMessage(getErrorMessage(err, t('barber.deleteServiceError')));
     }
-  }, [serviceToDelete, loadServices, deleteModal, t]);
+  }, [serviceToDelete, refetch, deleteModal, t]);
 
   const handleToggleActive = useCallback(
     async (svc: Service) => {
       try {
         await api.updateService(svc.id, { isActive: !svc.isActive });
-        await loadServices();
+        invalidateServicesCache(shopSlug);
+        await refetch();
       } catch (err) {
         setErrorMessage(getErrorMessage(err, t('barber.updateServiceError')));
       }
     },
-    [loadServices, t]
+    [refetch, shopSlug, t]
   );
 
   const moveService = useCallback(
@@ -145,12 +132,13 @@ export function ServiceManagementPage() {
       const ids = reordered.map((s) => s.id);
       try {
         await api.reorderServices(shopSlug, ids);
-        await loadServices();
+        invalidateServicesCache(shopSlug);
+        await refetch();
       } catch (err) {
         setErrorMessage(getErrorMessage(err, t('barber.updateServiceError')));
       }
     },
-    [services, shopSlug, loadServices, t]
+    [services, shopSlug, refetch, t]
   );
 
   const localeForCurrency = locale ?? 'pt-BR';
@@ -210,7 +198,7 @@ export function ServiceManagementPage() {
             ))}
           </div>
         ) : error ? (
-          <ErrorDisplay error={error} onRetry={loadServices} />
+          <ErrorDisplay error={error} onRetry={refetch} />
         ) : services.length === 0 ? (
           <div className="text-center py-12 text-[var(--shop-text-secondary)]">
             <span className="material-symbols-outlined text-4xl block mb-3 opacity-60">design_services</span>

@@ -3,16 +3,9 @@ import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { api } from '@/lib/api';
 import { logError } from '@/lib/logger';
 import { API_TIMEOUT_WAIT_TIMES_MS } from '@/lib/constants';
+import { getCachedWaitTimes, setCachedWaitTimes, type WaitTimesData } from '@/lib/cache/waitTimesCache';
 
-export type WaitTimesData = {
-  standardWaitTime: number | null;
-  barberWaitTimes: Array<{
-    barberId: number;
-    barberName: string;
-    waitTime: number | null;
-    isPresent: boolean;
-  }>;
-};
+export type { WaitTimesData };
 
 const EMPTY: WaitTimesData = {
   standardWaitTime: null,
@@ -35,8 +28,9 @@ const POLL_INTERVAL_MS = 20000;
  */
 export function WaitTimesProvider({ children }: { children: React.ReactNode }) {
   const shopSlug = useShopSlug();
-  const [waitTimes, setWaitTimes] = useState<WaitTimesData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const cached = shopSlug ? getCachedWaitTimes(shopSlug) : undefined;
+  const [waitTimes, setWaitTimes] = useState<WaitTimesData | null>(() => cached ?? null);
+  const [isLoading, setIsLoading] = useState(!cached);
   const intervalRef = useRef<number | null>(null);
 
   const fetchWaitTimes = useCallback(async () => {
@@ -50,6 +44,7 @@ export function WaitTimesProvider({ children }: { children: React.ReactNode }) {
         setTimeout(() => reject(new Error('Wait times request timed out')), API_TIMEOUT_WAIT_TIMES_MS)
       );
       const data = await Promise.race([api.getWaitTimes(shopSlug), timeoutPromise]);
+      setCachedWaitTimes(shopSlug, data);
       setWaitTimes(data);
     } catch (err) {
       logError('Wait times fetch failed', err);
@@ -60,6 +55,11 @@ export function WaitTimesProvider({ children }: { children: React.ReactNode }) {
   }, [shopSlug]);
 
   useEffect(() => {
+    const cachedNow = shopSlug ? getCachedWaitTimes(shopSlug) : undefined;
+    if (cachedNow !== undefined) {
+      setWaitTimes(cachedNow);
+      setIsLoading(false);
+    }
     fetchWaitTimes();
 
     const schedulePoll = () => {

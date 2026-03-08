@@ -15,6 +15,8 @@ import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
 import { getErrorMessage } from '@/lib/utils';
+import { invalidateBarbersCache } from '@/lib/cache/barbersCache';
+import { invalidateServicesCache } from '@/lib/cache/servicesCache';
 import { isRootBuild } from '@/lib/build';
 import { getTimezoneOptions, getBrowserTimezone } from '@/lib/timezones';
 import { SUPPORTED_LOCALES } from '@/lib/constants';
@@ -678,6 +680,7 @@ export function ShopManagementPage() {
       if (orderedIds.length > 0) {
         await api.reorderServices(editingShop.slug, orderedIds);
       }
+      invalidateServicesCache(editingShop.slug);
       for (const b of editBarbers) {
         if (b.id > 0) {
           await api.updateBarber(b.id, { name: b.name.trim() || b.name });
@@ -685,6 +688,7 @@ export function ShopManagementPage() {
           await api.createBarber(editingShop.slug, { name: b.name.trim() });
         }
       }
+      invalidateBarbersCache(editingShop.slug);
       setEditingShop(null);
       setFormData({ name: '', slug: '', domain: '', path: '', apiBase: '', theme: { ...DEFAULT_THEME }, style: defaultStyle, homeContentByLocale: defaultHomeByLocale(), settings: { ...DEFAULT_SETTINGS }, ownerUsername: '', staffUsername: '', ownerPassword: '', staffPassword: '' });
       setBarberAccess([]);
@@ -1146,6 +1150,7 @@ export function ShopManagementPage() {
                                             if (s.id > 0) {
                                               try {
                                                 await api.deleteService(s.id);
+                                                invalidateServicesCache(editingShop.slug);
                                                 setEditServices((prev) => prev.filter((x) => x.id !== s.id));
                                               } catch (err) {
                                                 setErrorMessage(getErrorMessage(err, t('management.updateError')));
@@ -1240,6 +1245,7 @@ export function ShopManagementPage() {
                                           if (b.id > 0) {
                                             try {
                                               await api.deleteBarber(b.id);
+                                              invalidateBarbersCache(editingShop.slug);
                                               setEditBarbers((prev) => prev.filter((x) => x.id !== b.id));
                                             } catch (err) {
                                               setErrorMessage(getErrorMessage(err, t('management.updateError')));
@@ -2179,6 +2185,7 @@ export function ShopManagementPage() {
                                         if (s.id > 0) {
                                           try {
                                             await api.deleteService(s.id);
+                                            invalidateServicesCache(editingShop.slug);
                                             setEditServices((prev) => prev.filter((x) => x.id !== s.id));
                                           } catch (err) {
                                             setErrorMessage(getErrorMessage(err, t('management.updateError')));
@@ -2273,6 +2280,7 @@ export function ShopManagementPage() {
                                       if (b.id > 0) {
                                         try {
                                           await api.deleteBarber(b.id);
+                                          invalidateBarbersCache(editingShop.slug);
                                           setEditBarbers((prev) => prev.filter((x) => x.id !== b.id));
                                         } catch (err) {
                                           setErrorMessage(getErrorMessage(err, t('management.updateError')));

@@ -27,7 +27,7 @@ function ServiceChip({
       type="button"
       onClick={onToggle}
       className={`
-        w-full text-left rounded-xl border-2 px-4 py-3 transition-all
+        w-full min-w-max text-left rounded-xl border-2 px-4 py-3 transition-all
         flex items-center justify-between gap-2
         ${selected
           ? 'border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_12%,transparent)]'
@@ -35,7 +35,7 @@ function ServiceChip({
         }
       `}
     >
-      <span className="text-sm font-medium text-[var(--shop-text-primary)] truncate">{label}</span>
+      <span className="text-sm font-medium text-[var(--shop-text-primary)] min-w-0">{label}</span>
       {selected && (
         <span className="material-symbols-outlined text-[var(--shop-accent)] text-lg flex-shrink-0" aria-hidden>
           check_circle
