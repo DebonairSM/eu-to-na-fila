@@ -118,6 +118,16 @@ export function BarberSelector({
             />
           </>
         )}
+        {clientId == null && onOpenNotesModal && (
+          <div className="rounded-lg border border-[var(--shop-border-color)] bg-white/5 p-4 space-y-2">
+            <p className="text-sm text-[var(--shop-text-secondary)]">
+              {t('barber.noClientNotesHint')}
+            </p>
+            <Button variant="outline" size="sm" onClick={onOpenNotesModal}>
+              {t('barber.openNotes')}
+            </Button>
+          </div>
+        )}
         {/* Hidden focus target so the first barber doesn't get auto-focused (and show a focus ring) when the modal opens */}
         <button
           type="button"

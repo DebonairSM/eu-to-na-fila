@@ -1084,10 +1084,8 @@ export function BarberQueueManager() {
                   const assignedBarber = getAssignedBarber(ticket);
                   const isServing = ticket.status === 'in_progress';
                   const isWaiting = ticket.status === 'waiting';
-                  const ticketClientId = (ticket as { clientId?: number | null }).clientId ?? null;
-                  const hasClientRecord = ticketClientId != null;
                   const canOpenNotesAsBarber = isWaiting || !isBarber || (user && assignedBarber?.id === user.id);
-                  const showNotesButton = hasClientRecord && (isWaiting || isServing) && canOpenNotesAsBarber;
+                  const showNotesButton = (isWaiting || isServing) && canOpenNotesAsBarber;
                   // Calculate display position based on index in sorted waiting tickets
                   const displayPosition = isServing ? null : index + 1;
                   const preferredBarberId = (ticket as { preferredBarberId?: number }).preferredBarberId;

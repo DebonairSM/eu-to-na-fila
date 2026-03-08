@@ -7,9 +7,11 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { Navigation } from '@/components/Navigation';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { ClipNotesPanel } from '@/components/ClipNotesPanel';
 import { Button } from '@/components/ui/button';
 import { formatNameForDisplay } from '@/lib/utils';
 import { getErrorMessage } from '@/lib/utils';
+import { useServices } from '@/hooks/useServices';
 import type { ClientDetailResponse } from '@/lib/api/clients';
 
 export function ClientDetailPage() {
@@ -33,6 +35,7 @@ export function ClientDetailPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const clientId = id ? parseInt(id, 10) : null;
+  const { activeServices } = useServices();
 
   // Resolve reference image URL: staff route for auth-required images
   const [refImageDisplayUrl, setRefImageDisplayUrl] = useState<string | null>(null);
@@ -207,7 +210,7 @@ export function ClientDetailPage() {
     );
   }
 
-  const { client, clipNotes, serviceHistory } = data;
+  const { client, serviceHistory } = data;
   const isBarberView = client.phone == null;
 
   return (
@@ -373,26 +376,15 @@ export function ClientDetailPage() {
           )}
 
           <section className="bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-6">
-            <h2 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[var(--shop-accent)]">note</span>
-              {t('barber.clipNotes')}
-            </h2>
-            {clipNotes.length === 0 ? (
-              <p className="text-[var(--shop-text-secondary)] italic">{t('barber.clipNotesEmpty')}</p>
-            ) : (
-              <ul className="space-y-3">
-                {clipNotes.map((n) => (
-                  <li
-                    key={n.id}
-                    className="py-3 px-4 rounded-lg bg-white/5 border border-white/10"
-                  >
-                    <p className="text-white">{n.note}</p>
-                    <span className="text-xs text-[var(--shop-text-secondary)] mt-1 block">
-                      {n.barber?.name ?? ''} · {new Date(n.createdAt).toLocaleString('pt-BR', { dateStyle: 'medium', timeStyle: 'short' })}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+            {shopSlug && clientId != null && !isNaN(clientId) && (
+              <ClipNotesPanel
+                shopSlug={shopSlug}
+                clientId={clientId}
+                services={activeServices.map((s) => ({ id: s.id, name: s.name }))}
+                onError={(msg) => setError(msg)}
+                canViewFullClient={true}
+                canAddNote={true}
+              />
             )}
           </section>
 

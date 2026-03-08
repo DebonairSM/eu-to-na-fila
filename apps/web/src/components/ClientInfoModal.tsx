@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -113,6 +114,29 @@ export function ClientInfoModal({ clientId, onClose }: ClientInfoModalProps) {
                 <div>
                   <span className="text-xs text-white/50 uppercase tracking-wider block mb-1">{t('clients.gender')}</span>
                   <p className="text-white">{client.gender}</p>
+                </div>
+              )}
+              {data?.clipNotes && data.clipNotes.length > 0 && (
+                <div className="pt-2 border-t border-[var(--shop-border-color)]">
+                  <span className="text-xs text-white/50 uppercase tracking-wider block mb-2">{t('barber.clipNotes')}</span>
+                  <ul className="space-y-2 mb-3 max-h-32 overflow-y-auto">
+                    {data.clipNotes.slice(0, 5).map((n) => (
+                      <li key={n.id} className="py-2 px-3 rounded-lg bg-white/5 border border-white/10 text-sm">
+                        <p className="text-white">{n.note}</p>
+                        <span className="text-xs text-white/50 mt-1 block">
+                          {n.barber?.name ?? ''} · {new Date(n.createdAt).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' })}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    to={`/clients/${clientId}`}
+                    className="text-sm text-[var(--shop-accent)] hover:underline flex items-center gap-1"
+                    onClick={onClose}
+                  >
+                    {t('barber.viewClient')}
+                    <span className="material-symbols-outlined text-sm">open_in_new</span>
+                  </Link>
                 </div>
               )}
             </>
