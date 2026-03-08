@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
+import { config } from '@/lib/config';
 import { useLocale } from '@/contexts/LocaleContext';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { getErrorMessage } from '@/lib/utils';
@@ -28,6 +29,10 @@ export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient 
   const [notes, setNotes] = useState<ClientClipNote[]>([]);
   const [serviceHistory, setServiceHistory] = useState<ServiceHistoryItem[]>([]);
   const [clientCity, setClientCity] = useState<string | null>(null);
+  const [clientNextServiceNote, setClientNextServiceNote] = useState<string | null>(null);
+  const [clientNextServiceImageUrl, setClientNextServiceImageUrl] = useState<string | null>(null);
+  const [refImageDisplayUrl, setRefImageDisplayUrl] = useState<string | null>(null);
+  const refImageObjUrlRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [newNote, setNewNote] = useState('');
   const [newNoteBySection, setNewNoteBySection] = useState<Record<string, string>>({});
@@ -43,6 +48,8 @@ export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient 
           setNotes(res.clipNotes);
           setServiceHistory(res.serviceHistory ?? []);
           setClientCity(res.client?.city ?? null);
+          setClientNextServiceNote(res.client?.nextServiceNote ?? null);
+          setClientNextServiceImageUrl(res.client?.nextServiceImageUrl ?? null);
         }
       })
       .catch((err) => {
@@ -55,6 +62,44 @@ export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient 
       });
     return () => { mounted = false; };
   }, [shopSlug, clientId, onError, t]);
+
+  // Resolve reference image URL for staff (customer auth route requires staff endpoint)
+  useEffect(() => {
+    const url = clientNextServiceImageUrl;
+    if (!url || !shopSlug || !clientId) {
+      if (refImageObjUrlRef.current) {
+        URL.revokeObjectURL(refImageObjUrlRef.current);
+        refImageObjUrlRef.current = null;
+      }
+      setRefImageDisplayUrl(null);
+      return;
+    }
+    if (url.includes('/auth/customer/me/reference')) {
+      const staffUrl = `${config.apiBase}/shops/${encodeURIComponent(shopSlug)}/clients/${clientId}/reference-image`;
+      const token = sessionStorage.getItem('eutonafila_auth_token') ?? localStorage.getItem('eutonafila_auth_token');
+      let cancelled = false;
+      fetch(staffUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        .then((r) => r.blob())
+        .then((blob) => {
+          if (cancelled) return;
+          if (refImageObjUrlRef.current) URL.revokeObjectURL(refImageObjUrlRef.current);
+          const objUrl = URL.createObjectURL(blob);
+          refImageObjUrlRef.current = objUrl;
+          setRefImageDisplayUrl(objUrl);
+        })
+        .catch(() => { if (!cancelled) setRefImageDisplayUrl(null); });
+      return () => {
+        cancelled = true;
+        if (refImageObjUrlRef.current) {
+          URL.revokeObjectURL(refImageObjUrlRef.current);
+          refImageObjUrlRef.current = null;
+        }
+        setRefImageDisplayUrl(null);
+      };
+    }
+    setRefImageDisplayUrl(url);
+    return undefined;
+  }, [clientNextServiceImageUrl, shopSlug, clientId]);
 
   const handleAdd = async (e: React.FormEvent, serviceId?: number | null) => {
     e.preventDefault();
@@ -109,12 +154,28 @@ export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient 
           </Link>
         )}
       </div>
+      {(clientNextServiceNote || clientNextServiceImageUrl || refImageDisplayUrl) && (
+        <div className="rounded-lg border border-border p-3 bg-muted/20">
+          <h5 className="text-sm font-medium text-[var(--shop-text-primary)] mb-2 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-base">person</span>
+            {t('barber.clientReference')}
+          </h5>
+          {clientNextServiceNote && (
+            <p className="text-sm text-[var(--shop-text-primary)] whitespace-pre-wrap mb-2">{clientNextServiceNote}</p>
+          )}
+          {refImageDisplayUrl && (
+            <img
+              src={refImageDisplayUrl}
+              alt=""
+              className="max-h-48 rounded-lg border border-border object-cover"
+            />
+          )}
+        </div>
+      )}
       {services.length > 0 ? (
         <div className="space-y-4">
-          {[{ key: 'general', title: t('barber.clipNotesGeneral'), serviceId: null as number | null }].concat(
-            services.map((s) => ({ key: String(s.id), title: s.name, serviceId: s.id as number })),
-          ).map(({ key, title, serviceId }) => {
-            const sectionNotes = notes.filter((n) => (serviceId == null ? n.serviceId == null : n.serviceId === serviceId));
+          {services.map((s) => ({ key: String(s.id), title: s.name, serviceId: s.id })).map(({ key, title, serviceId }) => {
+            const sectionNotes = notes.filter((n) => n.serviceId === serviceId);
             const sectionNoteValue = newNoteBySection[key] ?? '';
             const isAdding = addingForSection === key;
             return (

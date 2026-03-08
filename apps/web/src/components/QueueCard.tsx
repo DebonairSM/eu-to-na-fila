@@ -120,22 +120,6 @@ export const QueueCard = memo(function QueueCard({
                 <span className="material-symbols-outlined text-xl" aria-hidden="true">close</span>
               </button>
             )}
-            {/* View/add client notes - shown when client is in queue (waiting or in progress) */}
-            {(isServing || isWaiting) && onOpenNotes && (
-              <button
-                type="button"
-                className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[var(--shop-accent)]/90 hover:text-[var(--shop-accent)] hover:bg-[var(--shop-accent)]/20 border border-[var(--shop-accent)]/30 hover:border-[var(--shop-accent)]/50 transition-all focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]/50 focus:ring-offset-0 text-sm font-medium"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenNotes();
-                }}
-                aria-label={t('barber.seePreviousNotes')}
-                title={t('barber.seePreviousNotes')}
-              >
-                <span className="material-symbols-outlined text-xl" aria-hidden="true">note</span>
-                <span>{t('barber.notesButton')}</span>
-              </button>
-            )}
           </div>
 
           {/* Customer Name + ticket number / type (hybrid mode) */}
@@ -176,39 +160,52 @@ export const QueueCard = memo(function QueueCard({
           </div>
         </div>
 
-        {/* Barber Avatar - 40px × 40px for management mode */}
-        {(barberAvatarUrl || assignedBarber) && (
-          <div className="flex-shrink-0 w-10 h-10 relative">
-            {/* Always show placeholder immediately for better perceived performance */}
-            <div className={cn(
-              'rounded-md bg-gradient-to-br from-[var(--shop-accent)] to-[var(--shop-accent-hover)] text-[var(--shop-text-on-accent)] font-semibold flex items-center justify-center absolute inset-0 transition-opacity duration-200',
-              barberImageLoaded && 'opacity-0 pointer-events-none'
-            )} aria-hidden="true">
-              {barberInitials}
+        {/* Right: Barber Avatar + Notes icon (small, at right end) */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {(barberAvatarUrl || assignedBarber) && (
+            <div className="w-10 h-10 relative">
+              <div className={cn(
+                'rounded-md bg-gradient-to-br from-[var(--shop-accent)] to-[var(--shop-accent-hover)] text-[var(--shop-text-on-accent)] font-semibold flex items-center justify-center absolute inset-0 transition-opacity duration-200',
+                barberImageLoaded && 'opacity-0 pointer-events-none'
+              )} aria-hidden="true">
+                {barberInitials}
+              </div>
+              {showAvatarImage && barberAvatarUrl && (
+                <img
+                  src={barberAvatarUrl}
+                  alt={assignedBarber?.name || 'Barber'}
+                  className="w-10 h-10 rounded-md object-cover relative z-10"
+                  loading="lazy"
+                  decoding="async"
+                  width={40}
+                  height={40}
+                  onLoad={() => {
+                    setBarberImageLoaded(true);
+                  }}
+                  onError={(e) => {
+                    setBarberAvatarFailed(true);
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                />
+              )}
             </div>
-            {showAvatarImage && barberAvatarUrl && (
-              <img
-                src={barberAvatarUrl}
-                alt={assignedBarber?.name || 'Barber'}
-                className="w-10 h-10 rounded-md object-cover relative z-10"
-                loading="lazy"
-                decoding="async"
-                width={40}
-                height={40}
-                onLoad={() => {
-                  setBarberImageLoaded(true);
-                }}
-                onError={(e) => {
-                  // Silently fall back to initials on any error (CSP violation, rate limit, network error, etc.)
-                  setBarberAvatarFailed(true);
-                  // Prevent error from bubbling
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-              />
-            )}
-          </div>
-        )}
+          )}
+          {(isServing || isWaiting) && onOpenNotes && (
+            <button
+              type="button"
+              className="flex-shrink-0 w-9 h-9 rounded-md flex items-center justify-center text-[var(--shop-accent)]/90 hover:text-[var(--shop-accent)] hover:bg-[var(--shop-accent)]/20 border border-[var(--shop-accent)]/30 hover:border-[var(--shop-accent)]/50 transition-all focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]/50 focus:ring-offset-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenNotes();
+              }}
+              aria-label={t('barber.seePreviousNotes')}
+              title={t('barber.seePreviousNotes')}
+            >
+              <span className="material-symbols-outlined text-xl" aria-hidden="true">note</span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

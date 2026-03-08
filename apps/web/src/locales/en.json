@@ -942,6 +942,7 @@
     "openNotes": "Open notes",
     "latestNote": "Latest note",
     "viewClient": "View client",
+    "clientReference": "Client's reference",
     "serviceHistory": "Service history",
     "editBarber": "Edit Barber",
     "editAria": "Edit {name}",

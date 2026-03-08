@@ -102,6 +102,7 @@ export function BarberQueueManager() {
   const removeConfirmModal = useModal(false);
   const completeConfirmModal = useModal(false);
   const [notesForTicketId, setNotesForTicketId] = useState<number | null>(null);
+  const [notesModalPayload, setNotesModalPayload] = useState<{ clientId: number; services: Array<{ id: number; name: string }> } | null>(null);
   const [latestNotePopup, setLatestNotePopup] = useState<{ ticketId: number; clientId: number; note: ClientClipNote } | null>(null);
   const { validateName } = useProfanityFilter();
   const allowAppointments = shopConfig.settings?.allowAppointments ?? false;
@@ -547,7 +548,11 @@ export function BarberQueueManager() {
 
     const completedTicketId = customerToComplete;
     const ticket = tickets.find((t) => t.id === completedTicketId);
-    const hadClientId = (ticket as { clientId?: number | null } | undefined)?.clientId != null;
+    const clientId = (ticket as { clientId?: number | null } | undefined)?.clientId ?? null;
+    const payload =
+      clientId != null && ticket
+        ? { clientId, services: getTicketServices(ticket as Parameters<typeof getTicketServices>[0]) }
+        : null;
 
     try {
       await api.updateTicket(customerToComplete, {
@@ -557,8 +562,9 @@ export function BarberQueueManager() {
       completeConfirmModal.close();
       setCustomerToComplete(null);
 
-      if (hadClientId) {
+      if (payload) {
         setNotesForTicketId(completedTicketId);
+        setNotesModalPayload(payload);
         notesModal.open();
       }
     } catch (error) {
@@ -1112,6 +1118,7 @@ export function BarberQueueManager() {
                         completeConfirmModal.open();
                       }}
                       onOpenNotes={showNotesButton ? () => {
+                        setNotesModalPayload(null);
                         setNotesForTicketId(ticket.id);
                         notesModal.open();
                       } : undefined}
@@ -1548,6 +1555,7 @@ export function BarberQueueManager() {
             canViewFullClient={!isBarber}
             canAddNoteInPanel={true}
             onOpenNotesModal={() => {
+              setNotesModalPayload(null);
               setNotesForTicketId(selectedCustomerId);
               barberSelectorModal.close();
               setSelectedCustomerId(null);
@@ -1578,6 +1586,7 @@ export function BarberQueueManager() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
+                  setNotesModalPayload(null);
                   setNotesForTicketId(latestNotePopup.ticketId);
                   setLatestNotePopup(null);
                   notesModal.open();
@@ -1590,15 +1599,20 @@ export function BarberQueueManager() {
         </Modal>
       )}
 
-      {/* Notes modal: view and add clip notes (opens for any waiting/in-progress ticket; shows message if no client record) */}
+      {/* Notes modal: view and add clip notes (opens for waiting/in-progress or after complete; uses notesModalPayload when ticket no longer in list) */}
       {notesModal.isOpen && notesForTicketId != null && shopSlug && (() => {
         const noteTicket = tickets.find((t) => t.id === notesForTicketId);
-        const clientId = (noteTicket as { clientId?: number | null } | undefined)?.clientId ?? null;
-        const clipNotesServices = noteTicket ? getTicketServices(noteTicket as Parameters<typeof getTicketServices>[0]) : [];
+        const clientId =
+          notesModalPayload?.clientId ??
+          (noteTicket as { clientId?: number | null } | undefined)?.clientId ??
+          null;
+        const clipNotesServices =
+          notesModalPayload?.services ??
+          (noteTicket ? getTicketServices(noteTicket as Parameters<typeof getTicketServices>[0]) : []);
         return (
           <Modal
             isOpen={notesModal.isOpen}
-            onClose={() => { notesModal.close(); setNotesForTicketId(null); }}
+            onClose={() => { notesModal.close(); setNotesForTicketId(null); setNotesModalPayload(null); }}
             title={t('barber.clipNotes')}
             className="max-w-lg"
           >
