@@ -22,6 +22,8 @@ export interface QueueCardProps {
   disabledReason?: string;
   /** When set and ticket is in_progress, show a "See previous notes" button that calls this (e.g. open notes modal). */
   onOpenNotes?: () => void;
+  /** When true, show only name and service (e.g. mobile); actions move to a popup. */
+  compact?: boolean;
   className?: string;
 }
 
@@ -37,6 +39,7 @@ export const QueueCard = memo(function QueueCard({
   disabled = false,
   disabledReason,
   onOpenNotes,
+  compact = false,
   className,
 }: QueueCardProps) {
   const { t } = useLocale();
@@ -48,6 +51,45 @@ export const QueueCard = memo(function QueueCard({
   const barberAvatarUrl = assignedBarber ? getBarberAvatarUrl(assignedBarber, 64) : null;
   const barberInitials = assignedBarber?.name?.charAt(0)?.toUpperCase() || '';
   const showAvatarImage = barberAvatarUrl && !barberAvatarFailed;
+
+  if (compact) {
+    return (
+      <div
+        className={cn(
+          'queue-item px-4 py-3 rounded-md border-2 transition-all flex items-center gap-3 min-w-0',
+          'focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--shop-accent)] focus-visible:ring-offset-2',
+          {
+            'border-[var(--shop-accent)] bg-[var(--shop-background)]': isServing,
+            'border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] bg-card': isWaiting && !disabled,
+            'opacity-60 cursor-not-allowed': disabled,
+            'cursor-pointer': !disabled && onClick,
+          },
+          className
+        )}
+        onClick={disabled ? undefined : onClick}
+        role={!disabled && onClick ? 'button' : undefined}
+        tabIndex={!disabled && onClick ? 0 : undefined}
+        onKeyDown={!disabled && onClick ? (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+          }
+        } : undefined}
+        aria-label={!disabled && onClick ? `Cliente ${formatNameForDisplay(ticket.customerName)}, posição ${displayPosition !== null && displayPosition !== undefined ? displayPosition : ticket.position}` : undefined}
+        title={disabled && disabledReason ? disabledReason : undefined}
+      >
+        <span className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center text-sm font-bold bg-white/10 text-[var(--shop-text-primary)]">
+          {isServing ? <span className="material-symbols-outlined text-lg">check</span> : (displayPosition ?? ticket.position)}
+        </span>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-[var(--shop-text-primary)] truncate">{formatNameForDisplay(ticket.customerName)}</p>
+          {serviceName && (
+            <p className="text-xs text-[var(--shop-text-secondary)] truncate">{serviceName}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

@@ -944,6 +944,7 @@
     "viewClient": "Ver cliente",
     "clientReference": "Referência do cliente",
     "serviceHistory": "Histórico de serviços",
+    "assignBarber": "Atribuir barbeiro",
     "editBarber": "Editar Barbeiro",
     "editAria": "Editar {name}",
     "editBarberAria": "Editar barbeiro {name}",

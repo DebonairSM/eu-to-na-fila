@@ -37,6 +37,8 @@ export interface BarberSelectorProps {
   onOpenNotesModal?: () => void;
   /** When set, clip notes are grouped into one section per service (e.g. from ticket). */
   clipNotesServices?: ClipNotesService[];
+  /** When false, hide the notes panel and "open notes" block. Notes only from check-in to barber onward. */
+  showNotesSection?: boolean;
 }
 
 export function BarberSelector({
@@ -59,6 +61,7 @@ export function BarberSelector({
   canAddNoteInPanel = true,
   onOpenNotesModal,
   clipNotesServices = [],
+  showNotesSection = false,
 }: BarberSelectorProps) {
   const { t } = useLocale();
   const sortedDisplayedBarbers = useMemo(() => {
@@ -99,16 +102,8 @@ export function BarberSelector({
       className="max-w-2xl"
     >
       <div className="space-y-4 relative">
-        {clientId != null && shopSlug && (
-          <>
-            {onOpenNotesModal && (
-              <div className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={onOpenNotesModal}>
-                  {t('barber.seeAllNotes')}
-                </Button>
-              </div>
-            )}
-            <ClipNotesPanel
+        {showNotesSection && clientId != null && shopSlug && (
+          <ClipNotesPanel
               shopSlug={shopSlug}
               clientId={clientId}
               onError={onClipNotesError}
@@ -116,9 +111,8 @@ export function BarberSelector({
               canAddNote={canAddNoteInPanel}
               services={clipNotesServices}
             />
-          </>
         )}
-        {clientId == null && onOpenNotesModal && (
+        {showNotesSection && clientId == null && onOpenNotesModal && (
           <div className="rounded-lg border border-[var(--shop-border-color)] bg-white/5 p-4 space-y-2">
             <p className="text-sm text-[var(--shop-text-secondary)]">
               {t('barber.noClientNotesHint')}

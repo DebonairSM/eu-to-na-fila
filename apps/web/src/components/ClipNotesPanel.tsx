@@ -22,9 +22,11 @@ export interface ClipNotesPanelProps {
   canAddNote?: boolean;
   /** When set, notes are shown in one section per service (plus General for notes without a service). */
   services?: ClipNotesService[];
+  /** When set (e.g. post-complete flow), attribute new notes to this barber; required when caller is staff/owner. */
+  barberIdForNote?: number;
 }
 
-export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient = true, canAddNote = true, services = [] }: ClipNotesPanelProps) {
+export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient = true, canAddNote = true, services = [], barberIdForNote }: ClipNotesPanelProps) {
   const { t } = useLocale();
   const [notes, setNotes] = useState<ClientClipNote[]>([]);
   const [serviceHistory, setServiceHistory] = useState<ServiceHistoryItem[]>([]);
@@ -111,7 +113,7 @@ export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient 
     if (isSectioned) setAddingForSection(sectionKey);
     else setAdding(true);
     try {
-      const created = await api.addClipNote(shopSlug, clientId, text, serviceId ?? undefined);
+      const created = await api.addClipNote(shopSlug, clientId, text, serviceId ?? undefined, barberIdForNote);
       setNotes((prev) => [created, ...prev]);
       if (isSectioned) {
         setNewNoteBySection((prev) => ({ ...prev, [sectionKey]: '' }));

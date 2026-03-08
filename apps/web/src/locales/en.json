@@ -944,6 +944,7 @@
     "viewClient": "View client",
     "clientReference": "Client's reference",
     "serviceHistory": "Service history",
+    "assignBarber": "Assign barber",
     "editBarber": "Edit Barber",
     "editAria": "Edit {name}",
     "editBarberAria": "Edit barber {name}",

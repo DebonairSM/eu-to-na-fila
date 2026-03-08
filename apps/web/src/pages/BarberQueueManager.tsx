@@ -19,6 +19,7 @@ import { BarberSelector } from '@/components/BarberSelector';
 import { BarberCard } from '@/components/BarberCard';
 import { ClipNotesPanel } from '@/components/ClipNotesPanel';
 import { QueueCard } from '@/components/QueueCard';
+import { TicketActionSheet } from '@/components/TicketActionSheet';
 import { QRCode } from '@/components/QRCode';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Skeleton } from '@/components/design-system';
@@ -26,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { KioskAdsPlayer } from '@/components/KioskAdsPlayer';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { useErrorTimeout } from '@/hooks/useErrorTimeout';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useLocale } from '@/contexts/LocaleContext';
 import { getShopBasePath } from '@/lib/config';
 import { POLL_INTERVALS } from '@/lib/constants';
@@ -59,6 +61,7 @@ export function BarberQueueManager() {
   const { activeServices } = useServices();
   const { isBarber, user } = useAuthContext();
   const { t } = useLocale();
+  const isMobile = useIsMobile();
   const displayBarbers = isBarber && user ? barbers.filter((b) => b.id === user.id) : barbers;
   const singleBarberId = displayBarbers.length === 1 ? displayBarbers[0].id : null;
 
@@ -98,11 +101,12 @@ export function BarberQueueManager() {
 
   const checkInModal = useModal(false);
   const barberSelectorModal = useModal(false);
+  const ticketActionSheetModal = useModal(false);
   const notesModal = useModal(false);
   const removeConfirmModal = useModal(false);
   const completeConfirmModal = useModal(false);
   const [notesForTicketId, setNotesForTicketId] = useState<number | null>(null);
-  const [notesModalPayload, setNotesModalPayload] = useState<{ clientId: number; services: Array<{ id: number; name: string }> } | null>(null);
+  const [notesModalPayload, setNotesModalPayload] = useState<{ clientId: number; services: Array<{ id: number; name: string }>; barberId: number | null } | null>(null);
   const [latestNotePopup, setLatestNotePopup] = useState<{ ticketId: number; clientId: number; note: ClientClipNote } | null>(null);
   const { validateName } = useProfanityFilter();
   const allowAppointments = shopConfig.settings?.allowAppointments ?? false;
@@ -549,9 +553,10 @@ export function BarberQueueManager() {
     const completedTicketId = customerToComplete;
     const ticket = tickets.find((t) => t.id === completedTicketId);
     const clientId = (ticket as { clientId?: number | null } | undefined)?.clientId ?? null;
+    const barberId = (ticket as { barberId?: number | null } | undefined)?.barberId ?? null;
     const payload =
       clientId != null && ticket
-        ? { clientId, services: getTicketServices(ticket as Parameters<typeof getTicketServices>[0]) }
+        ? { clientId, services: getTicketServices(ticket as Parameters<typeof getTicketServices>[0]), barberId }
         : null;
 
     try {
@@ -1090,8 +1095,8 @@ export function BarberQueueManager() {
                   const assignedBarber = getAssignedBarber(ticket);
                   const isServing = ticket.status === 'in_progress';
                   const isWaiting = ticket.status === 'waiting';
-                  const canOpenNotesAsBarber = isWaiting || !isBarber || (user && assignedBarber?.id === user.id);
-                  const showNotesButton = (isWaiting || isServing) && canOpenNotesAsBarber;
+                  const canOpenNotesAsBarber = !isBarber || (user && assignedBarber?.id === user.id);
+                  const showNotesButton = isServing && canOpenNotesAsBarber;
                   // Calculate display position based on index in sorted waiting tickets
                   const displayPosition = isServing ? null : index + 1;
                   const preferredBarberId = (ticket as { preferredBarberId?: number }).preferredBarberId;
@@ -1105,25 +1110,30 @@ export function BarberQueueManager() {
                         barbers={displayBarbers}
                         preferredBarberName={preferredBarberName ?? undefined}
                         displayPosition={displayPosition}
-                      onClick={() => {
-                        setSelectedCustomerId(ticket.id);
-                        barberSelectorModal.open();
-                      }}
-                      onRemove={() => {
-                        setCustomerToRemove(ticket.id);
-                        removeConfirmModal.open();
-                      }}
-                      onComplete={() => {
-                        setCustomerToComplete(ticket.id);
-                        completeConfirmModal.open();
-                      }}
-                      onOpenNotes={showNotesButton ? () => {
-                        setNotesModalPayload(null);
-                        setNotesForTicketId(ticket.id);
-                        notesModal.open();
-                      } : undefined}
-                    />
-                  );
+                        compact={isMobile}
+                        onClick={() => {
+                          setSelectedCustomerId(ticket.id);
+                          if (isMobile) {
+                            ticketActionSheetModal.open();
+                          } else {
+                            barberSelectorModal.open();
+                          }
+                        }}
+                        onRemove={() => {
+                          setCustomerToRemove(ticket.id);
+                          removeConfirmModal.open();
+                        }}
+                        onComplete={() => {
+                          setCustomerToComplete(ticket.id);
+                          completeConfirmModal.open();
+                        }}
+                        onOpenNotes={!isMobile && showNotesButton ? () => {
+                          setNotesModalPayload(null);
+                          setNotesForTicketId(ticket.id);
+                          notesModal.open();
+                        } : undefined}
+                      />
+                    );
                 })
               )}
             </div>
@@ -1550,6 +1560,7 @@ export function BarberQueueManager() {
             currentBarberId={isBarber && user ? user.id : null}
             clientId={(selectedTicket as { clientId?: number } | undefined)?.clientId ?? null}
             shopSlug={shopSlug}
+            showNotesSection={selectedTicket?.status === 'in_progress'}
             clipNotesServices={selectedTicket ? getTicketServices(selectedTicket as Parameters<typeof getTicketServices>[0]) : []}
             onClipNotesError={setErrorMessage}
             canViewFullClient={!isBarber}
@@ -1562,6 +1573,49 @@ export function BarberQueueManager() {
               setDeadZoneWarning(null);
               notesModal.open();
             }}
+          />
+        );
+      })()}
+
+      {/* Mobile: ticket action sheet (compact card tap opens this instead of barber selector) */}
+      {isMobile && ticketActionSheetModal.isOpen && selectedCustomerId && (() => {
+        const selectedTicket = tickets.find((t) => t.id === selectedCustomerId);
+        const assignedBarberForSheet = selectedTicket ? getAssignedBarber(selectedTicket) : null;
+        const idx = selectedTicket ? sortedTickets.findIndex((t) => t.id === selectedTicket.id) : -1;
+        const displayPos = selectedTicket?.status === 'in_progress' ? null : idx >= 0 ? idx + 1 : null;
+        const isServingSheet = selectedTicket?.status === 'in_progress';
+        const canOpenNotesAsBarber = !isBarber || (user && assignedBarberForSheet?.id === user.id);
+        const showNotesBtn = isServingSheet && canOpenNotesAsBarber;
+        if (!selectedTicket) return null;
+        return (
+          <TicketActionSheet
+            isOpen={ticketActionSheetModal.isOpen}
+            onClose={() => { ticketActionSheetModal.close(); setSelectedCustomerId(null); }}
+            customerName={selectedTicket.customerName ?? ''}
+            serviceName={getTicketServiceNames(selectedTicket as Parameters<typeof getTicketServiceNames>[0])}
+            displayPosition={displayPos}
+            assignedBarber={assignedBarberForSheet}
+            isServing={isServingSheet}
+            onAssignBarber={() => {
+              ticketActionSheetModal.close();
+              barberSelectorModal.open();
+            }}
+            onNotes={showNotesBtn ? () => {
+              setNotesModalPayload(null);
+              setNotesForTicketId(selectedCustomerId);
+              notesModal.open();
+            } : undefined}
+            onComplete={() => {
+              ticketActionSheetModal.close();
+              setCustomerToComplete(selectedCustomerId);
+              completeConfirmModal.open();
+            }}
+            onRemove={() => {
+              ticketActionSheetModal.close();
+              setCustomerToRemove(selectedCustomerId);
+              removeConfirmModal.open();
+            }}
+            showNotesButton={showNotesBtn}
           />
         );
       })()}
@@ -1609,6 +1663,10 @@ export function BarberQueueManager() {
         const clipNotesServices =
           notesModalPayload?.services ??
           (noteTicket ? getTicketServices(noteTicket as Parameters<typeof getTicketServices>[0]) : []);
+        const barberIdForNote =
+          notesModalPayload?.barberId ??
+          (noteTicket as { barberId?: number | null } | undefined)?.barberId ??
+          null;
         return (
           <Modal
             isOpen={notesModal.isOpen}
@@ -1624,6 +1682,7 @@ export function BarberQueueManager() {
                 canViewFullClient={!isBarber}
                 canAddNote={true}
                 services={clipNotesServices}
+                barberIdForNote={barberIdForNote ?? undefined}
               />
             ) : (
               <p className="text-[var(--shop-text-secondary)] text-sm">
