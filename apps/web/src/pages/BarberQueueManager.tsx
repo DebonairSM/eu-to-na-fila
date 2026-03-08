@@ -295,6 +295,30 @@ export function BarberQueueManager() {
     },
     [activeServices]
   );
+
+  /** Services for clip notes sections (one section per ticket service). */
+  const getTicketServices = useCallback(
+    (ticket: {
+      serviceId: number;
+      service?: { id: number; name: string };
+      complementaryServiceIds?: number[];
+    }): Array<{ id: number; name: string }> => {
+      const ids: number[] =
+        ticket.complementaryServiceIds && ticket.complementaryServiceIds.length > 0
+          ? ticket.complementaryServiceIds
+          : [ticket.serviceId];
+      return ids
+        .map((id) => {
+          const name =
+            id === ticket.serviceId && ticket.service?.name
+              ? ticket.service.name
+              : activeServices.find((s) => s.id === id)?.name;
+          return name != null ? { id, name } : null;
+        })
+        .filter((s): s is { id: number; name: string } => s != null);
+    },
+    [activeServices]
+  );
   const editTicketBarberId = editTicket ? (editTicket as { preferredBarberId?: number }).preferredBarberId : undefined;
   useEffect(() => {
     if (!editAppointmentTicketId || !rescheduleDateStr || !useSlotsForAppointment || !editTicketServiceId) {
@@ -1521,6 +1545,7 @@ export function BarberQueueManager() {
             currentBarberId={isBarber && user ? user.id : null}
             clientId={(selectedTicket as { clientId?: number } | undefined)?.clientId ?? null}
             shopSlug={shopSlug}
+            clipNotesServices={selectedTicket ? getTicketServices(selectedTicket as Parameters<typeof getTicketServices>[0]) : []}
             onClipNotesError={setErrorMessage}
             canViewFullClient={!isBarber}
             canAddNoteInPanel={true}
@@ -1571,6 +1596,7 @@ export function BarberQueueManager() {
       {notesModal.isOpen && notesForTicketId != null && shopSlug && (() => {
         const noteTicket = tickets.find((t) => t.id === notesForTicketId);
         const clientId = (noteTicket as { clientId?: number | null } | undefined)?.clientId ?? null;
+        const clipNotesServices = noteTicket ? getTicketServices(noteTicket as Parameters<typeof getTicketServices>[0]) : [];
         return (
           <Modal
             isOpen={notesModal.isOpen}
@@ -1585,6 +1611,7 @@ export function BarberQueueManager() {
                 onError={setErrorMessage}
                 canViewFullClient={!isBarber}
                 canAddNote={true}
+                services={clipNotesServices}
               />
             ) : (
               <p className="text-[var(--shop-text-secondary)] text-sm">

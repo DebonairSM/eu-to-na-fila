@@ -8,6 +8,9 @@ import type { ClientClipNote } from '@/lib/api/clients';
 
 export type ServiceHistoryItem = { id: number; serviceName: string; barberName: string | null; completedAt: string | null };
 
+/** Service option for grouping notes into sections (e.g. from ticket's complementary services). */
+export type ClipNotesService = { id: number; name: string };
+
 export interface ClipNotesPanelProps {
   shopSlug: string;
   clientId: number;
@@ -16,16 +19,20 @@ export interface ClipNotesPanelProps {
   canViewFullClient?: boolean;
   /** When false, hide the add-note form (e.g. in barber selector; use "See previous notes" during service to add). */
   canAddNote?: boolean;
+  /** When set, notes are shown in one section per service (plus General for notes without a service). */
+  services?: ClipNotesService[];
 }
 
-export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient = true, canAddNote = true }: ClipNotesPanelProps) {
+export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient = true, canAddNote = true, services = [] }: ClipNotesPanelProps) {
   const { t } = useLocale();
   const [notes, setNotes] = useState<ClientClipNote[]>([]);
   const [serviceHistory, setServiceHistory] = useState<ServiceHistoryItem[]>([]);
   const [clientCity, setClientCity] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [newNote, setNewNote] = useState('');
+  const [newNoteBySection, setNewNoteBySection] = useState<Record<string, string>>({});
   const [adding, setAdding] = useState(false);
+  const [addingForSection, setAddingForSection] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -49,20 +56,28 @@ export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient 
     return () => { mounted = false; };
   }, [shopSlug, clientId, onError, t]);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent, serviceId?: number | null) => {
     e.preventDefault();
-    const trimmed = newNote.trim();
-    if (!trimmed || adding) return;
+    const isSectioned = services.length > 0;
+    const sectionKey = serviceId == null ? 'general' : String(serviceId);
+    const text = isSectioned ? (newNoteBySection[sectionKey] ?? '').trim() : newNote.trim();
+    if (!text || (isSectioned ? addingForSection !== null : adding)) return;
 
-    setAdding(true);
+    if (isSectioned) setAddingForSection(sectionKey);
+    else setAdding(true);
     try {
-      const created = await api.addClipNote(shopSlug, clientId, trimmed);
+      const created = await api.addClipNote(shopSlug, clientId, text, serviceId ?? undefined);
       setNotes((prev) => [created, ...prev]);
-      setNewNote('');
+      if (isSectioned) {
+        setNewNoteBySection((prev) => ({ ...prev, [sectionKey]: '' }));
+      } else {
+        setNewNote('');
+      }
     } catch (err) {
       onError?.(getErrorMessage(err, t('barber.addCustomerError')));
     } finally {
-      setAdding(false);
+      if (isSectioned) setAddingForSection(null);
+      else setAdding(false);
     }
   };
 
@@ -94,43 +109,99 @@ export function ClipNotesPanel({ shopSlug, clientId, onError, canViewFullClient 
           </Link>
         )}
       </div>
-      {canAddNote && (
-        <form onSubmit={handleAdd} className="flex gap-2">
-          <input
-            type="text"
-            value={newNote}
-            onChange={(e) => setNewNote(e.target.value)}
-            placeholder={t('barber.clipNotePlaceholder')}
-            maxLength={2000}
-            className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            disabled={adding}
-          />
-          <button
-            type="submit"
-            disabled={adding || !newNote.trim()}
-            className="px-3 py-2 rounded-lg bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {adding ? '...' : t('barber.addClipNote')}
-          </button>
-        </form>
+      {services.length > 0 ? (
+        <div className="space-y-4">
+          {[{ key: 'general', title: t('barber.clipNotesGeneral'), serviceId: null as number | null }].concat(
+            services.map((s) => ({ key: String(s.id), title: s.name, serviceId: s.id as number })),
+          ).map(({ key, title, serviceId }) => {
+            const sectionNotes = notes.filter((n) => (serviceId == null ? n.serviceId == null : n.serviceId === serviceId));
+            const sectionNoteValue = newNoteBySection[key] ?? '';
+            const isAdding = addingForSection === key;
+            return (
+              <div key={key} className="border border-border rounded-lg p-3 bg-muted/20">
+                <h5 className="text-sm font-medium text-[var(--shop-text-primary)] mb-2">{title}</h5>
+                {canAddNote && (
+                  <form onSubmit={(e) => handleAdd(e, serviceId ?? undefined)} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={sectionNoteValue}
+                      onChange={(e) => setNewNoteBySection((prev) => ({ ...prev, [key]: e.target.value }))}
+                      placeholder={t('barber.clipNotePlaceholder')}
+                      maxLength={2000}
+                      className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      disabled={isAdding}
+                    />
+                    <button
+                      type="submit"
+                      disabled={isAdding || !sectionNoteValue.trim()}
+                      className="px-3 py-2 rounded-lg bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isAdding ? '...' : t('barber.addClipNote')}
+                    </button>
+                  </form>
+                )}
+                <ul className="space-y-2 max-h-28 overflow-y-auto">
+                  {sectionNotes.length === 0 ? (
+                    <li className="text-sm text-[var(--shop-text-secondary)] italic">{t('barber.clipNotesEmpty')}</li>
+                  ) : (
+                    sectionNotes.map((n) => (
+                      <li
+                        key={n.id}
+                        className="text-sm py-1.5 px-2 rounded bg-white/5 border border-white/5 text-[var(--shop-text-primary)]"
+                      >
+                        <p>{n.note}</p>
+                        <span className="text-xs text-[var(--shop-text-secondary)]">
+                          {n.barber?.name ?? ''} · {new Date(n.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                        </span>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <>
+          {canAddNote && (
+            <form onSubmit={(e) => handleAdd(e)} className="flex gap-2">
+              <input
+                type="text"
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                placeholder={t('barber.clipNotePlaceholder')}
+                maxLength={2000}
+                className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                disabled={adding}
+              />
+              <button
+                type="submit"
+                disabled={adding || !newNote.trim()}
+                className="px-3 py-2 rounded-lg bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {adding ? '...' : t('barber.addClipNote')}
+              </button>
+            </form>
+          )}
+          <ul className="space-y-2 max-h-32 overflow-y-auto">
+            {notes.length === 0 ? (
+              <li className="text-sm text-[var(--shop-text-secondary)] italic">{t('barber.clipNotesEmpty')}</li>
+            ) : (
+              notes.map((n) => (
+                <li
+                  key={n.id}
+                  className="text-sm py-1.5 px-2 rounded bg-white/5 border border-white/5 text-[var(--shop-text-primary)]"
+                >
+                  <p>{n.note}</p>
+                  <span className="text-xs text-[var(--shop-text-secondary)]">
+                    {n.barber?.name ?? ''} · {new Date(n.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                  </span>
+                </li>
+              ))
+            )}
+          </ul>
+        </>
       )}
-      <ul className="space-y-2 max-h-32 overflow-y-auto">
-        {notes.length === 0 ? (
-          <li className="text-sm text-[var(--shop-text-secondary)] italic">{t('barber.clipNotesEmpty')}</li>
-        ) : (
-          notes.map((n) => (
-            <li
-              key={n.id}
-              className="text-sm py-1.5 px-2 rounded bg-white/5 border border-white/5 text-[var(--shop-text-primary)]"
-            >
-              <p>{n.note}</p>
-              <span className="text-xs text-[var(--shop-text-secondary)]">
-                {n.barber?.name ?? ''} · {new Date(n.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
-              </span>
-            </li>
-          ))
-        )}
-      </ul>
       {serviceHistory.length > 0 && (
         <div className="pt-3 border-t border-border">
           <h4 className="text-sm font-medium text-[var(--shop-text-primary)] flex items-center gap-2 mb-2">

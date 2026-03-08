@@ -269,6 +269,7 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
     const bodySchema = z.object({
       note: z.string().min(1).max(2000),
       barberId: z.number().int().positive().optional(),
+      serviceId: z.number().int().positive().nullable().optional(),
     });
     const body = validateRequest(bodySchema, request.body);
 
@@ -282,7 +283,7 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
     const barberId = request.user?.barberId ?? body.barberId;
     if (!barberId) throw new NotFoundError('Barber context required to add clip note');
 
-    const clipNote = await clientService.addClipNote(id, shop.id, barberId, body.note);
+    const clipNote = await clientService.addClipNote(id, shop.id, barberId, body.note, body.serviceId);
     return reply.status(201).send(clipNote);
   });
 };

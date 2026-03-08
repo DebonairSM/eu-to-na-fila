@@ -39,6 +39,7 @@ export interface ClientClipNote {
   id: number;
   clientId: number;
   barberId: number;
+  serviceId: number | null;
   note: string;
   createdAt: string;
   barber?: { name: string };
@@ -82,7 +83,7 @@ export interface ClientsApi {
   listClients(shopSlug: string, page?: number, limit?: number): Promise<ClientListResponse>;
   getClient(shopSlug: string, clientId: number): Promise<ClientDetailResponse>;
   updateClient(shopSlug: string, clientId: number, data: ClientUpdatePayload): Promise<ClientListItem>;
-  addClipNote(shopSlug: string, clientId: number, note: string): Promise<ClientClipNote>;
+  addClipNote(shopSlug: string, clientId: number, note: string, serviceId?: number | null): Promise<ClientClipNote>;
 }
 
 export function createClientsApi(client: BaseApiClient): ClientsApi {
@@ -106,8 +107,8 @@ export function createClientsApi(client: BaseApiClient): ClientsApi {
     async updateClient(shopSlug, clientId, data) {
       return c.patch(`/shops/${shopSlug}/clients/${clientId}`, data);
     },
-    async addClipNote(shopSlug, clientId, note) {
-      return c.post(`/shops/${shopSlug}/clients/${clientId}/clip-notes`, { note });
+    async addClipNote(shopSlug, clientId, note, serviceId) {
+      return c.post(`/shops/${shopSlug}/clients/${clientId}/clip-notes`, { note, serviceId: serviceId ?? undefined });
     },
   };
 }

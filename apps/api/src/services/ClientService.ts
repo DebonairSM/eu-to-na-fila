@@ -38,6 +38,7 @@ export interface ClientClipNote {
   id: number;
   clientId: number;
   barberId: number;
+  serviceId: number | null;
   note: string;
   createdAt: Date;
   barber?: { name: string };
@@ -326,19 +327,26 @@ export class ClientService {
       id: n.id,
       clientId: n.clientId,
       barberId: n.barberId,
+      serviceId: n.serviceId ?? null,
       note: n.note,
       createdAt: n.createdAt,
       barber: n.barber ? { name: n.barber.name } : undefined,
     })) as ClientClipNote[];
   }
 
-  async addClipNote(clientId: number, shopId: number, barberId: number, note: string): Promise<ClientClipNote> {
+  async addClipNote(
+    clientId: number,
+    shopId: number,
+    barberId: number,
+    note: string,
+    serviceId?: number | null,
+  ): Promise<ClientClipNote> {
     const client = await this.getByIdWithShopCheck(clientId, shopId);
     if (!client) throw new NotFoundError('Client not found');
 
     const [created] = await this.db
       .insert(schema.clientClipNotes)
-      .values({ clientId, barberId, note: note.trim() })
+      .values({ clientId, barberId, note: note.trim(), serviceId: serviceId ?? null })
       .returning();
 
     const withBarber = await this.db.query.clientClipNotes.findFirst({
@@ -349,6 +357,7 @@ export class ClientService {
       id: created.id,
       clientId: created.clientId,
       barberId: created.barberId,
+      serviceId: created.serviceId ?? null,
       note: created.note,
       createdAt: created.createdAt,
       barber: withBarber?.barber ? { name: withBarber.barber.name } : undefined,

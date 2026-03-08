@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Modal } from './Modal';
 import { BarberCard } from './BarberCard';
-import { ClipNotesPanel } from './ClipNotesPanel';
+import { ClipNotesPanel, type ClipNotesService } from './ClipNotesPanel';
 import { Button } from './ui/button';
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatNameForDisplay } from '@/lib/utils';
@@ -35,6 +35,8 @@ export interface BarberSelectorProps {
   canAddNoteInPanel?: boolean;
   /** When set, show a "See all notes" button that opens the full notes modal (e.g. in parent). */
   onOpenNotesModal?: () => void;
+  /** When set, clip notes are grouped into one section per service (e.g. from ticket). */
+  clipNotesServices?: ClipNotesService[];
 }
 
 export function BarberSelector({
@@ -56,6 +58,7 @@ export function BarberSelector({
   canViewFullClient = true,
   canAddNoteInPanel = true,
   onOpenNotesModal,
+  clipNotesServices = [],
 }: BarberSelectorProps) {
   const { t } = useLocale();
   const sortedDisplayedBarbers = useMemo(() => {
@@ -111,6 +114,7 @@ export function BarberSelector({
               onError={onClipNotesError}
               canViewFullClient={canViewFullClient}
               canAddNote={canAddNoteInPanel}
+              services={clipNotesServices}
             />
           </>
         )}

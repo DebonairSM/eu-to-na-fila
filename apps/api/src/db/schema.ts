@@ -159,11 +159,13 @@ export const clientClipNotes = pgTable('client_clip_notes', {
   id: serial('id').primaryKey(),
   clientId: integer('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
   barberId: integer('barber_id').notNull().references(() => barbers.id),
+  serviceId: integer('service_id').references(() => services.id),
   note: text('note').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({
   clientIdIdx: index('client_clip_notes_client_id_idx').on(table.clientId),
   barberIdIdx: index('client_clip_notes_barber_id_idx').on(table.barberId),
+  serviceIdIdx: index('client_clip_notes_service_id_idx').on(table.serviceId),
 }));
 
 export const tickets = pgTable('tickets', {
@@ -301,6 +303,7 @@ export const clientsRelations = relations(clients, ({ one, many }) => ({
 export const clientClipNotesRelations = relations(clientClipNotes, ({ one }) => ({
   client: one(clients, { fields: [clientClipNotes.clientId], references: [clients.id] }),
   barber: one(barbers, { fields: [clientClipNotes.barberId], references: [barbers.id] }),
+  service: one(services, { fields: [clientClipNotes.serviceId], references: [services.id] }),
 }));
 
 export const ticketsRelations = relations(tickets, ({ one }) => ({
