@@ -45,7 +45,7 @@ export interface CompaniesApi {
     ownerPassword?: string; staffPassword?: string;
   }): Promise<ShopAdminView>;
   deleteCompanyShop(companyId: number, shopId: number): Promise<{ success: boolean; message: string }>;
-  updateCompanyShopBarber(companyId: number, shopId: number, barberId: number, data: { username?: string | null; password?: string }): Promise<{ id: number; name: string; username: string | null }>;
+  updateCompanyShopBarber(companyId: number, shopId: number, barberId: number, data: { username?: string | null; password?: string; email?: string | null }): Promise<{ id: number; name: string; username: string | null; email?: string | null }>;
   lookupPlacesByAddress(companyId: number, address: string): Promise<PlacesLookupResult>;
   getAdOrders(companyId: number, status?: 'pending_approval' | 'approved' | 'rejected'): Promise<AdOrder[]>;
   patchAdOrder(companyId: number, orderId: number, body: { action: 'approve' | 'reject' | 'mark_paid' }): Promise<{ ok: boolean; status?: string; paymentStatus?: string }>;

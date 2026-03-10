@@ -693,6 +693,8 @@
     "addShopAria": "Adicionar nova barbearia",
     "closeErrorAria": "Fechar mensagem de erro",
     "leaveBlankToNotChange": "Deixe em branco para não alterar",
+    "email": "Email",
+    "emailPlaceholder": "Opcional",
     "usernamePlaceholder": "Ex: joao.silva",
     "operatingHours": "Horário de funcionamento",
     "operatingHoursHint": "Usado para agendamentos. Deixe fechado os dias sem atendimento.",

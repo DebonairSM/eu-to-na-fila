@@ -560,6 +560,7 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
       const bodySchema = z.object({
         username: z.string().max(100).optional().nullable(),
         password: z.string().min(1).max(200).optional(),
+        email: z.string().max(255).optional().nullable(),
       });
 
       const { id, shopId, barberId } = validateRequest(paramsSchema, request.params);
@@ -589,9 +590,13 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
       });
       if (!barber) throw new NotFoundError('Barber not found');
 
-      const updatePayload: { username?: string | null; passwordHash?: string | null; updatedAt: Date } = {
+      const updatePayload: { username?: string | null; passwordHash?: string | null; email?: string | null; updatedAt: Date } = {
         updatedAt: new Date(),
       };
+
+      if (body.email !== undefined) {
+        updatePayload.email = body.email === null || String(body.email).trim() === '' ? null : String(body.email).trim().slice(0, 255);
+      }
 
       if (body.username !== undefined) {
         if (body.username === null || String(body.username).trim() === '') {
@@ -618,9 +623,9 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const [updated] = await db.query.barbers.findMany({
         where: eq(schema.barbers.id, barberId),
-        columns: { id: true, shopId: true, name: true, username: true, isActive: true, isPresent: true },
+        columns: { id: true, shopId: true, name: true, username: true, email: true, isActive: true, isPresent: true },
       });
-      return updated ?? { id: barber.id, shopId: barber.shopId, name: barber.name, username: barber.username, isActive: barber.isActive, isPresent: barber.isPresent };
+      return updated ?? { id: barber.id, shopId: barber.shopId, name: barber.name, username: barber.username, email: barber.email, isActive: barber.isActive, isPresent: barber.isPresent };
     }
   );
 

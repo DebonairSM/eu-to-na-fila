@@ -697,14 +697,16 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
-   * Bulk delete all tickets for a shop (owner only).
+   * Bulk delete all tickets and related history for a shop (data reset).
+   * Clears queue, audit log, barber productivity stats, and tickets so analytics
+   * and earnings start from zero. Owner or company admin for their shop.
    *
    * @route DELETE /api/shops/:slug/tickets
    * @param slug - Shop slug identifier
    * @returns { deletedCount: number }
    */
   fastify.delete('/shops/:slug/tickets', {
-    preHandler: [requireAuth(), requireRole(['owner'])],
+    preHandler: [requireAuth(), requireRole(['owner', 'company_admin'])],
   }, async (request, reply) => {
     const paramsSchema = z.object({
       slug: z.string().min(1),
@@ -714,12 +716,27 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    const deleted = await db
-      .delete(schema.tickets)
-      .where(eq(schema.tickets.shopId, shop.id))
-      .returning({ id: schema.tickets.id });
+    if (request.user?.role === 'company_admin') {
+      if (shop.companyId !== request.user.companyId) {
+        return reply.status(403).send({
+          error: 'Access denied to this shop',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+    }
 
-    return { deletedCount: deleted.length };
+    const result = await db.transaction(async (tx) => {
+      await tx.delete(schema.auditLog).where(eq(schema.auditLog.shopId, shop.id));
+      await tx.delete(schema.barberServiceWeekdayStats).where(eq(schema.barberServiceWeekdayStats.shopId, shop.id));
+      const deleted = await tx
+        .delete(schema.tickets)
+        .where(eq(schema.tickets.shopId, shop.id))
+        .returning({ id: schema.tickets.id });
+      return deleted.length;
+    });
+
+    return { deletedCount: result };
   });
 };
 

@@ -694,6 +694,8 @@
     "addShopAria": "Add new shop",
     "closeErrorAria": "Close error message",
     "leaveBlankToNotChange": "Leave blank to not change",
+    "email": "Email",
+    "emailPlaceholder": "Optional",
     "usernamePlaceholder": "E.g. joao.silva",
     "operatingHours": "Operating hours",
     "operatingHoursHint": "Used for appointments. Leave closed for days with no service.",

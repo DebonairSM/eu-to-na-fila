@@ -363,7 +363,7 @@ export function ShopManagementPage() {
   const [contentLocale, setContentLocale] = useState<string>('pt-BR');
   const [featureSelectorOpen, setFeatureSelectorOpen] = useState(false);
   const [customFeatureForm, setCustomFeatureForm] = useState<{ icon: string; text: string }>({ icon: '', text: '' });
-  type BarberAccessRow = { barberId: number; name: string; username: string; password: string; initialUsername: string };
+  type BarberAccessRow = { barberId: number; name: string; username: string; password: string; initialUsername: string; email: string; initialEmail: string };
   const [barberAccess, setBarberAccess] = useState<BarberAccessRow[]>([]);
   const [barberAccessLoading, setBarberAccessLoading] = useState(false);
   type EditServiceRow = { id: number; name: string; description: string | null; duration: number; price: number | null };
@@ -431,6 +431,8 @@ export function ShopManagementPage() {
             username: b.username ?? '',
             password: '',
             initialUsername: b.username ?? '',
+            email: (b as { email?: string | null }).email ?? '',
+            initialEmail: (b as { email?: string | null }).email ?? '',
           })));
         }
       })
@@ -647,10 +649,13 @@ export function ShopManagementPage() {
         const un = row.username.trim();
         const pw = row.password.trim();
         const changed = un !== row.initialUsername || pw.length > 0;
-        if (changed) {
+        const emailVal = row.email.trim();
+        const emailChanged = emailVal !== row.initialEmail;
+        if (changed || emailChanged) {
           await api.updateCompanyShopBarber(user.companyId, editingShop.id, row.barberId, {
             username: un.length > 0 ? un : null,
             ...(pw.length > 0 ? { password: pw } : undefined),
+            ...(emailChanged ? { email: emailVal.length > 0 ? emailVal : null } : undefined),
           });
         }
       }
@@ -1784,6 +1789,16 @@ export function ShopManagementPage() {
                                 <p className="text-white font-medium text-sm">{row.name}</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <div>
+                                    <label className="block text-white/50 text-xs mb-1">{t('management.email')}</label>
+                                    <input
+                                      type="email"
+                                      value={row.email}
+                                      onChange={(e) => setBarberAccess((prev) => prev.map((r) => r.barberId === row.barberId ? { ...r, email: e.target.value } : r))}
+                                      placeholder={t('management.emailPlaceholder')}
+                                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[40px] placeholder:text-white/40"
+                                    />
+                                  </div>
+                                  <div>
                                     <label className="block text-white/50 text-xs mb-1">Usuário</label>
                                     <input
                                       type="text"
@@ -1793,7 +1808,7 @@ export function ShopManagementPage() {
                                       className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[40px] placeholder:text-white/40"
                                     />
                                   </div>
-                                  <div>
+                                  <div className="sm:col-span-2">
                                     <label className="block text-white/50 text-xs mb-1">Senha</label>
                                     <input
                                       type="password"
@@ -2934,6 +2949,16 @@ export function ShopManagementPage() {
                             <p className="text-white font-medium text-sm">{row.name}</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <div>
+                                <label className="block text-white/50 text-xs mb-1">{t('management.email')}</label>
+                                <input
+                                  type="email"
+                                  value={row.email}
+                                  onChange={(e) => setBarberAccess((prev) => prev.map((r) => r.barberId === row.barberId ? { ...r, email: e.target.value } : r))}
+                                  placeholder={t('management.emailPlaceholder')}
+                                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[40px] placeholder:text-white/40"
+                                />
+                              </div>
+                              <div>
                                 <label className="block text-white/50 text-xs mb-1">Usuário</label>
                                 <input
                                   type="text"
@@ -2943,7 +2968,7 @@ export function ShopManagementPage() {
                                   className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-h-[40px] placeholder:text-white/40"
                                 />
                               </div>
-                              <div>
+                              <div className="sm:col-span-2">
                                 <label className="block text-white/50 text-xs mb-1">Senha</label>
                                 <input
                                   type="password"
