@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db, schema } from '../db/index.js';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, desc, sql, gte, lt, inArray } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
@@ -272,6 +272,228 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         activeAds: enabledAds.length,
         totalAds: allAds.length,
       };
+    }
+  );
+
+  /**
+   * GET /api/companies/:id/usage
+   * Company admin only. Returns aggregated API usage for the company's shops.
+   * Query: days (default 30) or since/until (ISO date strings).
+   */
+  fastify.get(
+    '/companies/:id/usage',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || request.user.companyId === undefined) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+      const paramsSchema = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      });
+      const querySchema = z.object({
+        days: z.string().transform((v) => parseInt(v, 10)).optional(),
+        since: z.string().datetime().optional(),
+        until: z.string().datetime().optional(),
+      });
+      const { id } = validateRequest(paramsSchema, request.params);
+      const query = validateRequest(querySchema, request.query as Record<string, unknown>);
+
+      if (request.user.companyId !== id) {
+        return reply.status(403).send({
+          error: 'Access denied to this company',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+
+      const now = new Date();
+      const days = query.days ?? 30;
+      const until = query.until ? new Date(query.until) : now;
+      const since = query.since ? new Date(query.since) : new Date(until.getTime() - days * 24 * 60 * 60 * 1000);
+
+      const buckets = await db
+        .select({
+          shopId: schema.apiUsageBuckets.shopId,
+          bucketStart: schema.apiUsageBuckets.bucketStart,
+          requestCount: schema.apiUsageBuckets.requestCount,
+        })
+        .from(schema.apiUsageBuckets)
+        .where(
+          and(
+            eq(schema.apiUsageBuckets.companyId, id),
+            gte(schema.apiUsageBuckets.bucketStart, since),
+            lt(schema.apiUsageBuckets.bucketStart, until)
+          )
+        );
+
+      const totalRequests = buckets.reduce((sum, r) => sum + (r.requestCount ?? 0), 0);
+
+      const byShop = new Map<number, number>();
+      for (const r of buckets) {
+        const sid = r.shopId ?? 0;
+        byShop.set(sid, (byShop.get(sid) ?? 0) + (r.requestCount ?? 0));
+      }
+
+      const shopIds = Array.from(byShop.keys()).filter((sid) => sid > 0);
+      const shopsList =
+        shopIds.length > 0
+          ? await db.query.shops.findMany({
+              where: and(eq(schema.shops.companyId, id), inArray(schema.shops.id, shopIds)),
+              columns: { id: true, name: true, slug: true },
+            })
+          : [];
+      const perShop = shopsList.map((s) => ({
+        shopId: s.id,
+        shopName: s.name,
+        shopSlug: s.slug,
+        requestCount: byShop.get(s.id) ?? 0,
+      }));
+
+      const byDay = new Map<string, number>();
+      for (const r of buckets) {
+        const d = r.bucketStart instanceof Date ? r.bucketStart.toISOString().slice(0, 10) : String(r.bucketStart).slice(0, 10);
+        byDay.set(d, (byDay.get(d) ?? 0) + (r.requestCount ?? 0));
+      }
+      const timeSeries = Array.from(byDay.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([date, requestCount]) => ({ date, requestCount }));
+
+      return reply.send({
+        totalRequests,
+        since: since.toISOString(),
+        until: until.toISOString(),
+        perShop,
+        timeSeries,
+      });
+    }
+  );
+
+  /**
+   * GET /api/companies/:id/usage/alerts
+   * Company admin only. Returns usage alerts (spike anomalies) for the company's shops.
+   */
+  fastify.get(
+    '/companies/:id/usage/alerts',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || request.user.companyId === undefined) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+      const paramsSchema = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      });
+      const querySchema = z.object({
+        resolved: z.enum(['true', 'false']).optional(),
+      });
+      const { id } = validateRequest(paramsSchema, request.params);
+      const query = validateRequest(querySchema, request.query as Record<string, unknown>);
+
+      if (request.user.companyId !== id) {
+        return reply.status(403).send({
+          error: 'Access denied to this company',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+
+      const conditions = [eq(schema.usageAlerts.companyId, id)];
+      if (query.resolved === 'false') {
+        conditions.push(sql`${schema.usageAlerts.resolvedAt} IS NULL`);
+      } else if (query.resolved === 'true') {
+        conditions.push(sql`${schema.usageAlerts.resolvedAt} IS NOT NULL`);
+      }
+
+      const alerts = await db
+        .select()
+        .from(schema.usageAlerts)
+        .where(and(...conditions))
+        .orderBy(desc(schema.usageAlerts.triggeredAt))
+        .limit(100);
+
+      const shopIds = [...new Set(alerts.map((a) => a.shopId))];
+      const shops =
+        shopIds.length > 0
+          ? await db.query.shops.findMany({
+              where: eq(schema.shops.companyId, id),
+              columns: { id: true, name: true, slug: true },
+            })
+          : [];
+      const shopMap = new Map(shops.map((s) => [s.id, s]));
+
+      const list = alerts.map((a) => ({
+        id: a.id,
+        shopId: a.shopId,
+        shopName: shopMap.get(a.shopId)?.name ?? null,
+        shopSlug: shopMap.get(a.shopId)?.slug ?? null,
+        triggeredAt: a.triggeredAt,
+        periodStart: a.periodStart,
+        periodEnd: a.periodEnd,
+        requestCount: a.requestCount,
+        baselineCount: a.baselineCount,
+        reason: a.reason,
+        resolvedAt: a.resolvedAt,
+      }));
+
+      return reply.send({ alerts: list });
+    }
+  );
+
+  /**
+   * PATCH /api/companies/:id/usage/alerts/:alertId
+   * Company admin only. Mark a usage alert as resolved.
+   */
+  fastify.patch(
+    '/companies/:id/usage/alerts/:alertId',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || request.user.companyId === undefined) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+      const paramsSchema = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+        alertId: z.string().transform((val) => parseInt(val, 10)),
+      });
+      const { id, alertId } = validateRequest(paramsSchema, request.params);
+
+      if (request.user.companyId !== id) {
+        return reply.status(403).send({
+          error: 'Access denied to this company',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+
+      const alert = await db.query.usageAlerts.findFirst({
+        where: and(eq(schema.usageAlerts.id, alertId), eq(schema.usageAlerts.companyId, id)),
+      });
+      if (!alert) {
+        return reply.status(404).send({ error: 'Alert not found' });
+      }
+
+      await db
+        .update(schema.usageAlerts)
+        .set({ resolvedAt: new Date() })
+        .where(eq(schema.usageAlerts.id, alertId));
+
+      return reply.send({ ok: true, resolvedAt: new Date().toISOString() });
     }
   );
 

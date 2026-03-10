@@ -173,6 +173,42 @@ export const passwordResetTokens = pgTable(
   })
 );
 
+/** Aggregated API request counts per shop per time bucket (hour). */
+export const apiUsageBuckets = pgTable(
+  'api_usage_buckets',
+  {
+    id: serial('id').primaryKey(),
+    shopId: integer('shop_id').references(() => shops.id),
+    companyId: integer('company_id').references(() => companies.id),
+    bucketStart: timestamp('bucket_start', { withTimezone: true }).notNull(),
+    endpointTag: text('endpoint_tag').notNull(),
+    method: text('method').notNull(),
+    requestCount: integer('request_count').notNull().default(0),
+  },
+  (table) => ({
+    shopBucketIdx: index('api_usage_buckets_shop_bucket_idx').on(table.shopId, table.bucketStart),
+    companyBucketIdx: index('api_usage_buckets_company_bucket_idx').on(table.companyId, table.bucketStart),
+    bucketStartIdx: index('api_usage_buckets_bucket_start_idx').on(table.bucketStart),
+  })
+);
+
+/** Alerts when a shop's API usage spikes relative to baseline. */
+export const usageAlerts = pgTable('usage_alerts', {
+  id: serial('id').primaryKey(),
+  shopId: integer('shop_id').notNull().references(() => shops.id),
+  companyId: integer('company_id').notNull().references(() => companies.id),
+  triggeredAt: timestamp('triggered_at', { withTimezone: true }).notNull().defaultNow(),
+  periodStart: timestamp('period_start', { withTimezone: true }).notNull(),
+  periodEnd: timestamp('period_end', { withTimezone: true }).notNull(),
+  requestCount: integer('request_count').notNull(),
+  baselineCount: integer('baseline_count').notNull(),
+  reason: text('reason').notNull(), // e.g. 'spike'
+  resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+}, (table) => ({
+  companyIdx: index('usage_alerts_company_id_idx').on(table.companyId),
+  shopIdx: index('usage_alerts_shop_id_idx').on(table.shopId),
+}));
+
 export const clientClipNotes = pgTable('client_clip_notes', {
   id: serial('id').primaryKey(),
   clientId: integer('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),

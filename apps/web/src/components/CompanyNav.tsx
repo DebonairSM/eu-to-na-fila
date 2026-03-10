@@ -61,16 +61,48 @@ export function CompanyNav() {
                 );
               })}
               {isCompanyAdmin && (
-                <Link
-                  to="/company/dashboard"
-                  className={`transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071124] ${
-                    location.pathname.startsWith('/company')
-                      ? 'text-[#D4AF37] border-b border-[#D4AF37]/50 pb-1'
-                      : 'text-white/80 hover:text-white'
-                  }`}
-                >
-                  {t('nav.dashboardCompany')}
-                </Link>
+                <>
+                  <Link
+                    to="/company/dashboard"
+                    className={`transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071124] ${
+                      location.pathname === '/company/dashboard'
+                        ? 'text-[#D4AF37] border-b border-[#D4AF37]/50 pb-1'
+                        : 'text-white/80 hover:text-white'
+                    }`}
+                  >
+                    {t('nav.dashboardCompany')}
+                  </Link>
+                  <Link
+                    to="/company/ads"
+                    className={`transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071124] ${
+                      location.pathname === '/company/ads'
+                        ? 'text-[#D4AF37] border-b border-[#D4AF37]/50 pb-1'
+                        : 'text-white/80 hover:text-white'
+                    }`}
+                  >
+                    {t('company.manageAds')}
+                  </Link>
+                  <Link
+                    to="/company/shops"
+                    className={`transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071124] ${
+                      location.pathname === '/company/shops'
+                        ? 'text-[#D4AF37] border-b border-[#D4AF37]/50 pb-1'
+                        : 'text-white/80 hover:text-white'
+                    }`}
+                  >
+                    {t('company.manageShops')}
+                  </Link>
+                  <Link
+                    to="/company/usage"
+                    className={`transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071124] ${
+                      location.pathname === '/company/usage'
+                        ? 'text-[#D4AF37] border-b border-[#D4AF37]/50 pb-1'
+                        : 'text-white/80 hover:text-white'
+                    }`}
+                  >
+                    {t('company.usage')}
+                  </Link>
+                </>
               )}
             </nav>
 
@@ -104,13 +136,36 @@ export function CompanyNav() {
                     </Link>
                   ))}
                   {isCompanyAdmin && (
-                    <Link
-                      to="/company/dashboard"
-                      className="block rounded-md px-3 py-2 text-white hover:text-[#D4AF37] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1a33]"
-                      onClick={() => setOpen(false)}
-                    >
-                      {t('nav.dashboardCompany')}
-                    </Link>
+                    <>
+                      <Link
+                        to="/company/dashboard"
+                        className="block rounded-md px-3 py-2 text-white hover:text-[#D4AF37] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1a33]"
+                        onClick={() => setOpen(false)}
+                      >
+                        {t('nav.dashboardCompany')}
+                      </Link>
+                      <Link
+                        to="/company/ads"
+                        className="block rounded-md px-3 py-2 text-white hover:text-[#D4AF37] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1a33]"
+                        onClick={() => setOpen(false)}
+                      >
+                        {t('company.manageAds')}
+                      </Link>
+                      <Link
+                        to="/company/shops"
+                        className="block rounded-md px-3 py-2 text-white hover:text-[#D4AF37] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1a33]"
+                        onClick={() => setOpen(false)}
+                      >
+                        {t('company.manageShops')}
+                      </Link>
+                      <Link
+                        to="/company/usage"
+                        className="block rounded-md px-3 py-2 text-white hover:text-[#D4AF37] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1a33]"
+                        onClick={() => setOpen(false)}
+                      >
+                        {t('company.usage')}
+                      </Link>
+                    </>
                   )}
                 </div>
               )}

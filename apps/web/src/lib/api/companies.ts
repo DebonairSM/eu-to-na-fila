@@ -53,6 +53,31 @@ export interface CompaniesApi {
   putAdPricing(companyId: number, pricing: { 10?: number; 15?: number; 20?: number; 30?: number }): Promise<Record<string, number>>;
   getCompany(companyId: number): Promise<{ id: number; name: string; propagandasReminderEmail?: string | null }>;
   patchCompany(companyId: number, data: { propagandas_reminder_email?: string | null }): Promise<{ id: number; name: string; propagandasReminderEmail?: string | null }>;
+  getCompanyUsage(companyId: number, params?: { days?: number }): Promise<CompanyUsageResponse>;
+  getCompanyUsageAlerts(companyId: number, params?: { resolved?: 'true' | 'false' }): Promise<{ alerts: CompanyUsageAlert[] }>;
+  resolveUsageAlert(companyId: number, alertId: number): Promise<{ ok: boolean; resolvedAt: string }>;
+}
+
+export interface CompanyUsageResponse {
+  totalRequests: number;
+  since: string;
+  until: string;
+  perShop: Array<{ shopId: number; shopName: string; shopSlug: string; requestCount: number }>;
+  timeSeries: Array<{ date: string; requestCount: number }>;
+}
+
+export interface CompanyUsageAlert {
+  id: number;
+  shopId: number;
+  shopName: string | null;
+  shopSlug: string | null;
+  triggeredAt: string;
+  periodStart: string;
+  periodEnd: string;
+  requestCount: number;
+  baselineCount: number;
+  reason: string;
+  resolvedAt: string | null;
 }
 
 export interface AdOrder {
@@ -129,5 +154,15 @@ export function createCompaniesApi(client: BaseApiClient): CompaniesApi {
     putAdPricing: (companyId, pricing) => c.put(`/companies/${companyId}/ad-pricing`, pricing),
     getCompany: (companyId) => c.get(`/companies/${companyId}`),
     patchCompany: (companyId, data) => c.patch(`/companies/${companyId}`, data),
+    getCompanyUsage: (companyId, params) => {
+      const q = params?.days != null ? `?days=${params.days}` : '';
+      return c.get(`/companies/${companyId}/usage${q}`);
+    },
+    getCompanyUsageAlerts: (companyId, params) => {
+      const q = params?.resolved != null ? `?resolved=${params.resolved}` : '';
+      return c.get(`/companies/${companyId}/usage/alerts${q}`);
+    },
+    resolveUsageAlert: (companyId, alertId) =>
+      c.patch(`/companies/${companyId}/usage/alerts/${alertId}`, {}),
   };
 }

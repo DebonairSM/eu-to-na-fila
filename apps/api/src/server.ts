@@ -35,6 +35,8 @@ import { getPublicPath } from './lib/paths.js';
 import { getProjectByPathname, getProjectBySlug, getShopByProjectSlug } from './lib/shop.js';
 import { startQueueCountdown } from './jobs/queueCountdown.js';
 import { startBarberPresenceJob } from './jobs/barberPresenceJob.js';
+import { startUsageAnomalyJob } from './jobs/usageAnomalyJob.js';
+import { getUsageService, UsageService } from './services/UsageService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -627,6 +629,15 @@ fastify.addHook('onRequest', async (request, reply) => {
   // Hook can be used for future request logging/monitoring if needed
 });
 
+// Usage tracking: record API requests for company admin insights (non-blocking)
+fastify.addHook('onResponse', (request, reply, done) => {
+  const path = (request.url ?? '').split('?')[0] ?? '';
+  if (!path.startsWith('/api/')) return done();
+  const slug = UsageService.getShopSlugFromPath(path);
+  getUsageService().recordRequest(slug, request.method, path);
+  done();
+});
+
 fastify.addHook('onError', async (request, reply, error) => {
 });
 
@@ -681,6 +692,9 @@ fastify.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {
   startQueueCountdown();
   // Auto-set barbers absent 1h after closing (every 15min); barbers are never auto-set present
   startBarberPresenceJob();
+  // Flush usage counters to DB every 5 min for company admin insights
+  getUsageService().startFlushJob();
+  startUsageAnomalyJob();
 }).catch((err) => {
   console.error('❌ Failed to start server:', err);
   process.exit(1);

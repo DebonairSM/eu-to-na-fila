@@ -35,6 +35,7 @@ const ServiceManagementPage = lazyWithRetry(() => import('./pages/ServiceManagem
 const AdManagementPage = lazyWithRetry(() => import('./pages/AdManagementPage').then((m) => ({ default: m.AdManagementPage })));
 const CompanyDashboard = lazyWithRetry(() => import('./pages/CompanyDashboard').then((m) => ({ default: m.CompanyDashboard })));
 const ShopManagementPage = lazyWithRetry(() => import('./pages/ShopManagementPage').then((m) => ({ default: m.ShopManagementPage })));
+const CompanyUsagePage = lazyWithRetry(() => import('./pages/CompanyUsagePage').then((m) => ({ default: m.CompanyUsagePage })));
 const SchedulePage = lazyWithRetry(() => import('./pages/SchedulePage').then((m) => ({ default: m.SchedulePage })));
 const AppointmentConfirmPage = lazyWithRetry(() => import('./pages/AppointmentConfirmPage').then((m) => ({ default: m.AppointmentConfirmPage })));
 const CheckInConfirmPage = lazyWithRetry(() => import('./pages/CheckInConfirmPage').then((m) => ({ default: m.CheckInConfirmPage })));
@@ -198,6 +199,14 @@ function AppContent() {
         element={
           <ProtectedRoute {...shopProtectedProps} requireCompanyAdmin>
             <AdManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/company/usage"
+        element={
+          <ProtectedRoute {...shopProtectedProps} requireCompanyAdmin>
+            <CompanyUsagePage />
           </ProtectedRoute>
         }
       />

@@ -18,6 +18,7 @@ const CompanyLoginPage = lazyWithRetry(() => import('./pages/CompanyLoginPage').
 const CompanyDashboard = lazyWithRetry(() => import('./pages/CompanyDashboard').then((m) => ({ default: m.CompanyDashboard })));
 const AdManagementPage = lazyWithRetry(() => import('./pages/AdManagementPage').then((m) => ({ default: m.AdManagementPage })));
 const ShopManagementPage = lazyWithRetry(() => import('./pages/ShopManagementPage').then((m) => ({ default: m.ShopManagementPage })));
+const CompanyUsagePage = lazyWithRetry(() => import('./pages/CompanyUsagePage').then((m) => ({ default: m.CompanyUsagePage })));
 
 // Always use dark theme (matching mockups)
 document.documentElement.classList.add('dark');
@@ -49,6 +50,7 @@ function App() {
           <Route path="/company/dashboard" element={<ProtectedRoute loginPath="/company/login" loadingComponent={<RootLoadingScreen />} requireCompanyAdmin companyAdminRedirect="/company/login"><CompanyDashboard /></ProtectedRoute>} />
           <Route path="/company/ads" element={<ProtectedRoute loginPath="/company/login" loadingComponent={<RootLoadingScreen />} requireCompanyAdmin companyAdminRedirect="/company/login"><AdManagementPage /></ProtectedRoute>} />
           <Route path="/company/shops" element={<ProtectedRoute loginPath="/company/login" loadingComponent={<RootLoadingScreen />} requireCompanyAdmin companyAdminRedirect="/company/login"><ShopManagementPage /></ProtectedRoute>} />
+          <Route path="/company/usage" element={<ProtectedRoute loginPath="/company/login" loadingComponent={<RootLoadingScreen />} requireCompanyAdmin companyAdminRedirect="/company/login"><CompanyUsagePage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
           </Suspense>

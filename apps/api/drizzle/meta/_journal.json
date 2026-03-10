@@ -141,6 +141,20 @@
       "when": 1771700000000,
       "tag": "0028_clip_notes_service_id",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1771800000000,
+      "tag": "0029_password_reset_tokens",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "5",
+      "when": 1771900000000,
+      "tag": "0030_api_usage_and_alerts",
+      "breakpoints": true
     }
   ]
 }

@@ -103,6 +103,9 @@ class ApiClient extends BaseApiClient {
   putAdPricing = this._companies.putAdPricing;
   getCompany = this._companies.getCompany;
   patchCompany = this._companies.patchCompany;
+  getCompanyUsage = this._companies.getCompanyUsage;
+  getCompanyUsageAlerts = this._companies.getCompanyUsageAlerts;
+  resolveUsageAlert = this._companies.resolveUsageAlert;
 
   // --- Auth ---
   authenticate = this._auth.authenticate;

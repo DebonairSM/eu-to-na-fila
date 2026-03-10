@@ -93,7 +93,7 @@ export function ResetPasswordPage() {
               <div className="space-y-4">
                 <p className="text-sm text-[var(--shop-text-secondary)]">{t('auth.resetPasswordInvalidLink')}</p>
                 <Link
-                  to="/shop/forgot-password"
+                  to={shopSlug ? `/shop/forgot-password?shop=${encodeURIComponent(shopSlug)}` : '/shop/forgot-password'}
                   className="block w-full px-6 py-3 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-semibold rounded-lg hover:opacity-90 transition-opacity text-center"
                 >
                   {t('auth.requestNewLink')}

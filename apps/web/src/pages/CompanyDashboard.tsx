@@ -100,7 +100,7 @@ export function CompanyDashboard() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Link
             to="/company/ads"
             className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-10 flex flex-col items-center gap-4 transition-all hover:border-white/20 hover:bg-white/10"
@@ -125,6 +125,21 @@ export function CompanyDashboard() {
             </div>
             <h2 className="text-2xl font-light text-white text-center">
               {t('company.manageShops')}
+            </h2>
+            <span className="material-symbols-outlined text-blue-400 text-2xl">
+              arrow_forward
+            </span>
+          </Link>
+
+          <Link
+            to="/company/usage"
+            className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-2xl p-10 flex flex-col items-center gap-4 transition-all hover:border-white/20 hover:bg-white/10"
+          >
+            <div className="text-5xl text-blue-400">
+              <span className="material-symbols-outlined">bar_chart</span>
+            </div>
+            <h2 className="text-2xl font-light text-white text-center">
+              {t('company.usage')}
             </h2>
             <span className="material-symbols-outlined text-blue-400 text-2xl">
               arrow_forward
@@ -200,7 +215,7 @@ export function CompanyDashboard() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <Link
               to="/company/ads"
               className="border border-white/10 bg-white/5 rounded-xl p-6 flex flex-col items-center gap-4 transition-all hover:border-white/20 hover:bg-white/[0.07]"
@@ -225,6 +240,21 @@ export function CompanyDashboard() {
               </div>
               <h2 className="text-2xl font-semibold text-white text-center">
                 {t('company.manageShops')}
+              </h2>
+              <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
+                arrow_forward
+              </span>
+            </Link>
+
+            <Link
+              to="/company/usage"
+              className="border border-white/10 bg-white/5 rounded-xl p-6 flex flex-col items-center gap-4 transition-all hover:border-white/20 hover:bg-white/[0.07]"
+            >
+              <div className="text-5xl text-[#D4AF37]">
+                <span className="material-symbols-outlined">bar_chart</span>
+              </div>
+              <h2 className="text-2xl font-semibold text-white text-center">
+                {t('company.usage')}
               </h2>
               <span className="material-symbols-outlined text-[#D4AF37] text-2xl">
                 arrow_forward

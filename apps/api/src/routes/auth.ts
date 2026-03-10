@@ -841,8 +841,11 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
         expiresAt,
         createdAt: new Date(),
       });
-      const resetLink = `${frontendBaseUrl}${resetPath}?token=${encodeURIComponent(rawToken)}`;
-      await sendPasswordResetEmail(toEmail, { shopName: shop.name, resetLink });
+      const resetLink = `${frontendBaseUrl}${resetPath}?token=${encodeURIComponent(rawToken)}&shop=${encodeURIComponent(slug)}`;
+      const sent = await sendPasswordResetEmail(toEmail, { shopName: shop.name, resetLink });
+      if (!sent) {
+        request.log.warn({ toEmail: toEmail.slice(0, 3) + '***', shopId: shop.id }, 'Password reset email could not be sent; check GMAIL_USER and GMAIL_APP_PASSWORD or Gmail OAuth env');
+      }
     }
 
     return reply.status(200).send({ message: genericMessage });
