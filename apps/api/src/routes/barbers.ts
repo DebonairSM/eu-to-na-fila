@@ -16,6 +16,11 @@ function normalizeUsername(username: string): string {
   return username.trim().toLowerCase();
 }
 
+/** Normalize email for storage and lookup (trim + lowercase). */
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 /** Validate barber username format. */
 function validateBarberUsername(username: string): { isValid: boolean; error?: string } {
   const trimmed = username.trim();
@@ -259,6 +264,8 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     const bodySchema = z.object({
       name: z.string().min(1).max(100).optional(),
       avatarUrl: z.string().url().optional().nullable(),
+      email: z.string().max(255).optional().nullable(),
+      phone: z.string().max(50).optional().nullable(),
       username: z.string().min(1).max(100).optional().nullable(),
       password: z.string().min(1).max(200).optional(),
       revenueSharePercent: z.number().int().min(0).max(100).nullable().optional(),
@@ -276,10 +283,27 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError(`Barber with ID ${id} not found`);
     }
 
+    // Resolve final username and email after update for validation
+    const nextUsername = body.username !== undefined
+      ? (body.username === null || body.username === '' ? null : normalizeUsername(body.username))
+      : barber.username;
+    const nextEmail = body.email !== undefined
+      ? (body.email === null || body.email === '' ? null : normalizeEmail(body.email))
+      : barber.email;
+    if (nextUsername && !nextEmail) {
+      throw new ValidationError('Email is required when barber has login credentials (username)');
+    }
+    if (body.email !== undefined && body.email !== null && body.email.trim() !== '') {
+      const emailParsed = z.string().email().safeParse(body.email.trim());
+      if (!emailParsed.success) throw new ValidationError('Invalid email format');
+    }
+
     // Build update object
     const updateData: {
       name?: string;
       avatarUrl?: string | null;
+      email?: string | null;
+      phone?: string | null;
       username?: string | null;
       passwordHash?: string | null;
       revenueSharePercent?: number | null;
@@ -292,6 +316,12 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     }
     if (body.avatarUrl !== undefined) {
       updateData.avatarUrl = body.avatarUrl;
+    }
+    if (body.email !== undefined) {
+      updateData.email = body.email === null || body.email === '' ? null : normalizeEmail(body.email);
+    }
+    if (body.phone !== undefined) {
+      updateData.phone = body.phone === null || body.phone === '' ? null : body.phone.trim();
     }
     if (body.revenueSharePercent !== undefined) {
       updateData.revenueSharePercent = body.revenueSharePercent;
@@ -386,19 +416,22 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
     const bodySchema = z.object({
       name: z.string().min(1).max(100),
       avatarUrl: z.string().url().optional().nullable(),
+      email: z.string().max(255).optional().nullable(),
+      phone: z.string().max(50).optional().nullable(),
       username: z.string().min(1).max(100).optional(),
       password: z.string().min(1).max(200).optional(),
     });
 
     const { slug } = validateRequest(paramsSchema, request.params);
     const body = validateRequest(bodySchema, request.body);
-    const { name, avatarUrl, username, password } = body;
+    const { name, avatarUrl, email, phone, username, password } = body;
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     let usernameNormalized: string | null = null;
     let passwordHash: string | null = null;
+    let emailNormalized: string | null = null;
     if (username !== undefined && username !== '') {
       const unValidation = validateBarberUsername(username);
       if (!unValidation.isValid) throw new ValidationError(unValidation.error);
@@ -406,11 +439,23 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
       if (password === undefined || password === '') {
         throw new ValidationError('Password is required when setting username');
       }
+      const emailVal = email ?? null;
+      if (!emailVal || !emailVal.trim()) {
+        throw new ValidationError('Email is required when barber has login credentials (username)');
+      }
+      const emailParsed = z.string().email().safeParse(emailVal.trim());
+      if (!emailParsed.success) {
+        throw new ValidationError('Invalid email format');
+      }
+      emailNormalized = normalizeEmail(emailVal);
       const pwValidation = validatePassword(password);
       if (!pwValidation.isValid) throw new ValidationError(pwValidation.error);
       passwordHash = await hashPassword(password);
     } else if (password !== undefined && password !== '') {
       throw new ValidationError('Username is required when setting password');
+    } else if (email !== undefined && email !== null && email.trim() !== '') {
+      const emailParsed = z.string().email().safeParse(email.trim());
+      if (emailParsed.success) emailNormalized = normalizeEmail(email);
     }
 
     // Create barber
@@ -420,6 +465,8 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
         shopId: shop.id,
         name,
         avatarUrl: avatarUrl || null,
+        email: emailNormalized,
+        phone: phone?.trim() || null,
         username: usernameNormalized,
         passwordHash,
         isPresent: false,

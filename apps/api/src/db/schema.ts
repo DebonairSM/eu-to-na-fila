@@ -155,6 +155,24 @@ export const clients = pgTable('clients', {
   shopIdIdx: index('clients_shop_id_idx').on(table.shopId),
 }));
 
+/** One-time tokens for password reset. entity_type: 'customer' | 'barber'; entity_id: client id or barber id. */
+export const passwordResetTokens = pgTable(
+  'password_reset_tokens',
+  {
+    id: serial('id').primaryKey(),
+    shopId: integer('shop_id').notNull().references(() => shops.id),
+    entityType: text('entity_type').notNull(), // 'customer' | 'barber'
+    entityId: integer('entity_id').notNull(),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tokenHashIdx: index('password_reset_tokens_token_hash_idx').on(table.tokenHash),
+    expiresAtIdx: index('password_reset_tokens_expires_at_idx').on(table.expiresAt),
+  })
+);
+
 export const clientClipNotes = pgTable('client_clip_notes', {
   id: serial('id').primaryKey(),
   clientId: integer('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),

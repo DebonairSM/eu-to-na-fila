@@ -19,6 +19,8 @@ const AboutPage = lazyWithRetry(() => import('./pages/AboutPage').then((m) => ({
 const JoinPageGuard = lazyWithRetry(() => import('./pages/JoinPage/JoinPageGuard').then((m) => ({ default: m.JoinPageGuard })));
 const StatusPage = lazyWithRetry(() => import('./pages/StatusPage').then((m) => ({ default: m.StatusPage })));
 const LoginPage = lazyWithRetry(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
+const ForgotPasswordPage = lazyWithRetry(() => import('./pages/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })));
 const SignupPage = lazyWithRetry(() => import('./pages/SignupPage').then((m) => ({ default: m.SignupPage })));
 const ShopCallbackPage = lazyWithRetry(() => import('./pages/ShopCallbackPage').then((m) => ({ default: m.ShopCallbackPage })));
 const KioskLoginPage = lazyWithRetry(() => import('./pages/KioskLoginPage').then((m) => ({ default: m.KioskLoginPage })));
@@ -87,6 +89,8 @@ function AppContent() {
       <Route path="/checkin/confirm" element={<CheckInConfirmPage />} />
       <Route path="/status/:id" element={<StatusPage />} />
       <Route path="/shop/login" element={<LoginPage />} />
+      <Route path="/shop/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/shop/reset-password" element={<ResetPasswordPage />} />
       <Route path="/account" element={<CustomerAccountPage />} />
       <Route path="/shop/signup" element={<SignupPage />} />
       <Route path="/shop/callback" element={<ShopCallbackPage />} />

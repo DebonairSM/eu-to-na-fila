@@ -3,8 +3,9 @@ import { z } from 'zod';
 import { join } from 'path';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
+import crypto from 'crypto';
 import { db, schema } from '../db/index.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, gt, or } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
 import { getShopBySlug, getShopFrontendPath } from '../lib/shop.js';
 import { clientService } from '../services/index.js';
@@ -18,6 +19,7 @@ import { hashPassword, verifyPassword, validatePassword } from '../lib/password.
 import { getKioskPasswordHash } from '../lib/settings.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { logAuthFailure, logAuthSuccess, getClientIp } from '../middleware/security.js';
+import { sendPasswordResetEmail } from '../services/EmailService.js';
 
 /**
  * Auth routes.
@@ -599,6 +601,302 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       clientId: client.id,
       name: client.name,
     };
+  });
+
+  /**
+   * Unified login: one endpoint for customer, owner, staff, barber, and kiosk.
+   * Accepts identifier (email or username) + password; determines role automatically.
+   * @route POST /api/shops/:slug/auth/login
+   * @body identifier, password, remember_me (optional, for customer)
+   */
+  fastify.post('/shops/:slug/auth/login', {
+    preHandler: [authRateLimit],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const bodySchema = z.object({
+      identifier: z.string().min(1).max(255),
+      password: z.string().min(1).max(200),
+      remember_me: z.boolean().optional(),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { identifier, password, remember_me } = validateRequest(bodySchema, request.body);
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      logAuthFailure(request, 'invalid_password_format', slug);
+      throw new ValidationError(passwordValidation.error || 'Invalid password format');
+    }
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) {
+      logAuthFailure(request, 'shop_not_found', slug);
+      return reply.status(200).send({ valid: false, role: null });
+    }
+
+    const normalized = identifier.trim().toLowerCase();
+    const isEmail = identifier.includes('@');
+
+    // 1) Customer (if identifier looks like email)
+    if (isEmail) {
+      const client = await db.query.clients.findFirst({
+        where: and(
+          eq(schema.clients.shopId, shop.id),
+          eq(schema.clients.email, normalized)
+        ),
+      });
+      if (client?.passwordHash) {
+        const matches = await verifyPassword(password, client.passwordHash);
+        if (matches) {
+          logAuthSuccess(request, shop.id, 'customer');
+          const token = signToken(
+            {
+              userId: client.id,
+              shopId: shop.id,
+              role: 'customer',
+              clientId: client.id,
+            },
+            { expiresIn: remember_me === true ? '7d' : '24h' }
+          );
+          return reply.status(200).send({
+            valid: true,
+            role: 'customer' as const,
+            token,
+            clientId: client.id,
+            name: client.name,
+          });
+        }
+      }
+    }
+
+    // 2) Owner / Staff
+    const ownerLogin = shop.ownerUsername?.trim().toLowerCase();
+    const staffLogin = shop.staffUsername?.trim().toLowerCase();
+    const roleFromUsername: 'owner' | 'staff' | null =
+      (ownerLogin && normalized === ownerLogin) ? 'owner'
+        : (staffLogin && normalized === staffLogin) ? 'staff'
+          : normalized === 'owner' ? 'owner'
+            : normalized === 'staff' ? 'staff'
+              : null;
+    if (roleFromUsername) {
+      let passwordMatches = false;
+      let pinResetRequired = false;
+      if (roleFromUsername === 'owner') {
+        if (shop.ownerPinHash) {
+          passwordMatches = await verifyPassword(password, shop.ownerPinHash);
+          if (passwordMatches) pinResetRequired = shop.ownerPinResetRequired || false;
+        } else if (shop.ownerPin === password) {
+          passwordMatches = true;
+          pinResetRequired = true;
+        }
+      } else {
+        if (shop.staffPinHash) {
+          passwordMatches = await verifyPassword(password, shop.staffPinHash);
+          if (passwordMatches) pinResetRequired = shop.staffPinResetRequired || false;
+        } else if (shop.staffPin === password) {
+          passwordMatches = true;
+          pinResetRequired = true;
+        }
+      }
+      if (passwordMatches) {
+        logAuthSuccess(request, shop.id, roleFromUsername);
+        const token = signToken({
+          userId: shop.id,
+          shopId: shop.id,
+          role: roleFromUsername,
+        } as { userId: number; shopId: number; role: 'owner' | 'staff' });
+        return reply.status(200).send({
+          valid: true,
+          role: roleFromUsername,
+          token,
+          pinResetRequired,
+        });
+      }
+    }
+
+    // 3) Barber (by username or email)
+    const barber = await db.query.barbers.findFirst({
+      where: and(
+        eq(schema.barbers.shopId, shop.id),
+        or(
+          eq(schema.barbers.username, normalized),
+          eq(schema.barbers.email, normalized)
+        )
+      ),
+    });
+    if (barber?.passwordHash) {
+      const passwordMatches = await verifyPassword(password, barber.passwordHash);
+      if (passwordMatches) {
+        logAuthSuccess(request, shop.id, 'barber');
+        const token = signToken({
+          userId: barber.id,
+          shopId: barber.shopId,
+          role: 'barber',
+          barberId: barber.id,
+        });
+        return reply.status(200).send({
+          valid: true,
+          role: 'barber' as const,
+          token,
+          barberId: barber.id,
+          barberName: barber.name,
+          pinResetRequired: false,
+        });
+      }
+    }
+
+    // 4) Kiosk
+    const settings = shop.settings as Record<string, unknown> | null;
+    const kioskUsername = settings?.kioskUsername;
+    const kioskPasswordHash = getKioskPasswordHash(shop.settings);
+    const kioskPasswordPlain = typeof settings?.kioskPassword === 'string' ? settings.kioskPassword : null;
+    if (typeof kioskUsername === 'string' && kioskUsername.trim()) {
+      const usernameMatch = identifier.trim() === kioskUsername.trim();
+      let kioskPasswordMatches = false;
+      if (kioskPasswordHash) {
+        kioskPasswordMatches = await verifyPassword(password, kioskPasswordHash);
+      } else if (kioskPasswordPlain) {
+        kioskPasswordMatches = password === kioskPasswordPlain;
+      }
+      if (usernameMatch && kioskPasswordMatches) {
+        logAuthSuccess(request, shop.id, 'kiosk');
+        const token = signToken({
+          userId: shop.id,
+          shopId: shop.id,
+          role: 'kiosk',
+        });
+        return reply.status(200).send({
+          valid: true,
+          role: 'kiosk' as const,
+          token,
+        });
+      }
+    }
+
+    logAuthFailure(request, 'invalid_unified_login', slug);
+    return reply.status(200).send({ valid: false, role: null });
+  });
+
+  /**
+   * Forgot password: request a reset link by email. Does not leak whether the email exists.
+   * @route POST /api/shops/:slug/auth/forgot-password
+   * @body email
+   */
+  fastify.post('/shops/:slug/auth/forgot-password', {
+    preHandler: [customerRateLimit],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const bodySchema = z.object({ email: z.string().min(1).max(255) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { email } = validateRequest(bodySchema, request.body);
+
+    const shop = await getShopBySlug(slug);
+    const frontendBaseUrl = env.CORS_ORIGIN.replace(/\/$/, '');
+    const basePath = `/${slug}`.replace(/\/+/g, '/');
+    const resetPath = `${basePath}/shop/reset-password`;
+    const genericMessage = 'If an account exists with this email, you will receive reset instructions.';
+
+    if (!shop) {
+      return reply.status(200).send({ message: genericMessage });
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    let entityType: 'customer' | 'barber' | null = null;
+    let entityId: number | null = null;
+    let toEmail: string | null = null;
+
+    const client = await db.query.clients.findFirst({
+      where: and(
+        eq(schema.clients.shopId, shop.id),
+        eq(schema.clients.email, normalizedEmail)
+      ),
+    });
+    if (client?.passwordHash) {
+      entityType = 'customer';
+      entityId = client.id;
+      toEmail = normalizedEmail;
+    }
+    if (!entityType) {
+      const barber = await db.query.barbers.findFirst({
+        where: and(
+          eq(schema.barbers.shopId, shop.id),
+          eq(schema.barbers.email, normalizedEmail)
+        ),
+      });
+      if (barber?.username && barber?.passwordHash) {
+        entityType = 'barber';
+        entityId = barber.id;
+        toEmail = normalizedEmail;
+      }
+    }
+
+    if (entityType && entityId !== null && toEmail) {
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+      await db.insert(schema.passwordResetTokens).values({
+        shopId: shop.id,
+        entityType,
+        entityId,
+        tokenHash,
+        expiresAt,
+        createdAt: new Date(),
+      });
+      const resetLink = `${frontendBaseUrl}${resetPath}?token=${encodeURIComponent(rawToken)}`;
+      await sendPasswordResetEmail(toEmail, { shopName: shop.name, resetLink });
+    }
+
+    return reply.status(200).send({ message: genericMessage });
+  });
+
+  /**
+   * Reset password with a token from the forgot-password email.
+   * @route POST /api/shops/:slug/auth/reset-password
+   * @body token, newPassword
+   */
+  fastify.post('/shops/:slug/auth/reset-password', {
+    preHandler: [customerRateLimit],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const bodySchema = z.object({
+      token: z.string().min(1).max(200),
+      newPassword: z.string().min(1).max(200),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { token: rawToken, newPassword } = validateRequest(bodySchema, request.body);
+
+    const pwValidation = validatePassword(newPassword);
+    if (!pwValidation.isValid) {
+      throw new ValidationError(pwValidation.error || 'Invalid password');
+    }
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) {
+      return reply.status(400).send({ error: 'Invalid or expired reset link.' });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const now = new Date();
+    const row = await db.query.passwordResetTokens.findFirst({
+      where: and(
+        eq(schema.passwordResetTokens.shopId, shop.id),
+        eq(schema.passwordResetTokens.tokenHash, tokenHash),
+        gt(schema.passwordResetTokens.expiresAt, now)
+      ),
+    });
+
+    if (!row) {
+      return reply.status(400).send({ error: 'Invalid or expired reset link.' });
+    }
+
+    const passwordHash = await hashPassword(newPassword);
+    if (row.entityType === 'customer') {
+      await db.update(schema.clients).set({ passwordHash, updatedAt: new Date() }).where(eq(schema.clients.id, row.entityId));
+    } else if (row.entityType === 'barber') {
+      await db.update(schema.barbers).set({ passwordHash, updatedAt: new Date() }).where(eq(schema.barbers.id, row.entityId));
+    }
+    await db.delete(schema.passwordResetTokens).where(eq(schema.passwordResetTokens.id, row.id));
+
+    return reply.status(200).send({ message: 'Password updated. You can log in now.' });
   });
 
   /**

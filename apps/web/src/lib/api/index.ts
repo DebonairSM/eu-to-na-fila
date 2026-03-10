@@ -109,9 +109,12 @@ class ApiClient extends BaseApiClient {
   authenticateBarber = this._auth.authenticateBarber;
   authenticateKiosk = this._auth.authenticateKiosk;
   authenticateStaff = this._auth.authenticateStaff;
+  login = this._auth.login;
   companyAuthenticate = this._auth.companyAuthenticate;
   registerCustomer = this._auth.registerCustomer;
   loginCustomer = this._auth.loginCustomer;
+  requestPasswordReset = this._auth.requestPasswordReset;
+  resetPassword = this._auth.resetPassword;
   getCustomerProfile = this._auth.getCustomerProfile;
   updateCustomerProfile = this._auth.updateCustomerProfile;
   uploadClientReferenceImage = this._auth.uploadClientReferenceImage;

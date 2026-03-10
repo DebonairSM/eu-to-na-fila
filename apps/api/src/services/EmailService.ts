@@ -133,6 +133,54 @@ export async function sendAppointmentReminder(toEmail: string, data: Appointment
   }
 }
 
+export interface PasswordResetEmailData {
+  shopName: string;
+  resetLink: string;
+}
+
+export async function sendPasswordResetEmail(toEmail: string, data: PasswordResetEmailData): Promise<boolean> {
+  const fromEmail = process.env.GMAIL_USER ?? 'eutonafila@gmail.com';
+  const subject = `Redefinir senha - ${data.shopName}`;
+  const textBody = [
+    'Você solicitou a redefinição de senha.',
+    '',
+    `Clique no link abaixo para definir uma nova senha (válido por 1 hora):`,
+    '',
+    data.resetLink,
+    '',
+    'Se você não solicitou isso, ignore este e-mail.',
+  ].join('\n');
+
+  const gmail = getGmailClient();
+  if (gmail) {
+    try {
+      const raw = toBase64Url(buildMessage(toEmail, subject, textBody, fromEmail));
+      await gmail.users.messages.send({
+        userId: 'me',
+        requestBody: { raw },
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  const trans = getNodemailerTransporter();
+  if (!trans) return false;
+
+  try {
+    await trans.sendMail({
+      from: fromEmail,
+      to: toEmail,
+      subject,
+      text: textBody,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Optional reminder to company admin when a new Propagandas ad is submitted (paid + image uploaded). */
 export async function sendAdOrderReminderToAdmin(
   toEmail: string,

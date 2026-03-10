@@ -7,12 +7,8 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { getErrorMessage, hasScheduleEnabled } from '@/lib/utils';
 
-export type LoginMode = 'customer' | 'staff';
-
 export function useLoginForm() {
-  const [mode, setMode] = useState<LoginMode>('customer');
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -34,84 +30,83 @@ export function useLoginForm() {
 
     if (isSubmittingRef.current || isLoading) return;
 
+    if (!identifier.trim()) {
+      setError(t('auth.fillAllFields'));
+      return;
+    }
+
     setError(null);
     setIsLoading(true);
     isSubmittingRef.current = true;
 
     try {
-      if (mode === 'staff') {
-        if (!username.trim()) {
-          setError(t('auth.fillAllFields'));
-          setIsLoading(false);
-          isSubmittingRef.current = false;
-          return;
-        }
-        const staffResult = await api.authenticateStaff(shopSlug, username.trim(), password);
-        if (staffResult.valid && staffResult.token && staffResult.role) {
-          const role = staffResult.role;
-          if (role === 'barber') {
-            login({
-              id: staffResult.barberId ?? 0,
-              username: username.trim(),
-              role: 'barber',
-              name: staffResult.barberName ?? username.trim(),
-            });
-            navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/barber');
-          } else if (role === 'owner') {
-            login({
-              id: 0,
-              username: 'owner',
-              role: 'owner',
-              name: 'owner',
-            });
-            navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/owner');
-          } else if (role === 'kiosk') {
-            login({
-              id: 0,
-              username: 'kiosk',
-              role: 'kiosk',
-              name: 'kiosk',
-            });
-            navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/manage?kiosk=true');
-          } else {
-            // staff
-            login({
-              id: 0,
-              username: 'staff',
-              role: 'staff',
-              name: 'staff',
-            });
-            navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/manage');
-          }
-          return;
-        }
-      } else {
-        if (!email.trim()) {
-          setError(t('auth.fillAllFields'));
-          setIsLoading(false);
-          isSubmittingRef.current = false;
-          return;
-        }
-        const customerResult = await api.loginCustomer(shopSlug, {
-          email: email.trim(),
-          password,
-          remember_me: rememberMe,
-        });
-        if (customerResult.valid && customerResult.token && customerResult.role === 'customer') {
-          api.setAuthToken(customerResult.token);
+      const result = await api.login(shopSlug, {
+        identifier: identifier.trim(),
+        password,
+        remember_me: rememberMe,
+      });
+
+      if (result.valid && result.token && result.role) {
+        const role = result.role;
+        const targetPath = redirectTo && redirectTo.startsWith('/') ? redirectTo : undefined;
+
+        if (role === 'customer') {
           login(
             {
-              id: customerResult.clientId ?? 0,
-              username: email.trim(),
+              id: result.clientId ?? 0,
+              username: identifier.trim(),
               role: 'customer',
-              name: customerResult.name?.trim() || email.trim(),
-              clientId: customerResult.clientId,
+              name: result.name?.trim() || identifier.trim(),
+              clientId: result.clientId,
             },
             { rememberMe }
           );
-          navigate(redirectTo && redirectTo.startsWith('/') ? redirectTo : defaultPostLoginPath);
+          navigate(targetPath ?? defaultPostLoginPath);
           return;
         }
+
+        if (role === 'barber') {
+          login({
+            id: result.barberId ?? 0,
+            username: identifier.trim(),
+            role: 'barber',
+            name: result.barberName ?? identifier.trim(),
+          });
+          navigate(targetPath ?? '/barber');
+          return;
+        }
+
+        if (role === 'owner') {
+          login({
+            id: 0,
+            username: 'owner',
+            role: 'owner',
+            name: 'owner',
+          });
+          navigate(targetPath ?? '/owner');
+          return;
+        }
+
+        if (role === 'kiosk') {
+          login({
+            id: 0,
+            username: 'kiosk',
+            role: 'kiosk',
+            name: 'kiosk',
+          });
+          navigate(targetPath ?? '/manage?kiosk=true');
+          return;
+        }
+
+        // staff
+        login({
+          id: 0,
+          username: 'staff',
+          role: 'staff',
+          name: 'staff',
+        });
+        navigate(targetPath ?? '/manage');
+        return;
       }
 
       setError(t('auth.invalidCredentials'));
@@ -130,12 +125,8 @@ export function useLoginForm() {
   };
 
   return {
-    mode,
-    setMode,
-    email,
-    setEmail,
-    username,
-    setUsername,
+    identifier,
+    setIdentifier,
     password,
     setPassword,
     showPassword,

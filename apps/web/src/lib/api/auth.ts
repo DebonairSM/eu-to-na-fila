@@ -42,6 +42,17 @@ export interface AuthApi {
   authenticateKiosk(shopSlug: string, username: string, password: string): Promise<{ valid: boolean; role: 'kiosk' | null; token?: string }>;
   /** Unified staff login: identifies owner/staff/barber/kiosk from credentials. */
   authenticateStaff(shopSlug: string, username: string, password: string): Promise<{ valid: boolean; role: StaffAuthRole | null; token?: string; barberId?: number; barberName?: string; pinResetRequired?: boolean }>;
+  /** Unified login: identifier (email or username) + password. Returns role: customer | owner | staff | barber | kiosk. */
+  login(shopSlug: string, data: { identifier: string; password: string; remember_me?: boolean }): Promise<{
+    valid: boolean;
+    role: 'customer' | 'owner' | 'staff' | 'barber' | 'kiosk' | null;
+    token?: string;
+    clientId?: number;
+    name?: string;
+    barberId?: number;
+    barberName?: string;
+    pinResetRequired?: boolean;
+  }>;
   companyAuthenticate(username: string, password: string): Promise<{ valid: boolean; role: 'company_admin' | null; token?: string; companyId?: number; userId?: number }>;
   registerCustomer(shopSlug: string, data: { email: string; password: string; name?: string; dateOfBirth?: string | null }): Promise<{ valid: boolean; role: 'customer'; token: string; clientId: number }>;
   loginCustomer(shopSlug: string, data: { email: string; password: string; remember_me?: boolean }): Promise<{ valid: boolean; role: 'customer' | null; token?: string; clientId?: number; name?: string }>;
@@ -61,6 +72,8 @@ export interface AuthApi {
   uploadClientReferenceImage(shopSlug: string, file: File): Promise<{ url: string }>;
   getCustomerAppointments(shopSlug: string): Promise<CustomerAppointmentsResponse>;
   getCustomerGoogleAuthUrl(shopSlug: string, redirectUri?: string): string;
+  requestPasswordReset(shopSlug: string, email: string): Promise<{ message: string }>;
+  resetPassword(shopSlug: string, data: { token: string; newPassword: string }): Promise<{ message: string }>;
 }
 
 export function createAuthApi(client: BaseApiClient): AuthApi {
@@ -83,6 +96,20 @@ export function createAuthApi(client: BaseApiClient): AuthApi {
     },
     async authenticateStaff(shopSlug, username, password) {
       const result = await c.post(`/shops/${shopSlug}/auth/staff`, { username, password }) as { valid: boolean; role: StaffAuthRole | null; token?: string; barberId?: number; barberName?: string; pinResetRequired?: boolean };
+      if (result.valid && result.token) client.setAuthToken(result.token);
+      return result;
+    },
+    async login(shopSlug, data) {
+      const result = await c.post(`/shops/${shopSlug}/auth/login`, data) as {
+        valid: boolean;
+        role: 'customer' | 'owner' | 'staff' | 'barber' | 'kiosk' | null;
+        token?: string;
+        clientId?: number;
+        name?: string;
+        barberId?: number;
+        barberName?: string;
+        pinResetRequired?: boolean;
+      };
       if (result.valid && result.token) client.setAuthToken(result.token);
       return result;
     },
@@ -131,6 +158,12 @@ export function createAuthApi(client: BaseApiClient): AuthApi {
       const path = `/shops/${encodeURIComponent(shopSlug)}/auth/customer/google`;
       const query = redirectUri ? `?redirect_uri=${encodeURIComponent(redirectUri)}` : '';
       return `${base}${path}${query}`;
+    },
+    async requestPasswordReset(shopSlug, email) {
+      return c.post(`/shops/${shopSlug}/auth/forgot-password`, { email }) as Promise<{ message: string }>;
+    },
+    async resetPassword(shopSlug, data) {
+      return c.post(`/shops/${shopSlug}/auth/reset-password`, data) as Promise<{ message: string }>;
     },
   };
 }

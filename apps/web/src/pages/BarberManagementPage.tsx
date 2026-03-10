@@ -36,6 +36,8 @@ export function BarberManagementPage() {
   const [formData, setFormData] = useState({
     name: '',
     avatarUrl: '',
+    email: '',
+    phone: '',
     username: '',
     password: '',
     newPassword: '',
@@ -99,17 +101,23 @@ export function BarberManagementPage() {
       setErrorMessage(t('barber.userRequiredWithPassword'));
       return;
     }
+    if (formData.username.trim() && formData.password && !formData.email.trim()) {
+      setErrorMessage(t('barber.emailRequiredWithLogin'));
+      return;
+    }
 
     try {
       await api.createBarber(shopSlug, {
         name: formData.name,
         avatarUrl: formData.avatarUrl || null,
+        email: formData.email.trim() || null,
+        phone: formData.phone.trim() || null,
         ...(formData.username.trim() && formData.password
           ? { username: formData.username.trim(), password: formData.password }
           : {}),
       });
       invalidateBarbersCache(shopSlug);
-      setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
+      setFormData({ name: '', avatarUrl: '', email: '', phone: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
       addModal.close();
       await refetch();
     } catch (error) {
@@ -123,11 +131,18 @@ export function BarberManagementPage() {
       setErrorMessage(t('barber.nameRequired'));
       return;
     }
+    const hasLogin = (formData.username ?? editingBarber.username ?? '').toString().trim() !== '';
+    if (hasLogin && !(formData.email ?? editingBarber.email ?? '').toString().trim()) {
+      setErrorMessage(t('barber.emailRequiredWithLogin'));
+      return;
+    }
 
     try {
-      const payload: { name: string; avatarUrl: string | null; username?: string | null; password?: string; revenueSharePercent?: number | null } = {
+      const payload: { name: string; avatarUrl: string | null; email?: string | null; phone?: string | null; username?: string | null; password?: string; revenueSharePercent?: number | null } = {
         name: formData.name,
         avatarUrl: formData.avatarUrl || null,
+        email: formData.email.trim() || null,
+        phone: formData.phone.trim() || null,
       };
       if (formData.username !== undefined) {
         payload.username = formData.username.trim() || null;
@@ -141,7 +156,7 @@ export function BarberManagementPage() {
       await api.updateBarber(editingBarber.id, payload);
       invalidateBarbersCache(shopSlug);
       setEditingBarber(null);
-      setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
+      setFormData({ name: '', avatarUrl: '', email: '', phone: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
       editModal.close();
       await refetch();
     } catch (error) {
@@ -171,6 +186,8 @@ export function BarberManagementPage() {
     setFormData({
       name: barber.name,
       avatarUrl: barber.avatarUrl || '',
+      email: barber.email ?? '',
+      phone: barber.phone ?? '',
       username: barber.username ?? '',
       password: '',
       newPassword: '',
@@ -480,6 +497,31 @@ export function BarberManagementPage() {
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
+                <label htmlFor="addEmail" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                  {t('auth.email')}
+                </label>
+                <input
+                  id="addEmail"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder={formData.username.trim() ? t('barber.emailRequiredPlaceholder') : undefined}
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[rgba(255,255,255,0.3)]"
+                />
+              </div>
+              <div className="form-group mb-4 sm:mb-5">
+                <label htmlFor="addPhone" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                  {t('barber.phone')}
+                </label>
+                <input
+                  id="addPhone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[rgba(255,255,255,0.3)]"
+                />
+              </div>
+              <div className="form-group mb-4 sm:mb-5">
                 <p className="text-[rgba(255,255,255,0.5)] text-xs mb-2">
                   {t('barber.loginOptionalHint')}
                 </p>
@@ -519,7 +561,7 @@ export function BarberManagementPage() {
                   type="button"
                   onClick={() => {
                     addModal.close();
-                    setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
+                    setFormData({ name: '', avatarUrl: '', email: '', phone: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
                   }}
                   className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
@@ -584,6 +626,30 @@ export function BarberManagementPage() {
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
+                <label htmlFor="editEmail" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                  {t('auth.email')}
+                </label>
+                <input
+                  id="editEmail"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
+                />
+              </div>
+              <div className="form-group mb-4 sm:mb-5">
+                <label htmlFor="editPhone" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                  {t('barber.phone')}
+                </label>
+                <input
+                  id="editPhone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
+                />
+              </div>
+              <div className="form-group mb-4 sm:mb-5">
                 <p className="text-[rgba(255,255,255,0.5)] text-xs mb-2">
                   {t('barber.loginForPerformance')}
                 </p>
@@ -644,7 +710,7 @@ export function BarberManagementPage() {
                   onClick={() => {
                     editModal.close();
                     setEditingBarber(null);
-                    setFormData({ name: '', avatarUrl: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
+                    setFormData({ name: '', avatarUrl: '', email: '', phone: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
                   }}
                   className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
