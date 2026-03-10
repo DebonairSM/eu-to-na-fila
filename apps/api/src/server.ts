@@ -634,7 +634,8 @@ fastify.addHook('onResponse', (request, reply, done) => {
   const path = (request.url ?? '').split('?')[0] ?? '';
   if (!path.startsWith('/api/')) return done();
   const slug = UsageService.getShopSlugFromPath(path);
-  getUsageService().recordRequest(slug, request.method, path);
+  const companyIdFromPath = UsageService.getCompanyIdFromPath(path);
+  getUsageService().recordRequest(slug, request.method, path, companyIdFromPath);
   done();
 });
 

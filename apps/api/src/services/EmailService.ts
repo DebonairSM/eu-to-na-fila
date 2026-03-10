@@ -160,13 +160,19 @@ export async function sendPasswordResetEmail(toEmail: string, data: PasswordRese
         requestBody: { raw },
       });
       return true;
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[EmailService] sendPasswordResetEmail (Gmail) failed:', msg);
+      if (err instanceof Error && err.stack) console.error(err.stack);
       return false;
     }
   }
 
   const trans = getNodemailerTransporter();
-  if (!trans) return false;
+  if (!trans) {
+    console.error('[EmailService] sendPasswordResetEmail: no Gmail client and no Nodemailer transporter (set GMAIL_USER + GMAIL_APP_PASSWORD or Gmail OAuth env)');
+    return false;
+  }
 
   try {
     await trans.sendMail({
@@ -176,7 +182,10 @@ export async function sendPasswordResetEmail(toEmail: string, data: PasswordRese
       text: textBody,
     });
     return true;
-  } catch {
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[EmailService] sendPasswordResetEmail (Nodemailer) failed:', msg);
+    if (err instanceof Error && err.stack) console.error(err.stack);
     return false;
   }
 }

@@ -38,12 +38,14 @@ export class UsageService {
 
   /**
    * Record one API request. Synchronous and in-memory only (fire-and-forget safe).
-   * Slug resolution happens in flush(), not on the request path.
+   * Pass slug for /api/shops/:slug/..., or companyId for /api/companies/:id/..., or both null for global.
+   * Slug resolution happens in flush(); companyId is written as-is.
    */
-  recordRequest(slug: string | null, method: string, path: string): void {
+  recordRequest(slug: string | null, method: string, path: string, companyIdFromPath: number | null = null): void {
     const tag = normalizeEndpoint(method, path);
     const bucketStart = getBucketStart();
-    const slugPart = slug ?? 'g';
+    const slugPart =
+      companyIdFromPath != null ? `c${companyIdFromPath}` : slug != null ? slug : 'g';
     const key = [slugPart, bucketStart.getTime(), tag, method].join(KEY_SEP);
     this.counters.set(key, (this.counters.get(key) ?? 0) + 1);
   }
@@ -61,7 +63,7 @@ export class UsageService {
       const parts = key.split(KEY_SEP);
       if (parts.length < 4) continue;
       const [slugPart] = parts;
-      if (slugPart !== 'g') uniqueSlugs.add(slugPart);
+      if (slugPart !== 'g' && !slugPart.startsWith('c')) uniqueSlugs.add(slugPart);
     }
 
     for (const slug of uniqueSlugs) {
@@ -83,7 +85,11 @@ export class UsageService {
 
       let shopId: number | null = null;
       let companyId: number | null = null;
-      if (slugPart !== 'g') {
+      if (slugPart.startsWith('c')) {
+        const id = parseInt(slugPart.slice(1), 10);
+        if (!Number.isNaN(id)) companyId = id;
+        else continue;
+      } else if (slugPart !== 'g') {
         const ids = slugToIds.get(slugPart);
         if (!ids) continue; // skip unresolved slug to avoid noise
         shopId = ids.shopId;
@@ -139,6 +145,14 @@ export class UsageService {
   static getShopSlugFromPath(path: string): string | null {
     const match = path.match(/^\/api\/shops\/([^/]+)(?:\/|$)/);
     return match ? match[1] : null;
+  }
+
+  /** Extract company id from request path /api/companies/:id/... or return null. */
+  static getCompanyIdFromPath(path: string): number | null {
+    const match = path.match(/^\/api\/companies\/(\d+)(?:\/|$)/);
+    if (!match) return null;
+    const id = parseInt(match[1], 10);
+    return Number.isNaN(id) ? null : id;
   }
 }
 
