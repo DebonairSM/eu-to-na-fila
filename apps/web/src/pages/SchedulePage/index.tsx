@@ -19,6 +19,7 @@ import { getErrorMessage, formatName, getOrCreateDeviceId } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
 import { formatDurationMinutes } from '@/lib/formatDuration';
 import { hasHoursForDay } from '@/lib/operatingHours';
+import { ServiceChip } from '@/components/ServiceChip';
 
 function isSufficientName(name: string | undefined): boolean {
   if (!name || !name.trim()) return false;
@@ -45,7 +46,7 @@ export function SchedulePage() {
   const operatingHours = settings?.operatingHours as Record<string, { open?: string; close?: string } | null> | undefined;
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
   const [selectedBarberId, setSelectedBarberId] = useState<number | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [combinedName, setCombinedName] = useState('');
@@ -62,13 +63,13 @@ export function SchedulePage() {
     : '';
 
   const fetchSlots = useCallback(() => {
-    if (!dateStr || !selectedServiceId) {
+    if (!dateStr || selectedServiceIds.length === 0) {
       setSlots([]);
       return;
     }
     setSlotsLoading(true);
     api
-      .getAppointmentSlots(shopSlug, dateStr, selectedServiceId, selectedBarberId ?? undefined)
+      .getAppointmentSlots(shopSlug, dateStr, selectedServiceIds, selectedBarberId ?? undefined)
       .then((res) => {
         setSlots(res.slots);
         setSlotsLoading(false);
@@ -77,7 +78,7 @@ export function SchedulePage() {
         setSlots([]);
         setSlotsLoading(false);
       });
-  }, [shopSlug, dateStr, selectedServiceId, selectedBarberId]);
+  }, [shopSlug, dateStr, selectedServiceIds.join(','), selectedBarberId]);
 
   useEffect(() => {
     fetchSlots();
@@ -85,13 +86,20 @@ export function SchedulePage() {
 
   useEffect(() => {
     setSelectedTime(null);
-  }, [selectedDate, selectedServiceId, selectedBarberId]);
+  }, [selectedDate, selectedServiceIds.join(','), selectedBarberId]);
 
+  const activeServiceIdsStr = activeServices.map((s) => s.id).join(',');
   useEffect(() => {
-    if (activeServices.length > 0 && selectedServiceId === null) {
-      setSelectedServiceId(activeServices[0].id);
+    if (activeServices.length === 0) {
+      setSelectedServiceIds([]);
+      return;
     }
-  }, [activeServices, selectedServiceId]);
+    const validIds = new Set(activeServices.map((s) => s.id));
+    setSelectedServiceIds((prev) => {
+      const kept = prev.filter((id) => validIds.has(id));
+      return kept.length > 0 ? kept : [activeServices[0].id];
+    });
+  }, [activeServiceIdsStr]);
 
   useEffect(() => {
     if (isCustomer && user?.name) {
@@ -133,7 +141,7 @@ export function SchedulePage() {
       setValidationError(validation.error || t('join.invalidName'));
       return;
     }
-    if (!selectedDate || !selectedServiceId || !selectedTime) {
+    if (!selectedDate || selectedServiceIds.length === 0 || !selectedTime) {
       setSubmitError(t('schedule.slotNoLongerAvailable'));
       return;
     }
@@ -153,7 +161,7 @@ export function SchedulePage() {
       const utcDate = fromZonedTime(localDateTime, tz);
 
       const ticket = await api.bookAppointment(shopSlug, {
-        serviceId: selectedServiceId,
+        complementaryServiceIds: selectedServiceIds,
         customerName: fullName,
         customerPhone: customerPhone.trim() || undefined,
         preferredBarberId: selectedBarberId ?? undefined,
@@ -210,23 +218,26 @@ export function SchedulePage() {
                 </div>
 
                 <div>
-                  <InputLabel htmlFor="schedule-service">{t('schedule.selectService')}</InputLabel>
-                  <select
-                    id="schedule-service"
-                    value={selectedServiceId ?? ''}
-                    onChange={(e) => setSelectedServiceId(e.target.value ? parseInt(e.target.value, 10) : null)}
-                    required
-                    className="form-control-select select-readable w-full mt-1"
-                  >
-                    <option value="">{t('join.selectOption')}</option>
-                    {activeServices.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                        {s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}
-                        {s.price != null && s.price > 0 ? ` – ${formatCurrency(s.price, locale)}` : ''}
-                      </option>
-                    ))}
-                  </select>
+                  <InputLabel className="mb-2 block">{t('schedule.selectService')}</InputLabel>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {activeServices.map((s) => {
+                      const label = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}${s.price != null && s.price > 0 ? ` – ${formatCurrency(s.price, locale)}` : ''}`;
+                      const selected = selectedServiceIds.includes(s.id);
+                      return (
+                        <ServiceChip
+                          key={s.id}
+                          service={s}
+                          selected={selected}
+                          onToggle={() =>
+                            setSelectedServiceIds((prev) =>
+                              selected ? prev.filter((id) => id !== s.id) : [...prev, s.id]
+                            )
+                          }
+                          label={label}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {settings?.allowBarberPreference && (barbers.length > 0 || settings?.requireBarberChoice) && (
@@ -252,7 +263,7 @@ export function SchedulePage() {
                   </div>
                 )}
 
-                {dateStr && selectedServiceId && (
+                {dateStr && selectedServiceIds.length > 0 && (
                   <div>
                     <InputLabel className="mb-2 block">{t('schedule.selectTime')}</InputLabel>
                     {slotsLoading ? (
@@ -351,7 +362,7 @@ export function SchedulePage() {
                     isSubmitting ||
                     isLoadingServices ||
                     !selectedDate ||
-                    !selectedServiceId ||
+                    selectedServiceIds.length === 0 ||
                     !selectedTime ||
                     !combinedName.trim() ||
                     (settings?.requirePhone && !customerPhone.trim())

@@ -12,7 +12,10 @@ export interface CreateAppointmentInput {
 }
 
 export interface BookAppointmentInput {
-  serviceId: number;
+  /** Primary service (first of list when using complementaryServiceIds). */
+  serviceId?: number;
+  /** All selected service IDs; first is primary. When present, used for slot duration and stored on ticket. */
+  complementaryServiceIds?: number[];
   customerName: string;
   customerPhone?: string;
   preferredBarberId?: number;
@@ -28,7 +31,7 @@ export interface TicketsApi {
   getActiveTicketByDevice(shopSlug: string, deviceId: string): Promise<Ticket | null>;
   createTicket(shopSlug: string, data: Omit<CreateTicket, 'shopId'>): Promise<Ticket>;
   createAppointment(shopSlug: string, data: CreateAppointmentInput): Promise<Ticket>;
-  getAppointmentSlots(shopSlug: string, date: string, serviceId: number, barberId?: number): Promise<SlotsResponse>;
+  getAppointmentSlots(shopSlug: string, date: string, serviceIds: number[], barberId?: number): Promise<SlotsResponse>;
   bookAppointment(shopSlug: string, data: BookAppointmentInput): Promise<Ticket>;
   sendAppointmentReminder(shopSlug: string, ticketId: number, email: string): Promise<{ sent: boolean }>;
   checkInAppointment(shopSlug: string, ticketId: number): Promise<Ticket>;
@@ -62,8 +65,8 @@ export function createTicketsApi(client: BaseApiClient): TicketsApi {
         ...data,
         scheduledTime: data.scheduledTime,
       }),
-    getAppointmentSlots: (shopSlug, date, serviceId, barberId) =>
-      c.get(`/shops/${shopSlug}/appointments/slots?date=${encodeURIComponent(date)}&serviceId=${serviceId}${barberId != null ? '&barberId=' + barberId : ''}`),
+    getAppointmentSlots: (shopSlug, date, serviceIds, barberId) =>
+      c.get(`/shops/${shopSlug}/appointments/slots?date=${encodeURIComponent(date)}&serviceIds=${serviceIds.join(',')}${barberId != null ? '&barberId=' + barberId : ''}`),
     bookAppointment: (shopSlug, data) =>
       c.post(`/shops/${shopSlug}/appointments/book`, data),
     sendAppointmentReminder: (shopSlug, ticketId, email) =>

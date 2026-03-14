@@ -723,10 +723,10 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       ageBreakdown: { range: string; count: number }[];
       styleBreakdown: { style: string; count: number }[];
     } | undefined;
-    if (ticketClientIds.length > 0) {
+    if (ticketClientIds.length > 0 && shop.companyId != null) {
       const clientsData = await db.query.clients.findMany({
         where: and(
-          eq(schema.clients.shopId, shop.id),
+          eq(schema.clients.companyId, shop.companyId),
           inArray(schema.clients.id, ticketClientIds)
         ),
         columns: { id: true, city: true, state: true, dateOfBirth: true, gender: true },

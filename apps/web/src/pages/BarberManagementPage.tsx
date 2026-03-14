@@ -14,7 +14,7 @@ import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
 import { Skeleton } from '@/components/design-system';
 import { Modal } from '@/components/Modal';
-import { getErrorMessage } from '@/lib/utils';
+import { getErrorMessage, formatName } from '@/lib/utils';
 import { invalidateBarbersCache } from '@/lib/cache/barbersCache';
 import type { Barber } from '@eutonafila/shared';
 
@@ -180,6 +180,13 @@ export function BarberManagementPage() {
       deleteConfirmModal.close();
     }
   }, [barberToDelete, refetch, deleteConfirmModal, t]);
+
+  const handleBarberNameBlur = useCallback(() => {
+    setFormData((prev) => {
+      const trimmed = prev.name.trim();
+      return trimmed.length > 0 ? { ...prev, name: formatName(trimmed) } : prev;
+    });
+  }, []);
 
   const openEditModal = (barber: Barber) => {
     setEditingBarber(barber);
@@ -479,6 +486,9 @@ export function BarberManagementPage() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onBlur={handleBarberNameBlur}
+                  placeholder={t('management.name')}
+                  autoCapitalize="words"
                   required
                   className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
                 />
@@ -608,6 +618,9 @@ export function BarberManagementPage() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onBlur={handleBarberNameBlur}
+                  placeholder={t('management.name')}
+                  autoCapitalize="words"
                   required
                   className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
                 />

@@ -30,8 +30,10 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    const companyId = (shop as { companyId?: number | null }).companyId;
+    if (companyId == null) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    const client = await clientService.findByPhone(shop.id, phone);
+    const client = await clientService.findByPhone(companyId, phone);
     return {
       hasClient: !!client,
       name: client?.name,
@@ -58,8 +60,10 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    const companyId = (shop as { companyId?: number | null }).companyId;
+    if (companyId == null) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    const { clients, total } = await clientService.listByShop(shop.id, { page, limit });
+    const { clients, total } = await clientService.listByCompany(companyId, { page, limit, shopIdForTicketCount: shop.id });
     return { clients, total, page, limit };
   });
 
@@ -79,12 +83,14 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    const companyId = (shop as { companyId?: number | null }).companyId;
+    if (companyId == null) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     if (request.user?.role === 'barber' && request.user.shopId !== shop.id) {
       throw new NotFoundError(`Shop with slug "${slug}" not found`);
     }
 
-    const clients = await clientService.search(shop.id, q);
+    const clients = await clientService.search(companyId, q);
     if (request.user?.role === 'barber') {
       const limited = clients.map((c) => {
         const dob = (c as { dateOfBirth?: Date | string | null }).dateOfBirth;
@@ -119,17 +125,19 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    const companyId = (shop as { companyId?: number | null }).companyId;
+    if (companyId == null) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     if (request.user?.role === 'barber' && request.user.shopId !== shop.id) {
       throw new NotFoundError(`Shop with slug "${slug}" not found`);
     }
 
-    const client = await clientService.getByIdWithShopCheck(id, shop.id);
+    const client = await clientService.getByIdWithCompanyCheck(id, companyId);
     if (!client) throw new NotFoundError('Client not found');
 
     const [clipNotes, serviceHistory] = await Promise.all([
-      clientService.getClipNotes(id, shop.id),
-      clientService.getServiceHistory(id, shop.id),
+      clientService.getClipNotes(id, companyId),
+      clientService.getServiceHistory(id, companyId),
     ]);
 
     const isBarber = request.user?.role === 'barber';
@@ -182,12 +190,14 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    const companyId = (shop as { companyId?: number | null }).companyId;
+    if (companyId == null) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     if (user?.role === 'barber' && user.shopId !== shop.id) {
       throw new NotFoundError(`Shop with slug "${slug}" not found`);
     }
 
-    const client = await clientService.getByIdWithShopCheck(id, shop.id);
+    const client = await clientService.getByIdWithCompanyCheck(id, companyId);
     if (!client) throw new NotFoundError('Client not found');
 
     const imageUrl = (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl;
@@ -247,8 +257,10 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    const companyId = (shop as { companyId?: number | null }).companyId;
+    if (companyId == null) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    const client = await clientService.update(id, shop.id, data);
+    const client = await clientService.update(id, companyId, data);
     return client;
   });
 
@@ -275,6 +287,8 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+    const companyId = (shop as { companyId?: number | null }).companyId;
+    if (companyId == null) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     if (request.user?.role === 'barber' && request.user.shopId !== shop.id) {
       throw new NotFoundError(`Shop with slug "${slug}" not found`);
@@ -283,7 +297,7 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
     const barberId = request.user?.barberId ?? body.barberId;
     if (!barberId) throw new NotFoundError('Barber context required to add clip note');
 
-    const clipNote = await clientService.addClipNote(id, shop.id, barberId, body.note, body.serviceId);
+    const clipNote = await clientService.addClipNote(id, companyId, barberId, body.note, body.serviceId);
     return reply.status(201).send(clipNote);
   });
 };

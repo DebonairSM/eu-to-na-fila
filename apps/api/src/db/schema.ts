@@ -134,8 +134,9 @@ export const barbers = pgTable('barbers', {
 
 export const clients = pgTable('clients', {
   id: serial('id').primaryKey(),
-  shopId: integer('shop_id').notNull().references(() => shops.id),
-  phone: text('phone').notNull(), // Normalized digits only; unique per shop (use placeholder for email-only signups)
+  companyId: integer('company_id').notNull().references(() => companies.id),
+  shopId: integer('shop_id').references(() => shops.id), // Optional: last/first shop; clients are company-scoped
+  phone: text('phone').notNull(), // Normalized digits only; unique per company (use placeholder for email-only signups)
   name: text('name').notNull(),
   email: text('email'),
   passwordHash: text('password_hash'), // For email/password customer login
@@ -151,7 +152,8 @@ export const clients = pgTable('clients', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({
-  shopPhoneUnique: uniqueIndex('clients_shop_phone_unique').on(table.shopId, table.phone),
+  companyPhoneUnique: uniqueIndex('clients_company_phone_unique').on(table.companyId, table.phone),
+  companyIdIdx: index('clients_company_id_idx').on(table.companyId),
   shopIdIdx: index('clients_shop_id_idx').on(table.shopId),
 }));
 
@@ -314,6 +316,7 @@ export const projectsRelations = relations(projects, ({ many }) => ({
 export const companiesRelations = relations(companies, ({ many }) => ({
   admins: many(companyAdmins),
   shops: many(shops),
+  clients: many(clients),
   ads: many(companyAds),
   adOrders: many(adOrders),
   adPricing: many(adPricing),
@@ -332,7 +335,6 @@ export const shopsRelations = relations(shops, ({ one, many }) => ({
   company: one(companies, { fields: [shops.companyId], references: [companies.id] }),
   services: many(services),
   barbers: many(barbers),
-  clients: many(clients),
   tickets: many(tickets),
   ads: many(companyAds),
 }));
@@ -349,6 +351,7 @@ export const barbersRelations = relations(barbers, ({ one, many }) => ({
 }));
 
 export const clientsRelations = relations(clients, ({ one, many }) => ({
+  company: one(companies, { fields: [clients.companyId], references: [companies.id] }),
   shop: one(shops, { fields: [clients.shopId], references: [shops.id] }),
   tickets: many(tickets),
   clipNotes: many(clientClipNotes),

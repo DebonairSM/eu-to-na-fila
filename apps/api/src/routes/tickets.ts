@@ -213,7 +213,8 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const paramsSchema = z.object({ slug: z.string().min(1) });
     const { slug } = validateRequest(paramsSchema, request.params);
     const bodySchema = z.object({
-      serviceId: z.number(),
+      serviceId: z.number().optional(),
+      complementaryServiceIds: z.array(z.number().int().positive()).optional(),
       customerName: z.string().min(1).max(200),
       customerPhone: z.string().optional(),
       preferredBarberId: z.number().optional(),
@@ -221,6 +222,12 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       deviceId: z.string().optional(),
     });
     const data = validateRequest(bodySchema, request.body);
+    const serviceIds = data.complementaryServiceIds?.length
+      ? data.complementaryServiceIds
+      : data.serviceId != null
+        ? [data.serviceId]
+        : [];
+    if (serviceIds.length === 0) throw new ValidationError('At least one service is required');
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
@@ -248,13 +255,14 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       ? await queueService.getEstimatedQueueClearMinutes(shop.id, settings.defaultServiceDuration ?? 20)
       : undefined;
 
-    const { slots } = await getAppointmentSlots(shop, dateStr, data.serviceId, data.preferredBarberId ?? undefined, estimatedQueueClearMinutes);
+    const { slots } = await getAppointmentSlots(shop, dateStr, serviceIds, data.preferredBarberId ?? undefined, estimatedQueueClearMinutes);
     const slot = slots.find((sl) => sl.time === timeStr);
     if (!slot || !slot.available) throw new ValidationError('This time slot is no longer available');
 
     const clientId = request.user?.role === 'customer' ? request.user.clientId : undefined;
     const ticket = await ticketService.createAppointment(shop.id, {
-      serviceId: data.serviceId,
+      serviceId: serviceIds[0],
+      complementaryServiceIds: serviceIds,
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       preferredBarberId: data.preferredBarberId,
@@ -384,7 +392,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
    * Get available appointment slots for a date (public).
    * @route GET /api/shops/:slug/appointments/slots
    * @query date - YYYY-MM-DD
-   * @query serviceId - Service ID
+   * @query serviceIds - Comma-separated service IDs (e.g. 1,2,3); slot duration = sum of service durations
    * @query barberId - Optional; if set, only slots where this barber is free
    */
   fastify.get('/shops/:slug/appointments/slots', async (request, reply) => {
@@ -392,10 +400,11 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const { slug } = validateRequest(paramsSchema, request.params);
     const querySchema = z.object({
       date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-      serviceId: z.coerce.number().int().positive(),
+      serviceIds: z.string().min(1).transform((s) => s.split(',').map((id) => parseInt(id.trim(), 10)).filter((n) => Number.isInteger(n) && n > 0)),
       barberId: z.coerce.number().int().positive().optional(),
     });
-    const { date: dateStr, serviceId, barberId } = validateRequest(querySchema, request.query);
+    const { date: dateStr, serviceIds, barberId } = validateRequest(querySchema, request.query);
+    if (serviceIds.length === 0) throw new ValidationError('At least one service ID is required');
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
@@ -408,7 +417,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       ? await queueService.getEstimatedQueueClearMinutes(shop.id, settings.defaultServiceDuration ?? 20)
       : undefined;
 
-    const { slots } = await getAppointmentSlots(shop, dateStr, serviceId, barberId, estimatedQueueClearMinutes);
+    const { slots } = await getAppointmentSlots(shop, dateStr, serviceIds, barberId, estimatedQueueClearMinutes);
     return reply.send({ slots });
   });
 

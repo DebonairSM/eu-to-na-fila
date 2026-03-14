@@ -481,13 +481,18 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       logAuthFailure(request, 'shop_not_found', slug);
       return reply.status(404).send({ valid: false, error: 'Shop not found' });
     }
+    const companyId = shop.companyId;
+    if (companyId == null) {
+      logAuthFailure(request, 'shop_not_found', slug);
+      return reply.status(404).send({ valid: false, error: 'Shop not found' });
+    }
 
     const normalizedEmail = normalizeEmail(body.email);
     const phonePlaceholder = `e:${normalizedEmail}`;
 
     const existing = await db.query.clients.findFirst({
       where: and(
-        eq(schema.clients.shopId, shop.id),
+        eq(schema.clients.companyId, companyId),
         eq(schema.clients.email, normalizedEmail)
       ),
     });
@@ -520,6 +525,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const passwordHash = await hashPassword(body.password);
     const name = (body.name && body.name.trim()) || normalizedEmail.split('@')[0] || 'Customer';
     const [created] = await db.insert(schema.clients).values({
+      companyId,
       shopId: shop.id,
       phone: phonePlaceholder,
       name,
@@ -564,11 +570,13 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       logAuthFailure(request, 'shop_not_found', slug);
       return { valid: false, role: null };
     }
+    const companyId = shop.companyId;
+    if (companyId == null) return { valid: false, role: null };
 
     const normalizedEmail = normalizeEmail(email);
     const client = await db.query.clients.findFirst({
       where: and(
-        eq(schema.clients.shopId, shop.id),
+        eq(schema.clients.companyId, companyId),
         eq(schema.clients.email, normalizedEmail)
       ),
     });
@@ -637,10 +645,11 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const isEmail = identifier.includes('@');
 
     // 1) Customer (if identifier looks like email)
-    if (isEmail) {
+    const companyId = shop.companyId;
+    if (isEmail && companyId != null) {
       const client = await db.query.clients.findFirst({
         where: and(
-          eq(schema.clients.shopId, shop.id),
+          eq(schema.clients.companyId, companyId),
           eq(schema.clients.email, normalized)
         ),
       });
@@ -806,12 +815,13 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     let entityId: number | null = null;
     let toEmail: string | null = null;
 
-    const client = await db.query.clients.findFirst({
+    const companyId = shop.companyId;
+    const client = companyId != null ? await db.query.clients.findFirst({
       where: and(
-        eq(schema.clients.shopId, shop.id),
+        eq(schema.clients.companyId, companyId),
         eq(schema.clients.email, normalizedEmail)
       ),
-    });
+    }) : null;
     if (client?.passwordHash) {
       entityType = 'customer';
       entityId = client.id;
@@ -918,11 +928,13 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError('Shop not found');
+    const companyId = shop.companyId;
+    if (companyId == null) throw new NotFoundError('Shop not found');
 
     const client = await db.query.clients.findFirst({
       where: and(
         eq(schema.clients.id, clientId),
-        eq(schema.clients.shopId, shop.id)
+        eq(schema.clients.companyId, companyId)
       ),
     });
     if (!client) throw new NotFoundError('Client not found');
@@ -963,6 +975,8 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError('Shop not found');
+    const companyId = shop.companyId;
+    if (companyId == null) throw new NotFoundError('Shop not found');
 
     const bodySchema = z.object({
       name: z.string().min(1).max(200).optional(),
@@ -990,7 +1004,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     if (data.dateOfBirth !== undefined) updateData.dateOfBirth = data.dateOfBirth;
     if (data.gender !== undefined) updateData.gender = data.gender;
 
-    const client = await clientService.updateCustomerProfile(clientId, shop.id, updateData);
+    const client = await clientService.updateCustomerProfile(clientId, companyId, updateData);
     const phone = client.phone?.startsWith('e:') ? null : client.phone;
     const prefs = (client as { preferences?: { emailReminders?: boolean } }).preferences ?? {};
     const resAddress = (client as { address?: string | null }).address ?? null;
@@ -1030,8 +1044,10 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError('Shop not found');
+    const companyId = shop.companyId;
+    if (companyId == null) throw new NotFoundError('Shop not found');
 
-    const client = await clientService.getByIdWithShopCheck(clientId, shop.id);
+    const client = await clientService.getByIdWithCompanyCheck(clientId, companyId);
     if (!client) throw new NotFoundError('Client not found');
 
     let fileBuffer: Buffer | null = null;
@@ -1061,8 +1077,6 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const extension = mimeToExt[fileMimetype] || '.jpg';
 
     let url: string;
-    const companyId = (shop as { companyId?: number | null }).companyId;
-
     if (companyId != null && env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY) {
       url = await uploadClientReferenceImage(companyId, shop.id, clientId, fileBuffer, fileMimetype);
     } else {
@@ -1079,7 +1093,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       url = `${base}/api/shops/${encodeURIComponent(slug)}/auth/customer/me/reference/image`;
     }
 
-    await clientService.updateCustomerProfile(clientId, shop.id, { nextServiceImageUrl: url });
+    await clientService.updateCustomerProfile(clientId, companyId, { nextServiceImageUrl: url });
     return reply.send({ url });
   });
 
@@ -1097,8 +1111,10 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError('Shop not found');
+    const companyId = shop.companyId;
+    if (companyId == null) throw new NotFoundError('Shop not found');
 
-    const client = await clientService.getByIdWithShopCheck(clientId, shop.id);
+    const client = await clientService.getByIdWithCompanyCheck(clientId, companyId);
     if (!client) throw new NotFoundError('Client not found');
 
     const storedUrl = (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl;
@@ -1307,10 +1323,12 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const normalizedEmail = normalizeEmail(email);
     const phonePlaceholder = `e:${normalizedEmail}`;
+    const companyId = shop.companyId;
+    if (companyId == null) return await redirectToLogin('shop_not_found', slug);
 
     let client = await db.query.clients.findFirst({
       where: and(
-        eq(schema.clients.shopId, shop.id),
+        eq(schema.clients.companyId, companyId),
         eq(schema.clients.email, normalizedEmail)
       ),
     });
@@ -1324,6 +1342,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       }
     } else {
       const [created] = await db.insert(schema.clients).values({
+        companyId,
         shopId: shop.id,
         phone: phonePlaceholder,
         name,

@@ -9,12 +9,13 @@ const DEFAULT_TIMEZONE = 'America/Sao_Paulo';
 export async function getAppointmentSlots(
   shop: { id: number; settings: unknown },
   dateStr: string,
-  serviceId: number,
+  serviceIds: number[],
   barberId?: number,
   estimatedQueueClearMinutes?: number
 ): Promise<{ slots: Array<{ time: string; available: boolean }> }> {
   const settings = parseSettings(shop.settings);
   if (!settings.allowAppointments) throw new NotFoundError('Appointments not enabled');
+  if (!serviceIds.length) throw new ValidationError('At least one service is required');
 
   const appointmentCap = Math.floor(settings.maxQueueSize * (settings.maxAppointmentsFraction ?? 0.5));
   const existingCount = await db
@@ -33,11 +34,17 @@ export async function getAppointmentSlots(
 
   const timezone = settings.timezone ?? DEFAULT_TIMEZONE;
 
-  const service = await db.query.services.findFirst({
-    where: and(eq(s.services.id, serviceId), eq(s.services.shopId, shop.id)),
+  const services = await db.query.services.findMany({
+    where: and(inArray(s.services.id, serviceIds), eq(s.services.shopId, shop.id)),
+    columns: { id: true, duration: true, isActive: true },
   });
-  if (!service) throw new NotFoundError('Service not found');
-  if (!service.isActive) throw new ValidationError('Service is not active');
+  const serviceMap = new Map(services.map((svc) => [svc.id, svc]));
+  for (const id of serviceIds) {
+    const svc = serviceMap.get(id);
+    if (!svc) throw new NotFoundError('Service not found');
+    if (!svc.isActive) throw new ValidationError('Service is not active');
+  }
+  const totalDuration = services.reduce((sum, svc) => sum + (svc.duration ?? 0), 0);
 
   const [y, mo, d] = dateStr.split('-').map(Number);
   if (!y || !mo || !d) throw new ValidationError('Invalid date');
@@ -49,7 +56,7 @@ export async function getAppointmentSlots(
   const hours = settings.operatingHours?.[dayKey];
   if (!hours || typeof hours !== 'object') return { slots: [] };
 
-  const slotDurationMin = service.duration + 5;
+  const slotDurationMin = totalDuration + 5;
   const parseTime = (str: string) => {
     const [h, m] = str.split(':').map(Number);
     return (h ?? 0) * 60 + (m ?? 0);
@@ -63,7 +70,7 @@ export async function getAppointmentSlots(
   const hasLunch = lunchStartMin !== null && lunchEndMin !== null;
   
   const slotStarts: number[] = [];
-  for (let t = openMin; t + service.duration <= closeMin; t += slotDurationMin) {
+  for (let t = openMin; t + totalDuration <= closeMin; t += slotDurationMin) {
     // Skip slots that overlap with lunch break
     if (hasLunch && lunchStartMin !== null && lunchEndMin !== null) {
       const slotEnd = t + slotDurationMin;

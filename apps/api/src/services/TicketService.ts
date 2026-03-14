@@ -211,15 +211,20 @@ export class TicketService {
     const dataWithClient = data as CreateTicket & { clientId?: number };
     let clientId: number | null = dataWithClient.clientId ?? null;
     if (clientId == null && data.customerPhone && data.customerPhone.trim().length > 0) {
-      try {
-        const client = await this.clientService.findOrCreateByPhone(
-          shopId,
-          data.customerPhone,
-          data.customerName
-        );
-        clientId = client.id;
-      } catch (err) {
-        console.warn('[TicketService] Client resolution failed:', err);
+      const companyId = (shop as { companyId?: number | null }).companyId;
+      if (companyId != null) {
+        try {
+          const client = await this.clientService.findOrCreateByPhone(
+            companyId,
+            data.customerPhone,
+            data.customerName,
+            undefined,
+            shopId
+          );
+          clientId = client.id;
+        } catch (err) {
+          console.warn('[TicketService] Client resolution failed:', err);
+        }
       }
     }
     if (clientId != null) {
@@ -501,10 +506,19 @@ export class TicketService {
   /**
    * Create an appointment (staff or public book). Requires shop settings.allowAppointments.
    * Inserts with type=appointment, status=pending, scheduledTime; ticket_number set to A-{id}.
+   * When complementaryServiceIds is provided, serviceId is the first element and all are stored.
    */
   async createAppointment(
     shopId: number,
-    data: { serviceId: number; customerName: string; customerPhone?: string; preferredBarberId?: number; scheduledTime: Date | string; clientId?: number }
+    data: {
+      serviceId: number;
+      complementaryServiceIds?: number[];
+      customerName: string;
+      customerPhone?: string;
+      preferredBarberId?: number;
+      scheduledTime: Date | string;
+      clientId?: number;
+    }
   ): Promise<Ticket> {
     const shop = await this.db.query.shops.findFirst({
       where: eq(schema.shops.id, shopId),
@@ -513,11 +527,17 @@ export class TicketService {
     const settings = parseSettings(shop.settings);
     if (!settings.allowAppointments) throw new ConflictError('Appointments are not enabled for this shop');
 
-    const service = await this.db.query.services.findFirst({
-      where: and(eq(schema.services.id, data.serviceId), eq(schema.services.shopId, shopId)),
+    const idsToValidate = data.complementaryServiceIds?.length ? data.complementaryServiceIds : [data.serviceId];
+    const services = await this.db.query.services.findMany({
+      where: and(inArray(schema.services.id, idsToValidate), eq(schema.services.shopId, shopId)),
+      columns: { id: true, isActive: true },
     });
-    if (!service) throw new NotFoundError('Service not found');
-    if (!service.isActive) throw new ConflictError('Service is not active');
+    const serviceMap = new Map(services.map((s) => [s.id, s]));
+    for (const id of idsToValidate) {
+      const svc = serviceMap.get(id);
+      if (!svc) throw new NotFoundError('Service not found');
+      if (!svc.isActive) throw new ConflictError('Service is not active');
+    }
 
     const scheduledTime = typeof data.scheduledTime === 'string' ? new Date(data.scheduledTime) : data.scheduledTime;
     if (isNaN(scheduledTime.getTime())) throw new ValidationError('Invalid scheduledTime');
@@ -535,12 +555,14 @@ export class TicketService {
       throw new ConflictError('Appointment capacity reached. Maximum appointments for this queue is ' + appointmentCap + '.');
     }
 
+    const complementaryIds = data.complementaryServiceIds ?? [];
     const now = new Date();
     const [ticket] = await this.db
       .insert(schema.tickets)
       .values({
         shopId,
         serviceId: data.serviceId,
+        complementaryServiceIds: complementaryIds,
         customerName: data.customerName,
         customerPhone: data.customerPhone ?? null,
         deviceId: null,
@@ -558,15 +580,20 @@ export class TicketService {
     const ticketNumber = `A-${ticket.id}`;
     let clientId: number | null = data.clientId ?? null;
     if (clientId == null && data.customerPhone && data.customerPhone.trim().length > 0) {
-      try {
-        const client = await this.clientService.findOrCreateByPhone(
-          shopId,
-          data.customerPhone,
-          data.customerName
-        );
-        clientId = client.id;
-      } catch (err) {
-        console.warn('[TicketService] Client resolution failed for appointment:', err);
+      const companyId = (shop as { companyId?: number | null }).companyId;
+      if (companyId != null) {
+        try {
+          const client = await this.clientService.findOrCreateByPhone(
+            companyId,
+            data.customerPhone,
+            data.customerName,
+            undefined,
+            shopId
+          );
+          clientId = client.id;
+        } catch (err) {
+          console.warn('[TicketService] Client resolution failed for appointment:', err);
+        }
       }
     }
 

@@ -713,13 +713,16 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         await tx.delete(schema.tickets).where(eq(schema.tickets.shopId, shopId));
         await tx.delete(schema.barberServiceWeekdayStats).where(eq(schema.barberServiceWeekdayStats.shopId, shopId));
         await tx.delete(schema.services).where(eq(schema.services.shopId, shopId));
+        const shopBarberIds = await tx.select({ id: schema.barbers.id }).from(schema.barbers).where(eq(schema.barbers.shopId, shopId));
+        for (const b of shopBarberIds) {
+          await tx.delete(schema.clientClipNotes).where(eq(schema.clientClipNotes.barberId, b.id));
+        }
         await tx.delete(schema.barbers).where(eq(schema.barbers.shopId, shopId));
         await tx.delete(schema.companyAds).where(eq(schema.companyAds.shopId, shopId));
         await tx.delete(schema.usageAlerts).where(eq(schema.usageAlerts.shopId, shopId));
         await tx.delete(schema.apiUsageBuckets).where(eq(schema.apiUsageBuckets.shopId, shopId));
         await tx.delete(schema.passwordResetTokens).where(eq(schema.passwordResetTokens.shopId, shopId));
-        // Clients reference shop_id; client_clip_notes reference clients and use onDelete cascade, so deleting clients removes their notes
-        await tx.delete(schema.clients).where(eq(schema.clients.shopId, shopId));
+        // Clients are company-scoped; do not delete clients when deleting a shop (they may have tickets at other shops)
         await tx.delete(schema.shops).where(eq(schema.shops.id, shopId));
         await tx.delete(schema.projects).where(eq(schema.projects.id, projectId));
       });

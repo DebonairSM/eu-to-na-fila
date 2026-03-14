@@ -167,7 +167,7 @@ export function BarberQueueManager() {
     }
     setAppointmentSlotsLoading(true);
     api
-      .getAppointmentSlots(shopSlug, appointmentDateStr, appointmentForm.serviceId, appointmentForm.preferredBarberId ?? undefined)
+      .getAppointmentSlots(shopSlug, appointmentDateStr, [appointmentForm.serviceId], appointmentForm.preferredBarberId ?? undefined)
       .then((res) => setAppointmentSlots(res.slots))
       .catch(() => setAppointmentSlots([]))
       .finally(() => setAppointmentSlotsLoading(false));
@@ -280,8 +280,12 @@ export function BarberQueueManager() {
     return [...displayBarbers].sort((a, b) => a.id - b.id);
   }, [displayBarbers]);
 
-  // Load reschedule slots when editing appointment
-  const editTicketServiceId = editTicket?.serviceId;
+  // Load reschedule slots when editing appointment (use full service list for slot duration)
+  const editTicketServiceIds = editTicket
+    ? (editTicket.complementaryServiceIds && editTicket.complementaryServiceIds.length > 0
+        ? editTicket.complementaryServiceIds
+        : [editTicket.serviceId])
+    : [];
 
   const getTicketServiceNames = useCallback(
     (ticket: {
@@ -330,17 +334,17 @@ export function BarberQueueManager() {
   );
   const editTicketBarberId = editTicket ? (editTicket as { preferredBarberId?: number }).preferredBarberId : undefined;
   useEffect(() => {
-    if (!editAppointmentTicketId || !rescheduleDateStr || !useSlotsForAppointment || !editTicketServiceId) {
+    if (!editAppointmentTicketId || !rescheduleDateStr || !useSlotsForAppointment || editTicketServiceIds.length === 0) {
       setRescheduleSlots([]);
       return;
     }
     setRescheduleSlotsLoading(true);
     api
-      .getAppointmentSlots(shopSlug, rescheduleDateStr, editTicketServiceId, editTicketBarberId)
+      .getAppointmentSlots(shopSlug, rescheduleDateStr, editTicketServiceIds, editTicketBarberId)
       .then((res) => setRescheduleSlots(res.slots))
       .catch(() => setRescheduleSlots([]))
       .finally(() => setRescheduleSlotsLoading(false));
-  }, [editAppointmentTicketId, rescheduleDateStr, editTicketServiceId, editTicketBarberId, shopSlug, useSlotsForAppointment]);
+  }, [editAppointmentTicketId, rescheduleDateStr, editTicketServiceIds.join(','), editTicketBarberId, shopSlug, useSlotsForAppointment]);
 
   // Parse reschedule date/time from editAppointmentTime
   useEffect(() => {
@@ -359,16 +363,24 @@ export function BarberQueueManager() {
     }
   }, [editAppointmentTicketId, editAppointmentTime]);
 
-  // Combined name handler for check-in forms: allow full name with spaces
+  // Combined name handler for check-in forms: allow full name with spaces.
+  // Keep display value as-typed (including trailing space) so user can type "First " then "Last".
+  // Derive first/last from trimmed value for validation and submit.
   const handleCombinedCheckInNameChange = useCallback((value: string) => {
-    const formatted = formatName(value);
-    setCombinedCheckInName(formatted);
-    const words = formatted.trim().split(/\s+/).filter(Boolean);
+    setCombinedCheckInName(value);
+    const words = value.trim().split(/\s+/).filter(Boolean);
     setCheckInName({
       first: words[0] ?? '',
       last: words.length > 1 ? words.slice(1).join(' ') : '',
     });
   }, []);
+
+  const handleCombinedCheckInNameBlur = useCallback(() => {
+    const trimmed = combinedCheckInName.trim();
+    if (trimmed.length > 0) {
+      setCombinedCheckInName(formatName(trimmed));
+    }
+  }, [combinedCheckInName]);
 
   const handleAddCustomer = useCallback(async () => {
     const validation = validateName(checkInName.first, checkInName.last);
@@ -820,6 +832,7 @@ export function BarberQueueManager() {
                     type="text"
                     value={combinedCheckInName}
                     onChange={(e) => handleCombinedCheckInNameChange(e.target.value)}
+                    onBlur={handleCombinedCheckInNameBlur}
                     placeholder={t('barber.namePlaceholder')}
                     autoCapitalize="words"
                     autoCorrect="off"
@@ -1203,6 +1216,7 @@ export function BarberQueueManager() {
               type="text"
               value={combinedCheckInName}
               onChange={(e) => handleCombinedCheckInNameChange(e.target.value)}
+              onBlur={handleCombinedCheckInNameBlur}
               placeholder={t('barber.namePlaceholder')}
               autoComplete="one-time-code"
               autoCapitalize="words"
@@ -1488,7 +1502,7 @@ export function BarberQueueManager() {
                     />
                   </div>
                 </div>
-                {rescheduleDateStr && editTicket?.serviceId && (
+                {rescheduleDateStr && editTicketServiceIds.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium mb-1 text-[var(--shop-text-primary)]">{t('schedule.selectTime')}</label>
                     {rescheduleSlotsLoading ? (

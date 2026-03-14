@@ -28,6 +28,7 @@ import { propagandasPublicRoutes } from './routes/propagandas-public.js';
 import { stripeWebhookRoutes } from './routes/stripe-webhook.js';
 import { clientsRoutes } from './routes/clients.js';
 import { projectsRoutes } from './routes/projects.js';
+import { isEmailConfigured } from './services/EmailService.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { toLoggableError } from './lib/errors.js';
 import { registerWebSocket } from './websocket/handler.js';
@@ -649,7 +650,11 @@ fastify.addHook('onReady', async () => {
   } catch (error) {
     fastify.log.error({ err: toLoggableError(error) }, 'Database connection test failed on startup');
   }
-  
+
+  if (!isEmailConfigured()) {
+    fastify.log.warn('Email not configured; appointment, password-reset, and ad-order reminder emails will not be sent.');
+  }
+
   // Log path resolution for debugging
   fastify.log.info(`[Paths] publicPath resolved to: ${publicPath}`);
   fastify.log.info(`[Paths] companiesPath resolved to: ${companiesPath}`);

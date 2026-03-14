@@ -155,6 +155,20 @@
       "when": 1771900000000,
       "tag": "0030_api_usage_and_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "5",
+      "when": 1772000000000,
+      "tag": "0031_clients_company_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1772100000000,
+      "tag": "0032_deduplicate_clients_company_scope",
+      "breakpoints": true
     }
   ]
 }

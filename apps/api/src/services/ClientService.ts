@@ -21,7 +21,8 @@ export function normalizePhone(phone: string): string {
 
 export interface Client {
   id: number;
-  shopId: number;
+  companyId: number;
+  shopId: number | null;
   phone: string;
   name: string;
   email: string | null;
@@ -51,38 +52,43 @@ export class ClientService {
   constructor(private db: DbClient) {}
 
   /**
-   * Find or create a client by phone. Updates name on existing client (last-seen wins).
+   * Find or create a client by phone (company-scoped). Updates name on existing client (last-seen wins).
+   * Optionally set lastShopId so the client record reflects which shop they last visited.
    */
   async findOrCreateByPhone(
-    shopId: number,
+    companyId: number,
     phone: string,
     name: string,
-    email?: string | null
+    email?: string | null,
+    lastShopId?: number | null
   ): Promise<Client> {
     const normalized = normalizePhone(phone);
     if (!normalized) throw new Error('Invalid phone');
 
     const existing = await this.db.query.clients.findFirst({
       where: and(
-        eq(schema.clients.shopId, shopId),
+        eq(schema.clients.companyId, companyId),
         eq(schema.clients.phone, normalized)
       ),
     });
 
     const now = new Date();
     if (existing) {
+      const updates: Record<string, unknown> = {
+        name,
+        ...(email !== undefined ? { email: email ?? null } : {}),
+        updatedAt: now,
+      };
+      if (lastShopId !== undefined) updates.shopId = lastShopId;
       await this.db
         .update(schema.clients)
-        .set({
-          name,
-          ...(email !== undefined ? { email: email ?? null } : {}),
-          updatedAt: now,
-        })
+        .set(updates as Record<string, unknown>)
         .where(eq(schema.clients.id, existing.id));
       return {
         ...existing,
         name,
         email: email !== undefined ? (email ?? null) : existing.email,
+        shopId: lastShopId !== undefined ? lastShopId : existing.shopId,
         updatedAt: now,
       } as Client;
     }
@@ -90,7 +96,8 @@ export class ClientService {
     const [created] = await this.db
       .insert(schema.clients)
       .values({
-        shopId,
+        companyId,
+        shopId: lastShopId ?? null,
         phone: normalized,
         name,
         email: email ?? null,
@@ -100,14 +107,14 @@ export class ClientService {
   }
 
   /**
-   * Find client by normalized phone (for remember lookup).
+   * Find client by normalized phone (company-scoped, for remember lookup).
    */
-  async findByPhone(shopId: number, phone: string): Promise<Client | null> {
+  async findByPhone(companyId: number, phone: string): Promise<Client | null> {
     const normalized = normalizePhone(phone);
     if (!normalized) return null;
     const client = await this.db.query.clients.findFirst({
       where: and(
-        eq(schema.clients.shopId, shopId),
+        eq(schema.clients.companyId, companyId),
         eq(schema.clients.phone, normalized)
       ),
     });
@@ -121,17 +128,18 @@ export class ClientService {
     return client as Client | null;
   }
 
-  async getByIdWithShopCheck(id: number, shopId: number): Promise<Client | null> {
+  /** Verify client belongs to the company (e.g. company that owns the current shop). */
+  async getByIdWithCompanyCheck(id: number, companyId: number): Promise<Client | null> {
     const client = await this.db.query.clients.findFirst({
       where: and(
         eq(schema.clients.id, id),
-        eq(schema.clients.shopId, shopId)
+        eq(schema.clients.companyId, companyId)
       ),
     });
     return client as Client | null;
   }
 
-  async search(shopId: number, q: string, limit = 20): Promise<Client[]> {
+  async search(companyId: number, q: string, limit = 20): Promise<Client[]> {
     const trimmed = q.trim();
     if (!trimmed) return [];
 
@@ -147,7 +155,7 @@ export class ClientService {
     }
 
     const clients = await this.db.query.clients.findMany({
-      where: and(eq(schema.clients.shopId, shopId), or(...conditions)),
+      where: and(eq(schema.clients.companyId, companyId), or(...conditions)),
       limit,
       orderBy: [desc(schema.clients.updatedAt)],
     });
@@ -155,23 +163,24 @@ export class ClientService {
   }
 
   /**
-   * List all clients for a shop with ticket count. Paginated. Owner-only.
+   * List all clients for a company (seen from a shop context). Ticket count is scoped to shopId when provided
+   * so staff at a given shop see how many visits that client had at this shop. Paginated. Owner-only.
    */
-  async listByShop(
-    shopId: number,
-    opts: { page: number; limit: number }
+  async listByCompany(
+    companyId: number,
+    opts: { page: number; limit: number; shopIdForTicketCount?: number | null }
   ): Promise<{ clients: ClientListItem[]; total: number }> {
-    const { page, limit } = opts;
+    const { page, limit, shopIdForTicketCount } = opts;
     const offset = Math.max(0, (page - 1) * limit);
 
     const [totalRow] = await this.db
       .select({ count: sql<number>`count(*)::int` })
       .from(schema.clients)
-      .where(eq(schema.clients.shopId, shopId));
+      .where(eq(schema.clients.companyId, companyId));
     const total = totalRow?.count ?? 0;
 
     const clients = await this.db.query.clients.findMany({
-      where: eq(schema.clients.shopId, shopId),
+      where: eq(schema.clients.companyId, companyId),
       columns: { id: true, name: true, phone: true, email: true, createdAt: true },
       orderBy: [desc(schema.clients.updatedAt)],
       limit,
@@ -183,18 +192,16 @@ export class ClientService {
     }
 
     const clientIds = clients.map((c) => c.id);
+    const ticketWhere = shopIdForTicketCount != null
+      ? and(eq(schema.tickets.shopId, shopIdForTicketCount), inArray(schema.tickets.clientId, clientIds))
+      : inArray(schema.tickets.clientId, clientIds);
     const ticketCountRows = await this.db
       .select({
         clientId: schema.tickets.clientId,
         count: sql<number>`count(*)::int`,
       })
       .from(schema.tickets)
-      .where(
-        and(
-          eq(schema.tickets.shopId, shopId),
-          inArray(schema.tickets.clientId, clientIds)
-        )
-      )
+      .where(ticketWhere)
       .groupBy(schema.tickets.clientId);
 
     const countMap = new Map<number, number>();
@@ -218,7 +225,7 @@ export class ClientService {
 
   async update(
     id: number,
-    shopId: number,
+    companyId: number,
     data: {
       name?: string;
       email?: string | null;
@@ -229,7 +236,7 @@ export class ClientService {
       gender?: string | null;
     }
   ): Promise<Client> {
-    const client = await this.getByIdWithShopCheck(id, shopId);
+    const client = await this.getByIdWithCompanyCheck(id, companyId);
     if (!client) throw new NotFoundError('Client not found');
 
     const setData: Record<string, unknown> = { updatedAt: new Date() };
@@ -254,7 +261,7 @@ export class ClientService {
    */
   async updateCustomerProfile(
     id: number,
-    shopId: number,
+    companyId: number,
     data: {
       name?: string;
       phone?: string | null;
@@ -268,7 +275,7 @@ export class ClientService {
       gender?: string | null;
     }
   ): Promise<Client> {
-    const client = await this.getByIdWithShopCheck(id, shopId);
+    const client = await this.getByIdWithCompanyCheck(id, companyId);
     if (!client) throw new NotFoundError('Client not found');
 
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
@@ -314,8 +321,8 @@ export class ClientService {
     return updated as Client;
   }
 
-  async getClipNotes(clientId: number, shopId: number): Promise<ClientClipNote[]> {
-    const client = await this.getByIdWithShopCheck(clientId, shopId);
+  async getClipNotes(clientId: number, companyId: number): Promise<ClientClipNote[]> {
+    const client = await this.getByIdWithCompanyCheck(clientId, companyId);
     if (!client) throw new NotFoundError('Client not found');
 
     const notes = await this.db.query.clientClipNotes.findMany({
@@ -336,12 +343,12 @@ export class ClientService {
 
   async addClipNote(
     clientId: number,
-    shopId: number,
+    companyId: number,
     barberId: number,
     note: string,
     serviceId?: number | null,
   ): Promise<ClientClipNote> {
-    const client = await this.getByIdWithShopCheck(clientId, shopId);
+    const client = await this.getByIdWithCompanyCheck(clientId, companyId);
     if (!client) throw new NotFoundError('Client not found');
 
     const [created] = await this.db
@@ -364,13 +371,13 @@ export class ClientService {
     } as ClientClipNote;
   }
 
-  async getServiceHistory(clientId: number, shopId: number): Promise<Array<{
+  async getServiceHistory(clientId: number, companyId: number): Promise<Array<{
     id: number;
     serviceName: string;
     barberName: string | null;
     completedAt: Date | null;
   }>> {
-    const client = await this.getByIdWithShopCheck(clientId, shopId);
+    const client = await this.getByIdWithCompanyCheck(clientId, companyId);
     if (!client) throw new NotFoundError('Client not found');
 
     const tickets = await this.db.query.tickets.findMany({

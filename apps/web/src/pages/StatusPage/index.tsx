@@ -233,18 +233,23 @@ export function StatusPage() {
     setRescheduleError(null);
   }, [rescheduleModalOpen, ticket, timezone]);
 
+  const ticketServiceIds = ticket
+    ? (ticket.complementaryServiceIds && ticket.complementaryServiceIds.length > 0
+        ? ticket.complementaryServiceIds
+        : [ticket.serviceId])
+    : [];
   useEffect(() => {
-    if (!rescheduleModalOpen || !shopSlug || !rescheduleDateStr || !ticket?.serviceId) {
+    if (!rescheduleModalOpen || !shopSlug || !rescheduleDateStr || ticketServiceIds.length === 0) {
       setRescheduleSlots([]);
       return;
     }
     setRescheduleSlotsLoading(true);
     api
-      .getAppointmentSlots(shopSlug, rescheduleDateStr, ticket.serviceId, preferredBarberId ?? undefined)
+      .getAppointmentSlots(shopSlug, rescheduleDateStr, ticketServiceIds, preferredBarberId ?? undefined)
       .then((res) => setRescheduleSlots(res.slots))
       .catch(() => setRescheduleSlots([]))
       .finally(() => setRescheduleSlotsLoading(false));
-  }, [rescheduleModalOpen, shopSlug, rescheduleDateStr, ticket?.serviceId, preferredBarberId]);
+  }, [rescheduleModalOpen, shopSlug, rescheduleDateStr, ticketServiceIds.join(','), preferredBarberId]);
 
   useEffect(() => {
     setRescheduleSlotTime(null);
@@ -526,7 +531,7 @@ export function StatusPage() {
                 />
               </div>
             </div>
-            {rescheduleDateStr && ticket?.serviceId && (
+            {rescheduleDateStr && ticketServiceIds.length > 0 && (
               <div>
                 <InputLabel className="mb-2 block">{t('schedule.selectTime')}</InputLabel>
                 {rescheduleSlotsLoading ? (

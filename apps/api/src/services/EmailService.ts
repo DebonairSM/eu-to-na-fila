@@ -22,6 +22,15 @@ export interface AppointmentReminderData {
 
 let nodemailerTransporter: Transporter | null = null;
 let gmailClient: gmail_v1.Gmail | null = null;
+let noTransportLogged = false;
+
+function logIfNoTransport(): void {
+  if (noTransportLogged) return;
+  noTransportLogged = true;
+  console.error(
+    '[EmailService] No transport configured. Set GMAIL_USER + GMAIL_APP_PASSWORD or GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GMAIL_REFRESH_TOKEN.'
+  );
+}
 
 function getNodemailerTransporter(): Transporter | null {
   if (nodemailerTransporter) return nodemailerTransporter;
@@ -170,7 +179,7 @@ export async function sendPasswordResetEmail(toEmail: string, data: PasswordRese
 
   const trans = getNodemailerTransporter();
   if (!trans) {
-    console.error('[EmailService] sendPasswordResetEmail: no Gmail client and no Nodemailer transporter (set GMAIL_USER + GMAIL_APP_PASSWORD or Gmail OAuth env)');
+    logIfNoTransport();
     return false;
   }
 
@@ -215,13 +224,19 @@ export async function sendAdOrderReminderToAdmin(
         requestBody: { raw },
       });
       return true;
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[EmailService] sendAdOrderReminderToAdmin (Gmail) failed:', msg);
+      if (err instanceof Error && err.stack) console.error(err.stack);
       return false;
     }
   }
 
   const trans = getNodemailerTransporter();
-  if (!trans) return false;
+  if (!trans) {
+    logIfNoTransport();
+    return false;
+  }
 
   try {
     await trans.sendMail({
@@ -231,7 +246,15 @@ export async function sendAdOrderReminderToAdmin(
       text: textBody,
     });
     return true;
-  } catch {
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[EmailService] sendAdOrderReminderToAdmin (Nodemailer) failed:', msg);
+    if (err instanceof Error && err.stack) console.error(err.stack);
     return false;
   }
+}
+
+/** Returns true if at least one email transport (Gmail API or Nodemailer) is configured. */
+export function isEmailConfigured(): boolean {
+  return getGmailClient() !== null || getNodemailerTransporter() !== null;
 }
