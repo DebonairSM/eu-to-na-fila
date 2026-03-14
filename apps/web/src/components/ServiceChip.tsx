@@ -9,7 +9,7 @@ export interface ServiceChipProps {
   size?: 'default' | 'kiosk';
 }
 
-export function ServiceChip({ service, selected, onToggle, label, size = 'default' }: ServiceChipProps) {
+export function ServiceChip({ selected, onToggle, label, size = 'default' }: ServiceChipProps) {
   return (
     <button
       type="button"

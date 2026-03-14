@@ -208,10 +208,11 @@ export function BarberQueueManager() {
         setCombinedCheckInName('');
         setCheckInPhone('');
         setCheckInBarberId(null);
-        setCheckInServiceId(firstActiveServiceId);
+        const firstId = activeServices[0]?.id;
+        setCheckInServiceIds(firstId != null ? [firstId] : []);
       }
     }
-  }, [checkInModal.isOpen, firstActiveServiceId]);
+  }, [checkInModal.isOpen, activeServices]);
 
   // Preload barber avatar images when barbers data is available
   useEffect(() => {
