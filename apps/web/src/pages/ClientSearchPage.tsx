@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
@@ -20,42 +20,58 @@ function ageFromDateOfBirth(dateOfBirth: string | null | undefined): number | nu
   return age >= 0 ? age : null;
 }
 
+function normalizeForMatch(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '');
+}
+
 export function ClientSearchPage() {
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
   const { t } = useLocale();
   const [query, setQuery] = useState('');
-  const [clients, setClients] = useState<ClientListItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [allClients, setAllClients] = useState<ClientListItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searched, setSearched] = useState(false);
 
-  const runSearch = useCallback(async () => {
+  const loadAllClients = useCallback(async () => {
     if (!shopSlug) return;
-    const q = query.trim();
-    if (!q) {
-      setClients([]);
-      setSearched(false);
-      setError(null);
-      return;
-    }
     setLoading(true);
     setError(null);
-    setSearched(true);
     try {
-      const res = await api.searchClients(shopSlug, q);
-      setClients(res.clients);
+      const res = await api.searchClients(shopSlug, '');
+      setAllClients(res.clients ?? []);
     } catch (err) {
       setError(getErrorMessage(err, t('clients.searchError')));
-      setClients([]);
+      setAllClients([]);
     } finally {
       setLoading(false);
     }
-  }, [shopSlug, query, t]);
+  }, [shopSlug, t]);
+
+  useEffect(() => {
+    loadAllClients();
+  }, [loadAllClients]);
+
+  const filteredClients = useMemo(() => {
+    const q = query.trim();
+    if (!q) return allClients;
+    const normalizedQuery = normalizeForMatch(q);
+    const terms = normalizedQuery.split(/\s+/).filter(Boolean);
+    return allClients.filter((client) => {
+      const name = normalizeForMatch(client.name);
+      const phone = (client.phone ?? '').replace(/\D/g, '');
+      const queryDigits = normalizedQuery.replace(/\D/g, '');
+      const nameMatch = terms.every((term) => name.includes(term));
+      const phoneMatch = queryDigits.length >= 3 && phone.includes(queryDigits);
+      return nameMatch || phoneMatch;
+    });
+  }, [allClients, query]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    runSearch();
   };
 
   return (
@@ -88,13 +104,6 @@ export function ClientSearchPage() {
             aria-label={t('clients.searchPlaceholder')}
             autoComplete="off"
           />
-          <Button
-            type="submit"
-            disabled={loading || !query.trim()}
-            className="px-5 py-3 rounded-xl bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-medium hover:opacity-90 disabled:opacity-50"
-          >
-            {loading ? t('clients.searching') : t('clients.search')}
-          </Button>
         </form>
 
         {error && (
@@ -107,13 +116,13 @@ export function ClientSearchPage() {
           <p className="text-[var(--shop-text-secondary)] text-sm">{t('clients.searching')}</p>
         )}
 
-        {!loading && searched && clients.length === 0 && (
+        {!loading && query.trim() && filteredClients.length === 0 && (
           <p className="text-[var(--shop-text-secondary)] italic">{t('clients.noResults')}</p>
         )}
 
-        {!loading && clients.length > 0 && (
+        {!loading && filteredClients.length > 0 && (
           <ul className="space-y-2" role="list">
-            {clients.map((client) => {
+            {filteredClients.map((client) => {
               const age = ageFromDateOfBirth(client.dateOfBirth);
               const genderLabel = client.gender === 'male' ? t('account.genderMale') : client.gender === 'female' ? t('account.genderFemale') : client.gender || null;
               const hasFullInfo = client.phone != null || client.email != null;
@@ -138,12 +147,6 @@ export function ClientSearchPage() {
               );
             })}
           </ul>
-        )}
-
-        {!searched && !loading && (
-          <p className="text-[var(--shop-text-secondary)] text-sm">
-            {t('clients.enterQuery')}
-          </p>
         )}
       </main>
     </div>

@@ -192,12 +192,13 @@ export function BarberQueueManager() {
     return !hasHoursForDay(operatingHours, date);
   }, [operatingHours]);
 
-  // Auto-focus first name input when check-in modal opens; reset form only when modal closes (transition)
+  // Auto-focus first name input only when modal *just* opened (not on every re-render while open), so the keyboard doesn't keep popping back up on mobile
   const checkInModalWasOpenRef = useRef(false);
   useEffect(() => {
     if (checkInModal.isOpen) {
+      const justOpened = !checkInModalWasOpenRef.current;
       checkInModalWasOpenRef.current = true;
-      if (firstNameInputRef.current) {
+      if (justOpened && firstNameInputRef.current) {
         const t = setTimeout(() => firstNameInputRef.current?.focus(), 100);
         return () => clearTimeout(t);
       }
@@ -383,13 +384,21 @@ export function BarberQueueManager() {
   }, [combinedCheckInName]);
 
   const handleAddCustomer = useCallback(async () => {
-    const validation = validateName(checkInName.first, checkInName.last);
+    // Prefer combined name (kiosk single field) when non-empty so submit uses what the user actually typed
+    const combinedTrimmed = combinedCheckInName.trim();
+    const useCombined = combinedTrimmed.length > 0;
+    const first = useCombined ? combinedTrimmed.split(/\s+/).filter(Boolean)[0] ?? '' : checkInName.first;
+    const last = useCombined ? combinedTrimmed.split(/\s+/).filter(Boolean).slice(1).join(' ') : checkInName.last;
+
+    const validation = validateName(first, last);
     if (!validation.isValid) {
       setErrorMessage(validation.error || t('barber.invalidName'));
       return;
     }
 
-    const fullName = [checkInName.first.trim(), checkInName.last.trim()].filter(Boolean).map((s) => formatName(s)).join(' ');
+    const fullName = useCombined
+      ? formatName(combinedTrimmed)
+      : [checkInName.first.trim(), checkInName.last.trim()].filter(Boolean).map((s) => formatName(s)).join(' ');
 
     setIsSubmitting(true);
     setErrorMessage(null);
@@ -414,7 +423,7 @@ export function BarberQueueManager() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [checkInName, checkInPhone, validateName, refetchQueue, checkInModal, shopSlug, t, checkInServiceIds, checkInBarberId, activeServices, settings.allowBarberPreference]);
+  }, [checkInName, combinedCheckInName, checkInPhone, validateName, refetchQueue, checkInModal, shopSlug, t, checkInServiceIds, checkInBarberId, activeServices, settings.allowBarberPreference]);
 
   const handleSelectBarber = useCallback(async (barberId: number | null) => {
     if (!selectedCustomerId || !shopSlug) return;
@@ -651,8 +660,9 @@ export function BarberQueueManager() {
         <div className="flex-shrink-0 pt-4 pb-4 px-6 text-center border-b border-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] bg-[color-mix(in_srgb,var(--shop-background)_98%,transparent)] z-40">
           <button
             onClick={() => {
-              checkInModal.open();
               showQueueView();
+              // Defer modal open so it is not lost when the first click also triggers fullscreen request
+              setTimeout(() => checkInModal.open(), 0);
             }}
             className="inline-flex items-center gap-4 px-10 py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] rounded-2xl font-semibold text-xl hover:opacity-90 hover:-translate-y-1 hover:shadow-[0_8px_32px_color-mix(in_srgb,var(--shop-accent)_50%,transparent)] transition-all"
             aria-label={t('barber.addClientAria')}
@@ -808,13 +818,22 @@ export function BarberQueueManager() {
         )}
 
         {/* Kiosk Modals - Styled for fullscreen display */}
-        {/* Check-in Modal */}
+        {/* Check-in Modal - fixed to viewport so it is not clipped by fullscreen/overflow */}
         {checkInModal.isOpen && (
-          <div className="absolute inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-8">
+          <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-8" role="dialog" aria-modal="true" aria-labelledby="kiosk-checkin-title">
             <div className="bg-[var(--shop-surface-secondary)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-3xl p-6 sm:p-8 lg:p-10 max-w-2xl w-full min-w-[320px]">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-['Playfair_Display',serif] text-[var(--shop-accent)] mb-6 sm:mb-8 text-center">
+              <h2 id="kiosk-checkin-title" className="text-2xl sm:text-3xl lg:text-4xl font-['Playfair_Display',serif] text-[var(--shop-accent)] mb-6 sm:mb-8 text-center">
                 {t('barber.joinQueue')}
               </h2>
+              {errorMessage && (
+                <div className="mb-4 p-4 rounded-2xl bg-[var(--error)]/20 border border-[var(--error)] text-[var(--error)] flex items-center gap-2" role="alert">
+                  <span className="material-symbols-outlined flex-shrink-0">error</span>
+                  <p className="text-sm sm:text-base">{errorMessage}</p>
+                  <button type="button" onClick={() => setErrorMessage(null)} className="ml-auto p-1 rounded hover:bg-white/10" aria-label={t('barber.closeError')}>
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+              )}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -1120,7 +1139,8 @@ export function BarberQueueManager() {
                   const assignedBarber = getAssignedBarber(ticket);
                   const isServing = ticket.status === 'in_progress';
                   const canOpenNotesAsBarber = !isBarber || (user && assignedBarber?.id === user.id);
-                  const showNotesButton = isServing && canOpenNotesAsBarber;
+                  const hasClientRecord = (ticket as { clientId?: number | null }).clientId != null;
+                  const showNotesButton = isServing && canOpenNotesAsBarber && hasClientRecord;
                   // Calculate display position based on index in sorted waiting tickets
                   const displayPosition = isServing ? null : index + 1;
                   const preferredBarberId = (ticket as { preferredBarberId?: number }).preferredBarberId;
@@ -1622,7 +1642,8 @@ export function BarberQueueManager() {
         const displayPos = selectedTicket?.status === 'in_progress' ? null : idx >= 0 ? idx + 1 : null;
         const isServingSheet = selectedTicket?.status === 'in_progress';
         const canOpenNotesAsBarber = !isBarber || (user && assignedBarberForSheet?.id === user.id);
-        const showNotesBtn = isServingSheet && canOpenNotesAsBarber;
+        const hasClientRecordSheet = (selectedTicket as { clientId?: number | null } | undefined)?.clientId != null;
+        const showNotesBtn = isServingSheet && canOpenNotesAsBarber && hasClientRecordSheet;
         if (!selectedTicket) return null;
         return (
           <TicketActionSheet

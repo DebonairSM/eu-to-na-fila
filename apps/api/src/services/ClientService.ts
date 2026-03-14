@@ -1,6 +1,6 @@
 import type { DbClient } from '../db/types.js';
 import { schema } from '../db/index.js';
-import { eq, and, or, ilike, desc, inArray, sql } from 'drizzle-orm';
+import { eq, and, or, ilike, desc, asc, inArray, sql } from 'drizzle-orm';
 import { NotFoundError } from '../lib/errors.js';
 
 export interface ClientListItem {
@@ -141,7 +141,16 @@ export class ClientService {
 
   async search(companyId: number, q: string, limit = 20): Promise<Client[]> {
     const trimmed = q.trim();
-    if (!trimmed) return [];
+    const orderByName = [asc(schema.clients.name)];
+
+    if (!trimmed) {
+      const clients = await this.db.query.clients.findMany({
+        where: eq(schema.clients.companyId, companyId),
+        limit: 2000,
+        orderBy: orderByName,
+      });
+      return clients as Client[];
+    }
 
     const normalized = normalizePhone(trimmed);
     const words = trimmed.split(/\s+/).filter(Boolean);
@@ -157,7 +166,7 @@ export class ClientService {
     const clients = await this.db.query.clients.findMany({
       where: and(eq(schema.clients.companyId, companyId), or(...conditions)),
       limit,
-      orderBy: [desc(schema.clients.updatedAt)],
+      orderBy: orderByName,
     });
     return clients as Client[];
   }
