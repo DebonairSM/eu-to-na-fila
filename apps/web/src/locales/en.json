@@ -116,6 +116,7 @@
     "selectService": "Select a service.",
     "submitErrorDefault": "Error joining the queue. Please try again.",
     "scheduleForLater": "Schedule for later",
+    "ctaQueueAndSchedule": "Join queue and schedule",
     "backToCheckIn": "Back to check-in",
     "kioskMode": "Kiosk mode",
     "shopClosed": "The shop is currently closed.",

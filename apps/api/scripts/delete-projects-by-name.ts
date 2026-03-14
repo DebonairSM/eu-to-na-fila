@@ -83,6 +83,10 @@ async function main() {
         await tx.delete(schema.services).where(eq(schema.services.shopId, shopId));
         await tx.delete(schema.barbers).where(eq(schema.barbers.shopId, shopId));
         await tx.delete(schema.companyAds).where(eq(schema.companyAds.shopId, shopId));
+        await tx.delete(schema.usageAlerts).where(eq(schema.usageAlerts.shopId, shopId));
+        await tx.delete(schema.apiUsageBuckets).where(eq(schema.apiUsageBuckets.shopId, shopId));
+        await tx.delete(schema.passwordResetTokens).where(eq(schema.passwordResetTokens.shopId, shopId));
+        await tx.delete(schema.clients).where(eq(schema.clients.shopId, shopId));
         await tx.delete(schema.shops).where(eq(schema.shops.id, shopId));
         await tx.delete(schema.projects).where(eq(schema.projects.id, projectId));
       });

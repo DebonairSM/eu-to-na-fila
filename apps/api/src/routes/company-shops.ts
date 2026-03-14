@@ -715,6 +715,9 @@ export const companyShopsRoutes: FastifyPluginAsync = async (fastify) => {
         await tx.delete(schema.services).where(eq(schema.services.shopId, shopId));
         await tx.delete(schema.barbers).where(eq(schema.barbers.shopId, shopId));
         await tx.delete(schema.companyAds).where(eq(schema.companyAds.shopId, shopId));
+        await tx.delete(schema.usageAlerts).where(eq(schema.usageAlerts.shopId, shopId));
+        await tx.delete(schema.apiUsageBuckets).where(eq(schema.apiUsageBuckets.shopId, shopId));
+        await tx.delete(schema.passwordResetTokens).where(eq(schema.passwordResetTokens.shopId, shopId));
         // Clients reference shop_id; client_clip_notes reference clients and use onDelete cascade, so deleting clients removes their notes
         await tx.delete(schema.clients).where(eq(schema.clients.shopId, shopId));
         await tx.delete(schema.shops).where(eq(schema.shops.id, shopId));

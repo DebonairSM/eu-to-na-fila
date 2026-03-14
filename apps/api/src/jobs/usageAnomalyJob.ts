@@ -2,7 +2,7 @@ import { db, schema } from '../db/index.js';
 import { eq, and, gte, lt, sql, isNull } from 'drizzle-orm';
 
 const INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
-const SPIKES_RATIO = 3;              // alert when current > 3x baseline
+const SPIKES_RATIO = 8;              // alert when current > 8x baseline (tuned for multi-device normal usage)
 const MIN_REQUESTS = 50;            // only alert if current period has at least this many
 const PERIOD_MS = 60 * 60 * 1000;   // 1 hour
 

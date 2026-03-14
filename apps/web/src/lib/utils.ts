@@ -8,16 +8,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** True if the shop has scheduling (appointments) enabled and has operating hours configured. */
+/** True if the shop has scheduling (appointments) enabled. Used to show schedule CTAs; operating hours may still be required for slots. */
 export function hasScheduleEnabled(settings: { allowAppointments?: boolean; operatingHours?: unknown }): boolean {
-  if (!settings?.allowAppointments) return false;
-  const hours = settings.operatingHours as Record<string, { open?: string; close?: string } | null> | undefined;
-  if (!hours || typeof hours !== 'object') return false;
-  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
-  return days.some((d) => {
-    const h = hours[d];
-    return h != null && typeof h === 'object' && h.open != null && h.close != null;
-  });
+  return !!settings?.allowAppointments;
 }
 
 /** Truncate label for select options so long service/barber names fit. Full text available via title. */

@@ -35,6 +35,8 @@ import { cn, getErrorMessage, formatName, formatNameForDisplay, truncateOptionLa
 import type { ClientClipNote } from '@/lib/api/clients';
 import { hasHoursForDay, hasAnyOperatingHours } from '@/lib/operatingHours';
 import { getShopStatus } from '@eutonafila/shared';
+import { ServiceChip } from '@/components/ServiceChip';
+import { formatDurationMinutes } from '@/lib/formatDuration';
 
 const AD_VIEW_DURATION = 15000; // 15 seconds
 
@@ -71,7 +73,7 @@ export function BarberQueueManager() {
   const [checkInName, setCheckInName] = useState({ first: '', last: '' });
   const [combinedCheckInName, setCombinedCheckInName] = useState('');
   const [checkInPhone, setCheckInPhone] = useState('');
-  const [checkInServiceId, setCheckInServiceId] = useState<number | null>(null);
+  const [checkInServiceIds, setCheckInServiceIds] = useState<number[]>([]);
   const [checkInBarberId, setCheckInBarberId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -127,18 +129,19 @@ export function BarberQueueManager() {
     }
   }, [searchParams, isKioskMode, isKioskOnly, enterKioskMode]);
 
-  // Sync checkInServiceId to first active service when activeServices loads (like JoinForm). Use primitives to avoid loop.
-  const firstActiveServiceId = activeServices[0]?.id ?? null;
+  // Keep checkInServiceIds in sync with active services: clear when none, otherwise keep only valid ids or default to first.
   const activeServiceIdsStr = activeServices.map((s) => s.id).join(',');
   useEffect(() => {
     if (activeServices.length === 0) {
-      setCheckInServiceId(null);
+      setCheckInServiceIds([]);
       return;
     }
     const validIds = new Set(activeServices.map((s) => s.id));
-    if (checkInServiceId !== null && validIds.has(checkInServiceId)) return;
-    setCheckInServiceId(firstActiveServiceId);
-  }, [activeServices.length, firstActiveServiceId, activeServiceIdsStr, checkInServiceId]);
+    setCheckInServiceIds((prev) => {
+      const kept = prev.filter((id) => validIds.has(id));
+      return kept.length > 0 ? kept : [activeServices[0].id];
+    });
+  }, [activeServiceIdsStr]);
 
   // Auto-set checkInBarberId when single barber (convenience default). Use primitive deps to avoid loop.
   useEffect(() => {
@@ -378,10 +381,10 @@ export function BarberQueueManager() {
     setIsSubmitting(true);
     setErrorMessage(null);
     try {
-      const serviceId = checkInServiceId ?? activeServices[0]?.id ?? 1;
+      const serviceIds = checkInServiceIds.length > 0 ? checkInServiceIds : (activeServices[0] ? [activeServices[0].id] : []);
       await api.createTicket(shopSlug, {
         customerName: fullName,
-        serviceId,
+        complementaryServiceIds: serviceIds,
         ...(checkInPhone.trim() && { customerPhone: checkInPhone.trim() }),
         ...(settings.allowBarberPreference && { preferredBarberId: checkInBarberId ?? undefined }),
       });
@@ -389,7 +392,7 @@ export function BarberQueueManager() {
       setCombinedCheckInName('');
       setCheckInPhone('');
       setCheckInBarberId(null);
-      setCheckInServiceId(activeServices[0]?.id ?? null);
+      setCheckInServiceIds(activeServices.length > 0 ? [activeServices[0].id] : []);
       checkInModal.close();
       await refetchQueue();
     } catch (error) {
@@ -398,7 +401,7 @@ export function BarberQueueManager() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [checkInName, checkInPhone, validateName, refetchQueue, checkInModal, shopSlug, t, checkInServiceId, checkInBarberId, activeServices, settings.allowBarberPreference]);
+  }, [checkInName, checkInPhone, validateName, refetchQueue, checkInModal, shopSlug, t, checkInServiceIds, checkInBarberId, activeServices, settings.allowBarberPreference]);
 
   const handleSelectBarber = useCallback(async (barberId: number | null) => {
     if (!selectedCustomerId || !shopSlug) return;
@@ -841,23 +844,31 @@ export function BarberQueueManager() {
                     />
                   </div>
                 )}
-                {activeServices.length >= 2 && (
+                {activeServices.length > 0 && (
                   <div>
-                    <label htmlFor="kioskCheckInService" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-[var(--shop-text-primary)]">
+                    <label className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-[var(--shop-text-primary)]">
                       {t('join.serviceLabel')}
                     </label>
-                    <select
-                      id="kioskCheckInService"
-                      value={checkInServiceId ?? ''}
-                      onChange={(e) => setCheckInServiceId(e.target.value ? parseInt(e.target.value, 10) : null)}
-                      required
-                      className="select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[48px] px-4 py-3 text-lg rounded-2xl border-2 border-[var(--shop-border-color)] focus:outline-none focus:border-[var(--shop-accent)] bg-white text-gray-900"
-                    >
-                      <option value="">{t('join.selectOption')}</option>
-                      {activeServices.map((s) => (
-                        <option key={s.id} value={s.id} title={s.name}>{truncateOptionLabel(s.name)}</option>
-                      ))}
-                    </select>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {activeServices.map((s) => {
+                        const label = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}`;
+                        const selected = checkInServiceIds.includes(s.id);
+                        return (
+                          <ServiceChip
+                            key={s.id}
+                            service={s}
+                            selected={selected}
+                            onToggle={() =>
+                              setCheckInServiceIds((prev) =>
+                                selected ? prev.filter((id) => id !== s.id) : [...prev, s.id]
+                              )
+                            }
+                            label={label}
+                            size="kiosk"
+                          />
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
                 {settings.allowBarberPreference && barbers.filter((b) => b.isActive).length > 0 && (
@@ -882,7 +893,7 @@ export function BarberQueueManager() {
                   <button
                     type="button"
                     onClick={checkInModal.close}
-                    className="flex-1 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl rounded-2xl bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 transition-all min-h-[44px]"
+                    className="flex-1 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl rounded-2xl bg-white/10 border-2 border-[var(--shop-border-color)] text-[var(--shop-text-primary)] hover:bg-white/20 transition-all min-h-[44px]"
                   >
                     {t('common.cancel')}
                   </button>
@@ -890,7 +901,7 @@ export function BarberQueueManager() {
                     type="submit"
                     disabled={
                       isSubmitting ||
-                      (activeServices.length >= 2 && !checkInServiceId) ||
+                      (activeServices.length > 0 && checkInServiceIds.length === 0) ||
                       (settings.requirePhone && !checkInPhone.trim())
                     }
                     className="flex-1 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-5 text-base sm:text-lg lg:text-xl rounded-2xl bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-semibold hover:bg-[var(--shop-accent-hover)] transition-all disabled:opacity-50 min-h-[44px]"
@@ -1225,21 +1236,28 @@ export function BarberQueueManager() {
               className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-white/5 border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
             />
           </div>
-          {activeServices.length >= 2 && (
+          {activeServices.length > 0 && (
             <div>
-              <label htmlFor="checkInService" className="block text-sm font-medium mb-2 text-[var(--shop-text-primary)]">{t('join.serviceLabel')}</label>
-              <select
-                id="checkInService"
-                value={checkInServiceId ?? ''}
-                onChange={(e) => setCheckInServiceId(e.target.value ? parseInt(e.target.value, 10) : null)}
-                required
-                className="form-control-select select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[44px] bg-white/5 border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
-              >
-                <option value="">{t('join.selectOption')}</option>
-                {activeServices.map((s) => (
-                  <option key={s.id} value={s.id} title={s.name}>{truncateOptionLabel(s.name)}</option>
-                ))}
-              </select>
+              <label className="block text-sm font-medium mb-2 text-[var(--shop-text-primary)]">{t('join.serviceLabel')}</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {activeServices.map((s) => {
+                  const label = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}`;
+                  const selected = checkInServiceIds.includes(s.id);
+                  return (
+                    <ServiceChip
+                      key={s.id}
+                      service={s}
+                      selected={selected}
+                      onToggle={() =>
+                        setCheckInServiceIds((prev) =>
+                          selected ? prev.filter((id) => id !== s.id) : [...prev, s.id]
+                        )
+                      }
+                      label={label}
+                    />
+                  );
+                })}
+              </div>
             </div>
           )}
           {settings.allowBarberPreference && barbers.length > 0 && (
@@ -1259,17 +1277,22 @@ export function BarberQueueManager() {
             </div>
           )}
           <div className="flex gap-3">
-            <Button type="button" variant="outline" onClick={checkInModal.close} className="flex-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={checkInModal.close}
+              className="flex-1 border-[var(--shop-border-color)] text-[var(--shop-text-primary)] hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)] hover:bg-[var(--shop-accent)]/10 focus-visible:ring-[var(--shop-accent)]"
+            >
               {t('common.cancel')}
             </Button>
             <Button
               type="submit"
               disabled={
                 isSubmitting ||
-                (activeServices.length >= 2 && !checkInServiceId) ||
+                (activeServices.length > 0 && checkInServiceIds.length === 0) ||
                 (settings.requirePhone && !checkInPhone.trim())
               }
-              className="flex-1"
+              className="flex-1 !bg-[var(--shop-accent)] !text-[var(--shop-text-on-accent)] hover:!bg-[var(--shop-accent-hover)] focus-visible:!ring-[var(--shop-accent)]"
             >
               {isSubmitting ? t('barber.adding') : t('barber.add')}
             </Button>

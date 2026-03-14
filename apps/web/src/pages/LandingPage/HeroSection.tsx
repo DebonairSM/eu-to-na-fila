@@ -57,7 +57,7 @@ export function HeroSection() {
           <Link to="/schedule">
             <Button variant="outline" size="lg" className={behavior.heroOverlay ? 'cta-join' : ''}>
               {!ctaTextOnly && <span className="material-symbols-outlined text-xl">event</span>}
-              {t('join.scheduleForLater')}
+              {t('join.ctaQueueAndSchedule')}
             </Button>
           </Link>
         )}
@@ -111,7 +111,7 @@ export function HeroSection() {
                 <Link to="/schedule">
                   <Button variant="outline" size="lg" fullWidth className="sm:w-auto">
                     {!ctaTextOnly && <span className="material-symbols-outlined text-xl">event</span>}
-                    {t('join.scheduleForLater')}
+                    {t('join.ctaQueueAndSchedule')}
                   </Button>
                 </Link>
               )}

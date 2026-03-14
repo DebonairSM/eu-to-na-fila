@@ -116,6 +116,7 @@
     "selectService": "Selecione um serviço.",
     "submitErrorDefault": "Erro ao entrar na fila. Tente novamente.",
     "scheduleForLater": "Agendar para depois",
+    "ctaQueueAndSchedule": "Entrar na fila e marcar um horário",
     "backToCheckIn": "Voltar ao check-in",
     "kioskMode": "Modo quiosque",
     "shopClosed": "Fechado no momento.",
