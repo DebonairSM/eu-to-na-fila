@@ -1124,7 +1124,6 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const { readFileSync } = await import('fs');
     const publicPath = getPublicPath();
-    const companyId = (shop as { companyId?: number | null }).companyId;
     const dir = companyId != null
       ? join(publicPath, 'companies', String(companyId), 'shops', String(shop.id), 'clients', String(clientId))
       : join(publicPath, 'shops', String(shop.id), 'clients', String(clientId));
