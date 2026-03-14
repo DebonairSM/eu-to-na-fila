@@ -89,7 +89,7 @@ export function AppearanceForm({
   }, [saveLabel, onSaveCurrentPalette, t]);
 
   const isRoot = variant === 'root';
-  const activeClass = isRoot ? 'bg-white/20 text-white' : 'bg-[#D4AF37]/20 text-[#D4AF37]';
+  const activeClass = isRoot ? 'bg-white/20 text-white' : 'bg-[var(--shop-accent)]/20 text-[var(--shop-accent)]';
   const inactiveClass = isRoot ? 'bg-white/10 text-white/70 hover:text-white' : 'bg-white/10 text-white/70 hover:text-white';
   const inputClass = isRoot
     ? 'w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm'
@@ -317,7 +317,7 @@ export function AppearanceForm({
                           aria-hidden
                           onClick={() => setOpenPickerKey(null)}
                         />
-                        <div className="absolute left-0 top-full mt-1 z-[1002] p-2 rounded-lg bg-[#1a1a1a] border border-white/20 shadow-xl">
+                        <div className="absolute left-0 top-full mt-1 z-[1002] p-2 rounded-lg bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] shadow-xl">
                           <HexColorPicker
                             color={isHex ? value : '#000000'}
                             onChange={(hex) =>

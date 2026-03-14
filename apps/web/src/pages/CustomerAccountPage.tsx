@@ -209,7 +209,7 @@ export function CustomerAccountPage() {
     const googleUrl = api.getCustomerGoogleAuthUrl(shopSlug, '/account');
 
     return (
-      <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="min-h-screen bg-[var(--shop-background)]">
         <Navigation />
         <Container className="pt-20 md:pt-28 lg:pt-32 pb-10">
           <div className="max-w-md mx-auto">
@@ -250,7 +250,7 @@ export function CustomerAccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-[var(--shop-background)]">
       <Navigation />
       <Container className="pt-20 md:pt-28 lg:pt-32 pb-10">
         <div className="max-w-2xl mx-auto space-y-8">
@@ -367,7 +367,7 @@ export function CustomerAccountPage() {
                       </select>
                     </div>
                     {profileError && (
-                      <p className="text-sm text-[#ef4444]">{profileError}</p>
+                      <p className="text-sm text-[var(--error)]">{profileError}</p>
                     )}
                     <Button type="submit" disabled={profileSaving}>
                       {profileSaving ? t('account.saving') : profileSaved ? t('account.saved') : t('account.save')}
@@ -535,7 +535,7 @@ export function CustomerAccountPage() {
                       )}
                     </div>
                     {refError && (
-                      <p className="text-sm text-[#ef4444]">{refError}</p>
+                      <p className="text-sm text-[var(--error)]">{refError}</p>
                     )}
                     <Button type="submit" disabled={refSaving}>
                       {refSaving ? t('account.saving') : t('account.save')}

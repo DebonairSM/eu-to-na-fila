@@ -791,13 +791,14 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     const frontendBaseUrl = env.CORS_ORIGIN.replace(/\/$/, '');
-    const basePath = `/${slug}`.replace(/\/+/g, '/');
-    const resetPath = `${basePath}/shop/reset-password`;
     const genericMessage = 'If an account exists with this email, you will receive reset instructions.';
 
     if (!shop) {
       return reply.status(200).send({ message: genericMessage });
     }
+
+    const basePath = (await getShopFrontendPath(shop, slug)).replace(/\/+$/, '') || `/${slug}`;
+    const resetPath = `${basePath}/shop/reset-password`;
 
     const normalizedEmail = normalizeEmail(email);
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour

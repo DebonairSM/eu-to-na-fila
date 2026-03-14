@@ -7,7 +7,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 export function RootContactPage() {
   const { t } = useLocale();
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[var(--shop-background)] text-white">
       <RootSiteNav />
 
       <main className="py-20">

@@ -19,7 +19,7 @@ export function CheckInConfirmPage() {
   }, [configLoading, shopConfig.settings, navigate]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-[var(--shop-background)]">
       <Navigation />
       <Container className="pt-20 md:pt-28 lg:pt-32 pb-10">
         <div className="max-w-2xl mx-auto text-center space-y-6">

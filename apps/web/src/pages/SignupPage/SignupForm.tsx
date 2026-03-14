@@ -195,7 +195,7 @@ export function SignupForm() {
 
         {error && (
           <div className="p-4 rounded-lg bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)]">
-            <p className="text-sm text-[#ef4444] flex items-center gap-2">
+            <p className="text-sm text-[var(--error)] flex items-center gap-2">
               <span className="material-symbols-outlined text-base">error</span>
               {error}
             </p>

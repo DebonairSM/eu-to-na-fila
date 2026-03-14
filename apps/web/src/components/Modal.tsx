@@ -124,8 +124,8 @@ export function Modal({
       <div
         ref={modalRef}
         className={cn(
-          'relative z-10 w-full max-w-md mx-4 bg-card border-2 border-primary rounded-2xl shadow-elevation-4',
-          'max-h-[90vh] overflow-y-auto',
+          'relative z-10 w-full max-w-md mx-4 bg-[var(--shop-surface-secondary)] border-2 border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-2xl shadow-elevation-4',
+          'max-h-[90vh] max-h-[90dvh] overflow-y-auto',
           'p-4 sm:p-6 md:p-10', // Responsive padding
           'min-w-[320px]', // Minimum width for small screens
           className
@@ -133,16 +133,16 @@ export function Modal({
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between mb-6 pb-6 border-b border-border">
+          <div className="flex items-center justify-between mb-6 pb-6 border-b border-[var(--shop-border-color)]">
             {title && (
-              <h2 id="modal-title" className={cn('text-xl font-semibold', titleClassName)}>
+              <h2 id="modal-title" className={cn('text-xl font-semibold text-[var(--shop-text-primary)]', titleClassName)}>
                 {title}
               </h2>
             )}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="ml-auto rounded-md opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="ml-auto rounded-md opacity-70 hover:opacity-100 text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
                 aria-label={t('accessibility.closeModal')}
               >
                 <span className="material-symbols-outlined text-2xl">close</span>

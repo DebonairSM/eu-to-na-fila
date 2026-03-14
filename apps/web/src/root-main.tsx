@@ -26,7 +26,7 @@ document.documentElement.classList.add('dark');
 function RootLoadingScreen() {
   const { t } = useLocale();
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+    <div className="min-h-screen bg-[var(--shop-background)] text-white flex items-center justify-center">
       <LoadingSpinner text={t('common.loading')} />
     </div>
   );

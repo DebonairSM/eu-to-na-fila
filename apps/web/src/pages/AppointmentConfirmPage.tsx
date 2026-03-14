@@ -151,7 +151,7 @@ export function AppointmentConfirmPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="min-h-screen bg-[var(--shop-background)]">
         <Navigation />
         <Container className="pt-20 pb-10 flex items-center justify-center min-h-[50vh]">
           <LoadingSpinner text={t('common.loading')} />
@@ -162,7 +162,7 @@ export function AppointmentConfirmPage() {
 
   if (error || !ticket) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="min-h-screen bg-[var(--shop-background)]">
         <Navigation />
         <Container className="pt-20 pb-10">
           <ErrorDisplay
@@ -182,7 +182,7 @@ export function AppointmentConfirmPage() {
     : '';
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-[var(--shop-background)]">
       <Navigation />
       <Container className="pt-20 md:pt-28 lg:pt-32 pb-10">
         <div className="max-w-2xl mx-auto">
@@ -213,7 +213,7 @@ export function AppointmentConfirmPage() {
                     className="w-full"
                   />
                   {reminderError && (
-                    <p className="text-sm text-[#ef4444]">{reminderError}</p>
+                    <p className="text-sm text-[var(--error)]">{reminderError}</p>
                   )}
                   <Button type="submit" disabled={reminderSending || !email.trim()}>
                     {reminderSending ? t('common.loading') : t('appointment.sendReminder')}

@@ -224,28 +224,28 @@ function StepServices({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="sm:col-span-2">
-                <input type="text" value={service.name} onChange={(e) => updateService(service.id, { name: e.target.value })} placeholder={t('createShop.serviceNamePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
+                <input type="text" value={service.name} onChange={(e) => updateService(service.id, { name: e.target.value })} placeholder={t('createShop.serviceNamePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm" />
               </div>
               <div className="sm:col-span-2">
-                <input type="text" value={service.description} onChange={(e) => updateService(service.id, { description: e.target.value })} placeholder={t('createShop.serviceDescPlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
+                <input type="text" value={service.description} onChange={(e) => updateService(service.id, { description: e.target.value })} placeholder={t('createShop.serviceDescPlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm" />
               </div>
               <div>
                 <label className="block text-white/50 text-xs mb-1">{t('createShop.durationMin')}</label>
-                <input type="number" min={1} value={service.duration} onChange={(e) => updateService(service.id, { duration: parseInt(e.target.value) || 1 })} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
+                <input type="number" min={1} value={service.duration} onChange={(e) => updateService(service.id, { duration: parseInt(e.target.value) || 1 })} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm" />
               </div>
               <div>
                 <label className="block text-white/50 text-xs mb-1">{t('createShop.priceReais')}</label>
                 <PriceReaisInput
                   valueCents={service.price}
                   onChange={(c) => updateService(service.id, { price: c ?? 0 })}
-                  className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                  className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                 />
               </div>
             </div>
           </div>
         ))}
       </div>
-      <button type="button" onClick={addService} className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition-all text-sm">
+      <button type="button" onClick={addService} className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[var(--shop-accent)] hover:border-[var(--shop-accent)]/40 transition-all text-sm">
         <span className="material-symbols-outlined text-lg">add</span>
         {t('createShop.addService')}
       </button>
@@ -278,20 +278,20 @@ function StepBarbers({ barbers, onChange, errors }: { barbers: BarberItem[]; onC
               </button>
             )}
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37]/30 to-[#D4AF37]/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#D4AF37] text-lg">person</span>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--shop-accent)]/30 to-[var(--shop-accent)]/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[var(--shop-accent)] text-lg">person</span>
               </div>
               <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.barberN')} {index + 1}</span>
             </div>
             <div className="space-y-3">
-              <input type="text" value={barber.name} onChange={(e) => updateBarber(barber.id, { name: e.target.value })} placeholder={t('createShop.namePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
-              <input type="email" value={barber.email} onChange={(e) => updateBarber(barber.id, { email: e.target.value })} placeholder={t('createShop.emailPlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
-              <input type="tel" value={barber.phone} onChange={(e) => updateBarber(barber.id, { phone: e.target.value })} placeholder={t('createShop.phonePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm" />
+              <input type="text" value={barber.name} onChange={(e) => updateBarber(barber.id, { name: e.target.value })} placeholder={t('createShop.namePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm" />
+              <input type="email" value={barber.email} onChange={(e) => updateBarber(barber.id, { email: e.target.value })} placeholder={t('createShop.emailPlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm" />
+              <input type="tel" value={barber.phone} onChange={(e) => updateBarber(barber.id, { phone: e.target.value })} placeholder={t('createShop.phonePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm" />
             </div>
           </div>
         ))}
       </div>
-      <button type="button" onClick={addBarber} className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition-all text-sm">
+      <button type="button" onClick={addBarber} className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[var(--shop-accent)] hover:border-[var(--shop-accent)]/40 transition-all text-sm">
         <span className="material-symbols-outlined text-lg">person_add</span>
         {t('createShop.addBarber')}
       </button>
@@ -823,12 +823,12 @@ export function ShopManagementPage() {
 
   if (useRootTheme) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <div className="min-h-screen bg-[var(--shop-background)] text-white">
         <RootSiteNav />
         {/* Error Message Toast */}
         {errorMessage && (
           <div 
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#ef4444] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-[calc(100%-2rem)] sm:max-w-md"
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[var(--error)] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-[calc(100%-2rem)] sm:max-w-md"
             role="alert"
             aria-live="assertive"
           >
@@ -854,7 +854,7 @@ export function ShopManagementPage() {
 
           <button
             onClick={openCreateModal}
-            className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-white text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-medium transition-all hover:bg-gray-100 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-white/30"
+            className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-white text-[var(--shop-text-on-accent)] border-none rounded-xl text-sm sm:text-base font-medium transition-all hover:bg-gray-100 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-white/30"
             aria-label={t('management.addShopAria')}
           >
             <span className="material-symbols-outlined text-lg sm:text-xl" aria-hidden="true">add</span>
@@ -920,7 +920,7 @@ export function ShopManagementPage() {
                       setShopToDelete(shop.id);
                       deleteConfirmModal.open();
                     }}
-                    className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-[rgba(239,68,68,0.3)] rounded-lg text-xs sm:text-sm font-medium cursor-pointer transition-all min-h-[44px] bg-[rgba(239,68,68,0.2)] text-[#ef4444] hover:bg-[rgba(239,68,68,0.3)] focus:outline-none focus:ring-2 focus:ring-[#ef4444] focus:ring-offset-2 focus:ring-offset-[#242424]"
+                    className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-[var(--error)]/30 rounded-lg text-xs sm:text-sm font-medium cursor-pointer transition-all min-h-[44px] bg-[var(--error)]/20 text-[var(--error)] hover:bg-[var(--error)]/30 focus:outline-none focus:ring-2 focus:ring-[var(--error)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
                     aria-label={`Remover barbearia ${shop.name}`}
                   >
                     Remover
@@ -940,7 +940,7 @@ export function ShopManagementPage() {
               aria-modal="true"
               aria-labelledby="edit-modal-title-root"
             >
-              <div ref={editDialogRef} className="modal-content bg-[#242424] border border-white/20 rounded-2xl p-5 sm:p-6 lg:p-8 max-w-[min(90vw,720px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 shadow-2xl">
+              <div ref={editDialogRef} className="modal-content bg-[var(--shop-surface-secondary)] border border-white/20 rounded-2xl p-5 sm:p-6 lg:p-8 max-w-[min(90vw,720px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 shadow-2xl">
                 <header className="flex-shrink-0 mb-6">
                   <h2 id="edit-modal-title-root" className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
                     {editingShop ? t('management.editShop') ?? 'Editar Barbearia' : t('createShop.createShop')}
@@ -1178,7 +1178,7 @@ export function ShopManagementPage() {
                                           value={s.name}
                                           onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, name: e.target.value } : x)))}
                                           placeholder={t('createShop.serviceNamePlaceholder')}
-                                          className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                          className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                         />
                                       </div>
                                       <div className="sm:col-span-2">
@@ -1187,7 +1187,7 @@ export function ShopManagementPage() {
                                           value={s.description ?? ''}
                                           onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, description: e.target.value || null } : x)))}
                                           placeholder={t('createShop.serviceDescPlaceholder')}
-                                          className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                          className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                         />
                                       </div>
                                       <div>
@@ -1197,7 +1197,7 @@ export function ShopManagementPage() {
                                           min={1}
                                           value={s.duration}
                                           onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, duration: parseInt(e.target.value, 10) || 1 } : x)))}
-                                          className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                          className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                         />
                                       </div>
                                       <div>
@@ -1205,7 +1205,7 @@ export function ShopManagementPage() {
                                         <PriceReaisInput
                                           valueCents={s.price}
                                           onChange={(c) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, price: c } : x)))}
-                                          className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                          className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                         />
                                       </div>
                                     </div>
@@ -1215,7 +1215,7 @@ export function ShopManagementPage() {
                               <button
                                 type="button"
                                 onClick={() => setEditServices((prev) => [...prev, { id: 0, name: '', description: null, duration: 30, price: null }])}
-                                className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition-all text-sm"
+                                className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[var(--shop-accent)] hover:border-[var(--shop-accent)]/40 transition-all text-sm"
                               >
                                 <span className="material-symbols-outlined text-lg">add</span>
                                 {t('createShop.addService')}
@@ -1273,7 +1273,7 @@ export function ShopManagementPage() {
                                           value={b.name}
                                           onChange={(e) => setEditBarbers((prev) => prev.map((x) => (x.id === b.id ? { ...x, name: e.target.value } : x)))}
                                           placeholder={t('createShop.namePlaceholder')}
-                                          className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                          className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                         />
                                       </div>
                                       {b.email != null && b.email !== '' && (
@@ -1289,7 +1289,7 @@ export function ShopManagementPage() {
                               <button
                                 type="button"
                                 onClick={() => setEditBarbers((prev) => [...prev, { id: 0, name: '', email: null, phone: null }])}
-                                className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition-all text-sm"
+                                className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[var(--shop-accent)] hover:border-[var(--shop-accent)]/40 transition-all text-sm"
                               >
                                 <span className="material-symbols-outlined text-lg">add</span>
                                 {t('createShop.addBarber')}
@@ -1325,7 +1325,7 @@ export function ShopManagementPage() {
                       <p className="text-white/60 text-sm">{t('management.contentIntro')}</p>
                       <div className="flex gap-2 border-b border-white/10 pb-2">
                         {SUPPORTED_LOCALES.map((loc) => (
-                          <button key={loc} type="button" onClick={() => setContentLocale(loc)} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${contentLocale === loc ? 'bg-[#D4AF37] text-[#0a0a0a]' : 'bg-white/10 text-white/80 hover:bg-white/15'}`}>{t(`locale.${loc}`)}</button>
+                          <button key={loc} type="button" onClick={() => setContentLocale(loc)} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${contentLocale === loc ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]' : 'bg-white/10 text-white/80 hover:bg-white/15'}`}>{t(`locale.${loc}`)}</button>
                         ))}
                       </div>
                       <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
@@ -1418,8 +1418,8 @@ export function ShopManagementPage() {
                           <div>
                             <label className="block text-white/60 text-sm mb-1">{t('management.lookupByAddress')}</label>
                             <div className="flex gap-2 flex-wrap">
-                              <input type="text" value={placesLookupAddress} onChange={(e) => setPlacesLookupAddress(e.target.value)} placeholder={t('management.addressPlaceholder')} className="flex-1 min-w-[200px] w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20" disabled={placesLookupLoading} />
-                              <button type="button" onClick={handlePlacesLookup} disabled={placesLookupLoading || !placesLookupAddress.trim()} className="px-4 py-2.5 rounded-lg bg-[#D4AF37] text-[#0a0a0a] font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]">{placesLookupLoading ? t('management.searching') : t('management.search')}</button>
+                              <input type="text" value={placesLookupAddress} onChange={(e) => setPlacesLookupAddress(e.target.value)} placeholder={t('management.addressPlaceholder')} className="flex-1 min-w-[200px] w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]/20" disabled={placesLookupLoading} />
+                              <button type="button" onClick={handlePlacesLookup} disabled={placesLookupLoading || !placesLookupAddress.trim()} className="px-4 py-2.5 rounded-lg bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]">{placesLookupLoading ? t('management.searching') : t('management.search')}</button>
                             </div>
                             {placesLookupMessage && <p className={`text-sm mt-1 ${placesLookupMessage.startsWith('success:') ? 'text-green-400' : 'text-amber-400'}`}>{placesLookupMessage.startsWith('success:') ? placesLookupMessage.slice(8) : placesLookupMessage}</p>}
                           </div>
@@ -1516,7 +1516,7 @@ export function ShopManagementPage() {
                                   onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })}
                                   className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-white' : 'bg-white/20'}`}
                                 >
-                                  <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-[#0a0a0a]' : 'translate-x-0 bg-white/60'}`} />
+                                  <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-[var(--shop-background)]' : 'translate-x-0 bg-white/60'}`} />
                                 </button>
                                 <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t(labelKey)}</span>
                               </label>
@@ -1531,7 +1531,7 @@ export function ShopManagementPage() {
                                 onClick={() => setFormData({ ...formData, settings: { ...formData.settings, allowQueueBeforeOpen: !formData.settings.allowQueueBeforeOpen } })}
                                 className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings.allowQueueBeforeOpen ? 'bg-white' : 'bg-white/20'}`}
                               >
-                                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings.allowQueueBeforeOpen ? 'translate-x-5 bg-[#0a0a0a]' : 'translate-x-0 bg-white/60'}`} />
+                                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings.allowQueueBeforeOpen ? 'translate-x-5 bg-[var(--shop-background)]' : 'translate-x-0 bg-white/60'}`} />
                               </button>
                               <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t('management.allowQueueBeforeOpen')}</span>
                               {formData.settings.allowQueueBeforeOpen && (
@@ -1566,7 +1566,7 @@ export function ShopManagementPage() {
                                 onClick={() => setFormData({ ...formData, settings: { ...formData.settings, barbersCanSeeProfits: formData.settings.barbersCanSeeProfits === false } })}
                                 className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings.barbersCanSeeProfits !== false ? 'bg-white' : 'bg-white/20'}`}
                               >
-                                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings.barbersCanSeeProfits !== false ? 'translate-x-5 bg-[#0a0a0a]' : 'translate-x-0 bg-white/60'}`} />
+                                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings.barbersCanSeeProfits !== false ? 'translate-x-5 bg-[var(--shop-background)]' : 'translate-x-0 bg-white/60'}`} />
                               </button>
                               <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t('management.barbersCanSeeProfits')}</span>
                             </label>
@@ -1645,7 +1645,7 @@ export function ShopManagementPage() {
                                         onClick={() => setFormData({ ...formData, settings: { ...formData.settings, operatingHours: { ...hours, [day]: isOpen ? null : { open, close } } } })}
                                         className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${isOpen ? 'bg-white' : 'bg-white/20'}`}
                                       >
-                                        <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${isOpen ? 'translate-x-5 bg-[#0a0a0a]' : 'translate-x-0 bg-white/60'}`} />
+                                        <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${isOpen ? 'translate-x-5 bg-[var(--shop-background)]' : 'translate-x-0 bg-white/60'}`} />
                                       </button>
                                     </td>
                                     <td className="py-2 pr-4">
@@ -1675,7 +1675,7 @@ export function ShopManagementPage() {
                                         onClick={() => setFormData({ ...formData, settings: { ...formData.settings, operatingHours: { ...hours, [day]: hasLunch ? { open, close, lunchStart: undefined, lunchEnd: undefined } : { open, close, lunchStart, lunchEnd } } } })}
                                         className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${hasLunch ? 'bg-white' : 'bg-white/20'} disabled:opacity-30`}
                                       >
-                                        <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${hasLunch ? 'translate-x-5 bg-[#0a0a0a]' : 'translate-x-0 bg-white/60'}`} />
+                                        <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${hasLunch ? 'translate-x-5 bg-[var(--shop-background)]' : 'translate-x-0 bg-white/60'}`} />
                                       </button>
                                     </td>
                                     <td className="py-2 pr-4">
@@ -1861,7 +1861,7 @@ export function ShopManagementPage() {
                     >
                       {t('common.cancel')}
                     </button>
-                    <button type="submit" disabled={!editingShop && isSubmittingCreate} className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-medium cursor-pointer transition-all min-h-[44px] bg-white text-[#0a0a0a] hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button type="submit" disabled={!editingShop && isSubmittingCreate} className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-medium cursor-pointer transition-all min-h-[44px] bg-white text-[var(--shop-text-on-accent)] hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-50 disabled:cursor-not-allowed">
                       {!editingShop ? (isSubmittingCreate ? t('createShop.creating') : t('createShop.createBarbershop')) : (t('common.save') ?? 'Salvar')}
                     </button>
                   </div>
@@ -1905,7 +1905,7 @@ export function ShopManagementPage() {
       {/* Error Message Toast */}
       {errorMessage && (
         <div 
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#ef4444] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-[calc(100%-2rem)] sm:max-w-md"
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[var(--error)] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-[calc(100%-2rem)] sm:max-w-md"
           role="alert"
           aria-live="assertive"
         >
@@ -1933,7 +1933,7 @@ export function ShopManagementPage() {
 
           <button
             onClick={openCreateModal}
-            className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-[#D4AF37] text-[#0a0a0a] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:bg-[#E8C547] min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#0b1a33]"
+            className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-[300px] mx-auto mb-8 sm:mb-10 px-4 sm:px-6 py-3 sm:py-4 bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] border-none rounded-xl text-sm sm:text-base font-semibold transition-all hover:bg-[var(--shop-accent-hover)] min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
             aria-label={t('management.addShopAria')}
           >
             <span className="material-symbols-outlined text-lg sm:text-xl" aria-hidden="true">add</span>
@@ -1969,7 +1969,7 @@ export function ShopManagementPage() {
                   aria-labelledby={`shop-name-${shop.id}`}
                 >
                   <div className="shop-header mb-4 sm:mb-5">
-                    <div className="text-3xl text-[#D4AF37] mb-2">
+                    <div className="text-3xl text-[var(--shop-accent)] mb-2">
                       <span className="material-symbols-outlined">store</span>
                     </div>
                     <h3 id={`shop-name-${shop.id}`} className="text-lg sm:text-xl font-semibold text-white mb-2">
@@ -1989,7 +1989,7 @@ export function ShopManagementPage() {
                   <div className="flex gap-2 sm:gap-3">
                     <button
                       onClick={() => openEditModal(shop)}
-                      className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-white/20 rounded-lg text-xs sm:text-sm font-medium cursor-pointer transition-all min-h-[44px] bg-white/5 text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#242424]"
+                      className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-white/20 rounded-lg text-xs sm:text-sm font-medium cursor-pointer transition-all min-h-[44px] bg-white/5 text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
                       aria-label={`Editar barbearia ${shop.name}`}
                     >
                       Editar
@@ -1999,7 +1999,7 @@ export function ShopManagementPage() {
                         setShopToDelete(shop.id);
                         deleteConfirmModal.open();
                       }}
-                      className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-red-500/50 rounded-lg text-xs sm:text-sm font-medium cursor-pointer transition-all min-h-[44px] bg-red-500/20 text-[#ef4444] hover:bg-red-500/30 focus:outline-none focus:ring-2 focus:ring-[#ef4444] focus:ring-offset-2 focus:ring-offset-[#242424]"
+                      className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-red-500/50 rounded-lg text-xs sm:text-sm font-medium cursor-pointer transition-all min-h-[44px] bg-red-500/20 text-[var(--error)] hover:bg-red-500/30 focus:outline-none focus:ring-2 focus:ring-[var(--error)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
                       aria-label={`Remover barbearia ${shop.name}`}
                     >
                       Remover
@@ -2021,7 +2021,7 @@ export function ShopManagementPage() {
           aria-modal="true"
           aria-labelledby="edit-modal-title"
         >
-          <div ref={editDialogRef} className="modal-content bg-[#242424] border border-white/10 rounded-2xl p-5 sm:p-6 lg:p-8 max-w-[min(90vw,720px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 shadow-2xl">
+          <div ref={editDialogRef} className="modal-content bg-[var(--shop-surface-secondary)] border border-white/10 rounded-2xl p-5 sm:p-6 lg:p-8 max-w-[min(90vw,720px)] w-full min-w-[320px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 shadow-2xl">
             <header className="flex-shrink-0 mb-6">
             <h2 id="edit-modal-title" className="modal-title text-xl sm:text-2xl font-semibold text-white tracking-tight">
               {editingShop ? t('management.editShop') ?? 'Editar Barbearia' : t('createShop.createShop')}
@@ -2050,7 +2050,7 @@ export function ShopManagementPage() {
                     {tab === 'services' && t('createShop.servicesTab')}
                     {tab === 'barbers' && t('createShop.barbersTab')}
                     {editTab === tab && (
-                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#D4AF37] rounded-full min-w-[4px]" aria-hidden="true" />
+                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--shop-accent)] rounded-full min-w-[4px]" aria-hidden="true" />
                     )}
                   </button>
                 ))}
@@ -2073,13 +2073,13 @@ export function ShopManagementPage() {
                             setFormData((prev) => ({ ...prev, name, ...(!editingShop && (!prev.slug || prev.slug === generateSlug(prev.name)) ? { slug: generateSlug(name) } : {}) }));
                           }}
                           required
-                          className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20"
+                          className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]/20"
                         />
                         {!editingShop && createErrors.name && <p className="text-red-400 text-xs mt-1">{createErrors.name}</p>}
                       </div>
                       <div>
                         <label htmlFor="editSlug" className="block text-white/70 text-sm mb-1.5">{t('management.slug')} *</label>
-                        <input id="editSlug" type="text" value={formData.slug} onChange={(e) => !editingShop && setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} required pattern="[a-z0-9\-]+" disabled={!!editingShop} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 disabled:opacity-70 disabled:cursor-not-allowed" />
+                        <input id="editSlug" type="text" value={formData.slug} onChange={(e) => !editingShop && setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} required pattern="[a-z0-9\-]+" disabled={!!editingShop} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]/20 disabled:opacity-70 disabled:cursor-not-allowed" />
                         {editingShop && <p className="text-white/50 text-xs mt-1">{t('management.slugReadOnly')}</p>}
                       </div>
                     </div>
@@ -2089,15 +2089,15 @@ export function ShopManagementPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="sm:col-span-2">
                         <label htmlFor="editDomain" className="block text-white/60 text-sm mb-1.5">{t('management.domain')}</label>
-                        <input id="editDomain" type="text" value={formData.domain} onChange={(e) => setFormData({ ...formData, domain: e.target.value })} placeholder={t('management.domainPlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" />
+                        <input id="editDomain" type="text" value={formData.domain} onChange={(e) => setFormData({ ...formData, domain: e.target.value })} placeholder={t('management.domainPlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]/20 placeholder:text-white/30" />
                       </div>
                       <div>
                         <label htmlFor="editPath" className="block text-white/60 text-sm mb-1.5">{t('management.path')}</label>
-                        <input id="editPath" type="text" value={formData.path} onChange={(e) => setFormData({ ...formData, path: e.target.value })} placeholder={t('management.pathPlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" />
+                        <input id="editPath" type="text" value={formData.path} onChange={(e) => setFormData({ ...formData, path: e.target.value })} placeholder={t('management.pathPlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]/20 placeholder:text-white/30" />
                       </div>
                       <div>
                         <label htmlFor="editApiBase" className="block text-white/60 text-sm mb-1.5">{t('management.apiBase')}</label>
-                        <input id="editApiBase" type="url" value={formData.apiBase} onChange={(e) => setFormData({ ...formData, apiBase: e.target.value })} placeholder={t('management.apiBasePlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 placeholder:text-white/30" />
+                        <input id="editApiBase" type="url" value={formData.apiBase} onChange={(e) => setFormData({ ...formData, apiBase: e.target.value })} placeholder={t('management.apiBasePlaceholder')} className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]/20 placeholder:text-white/30" />
                       </div>
                     </div>
                   </div>
@@ -2223,7 +2223,7 @@ export function ShopManagementPage() {
                                       value={s.name}
                                       onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, name: e.target.value } : x)))}
                                       placeholder={t('createShop.serviceNamePlaceholder')}
-                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                     />
                                   </div>
                                   <div className="sm:col-span-2">
@@ -2232,7 +2232,7 @@ export function ShopManagementPage() {
                                       value={s.description ?? ''}
                                       onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, description: e.target.value || null } : x)))}
                                       placeholder={t('createShop.serviceDescPlaceholder')}
-                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                     />
                                   </div>
                                   <div>
@@ -2242,7 +2242,7 @@ export function ShopManagementPage() {
                                       min={1}
                                       value={s.duration}
                                       onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, duration: parseInt(e.target.value, 10) || 1 } : x)))}
-                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                     />
                                   </div>
                                   <div>
@@ -2250,7 +2250,7 @@ export function ShopManagementPage() {
                                     <PriceReaisInput
                                       valueCents={s.price}
                                       onChange={(c) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, price: c } : x)))}
-                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                     />
                                   </div>
                                 </div>
@@ -2260,7 +2260,7 @@ export function ShopManagementPage() {
                           <button
                             type="button"
                             onClick={() => setEditServices((prev) => [...prev, { id: 0, name: '', description: null, duration: 30, price: null }])}
-                            className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition-all text-sm"
+                            className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[var(--shop-accent)] hover:border-[var(--shop-accent)]/40 transition-all text-sm"
                           >
                             <span className="material-symbols-outlined text-lg">add</span>
                             {t('createShop.addService')}
@@ -2318,7 +2318,7 @@ export function ShopManagementPage() {
                                       value={b.name}
                                       onChange={(e) => setEditBarbers((prev) => prev.map((x) => (x.id === b.id ? { ...x, name: e.target.value } : x)))}
                                       placeholder={t('createShop.namePlaceholder')}
-                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                     />
                                   </div>
                                   <div className="sm:col-span-2">
@@ -2327,7 +2327,7 @@ export function ShopManagementPage() {
                                       value={b.email ?? ''}
                                       onChange={(e) => setEditBarbers((prev) => prev.map((x) => (x.id === b.id ? { ...x, email: e.target.value || null } : x)))}
                                       placeholder={t('createShop.emailPlaceholder')}
-                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                     />
                                   </div>
                                   <div className="sm:col-span-2">
@@ -2336,7 +2336,7 @@ export function ShopManagementPage() {
                                       value={b.phone ?? ''}
                                       onChange={(e) => setEditBarbers((prev) => prev.map((x) => (x.id === b.id ? { ...x, phone: e.target.value || null } : x)))}
                                       placeholder={t('createShop.phonePlaceholder')}
-                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-all text-sm"
+                                      className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                     />
                                   </div>
                                 </div>
@@ -2346,7 +2346,7 @@ export function ShopManagementPage() {
                           <button
                             type="button"
                             onClick={() => setEditBarbers((prev) => [...prev, { id: 0, name: '', email: null, phone: null }])}
-                            className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition-all text-sm"
+                            className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-[var(--shop-accent)] hover:border-[var(--shop-accent)]/40 transition-all text-sm"
                           >
                             <span className="material-symbols-outlined text-lg">add</span>
                             {t('createShop.addBarber')}
@@ -2382,7 +2382,7 @@ export function ShopManagementPage() {
                   <p className="text-white/60 text-sm">{t('management.contentIntro')}</p>
                   <div className="flex gap-2 border-b border-white/10 pb-2">
                     {SUPPORTED_LOCALES.map((loc) => (
-                      <button key={loc} type="button" onClick={() => setContentLocale(loc)} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${contentLocale === loc ? 'bg-[#D4AF37] text-[#0a0a0a]' : 'bg-white/10 text-white/80 hover:bg-white/15'}`}>{t(`locale.${loc}`)}</button>
+                      <button key={loc} type="button" onClick={() => setContentLocale(loc)} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${contentLocale === loc ? 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]' : 'bg-white/10 text-white/80 hover:bg-white/15'}`}>{t(`locale.${loc}`)}</button>
                     ))}
                   </div>
                   <section className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
@@ -2436,7 +2436,7 @@ export function ShopManagementPage() {
                           }} />
                           <button type="button" onClick={() => homeImageInputRef.current?.click()} disabled={homeImageUploading} className="px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium disabled:opacity-50 min-h-[44px]">{homeImageUploading ? t('common.loading') : t('management.uploadImage')}</button>
                         </div>
-                        {homeImageError && <p className="text-sm text-[#ef4444] mt-1">{homeImageError}</p>}
+                        {homeImageError && <p className="text-sm text-[var(--error)] mt-1">{homeImageError}</p>}
                       </div>
                       <div><label className="block text-white/60 text-sm mb-1">{t('management.imageAlt')}</label><input type="text" value={contentForm.about.imageAlt} onChange={(e) => setContentForm({ about: { ...contentForm.about, imageAlt: e.target.value } })} className="form-input w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm" /></div>
                       
@@ -2498,7 +2498,7 @@ export function ShopManagementPage() {
                         <label className="block text-white/60 text-sm mb-1">{t('management.lookupByAddress')}</label>
                         <div className="flex gap-2 flex-wrap">
                           <input type="text" value={placesLookupAddress} onChange={(e) => setPlacesLookupAddress(e.target.value)} placeholder={t('management.addressPlaceholder')} className="form-input flex-1 min-w-[200px] w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/30" disabled={placesLookupLoading} />
-                          <button type="button" onClick={handlePlacesLookup} disabled={placesLookupLoading || !placesLookupAddress.trim()} className="px-4 py-2.5 rounded-lg bg-[#D4AF37] text-[#0a0a0a] font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]">{placesLookupLoading ? t('management.searching') : t('management.search')}</button>
+                          <button type="button" onClick={handlePlacesLookup} disabled={placesLookupLoading || !placesLookupAddress.trim()} className="px-4 py-2.5 rounded-lg bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]">{placesLookupLoading ? t('management.searching') : t('management.search')}</button>
                         </div>
                         {placesLookupMessage && <p className={`text-sm mt-1 ${placesLookupMessage.startsWith('success:') ? 'text-green-400' : 'text-amber-400'}`}>{placesLookupMessage.startsWith('success:') ? placesLookupMessage.slice(8) : placesLookupMessage}</p>}
                       </div>
@@ -2552,7 +2552,7 @@ export function ShopManagementPage() {
                                   }}
                                   className="flex items-center gap-3 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-left transition-colors"
                                 >
-                                  <span className="material-symbols-outlined text-[#D4AF37]">{feature.icon}</span>
+                                  <span className="material-symbols-outlined text-[var(--shop-accent)]">{feature.icon}</span>
                                   <span className="text-white text-sm">{contentLocale === 'pt-BR' ? feature.labelPtBR : feature.labelEn}</span>
                                 </button>
                               ))}
@@ -2608,7 +2608,7 @@ export function ShopManagementPage() {
                               }
                             }}
                             disabled={!customFeatureForm.icon.trim() || !customFeatureForm.text.trim()}
-                            className="w-full px-4 py-2 bg-[#D4AF37] hover:bg-[#E8C547] text-[#0a0a0a] rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full px-4 py-2 bg-[var(--shop-accent)] hover:bg-[var(--shop-accent-hover)] text-[var(--shop-text-on-accent)] rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {t('management.addCustomFeature')}
                           </button>
@@ -2648,14 +2648,14 @@ export function ShopManagementPage() {
                       {[{ key: 'requirePhone' as const, labelKey: 'management.requirePhone' }, { key: 'allowBarberPreference' as const, labelKey: 'management.allowBarberPreference' }, { key: 'requireBarberChoice' as const, labelKey: 'management.requireBarberChoice' }, { key: 'allowDuplicateNames' as const, labelKey: 'management.allowDuplicateNames' }, { key: 'deviceDeduplication' as const, labelKey: 'management.deviceDeduplication' }, { key: 'allowCustomerCancelInProgress' as const, labelKey: 'management.allowCustomerCancelInProgress' }, { key: 'allowAppointments' as const, labelKey: 'management.allowAppointments' }].map(({ key, labelKey }) => (
                         <li key={key}>
                           <label className="flex items-center gap-3 cursor-pointer group">
-                            <button type="button" role="switch" aria-checked={formData.settings[key]} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
+                            <button type="button" role="switch" aria-checked={formData.settings[key]} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, [key]: !formData.settings[key] } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings[key] ? 'bg-[var(--shop-accent)]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings[key] ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
                             <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t(labelKey)}</span>
                           </label>
                         </li>
                       ))}
                       <li>
                         <label className="flex items-center gap-3 cursor-pointer group">
-                          <button type="button" role="switch" aria-checked={formData.settings.allowQueueBeforeOpen} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, allowQueueBeforeOpen: !formData.settings.allowQueueBeforeOpen } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings.allowQueueBeforeOpen ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings.allowQueueBeforeOpen ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
+                          <button type="button" role="switch" aria-checked={formData.settings.allowQueueBeforeOpen} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, allowQueueBeforeOpen: !formData.settings.allowQueueBeforeOpen } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings.allowQueueBeforeOpen ? 'bg-[var(--shop-accent)]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings.allowQueueBeforeOpen ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
                           <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t('management.allowQueueBeforeOpen')}</span>
                           {formData.settings.allowQueueBeforeOpen && (
                             <span className="flex items-center gap-1.5 text-white/60 text-sm">
@@ -2672,7 +2672,7 @@ export function ShopManagementPage() {
                     <ul className="space-y-4">
                       <li>
                         <label className="flex items-center gap-3 cursor-pointer group">
-                          <button type="button" role="switch" aria-checked={formData.settings.barbersCanSeeProfits !== false} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, barbersCanSeeProfits: formData.settings.barbersCanSeeProfits === false } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings.barbersCanSeeProfits !== false ? 'bg-[#D4AF37]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings.barbersCanSeeProfits !== false ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
+                          <button type="button" role="switch" aria-checked={formData.settings.barbersCanSeeProfits !== false} onClick={() => setFormData({ ...formData, settings: { ...formData.settings, barbersCanSeeProfits: formData.settings.barbersCanSeeProfits === false } })} className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${formData.settings.barbersCanSeeProfits !== false ? 'bg-[var(--shop-accent)]' : 'bg-white/20'}`}><span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${formData.settings.barbersCanSeeProfits !== false ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} /></button>
                           <span className="text-white/80 text-sm group-hover:text-white transition-colors">{t('management.barbersCanSeeProfits')}</span>
                         </label>
                       </li>
@@ -2760,7 +2760,7 @@ export function ShopManagementPage() {
                                         } 
                                       } 
                                     })}
-                                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${isOpen ? 'bg-[#D4AF37]' : 'bg-white/20'}`}
+                                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${isOpen ? 'bg-[var(--shop-accent)]' : 'bg-white/20'}`}
                                   >
                                     <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${isOpen ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} />
                                   </button>
@@ -2825,7 +2825,7 @@ export function ShopManagementPage() {
                                         } 
                                       } 
                                     })}
-                                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${hasLunch ? 'bg-[#D4AF37]' : 'bg-white/20'} disabled:opacity-30`}
+                                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${hasLunch ? 'bg-[var(--shop-accent)]' : 'bg-white/20'} disabled:opacity-30`}
                                   >
                                     <span className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-lg transition-transform ${hasLunch ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white/60'}`} />
                                   </button>
@@ -3028,7 +3028,7 @@ export function ShopManagementPage() {
                 <button
                   type="submit"
                   disabled={!editingShop && isSubmittingCreate}
-                  className="modal-btn primary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-gradient-to-r from-[#D4AF37] to-[#E8C547] text-[#0a0a0a] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-[#242424] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="modal-btn primary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)] text-[var(--shop-text-on-accent)] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {!editingShop ? (isSubmittingCreate ? t('createShop.creating') : t('createShop.createBarbershop')) : (t('common.save') ?? 'Salvar')}
                 </button>

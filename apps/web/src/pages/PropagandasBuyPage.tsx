@@ -96,7 +96,7 @@ export function PropagandasBuyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[var(--shop-background)] text-white">
       <RootSiteNav />
       <main className="py-20">
         <Container size="2xl">
@@ -263,7 +263,7 @@ export function PropagandasBuyPage() {
               <button
                 type="submit"
                 disabled={submitting || shopsLoading || shops.length === 0 || quoteLoading || !quote || quote.amount_cents <= 0}
-                className="w-full px-6 py-3.5 bg-white text-[#0a0a0a] font-medium rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
+                className="w-full px-6 py-3.5 bg-white text-[var(--shop-text-on-accent)] font-medium rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
               >
                 {submitting ? t('propagandas.submitting') : t('propagandas.payNow').replace('{amount}', quote?.amount_display ?? '—')}
               </button>

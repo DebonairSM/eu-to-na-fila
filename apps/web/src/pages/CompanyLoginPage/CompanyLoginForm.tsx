@@ -56,20 +56,20 @@ export function CompanyLoginForm() {
 
   const iconBgClass = useRootTheme
     ? 'bg-gradient-to-br from-blue-500 to-indigo-600'
-    : 'bg-gradient-to-br from-[#D4AF37] to-[#E8C547]';
-  const iconTextClass = useRootTheme ? 'text-white' : 'text-[#0a0a0a]';
+    : 'bg-gradient-to-br from-[var(--shop-accent)] to-[var(--shop-accent-hover)]';
+  const iconTextClass = useRootTheme ? 'text-white' : 'text-[var(--shop-text-on-accent)]';
   const focusRingClass = useRootTheme
     ? 'focus:ring-blue-500 focus:border-blue-500'
-    : 'focus:ring-[#D4AF37] focus:border-[#D4AF37]';
+    : 'focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]';
   const labelActiveClass = useRootTheme
     ? 'text-blue-400'
-    : 'text-[#D4AF37]';
+    : 'text-[var(--shop-accent)]';
   const submitButtonClass = useRootTheme
-    ? 'bg-white text-[#0a0a0a] hover:bg-gray-100'
-    : 'bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#E8C547] hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)]';
+    ? 'bg-white text-[var(--shop-text-on-accent)] hover:bg-gray-100'
+    : 'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] hover:bg-[var(--shop-accent-hover)] hover:shadow-[0_10px_30px_color-mix(in_srgb,var(--shop-accent)_30%,transparent)]';
   const backLinkClass = useRootTheme
     ? 'text-gray-400 hover:text-white'
-    : 'text-[rgba(255,255,255,0.7)] hover:text-[#D4AF37]';
+    : 'text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)]';
 
   return (
     <div className="space-y-6">
@@ -140,7 +140,7 @@ export function CompanyLoginForm() {
 
         {error && (
           <div className="p-4 rounded-lg bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)]">
-            <p className="text-sm text-[#ef4444] flex items-center gap-2">
+            <p className="text-sm text-[var(--error)] flex items-center gap-2">
               <span className="material-symbols-outlined text-base">error</span>
               {error}
             </p>

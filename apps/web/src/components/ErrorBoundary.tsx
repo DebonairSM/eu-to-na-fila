@@ -73,7 +73,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       return (
-        <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
+        <div className="min-h-screen bg-[var(--shop-background)] flex items-center justify-center p-4">
           <ErrorDisplay
             error={this.state.error || new Error(this.props.fallbackErrorMessage ?? 'Error')}
             onRetry={this.handleReset}

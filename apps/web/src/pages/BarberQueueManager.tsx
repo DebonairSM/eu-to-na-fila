@@ -593,11 +593,11 @@ export function BarberQueueManager() {
     const joinUrl = `${window.location.origin}${getShopBasePath()}/join`;
 
     return (
-      <div className="fixed inset-0 bg-black text-white z-50 overflow-hidden flex flex-col" data-testid="kiosk-root">
+      <div className="fixed inset-0 bg-[var(--shop-background)] text-[var(--shop-text-primary)] z-50 overflow-hidden flex flex-col" data-testid="kiosk-root">
         {/* Error Message Toast */}
         {errorMessage && (
           <div 
-            className="absolute top-20 left-1/2 -translate-x-1/2 z-[60] bg-[#ef4444] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-[calc(100%-2rem)] sm:max-w-md"
+            className="absolute top-20 left-1/2 -translate-x-1/2 z-[60] bg-[var(--error)] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-[calc(100%-2rem)] sm:max-w-md"
             role="alert"
             aria-live="assertive"
           >
@@ -807,7 +807,7 @@ export function BarberQueueManager() {
                 className="space-y-4 sm:space-y-6"
               >
                 <div>
-                  <label htmlFor="kioskGuestName" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
+                  <label htmlFor="kioskGuestName" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-[var(--shop-text-primary)]">
                     {t('barber.nameLabel')}
                   </label>
                   <input
@@ -827,7 +827,7 @@ export function BarberQueueManager() {
                 </div>
                 {settings.requirePhone && (
                   <div>
-                    <label htmlFor="kioskGuestPhone" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
+                    <label htmlFor="kioskGuestPhone" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-[var(--shop-text-primary)]">
                       {t('join.phoneLabel')}
                     </label>
                     <input
@@ -843,7 +843,7 @@ export function BarberQueueManager() {
                 )}
                 {activeServices.length >= 2 && (
                   <div>
-                    <label htmlFor="kioskCheckInService" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
+                    <label htmlFor="kioskCheckInService" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-[var(--shop-text-primary)]">
                       {t('join.serviceLabel')}
                     </label>
                     <select
@@ -862,7 +862,7 @@ export function BarberQueueManager() {
                 )}
                 {settings.allowBarberPreference && barbers.filter((b) => b.isActive).length > 0 && (
                   <div>
-                    <label htmlFor="kioskCheckInBarber" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-white">
+                    <label htmlFor="kioskCheckInBarber" className="block text-lg sm:text-xl font-medium mb-2 sm:mb-3 text-[var(--shop-text-primary)]">
                       {t('join.barberLabelOptional')}
                     </label>
                     <select
@@ -910,12 +910,12 @@ export function BarberQueueManager() {
 
   // Management Mode View
   return (
-    <div className="min-h-screen bg-black p-3 sm:p-4 pb-20 overflow-x-hidden max-w-full">
+    <div className="min-h-screen bg-[var(--shop-background)] p-3 sm:p-4 pb-[max(5rem,env(safe-area-inset-bottom))] overflow-x-hidden max-w-full">
       <Navigation />
       {/* Error Message Toast */}
       {errorMessage && (
         <div 
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#ef4444] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-[calc(100%-2rem)] sm:max-w-md"
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[var(--error)] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-[calc(100%-2rem)] sm:max-w-md"
           role="alert"
           aria-live="assertive"
         >
@@ -937,11 +937,11 @@ export function BarberQueueManager() {
           <div className="stats flex gap-4 sm:gap-6">
             <div className="stat-item flex-1 text-center">
               <div className="stat-value text-2xl sm:text-3xl font-semibold text-[var(--shop-accent)]">{waitingCount}</div>
-              <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">{t('barber.waiting')}</div>
+              <div className="stat-label text-xs text-[var(--shop-text-secondary)] mt-1">{t('barber.waiting')}</div>
             </div>
             <div className="stat-item flex-1 text-center">
               <div className="stat-value text-2xl sm:text-3xl font-semibold text-white">{servingCount}</div>
-              <div className="stat-label text-xs text-[rgba(255,255,255,0.7)] mt-1">{t('barber.serving')}</div>
+              <div className="stat-label text-xs text-[var(--shop-text-secondary)] mt-1">{t('barber.serving')}</div>
             </div>
           </div>
         </div>
@@ -1087,7 +1087,7 @@ export function BarberQueueManager() {
           ) : (
             <div className="space-y-3" aria-live="polite">
               {sortedTickets.length === 0 ? (
-                <div className="text-center py-12 text-[rgba(255,255,255,0.7)]">
+                <div className="text-center py-12 text-[var(--shop-text-secondary)]">
                   {t('barber.noClientInQueue')}
                 </div>
               ) : (
@@ -1183,7 +1183,7 @@ export function BarberQueueManager() {
           autoComplete="off"
         >
           <div>
-            <label htmlFor="guestName" className="block text-sm font-medium mb-2">
+            <label htmlFor="guestName" className="block text-sm font-medium mb-2 text-[var(--shop-text-primary)]">
               {t('barber.nameLabel')}
             </label>
             <input
@@ -1200,7 +1200,7 @@ export function BarberQueueManager() {
               data-lpignore="true"
               data-form-type="other"
               required
-              className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-white/5 border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
               onFocus={(e) => {
                 // Prevent autofill UI by temporarily making readOnly
                 const input = e.target as HTMLInputElement;
@@ -1212,7 +1212,7 @@ export function BarberQueueManager() {
             />
           </div>
           <div>
-            <label htmlFor="checkInPhone" className="block text-sm font-medium mb-2">
+            <label htmlFor="checkInPhone" className="block text-sm font-medium mb-2 text-[var(--shop-text-primary)]">
               {settings.requirePhone ? t('join.phoneLabel') : t('barber.phoneOptional')}
             </label>
             <input
@@ -1222,18 +1222,18 @@ export function BarberQueueManager() {
               onChange={(e) => setCheckInPhone(e.target.value)}
               placeholder={t('join.phonePlaceholder')}
               required={settings.requirePhone}
-              className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-muted/50 border border-border text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full min-w-[200px] sm:min-w-[250px] max-w-[300px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-white/5 border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
             />
           </div>
           {activeServices.length >= 2 && (
             <div>
-              <label htmlFor="checkInService" className="block text-sm font-medium mb-2">{t('join.serviceLabel')}</label>
+              <label htmlFor="checkInService" className="block text-sm font-medium mb-2 text-[var(--shop-text-primary)]">{t('join.serviceLabel')}</label>
               <select
                 id="checkInService"
                 value={checkInServiceId ?? ''}
                 onChange={(e) => setCheckInServiceId(e.target.value ? parseInt(e.target.value, 10) : null)}
                 required
-                className="form-control-select select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                className="form-control-select select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[44px] bg-white/5 border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
               >
                 <option value="">{t('join.selectOption')}</option>
                 {activeServices.map((s) => (
@@ -1244,12 +1244,12 @@ export function BarberQueueManager() {
           )}
           {settings.allowBarberPreference && barbers.length > 0 && (
             <div>
-              <label htmlFor="checkInBarber" className="block text-sm font-medium mb-2">{t('join.barberLabelOptional')}</label>
+              <label htmlFor="checkInBarber" className="block text-sm font-medium mb-2 text-[var(--shop-text-primary)]">{t('join.barberLabelOptional')}</label>
               <select
                 id="checkInBarber"
                 value={checkInBarberId ?? ''}
                 onChange={(e) => setCheckInBarberId(e.target.value ? parseInt(e.target.value, 10) : null)}
-                className="form-control-select select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                className="form-control-select select-readable w-full min-w-[200px] sm:min-w-[250px] max-w-[320px] min-h-[44px] bg-white/5 border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
               >
                 <option value="">{t('join.selectOption')}</option>
                 {barbers.filter((b) => b.isActive).map((b) => (

@@ -1,4 +1,4 @@
-import { useState, useEffect, type ImgHTMLAttributes } from 'react';
+import { useState, useEffect, useRef, type ImgHTMLAttributes } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { config as appConfig } from '@/lib/config';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -13,6 +13,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileMenuRef = useDialogA11y(isMobileMenuOpen, () => setIsMobileMenuOpen(false));
+  const savedScrollYRef = useRef(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user } = useAuthContext();
   const { logoutAndGoHome } = useLogout();
@@ -59,15 +60,20 @@ export function Navigation() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Prevent body scroll when mobile menu is open
+  // Prevent body scroll when mobile menu is open; preserve scroll position on iOS
   useEffect(() => {
     if (isMobileMenuOpen) {
+      savedScrollYRef.current = window.scrollY;
       document.body.classList.add('menu-open');
+      document.body.style.top = `-${savedScrollYRef.current}px`;
     } else {
       document.body.classList.remove('menu-open');
+      document.body.style.top = '';
+      window.scrollTo(0, savedScrollYRef.current);
     }
     return () => {
       document.body.classList.remove('menu-open');
+      document.body.style.top = '';
     };
   }, [isMobileMenuOpen]);
 

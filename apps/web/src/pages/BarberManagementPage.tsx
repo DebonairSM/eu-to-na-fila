@@ -221,7 +221,7 @@ export function BarberManagementPage() {
       {/* Error Message Toast */}
       {errorMessage && (
         <div 
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#ef4444] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-[calc(100%-2rem)] sm:max-w-md"
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[var(--error)] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 max-w-[calc(100%-2rem)] sm:max-w-md"
           role="alert"
           aria-live="assertive"
         >
@@ -333,7 +333,7 @@ export function BarberManagementPage() {
           <ErrorDisplay error={error} onRetry={refetch} />
         ) : displayBarbers.length === 0 ? (
           <div className="empty-state text-center py-12 sm:py-[60px] px-4 sm:px-5 text-[rgba(255,255,255,0.7)]">
-            <span className="material-symbols-outlined text-[3rem] sm:text-[4rem] text-[rgba(255,255,255,0.5)] mb-3 sm:mb-4 block" aria-hidden="true">
+            <span className="material-symbols-outlined text-[3rem] sm:text-[4rem] text-[var(--shop-text-secondary)] mb-3 sm:mb-4 block" aria-hidden="true">
               content_cut
             </span>
             <p className="text-sm sm:text-base">{isBarber ? t('barber.noBarberFound') : t('barber.noBarbers')}</p>
@@ -403,8 +403,8 @@ export function BarberManagementPage() {
                       <div
                         className={`barber-status inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-xl text-[10px] sm:text-xs font-medium ${
                           barber.isPresent
-                            ? 'bg-[rgba(255,255,255,0.2)] text-white'
-                            : 'bg-[rgba(255,255,255,0.1)] text-[rgba(255,255,255,0.5)]'
+                            ? 'bg-white/20 text-[var(--shop-text-primary)]'
+                            : 'bg-[rgba(255,255,255,0.1)] text-[var(--shop-text-secondary)]'
                         }`}
                         aria-label={barber.isPresent ? t('barber.statusPresent') : t('barber.statusAbsent')}
                       >
@@ -427,7 +427,7 @@ export function BarberManagementPage() {
                 <div className="barber-actions flex gap-2 sm:gap-3">
                   <button
                     onClick={() => openEditModal(barber)}
-                    className="action-btn flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border-none rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:bg-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] hover:text-[var(--shop-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
+                    className="action-btn flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border-none rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all min-h-[44px] bg-white/10 text-[var(--shop-text-primary)] hover:bg-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] hover:text-[var(--shop-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
                     aria-label={t('barber.editBarberAria').replace('{name}', barber.name)}
                   >
                     {t('barber.edit')}
@@ -437,7 +437,7 @@ export function BarberManagementPage() {
                       setBarberToDelete(barber.id);
                       deleteConfirmModal.open();
                     }}
-                    className="action-btn delete flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-[rgba(239,68,68,0.3)] rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(239,68,68,0.2)] text-[#ef4444] hover:bg-[rgba(239,68,68,0.3)] focus:outline-none focus:ring-2 focus:ring-[#ef4444] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
+                    className="action-btn delete flex-1 px-2 sm:px-3 py-2.5 sm:py-3 border border-[var(--error)]/30 rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all min-h-[44px] bg-[var(--error)]/20 text-[var(--error)] hover:bg-[var(--error)]/30 focus:outline-none focus:ring-2 focus:ring-[var(--error)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
                     aria-label={t('barber.removeAria').replace('{name}', barber.name)}
                   >
                     {t('barber.remove')}
@@ -471,7 +471,7 @@ export function BarberManagementPage() {
               }}
             >
               <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="addName" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                <label htmlFor="addName" className="form-label block text-[var(--shop-text-secondary)] text-sm mb-2">
                   {t('management.name')}
                 </label>
                 <input
@@ -480,11 +480,11 @@ export function BarberManagementPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="addAvatar" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                <label htmlFor="addAvatar" className="form-label block text-[var(--shop-text-secondary)] text-sm mb-2">
                   {t('barber.avatarUrl')}
                 </label>
                 <input
@@ -493,11 +493,11 @@ export function BarberManagementPage() {
                   value={formData.avatarUrl}
                   onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
                   placeholder={t('barber.avatarUrlPlaceholder')}
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[rgba(255,255,255,0.3)]"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[var(--shop-text-secondary)]"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="addEmail" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                <label htmlFor="addEmail" className="form-label block text-[var(--shop-text-secondary)] text-sm mb-2">
                   {t('auth.email')}
                 </label>
                 <input
@@ -506,11 +506,11 @@ export function BarberManagementPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder={formData.username.trim() ? t('barber.emailRequiredPlaceholder') : undefined}
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[rgba(255,255,255,0.3)]"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[var(--shop-text-secondary)]"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="addPhone" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                <label htmlFor="addPhone" className="form-label block text-[var(--shop-text-secondary)] text-sm mb-2">
                   {t('barber.phone')}
                 </label>
                 <input
@@ -518,16 +518,16 @@ export function BarberManagementPage() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[rgba(255,255,255,0.3)]"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[var(--shop-text-secondary)]"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
-                <p className="text-[rgba(255,255,255,0.5)] text-xs mb-2">
+                <p className="text-[var(--shop-text-secondary)] text-xs mb-2">
                   {t('barber.loginOptionalHint')}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="addUsername" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-1">
+                    <label htmlFor="addUsername" className="form-label block text-[var(--shop-text-secondary)] text-sm mb-1">
                       {t('auth.username')}
                     </label>
                     <input
@@ -537,11 +537,11 @@ export function BarberManagementPage() {
                       onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                       placeholder={t('barber.nameExamplePlaceholder')}
                       autoComplete="off"
-                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-[var(--shop-text-primary)] text-sm min-h-[40px] focus:outline-none focus:border-[var(--shop-accent)]"
+                      className="form-input w-full px-3 py-2 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-sm min-h-[40px] focus:outline-none focus:border-[var(--shop-accent)]"
                     />
                   </div>
                   <div>
-                    <label htmlFor="addPassword" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-1">
+                    <label htmlFor="addPassword" className="form-label block text-[var(--shop-text-secondary)] text-sm mb-1">
                       {t('auth.password')}
                     </label>
                     <input
@@ -551,7 +551,7 @@ export function BarberManagementPage() {
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       placeholder={t('barber.passwordMinPlaceholder')}
                       autoComplete="new-password"
-                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-[var(--shop-text-primary)] text-sm min-h-[40px] focus:outline-none focus:border-[var(--shop-accent)]"
+                      className="form-input w-full px-3 py-2 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-sm min-h-[40px] focus:outline-none focus:border-[var(--shop-accent)]"
                     />
                   </div>
                 </div>
@@ -563,7 +563,7 @@ export function BarberManagementPage() {
                     addModal.close();
                     setFormData({ name: '', avatarUrl: '', email: '', phone: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
                   }}
-                  className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-white/10 text-[var(--shop-text-primary)] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]/50"
                 >
                   {t('common.cancel')}
                 </button>
@@ -600,7 +600,7 @@ export function BarberManagementPage() {
               }}
             >
               <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="editName" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                <label htmlFor="editName" className="form-label block text-[var(--shop-text-secondary)] text-sm mb-2">
                   {t('management.name')}
                 </label>
                 <input
@@ -609,11 +609,11 @@ export function BarberManagementPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="editAvatar" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                <label htmlFor="editAvatar" className="form-label block text-[var(--shop-text-secondary)] text-sm mb-2">
                   {t('barber.avatarUrl')}
                 </label>
                 <input
@@ -622,11 +622,11 @@ export function BarberManagementPage() {
                   value={formData.avatarUrl}
                   onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
                   placeholder={t('barber.avatarUrlPlaceholder')}
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[rgba(255,255,255,0.3)]"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)] placeholder:text-[var(--shop-text-secondary)]"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="editEmail" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                <label htmlFor="editEmail" className="form-label block text-[var(--shop-text-secondary)] text-sm mb-2">
                   {t('auth.email')}
                 </label>
                 <input
@@ -634,11 +634,11 @@ export function BarberManagementPage() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
-                <label htmlFor="editPhone" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                <label htmlFor="editPhone" className="form-label block text-[var(--shop-text-secondary)] text-sm mb-2">
                   {t('barber.phone')}
                 </label>
                 <input
@@ -646,16 +646,16 @@ export function BarberManagementPage() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
+                  className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]"
                 />
               </div>
               <div className="form-group mb-4 sm:mb-5">
-                <p className="text-[rgba(255,255,255,0.5)] text-xs mb-2">
+                <p className="text-[var(--shop-text-secondary)] text-xs mb-2">
                   {t('barber.loginForPerformance')}
                 </p>
                 <div className="space-y-3">
                   <div>
-                    <label htmlFor="editUsername" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-1">
+                    <label htmlFor="editUsername" className="form-label block text-[var(--shop-text-secondary)] text-sm mb-1">
                       {t('auth.username')}
                     </label>
                     <input
@@ -665,11 +665,11 @@ export function BarberManagementPage() {
                       onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                       placeholder={t('barber.removeLoginPlaceholder')}
                       autoComplete="off"
-                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-[var(--shop-text-primary)] text-sm min-h-[40px] focus:outline-none focus:border-[var(--shop-accent)]"
+                      className="form-input w-full px-3 py-2 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-sm min-h-[40px] focus:outline-none focus:border-[var(--shop-accent)]"
                     />
                   </div>
                   <div>
-                    <label htmlFor="editNewPassword" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-1">
+                    <label htmlFor="editNewPassword" className="form-label block text-[var(--shop-text-secondary)] text-sm mb-1">
                       {t('barber.newPassword')}
                     </label>
                     <input
@@ -679,14 +679,14 @@ export function BarberManagementPage() {
                       onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                       placeholder={t('barber.keepPasswordPlaceholder')}
                       autoComplete="new-password"
-                      className="form-input w-full px-3 py-2 bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg text-[var(--shop-text-primary)] text-sm min-h-[40px] focus:outline-none focus:border-[var(--shop-accent)]"
+                      className="form-input w-full px-3 py-2 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] text-sm min-h-[40px] focus:outline-none focus:border-[var(--shop-accent)]"
                     />
                   </div>
                 </div>
               </div>
               {isOwner && (
                 <div className="form-group mb-4 sm:mb-5">
-                  <label htmlFor="editRevenueShare" className="form-label block text-[rgba(255,255,255,0.7)] text-sm mb-2">
+                  <label htmlFor="editRevenueShare" className="form-label block text-[var(--shop-text-secondary)] text-sm mb-2">
                     {t('barber.revenueSharePercent')}
                   </label>
                   <div className="flex items-center gap-3">
@@ -699,9 +699,9 @@ export function BarberManagementPage() {
                       onChange={(e) => setFormData({ ...formData, revenueSharePercent: Number(e.target.value) })}
                       className="flex-1 h-2 rounded-lg appearance-none bg-white/20 accent-[var(--shop-accent)]"
                     />
-                    <span className="text-white font-medium w-10 text-right">{formData.revenueSharePercent}%</span>
+                    <span className="text-[var(--shop-text-primary)] font-medium w-10 text-right">{formData.revenueSharePercent}%</span>
                   </div>
-                  <p className="text-[rgba(255,255,255,0.5)] text-xs mt-1">{t('barber.revenueShareHint')}</p>
+                  <p className="text-[var(--shop-text-secondary)] text-xs mt-1">{t('barber.revenueShareHint')}</p>
                 </div>
               )}
               <div className="modal-actions flex gap-2 sm:gap-3 mt-5 sm:mt-6">
@@ -712,7 +712,7 @@ export function BarberManagementPage() {
                     setEditingBarber(null);
                     setFormData({ name: '', avatarUrl: '', email: '', phone: '', username: '', password: '', newPassword: '', revenueSharePercent: 100 });
                   }}
-                  className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-[rgba(255,255,255,0.1)] text-white hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="modal-btn secondary flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-none rounded-lg text-sm sm:text-base font-semibold cursor-pointer transition-all min-h-[44px] bg-white/10 text-[var(--shop-text-primary)] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]/50"
                 >
                   {t('common.cancel')}
                 </button>
@@ -751,7 +751,7 @@ export function BarberManagementPage() {
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-white/80 text-sm mb-2">
+              <label className="block text-[var(--shop-text-secondary)] text-sm mb-2">
                 Duração (minutos)
               </label>
               <input
@@ -763,15 +763,15 @@ export function BarberManagementPage() {
                   ...overrideForm, 
                   durationMinutes: parseInt(e.target.value) || 60 
                 })}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                className="w-full px-3 py-2 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)]"
               />
-              <p className="text-white/50 text-xs mt-1">
+              <p className="text-[var(--shop-text-secondary)] text-xs mt-1">
                 Máximo: 1440 minutos (24 horas)
               </p>
             </div>
             
             <div>
-              <label className="block text-white/80 text-sm mb-2">
+              <label className="block text-[var(--shop-text-secondary)] text-sm mb-2">
                 Motivo (opcional)
               </label>
               <input
@@ -783,14 +783,14 @@ export function BarberManagementPage() {
                   reason: e.target.value 
                 })}
                 placeholder="Ex: Manutenção, Evento especial..."
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-white/40"
+                className="w-full px-3 py-2 bg-white/10 border border-[var(--shop-border-color)] rounded-lg text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)]"
               />
             </div>
 
             <div className="flex gap-3 pt-4">
               <button
                 onClick={() => setOverrideModal(false)}
-                className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-colors"
+                className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-[var(--shop-text-primary)] rounded-lg font-medium transition-colors"
               >
                 Cancelar
               </button>

@@ -9,7 +9,7 @@ export function CompanyLoginPage() {
 
   if (useRootTheme) {
     return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[var(--shop-background)] text-white">
       <RootSiteNav />
       <main className="py-20">
         <Container size="2xl">

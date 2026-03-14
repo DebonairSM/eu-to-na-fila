@@ -68,7 +68,7 @@ export function TicketActionSheet({
       />
       <div
         ref={panelRef}
-        className="relative z-10 bg-[var(--shop-surface-secondary)] border-2 border-t-[var(--shop-border-color)] border-x-0 border-b-0 rounded-t-2xl shadow-xl max-h-[85vh] overflow-y-auto"
+        className="relative z-10 bg-[var(--shop-surface-secondary)] border-2 border-t-[var(--shop-border-color)] border-x-0 border-b-0 rounded-t-2xl shadow-xl max-h-[85vh] max-h-[85dvh] overflow-y-auto"
       >
         <div className="p-4 pb-safe">
           <div className="w-10 h-1 rounded-full bg-white/30 mx-auto mb-4" aria-hidden="true" />
