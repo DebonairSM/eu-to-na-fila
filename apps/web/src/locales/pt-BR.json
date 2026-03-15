@@ -79,6 +79,8 @@
   },
   "join": {
     "joinTitle": "Entrar na Fila",
+    "greetingPrefix": "Oi,",
+    "nameHint": "(nome)",
     "serviceLabel": "Serviço *",
     "nameLabel": "Nome *",
     "namePlaceholder": "Nome e sobrenome",
@@ -105,6 +107,7 @@
     "calculatingWait": "Calculando tempo de espera...",
     "waitError": "Erro ao obter tempo de espera",
     "estimatedTime": "Tempo estimado",
+    "estWaitTime": "Tempo est. espera",
     "estimateFor": "Estimativa para",
     "clearBarberForGeneralLine": "Deixe o barbeiro em branco para usar a fila geral",
     "generalLine": "Fila geral",

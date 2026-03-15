@@ -79,6 +79,8 @@
   },
   "join": {
     "joinTitle": "Join Queue",
+    "greetingPrefix": "Hi,",
+    "nameHint": "(name)",
     "serviceLabel": "Service *",
     "nameLabel": "Name *",
     "namePlaceholder": "First and last name",
@@ -105,6 +107,7 @@
     "calculatingWait": "Calculating wait time...",
     "waitError": "Error getting wait time",
     "estimatedTime": "Estimated time",
+    "estWaitTime": "Est. wait time",
     "estimateFor": "Estimate for",
     "clearBarberForGeneralLine": "Clear barber above to use general line",
     "generalLine": "General line",

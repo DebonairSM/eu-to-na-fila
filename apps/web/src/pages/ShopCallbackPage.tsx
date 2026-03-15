@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { hasScheduleEnabled } from '@/lib/utils';
+import { getShopBasePath } from '@/lib/config';
 
 /**
  * Handles redirect from backend after Google OAuth or other shop auth.
@@ -12,7 +12,6 @@ import { hasScheduleEnabled } from '@/lib/utils';
  */
 export function ShopCallbackPage() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { login } = useAuthContext();
   const [error, setError] = useState<string | null>(null);
 
@@ -28,28 +27,24 @@ export function ShopCallbackPage() {
       return;
     }
 
+    // Persist token so API client and useAuth both see it (same key).
     api.setAuthToken(token);
     const clientId = clientIdParam ? parseInt(clientIdParam, 10) : 0;
-    login({
+    const user = {
       id: Number.isNaN(clientId) ? 0 : clientId,
       username: '',
-      role: 'customer',
+      role: 'customer' as const,
       name: (nameParam && nameParam.trim()) || 'Customer',
       clientId: Number.isNaN(clientId) ? undefined : clientId,
-    });
+    };
+    login(user);
 
-    const go = (target: string) => navigate(target, { replace: true });
-    if (redirect && redirect.startsWith('/')) {
-      go(redirect);
-      return;
-    }
-    api.getShopConfig(shop).then((config) => {
-      const target = hasScheduleEnabled(config.settings ?? {}) ? '/checkin/confirm' : '/join';
-      go(target);
-    }).catch(() => {
-      go('/join');
-    });
-  }, [searchParams, navigate, login]);
+    const target = redirect && redirect.startsWith('/') ? redirect : '/join';
+    const basePath = getShopBasePath();
+    const fullPath = basePath === '/' ? target : `${basePath.replace(/\/$/, '')}${target.startsWith('/') ? target : `/${target}`}`;
+    // Full page navigation so the next load reads persisted auth and shows logged-in state.
+    window.location.replace(fullPath);
+  }, [searchParams, login]);
 
   if (error) {
     return (

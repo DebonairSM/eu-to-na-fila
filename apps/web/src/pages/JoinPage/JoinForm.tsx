@@ -86,8 +86,6 @@ export function JoinForm() {
     hasServiceSelection,
     settings,
     needsProfileCompletion,
-    isLoggedInAsCustomer,
-    logout,
     isRefreshingJoinData,
     refreshJoinData,
   } = useJoinForm();
@@ -284,58 +282,45 @@ export function JoinForm() {
     <Card variant="default" className="join-form-card shadow-lg min-w-[320px]">
       <CardContent className="p-6 sm:p-8">
         <form onSubmit={handleMainSubmit} autoComplete="off" className="space-y-7">
-          <button
-            type="submit"
-            disabled={!canStartCheckIn}
-            className={`
-              w-full text-center text-3xl sm:text-4xl tracking-tight transition-colors
-              ${canStartCheckIn
-                ? 'text-[var(--shop-accent)] cursor-pointer hover:text-[var(--shop-accent-hover)]'
-                : 'text-[var(--shop-text-primary)] cursor-default'
-              }
-            `}
-          >
-            {t('join.joinTitle')}
-          </button>
-
           <div className="space-y-5">
             <div className="min-w-0">
-              <label htmlFor="customerName" className="block text-xs uppercase tracking-wide text-[var(--shop-text-secondary)] mb-2">
-                {needsProfileCompletion ? t('join.completeProfile') : t('join.nameLabel')}
+              <label htmlFor="customerName" className="flex flex-wrap items-baseline gap-1 text-xl sm:text-2xl text-[var(--shop-text-primary)]">
+                <span>{t('join.greetingPrefix')}</span>
+                <input
+                  id="customerName"
+                  type="text"
+                  value={combinedName}
+                  onChange={handleCombinedNameChange}
+                  onBlur={applyFormattedName}
+                  placeholder={t('join.namePlaceholder')}
+                  autoComplete="off"
+                  autoCapitalize="words"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  required
+                  aria-describedby={validationError ? nameErrorId : undefined}
+                  className="flex-1 min-w-[8rem] bg-transparent border-0 border-b-2 border-[rgba(255,255,255,0.22)] focus:border-[var(--shop-accent)] text-[var(--shop-text-primary)] text-xl sm:text-2xl px-0 py-2 outline-none placeholder:text-[var(--shop-text-secondary)]"
+                />
               </label>
-              <input
-                id="customerName"
-                type="text"
-                value={combinedName}
-                onChange={handleCombinedNameChange}
-                onBlur={applyFormattedName}
-                placeholder={t('join.namePlaceholder')}
-                autoComplete="off"
-                autoCapitalize="words"
-                autoCorrect="off"
-                spellCheck={false}
-                required
-                aria-describedby={validationError ? nameErrorId : undefined}
-                className="w-full bg-transparent border-0 border-b-2 border-[rgba(255,255,255,0.22)] focus:border-[var(--shop-accent)] text-[var(--shop-text-primary)] text-xl px-0 py-3 outline-none placeholder:text-[var(--shop-text-secondary)]"
-              />
               <InputError id={nameErrorId} message={validationError || ''} />
-              {isLoggedInAsCustomer ? (
-                <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
-                  {t('join.nameChangeHint')}
-                  <button
-                    type="button"
-                    onClick={() => logout()}
-                    className="text-[var(--shop-accent)] hover:underline ml-1"
-                  >
-                    {t('join.notYouLogout')}
-                  </button>
-                </p>
-              ) : (
-                <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
-                  {t('join.quickAuthHint')}
-                </p>
-              )}
             </div>
+
+            {canStartCheckIn ? (
+              <button
+                type="submit"
+                className="w-full text-center text-3xl sm:text-4xl tracking-tight py-4 px-5 rounded-2xl border-2 border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_12%,transparent)] text-[var(--shop-accent)] cursor-pointer hover:bg-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] hover:border-[var(--shop-accent-hover)] hover:text-[var(--shop-accent-hover)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)] min-h-[52px] flex items-center justify-center"
+                aria-label={t('join.confirmEntry')}
+              >
+                {t('join.joinTitle')}
+              </button>
+            ) : (
+              <div
+                className="w-full text-center text-3xl sm:text-4xl tracking-tight text-[var(--shop-text-primary)] py-2"
+                aria-hidden
+              >
+                {t('join.joinTitle')}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="min-w-0">
@@ -348,19 +333,19 @@ export function JoinForm() {
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
                   placeholder={t('join.emailPlaceholder')}
-                  className="w-full bg-transparent border-0 border-b-2 border-[rgba(255,255,255,0.18)] focus:border-[var(--shop-accent)] text-[var(--shop-text-primary)] px-0 py-3 outline-none placeholder:text-[var(--shop-text-secondary)]"
+                  className="w-full rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] px-4 py-3 text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-h-[46px]"
                 />
               </div>
               <div className="min-w-0">
                 <label htmlFor="customerPhone" className="block text-xs uppercase tracking-wide text-[var(--shop-text-secondary)] mb-2">
                   {settings.requirePhone ? t('join.phoneLabel') : t('join.phoneLabelOptional')}
                 </label>
-                <div className="flex items-end gap-2">
+                <div className="flex gap-2">
                   <select
                     id="customerCountry"
                     value={customerCountry}
                     onChange={(e) => handleCountryChange(e.target.value)}
-                    className="h-[46px] bg-transparent border-0 border-b-2 border-[rgba(255,255,255,0.18)] text-[var(--shop-text-primary)] min-w-[112px] outline-none"
+                    className="rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] text-[var(--shop-text-primary)] min-w-[112px] px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-h-[46px]"
                     aria-label={t('join.countryLabel')}
                   >
                     {countryOptions.map((country) => (
@@ -376,7 +361,7 @@ export function JoinForm() {
                     onChange={(e) => handlePhoneChange(e.target.value)}
                     placeholder={t('join.phonePlaceholder')}
                     required={settings.requirePhone}
-                    className="w-full bg-transparent border-0 border-b-2 border-[rgba(255,255,255,0.18)] focus:border-[var(--shop-accent)] text-[var(--shop-text-primary)] px-0 py-3 outline-none placeholder:text-[var(--shop-text-secondary)]"
+                    className="w-full rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] px-4 py-3 text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-h-[46px]"
                   />
                 </div>
               </div>
@@ -398,18 +383,15 @@ export function JoinForm() {
                   backgroundColor: authShift ? 'var(--shop-accent-hover)' : 'var(--shop-accent)',
                 }}
               >
-                {t('auth.login')}
+                {t('auth.loginButton')}
               </button>
               <button
                 type="button"
                 onClick={goToGoogleAuth}
-                className="min-h-[46px] px-4 rounded-xl border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] flex items-center gap-2"
+                className="min-h-[46px] min-w-[46px] px-3 rounded-xl border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] flex items-center justify-center"
                 aria-label={t('auth.signInOrCreateWithGoogle')}
               >
-                <span className="font-bold text-lg">
-                  <span className="text-[#4285F4]">G</span>
-                </span>
-                <span className="text-sm">{t('join.googleQuick')}</span>
+                <span className="font-bold text-xl text-[#4285F4]">G</span>
               </button>
             </div>
 
