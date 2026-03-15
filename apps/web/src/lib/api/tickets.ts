@@ -33,7 +33,7 @@ export interface TicketsApi {
   createAppointment(shopSlug: string, data: CreateAppointmentInput): Promise<Ticket>;
   getAppointmentSlots(shopSlug: string, date: string, serviceIds: number[], barberId?: number): Promise<SlotsResponse>;
   bookAppointment(shopSlug: string, data: BookAppointmentInput): Promise<Ticket>;
-  sendAppointmentReminder(shopSlug: string, ticketId: number, email: string): Promise<{ sent: boolean }>;
+  sendAppointmentReminder(shopSlug: string, ticketId: number, email: string): Promise<{ sent: boolean; error?: string }>;
   checkInAppointment(shopSlug: string, ticketId: number): Promise<Ticket>;
   getTicket(ticketId: number): Promise<Ticket>;
   updateTicketStatus(ticketId: number, data: UpdateTicketStatus): Promise<Ticket>;

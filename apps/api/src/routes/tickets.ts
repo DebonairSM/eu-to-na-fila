@@ -320,7 +320,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     const ticketClientId = (ticket as { clientId?: number | null }).clientId ?? null;
     const frontendBase = env.CORS_ORIGIN.replace(/\/$/, '');
     const shopPath = await getShopFrontendPath(shop, slug);
-    const sent = await sendAppointmentReminder(email, {
+    const result = await sendAppointmentReminder(email, {
       shopName: shop.name,
       serviceName: service?.name ?? 'Serviço',
       scheduledAt,
@@ -333,9 +333,9 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       hasClientAccount: ticketClientId != null,
     });
 
-    if (sent) reminderSentTicketIds.add(ticketId);
+    if (result.sent) reminderSentTicketIds.add(ticketId);
 
-    return reply.send({ sent });
+    return reply.send(result.sent ? { sent: true } : { sent: false, error: result.error });
   });
 
   /**

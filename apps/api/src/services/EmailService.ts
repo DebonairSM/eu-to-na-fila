@@ -101,7 +101,9 @@ function toBase64Url(message: string): string {
     .replace(/=+$/, '');
 }
 
-export async function sendAppointmentReminder(toEmail: string, data: AppointmentReminderData): Promise<boolean> {
+export type SendAppointmentReminderResult = { sent: true } | { sent: false; error: string };
+
+export async function sendAppointmentReminder(toEmail: string, data: AppointmentReminderData): Promise<SendAppointmentReminderResult> {
   const fromEmail = process.env.GMAIL_USER ?? 'eutonafila@gmail.com';
   const dateStr = data.scheduledAt.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
   const lines: string[] = [
@@ -137,18 +139,23 @@ export async function sendAppointmentReminder(toEmail: string, data: Appointment
         userId: 'me',
         requestBody: { raw },
       });
-      return true;
+      return { sent: true };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[EmailService] sendAppointmentReminder (Gmail) failed:', msg);
       if (err instanceof Error && err.stack) console.error(err.stack);
       if (isAuthError(err)) clearGmailClient();
-      return false;
+      return { sent: false, error: msg };
     }
   }
 
   const trans = getNodemailerTransporter();
-  if (!trans) return false;
+  if (!trans) {
+    return {
+      sent: false,
+      error: 'Email not configured. Set GMAIL_USER + GMAIL_APP_PASSWORD or GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GMAIL_REFRESH_TOKEN.',
+    };
+  }
 
   try {
     await trans.sendMail({
@@ -157,11 +164,11 @@ export async function sendAppointmentReminder(toEmail: string, data: Appointment
       subject,
       text: textBody,
     });
-    return true;
+    return { sent: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[EmailService] sendAppointmentReminder (Nodemailer) failed:', msg);
-    return false;
+    return { sent: false, error: msg };
   }
 }
 
