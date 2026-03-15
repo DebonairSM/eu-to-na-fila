@@ -37,7 +37,7 @@ export function Navigation() {
     labelMenu: t('nav.menu'),
   };
   const showSeeStatus = activeTicket != null;
-  const ctaLabel = showSeeStatus ? (navLabels.ctaSeeStatus ?? t('nav.ctaSeeStatus')) : navLabels.ctaJoin;
+  const ctaLabel = showSeeStatus ? (navLabels.ctaSeeStatus ?? t('nav.ctaSeeStatus')) : t('nav.ctaJoin');
   const ctaTo = showSeeStatus ? `/status/${activeTicket.id}` : '/join';
   const ctaIcon = showSeeStatus ? 'visibility' : 'queue';
   const shopName = shopConfig.name || appConfig.name;
@@ -239,33 +239,19 @@ export function Navigation() {
               </li>
             </>
           ) : (
-            <>
-              <li>
-                <Link
-                  to={ctaTo}
-                  className="inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] px-4 py-2.5 rounded-xl min-h-[44px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2"
-                  style={{
-                    color: '#0a0a0a',
-                    backgroundColor: 'var(--shop-accent, #D4AF37)',
-                  }}
-                >
-                  <span className="material-symbols-outlined text-lg" aria-hidden>{ctaIcon}</span>
-                  {ctaLabel}
-                </Link>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => navigate('/shop/login')}
-                  className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center w-full text-left bg-transparent border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 [&:hover]:[color:var(--shop-accent)]"
-                  style={{
-                    color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
-                  }}
-                >
-                  {navLabels.linkBarbers}
-                </button>
-              </li>
-            </>
+            <li>
+              <Link
+                to={ctaTo}
+                className="inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] px-4 py-2.5 rounded-xl min-h-[44px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2"
+                style={{
+                  color: '#0a0a0a',
+                  backgroundColor: 'var(--shop-accent, #D4AF37)',
+                }}
+              >
+                <span className="material-symbols-outlined text-lg" aria-hidden>{ctaIcon}</span>
+                {ctaLabel}
+              </Link>
+            </li>
           )}
           <li>
             <LanguageSwitcher />
@@ -419,32 +405,18 @@ export function Navigation() {
                     </Link>
                   </>
                 ) : (
-                  <>
-                    <Link
-                      to={ctaTo}
-                      className="flex items-center justify-center gap-2 w-full font-semibold text-sm px-4 py-3 rounded-xl min-h-[48px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2"
-                      style={{ color: '#0a0a0a', backgroundColor: 'var(--shop-accent)' }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      <span className="material-symbols-outlined text-lg" aria-hidden>{ctaIcon}</span>
-                      {ctaLabel}
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsMobileMenuOpen(false);
-                        navigate('/shop/login');
-                      }}
-                      className="block w-full text-left text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)] bg-transparent border-0 cursor-pointer"
-                      style={{ color: 'rgba(255,255,255,0.85)' }}
-                    >
-                      {navLabels.linkBarbers}
-                    </button>
-                  </>
+                  <Link
+                    to={ctaTo}
+                    className="flex items-center justify-center gap-2 w-full font-semibold text-sm px-4 py-3 rounded-xl min-h-[48px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2"
+                    style={{ color: '#0a0a0a', backgroundColor: 'var(--shop-accent)' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <span className="material-symbols-outlined text-lg" aria-hidden>{ctaIcon}</span>
+                    {ctaLabel}
+                  </Link>
                 )}
                 <div className="relative z-10 mt-4 pt-4 border-t border-[rgba(255,255,255,0.1)]">
                   <LanguageSwitcher />

@@ -38,8 +38,6 @@ import { getShopStatus } from '@eutonafila/shared';
 import { ServiceChip } from '@/components/ServiceChip';
 import { formatDurationMinutes } from '@/lib/formatDuration';
 
-const AD_VIEW_DURATION = 15000; // 15 seconds
-
 export function BarberQueueManager() {
   const shopSlug = useShopSlug();
   const { config: shopConfig } = useShopConfig();
@@ -51,6 +49,7 @@ export function BarberQueueManager() {
     isFullscreen,
     ads,
     currentAdIndex,
+    adViewDurationMs,
     enterKioskMode,
     showQueueView,
     toggleFullscreen,
@@ -811,7 +810,7 @@ export function BarberQueueManager() {
               className="h-full bg-[var(--shop-accent)]"
               style={{
                 width: '0%',
-                animation: `progress ${AD_VIEW_DURATION}ms linear forwards`,
+                animation: `progress ${adViewDurationMs}ms linear forwards`,
               }}
             />
           </div>

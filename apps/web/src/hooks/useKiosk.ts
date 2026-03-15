@@ -4,6 +4,9 @@ import { useShopSlug } from '@/contexts/ShopSlugContext';
 
 const QUEUE_VIEW_DURATION = 15000; // 15 seconds per US-013
 const AD_VIEW_DURATION = 15000; // 15 seconds per US-013
+// One ad only: 40s line (queue) then 10s ad
+const ONE_AD_QUEUE_DURATION = 40000;
+const ONE_AD_VIEW_DURATION = 10000;
 const IDLE_TIMEOUT = 10000; // 10 seconds per US-014
 
 export type KioskView = 'queue' | 'ad';
@@ -243,8 +246,10 @@ export function useKiosk() {
       clearTimeout(rotationTimerRef.current);
     }
 
-    const currentDuration =
-      currentView === 'queue' ? QUEUE_VIEW_DURATION : AD_VIEW_DURATION;
+    const oneAdOnly = ads.length === 1;
+    const queueDuration = oneAdOnly ? ONE_AD_QUEUE_DURATION : QUEUE_VIEW_DURATION;
+    const adDuration = oneAdOnly ? ONE_AD_VIEW_DURATION : AD_VIEW_DURATION;
+    const currentDuration = currentView === 'queue' ? queueDuration : adDuration;
 
     rotationTimerRef.current = setTimeout(() => {
       if (currentView === 'queue') {
@@ -284,6 +289,9 @@ export function useKiosk() {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isKioskMode, exitKioskMode]);
 
+  const oneAdOnly = ads.length === 1;
+  const adViewDurationMs = oneAdOnly ? ONE_AD_VIEW_DURATION : AD_VIEW_DURATION;
+
   return {
     isKioskMode,
     currentView,
@@ -291,6 +299,7 @@ export function useKiosk() {
     isFullscreen,
     ads,
     currentAdIndex,
+    adViewDurationMs,
     enterKioskMode,
     exitKioskMode,
     showQueueView,

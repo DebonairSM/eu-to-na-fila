@@ -1,11 +1,21 @@
-import { useId } from 'react';
+import { useEffect, useId, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useJoinForm } from './hooks/useJoinForm';
 import { ActiveBarbersInfo } from './ActiveBarbersInfo';
-import { Card, CardContent, Input, InputLabel, InputError, Button } from '@/components/design-system';
-import { hasScheduleEnabled } from '@/lib/utils';
+import { Card, CardContent, InputError, Button } from '@/components/design-system';
+import { Modal } from '@/components/Modal';
+import { api } from '@/lib/api';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatCurrency } from '@/lib/format';
 import { formatDurationMinutes } from '@/lib/formatDuration';
+import {
+  formatNameWithConnectors,
+  formatPhoneByCountry,
+  getCountryOptions,
+  getErrorMessage,
+  hasScheduleEnabled,
+} from '@/lib/utils';
 import type { Service } from '@eutonafila/shared';
 
 function serviceSubtotal(services: Service[]): number {
@@ -17,7 +27,6 @@ function ServiceChip({
   onToggle,
   label,
 }: {
-  service: Service;
   selected: boolean;
   onToggle: () => void;
   label: string;
@@ -51,6 +60,10 @@ export function JoinForm() {
     handleCombinedNameChange,
     customerPhone,
     setCustomerPhone,
+    customerEmail,
+    setCustomerEmail,
+    customerCountry,
+    setCustomerCountry,
     selectedBarberId,
     setSelectedBarberId,
     validationError,
@@ -60,7 +73,7 @@ export function JoinForm() {
     isAlreadyInQueue,
     existingTicketId,
     nameCollisionError,
-    handleSubmit,
+    submitJoin,
     navigate,
     waitTimes,
     isLoadingWaitTimes,
@@ -79,7 +92,22 @@ export function JoinForm() {
     refreshJoinData,
   } = useJoinForm();
   const { locale, t } = useLocale();
+  const shopSlug = useShopSlug();
+  const { login } = useAuthContext();
   const nameErrorId = useId();
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isSignupExpanded, setIsSignupExpanded] = useState(false);
+  const [authShift, setAuthShift] = useState(false);
+  const [authIdentifier, setAuthIdentifier] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+  const [signupName, setSignupName] = useState('');
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
+  const [signupBirthday, setSignupBirthday] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
 
   const selectedServicesForSubtotal: Service[] = activeServices.filter((s) => selectedServiceIds.includes(s.id));
   const subtotal = serviceSubtotal(selectedServicesForSubtotal);
@@ -97,94 +125,198 @@ export function JoinForm() {
     totalServiceDurationMinutes +
     (estimatedWaitMinutes != null && estimatedWaitMinutes > 0 ? estimatedWaitMinutes : 0);
   const showEstimatedTime = selectedServiceIds.length > 0 && totalServiceDurationMinutes > 0;
+  const countryOptions = useMemo(() => getCountryOptions(locale), [locale]);
+  const canStartCheckIn =
+    combinedName.trim().length > 0 &&
+    !validationError &&
+    (!settings.requirePhone || customerPhone.trim().length > 0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setAuthShift((prev) => !prev);
+    }, 3500);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthModalOpen) return;
+    if (!authIdentifier && customerEmail.trim()) {
+      setAuthIdentifier(customerEmail.trim());
+    }
+    if (!signupEmail && customerEmail.trim()) {
+      setSignupEmail(customerEmail.trim());
+    }
+  }, [isAuthModalOpen, authIdentifier, customerEmail, signupEmail]);
+
+  const applyFormattedName = () => {
+    const formatted = formatNameWithConnectors(combinedName);
+    handleCombinedNameChange({
+      target: { value: formatted },
+    } as ChangeEvent<HTMLInputElement>);
+  };
+
+  const openServiceModal = () => {
+    if (!canStartCheckIn) return;
+    setIsServiceModalOpen(true);
+  };
+
+  const handleMainSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    openServiceModal();
+  };
+
+  const handleCountryChange = (value: string) => {
+    setCustomerCountry(value as typeof customerCountry);
+    if (!customerPhone.trim()) return;
+    setCustomerPhone(formatPhoneByCountry(customerPhone, value as typeof customerCountry));
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setCustomerPhone(formatPhoneByCountry(value, customerCountry));
+  };
+
+  const goToGoogleAuth = () => {
+    const redirectUri = hasScheduleEnabled(settings) ? '/checkin/confirm' : '/join';
+    window.location.href = api.getCustomerGoogleAuthUrl(shopSlug, redirectUri);
+  };
+
+  const handleAuthSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (isAuthSubmitting) return;
+    setAuthError(null);
+    setIsAuthSubmitting(true);
+
+    try {
+      if (isSignupExpanded) {
+        if (!signupEmail.trim()) {
+          setAuthError(t('auth.fillAllFields'));
+          return;
+        }
+        if (authPassword.length < 6) {
+          setAuthError(t('auth.passwordMinLength'));
+          return;
+        }
+        if (authPassword !== signupConfirmPassword) {
+          setAuthError(t('auth.passwordMismatch'));
+          return;
+        }
+
+        const result = await api.registerCustomer(shopSlug, {
+          email: signupEmail.trim(),
+          password: authPassword,
+          name: signupName.trim() || undefined,
+          dateOfBirth: signupBirthday.trim() || undefined,
+        });
+        if (result.valid && result.token && result.role === 'customer') {
+          login({
+            id: result.clientId,
+            username: signupEmail.trim(),
+            role: 'customer',
+            name: signupName.trim() || signupEmail.trim(),
+            clientId: result.clientId,
+          });
+          setIsAuthModalOpen(false);
+          return;
+        }
+        setAuthError(t('auth.signupError'));
+        return;
+      }
+
+      if (!authIdentifier.trim() || !authPassword.trim()) {
+        setAuthError(t('auth.fillAllFields'));
+        return;
+      }
+
+      const result = await api.login(shopSlug, {
+        identifier: authIdentifier.trim(),
+        password: authPassword,
+        remember_me: rememberMe,
+      });
+      if (!result.valid || !result.token || !result.role) {
+        setAuthError(t('auth.invalidCredentials'));
+        return;
+      }
+
+      if (result.role === 'customer') {
+        login(
+          {
+            id: result.clientId ?? 0,
+            username: authIdentifier.trim(),
+            role: 'customer',
+            name: result.name?.trim() || authIdentifier.trim(),
+            clientId: result.clientId,
+          },
+          { rememberMe }
+        );
+        setIsAuthModalOpen(false);
+        return;
+      }
+      if (result.role === 'barber') {
+        login({
+          id: result.barberId ?? 0,
+          username: authIdentifier.trim(),
+          role: 'barber',
+          name: result.barberName ?? authIdentifier.trim(),
+        });
+        navigate('/barber');
+        return;
+      }
+      if (result.role === 'owner') {
+        login({ id: 0, username: 'owner', role: 'owner', name: 'owner' });
+        navigate('/owner');
+        return;
+      }
+      if (result.role === 'kiosk') {
+        login({ id: 0, username: 'kiosk', role: 'kiosk', name: 'kiosk' });
+        navigate('/manage?kiosk=true');
+        return;
+      }
+      login({ id: 0, username: 'staff', role: 'staff', name: 'staff' });
+      navigate('/manage');
+    } catch (error) {
+      setAuthError(getErrorMessage(error, t('auth.loginError')));
+    } finally {
+      setIsAuthSubmitting(false);
+    }
+  };
 
   return (
     <Card variant="default" className="join-form-card shadow-lg min-w-[320px]">
       <CardContent className="p-6 sm:p-8">
-        <form onSubmit={handleSubmit} autoComplete="off">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
-            {hasServices && (
-              <div className="min-w-0 sm:col-span-2">
-                <InputLabel className="mb-2 block">{t('join.serviceLabel')}</InputLabel>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {activeServices.map((s) => {
-                    const label = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}`;
-                    const selected = selectedServiceIds.includes(s.id);
-                    return (
-                      <ServiceChip
-                        key={s.id}
-                        service={s}
-                        selected={selected}
-                        onToggle={() =>
-                          setSelectedServiceIds((prev) =>
-                            prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id]
-                          )
-                        }
-                        label={label}
-                      />
-                    );
-                  })}
-                </div>
-                {(showSubtotal || showEstimatedTime) && (
-                  <div className="pt-2 mt-2 border-t border-[rgba(255,255,255,0.1)] space-y-1">
-                    {showSubtotal && (
-                      <p className="text-sm text-[var(--shop-text-secondary)] flex justify-end gap-2">
-                        <span>{t('join.subtotal')}</span>
-                        <span className="font-medium text-[var(--shop-text-primary)]">
-                          {formatCurrency(subtotal, locale)}
-                        </span>
-                      </p>
-                    )}
-                    {showEstimatedTime && (
-                      <>
-                        <p className="text-sm text-[var(--shop-text-secondary)] flex justify-end gap-2">
-                          <span className="font-medium text-[var(--shop-text-primary)]">
-                            {t('join.estimatedTotalTime', {
-                              duration: formatDurationMinutes(totalCompletionMinutes),
-                            })}
-                          </span>
-                        </p>
-                        {estimatedWaitMinutes != null && estimatedWaitMinutes > 0 && (
-                          <p className="text-xs text-[var(--shop-text-secondary)] flex justify-end">
-                            {t('join.estimatedTotalBreakdown', {
-                              wait: formatDurationMinutes(estimatedWaitMinutes),
-                              service: formatDurationMinutes(totalServiceDurationMinutes),
-                            })}
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+        <form onSubmit={handleMainSubmit} autoComplete="off" className="space-y-7">
+          <button
+            type="submit"
+            disabled={!canStartCheckIn}
+            className={`
+              w-full text-center text-3xl sm:text-4xl tracking-tight transition-colors
+              ${canStartCheckIn
+                ? 'text-[var(--shop-accent)] cursor-pointer hover:text-[var(--shop-accent-hover)]'
+                : 'text-[var(--shop-text-primary)] cursor-default'
+              }
+            `}
+          >
+            {t('join.joinTitle')}
+          </button>
 
+          <div className="space-y-5">
             <div className="min-w-0">
-              <InputLabel htmlFor="customerName">
+              <label htmlFor="customerName" className="block text-xs uppercase tracking-wide text-[var(--shop-text-secondary)] mb-2">
                 {needsProfileCompletion ? t('join.completeProfile') : t('join.nameLabel')}
-              </InputLabel>
-              <Input
+              </label>
+              <input
                 id="customerName"
                 type="text"
                 value={combinedName}
                 onChange={handleCombinedNameChange}
+                onBlur={applyFormattedName}
                 placeholder={t('join.namePlaceholder')}
-                autoComplete="one-time-code"
+                autoComplete="off"
                 autoCapitalize="words"
                 autoCorrect="off"
-                spellCheck="false"
-                inputMode="text"
-                data-lpignore="true"
-                data-form-type="other"
+                spellCheck={false}
                 required
-                error={!!validationError}
                 aria-describedby={validationError ? nameErrorId : undefined}
-                className="w-full max-w-full"
-                onFocus={(e) => {
-                  const input = e.target as HTMLInputElement;
-                  input.setAttribute('readonly', 'readonly');
-                  setTimeout(() => input.removeAttribute('readonly'), 100);
-                }}
+                className="w-full bg-transparent border-0 border-b-2 border-[rgba(255,255,255,0.22)] focus:border-[var(--shop-accent)] text-[var(--shop-text-primary)] text-xl px-0 py-3 outline-none placeholder:text-[var(--shop-text-secondary)]"
               />
               <InputError id={nameErrorId} message={validationError || ''} />
               {isLoggedInAsCustomer ? (
@@ -200,37 +332,92 @@ export function JoinForm() {
                 </p>
               ) : (
                 <p className="text-sm text-[var(--shop-text-secondary)] mt-1">
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/shop/login?redirect=${encodeURIComponent(hasScheduleEnabled(settings) ? '/checkin/confirm' : '/join')}`)}
-                    className="text-[var(--shop-accent)] hover:underline bg-transparent border-0 p-0 cursor-pointer font-inherit"
-                  >
-                    {t('schedule.checkInWithLogin')}
-                  </button>
+                  {t('join.quickAuthHint')}
                 </p>
               )}
             </div>
 
-            {settings.requirePhone && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="min-w-0">
-                <InputLabel htmlFor="customerPhone">{t('join.phoneLabel')}</InputLabel>
-                <Input
-                  id="customerPhone"
-                  type="tel"
-                  value={customerPhone}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomerPhone(e.target.value)}
-                  placeholder={t('join.phonePlaceholder')}
-                  required
-                  className="w-full max-w-full"
+                <label htmlFor="customerEmail" className="block text-xs uppercase tracking-wide text-[var(--shop-text-secondary)] mb-2">
+                  {t('join.emailLabel')}
+                </label>
+                <input
+                  id="customerEmail"
+                  type="email"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  placeholder={t('join.emailPlaceholder')}
+                  className="w-full bg-transparent border-0 border-b-2 border-[rgba(255,255,255,0.18)] focus:border-[var(--shop-accent)] text-[var(--shop-text-primary)] px-0 py-3 outline-none placeholder:text-[var(--shop-text-secondary)]"
                 />
               </div>
-            )}
+              <div className="min-w-0">
+                <label htmlFor="customerPhone" className="block text-xs uppercase tracking-wide text-[var(--shop-text-secondary)] mb-2">
+                  {settings.requirePhone ? t('join.phoneLabel') : t('join.phoneLabelOptional')}
+                </label>
+                <div className="flex items-end gap-2">
+                  <select
+                    id="customerCountry"
+                    value={customerCountry}
+                    onChange={(e) => handleCountryChange(e.target.value)}
+                    className="h-[46px] bg-transparent border-0 border-b-2 border-[rgba(255,255,255,0.18)] text-[var(--shop-text-primary)] min-w-[112px] outline-none"
+                    aria-label={t('join.countryLabel')}
+                  >
+                    {countryOptions.map((country) => (
+                      <option key={country.code} value={country.code} className="text-black">
+                        {country.code} {country.dialCode}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    id="customerPhone"
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
+                    placeholder={t('join.phonePlaceholder')}
+                    required={settings.requirePhone}
+                    className="w-full bg-transparent border-0 border-b-2 border-[rgba(255,255,255,0.18)] focus:border-[var(--shop-accent)] text-[var(--shop-text-primary)] px-0 py-3 outline-none placeholder:text-[var(--shop-text-secondary)]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAuthModalOpen(true);
+                  setIsSignupExpanded(false);
+                  setAuthError(null);
+                }}
+                className={`
+                  flex-1 min-h-[46px] rounded-xl font-semibold transition-all duration-[3200ms]
+                  text-[var(--shop-text-on-accent)]
+                `}
+                style={{
+                  backgroundColor: authShift ? 'var(--shop-accent-hover)' : 'var(--shop-accent)',
+                }}
+              >
+                {t('auth.login')}
+              </button>
+              <button
+                type="button"
+                onClick={goToGoogleAuth}
+                className="min-h-[46px] px-4 rounded-xl border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] flex items-center gap-2"
+                aria-label={t('auth.signInOrCreateWithGoogle')}
+              >
+                <span className="font-bold text-lg">
+                  <span className="text-[#4285F4]">G</span>
+                </span>
+                <span className="text-sm">{t('join.googleQuick')}</span>
+              </button>
+            </div>
 
             {settings.allowBarberPreference && (barbers.length > 0 || settings.requireBarberChoice) && (
               <div className="min-w-0">
-                <InputLabel htmlFor="preferredBarber">
+                <label htmlFor="preferredBarber" className="block text-xs uppercase tracking-wide text-[var(--shop-text-secondary)] mb-2">
                   {settings.requireBarberChoice ? t('join.barberLabel') : t('join.barberLabelOptional')}
-                </InputLabel>
+                </label>
                 <select
                   id="preferredBarber"
                   value={selectedBarberId ?? ''}
@@ -253,8 +440,7 @@ export function JoinForm() {
             )}
           </div>
 
-          <div className="mt-6 space-y-6">
-
+          <div className="space-y-6">
             {nameCollisionError && (
               <div className="p-4 rounded-lg bg-[#ef4444]/20 border-2 border-[#ef4444] flex items-start gap-3">
                 <span className="material-symbols-outlined text-[#ef4444] text-xl flex-shrink-0 mt-0.5">
@@ -319,37 +505,223 @@ export function JoinForm() {
                 {t('join.noServicesAvailable')}
               </p>
             )}
-
-            <Button
-              type="submit"
-              fullWidth
-              size="lg"
-              disabled={
-                isSubmitting ||
-                !!validationError ||
-                isAlreadyInQueue ||
-                !!nameCollisionError ||
-                isLoadingServices ||
-                !hasServices ||
-                (hasServices && !hasServiceSelection) ||
-                (settings.requirePhone && !customerPhone.trim())
-              }
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="material-symbols-outlined animate-spin text-xl">hourglass_top</span>
-                  {t('join.entering')}
-                </>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined text-xl">check</span>
-                  {t('join.confirmEntry')}
-                </>
-              )}
-            </Button>
           </div>
         </form>
       </CardContent>
+
+      <Modal
+        isOpen={isServiceModalOpen}
+        onClose={() => setIsServiceModalOpen(false)}
+        title={t('join.selectServicesModalTitle')}
+        showCloseButton
+      >
+        <div className="space-y-4">
+          {hasServices ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {activeServices.map((s) => {
+                const label = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}`;
+                const selected = selectedServiceIds.includes(s.id);
+                return (
+                  <ServiceChip
+                    key={s.id}
+                    selected={selected}
+                    onToggle={() =>
+                      setSelectedServiceIds((prev) =>
+                        prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id]
+                      )
+                    }
+                    label={label}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--shop-text-secondary)]">{t('join.noServicesAvailable')}</p>
+          )}
+
+          {(showSubtotal || showEstimatedTime) && (
+            <div className="pt-2 mt-2 border-t border-[rgba(255,255,255,0.1)] space-y-1">
+              {showSubtotal && (
+                <p className="text-sm text-[var(--shop-text-secondary)] flex justify-end gap-2">
+                  <span>{t('join.subtotal')}</span>
+                  <span className="font-medium text-[var(--shop-text-primary)]">
+                    {formatCurrency(subtotal, locale)}
+                  </span>
+                </p>
+              )}
+              {showEstimatedTime && (
+                <>
+                  <p className="text-sm text-[var(--shop-text-secondary)] flex justify-end gap-2">
+                    <span className="font-medium text-[var(--shop-text-primary)]">
+                      {t('join.estimatedTotalTime', {
+                        duration: formatDurationMinutes(totalCompletionMinutes),
+                      })}
+                    </span>
+                  </p>
+                  {estimatedWaitMinutes != null && estimatedWaitMinutes > 0 && (
+                    <p className="text-xs text-[var(--shop-text-secondary)] flex justify-end">
+                      {t('join.estimatedTotalBreakdown', {
+                        wait: formatDurationMinutes(estimatedWaitMinutes),
+                        service: formatDurationMinutes(totalServiceDurationMinutes),
+                      })}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          <Button
+            type="button"
+            fullWidth
+            size="lg"
+            onClick={() => {
+              void submitJoin();
+            }}
+            disabled={
+              isSubmitting ||
+              !!validationError ||
+              isAlreadyInQueue ||
+              !!nameCollisionError ||
+              isLoadingServices ||
+              !hasServices ||
+              (hasServices && !hasServiceSelection) ||
+              (settings.requirePhone && !customerPhone.trim())
+            }
+          >
+            {isSubmitting ? (
+              <>
+                <span className="material-symbols-outlined animate-spin text-xl">hourglass_top</span>
+                {t('join.entering')}
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-xl">check</span>
+                {t('join.confirmEntry')}
+              </>
+            )}
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        title={isSignupExpanded ? t('auth.createAccount') : t('auth.login')}
+        showCloseButton
+      >
+        <form onSubmit={handleAuthSubmit} className="space-y-4">
+          {isSignupExpanded ? (
+            <>
+              <input
+                type="email"
+                value={signupEmail}
+                onChange={(e) => setSignupEmail(e.target.value)}
+                placeholder={t('auth.email')}
+                required
+                className="w-full px-4 py-3 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)]"
+              />
+              <input
+                type="text"
+                value={signupName}
+                onChange={(e) => setSignupName(e.target.value)}
+                placeholder={t('auth.nameOptional')}
+                className="w-full px-4 py-3 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)]"
+              />
+            </>
+          ) : (
+            <input
+              type="text"
+              value={authIdentifier}
+              onChange={(e) => setAuthIdentifier(e.target.value)}
+              placeholder={t('auth.emailOrUsername')}
+              required
+              className="w-full px-4 py-3 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)]"
+            />
+          )}
+
+          <input
+            type="password"
+            value={authPassword}
+            onChange={(e) => setAuthPassword(e.target.value)}
+            placeholder={t('auth.password')}
+            required
+            className="w-full px-4 py-3 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)]"
+          />
+
+          {isSignupExpanded && (
+            <>
+              <input
+                type="password"
+                value={signupConfirmPassword}
+                onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                placeholder={t('auth.confirmPassword')}
+                required
+                className="w-full px-4 py-3 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)]"
+              />
+              <div>
+                <label className="block text-xs uppercase tracking-wide text-[var(--shop-text-secondary)] mb-2">
+                  {t('auth.birthdayOptional')}
+                </label>
+                <input
+                  type="date"
+                  value={signupBirthday}
+                  onChange={(e) => setSignupBirthday(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)]"
+                />
+              </div>
+            </>
+          )}
+
+          {!isSignupExpanded && (
+            <label className="flex items-center gap-2 text-sm text-[var(--shop-text-secondary)]">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              {t('auth.rememberMe')}
+            </label>
+          )}
+
+          {authError && (
+            <div className="p-3 rounded-lg bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.25)] text-sm text-[#ef4444]">
+              {authError}
+            </div>
+          )}
+
+          <Button type="submit" fullWidth disabled={isAuthSubmitting}>
+            {isAuthSubmitting
+              ? (isSignupExpanded ? t('auth.creatingAccount') : t('auth.entering'))
+              : (isSignupExpanded ? t('auth.createAccount') : t('auth.loginButton'))}
+          </Button>
+
+          {!isSignupExpanded && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignupExpanded(true);
+                setAuthError(null);
+              }}
+              className="w-full text-sm text-[var(--shop-accent)] hover:underline"
+            >
+              {t('auth.createAccount')}
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsSignupExpanded(false);
+              setAuthError(null);
+            }}
+            className="w-full flex items-center justify-center text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)]"
+            aria-label={t('join.collapseSignup')}
+          >
+            <span className="material-symbols-outlined">keyboard_arrow_up</span>
+          </button>
+        </form>
+      </Modal>
     </Card>
   );
 }

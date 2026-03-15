@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { CountryCode } from 'libphonenumber-js';
 import { api, ApiError } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
@@ -10,7 +11,7 @@ import { useQueue } from '@/hooks/useQueue';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useServices } from '@/hooks/useServices';
 import { getShopStatus } from '@eutonafila/shared';
-import { getErrorMessage, formatName, getOrCreateDeviceId, redirectToStatusPage } from '@/lib/utils';
+import { getErrorMessage, formatNameWithConnectors, getOrCreateDeviceId, redirectToStatusPage } from '@/lib/utils';
 import { logError } from '@/lib/logger';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { useWaitTimes } from '@/contexts/WaitTimesContext';
@@ -18,6 +19,8 @@ import { useWaitTimes } from '@/contexts/WaitTimesContext';
 const STORAGE_KEY = STORAGE_KEYS.ACTIVE_TICKET_ID;
 const CUSTOMER_NAME_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_NAME;
 const CUSTOMER_PHONE_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_PHONE;
+const CUSTOMER_EMAIL_STORAGE_KEY = 'eutonafila_customer_email';
+const CUSTOMER_COUNTRY_STORAGE_KEY = 'eutonafila_customer_country';
 const REMEMBER_PHONE_DEBOUNCE_MS = 400;
 
 function isSufficientName(name: string | undefined): boolean {
@@ -33,6 +36,8 @@ export function useJoinForm() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerCountry, setCustomerCountry] = useState<CountryCode>('BR');
   const [selectedBarberId, setSelectedBarberId] = useState<number | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,7 +85,7 @@ export function useJoinForm() {
   // Load stored customer name and phone on mount; when logged in, use profile
   useEffect(() => {
     if (isCustomer && user?.name) {
-      const formatted = formatName(user.name.trim());
+      const formatted = formatNameWithConnectors(user.name.trim());
       const words = formatted.trim().split(/\s+/).filter(Boolean);
       setFirstName(words[0] ?? '');
       setLastName(words.length > 1 ? words.slice(1).join(' ') : '');
@@ -107,6 +112,14 @@ export function useJoinForm() {
       const storedPhone = localStorage.getItem(CUSTOMER_PHONE_STORAGE_KEY);
       if (storedPhone && typeof storedPhone === 'string') {
         setCustomerPhone(storedPhone.trim());
+      }
+      const storedEmail = localStorage.getItem(CUSTOMER_EMAIL_STORAGE_KEY);
+      if (storedEmail && typeof storedEmail === 'string') {
+        setCustomerEmail(storedEmail.trim());
+      }
+      const storedCountry = localStorage.getItem(CUSTOMER_COUNTRY_STORAGE_KEY);
+      if (storedCountry && typeof storedCountry === 'string' && storedCountry.length === 2) {
+        setCustomerCountry(storedCountry.toUpperCase() as CountryCode);
       }
     } catch (error) {
       logError('Failed to load stored customer name', error);
@@ -138,7 +151,7 @@ export function useJoinForm() {
         const res = await api.getClientRemember(shopSlug, customerPhone);
         if (res.hasClient && res.name && res.name.trim()) {
           if (combinedNameRef.current.trim()) return;
-          const formatted = formatName(res.name.trim());
+          const formatted = formatNameWithConnectors(res.name.trim());
           const words = formatted.trim().split(/\s+/).filter(Boolean);
           setFirstName(words[0] ?? '');
           setLastName(words.length > 1 ? words.slice(1).join(' ') : '');
@@ -150,6 +163,21 @@ export function useJoinForm() {
     }, REMEMBER_PHONE_DEBOUNCE_MS);
     return () => clearTimeout(t);
   }, [customerPhone, shopSlug]);
+
+  // Persist lightweight join contact state to improve return visits.
+  useEffect(() => {
+    try {
+      localStorage.setItem(CUSTOMER_COUNTRY_STORAGE_KEY, customerCountry);
+      if (customerEmail.trim()) {
+        localStorage.setItem(CUSTOMER_EMAIL_STORAGE_KEY, customerEmail.trim());
+      }
+      if (customerPhone.trim()) {
+        localStorage.setItem(CUSTOMER_PHONE_STORAGE_KEY, customerPhone.trim());
+      }
+    } catch {
+      // ignore storage failures
+    }
+  }, [customerCountry, customerEmail, customerPhone]);
 
   // Real-time validation
   useEffect(() => {
@@ -184,7 +212,7 @@ export function useJoinForm() {
 
   // Legacy handlers kept for backward compatibility (not used but maintained for type safety)
   const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatName(e.target.value);
+    const formatted = formatNameWithConnectors(e.target.value);
     setFirstName(formatted);
     // Update combinedName to reflect change
     setCombinedName(formatted + (lastName ? ' ' + lastName : ''));
@@ -197,8 +225,7 @@ export function useJoinForm() {
     setCombinedName(firstName + (firstChar ? ' ' + firstChar : ''));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitJoin = async () => {
     setSubmitError(null);
     setClosedReason(null);
     setIsAlreadyInQueue(false);
@@ -211,9 +238,9 @@ export function useJoinForm() {
       return;
     }
 
-    const fullName = lastName.trim()
-      ? `${formatName(firstName.trim())} ${formatName(lastName.trim())}`
-      : formatName(firstName.trim());
+    const fullName = formatNameWithConnectors(
+      [firstName.trim(), lastName.trim()].filter(Boolean).join(' ')
+    );
 
     // Get or create deviceId for this device
     const deviceId = getOrCreateDeviceId();
@@ -360,6 +387,10 @@ export function useJoinForm() {
       if (customerPhone.trim()) {
         localStorage.setItem(CUSTOMER_PHONE_STORAGE_KEY, customerPhone.trim());
       }
+      if (customerEmail.trim()) {
+        localStorage.setItem(CUSTOMER_EMAIL_STORAGE_KEY, customerEmail.trim());
+      }
+      localStorage.setItem(CUSTOMER_COUNTRY_STORAGE_KEY, customerCountry);
 
       // Navigate to status page (use ticket's shop when present for correct barbershop context)
       redirectToStatusPage(ticket.id, ticket.shopSlug, navigate, shopSlug);
@@ -383,6 +414,11 @@ export function useJoinForm() {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitJoin();
+  };
+
   const refreshJoinData = useCallback(async () => {
     if (isRefreshingJoinData) return;
     setIsRefreshingJoinData(true);
@@ -402,6 +438,10 @@ export function useJoinForm() {
     handleLastNameChange,
     customerPhone,
     setCustomerPhone,
+    customerEmail,
+    setCustomerEmail,
+    customerCountry,
+    setCustomerCountry,
     selectedBarberId,
     setSelectedBarberId,
     validationError,
@@ -412,6 +452,7 @@ export function useJoinForm() {
     existingTicketId,
     nameCollisionError,
     handleSubmit,
+    submitJoin,
     navigate,
     waitTimes,
     isLoadingWaitTimes,

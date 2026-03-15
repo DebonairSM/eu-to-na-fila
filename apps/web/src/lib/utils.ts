@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { AsYouType, getCountries, getCountryCallingCode, type CountryCode } from 'libphonenumber-js';
 import { ApiError } from './api';
 import { getShopBasePath } from './config';
 import { STORAGE_KEYS } from './constants';
@@ -98,6 +99,64 @@ export function formatName(name: string): string {
     })
     .join(' ');
   return formatted;
+}
+
+const NAME_CONNECTORS = new Set(['da', 'das', 'de', 'del', 'della', 'di', 'do', 'dos', 'du', 'e', 'la', 'le', 'van', 'von']);
+
+/**
+ * Formats person names while keeping common connectors lowercase.
+ * First and last words are always capitalized.
+ */
+export function formatNameWithConnectors(name: string): string {
+  if (!name || name.trim().length === 0) {
+    return name;
+  }
+
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return '';
+
+  const formatted = words.map((word, index) => {
+    const normalized = word.toLowerCase();
+    const isFirst = index === 0;
+    const isLast = index === words.length - 1;
+
+    if (!isFirst && !isLast && NAME_CONNECTORS.has(normalized)) {
+      return normalized;
+    }
+
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  });
+
+  return formatted.join(' ');
+}
+
+export interface CountryOption {
+  code: CountryCode;
+  name: string;
+  dialCode: string;
+}
+
+export function getCountryOptions(locale: string): CountryOption[] {
+  const displayNames = typeof Intl !== 'undefined'
+    ? new Intl.DisplayNames([locale], { type: 'region' })
+    : null;
+
+  return getCountries()
+    .map((code) => ({
+      code,
+      name: displayNames?.of(code) ?? code,
+      dialCode: `+${getCountryCallingCode(code)}`,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Formats input as user types according to the selected country.
+ */
+export function formatPhoneByCountry(rawInput: string, country: CountryCode): string {
+  const formatter = new AsYouType(country);
+  const formatted = formatter.input(rawInput);
+  return formatted || formatter.getChars();
 }
 
 /**

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
-import { SectionDivider } from '@/components/design-system';
+import { Container, SectionDivider } from '@/components/design-system';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { getLayoutBehavior } from '@/lib/layouts';
@@ -88,6 +89,17 @@ export function LandingPage() {
           <LocationSection />
         </>
       )}
+      <section className="py-12 sm:py-16 border-t border-[rgba(255,255,255,0.08)]">
+        <Container size="lg" className="text-center space-y-4">
+          <p className="text-sm text-[var(--shop-text-secondary)]">{t('join.bottomLoginHint')}</p>
+          <Link
+            to="/shop/login"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-xl min-h-[44px] font-semibold text-[var(--shop-text-on-accent)] bg-[var(--shop-accent)] hover:bg-[var(--shop-accent-hover)] transition-colors"
+          >
+            {t('auth.login')}
+          </Link>
+        </Container>
+      </section>
     </div>
   );
 }

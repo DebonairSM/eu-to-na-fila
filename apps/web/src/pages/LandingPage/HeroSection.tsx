@@ -15,7 +15,6 @@ export function HeroSection() {
   const hero = homeContent?.hero ?? {
     badge: '',
     subtitle: '',
-    ctaJoin: t('shop.heroCtaJoinDefault'),
     ctaLocation: t('shop.heroCtaLocationDefault'),
   };
   const useSplitLayout = behavior.heroSplit;
@@ -47,12 +46,6 @@ export function HeroSection() {
         {hero.subtitle}
       </Text>
       <div className={useSplitLayout ? 'flex gap-4 flex-wrap' : 'flex gap-4 justify-center flex-wrap'}>
-        <Link to="/join">
-          <Button size="lg" className={behavior.heroOverlay ? 'cta-join' : ''}>
-            {!ctaTextOnly && <span className="material-symbols-outlined text-xl">person_add</span>}
-            {hero.ctaJoin}
-          </Button>
-        </Link>
         {showSchedule && (
           <Link to="/schedule">
             <Button variant="outline" size="lg" className={behavior.heroOverlay ? 'cta-join' : ''}>
@@ -101,12 +94,6 @@ export function HeroSection() {
           </SlideIn>
           <SlideIn direction="up" delay={600}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
-              <Link to="/join">
-                <Button size="lg" fullWidth className="sm:w-auto">
-                  {!ctaTextOnly && <span className="material-symbols-outlined text-xl">person_add</span>}
-                  {hero.ctaJoin}
-                </Button>
-              </Link>
               {showSchedule && (
                 <Link to="/schedule">
                   <Button variant="outline" size="lg" fullWidth className="sm:w-auto">
