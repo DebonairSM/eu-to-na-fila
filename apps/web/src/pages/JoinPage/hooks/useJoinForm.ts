@@ -12,6 +12,7 @@ import { useBarbers } from '@/hooks/useBarbers';
 import { useServices } from '@/hooks/useServices';
 import { getShopStatus } from '@eutonafila/shared';
 import { getErrorMessage, formatNameWithConnectors, getOrCreateDeviceId, redirectToStatusPage } from '@/lib/utils';
+import { applyTrackingConsent, clearTrackingCookie } from '@/lib/trackingCookie';
 import { logError } from '@/lib/logger';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { useWaitTimes } from '@/contexts/WaitTimesContext';
@@ -21,6 +22,7 @@ const CUSTOMER_NAME_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_NAME;
 const CUSTOMER_PHONE_STORAGE_KEY = STORAGE_KEYS.CUSTOMER_PHONE;
 const CUSTOMER_EMAIL_STORAGE_KEY = 'eutonafila_customer_email';
 const CUSTOMER_COUNTRY_STORAGE_KEY = 'eutonafila_customer_country';
+const TRACKING_CONSENT_STORAGE_KEY = STORAGE_KEYS.TRACKING_CONSENT;
 const REMEMBER_PHONE_DEBOUNCE_MS = 400;
 
 function isSufficientName(name: string | undefined): boolean {
@@ -47,6 +49,8 @@ export function useJoinForm() {
   const [existingTicketId, setExistingTicketId] = useState<number | null>(null);
   const [nameCollisionError, setNameCollisionError] = useState<string | null>(null);
   const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
+  const [trackingConsent, setTrackingConsent] = useState<boolean | null>(null);
+  const [referralSource, setReferralSource] = useState<string>('');
   const { waitTimes, isLoading: isLoadingWaitTimes, refetch: refetchWaitTimes } = useWaitTimes();
   const combinedNameRef = useRef(combinedName);
   combinedNameRef.current = combinedName;
@@ -82,6 +86,20 @@ export function useJoinForm() {
   useEffect(() => {
     if (!settings.allowBarberPreference) setSelectedBarberId(null);
   }, [settings.allowBarberPreference]);
+
+  // Load last tracking consent choice from localStorage for pre-fill; clear tracking cookie if user previously denied
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(TRACKING_CONSENT_STORAGE_KEY);
+      if (stored === 'true') setTrackingConsent(true);
+      else if (stored === 'false') {
+        setTrackingConsent(false);
+        clearTrackingCookie();
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Load stored customer name and phone on mount; when logged in, use profile
   useEffect(() => {
@@ -366,6 +384,8 @@ export function useJoinForm() {
     setIsSubmitting(true);
 
     const validServiceIds = new Set(activeServices.map((s) => s.id));
+    const consentToSend = trackingConsent === true || trackingConsent === false ? trackingConsent : false;
+    const validReferralSources = ['qr', 'friend', 'instagram', 'walk_by', 'other'] as const;
     let payload: {
       customerName: string;
       serviceId?: number;
@@ -373,11 +393,15 @@ export function useJoinForm() {
       customerPhone?: string;
       preferredBarberId?: number;
       deviceId?: string;
+      trackingConsent?: boolean;
+      referralSource?: typeof validReferralSources[number];
     } = {
       customerName: fullName,
       deviceId,
+      trackingConsent: consentToSend,
       ...(customerPhone.trim() ? { customerPhone: customerPhone.trim() } : {}),
       ...(selectedBarberId ? { preferredBarberId: selectedBarberId } : {}),
+      ...(settings.showReferralSource && referralSource && validReferralSources.includes(referralSource as any) ? { referralSource: referralSource as typeof validReferralSources[number] } : {}),
     };
 
     const validSelected = selectedServiceIds.filter((id) => validServiceIds.has(id));
@@ -409,6 +433,8 @@ export function useJoinForm() {
         localStorage.setItem(CUSTOMER_EMAIL_STORAGE_KEY, customerEmail.trim());
       }
       localStorage.setItem(CUSTOMER_COUNTRY_STORAGE_KEY, customerCountry);
+      localStorage.setItem(TRACKING_CONSENT_STORAGE_KEY, String(consentToSend));
+      applyTrackingConsent(consentToSend, deviceId);
 
       // Navigate to status page (use ticket's shop when present for correct barbershop context)
       redirectToStatusPage(ticket.id, ticket.shopSlug, navigate, shopSlug);
@@ -488,5 +514,9 @@ export function useJoinForm() {
     logout,
     isRefreshingJoinData,
     refreshJoinData,
+    trackingConsent,
+    setTrackingConsent,
+    referralSource,
+    setReferralSource,
   };
 }

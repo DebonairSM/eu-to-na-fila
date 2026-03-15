@@ -58,6 +58,7 @@ export interface ClientDetailResponse {
     gender?: string | null;
     nextServiceNote?: string | null;
     nextServiceImageUrl?: string | null;
+    nextServicePreset?: string | null;
   };
   clipNotes: ClientClipNote[];
   serviceHistory: Array<{ id: number; serviceName: string; barberName: string | null; completedAt: string | null }>;

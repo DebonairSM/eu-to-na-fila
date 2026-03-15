@@ -65,6 +65,8 @@ export interface HomeContent {
     mapQuery: string;
   };
   accessibility: { skipLink: string; loading: string };
+  /** Optional one-line tip shown on status page while waiting (e.g. "Did you know? We use premium products."). */
+  waitingTip?: string;
 }
 
 /** Per-locale home content. Keys are locale codes (e.g. "pt-BR", "en"). */
@@ -284,6 +286,12 @@ export interface ShopSettings {
   kioskPassword?: string;
   /** When false, barbers cannot see revenue/profit (e.g. salary contract). */
   barbersCanSeeProfits?: boolean;
+  /** When false, rating prompt is hidden on completed status page. */
+  showRatingPrompt?: boolean;
+  /** When true, join form shows "How did you hear about us?" dropdown. */
+  showReferralSource?: boolean;
+  /** When false, customer "best time" tip is hidden. */
+  showBestTimeTip?: boolean;
 }
 
 /** Zod schema for settings validation with defaults. Adding a new field here with a .default() is all you need. */
@@ -310,6 +318,9 @@ export const shopSettingsSchema = z.object({
   kioskUsername: z.string().max(100).optional(),
   kioskPassword: z.string().max(100).optional(),
   barbersCanSeeProfits: z.boolean().default(true),
+  showRatingPrompt: z.boolean().default(true),
+  showReferralSource: z.boolean().default(false),
+  showBestTimeTip: z.boolean().default(true),
 });
 
 /** Partial input for PATCH (all optional, shallow-merged with existing). */
@@ -331,6 +342,9 @@ export const shopSettingsInputSchema = z.object({
   kioskUsername: z.string().max(100).optional(),
   kioskPassword: z.string().max(100).optional(),
   barbersCanSeeProfits: z.boolean().optional(),
+  showRatingPrompt: z.boolean().optional(),
+  showReferralSource: z.boolean().optional(),
+  showBestTimeTip: z.boolean().optional(),
   temporaryStatusOverride: z.object({
     isOpen: z.boolean(),
     until: z.string(),
@@ -416,6 +430,7 @@ export const DEFAULT_HOME_CONTENT: HomeContent = {
     skipLink: 'Pular para o conteúdo principal',
     loading: 'Carregando…',
   },
+  waitingTip: '',
 };
 
 // ---------------------------------------------------------------------------

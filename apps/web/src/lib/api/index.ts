@@ -57,6 +57,7 @@ class ApiClient extends BaseApiClient {
   sendAppointmentReminder = this._tickets.sendAppointmentReminder;
   checkInAppointment = this._tickets.checkInAppointment;
   getTicket = this._tickets.getTicket;
+  submitRating = this._tickets.submitRating;
   updateTicketStatus = this._tickets.updateTicketStatus;
   rescheduleAppointment = this._tickets.rescheduleAppointment;
   cancelTicket = this._tickets.cancelTicket;
@@ -122,6 +123,8 @@ class ApiClient extends BaseApiClient {
   updateCustomerProfile = this._auth.updateCustomerProfile;
   uploadClientReferenceImage = this._auth.uploadClientReferenceImage;
   getCustomerAppointments = this._auth.getCustomerAppointments;
+  getBestTimes = this._auth.getBestTimes;
+  getPopularReferencePresets = this._auth.getPopularReferencePresets;
   getCustomerGoogleAuthUrl = this._auth.getCustomerGoogleAuthUrl;
 
   // --- Ads ---

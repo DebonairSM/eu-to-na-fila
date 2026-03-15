@@ -109,6 +109,8 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       customerPhone: z.string().optional(),
       preferredBarberId: z.number().optional(),
       deviceId: z.string().optional(),
+      trackingConsent: z.boolean().optional(),
+      referralSource: z.enum(['qr', 'friend', 'instagram', 'walk_by', 'other']).optional(),
     });
     const data = validateRequest(bodySchema, request.body);
 
@@ -491,7 +493,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * Get a ticket by ID.
-   * 
+   *
    * @route GET /api/tickets/:id
    * @param id - Ticket ID
    * @returns Ticket details
@@ -518,6 +520,24 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       request.log.error({ err, ticketId: (request.params as { id?: string })?.id }, 'GET /tickets/:id failed');
       throw new InternalError('Failed to load ticket. Please try again.');
     }
+  });
+
+  /**
+   * Submit a one-tap rating (1-5) for a completed ticket. Public; idempotent if already rated.
+   * @route POST /api/tickets/:id/rating
+   */
+  fastify.post('/tickets/:id/rating', async (request, reply) => {
+    const paramsSchema = z.object({
+      id: z.coerce.number().int().positive(),
+    });
+    const bodySchema = z.object({
+      rating: z.number().int().min(1).max(5),
+    });
+    const { id } = validateRequest(paramsSchema, request.params);
+    const { rating } = validateRequest(bodySchema, request.body);
+
+    await ticketService.submitRating(id, rating);
+    return reply.status(204).send();
   });
 
   /**

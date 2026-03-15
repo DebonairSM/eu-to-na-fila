@@ -2,6 +2,7 @@ import type { DbClient } from '../db/types.js';
 import { schema } from '../db/index.js';
 import { eq, and, or, ilike, desc, asc, inArray, sql } from 'drizzle-orm';
 import { NotFoundError } from '../lib/errors.js';
+import type { ReferencePresetId } from '@eutonafila/shared';
 
 export interface ClientListItem {
   id: number;
@@ -31,6 +32,7 @@ export interface Client {
   city: string | null;
   dateOfBirth: Date | string | null;
   gender: string | null;
+  nextServicePreset?: ReferencePresetId | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -274,9 +276,10 @@ export class ClientService {
     data: {
       name?: string;
       phone?: string | null;
-      preferences?: { emailReminders?: boolean };
+      preferences?: { emailReminders?: boolean; trackingConsent?: boolean };
       nextServiceNote?: string | null;
       nextServiceImageUrl?: string | null;
+      nextServicePreset?: ReferencePresetId | null;
       address?: string | null;
       state?: string | null;
       city?: string | null;
@@ -305,6 +308,9 @@ export class ClientService {
     }
     if (data.nextServiceImageUrl !== undefined) {
       updateData.nextServiceImageUrl = data.nextServiceImageUrl === '' ? null : data.nextServiceImageUrl;
+    }
+    if (data.nextServicePreset !== undefined) {
+      updateData.nextServicePreset = data.nextServicePreset;
     }
     if (data.address !== undefined) {
       updateData.address = data.address === '' ? null : data.address;

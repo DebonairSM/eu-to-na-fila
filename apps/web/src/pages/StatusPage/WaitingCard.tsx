@@ -2,6 +2,8 @@ import { Card, CardContent, Heading, Text, StatusTransition } from '@/components
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatDurationMinutes } from '@/lib/formatDuration';
 
+export type WaitingMilestone = 'first_in_line' | 'almost_there' | 'your_turn' | null;
+
 interface WaitingCardProps {
   waitTime: number | null;
   position?: number;
@@ -11,10 +13,19 @@ interface WaitingCardProps {
   preferredBarberName?: string;
   /** When set, shows that the general line would be faster (e.g. "General line: 15 min — Faster"). */
   generalLineWaitTime?: number;
+  /** Short milestone copy shown under wait time. */
+  milestone?: WaitingMilestone;
 }
 
-export function WaitingCard({ waitTime, position, total, ahead, preferredBarberName, generalLineWaitTime }: WaitingCardProps) {
+const MILESTONE_KEYS: Record<NonNullable<WaitingCardProps['milestone']>, string> = {
+  first_in_line: 'status.firstInLine',
+  almost_there: 'status.almostYourTurn',
+  your_turn: 'status.youAreUp',
+};
+
+export function WaitingCard({ waitTime, position, total, ahead, preferredBarberName, generalLineWaitTime, milestone }: WaitingCardProps) {
   const { t } = useLocale();
+  const milestoneCopy = milestone ? t(MILESTONE_KEYS[milestone]) : null;
   return (
     <StatusTransition status="waiting">
       <Card
@@ -39,7 +50,7 @@ export function WaitingCard({ waitTime, position, total, ahead, preferredBarberN
             {waitTime === null ? '--' : waitTime <= 0 ? t('status.now') : formatDurationMinutes(waitTime)}
           </Heading>
           <Text size="lg" variant="secondary" className="mb-6 text-xl">
-            {waitTime !== null && waitTime <= 0 ? t('status.yourTurn') : ''}
+            {milestoneCopy ?? (waitTime !== null && waitTime <= 0 ? t('status.yourTurn') : '')}
           </Text>
           {generalLineWaitTime != null && (
             <Text size="xs" variant="tertiary" className="mb-4">

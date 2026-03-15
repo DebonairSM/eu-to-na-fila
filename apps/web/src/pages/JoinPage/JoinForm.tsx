@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { useJoinForm } from './hooks/useJoinForm';
 import { ActiveBarbersInfo } from './ActiveBarbersInfo';
 import { Card, CardContent, InputError, Button } from '@/components/design-system';
@@ -18,6 +19,8 @@ import {
   hasScheduleEnabled,
 } from '@/lib/utils';
 import type { Service } from '@eutonafila/shared';
+
+const QUEUE_LONG_THRESHOLD_MINUTES = 20;
 
 function serviceSubtotal(services: Service[]): number {
   return services.reduce((sum, s) => sum + ((s.price != null && s.price > 0 ? s.price : 0)), 0);
@@ -88,6 +91,10 @@ export function JoinForm() {
     settings,
     isRefreshingJoinData,
     refreshJoinData,
+    trackingConsent,
+    setTrackingConsent,
+    referralSource,
+    setReferralSource,
   } = useJoinForm();
   const { locale, t } = useLocale();
   const shopSlug = useShopSlug();
@@ -330,6 +337,70 @@ export function JoinForm() {
           <InputError id={nameErrorId} message={validationError || ''} />
         </div>
 
+        <div className="space-y-2">
+          <p className="text-sm text-[var(--shop-text-secondary)]">{t('join.trackingConsentLabel')}</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setTrackingConsent(true)}
+              className={`flex-1 py-2.5 px-4 rounded-xl border-2 text-sm font-medium transition-colors ${
+                trackingConsent === true
+                  ? 'border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] text-[var(--shop-accent)]'
+                  : 'border-[rgba(255,255,255,0.2)] bg-transparent text-[var(--shop-text-secondary)] hover:border-[rgba(255,255,255,0.35)]'
+              }`}
+            >
+              {t('join.trackingAllow')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTrackingConsent(false)}
+              className={`flex-1 py-2.5 px-4 rounded-xl border-2 text-sm font-medium transition-colors ${
+                trackingConsent === false
+                  ? 'border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] text-[var(--shop-accent)]'
+                  : 'border-[rgba(255,255,255,0.2)] bg-transparent text-[var(--shop-text-secondary)] hover:border-[rgba(255,255,255,0.35)]'
+              }`}
+            >
+              {t('join.trackingDeny')}
+            </button>
+          </div>
+        </div>
+
+        {settings.showReferralSource && (
+          <div className="space-y-2">
+            <label htmlFor="referral-source" className="block text-sm text-[var(--shop-text-secondary)]">
+              {t('join.referralSource')}
+            </label>
+            <select
+              id="referral-source"
+              value={referralSource}
+              onChange={(e) => setReferralSource(e.target.value)}
+              className="w-full py-2.5 px-4 rounded-xl border-2 border-[rgba(255,255,255,0.2)] bg-transparent text-[var(--shop-text-primary)] text-base focus:border-[var(--shop-accent)] focus:outline-none"
+            >
+              <option value="">{t('join.referralSourcePlaceholder')}</option>
+              <option value="qr">{t('join.referralSourceQr')}</option>
+              <option value="friend">{t('join.referralSourceFriend')}</option>
+              <option value="instagram">{t('join.referralSourceInstagram')}</option>
+              <option value="walk_by">{t('join.referralSourceWalkBy')}</option>
+              <option value="other">{t('join.referralSourceOther')}</option>
+            </select>
+          </div>
+        )}
+
+        {hasScheduleEnabled(settings) && estimatedWaitMinutes != null && estimatedWaitMinutes >= QUEUE_LONG_THRESHOLD_MINUTES && (
+          <div className="rounded-xl border border-[color-mix(in_srgb,var(--shop-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] p-4 space-y-2">
+            <p className="text-sm text-[var(--shop-text-primary)]">
+              {t('join.queueLongBookSlot', { minutes: String(estimatedWaitMinutes) })}
+            </p>
+            <Link
+              to="/schedule"
+              className="inline-flex items-center gap-2 text-sm font-medium text-[var(--shop-accent)] hover:underline"
+            >
+              <span className="material-symbols-outlined text-lg">edit_calendar</span>
+              {t('join.bookSlotCta')}
+            </Link>
+          </div>
+        )}
+
         {canStartCheckIn ? (
           <button
             type="submit"
@@ -431,6 +502,70 @@ export function JoinForm() {
               <InputError id={nameErrorId} message={validationError || ''} />
             </div>
 
+            <div className="space-y-2">
+              <p className="text-sm text-[var(--shop-text-secondary)]">{t('join.trackingConsentLabel')}</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTrackingConsent(true)}
+                  className={`flex-1 py-2.5 px-4 rounded-xl border-2 text-sm font-medium transition-colors ${
+                    trackingConsent === true
+                      ? 'border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] text-[var(--shop-accent)]'
+                      : 'border-[rgba(255,255,255,0.2)] bg-transparent text-[var(--shop-text-secondary)] hover:border-[rgba(255,255,255,0.35)]'
+                  }`}
+                >
+                  {t('join.trackingAllow')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTrackingConsent(false)}
+                  className={`flex-1 py-2.5 px-4 rounded-xl border-2 text-sm font-medium transition-colors ${
+                    trackingConsent === false
+                      ? 'border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] text-[var(--shop-accent)]'
+                      : 'border-[rgba(255,255,255,0.2)] bg-transparent text-[var(--shop-text-secondary)] hover:border-[rgba(255,255,255,0.35)]'
+                  }`}
+                >
+                  {t('join.trackingDeny')}
+                </button>
+              </div>
+            </div>
+
+            {settings.showReferralSource && (
+              <div className="space-y-2">
+                <label htmlFor="referral-source-lg" className="block text-sm text-[var(--shop-text-secondary)]">
+                  {t('join.referralSource')}
+                </label>
+                <select
+                  id="referral-source-lg"
+                  value={referralSource}
+                  onChange={(e) => setReferralSource(e.target.value)}
+                  className="w-full py-2.5 px-4 rounded-xl border-2 border-[rgba(255,255,255,0.2)] bg-transparent text-[var(--shop-text-primary)] text-base focus:border-[var(--shop-accent)] focus:outline-none"
+                >
+                  <option value="">{t('join.referralSourcePlaceholder')}</option>
+                  <option value="qr">{t('join.referralSourceQr')}</option>
+                  <option value="friend">{t('join.referralSourceFriend')}</option>
+                  <option value="instagram">{t('join.referralSourceInstagram')}</option>
+                  <option value="walk_by">{t('join.referralSourceWalkBy')}</option>
+                  <option value="other">{t('join.referralSourceOther')}</option>
+                </select>
+              </div>
+            )}
+
+            {hasScheduleEnabled(settings) && estimatedWaitMinutes != null && estimatedWaitMinutes >= QUEUE_LONG_THRESHOLD_MINUTES && (
+              <div className="rounded-xl border border-[color-mix(in_srgb,var(--shop-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] p-4 space-y-2">
+                <p className="text-sm text-[var(--shop-text-primary)]">
+                  {t('join.queueLongBookSlot', { minutes: String(estimatedWaitMinutes) })}
+                </p>
+                <Link
+                  to="/schedule"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-[var(--shop-accent)] hover:underline"
+                >
+                  <span className="material-symbols-outlined text-lg">edit_calendar</span>
+                  {t('join.bookSlotCta')}
+                </Link>
+              </div>
+            )}
+
             {canStartCheckIn ? (
               <button
                 type="submit"
@@ -459,20 +594,20 @@ export function JoinForm() {
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
                   placeholder={t('join.emailPlaceholder')}
-                  className="w-full rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] px-4 py-3 text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-h-[46px]"
+                  className="w-full rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] px-4 py-3 text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] h-[46px] box-border"
                 />
               </div>
               <div className="min-w-0 flex flex-col">
                 <label htmlFor="customerPhone" className="block text-xs uppercase tracking-wide text-[var(--shop-text-secondary)] mb-2">
                   {settings.requirePhone ? t('join.phoneLabel') : t('join.phoneLabelOptional')}
                 </label>
-                <div className="flex gap-2 w-full min-w-0" ref={countryDropdownRef}>
-                  <div className="relative min-w-[56px]">
+                <div className="flex gap-2 w-full min-w-0 items-stretch" ref={countryDropdownRef}>
+                  <div className="relative min-w-[56px] flex">
                     <button
                       type="button"
                       id="customerCountry"
                       onClick={() => setCountryDropdownOpen((open) => !open)}
-                      className="w-full rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] text-[var(--shop-text-primary)] min-h-[46px] px-3 py-3 flex items-center justify-center text-2xl outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
+                      className="w-full h-[46px] rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] text-[var(--shop-text-primary)] px-3 flex items-center justify-center text-xl outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] box-border shrink-0"
                       aria-label={t('join.countryLabel')}
                       aria-expanded={countryDropdownOpen}
                       aria-haspopup="listbox"
@@ -509,7 +644,7 @@ export function JoinForm() {
                     onChange={(e) => handlePhoneChange(e.target.value)}
                     placeholder={t('join.phonePlaceholder')}
                     required={settings.requirePhone}
-                    className="min-w-0 flex-1 rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] px-4 py-3 text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-h-[46px]"
+                    className="min-w-0 flex-1 rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] px-4 py-3 text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] h-[46px] box-border"
                   />
                 </div>
               </div>
@@ -779,6 +914,14 @@ export function JoinForm() {
             required
             className="w-full px-4 py-3 rounded-lg border border-[var(--shop-border-color)] bg-[rgba(255,255,255,0.05)] text-[var(--shop-text-primary)]"
           />
+
+          {!isSignupExpanded && (
+            <p className="text-center text-sm text-[var(--shop-text-secondary)]">
+              <Link to="/shop/forgot-password" className="text-[var(--shop-accent)] hover:underline" onClick={() => setIsAuthModalOpen(false)}>
+                {t('auth.forgotPassword')}
+              </Link>
+            </p>
+          )}
 
           {isSignupExpanded && (
             <>

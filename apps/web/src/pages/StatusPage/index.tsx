@@ -6,7 +6,7 @@ import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { useTicketStatus } from '@/hooks/useTicketStatus';
 import { useQueue } from '@/hooks/useQueue';
 import { useServices } from '@/hooks/useServices';
-import { useShopConfig } from '@/contexts/ShopConfigContext';
+import { useShopConfig, useShopHomeContent } from '@/contexts/ShopConfigContext';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -18,7 +18,7 @@ import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
 import { useStatusDisplay } from './hooks/useStatusDisplay';
 import { StatusHeader } from './StatusHeader';
-import { WaitingCard } from './WaitingCard';
+import { WaitingCard, type WaitingMilestone } from './WaitingCard';
 import { InProgressCard } from './InProgressCard';
 import { CompletedCard } from './CompletedCard';
 import { ActionButtons } from './ActionButtons';
@@ -41,6 +41,7 @@ export function StatusPage() {
   const [shareSuccess, setShareSuccess] = useState(false);
   const [generalLineWaitTime, setGeneralLineWaitTime] = useState<number | null>(null);
   const { config: shopConfig } = useShopConfig();
+  const homeContent = useShopHomeContent();
   const { user, isCustomer } = useAuthContext();
   const location = useLocation();
   const linkToAccountHref =
@@ -60,6 +61,9 @@ export function StatusPage() {
   const [rescheduleError, setRescheduleError] = useState<string | null>(null);
   const [rescheduleSubmitting, setRescheduleSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRatingSubmitting, setIsRatingSubmitting] = useState(false);
+  const [showYouMovedUp, setShowYouMovedUp] = useState(false);
+  const prevPositionRef = useRef<number | null>(null);
 
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
@@ -161,6 +165,27 @@ export function StatusPage() {
     };
   }, [ticket, queueData]);
 
+  const waitingMilestone: WaitingMilestone = useMemo(() => {
+    if (!ticket || ticket.status !== 'waiting') return null;
+    const wt = ticket.estimatedWaitTime ?? null;
+    if (wt !== null && wt <= 0) return 'your_turn';
+    if (wt !== null && wt <= 2 && wt > 0) return 'almost_there';
+    if (positionInfo?.position === 1 && (positionInfo?.total ?? 0) >= 1) return 'first_in_line';
+    return null;
+  }, [ticket?.status, ticket?.estimatedWaitTime, positionInfo?.position, positionInfo?.total]);
+
+  useEffect(() => {
+    const pos = positionInfo?.position;
+    if (pos == null) return;
+    const prev = prevPositionRef.current;
+    prevPositionRef.current = pos;
+    if (prev != null && pos < prev) {
+      setShowYouMovedUp(true);
+      const t = setTimeout(() => setShowYouMovedUp(false), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [positionInfo?.position]);
+
   const handleShare = async () => {
     if (!ticketIdFromParams) return;
     const success = await handleShareTicket(ticketIdFromParams);
@@ -211,7 +236,24 @@ export function StatusPage() {
   }, [checkInCooldownUntil]);
 
   const settings = shopConfig.settings;
+  const showRatingPrompt = settings?.showRatingPrompt !== false;
   const operatingHours = settings?.operatingHours as Record<string, { open?: string; close?: string } | null> | undefined;
+
+  const handleRate = useCallback(
+    async (rating: number) => {
+      if (!ticketIdFromParams || isRatingSubmitting) return;
+      setIsRatingSubmitting(true);
+      try {
+        await api.submitRating(ticketIdFromParams, rating);
+        await refetch();
+      } finally {
+        setIsRatingSubmitting(false);
+      }
+    },
+    [ticketIdFromParams, isRatingSubmitting, refetch]
+  );
+
+  const ticketRating = (ticket as { rating?: number } | null)?.rating;
   const timezone = settings?.timezone ?? 'America/Sao_Paulo';
 
   const rescheduleDateStr = rescheduleDate
@@ -356,11 +398,20 @@ export function StatusPage() {
     ticket.status === 'waiting' ||
     (ticket.status === 'in_progress' && shopConfig.settings.allowCustomerCancelInProgress);
 
+  const showGuestBanner = ticket && !isCustomer && (ticket.status === 'waiting' || ticket.status === 'in_progress') && linkToAccountHref;
+
   return (
     <div className="min-h-screen bg-[var(--shop-background)] status-page">
       <Navigation />
 
       <Container className="pt-24 pb-20">
+        {showGuestBanner && (
+          <div className="mb-6 rounded-lg border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] px-4 py-3 text-center">
+            <Link to={linkToAccountHref!} className="text-sm text-[var(--shop-accent)] hover:underline">
+              {t('status.signInForReminders')}
+            </Link>
+          </div>
+        )}
         <div className="lg:hidden space-y-8">
           <StatusHeader customerName={ticket.customerName} status={ticket.status} serviceName={serviceName} ticketNumber={(ticket as { ticketNumber?: string | null }).ticketNumber} scheduledTime={(ticket as { scheduledTime?: string | null }).scheduledTime} />
 
@@ -373,7 +424,18 @@ export function StatusPage() {
                 ahead={positionInfo?.ahead}
                 preferredBarberName={preferredBarberName ?? undefined}
                 generalLineWaitTime={generalLineFaster ? generalLineWaitTime ?? undefined : undefined}
+                milestone={waitingMilestone}
               />
+              {showYouMovedUp && (
+                <div className="text-center py-2 text-[var(--shop-accent)] text-sm font-medium animate-in fade-in duration-300">
+                  {t('status.youMovedUp')}
+                </div>
+              )}
+              {homeContent.waitingTip?.trim() && (
+                <div className="text-center py-3 px-4 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)]">
+                  <p className="text-sm text-[var(--shop-text-secondary)]">{homeContent.waitingTip.trim()}</p>
+                </div>
+              )}
               <div className="flex justify-center -mt-2">
                 <RefreshButton
                   isRefreshing={isRefreshing}
@@ -401,7 +463,12 @@ export function StatusPage() {
 
           {isCompleted && (
             <>
-              <CompletedCard barberName={barber?.name} />
+              <CompletedCard
+                barberName={barber?.name}
+                rating={ticketRating}
+                onRate={showRatingPrompt ? handleRate : undefined}
+                isRatingSubmitting={isRatingSubmitting}
+              />
               <div className="flex justify-center -mt-2">
                 <RefreshButton
                   isRefreshing={isRefreshing}
@@ -445,7 +512,18 @@ export function StatusPage() {
                   ahead={positionInfo?.ahead}
                   preferredBarberName={preferredBarberName ?? undefined}
                   generalLineWaitTime={generalLineFaster ? generalLineWaitTime ?? undefined : undefined}
+                  milestone={waitingMilestone}
                 />
+                {showYouMovedUp && (
+                  <div className="text-center py-2 text-[var(--shop-accent)] text-sm font-medium animate-in fade-in duration-300">
+                    {t('status.youMovedUp')}
+                  </div>
+                )}
+                {homeContent.waitingTip?.trim() && (
+                  <div className="text-center py-3 px-4 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)]">
+                    <p className="text-sm text-[var(--shop-text-secondary)]">{homeContent.waitingTip.trim()}</p>
+                  </div>
+                )}
                 <div className="flex justify-center -mt-2">
                   <RefreshButton
                     isRefreshing={isRefreshing}
@@ -473,7 +551,12 @@ export function StatusPage() {
 
             {isCompleted && (
               <>
-                <CompletedCard barberName={barber?.name} />
+                <CompletedCard
+                  barberName={barber?.name}
+                  rating={ticketRating}
+                  onRate={showRatingPrompt ? handleRate : undefined}
+                  isRatingSubmitting={isRatingSubmitting}
+                />
                 <div className="flex justify-center -mt-2">
                   <RefreshButton
                     isRefreshing={isRefreshing}
@@ -498,6 +581,8 @@ export function StatusPage() {
               onCheckIn={handleCheckIn}
               isCheckingIn={isCheckingIn}
               checkInCooldownRemaining={checkInCooldownRemaining}
+              isPendingAppointment={isPendingAppointment}
+              onEditAppointment={handleOpenReschedule}
               linkToAccountHref={linkToAccountHref}
             />
           </div>

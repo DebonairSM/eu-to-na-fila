@@ -169,6 +169,34 @@
       "when": 1772100000000,
       "tag": "0032_deduplicate_clients_company_scope",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1772200000000,
+      "tag": "0033_tracking_consent",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1772300000000,
+      "tag": "0034_ticket_ratings",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1772400000000,
+      "tag": "0035_referral_source",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "5",
+      "when": 1772500000000,
+      "tag": "0036_next_service_preset",
+      "breakpoints": true
     }
   ]
 }

@@ -163,6 +163,7 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
         ...client,
         nextServiceNote: (client as { nextServiceNote?: string | null }).nextServiceNote ?? null,
         nextServiceImageUrl: (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl ?? null,
+        nextServicePreset: (client as { nextServicePreset?: string | null }).nextServicePreset ?? null,
       },
       clipNotes,
       serviceHistory,

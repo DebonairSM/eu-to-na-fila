@@ -4,8 +4,11 @@ import { join } from 'path';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import crypto from 'crypto';
+import { REFERENCE_PRESET_IDS, type ReferencePresetId } from '@eutonafila/shared';
 import { db, schema } from '../db/index.js';
-import { eq, and, gt, or } from 'drizzle-orm';
+import { eq, and, gt, gte, lt, or, inArray, desc, isNotNull, sql } from 'drizzle-orm';
+import { toZonedTime } from 'date-fns-tz';
+import { parseSettings } from '../lib/settings.js';
 import { validateRequest } from '../lib/validation.js';
 import { getShopBySlug, getShopFrontendPath } from '../lib/shop.js';
 import { clientService } from '../services/index.js';
@@ -945,6 +948,16 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     });
     if (!client) throw new NotFoundError('Client not found');
 
+    const completedTickets = await db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.clientId, clientId),
+        eq(schema.tickets.shopId, shop.id),
+        eq(schema.tickets.status, 'completed')
+      ),
+      columns: { id: true },
+    });
+    const visitCount = completedTickets.length;
+
     const phone = client.phone?.startsWith('e:') ? null : client.phone;
     const prefs = (client as { preferences?: { emailReminders?: boolean } }).preferences ?? {};
     const address = (client as { address?: string | null }).address ?? null;
@@ -959,12 +972,141 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       preferences: { emailReminders: prefs.emailReminders ?? true },
       nextServiceNote: (client as { nextServiceNote?: string | null }).nextServiceNote ?? null,
       nextServiceImageUrl: (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl ?? null,
+      nextServicePreset: (client as { nextServicePreset?: ReferencePresetId | null }).nextServicePreset ?? null,
       address,
       state,
       city,
       dateOfBirth: dateOfBirth ? (typeof dateOfBirth === 'string' ? dateOfBirth : dateOfBirth.toISOString().slice(0, 10)) : null,
       gender,
+      visitCount,
     };
+  });
+
+  /**
+   * Get most popular next-service presets for this company/shop audience.
+   * @route GET /api/shops/:slug/auth/customer/me/popular-reference-presets
+   */
+  fastify.get('/shops/:slug/auth/customer/me/popular-reference-presets', {
+    preHandler: [requireAuth(), requireRole(['customer'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError('Shop not found');
+    const companyId = shop.companyId;
+    if (companyId == null) throw new NotFoundError('Shop not found');
+
+    const rows = await db
+      .select({
+        preset: schema.clients.nextServicePreset,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(schema.clients)
+      .where(and(
+        eq(schema.clients.companyId, companyId),
+        isNotNull(schema.clients.nextServicePreset),
+        sql`${schema.clients.nextServicePreset} <> 'other'`
+      ))
+      .groupBy(schema.clients.nextServicePreset);
+
+    const allowed = new Set<string>(REFERENCE_PRESET_IDS);
+    const presets = rows
+      .map((r) => {
+        if (!r.preset || !allowed.has(r.preset)) return null;
+        return {
+          preset: r.preset as ReferencePresetId,
+          count: r.count,
+        };
+      })
+      .filter((r): r is { preset: ReferencePresetId; count: number } => r != null)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    return reply.send({ presets });
+  });
+
+  /**
+   * Get best (quietest) times to visit for logged-in customer. Uses last 14 days of completed tickets.
+   * @route GET /api/shops/:slug/auth/customer/best-times
+   */
+  fastify.get('/shops/:slug/auth/customer/best-times', {
+    preHandler: [requireAuth(), requireRole(['customer'])],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({ slug: z.string().min(1).max(100) });
+    const { slug } = validateRequest(paramsSchema, request.params);
+
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError('Shop not found');
+    const settings = parseSettings(shop.settings);
+    if (settings.showBestTimeTip === false) {
+      return reply.status(404).send({ suggestion: null });
+    }
+
+    const tz = settings.timezone ?? 'America/Sao_Paulo';
+    const now = new Date();
+    const daysAgo = new Date(now);
+    daysAgo.setDate(daysAgo.getDate() - 14);
+
+    const tickets = await db.query.tickets.findMany({
+      where: and(
+        eq(schema.tickets.shopId, shop.id),
+        eq(schema.tickets.status, 'completed'),
+        isNotNull(schema.tickets.completedAt),
+        gte(schema.tickets.completedAt, daysAgo),
+        lt(schema.tickets.completedAt, now)
+      ),
+      columns: { completedAt: true },
+    });
+
+    const hourCounts: Record<number, number> = {};
+    for (let h = 0; h < 24; h++) hourCounts[h] = 0;
+    const dayCounts: Record<number, number> = {};
+    for (let d = 0; d < 7; d++) dayCounts[d] = 0;
+
+    tickets.forEach((t) => {
+      const completedAt = new Date((t as { completedAt: Date }).completedAt);
+      const zoned = toZonedTime(completedAt, tz);
+      const hour = zoned.getHours();
+      const day = zoned.getDay();
+      hourCounts[hour]++;
+      dayCounts[day]++;
+    });
+
+    const total = tickets.length;
+    if (total < 5) {
+      return reply.send({ suggestion: null });
+    }
+
+    const hourCountsArr = Object.entries(hourCounts).map(([h, c]) => ({ hour: parseInt(h, 10), count: c }));
+    hourCountsArr.sort((a, b) => a.count - b.count);
+    const medianIdx = Math.floor(hourCountsArr.length / 2);
+    const medianCount = hourCountsArr[medianIdx]?.count ?? 0;
+    const quietHours = hourCountsArr.filter((x) => x.count <= medianCount && x.count < hourCountsArr[hourCountsArr.length - 1]?.count).map((x) => x.hour).sort((a, b) => a - b);
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayCountsArr = Object.entries(dayCounts).map(([d, c]) => ({ day: parseInt(d, 10), count: c }));
+    dayCountsArr.sort((a, b) => a.count - b.count);
+    const dayMedianIdx = Math.floor(dayCountsArr.length / 2);
+    const dayMedianCount = dayCountsArr[dayMedianIdx]?.count ?? 0;
+    const quietDays = dayCountsArr.filter((x) => x.count <= dayMedianCount).map((x) => x.day).sort((a, b) => a - b);
+
+    let suggestion: string | null = null;
+    if (quietHours.length > 0 || quietDays.length > 0) {
+      const hourPart = quietHours.length >= 2
+        ? `${quietHours[0]}h–${quietHours[quietHours.length - 1]}h`
+        : quietHours.length === 1
+          ? `around ${quietHours[0]}h`
+          : null;
+      const dayPart = quietDays.length > 0
+        ? quietDays.map((d) => dayNames[d]).join('–')
+        : null;
+      if (dayPart && hourPart) suggestion = `Usually quieter on ${dayPart}, ${hourPart}.`;
+      else if (hourPart) suggestion = `Usually quieter ${hourPart}.`;
+      else if (dayPart) suggestion = `Usually quieter on ${dayPart}.`;
+    }
+
+    return reply.send({ suggestion });
   });
 
   /**
@@ -990,6 +1132,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       preferences: z.object({ emailReminders: z.boolean().optional() }).optional(),
       nextServiceNote: z.string().max(2000).nullable().optional(),
       nextServiceImageUrl: z.string().url().max(500).nullable().optional(),
+      nextServicePreset: z.enum(REFERENCE_PRESET_IDS).nullable().optional(),
       address: z.string().max(500).nullable().optional(),
       state: z.string().max(2).nullable().optional(),
       city: z.string().max(200).nullable().optional(),
@@ -1004,6 +1147,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     if (data.preferences !== undefined) updateData.preferences = data.preferences;
     if (data.nextServiceNote !== undefined) updateData.nextServiceNote = data.nextServiceNote;
     if (data.nextServiceImageUrl !== undefined) updateData.nextServiceImageUrl = data.nextServiceImageUrl;
+    if (data.nextServicePreset !== undefined) updateData.nextServicePreset = data.nextServicePreset;
     if (data.address !== undefined) updateData.address = data.address;
     if (data.state !== undefined) updateData.state = data.state;
     if (data.city !== undefined) updateData.city = data.city;
@@ -1025,6 +1169,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       preferences: { emailReminders: prefs.emailReminders ?? true },
       nextServiceNote: (client as { nextServiceNote?: string | null }).nextServiceNote ?? null,
       nextServiceImageUrl: (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl ?? null,
+      nextServicePreset: (client as { nextServicePreset?: ReferencePresetId | null }).nextServicePreset ?? null,
       address: resAddress,
       state: resState,
       city: resCity,
@@ -1161,6 +1306,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError('Shop not found');
 
+    // Upcoming: current shop only
     const tickets = await db.query.tickets.findMany({
       where: and(
         eq(schema.tickets.clientId, clientId),
@@ -1174,9 +1320,92 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const upcoming = tickets.filter(
       (t) => t.status === 'pending' || t.status === 'waiting' || t.status === 'in_progress'
     );
-    const past = tickets.filter(
-      (t) => t.status === 'completed' || t.status === 'cancelled'
-    );
+
+    // Past: cross-shop when customer has email (same email = same person across shops)
+    let past: Array<{
+      id: number;
+      status: string;
+      type: string;
+      customerName: string;
+      serviceName: string | null;
+      barberName: string | null;
+      scheduledTime: string | null;
+      completedAt: string | null;
+      ticketNumber: string | null;
+      createdAt: string;
+      shopSlug?: string;
+      shopName?: string;
+    }> = [];
+
+    const companyId = shop.companyId;
+    const currentClient = companyId != null
+      ? await db.query.clients.findFirst({
+          where: and(
+            eq(schema.clients.id, clientId),
+            eq(schema.clients.companyId, companyId)
+          ),
+          columns: { email: true },
+        })
+      : null;
+    const email = currentClient?.email?.trim().toLowerCase();
+
+    if (email && companyId != null) {
+      const sameEmailClients = await db.query.clients.findMany({
+        where: eq(schema.clients.email, email),
+        columns: { id: true },
+      });
+      const clientIds = sameEmailClients.map((c) => c.id);
+      if (clientIds.length > 0) {
+        const pastTickets = await db.query.tickets.findMany({
+          where: and(
+            inArray(schema.tickets.clientId, clientIds),
+            or(
+              eq(schema.tickets.status, 'completed'),
+              eq(schema.tickets.status, 'cancelled')
+            )
+          ),
+          with: {
+            service: { columns: { name: true } },
+            barber: { columns: { name: true } },
+            shop: { columns: { slug: true, name: true } },
+          },
+          orderBy: (t, { desc }) => [desc(t.completedAt), desc(t.createdAt)],
+          limit: 50,
+        });
+        past = pastTickets.map((t) => ({
+          id: t.id,
+          status: t.status,
+          type: (t as { type?: string }).type ?? 'walkin',
+          customerName: t.customerName,
+          serviceName: (t.service as { name?: string })?.name ?? null,
+          barberName: (t.barber as { name?: string })?.name ?? null,
+          scheduledTime: t.scheduledTime != null ? t.scheduledTime.toISOString() : null,
+          completedAt: t.completedAt != null ? t.completedAt.toISOString() : null,
+          ticketNumber: t.ticketNumber,
+          createdAt: t.createdAt.toISOString(),
+          shopSlug: (t.shop as { slug?: string })?.slug,
+          shopName: (t.shop as { name?: string })?.name ?? undefined,
+        }));
+      }
+    }
+
+    if (past.length === 0) {
+      const currentShopPast = tickets.filter(
+        (t) => t.status === 'completed' || t.status === 'cancelled'
+      );
+      past = currentShopPast.map((t) => ({
+        id: t.id,
+        status: t.status,
+        type: (t as { type?: string }).type ?? 'walkin',
+        customerName: t.customerName,
+        serviceName: (t.service as { name?: string })?.name ?? null,
+        barberName: (t.barber as { name?: string })?.name ?? null,
+        scheduledTime: t.scheduledTime != null ? t.scheduledTime.toISOString() : null,
+        completedAt: t.completedAt != null ? t.completedAt.toISOString() : null,
+        ticketNumber: t.ticketNumber,
+        createdAt: t.createdAt.toISOString(),
+      }));
+    }
 
     return {
       upcoming: upcoming.map((t) => ({
@@ -1192,18 +1421,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
         ticketNumber: t.ticketNumber,
         createdAt: t.createdAt,
       })),
-      past: past.map((t) => ({
-        id: t.id,
-        status: t.status,
-        type: (t as { type?: string }).type ?? 'walkin',
-        customerName: t.customerName,
-        serviceName: (t.service as { name?: string })?.name ?? null,
-        barberName: (t.barber as { name?: string })?.name ?? null,
-        scheduledTime: t.scheduledTime,
-        completedAt: t.completedAt,
-        ticketNumber: t.ticketNumber,
-        createdAt: t.createdAt,
-      })),
+      past,
     };
   });
 

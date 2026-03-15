@@ -21,6 +21,11 @@ export function useProfanityFilter() {
       ? `${trimmed} ${lastName.trim()}`
       : trimmed;
 
+    const words = fullName.trim().split(/\s+/).filter(Boolean);
+    if (words.length > 3) {
+      return { isValid: false, error: 'Máximo 3 palavras no nome.' };
+    }
+
     if (fullName.length > 200) {
       return { isValid: false, error: 'Nome muito longo (máximo 200 caracteres)' };
     }

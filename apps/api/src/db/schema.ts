@@ -144,6 +144,7 @@ export const clients = pgTable('clients', {
   preferences: jsonb('preferences'), // { emailReminders: boolean } etc.
   nextServiceNote: text('next_service_note'), // Client's note for next service
   nextServiceImageUrl: text('next_service_image_url'), // Client's image reference for next service
+  nextServicePreset: text('next_service_preset'), // Structured preset for next service (e.g. fade, same_as_last)
   address: text('address'), // Street/neighborhood details
   state: text('state'), // Brazilian state (e.g. SP, RJ)
   city: text('city'), // City name
@@ -236,6 +237,8 @@ export const tickets = pgTable('tickets', {
   customerName: text('customer_name').notNull(),
   customerPhone: text('customer_phone'),
   deviceId: text('device_id'), // Device identifier for preventing multiple active tickets per device
+  trackingConsent: boolean('tracking_consent'), // true = allowed, false = denied, null = legacy/not collected
+  referralSource: text('referral_source'), // How did you hear about us? (qr, friend, instagram, walk_by, other)
   status: text('status').notNull().default('waiting'), // pending, waiting, in_progress, completed, cancelled
   position: integer('position').notNull().default(0),
   estimatedWaitTime: integer('estimated_wait_time'), // in minutes
@@ -255,6 +258,23 @@ export const tickets = pgTable('tickets', {
   shopCreatedIdx: index('tickets_shop_created_idx').on(table.shopId, table.createdAt),
   clientIdIdx: index('tickets_client_id_idx').on(table.clientId),
 }));
+
+/** One-tap rating (1-5) for completed tickets. One rating per ticket. */
+export const ticketRatings = pgTable(
+  'ticket_ratings',
+  {
+    id: serial('id').primaryKey(),
+    ticketId: integer('ticket_id').notNull().references(() => tickets.id, { onDelete: 'cascade' }),
+    rating: integer('rating').notNull(), // 1-5
+    barberId: integer('barber_id').references(() => barbers.id), // denormalized for analytics
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    ticketIdUnique: uniqueIndex('ticket_ratings_ticket_id_unique').on(table.ticketId),
+    ticketIdIdx: index('ticket_ratings_ticket_id_idx').on(table.ticketId),
+    barberIdIdx: index('ticket_ratings_barber_id_idx').on(table.barberId),
+  })
+);
 
 export const companyAds = pgTable('company_ads', {
   id: serial('id').primaryKey(),
@@ -363,11 +383,17 @@ export const clientClipNotesRelations = relations(clientClipNotes, ({ one }) => 
   service: one(services, { fields: [clientClipNotes.serviceId], references: [services.id] }),
 }));
 
+export const ticketRatingsRelations = relations(ticketRatings, ({ one }) => ({
+  ticket: one(tickets, { fields: [ticketRatings.ticketId], references: [tickets.id] }),
+  barber: one(barbers, { fields: [ticketRatings.barberId], references: [barbers.id] }),
+}));
+
 export const ticketsRelations = relations(tickets, ({ one }) => ({
   shop: one(shops, { fields: [tickets.shopId], references: [shops.id] }),
   service: one(services, { fields: [tickets.serviceId], references: [services.id] }),
   barber: one(barbers, { fields: [tickets.barberId], references: [barbers.id] }),
   client: one(clients, { fields: [tickets.clientId], references: [clients.id] }),
+  ticketRating: one(ticketRatings, { fields: [tickets.id], references: [ticketRatings.ticketId] }),
 }));
 
 export const auditLog = pgTable('audit_log', {

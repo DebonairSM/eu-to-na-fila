@@ -24,7 +24,7 @@ export function shapeTicketResponse(ticket: Record<string, unknown>): Record<str
 
   const keys = [
     'id', 'shopId', 'serviceId', 'barberId', 'preferredBarberId', 'clientId', 'customerName', 'customerPhone',
-    'deviceId', 'status', 'position', 'estimatedWaitTime', 'type', 'scheduledTime', 'checkInTime',
+    'deviceId', 'trackingConsent', 'status', 'position', 'estimatedWaitTime', 'type', 'scheduledTime', 'checkInTime',
     'ticketNumber', 'createdAt', 'updatedAt', 'startedAt', 'completedAt', 'cancelledAt', 'barberAssignedAt',
     'complementaryServiceIds',
   ] as const;
@@ -48,6 +48,11 @@ export function shapeTicketResponse(ticket: Record<string, unknown>): Record<str
     const c = client as { city?: string | null; state?: string | null };
     if (c.city != null && c.city !== '') out.clientCity = c.city;
     if (c.state != null && c.state !== '') out.clientState = c.state;
+  }
+
+  const ticketRating = ticket.ticketRating;
+  if (ticketRating && typeof ticketRating === 'object' && 'rating' in ticketRating && typeof (ticketRating as { rating: number }).rating === 'number') {
+    out.rating = (ticketRating as { rating: number }).rating;
   }
 
   return out;

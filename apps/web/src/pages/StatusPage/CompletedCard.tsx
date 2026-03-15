@@ -3,10 +3,17 @@ import { useLocale } from '@/contexts/LocaleContext';
 
 interface CompletedCardProps {
   barberName?: string;
+  /** When set and rating is null, show one-tap rating; when number, show thanks. */
+  rating?: number | null;
+  onRate?: (rating: number) => void | Promise<void>;
+  isRatingSubmitting?: boolean;
 }
 
-export function CompletedCard({ barberName }: CompletedCardProps) {
+export function CompletedCard({ barberName, rating, onRate, isRatingSubmitting }: CompletedCardProps) {
   const { t } = useLocale();
+  const showRatingPrompt = onRate != null && rating == null && !isRatingSubmitting;
+  const showThanks = rating != null && typeof rating === 'number';
+
   return (
     <StatusTransition status="completed">
       <Card
@@ -57,6 +64,35 @@ export function CompletedCard({ barberName }: CompletedCardProps) {
                   content_cut
                 </span>
                 {barberName}
+              </Text>
+            </div>
+          )}
+          {showRatingPrompt && (
+            <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-[var(--shop-border-color)]">
+              <Text size="sm" variant="secondary" className="mb-3 block">
+                {t('status.rateExperience')}
+              </Text>
+              <div className="flex justify-center gap-1 sm:gap-2" role="group" aria-label={t('status.rateExperience')}>
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => onRate(value)}
+                    className="p-2 rounded-lg hover:bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                    aria-label={`${value} ${value === 1 ? 'star' : 'stars'}`}
+                  >
+                    <span className="material-symbols-outlined text-3xl sm:text-4xl text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)]">
+                      star
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {showThanks && (
+            <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-[var(--shop-border-color)]">
+              <Text size="sm" className="text-[var(--shop-accent)]">
+                {t('status.rateThanks')}
               </Text>
             </div>
           )}

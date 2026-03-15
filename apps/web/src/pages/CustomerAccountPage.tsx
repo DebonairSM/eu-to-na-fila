@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
+import type { CountryCode } from 'libphonenumber-js';
 import { Link } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -11,7 +12,9 @@ import { useLogout } from '@/hooks/useLogout';
 import { api } from '@/lib/api';
 import { config } from '@/lib/config';
 import { formatDurationMinutes } from '@/lib/formatDuration';
-import { cn, getErrorMessage } from '@/lib/utils';
+import { isReferencePresetId, referencePresetIcons, referencePresetLabelKeys } from '@/lib/referencePresets';
+import { cn, formatPhoneByCountry, getCountryFlagEmoji, getCountryOptions, getErrorMessage } from '@/lib/utils';
+import { REFERENCE_PRESET_IDS, type ReferencePresetId } from '@eutonafila/shared';
 
 function formatDate(iso: string | null): string {
   if (!iso) return '–';
@@ -29,7 +32,9 @@ export function CustomerAccountPage() {
   const shopSlug = useShopSlug();
   const { user, isCustomer } = useAuthContext();
   const { logoutAndGoHome } = useLogout();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+
+  const CUSTOMER_COUNTRY_STORAGE_KEY = 'eutonafila_customer_country';
   const { profile, appointments, isLoading: loading, error, refetch } = useCustomerProfileAndAppointments();
 
   // Editable profile state (synced from profile when it loads)
@@ -43,6 +48,11 @@ export function CustomerAccountPage() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [editCountry, setEditCountry] = useState<CountryCode>('BR');
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
+
+  const countryOptions = useMemo(() => getCountryOptions(locale), [locale]);
 
   // Preferences state
   const [emailReminders, setEmailReminders] = useState(true);
@@ -55,12 +65,21 @@ export function CustomerAccountPage() {
   const [refSaving, setRefSaving] = useState(false);
   const [refUploading, setRefUploading] = useState(false);
   const [refError, setRefError] = useState<string | null>(null);
+  const [refSavedFeedback, setRefSavedFeedback] = useState(false);
+  const [refPreset, setRefPreset] = useState<ReferencePresetId | null>(null);
+  const [popularPresets, setPopularPresets] = useState<ReferencePresetId[]>([]);
   const refFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [bestTimesSuggestion, setBestTimesSuggestion] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profile) return;
     setEditName(profile.name);
     setEditPhone(profile.phone ?? '');
+    const stored = localStorage.getItem(CUSTOMER_COUNTRY_STORAGE_KEY);
+    if (stored && /^[A-Z]{2}$/.test(stored)) {
+      setEditCountry(stored as CountryCode);
+    }
     setEditState(profile.state ?? '');
     setEditCity(profile.city ?? '');
     setEditAddress(profile.address ?? '');
@@ -69,7 +88,33 @@ export function CustomerAccountPage() {
     setEmailReminders(profile.preferences?.emailReminders ?? true);
     setRefNote(profile.nextServiceNote ?? '');
     setRefImageUrl(profile.nextServiceImageUrl ?? null);
+    setRefPreset(profile.nextServicePreset ?? null);
   }, [profile]);
+
+  useEffect(() => {
+    if (!shopSlug || !isCustomer) return;
+    api.getBestTimes(shopSlug)
+      .then((res) => {
+        if (res.suggestion) setBestTimesSuggestion(res.suggestion);
+      })
+      .catch(() => {
+        // 401 or 404: do not show block
+      });
+  }, [shopSlug, isCustomer]);
+
+  useEffect(() => {
+    if (!shopSlug || !isCustomer) return;
+    api.getPopularReferencePresets(shopSlug)
+      .then((res) => {
+        const ids = res.presets
+          .map((p) => p.preset)
+          .filter((preset) => isReferencePresetId(preset));
+        setPopularPresets(ids);
+      })
+      .catch(() => {
+        setPopularPresets([]);
+      });
+  }, [shopSlug, isCustomer]);
 
   // Create object URL for auth-required reference images (our API); use URL directly for public (Supabase)
   const refObjUrlRef = useRef<string | null>(null);
@@ -109,6 +154,29 @@ export function CustomerAccountPage() {
     setRefImageObjectUrl(url);
     return undefined;
   }, [refImageUrl]);
+
+  useEffect(() => {
+    if (!countryDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) {
+        setCountryDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [countryDropdownOpen]);
+
+  const handleCountryChange = (value: CountryCode) => {
+    setEditCountry(value);
+    if (editPhone.trim()) {
+      setEditPhone(formatPhoneByCountry(editPhone, value));
+    }
+    localStorage.setItem(CUSTOMER_COUNTRY_STORAGE_KEY, value);
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setEditPhone(formatPhoneByCountry(value, editCountry));
+  };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,17 +226,31 @@ export function CustomerAccountPage() {
     if (!shopSlug) return;
     setRefSaving(true);
     setRefError(null);
+    setRefSavedFeedback(false);
     try {
       await api.updateCustomerProfile(shopSlug, {
+        nextServicePreset: refPreset,
         nextServiceNote: refNote.trim() || null,
       });
       await refetch();
+      setRefSavedFeedback(true);
+      setTimeout(() => setRefSavedFeedback(false), 2200);
     } catch (err) {
       setRefError(getErrorMessage(err, t('common.error')));
     } finally {
       setRefSaving(false);
     }
   };
+
+  const handleSelectReferencePreset = (preset: ReferencePresetId) => {
+    setRefPreset(preset);
+  };
+
+  const orderedReferencePresets = useMemo(() => {
+    const popular = popularPresets.filter((p) => REFERENCE_PRESET_IDS.includes(p));
+    const remaining = REFERENCE_PRESET_IDS.filter((p) => !popular.includes(p));
+    return [...popular, ...remaining];
+  }, [popularPresets]);
 
   const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -255,7 +337,17 @@ export function CustomerAccountPage() {
       <Container className="pt-20 md:pt-28 lg:pt-32 pb-10">
         <div className="max-w-2xl mx-auto space-y-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <Heading level={1}>{t('account.title')}</Heading>
+            <div className="flex flex-wrap items-center gap-3">
+              <Heading level={1}>{t('account.title')}</Heading>
+              {profile?.visitCount != null && profile.visitCount > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium bg-[color-mix(in_srgb,var(--shop-accent)_18%,transparent)] text-[var(--shop-accent)] border border-[color-mix(in_srgb,var(--shop-accent)_40%,transparent)]">
+                  {profile.visitCount >= 5 && (
+                    <span className="material-symbols-outlined text-base">local_fire_department</span>
+                  )}
+                  {profile.visitCount >= 5 ? t('account.regularBadge') : t('account.visitCount').replace('{{count}}', String(profile.visitCount))}
+                </span>
+              )}
+            </div>
             <Button
               variant="outline"
               onClick={logoutAndGoHome}
@@ -272,6 +364,19 @@ export function CustomerAccountPage() {
             <Text variant="secondary">{t('common.error')}</Text>
           ) : (
             <>
+              {bestTimesSuggestion && (
+                <Card variant="default" className="shadow-lg border-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)]">
+                  <CardContent className="p-4">
+                    <h2 className="text-sm font-semibold text-[var(--shop-text-secondary)] uppercase tracking-wider mb-2 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[var(--shop-accent)] text-lg">schedule</span>
+                      {t('account.bestTimeTitle')}
+                    </h2>
+                    <Text size="sm" className="text-[var(--shop-text-primary)]">
+                      {bestTimesSuggestion}
+                    </Text>
+                  </CardContent>
+                </Card>
+              )}
               <Card variant="default" className="shadow-lg">
                 <CardContent className="p-6">
                   <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -297,14 +402,51 @@ export function CustomerAccountPage() {
                     </div>
                     <div>
                       <InputLabel htmlFor="profile-phone">{t('account.phone')}</InputLabel>
-                      <Input
-                        id="profile-phone"
-                        type="tel"
-                        value={editPhone}
-                        onChange={(e) => setEditPhone(e.target.value)}
-                        placeholder="(00) 00000-0000"
-                        className="w-full mt-1"
-                      />
+                      <div className="flex gap-2 w-full min-w-0 items-stretch mt-1" ref={countryDropdownRef}>
+                        <div className="relative min-w-[56px] flex">
+                          <button
+                            type="button"
+                            id="profile-country"
+                            onClick={() => setCountryDropdownOpen((open) => !open)}
+                            className="w-full h-[46px] rounded-lg border border-[var(--shop-border-color)] bg-white/5 text-[var(--shop-text-primary)] px-3 flex items-center justify-center text-xl outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] box-border shrink-0"
+                            aria-label={t('join.countryLabel')}
+                            aria-expanded={countryDropdownOpen}
+                            aria-haspopup="listbox"
+                          >
+                            {getCountryFlagEmoji(editCountry)}
+                          </button>
+                          {countryDropdownOpen && (
+                            <ul
+                              role="listbox"
+                              aria-label={t('join.countryLabel')}
+                              className="absolute top-full left-0 z-50 mt-1 max-h-[280px] overflow-auto rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] py-1 shadow-lg min-w-[200px]"
+                            >
+                              {countryOptions.map((country) => (
+                                <li
+                                  key={country.code}
+                                  role="option"
+                                  aria-selected={editCountry === country.code}
+                                  onClick={() => {
+                                    handleCountryChange(country.code);
+                                    setCountryDropdownOpen(false);
+                                  }}
+                                  className={`cursor-pointer px-3 py-2.5 text-left text-sm text-[var(--shop-text-primary)] hover:bg-white/10 ${editCountry === country.code ? 'bg-white/10' : ''}`}
+                                >
+                                  {getCountryFlagEmoji(country.code)} {country.name} {country.dialCode}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                        <input
+                          id="profile-phone"
+                          type="tel"
+                          value={editPhone}
+                          onChange={(e) => handlePhoneChange(e.target.value)}
+                          placeholder={t('join.phonePlaceholder')}
+                          className="min-w-0 flex-1 rounded-lg border border-[var(--shop-border-color)] bg-white/5 px-4 py-3 text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] h-[46px] box-border"
+                        />
+                      </div>
                     </div>
                     <p className="text-sm text-[var(--shop-text-secondary)] mt-2 mb-1">{t('account.demographicsHint')}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -450,6 +592,11 @@ export function CustomerAccountPage() {
                                 {a.barberName}
                               </span>
                             )}
+                            {a.shopName && (
+                              <span className="text-[var(--shop-text-secondary)] ml-2" title={a.shopSlug ?? undefined}>
+                                · {a.shopName}
+                              </span>
+                            )}
                           </div>
                           <span className="text-[var(--shop-text-secondary)]">
                             {a.completedAt ? formatDate(a.completedAt) : formatDate(a.createdAt)}
@@ -488,7 +635,45 @@ export function CustomerAccountPage() {
                     <span className="material-symbols-outlined text-[var(--shop-accent)]">image</span>
                     {t('account.referenceForNextService')}
                   </h2>
+                  <Text size="sm" variant="secondary" className="mb-4">
+                    {t('account.referenceSubtitle')}
+                  </Text>
                   <form onSubmit={handleSaveReference} className="space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-[var(--shop-text-secondary)]">{t('account.referencePresetPicker')}</p>
+                      <div role="group" aria-label={t('account.referencePresetPicker')} className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {orderedReferencePresets.map((presetId) => {
+                          const selected = refPreset === presetId;
+                          const isPopular = popularPresets.includes(presetId);
+                          return (
+                            <button
+                              key={presetId}
+                              type="button"
+                              onClick={() => handleSelectReferencePreset(presetId)}
+                              className={cn(
+                                'relative rounded-xl border p-3 text-left transition-colors',
+                                selected
+                                  ? 'border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)]'
+                                  : 'border-[var(--shop-border-color)] bg-white/5 hover:border-[var(--shop-accent)]'
+                              )}
+                              aria-pressed={selected}
+                            >
+                              {isPopular && (
+                                <span className="absolute top-1.5 right-1.5 text-[10px] leading-none px-1.5 py-1 rounded-full bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)]">
+                                  {t('account.referencePopularBadge')}
+                                </span>
+                              )}
+                              <span className="material-symbols-outlined text-[var(--shop-accent)] text-base">
+                                {referencePresetIcons[presetId]}
+                              </span>
+                              <p className="mt-1 text-sm text-[var(--shop-text-primary)]">
+                                {t(referencePresetLabelKeys[presetId])}
+                              </p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                     <div>
                       <textarea
                         value={refNote}
@@ -536,6 +721,12 @@ export function CustomerAccountPage() {
                     </div>
                     {refError && (
                       <p className="text-sm text-[var(--error)]">{refError}</p>
+                    )}
+                    {refSavedFeedback && (
+                      <div className="inline-flex items-center gap-2 text-sm text-[var(--shop-accent)]">
+                        <span className="material-symbols-outlined text-base">check_circle</span>
+                        {t('account.referenceSavedFeedback')}
+                      </div>
                     )}
                     <Button type="submit" disabled={refSaving}>
                       {refSaving ? t('account.saving') : t('account.save')}

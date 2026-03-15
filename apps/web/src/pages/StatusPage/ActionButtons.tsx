@@ -181,7 +181,7 @@ export function ActionButtons({
           <Link to={linkToAccountHref}>
             <Button variant="outline" fullWidth>
               <span className="material-symbols-outlined text-xl">person_add</span>
-              {t('status.linkToAccount')}
+              {isCompleted ? t('status.createAccountToSeeHistory') : t('status.linkToAccount')}
             </Button>
           </Link>
         )}

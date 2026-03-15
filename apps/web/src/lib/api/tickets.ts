@@ -36,6 +36,7 @@ export interface TicketsApi {
   sendAppointmentReminder(shopSlug: string, ticketId: number, email: string): Promise<{ sent: boolean; error?: string }>;
   checkInAppointment(shopSlug: string, ticketId: number): Promise<Ticket>;
   getTicket(ticketId: number): Promise<Ticket>;
+  submitRating(ticketId: number, rating: number): Promise<void>;
   updateTicketStatus(ticketId: number, data: UpdateTicketStatus): Promise<Ticket>;
   rescheduleAppointment(ticketId: number, scheduledTime: string): Promise<Ticket>;
   cancelTicket(ticketId: number): Promise<Ticket>;
@@ -74,6 +75,7 @@ export function createTicketsApi(client: BaseApiClient): TicketsApi {
     checkInAppointment: (shopSlug, ticketId) =>
       c.post(`/shops/${shopSlug}/tickets/${ticketId}/check-in`, {}),
     getTicket: (ticketId) => c.get(`/tickets/${ticketId}`),
+    submitRating: (ticketId, rating) => c.post(`/tickets/${ticketId}/rating`, { rating }, 5000),
     updateTicketStatus: (ticketId, data) =>
       c.patch(`/tickets/${ticketId}/status`, data, 45000),
     rescheduleAppointment: (ticketId, scheduledTime) =>

@@ -15,6 +15,7 @@ export * from './utils/shopStatus.js';
 
 // Constants
 export * from './constants/barbershopFeatures.js';
+export * from './constants/referencePresets.js';
 
 // Note: WebSocket types removed - using HTTP polling instead
 

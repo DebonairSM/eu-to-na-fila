@@ -661,7 +661,8 @@ fastify.addHook('onRequest', async (request, reply) => {
   // Hook can be used for future request logging/monitoring if needed
 });
 
-// Usage tracking: record API requests for company admin insights (non-blocking)
+// Usage tracking: record API requests for company admin insights (non-blocking).
+// Note: Per-visitor or per-device tracking must respect ticket.tracking_consent and client.preferences.trackingConsent.
 fastify.addHook('onResponse', (request, reply, done) => {
   const path = (request.url ?? '').split('?')[0] ?? '';
   if (!path.startsWith('/api/')) return done();

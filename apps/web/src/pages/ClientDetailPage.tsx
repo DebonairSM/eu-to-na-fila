@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { formatNameForDisplay } from '@/lib/utils';
 import { getErrorMessage } from '@/lib/utils';
 import { useServices } from '@/hooks/useServices';
+import { isReferencePresetId, referencePresetLabelKeys } from '@/lib/referencePresets';
 import type { ClientDetailResponse } from '@/lib/api/clients';
 
 export function ClientDetailPage() {
@@ -356,12 +357,17 @@ export function ClientDetailPage() {
             </section>
           )}
 
-          {!isBarberView && (client.nextServiceNote || client.nextServiceImageUrl) && (
+          {!isBarberView && (client.nextServicePreset || client.nextServiceNote || client.nextServiceImageUrl) && (
             <section className="bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-6">
               <h2 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[var(--shop-accent)]">image</span>
                 {t('account.referenceForNextService')}
               </h2>
+              {isReferencePresetId(client.nextServicePreset) && (
+                <p className="text-[var(--shop-text-secondary)] mb-2">
+                  {t('account.referencePresetLabel')}: <span className="text-white">{t(referencePresetLabelKeys[client.nextServicePreset])}</span>
+                </p>
+              )}
               {client.nextServiceNote && (
                 <p className="text-white whitespace-pre-wrap mb-3">{client.nextServiceNote}</p>
               )}

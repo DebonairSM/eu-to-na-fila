@@ -1,4 +1,5 @@
 import type { BaseApiClient } from './client.js';
+import type { ReferencePresetId } from '@eutonafila/shared';
 
 export interface CustomerProfile {
   name: string;
@@ -7,11 +8,14 @@ export interface CustomerProfile {
   preferences: { emailReminders: boolean };
   nextServiceNote: string | null;
   nextServiceImageUrl: string | null;
+  nextServicePreset: ReferencePresetId | null;
   address: string | null;
   state: string | null;
   city: string | null;
   dateOfBirth: string | null;
   gender: string | null;
+  /** Completed visits at this shop (for "You've been here X times" and regular badge). */
+  visitCount?: number;
 }
 
 export interface CustomerAppointment {
@@ -27,6 +31,9 @@ export interface CustomerAppointment {
   ticketNumber: string | null;
   createdAt: string;
   completedAt?: string | null;
+  /** Set for past appointments from other shops (cross-shop history). */
+  shopSlug?: string;
+  shopName?: string;
 }
 
 export interface CustomerAppointmentsResponse {
@@ -63,14 +70,17 @@ export interface AuthApi {
     preferences?: { emailReminders?: boolean };
     nextServiceNote?: string | null;
     nextServiceImageUrl?: string | null;
+    nextServicePreset?: ReferencePresetId | null;
     address?: string | null;
     state?: string | null;
     city?: string | null;
     dateOfBirth?: string | null;
     gender?: string | null;
   }): Promise<CustomerProfile>;
+  getPopularReferencePresets(shopSlug: string): Promise<{ presets: Array<{ preset: ReferencePresetId; count: number }> }>;
   uploadClientReferenceImage(shopSlug: string, file: File): Promise<{ url: string }>;
   getCustomerAppointments(shopSlug: string): Promise<CustomerAppointmentsResponse>;
+  getBestTimes(shopSlug: string): Promise<{ suggestion: string | null }>;
   getCustomerGoogleAuthUrl(shopSlug: string, redirectUri?: string): string;
   requestPasswordReset(shopSlug: string, email: string): Promise<{ message: string }>;
   resetPassword(shopSlug: string, data: { token: string; newPassword: string }): Promise<{ message: string }>;
@@ -152,6 +162,12 @@ export function createAuthApi(client: BaseApiClient): AuthApi {
     },
     async getCustomerAppointments(shopSlug) {
       return c.get(`/shops/${shopSlug}/auth/customer/me/appointments`) as Promise<CustomerAppointmentsResponse>;
+    },
+    async getBestTimes(shopSlug) {
+      return c.get(`/shops/${shopSlug}/auth/customer/best-times`) as Promise<{ suggestion: string | null }>;
+    },
+    async getPopularReferencePresets(shopSlug) {
+      return c.get(`/shops/${shopSlug}/auth/customer/me/popular-reference-presets`) as Promise<{ presets: Array<{ preset: ReferencePresetId; count: number }> }>;
     },
     getCustomerGoogleAuthUrl(shopSlug, redirectUri) {
       const base = client.getBaseUrl();

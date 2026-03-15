@@ -22,7 +22,12 @@ export class TicketService {
   async getById(id: number): Promise<Ticket | null> {
     const ticket = await this.db.query.tickets.findFirst({
       where: eq(schema.tickets.id, id),
-      with: { shop: true, service: { columns: schema.serviceColumnsWithoutSortOrder }, barber: true },
+      with: {
+        shop: true,
+        service: { columns: schema.serviceColumnsWithoutSortOrder },
+        barber: true,
+        ticketRating: true,
+      },
     });
     return ticket as Ticket | null;
   }
@@ -174,6 +179,8 @@ export class TicketService {
       estimatedWaitTime = await this.queueService.calculateWaitTime(shopId, position, settings.defaultServiceDuration);
     }
 
+    const trackingConsent = (data as CreateTicket & { trackingConsent?: boolean }).trackingConsent;
+    const referralSource = (data as CreateTicket & { referralSource?: string }).referralSource ?? null;
     const insertValues: Record<string, unknown> = {
       shopId,
       serviceId: primaryServiceId,
@@ -182,6 +189,8 @@ export class TicketService {
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       deviceId: data.deviceId || null,
+      trackingConsent: trackingConsent === true || trackingConsent === false ? trackingConsent : null,
+      referralSource: referralSource || null,
       preferredBarberId: data.preferredBarberId,
       status: 'waiting',
       position,
@@ -233,6 +242,18 @@ export class TicketService {
         .set({ clientId, updatedAt: now })
         .where(eq(schema.tickets.id, ticket.id));
       (ticket as any).clientId = clientId;
+      if (trackingConsent === true || trackingConsent === false) {
+        const companyId = (shop as { companyId?: number | null }).companyId;
+        if (companyId != null) {
+          try {
+            await this.clientService.updateCustomerProfile(clientId, companyId, {
+              preferences: { trackingConsent },
+            });
+          } catch (err) {
+            console.warn('[TicketService] Failed to update client trackingConsent preference:', err);
+          }
+        }
+      }
     }
 
     this.auditService.logTicketCreated(ticket.id, shopId, {
@@ -788,5 +809,25 @@ export class TicketService {
       .returning();
 
     return ticket as Ticket;
+  }
+
+  /**
+   * Submit a one-tap rating (1-5) for a completed ticket. Idempotent: only if status is completed and no rating yet.
+   */
+  async submitRating(ticketId: number, rating: number): Promise<void> {
+    const ticket = await this.db.query.tickets.findFirst({
+      where: eq(schema.tickets.id, ticketId),
+      with: { ticketRating: true },
+      columns: { status: true, barberId: true },
+    });
+    if (!ticket) throw new NotFoundError(`Ticket with ID ${ticketId} not found`);
+    if (ticket.status !== 'completed') throw new ValidationError('Only completed tickets can be rated');
+    if (ticket.ticketRating) return; // already rated, idempotent success
+
+    await this.db.insert(schema.ticketRatings).values({
+      ticketId,
+      rating,
+      barberId: ticket.barberId ?? undefined,
+    });
   }
 }

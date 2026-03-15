@@ -70,6 +70,8 @@ export const STORAGE_KEYS = {
   CUSTOMER_NAME: 'eutonafila_customer_name',
   /** Customer phone for remember-my-info (localStorage fallback) */
   CUSTOMER_PHONE: 'eutonafila_customer_phone',
+  /** Last tracking consent choice (allow/deny) for join form pre-fill */
+  TRACKING_CONSENT: 'eutonafila_tracking_consent',
 } as const;
 
 /**

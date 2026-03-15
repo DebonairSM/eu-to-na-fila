@@ -24,6 +24,7 @@ export const ticketSchema = z.object({
   customerName: z.string().min(1).max(200),
   customerPhone: z.string().optional(),
   deviceId: z.string().optional(), // Device identifier for preventing multiple active tickets per device
+  trackingConsent: z.boolean().optional().nullable(), // true = allowed, false = denied, null = legacy
   status: ticketStatusSchema,
   position: z.number().int().nonnegative(),
   estimatedWaitTime: z.number().int().nonnegative().optional(),
@@ -39,6 +40,8 @@ export const ticketSchema = z.object({
   barberAssignedAt: z.date().or(z.string()).optional(),
   /** All selected service ids (primary first). When present, use for display; otherwise only serviceId. */
   complementaryServiceIds: z.array(z.number().int().positive()).optional(),
+  /** Present when ticket has been rated (completed only). */
+  rating: z.number().int().min(1).max(5).optional(),
 });
 
 export type Ticket = z.infer<typeof ticketSchema>;
@@ -53,6 +56,8 @@ export const createTicketSchema = z.object({
   customerPhone: z.string().optional(),
   preferredBarberId: z.number().optional(),
   deviceId: z.string().optional(),
+  trackingConsent: z.boolean().optional(),
+  referralSource: z.enum(['qr', 'friend', 'instagram', 'walk_by', 'other']).optional(),
 });
 export type CreateTicket = z.infer<typeof createTicketSchema>;
 
