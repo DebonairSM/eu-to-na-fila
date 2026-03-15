@@ -204,6 +204,7 @@
     "emailPlaceholder": "you@email.com",
     "sendReminder": "Send reminder",
     "reminderSent": "Reminder sent.",
+    "reminderSendFailed": "We couldn’t send the email. Try again later or contact the shop.",
     "addToCalendar": "Add to calendar",
     "googleCalendar": "Google Calendar",
     "appleCalendar": "Apple Calendar"

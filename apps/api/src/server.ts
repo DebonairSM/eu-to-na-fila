@@ -28,7 +28,7 @@ import { propagandasPublicRoutes } from './routes/propagandas-public.js';
 import { stripeWebhookRoutes } from './routes/stripe-webhook.js';
 import { clientsRoutes } from './routes/clients.js';
 import { projectsRoutes } from './routes/projects.js';
-import { isEmailConfigured } from './services/EmailService.js';
+import { isEmailConfigured, getEmailTransportKind, sendTestEmail } from './services/EmailService.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { toLoggableError } from './lib/errors.js';
 import { registerWebSocket } from './websocket/handler.js';
@@ -313,6 +313,13 @@ fastify.get('/health', async () => {
     fastify.log.error({ err: toLoggableError(error) }, 'Health check: database error');
   }
 
+  // Email: configured and which transport (for isolating email issues)
+  const emailTransport = getEmailTransportKind();
+  health.email = {
+    configured: isEmailConfigured(),
+    transport: emailTransport,
+  };
+
   // Check memory usage
   const memoryUsage = process.memoryUsage();
   health.memory = {
@@ -322,6 +329,30 @@ fastify.get('/health', async () => {
   };
 
   return health;
+});
+
+// Email test: GET /api/health/email-test?to=you@example.com&secret=XXX (optional secret via query or header x-email-test-secret)
+// If EMAIL_TEST_SECRET is set, request must include it. Use to isolate email failures in production.
+fastify.get('/api/health/email-test', async (request, reply) => {
+  const secret = process.env.EMAIL_TEST_SECRET;
+  const auth =
+    (request.headers['x-email-test-secret'] as string | undefined) ??
+    (request.query as { secret?: string }).secret;
+  if (secret && auth !== secret) {
+    return reply.code(401).send({ error: 'Unauthorized' });
+  }
+  const to = (request.query as { to?: string }).to;
+  if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+    return reply.code(400).send({
+      error: 'Missing or invalid query: to=email@example.com',
+      hint: 'Add ?to=your@email.com (and &secret=YOUR_EMAIL_TEST_SECRET if you set that env var)',
+    });
+  }
+  const result = await sendTestEmail(to);
+  if (result.ok) {
+    return reply.send({ ok: true, message: 'Test email sent' });
+  }
+  return reply.code(500).send({ ok: false, error: result.error });
 });
 
 // Test route

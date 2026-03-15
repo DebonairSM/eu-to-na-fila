@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useJoinForm } from './hooks/useJoinForm';
 import { ActiveBarbersInfo } from './ActiveBarbersInfo';
 import { Card, CardContent, InputError, Button } from '@/components/design-system';
@@ -108,6 +108,8 @@ export function JoinForm() {
   const [signupBirthday, setSignupBirthday] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedServicesForSubtotal: Service[] = activeServices.filter((s) => selectedServiceIds.includes(s.id));
   const subtotal = serviceSubtotal(selectedServicesForSubtotal);
@@ -126,6 +128,18 @@ export function JoinForm() {
     (estimatedWaitMinutes != null && estimatedWaitMinutes > 0 ? estimatedWaitMinutes : 0);
   const showEstimatedTime = selectedServiceIds.length > 0 && totalServiceDurationMinutes > 0;
   const countryOptions = useMemo(() => getCountryOptions(locale), [locale]);
+
+  useEffect(() => {
+    if (!countryDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) {
+        setCountryDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [countryDropdownOpen]);
+
   const canStartCheckIn =
     combinedName.trim().length > 0 &&
     !validationError &&
@@ -452,20 +466,42 @@ export function JoinForm() {
                 <label htmlFor="customerPhone" className="block text-xs uppercase tracking-wide text-[var(--shop-text-secondary)] mb-2">
                   {settings.requirePhone ? t('join.phoneLabel') : t('join.phoneLabelOptional')}
                 </label>
-                <div className="flex gap-2">
-                  <select
-                    id="customerCountry"
-                    value={customerCountry}
-                    onChange={(e) => handleCountryChange(e.target.value)}
-                    className="rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] text-[var(--shop-text-primary)] min-w-[160px] px-3 py-3 outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-h-[46px]"
-                    aria-label={t('join.countryLabel')}
-                  >
-                    {countryOptions.map((country) => (
-                      <option key={country.code} value={country.code} className="text-black">
-                        {getCountryFlagEmoji(country.code)} {country.name} {country.dialCode}
-                      </option>
-                    ))}
-                  </select>
+                <div className="flex gap-2" ref={countryDropdownRef}>
+                  <div className="relative min-w-[56px]">
+                    <button
+                      type="button"
+                      id="customerCountry"
+                      onClick={() => setCountryDropdownOpen((open) => !open)}
+                      className="w-full rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] text-[var(--shop-text-primary)] min-h-[46px] px-3 py-3 flex items-center justify-center text-2xl outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]"
+                      aria-label={t('join.countryLabel')}
+                      aria-expanded={countryDropdownOpen}
+                      aria-haspopup="listbox"
+                    >
+                      {getCountryFlagEmoji(customerCountry)}
+                    </button>
+                    {countryDropdownOpen && (
+                      <ul
+                        role="listbox"
+                        aria-label={t('join.countryLabel')}
+                        className="absolute top-full left-0 z-50 mt-1 max-h-[280px] overflow-auto rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] py-1 shadow-lg min-w-[200px]"
+                      >
+                        {countryOptions.map((country) => (
+                          <li
+                            key={country.code}
+                            role="option"
+                            aria-selected={customerCountry === country.code}
+                            onClick={() => {
+                              handleCountryChange(country.code);
+                              setCountryDropdownOpen(false);
+                            }}
+                            className={`cursor-pointer px-3 py-2.5 text-left text-sm text-[var(--shop-text-primary)] hover:bg-white/10 ${customerCountry === country.code ? 'bg-white/10' : ''}`}
+                          >
+                            {getCountryFlagEmoji(country.code)} {country.name} {country.dialCode}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                   <input
                     id="customerPhone"
                     type="tel"

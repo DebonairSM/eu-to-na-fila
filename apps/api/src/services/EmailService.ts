@@ -283,3 +283,60 @@ export async function sendAdOrderReminderToAdmin(
 export function isEmailConfigured(): boolean {
   return getGmailClient() !== null || getNodemailerTransporter() !== null;
 }
+
+/** Which transport would be used, based on env (no side effects). */
+export function getEmailTransportKind(): 'gmail' | 'nodemailer' | null {
+  if (
+    process.env.GOOGLE_CLIENT_ID &&
+    process.env.GOOGLE_CLIENT_SECRET &&
+    process.env.GMAIL_REFRESH_TOKEN
+  ) {
+    return 'gmail';
+  }
+  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+    return 'nodemailer';
+  }
+  return null;
+}
+
+/**
+ * Send a minimal test email. Use for isolating email failures.
+ * Returns { ok: true } or { ok: false, error: string }.
+ */
+export async function sendTestEmail(to: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const fromEmail = process.env.GMAIL_USER ?? 'eutonafila@gmail.com';
+  const subject = 'Email test – Eu to na Fila';
+  const textBody = `This is a test email sent at ${new Date().toISOString()}. If you received it, email is working.`;
+
+  const gmail = getGmailClient();
+  if (gmail) {
+    try {
+      const raw = toBase64Url(buildMessage(to, subject, textBody, fromEmail));
+      await gmail.users.messages.send({
+        userId: 'me',
+        requestBody: { raw },
+      });
+      return { ok: true };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (isAuthError(err)) clearGmailClient();
+      return { ok: false, error: msg };
+    }
+  }
+
+  const trans = getNodemailerTransporter();
+  if (!trans) {
+    return {
+      ok: false,
+      error: 'No transport. Set GMAIL_USER+GMAIL_APP_PASSWORD or GOOGLE_CLIENT_ID+GOOGLE_CLIENT_SECRET+GMAIL_REFRESH_TOKEN.',
+    };
+  }
+
+  try {
+    await trans.sendMail({ from: fromEmail, to, subject, text: textBody });
+    return { ok: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: msg };
+  }
+}

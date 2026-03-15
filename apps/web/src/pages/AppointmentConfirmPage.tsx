@@ -124,8 +124,12 @@ export function AppointmentConfirmPage() {
     setReminderError(null);
     setReminderSending(true);
     try {
-      await api.sendAppointmentReminder(effectiveSlug, ticketId, email.trim());
-      setReminderSent(true);
+      const { sent } = await api.sendAppointmentReminder(effectiveSlug, ticketId, email.trim());
+      if (sent) {
+        setReminderSent(true);
+      } else {
+        setReminderError(t('appointment.reminderSendFailed') ?? 'We couldn’t send the email. Try again later or contact the shop.');
+      }
     } catch (err) {
       setReminderError(getErrorMessage(err, 'Failed to send reminder'));
     } finally {
