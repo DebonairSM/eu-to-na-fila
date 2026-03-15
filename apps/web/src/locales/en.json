@@ -279,6 +279,8 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "loginButton": "Log in",
+    "welcomeBack": "You're in! Welcome back.",
+    "accountCreated": "Account created. You're logged in.",
     "entering": "Logging in...",
     "kioskLoginTitle": "Kiosk mode",
     "kioskLoginSubtitle": "Use kiosk credentials to display the queue.",

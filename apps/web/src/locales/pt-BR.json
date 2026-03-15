@@ -279,6 +279,8 @@
     "showPassword": "Mostrar senha",
     "hidePassword": "Ocultar senha",
     "loginButton": "Entrar",
+    "welcomeBack": "Você entrou! Bem-vindo de volta.",
+    "accountCreated": "Conta criada. Você está conectado.",
     "entering": "Entrando...",
     "kioskLoginTitle": "Modo quiosque",
     "kioskLoginSubtitle": "Use as credenciais do quiosque para exibir a fila.",

@@ -46,9 +46,15 @@ export function HeroSection() {
         {hero.subtitle}
       </Text>
       <div className={useSplitLayout ? 'flex gap-4 flex-wrap' : 'flex gap-4 justify-center flex-wrap'}>
+        <Link to="/join">
+          <Button variant="default" size="lg" className={cn('text-base px-8 py-4 font-semibold', behavior.heroOverlay && 'cta-join')}>
+            {!ctaTextOnly && <span className="material-symbols-outlined text-xl">queue</span>}
+            {t('join.joinTitle')}
+          </Button>
+        </Link>
         {showSchedule && (
           <Link to="/schedule">
-            <Button variant="outline" size="lg" className={behavior.heroOverlay ? 'cta-join' : ''}>
+            <Button variant="outline" size="lg">
               {!ctaTextOnly && <span className="material-symbols-outlined text-xl">event</span>}
               {t('join.ctaQueueAndSchedule')}
             </Button>
@@ -94,6 +100,12 @@ export function HeroSection() {
           </SlideIn>
           <SlideIn direction="up" delay={600}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
+              <Link to="/join">
+                <Button variant="default" size="lg" fullWidth className="sm:w-auto text-base px-8 py-4 font-semibold">
+                  {!ctaTextOnly && <span className="material-symbols-outlined text-xl">queue</span>}
+                  {t('join.joinTitle')}
+                </Button>
+              </Link>
               {showSchedule && (
                 <Link to="/schedule">
                   <Button variant="outline" size="lg" fullWidth className="sm:w-auto">

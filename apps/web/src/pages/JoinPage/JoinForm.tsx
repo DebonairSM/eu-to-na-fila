@@ -90,15 +90,17 @@ export function JoinForm() {
   } = useJoinForm();
   const { locale, t } = useLocale();
   const shopSlug = useShopSlug();
-  const { login } = useAuthContext();
+  const { login, isCustomer } = useAuthContext();
   const nameErrorId = useId();
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [showLoginCelebration, setShowLoginCelebration] = useState(false);
+  const [celebrationIsSignup, setCelebrationIsSignup] = useState(false);
   const [isSignupExpanded, setIsSignupExpanded] = useState(false);
   const [authShift, setAuthShift] = useState(false);
   const [authIdentifier, setAuthIdentifier] = useState('');
   const [authPassword, setAuthPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [signupName, setSignupName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
@@ -137,13 +139,14 @@ export function JoinForm() {
 
   useEffect(() => {
     if (!isAuthModalOpen) return;
-    if (!authIdentifier && customerEmail.trim()) {
-      setAuthIdentifier(customerEmail.trim());
+    const fromJoin = customerEmail.trim() || customerPhone.trim() || '';
+    if (fromJoin && !authIdentifier) {
+      setAuthIdentifier(fromJoin);
     }
-    if (!signupEmail && customerEmail.trim()) {
+    if (customerEmail.trim() && !signupEmail) {
       setSignupEmail(customerEmail.trim());
     }
-  }, [isAuthModalOpen, authIdentifier, customerEmail, signupEmail]);
+  }, [isAuthModalOpen, authIdentifier, customerEmail, customerPhone, signupEmail]);
 
   const applyFormattedName = () => {
     const formatted = formatNameWithConnectors(combinedName);
@@ -205,13 +208,21 @@ export function JoinForm() {
           dateOfBirth: signupBirthday.trim() || undefined,
         });
         if (result.valid && result.token && result.role === 'customer') {
-          login({
-            id: result.clientId,
-            username: signupEmail.trim(),
-            role: 'customer',
-            name: signupName.trim() || signupEmail.trim(),
-            clientId: result.clientId,
-          });
+          login(
+            {
+              id: result.clientId,
+              username: signupEmail.trim(),
+              role: 'customer',
+              name: signupName.trim() || signupEmail.trim(),
+              clientId: result.clientId,
+            },
+            { rememberMe: true }
+          );
+          if (customerPhone.trim()) {
+            api.updateCustomerProfile(shopSlug, { phone: customerPhone.trim() }).catch(() => {});
+          }
+          setCelebrationIsSignup(true);
+          setShowLoginCelebration(true);
           setIsAuthModalOpen(false);
           return;
         }
@@ -243,8 +254,10 @@ export function JoinForm() {
             name: result.name?.trim() || authIdentifier.trim(),
             clientId: result.clientId,
           },
-          { rememberMe }
+          { rememberMe: true }
         );
+        setCelebrationIsSignup(false);
+        setShowLoginCelebration(true);
         setIsAuthModalOpen(false);
         return;
       }
@@ -277,9 +290,108 @@ export function JoinForm() {
     }
   };
 
+  const loggedInView = isCustomer && (
+    <form onSubmit={handleMainSubmit} autoComplete="off" className="space-y-7">
+      <div className="space-y-5">
+        <div className="min-w-0">
+          <label htmlFor="customerNameLoggedIn" className="flex flex-wrap items-baseline gap-1 text-xl sm:text-2xl text-[var(--shop-text-primary)]">
+            <span>{t('join.greetingPrefix')}</span>
+            <input
+              id="customerNameLoggedIn"
+              type="text"
+              value={combinedName}
+              onChange={handleCombinedNameChange}
+              onBlur={applyFormattedName}
+              placeholder={t('join.namePlaceholder')}
+              autoComplete="off"
+              autoCapitalize="words"
+              autoCorrect="off"
+              spellCheck={false}
+              required
+              aria-describedby={validationError ? nameErrorId : undefined}
+              className="flex-1 min-w-[8rem] bg-transparent border-0 border-b-2 border-[rgba(255,255,255,0.22)] focus:border-[var(--shop-accent)] text-[var(--shop-text-primary)] text-xl sm:text-2xl px-0 py-2 outline-none placeholder:text-[var(--shop-text-secondary)]"
+            />
+          </label>
+          <InputError id={nameErrorId} message={validationError || ''} />
+        </div>
+
+        {canStartCheckIn ? (
+          <button
+            type="submit"
+            className="w-full text-center text-3xl sm:text-4xl tracking-tight py-4 px-5 rounded-2xl border-2 border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_12%,transparent)] text-[var(--shop-accent)] cursor-pointer hover:bg-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] hover:border-[var(--shop-accent-hover)] hover:text-[var(--shop-accent-hover)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)] min-h-[52px] flex items-center justify-center"
+            aria-label={t('join.confirmEntry')}
+          >
+            {t('join.joinTitle')}
+          </button>
+        ) : (
+          <div
+            className="w-full text-center text-3xl sm:text-4xl tracking-tight text-[var(--shop-text-primary)] py-2"
+            aria-hidden
+          >
+            {t('join.joinTitle')}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-6">
+        {nameCollisionError && (
+          <div className="p-4 rounded-lg bg-[#ef4444]/20 border-2 border-[#ef4444] flex items-start gap-3">
+            <span className="material-symbols-outlined text-[#ef4444] text-xl flex-shrink-0 mt-0.5">warning</span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-[#ef4444] mb-1">{t('join.nameInUse')}</p>
+              <p className="text-sm text-[#ef4444]/90">{nameCollisionError}</p>
+            </div>
+          </div>
+        )}
+        {isAlreadyInQueue && existingTicketId && (
+          <div className="p-5 rounded-lg bg-[color-mix(in_srgb,var(--shop-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)]">
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl">info</span>
+              <div className="flex-1 space-y-3">
+                <p className="text-sm font-semibold text-[var(--shop-accent)]">{t('join.activeTicketFound')}</p>
+                <Button type="button" onClick={() => navigate(`/status/${existingTicketId}`)} fullWidth>
+                  {t('join.viewStatus')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        {closedReason && (
+          <div className="p-5 rounded-xl bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_25%,transparent)] text-center">
+            <span className="material-symbols-outlined text-3xl text-[var(--shop-accent)] block mb-2" aria-hidden>schedule</span>
+            <p className="text-[var(--shop-text-primary)] font-medium">
+              {closedReason === 'lunch' ? 'Fechado para almoço.' : 'Fechado no momento.'}
+            </p>
+          </div>
+        )}
+        {submitError && !closedReason && (
+          <div className="p-4 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/20">
+            <p className="text-sm text-[#ef4444] flex items-center gap-2">
+              <span className="material-symbols-outlined text-base">error</span>
+              {submitError}
+            </p>
+          </div>
+        )}
+        <ActiveBarbersInfo
+          barbers={barbers}
+          waitTimes={waitTimes}
+          selectedBarberId={selectedBarberId}
+          isLoading={isLoadingWaitTimes}
+          onRefresh={refreshJoinData}
+          isRefreshing={isRefreshingJoinData}
+          refreshAriaLabel={t('status.refresh')}
+          refreshLabel={t('status.refresh')}
+        />
+      </div>
+    </form>
+  );
+
   return (
     <Card variant="default" className="join-form-card shadow-lg min-w-[320px]">
       <CardContent className="p-6 sm:p-8">
+        {loggedInView ? (
+          loggedInView
+        ) : (
         <form onSubmit={handleMainSubmit} autoComplete="off" className="space-y-7">
           <div className="space-y-5">
             <div className="min-w-0">
@@ -488,6 +600,7 @@ export function JoinForm() {
             )}
           </div>
         </form>
+        )}
       </CardContent>
 
       <Modal
@@ -702,6 +815,27 @@ export function JoinForm() {
             <span className="material-symbols-outlined">keyboard_arrow_up</span>
           </button>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={showLoginCelebration}
+        onClose={() => setShowLoginCelebration(false)}
+        showCloseButton
+      >
+        <div className="text-center py-4 px-2">
+          <span className="material-symbols-outlined text-6xl text-[var(--shop-accent)] mb-4 block" aria-hidden>
+            celebration
+          </span>
+          <p className="text-lg font-medium text-[var(--shop-text-primary)]">
+            {celebrationIsSignup ? t('auth.accountCreated') : t('auth.welcomeBack')}
+          </p>
+          <p className="text-sm text-[var(--shop-text-secondary)] mt-2">
+            {t('join.loggedInAs', { name: combinedName.trim() || t('join.namePlaceholder') })}
+          </p>
+          <Button className="mt-6" fullWidth onClick={() => setShowLoginCelebration(false)}>
+            {t('common.close')}
+          </Button>
+        </div>
       </Modal>
     </Card>
   );

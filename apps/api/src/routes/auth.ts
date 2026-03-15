@@ -513,12 +513,15 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       await db.update(schema.clients).set(updateData).where(eq(schema.clients.id, existing.id));
 
       logAuthSuccess(request, shop.id, 'customer');
-      const token = signToken({
-        userId: existing.id,
-        shopId: shop.id,
-        role: 'customer',
-        clientId: existing.id,
-      });
+      const token = signToken(
+        {
+          userId: existing.id,
+          shopId: shop.id,
+          role: 'customer',
+          clientId: existing.id,
+        },
+        { expiresIn: '90d' }
+      );
       return { valid: true, role: 'customer', token, clientId: existing.id, name: name || existing.name };
     }
 
@@ -538,12 +541,15 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     if (!created) throw new ValidationError('Failed to create account');
     logAuthSuccess(request, shop.id, 'customer');
-    const token = signToken({
-      userId: created.id,
-      shopId: shop.id,
-      role: 'customer',
-      clientId: created.id,
-    });
+    const token = signToken(
+      {
+        userId: created.id,
+        shopId: shop.id,
+        role: 'customer',
+        clientId: created.id,
+      },
+      { expiresIn: '90d' }
+    );
     return reply.status(201).send({ valid: true, role: 'customer', token, clientId: created.id, name: created.name });
   });
 
@@ -600,7 +606,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
         role: 'customer',
         clientId: client.id,
       },
-      { expiresIn: remember_me === true ? '7d' : '24h' }
+      { expiresIn: '90d' }
     );
     return {
       valid: true,
@@ -664,7 +670,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
               role: 'customer',
               clientId: client.id,
             },
-            { expiresIn: remember_me === true ? '7d' : '24h' }
+            { expiresIn: '90d' }
           );
           return reply.status(200).send({
             valid: true,
