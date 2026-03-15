@@ -14,7 +14,7 @@ import { Modal } from '@/components/Modal';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { CompanyNav } from '@/components/CompanyNav';
 import { RootSiteNav } from '@/components/RootSiteNav';
-import { getErrorMessage } from '@/lib/utils';
+import { getErrorMessage, formatNameWithConnectors } from '@/lib/utils';
 import { invalidateBarbersCache } from '@/lib/cache/barbersCache';
 import { invalidateServicesCache } from '@/lib/cache/servicesCache';
 import { isRootBuild } from '@/lib/build';
@@ -224,7 +224,7 @@ function StepServices({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="sm:col-span-2">
-                <input type="text" value={service.name} onChange={(e) => updateService(service.id, { name: e.target.value })} placeholder={t('createShop.serviceNamePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm" />
+                <input type="text" value={service.name} onChange={(e) => updateService(service.id, { name: e.target.value })} onBlur={() => { const t = service.name.trim(); if (t.length > 0) updateService(service.id, { name: formatNameWithConnectors(t) }); }} placeholder={t('createShop.serviceNamePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm" />
               </div>
               <div className="sm:col-span-2">
                 <input type="text" value={service.description} onChange={(e) => updateService(service.id, { description: e.target.value })} placeholder={t('createShop.serviceDescPlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm" />
@@ -284,7 +284,7 @@ function StepBarbers({ barbers, onChange, errors }: { barbers: BarberItem[]; onC
               <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{t('createShop.barberN')} {index + 1}</span>
             </div>
             <div className="space-y-3">
-              <input type="text" value={barber.name} onChange={(e) => updateBarber(barber.id, { name: e.target.value })} placeholder={t('createShop.namePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm" />
+              <input type="text" value={barber.name} onChange={(e) => updateBarber(barber.id, { name: e.target.value })} onBlur={() => { const t = barber.name.trim(); if (t.length > 0) updateBarber(barber.id, { name: formatNameWithConnectors(t) }); }} placeholder={t('createShop.namePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm" />
               <input type="email" value={barber.email} onChange={(e) => updateBarber(barber.id, { email: e.target.value })} placeholder={t('createShop.emailPlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm" />
               <input type="tel" value={barber.phone} onChange={(e) => updateBarber(barber.id, { phone: e.target.value })} placeholder={t('createShop.phonePlaceholder')} className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm" />
             </div>
@@ -997,6 +997,17 @@ export function ShopManagementPage() {
                                   ...(!editingShop && (!prev.slug || prev.slug === generateSlug(prev.name)) ? { slug: generateSlug(name) } : {}),
                                 }));
                               }}
+                              onBlur={() => {
+                                const trimmed = formData.name.trim();
+                                if (trimmed.length > 0) {
+                                  const formatted = formatNameWithConnectors(trimmed);
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    name: formatted,
+                                    ...(!editingShop && (!prev.slug || prev.slug === generateSlug(prev.name)) ? { slug: generateSlug(formatted) } : {}),
+                                  }));
+                                }
+                              }}
                               required
                               className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20"
                             />
@@ -1177,6 +1188,7 @@ export function ShopManagementPage() {
                                           type="text"
                                           value={s.name}
                                           onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, name: e.target.value } : x)))}
+                                          onBlur={() => { const t = s.name.trim(); if (t.length > 0) setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, name: formatNameWithConnectors(t) } : x))); }}
                                           placeholder={t('createShop.serviceNamePlaceholder')}
                                           className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                         />
@@ -1272,6 +1284,7 @@ export function ShopManagementPage() {
                                           type="text"
                                           value={b.name}
                                           onChange={(e) => setEditBarbers((prev) => prev.map((x) => (x.id === b.id ? { ...x, name: e.target.value } : x)))}
+                                          onBlur={() => { const t = b.name.trim(); if (t.length > 0) setEditBarbers((prev) => prev.map((x) => (x.id === b.id ? { ...x, name: formatNameWithConnectors(t) } : x))); }}
                                           placeholder={t('createShop.namePlaceholder')}
                                           className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                         />
@@ -2072,6 +2085,13 @@ export function ShopManagementPage() {
                             const name = e.target.value;
                             setFormData((prev) => ({ ...prev, name, ...(!editingShop && (!prev.slug || prev.slug === generateSlug(prev.name)) ? { slug: generateSlug(name) } : {}) }));
                           }}
+                          onBlur={() => {
+                            const trimmed = formData.name.trim();
+                            if (trimmed.length > 0) {
+                              const formatted = formatNameWithConnectors(trimmed);
+                              setFormData((prev) => ({ ...prev, name: formatted, ...(!editingShop && (!prev.slug || prev.slug === generateSlug(prev.name)) ? { slug: generateSlug(formatted) } : {}) }));
+                            }
+                          }}
                           required
                           className="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white text-base min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)] focus:ring-2 focus:ring-[var(--shop-accent)]/20"
                         />
@@ -2222,6 +2242,7 @@ export function ShopManagementPage() {
                                       type="text"
                                       value={s.name}
                                       onChange={(e) => setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, name: e.target.value } : x)))}
+                                      onBlur={() => { const t = s.name.trim(); if (t.length > 0) setEditServices((prev) => prev.map((x) => (x.id === s.id ? { ...x, name: formatNameWithConnectors(t) } : x))); }}
                                       placeholder={t('createShop.serviceNamePlaceholder')}
                                       className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                     />
@@ -2317,6 +2338,7 @@ export function ShopManagementPage() {
                                       type="text"
                                       value={b.name}
                                       onChange={(e) => setEditBarbers((prev) => prev.map((x) => (x.id === b.id ? { ...x, name: e.target.value } : x)))}
+                                      onBlur={() => { const t = b.name.trim(); if (t.length > 0) setEditBarbers((prev) => prev.map((x) => (x.id === b.id ? { ...x, name: formatNameWithConnectors(t) } : x))); }}
                                       placeholder={t('createShop.namePlaceholder')}
                                       className="form-input w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--shop-accent)] transition-all text-sm"
                                     />

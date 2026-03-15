@@ -7,6 +7,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useLocale } from '@/contexts/LocaleContext';
 import { api } from '@/lib/api';
 import { validateRequired, validateEmail } from '@/lib/validation';
+import { formatNameWithConnectors } from '@/lib/utils';
 import type { ShopForAds } from '@/lib/api/propagandas';
 
 const DURATIONS = [10, 15, 20, 30] as const;
@@ -218,6 +219,10 @@ export function PropagandasBuyPage() {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    onBlur={() => {
+                      const trimmed = name.trim();
+                      if (trimmed.length > 0) setName(formatNameWithConnectors(trimmed));
+                    }}
                     placeholder={t('propagandas.namePlaceholder')}
                     className="w-full px-3 py-2.5 bg-white/5 border border-white/20 rounded-lg text-white placeholder:text-gray-500 text-sm"
                   />

@@ -31,7 +31,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useLocale } from '@/contexts/LocaleContext';
 import { getShopBasePath } from '@/lib/config';
 import { POLL_INTERVALS } from '@/lib/constants';
-import { cn, getErrorMessage, formatName, formatNameForDisplay, truncateOptionLabel } from '@/lib/utils';
+import { cn, getErrorMessage, formatNameWithConnectors, formatNameForDisplay, truncateOptionLabel } from '@/lib/utils';
 import type { ClientClipNote } from '@/lib/api/clients';
 import { hasHoursForDay, hasAnyOperatingHours } from '@/lib/operatingHours';
 import { getShopStatus } from '@eutonafila/shared';
@@ -378,7 +378,7 @@ export function BarberQueueManager() {
   const handleCombinedCheckInNameBlur = useCallback(() => {
     const trimmed = combinedCheckInName.trim();
     if (trimmed.length > 0) {
-      setCombinedCheckInName(formatName(trimmed));
+      setCombinedCheckInName(formatNameWithConnectors(trimmed));
     }
   }, [combinedCheckInName]);
 
@@ -396,8 +396,8 @@ export function BarberQueueManager() {
     }
 
     const fullName = useCombined
-      ? formatName(combinedTrimmed)
-      : [checkInName.first.trim(), checkInName.last.trim()].filter(Boolean).map((s) => formatName(s)).join(' ');
+      ? formatNameWithConnectors(combinedTrimmed)
+      : [checkInName.first.trim(), checkInName.last.trim()].filter(Boolean).map((s) => formatNameWithConnectors(s)).join(' ');
 
     setIsSubmitting(true);
     setErrorMessage(null);
@@ -1354,6 +1354,12 @@ export function BarberQueueManager() {
                 type="text"
                 value={appointmentForm.customerName}
                 onChange={(e) => setAppointmentForm((f) => ({ ...f, customerName: e.target.value }))}
+                onBlur={() => {
+                  const trimmed = appointmentForm.customerName.trim();
+                  if (trimmed.length > 0) {
+                    setAppointmentForm((f) => ({ ...f, customerName: formatNameWithConnectors(trimmed) }));
+                  }
+                }}
                 placeholder={t('barber.customerNamePlaceholder')}
                 required
                 className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-[var(--shop-border-color)] text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] min-h-[44px] focus:outline-none focus:border-[var(--shop-accent)]"

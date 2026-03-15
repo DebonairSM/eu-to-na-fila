@@ -136,18 +136,38 @@ export interface CountryOption {
   dialCode: string;
 }
 
+/** Returns Unicode flag emoji for a 2-letter ISO country code (e.g. BR -> 🇧🇷). */
+export function getCountryFlagEmoji(code: string): string {
+  if (!code || code.length !== 2) return '';
+  const c = code.toUpperCase();
+  return String.fromCodePoint(
+    ...[...c].map((char) => 0x1f1e6 - 65 + char.charCodeAt(0)))
+  );
+}
+
+/** Country codes to show at the top of the phone country selector, in order. */
+const COUNTRY_PRIORITY: CountryCode[] = ['BR', 'PT', 'US', 'CA', 'DE'];
+
 export function getCountryOptions(locale: string): CountryOption[] {
   const displayNames = typeof Intl !== 'undefined'
     ? new Intl.DisplayNames([locale], { type: 'region' })
     : null;
 
-  return getCountries()
+  const options = getCountries()
     .map((code) => ({
       code,
       name: displayNames?.of(code) ?? code,
       dialCode: `+${getCountryCallingCode(code)}`,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    }));
+
+  return options.sort((a, b) => {
+    const aIndex = COUNTRY_PRIORITY.indexOf(a.code);
+    const bIndex = COUNTRY_PRIORITY.indexOf(b.code);
+    if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+    if (aIndex !== -1) return -1;
+    if (bIndex !== -1) return 1;
+    return a.name.localeCompare(b.name);
+  });
 }
 
 /**

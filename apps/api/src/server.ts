@@ -652,7 +652,10 @@ fastify.addHook('onReady', async () => {
   }
 
   if (!isEmailConfigured()) {
-    fastify.log.warn('Email not configured; appointment, password-reset, and ad-order reminder emails will not be sent.');
+    fastify.log.warn(
+      'Email not configured; appointment reminders, password-reset, and ad-order reminder emails will not be sent. ' +
+      'Set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GMAIL_REFRESH_TOKEN (run apps/api/scripts/get-gmail-refresh-token.ts after changing OAuth credentials), or GMAIL_USER + GMAIL_APP_PASSWORD.'
+    );
   }
 
   // Log path resolution for debugging

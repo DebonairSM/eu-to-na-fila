@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CompanyNav } from '@/components/CompanyNav';
 import { Container } from '@/components/design-system/Spacing/Container';
 import { useLocale } from '@/contexts/LocaleContext';
+import { formatNameWithConnectors } from '@/lib/utils';
 
 export function ContactPage() {
   const { t } = useLocale();
+  const [name, setName] = useState('');
   return (
     <div className="min-h-screen bg-[var(--shop-background)] text-[var(--shop-text-primary)]">
       <CompanyNav />
@@ -24,6 +27,12 @@ export function ContactPage() {
                   <input
                     id="name"
                     type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onBlur={() => {
+                      const trimmed = name.trim();
+                      if (trimmed.length > 0) setName(formatNameWithConnectors(trimmed));
+                    }}
                     className="w-full rounded-lg bg-white/5 border border-[var(--shop-border-color)] px-3 py-2.5 text-base text-[var(--shop-text-primary)] min-h-[44px] placeholder:text-[var(--shop-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
                     placeholder={t('contact.namePlaceholder')}
                   />

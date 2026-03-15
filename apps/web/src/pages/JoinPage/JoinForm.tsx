@@ -12,6 +12,7 @@ import { formatDurationMinutes } from '@/lib/formatDuration';
 import {
   formatNameWithConnectors,
   formatPhoneByCountry,
+  getCountryFlagEmoji,
   getCountryOptions,
   getErrorMessage,
   hasScheduleEnabled,
@@ -295,7 +296,7 @@ export function JoinForm() {
       <div className="space-y-5">
         <div className="min-w-0">
           <label htmlFor="customerNameLoggedIn" className="flex flex-wrap items-baseline gap-1 text-xl sm:text-2xl text-[var(--shop-text-primary)]">
-            <span>{t('join.greetingPrefix')}</span>
+            {combinedName.trim().length >= 2 && <span>{t('join.greetingPrefix')}</span>}
             <input
               id="customerNameLoggedIn"
               type="text"
@@ -396,7 +397,7 @@ export function JoinForm() {
           <div className="space-y-5">
             <div className="min-w-0">
               <label htmlFor="customerName" className="flex flex-wrap items-baseline gap-1 text-xl sm:text-2xl text-[var(--shop-text-primary)]">
-                <span>{t('join.greetingPrefix')}</span>
+                {combinedName.trim().length >= 2 && <span>{t('join.greetingPrefix')}</span>}
                 <input
                   id="customerName"
                   type="text"
@@ -456,12 +457,12 @@ export function JoinForm() {
                     id="customerCountry"
                     value={customerCountry}
                     onChange={(e) => handleCountryChange(e.target.value)}
-                    className="rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] text-[var(--shop-text-primary)] min-w-[112px] px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-h-[46px]"
+                    className="rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] text-[var(--shop-text-primary)] min-w-[160px] px-3 py-3 outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-h-[46px]"
                     aria-label={t('join.countryLabel')}
                   >
                     {countryOptions.map((country) => (
                       <option key={country.code} value={country.code} className="text-black">
-                        {country.code} {country.dialCode}
+                        {getCountryFlagEmoji(country.code)} {country.name} {country.dialCode}
                       </option>
                     ))}
                   </select>

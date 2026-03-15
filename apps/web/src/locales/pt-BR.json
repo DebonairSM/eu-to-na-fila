@@ -83,7 +83,7 @@
     "nameHint": "(nome)",
     "serviceLabel": "Serviço *",
     "nameLabel": "Nome *",
-    "namePlaceholder": "Nome e sobrenome",
+    "namePlaceholder": "Escreva seu nome",
     "emailLabel": "Email (opcional)",
     "emailPlaceholder": "seu@email.com",
     "phoneLabel": "Telefone *",

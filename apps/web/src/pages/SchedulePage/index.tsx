@@ -15,7 +15,7 @@ import { useBarbers } from '@/hooks/useBarbers';
 import { useActiveTicket } from '@/hooks/useActiveTicket';
 import { useProfanityFilter } from '@/hooks/useProfanityFilter';
 import { api } from '@/lib/api';
-import { getErrorMessage, formatName, getOrCreateDeviceId } from '@/lib/utils';
+import { getErrorMessage, formatName, formatNameWithConnectors, getOrCreateDeviceId } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
 import { formatDurationMinutes } from '@/lib/formatDuration';
 import { hasHoursForDay } from '@/lib/operatingHours';
@@ -303,6 +303,12 @@ export function SchedulePage() {
                     type="text"
                     value={combinedName}
                     onChange={handleCombinedNameChange}
+                    onBlur={() => {
+                      const trimmed = combinedName.trim();
+                      if (trimmed.length > 0) {
+                        setCombinedName(formatNameWithConnectors(trimmed));
+                      }
+                    }}
                     placeholder={t('join.namePlaceholder')}
                     required
                     error={!!validationError}

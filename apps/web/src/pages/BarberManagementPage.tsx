@@ -14,7 +14,7 @@ import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { Navigation } from '@/components/Navigation';
 import { Skeleton } from '@/components/design-system';
 import { Modal } from '@/components/Modal';
-import { getErrorMessage, formatName } from '@/lib/utils';
+import { getErrorMessage, formatNameWithConnectors } from '@/lib/utils';
 import { invalidateBarbersCache } from '@/lib/cache/barbersCache';
 import type { Barber } from '@eutonafila/shared';
 
@@ -184,7 +184,7 @@ export function BarberManagementPage() {
   const handleBarberNameBlur = useCallback(() => {
     setFormData((prev) => {
       const trimmed = prev.name.trim();
-      return trimmed.length > 0 ? { ...prev, name: formatName(trimmed) } : prev;
+      return trimmed.length > 0 ? { ...prev, name: formatNameWithConnectors(trimmed) } : prev;
     });
   }, []);
 

@@ -28,8 +28,25 @@ function logIfNoTransport(): void {
   if (noTransportLogged) return;
   noTransportLogged = true;
   console.error(
-    '[EmailService] No transport configured. Set GMAIL_USER + GMAIL_APP_PASSWORD or GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GMAIL_REFRESH_TOKEN.'
+    '[EmailService] No transport configured. Set GMAIL_USER + GMAIL_APP_PASSWORD or GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GMAIL_REFRESH_TOKEN (run apps/api/scripts/get-gmail-refresh-token.ts after changing OAuth credentials).'
   );
+}
+
+/** Clear cached Gmail client so next send uses fresh env (e.g. after updating GMAIL_REFRESH_TOKEN). */
+function clearGmailClient(): void {
+  gmailClient = null;
+}
+
+function isAuthError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const o = err as Record<string, unknown>;
+  const code = typeof o.code === 'number' ? o.code : undefined;
+  const status = typeof o.status === 'number' ? o.status : undefined;
+  const responseStatus = o.response && typeof o.response === 'object' && typeof (o.response as { status?: number }).status === 'number'
+    ? (o.response as { status: number }).status
+    : undefined;
+  const n = code ?? status ?? responseStatus ?? 0;
+  return n === 401 || n === 403;
 }
 
 function getNodemailerTransporter(): Transporter | null {
@@ -121,7 +138,11 @@ export async function sendAppointmentReminder(toEmail: string, data: Appointment
         requestBody: { raw },
       });
       return true;
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[EmailService] sendAppointmentReminder (Gmail) failed:', msg);
+      if (err instanceof Error && err.stack) console.error(err.stack);
+      if (isAuthError(err)) clearGmailClient();
       return false;
     }
   }
@@ -137,7 +158,9 @@ export async function sendAppointmentReminder(toEmail: string, data: Appointment
       text: textBody,
     });
     return true;
-  } catch {
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[EmailService] sendAppointmentReminder (Nodemailer) failed:', msg);
     return false;
   }
 }
@@ -173,6 +196,7 @@ export async function sendPasswordResetEmail(toEmail: string, data: PasswordRese
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[EmailService] sendPasswordResetEmail (Gmail) failed:', msg);
       if (err instanceof Error && err.stack) console.error(err.stack);
+      if (isAuthError(err)) clearGmailClient();
       return false;
     }
   }
@@ -228,6 +252,7 @@ export async function sendAdOrderReminderToAdmin(
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[EmailService] sendAdOrderReminderToAdmin (Gmail) failed:', msg);
       if (err instanceof Error && err.stack) console.error(err.stack);
+      if (isAuthError(err)) clearGmailClient();
       return false;
     }
   }
