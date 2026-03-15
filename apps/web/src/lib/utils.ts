@@ -141,7 +141,7 @@ export function getCountryFlagEmoji(code: string): string {
   if (!code || code.length !== 2) return '';
   const c = code.toUpperCase();
   return String.fromCodePoint(
-    ...[...c].map((char) => 0x1f1e6 - 65 + char.charCodeAt(0)))
+    ...[...c].map((char) => 0x1f1e6 - 65 + char.charCodeAt(0))
   );
 }
 
