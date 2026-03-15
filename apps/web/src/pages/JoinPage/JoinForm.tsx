@@ -85,7 +85,6 @@ export function JoinForm() {
     setSelectedServiceIds,
     hasServiceSelection,
     settings,
-    needsProfileCompletion,
     isRefreshingJoinData,
     refreshJoinData,
   } = useJoinForm();
