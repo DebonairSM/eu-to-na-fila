@@ -4,7 +4,7 @@
  *
  * 1. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env (or env).
  * 2. In Google Cloud Console, add redirect URI: http://localhost:3000/oauth2callback
- * 3. Run: pnpm tsx apps/api/scripts/get-gmail-refresh-token.ts  (or from apps/api: pnpm tsx scripts/get-gmail-refresh-token.ts)
+ * 3. Run: pnpm --filter api gmail:token
  * 4. Open http://localhost:3000 in your browser, sign in as the Gmail account that will send mail.
  * 5. Copy the refresh token from the terminal into GMAIL_REFRESH_TOKEN (e.g. in Render env vars).
  */
