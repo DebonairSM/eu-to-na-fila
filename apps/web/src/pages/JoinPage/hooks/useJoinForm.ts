@@ -50,6 +50,7 @@ export function useJoinForm() {
   const { waitTimes, isLoading: isLoadingWaitTimes, refetch: refetchWaitTimes } = useWaitTimes();
   const combinedNameRef = useRef(combinedName);
   combinedNameRef.current = combinedName;
+  const nameCursorRestoreRef = useRef<{ input: HTMLInputElement; cursor: number } | null>(null);
   const navigate = useNavigate();
   const shopSlug = useShopSlug();
   const { config: shopConfig } = useShopConfig();
@@ -199,16 +200,33 @@ export function useJoinForm() {
     }
   }, [firstName, lastName, validateName, nameCollisionError]);
 
-  // Combined name handler: preserve spaces so clients can type first and last name; only collapse multiple spaces
+  // Combined name handler: collapse multiple spaces and auto-capitalize first/last word as you type
   const handleCombinedNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value;
-    const withSingleSpaces = input.replace(/\s+/g, ' ');
-    setCombinedName(withSingleSpaces);
+    const raw = e.target.value;
+    const withSingleSpaces = raw.replace(/\s+/g, ' ');
+    const formatted = formatNameWithConnectors(withSingleSpaces);
+    const cursor = e.target.selectionStart ?? 0;
+    setCombinedName(formatted);
+    nameCursorRestoreRef.current = { input: e.target, cursor };
 
-    const words = withSingleSpaces.trim().split(/\s+/).filter(Boolean);
+    const words = formatted.trim().split(/\s+/).filter(Boolean);
     setFirstName(words[0] ?? '');
     setLastName(words.length > 1 ? words.slice(1).join(' ') : '');
   };
+
+  // Restore cursor after React updates the input value (formatting only changes case, so length is unchanged)
+  useEffect(() => {
+    const pending = nameCursorRestoreRef.current;
+    if (!pending) return;
+    nameCursorRestoreRef.current = null;
+    const { input, cursor } = pending;
+    const run = () => {
+      if (document.activeElement !== input) return;
+      const pos = Math.min(cursor, input.value.length);
+      input.setSelectionRange(pos, pos);
+    };
+    requestAnimationFrame(run);
+  }, [combinedName]);
 
   // Legacy handlers kept for backward compatibility (not used but maintained for type safety)
   const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {

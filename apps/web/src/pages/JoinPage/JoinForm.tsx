@@ -449,7 +449,7 @@ export function JoinForm() {
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="min-w-0">
+              <div className="min-w-0 flex flex-col">
                 <label htmlFor="customerEmail" className="block text-xs uppercase tracking-wide text-[var(--shop-text-secondary)] mb-2">
                   {t('join.emailLabel')}
                 </label>
@@ -462,11 +462,11 @@ export function JoinForm() {
                   className="w-full rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] px-4 py-3 text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-h-[46px]"
                 />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex flex-col">
                 <label htmlFor="customerPhone" className="block text-xs uppercase tracking-wide text-[var(--shop-text-secondary)] mb-2">
                   {settings.requirePhone ? t('join.phoneLabel') : t('join.phoneLabelOptional')}
                 </label>
-                <div className="flex gap-2" ref={countryDropdownRef}>
+                <div className="flex gap-2 w-full min-w-0" ref={countryDropdownRef}>
                   <div className="relative min-w-[56px]">
                     <button
                       type="button"
@@ -509,7 +509,7 @@ export function JoinForm() {
                     onChange={(e) => handlePhoneChange(e.target.value)}
                     placeholder={t('join.phonePlaceholder')}
                     required={settings.requirePhone}
-                    className="w-full rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] px-4 py-3 text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-h-[46px]"
+                    className="min-w-0 flex-1 rounded-lg border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] px-4 py-3 text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)] outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)] min-h-[46px]"
                   />
                 </div>
               </div>
