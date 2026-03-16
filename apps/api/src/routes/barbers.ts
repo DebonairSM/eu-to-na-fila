@@ -157,7 +157,7 @@ export const barberRoutes: FastifyPluginAsync = async (fastify) => {
       }
       if (isPresent && !canMarkPresent) {
         throw new ValidationError(
-          'Barbers cannot mark themselves present within 1 hour before or after shop closing time'
+          'Barbers cannot mark themselves present at or after shop closing time'
         );
       }
     }

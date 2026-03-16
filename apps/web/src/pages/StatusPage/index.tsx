@@ -27,6 +27,7 @@ import { RefreshButton } from '@/components/RefreshButton';
 import { Button, InputLabel } from '@/components/design-system';
 import { Container, SlideIn } from '@/components/design-system';
 import { hasHoursForDay } from '@/lib/operatingHours';
+import { POLL_INTERVALS } from '@/lib/constants';
 
 export function StatusPage() {
   const { id } = useParams<{ id: string }>();
@@ -35,7 +36,7 @@ export function StatusPage() {
   const shopSlug = useShopSlug();
   const ticketIdFromParams = id ? parseInt(id, 10) : null;
   const { ticket, isLoading, error, refetch } = useTicketStatus(ticketIdFromParams);
-  const { data: queueData } = useQueue(2500); // 2.5s for customers waiting for their turn
+  const { data: queueData } = useQueue(POLL_INTERVALS.STATUS_PAGE_QUEUE);
   const { getServiceById } = useServices();
   const { barbers } = useBarbers();
   const [shareSuccess, setShareSuccess] = useState(false);

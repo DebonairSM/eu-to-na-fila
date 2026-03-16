@@ -56,7 +56,7 @@ export function BarberQueueManager() {
   } = useKiosk();
 
   const pollInterval = POLL_INTERVALS.MANAGEMENT_QUEUE;
-  const barberPollInterval = isKioskMode ? 5000 : 0;
+  const barberPollInterval = isKioskMode ? POLL_INTERVALS.KIOSK_BARBER_POLL : 0;
   const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval);
   const { barbers, togglePresence } = useBarbers(barberPollInterval);
   const { activeServices } = useServices();

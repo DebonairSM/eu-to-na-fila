@@ -160,11 +160,11 @@ function findNextOpenTime(
   return null; // No opening time in next 7 days
 }
 
-/** 1 hour in minutes; barbers cannot mark present this long before/after closing. */
-const BARBER_PRESENCE_CLOSE_MARGIN_MINUTES = 60;
+/** Minutes after closing when barbers are auto-set absent. */
+const BARBER_PRESENCE_ABSENT_AFTER_CLOSE_MINUTES = 60;
 
 export interface BarberPresenceWindowResult {
-  /** False when within 1h before closing or 1h after closing, or when shop has no hours today */
+  /** False when at or after closing time, or when shop has no hours today */
   canMarkPresent: boolean;
   /** True when current time is >= closing + 1h (barbers should be auto-set absent) */
   shouldAutoAbsent: boolean;
@@ -172,8 +172,8 @@ export interface BarberPresenceWindowResult {
 
 /**
  * Barber presence rules around shop closing.
- * - Barbers cannot mark themselves present from 1h before closing until 1h after closing.
- * - 1h after closing, barbers are automatically counted absent.
+ * - Barbers can mark themselves present at any time up to closing time (no buffer before closing).
+ * - From closing time onward they cannot mark present; 1h after closing they are automatically set absent.
  * - When temporaryStatusOverride is set with isOpen: true (e.g. "open an extra hour"), barbers can mark themselves present for the whole override period (until the override "until" time).
  */
 export function getBarberPresenceWindow(
@@ -204,13 +204,12 @@ export function getBarberPresenceWindow(
   }
 
   const closeTime = parseTime(todayHours.close);
-  const windowStart = closeTime - BARBER_PRESENCE_CLOSE_MARGIN_MINUTES;
-  const windowEnd = closeTime + BARBER_PRESENCE_CLOSE_MARGIN_MINUTES;
+  const absentAfter = closeTime + BARBER_PRESENCE_ABSENT_AFTER_CLOSE_MINUTES;
 
-  if (currentTime >= windowEnd) {
+  if (currentTime >= absentAfter) {
     return { canMarkPresent: false, shouldAutoAbsent: true };
   }
-  if (currentTime >= windowStart) {
+  if (currentTime >= closeTime) {
     return { canMarkPresent: false, shouldAutoAbsent: false };
   }
   return { canMarkPresent: true, shouldAutoAbsent: false };

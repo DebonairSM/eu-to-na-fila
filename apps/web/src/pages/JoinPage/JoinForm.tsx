@@ -48,7 +48,7 @@ function ServiceChip({
         }
       `}
     >
-      <span className="text-sm font-medium text-[var(--shop-text-primary)] min-w-0 truncate">{label}</span>
+      <span className="text-sm font-medium text-[var(--shop-text-primary)] min-w-0 break-words text-left">{label}</span>
       {selected && (
         <span className="material-symbols-outlined text-[var(--shop-accent)] text-lg flex-shrink-0" aria-hidden>
           check_circle
@@ -722,6 +722,7 @@ export function JoinForm() {
         onClose={() => setIsServiceModalOpen(false)}
         title={t('join.selectServicesModalTitle')}
         showCloseButton
+        className="max-w-md sm:max-w-xl lg:max-w-2xl"
       >
         <div className="space-y-4 min-w-0">
           {hasServices ? (

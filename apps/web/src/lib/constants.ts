@@ -3,23 +3,28 @@
  */
 
 /**
- * Polling intervals in milliseconds
+ * Polling intervals in milliseconds.
+ * Tuned to reduce API usage while keeping UX responsive.
  */
 export const POLL_INTERVALS = {
-  /** Standard queue polling interval (3 seconds) */
-  QUEUE: 3000,
+  /** Standard queue polling interval */
+  QUEUE: 5000,
   /** Minimum queue poll interval; values below this are clamped to avoid API hammering */
-  QUEUE_MIN_MS: 2000,
+  QUEUE_MIN_MS: 3000,
   /** Ticket status polling when not in line (1 minute) */
   TICKET_STATUS: 60000,
-  /** Ticket status polling when in line / check-in (15 seconds) */
-  TICKET_STATUS_CHECK_IN_LINE: 15000,
-  /** Wait times polling interval (30 seconds) */
+  /** Ticket status polling when in line / check-in */
+  TICKET_STATUS_CHECK_IN_LINE: 20000,
+  /** Wait times polling interval */
   WAIT_TIMES: 30000,
-  /** Kiosk mode queue polling interval (10 seconds) */
-  KIOSK_QUEUE: 10000,
-  /** Management/barber queue polling interval (3 seconds) */
-  MANAGEMENT_QUEUE: 3000,
+  /** Kiosk mode queue polling interval */
+  KIOSK_QUEUE: 15000,
+  /** Kiosk mode barber presence polling interval */
+  KIOSK_BARBER_POLL: 10000,
+  /** Management/barber queue polling interval */
+  MANAGEMENT_QUEUE: 5000,
+  /** Status page queue polling (customer watching their position) */
+  STATUS_PAGE_QUEUE: 4000,
 } as const;
 
 /**
