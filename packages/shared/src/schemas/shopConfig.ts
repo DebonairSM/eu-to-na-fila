@@ -33,6 +33,7 @@ export interface HomeContent {
     linkServices: string;
     linkAbout: string;
     linkLocation: string;
+    linkSchedule?: string;
     ctaJoin: string;
     ctaSeeStatus: string;
     linkBarbers: string;
@@ -170,6 +171,7 @@ export const homeContentInputSchema = z.object({
     linkServices: z.string().max(100).optional(),
     linkAbout: z.string().max(100).optional(),
     linkLocation: z.string().max(100).optional(),
+    linkSchedule: z.string().max(100).optional(),
     ctaJoin: z.string().max(100).optional(),
     ctaSeeStatus: z.string().max(100).optional(),
     linkBarbers: z.string().max(100).optional(),
@@ -386,6 +388,7 @@ export const DEFAULT_HOME_CONTENT: HomeContent = {
     linkServices: 'Serviços',
     linkAbout: 'Sobre',
     linkLocation: 'Localização',
+    linkSchedule: 'Marcar horário',
     ctaJoin: 'Entrar na Fila',
     ctaSeeStatus: 'Ver status',
     linkBarbers: 'Entrar',

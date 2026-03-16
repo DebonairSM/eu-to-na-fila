@@ -91,8 +91,6 @@ export function JoinForm() {
     settings,
     isRefreshingJoinData,
     refreshJoinData,
-    trackingConsent,
-    applyTrackingConsentChoice,
     referralSource,
     setReferralSource,
   } = useJoinForm();
@@ -445,32 +443,7 @@ export function JoinForm() {
   );
 
   return (
-    <>
-      <Modal
-        isOpen={trackingConsent === null}
-        onClose={() => applyTrackingConsentChoice(false)}
-        title={t('join.trackingConsentLabel')}
-      >
-        <div className="flex flex-col gap-4">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => applyTrackingConsentChoice(true)}
-              className="flex-1 py-2.5 px-4 rounded-xl border-2 border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] text-[var(--shop-accent)] text-sm font-medium hover:bg-[color-mix(in_srgb,var(--shop-accent)_25%,transparent)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
-            >
-              {t('join.trackingAllow')}
-            </button>
-            <button
-              type="button"
-              onClick={() => applyTrackingConsentChoice(false)}
-              className="flex-1 py-2.5 px-4 rounded-xl border-2 border-[rgba(255,255,255,0.2)] bg-transparent text-[var(--shop-text-secondary)] text-sm font-medium hover:border-[rgba(255,255,255,0.35)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
-            >
-              {t('join.trackingDeny')}
-            </button>
-          </div>
-        </div>
-      </Modal>
-      <Card variant="default" className="join-form-card shadow-lg min-w-[320px]">
+    <Card variant="default" className="join-form-card shadow-lg min-w-[320px]">
         <CardContent className="p-6 sm:p-8">
         {loggedInView ? (
           loggedInView
@@ -989,6 +962,5 @@ export function JoinForm() {
         </div>
       </Modal>
     </Card>
-    </>
   );
 }

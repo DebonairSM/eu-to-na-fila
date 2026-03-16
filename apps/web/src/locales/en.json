@@ -75,7 +75,8 @@
     "toggleMenu": "Open or close menu",
     "myProfile": "My profile",
     "home": "Home",
-    "chooseLanguage": "Choose language"
+    "chooseLanguage": "Choose language",
+    "schedule": "Schedule"
   },
   "join": {
     "joinTitle": "Join Queue",
@@ -124,6 +125,7 @@
     "submitErrorDefault": "Error joining the queue. Please try again.",
     "scheduleForLater": "Schedule for later",
     "ctaQueueAndSchedule": "Join queue and schedule",
+    "ctaSchedule": "Schedule",
     "backToCheckIn": "Back to check-in",
     "kioskMode": "Kiosk mode",
     "shopClosed": "The shop is currently closed.",

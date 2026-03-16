@@ -6,6 +6,7 @@ import { useLogout } from '@/hooks/useLogout';
 import { useActiveTicket } from '@/hooks/useActiveTicket';
 import { useShopConfig, useShopHomeContent } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
+import { hasScheduleEnabled } from '@/lib/utils';
 import { useDialogA11y } from '@/hooks/useDialogA11y';
 import { Container } from '@/components/design-system';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -27,6 +28,7 @@ export function Navigation() {
     linkServices: t('nav.services'),
     linkAbout: t('nav.about'),
     linkLocation: t('nav.location'),
+    linkSchedule: t('nav.schedule'),
     ctaJoin: t('nav.ctaJoin'),
     ctaSeeStatus: t('nav.ctaSeeStatus'),
     linkBarbers: t('nav.login'),
@@ -40,6 +42,7 @@ export function Navigation() {
   const ctaLabel = showSeeStatus ? (navLabels.ctaSeeStatus ?? t('nav.ctaSeeStatus')) : t('nav.ctaJoin');
   const ctaTo = showSeeStatus ? `/status/${activeTicket.id}` : '/join';
   const ctaIcon = showSeeStatus ? 'visibility' : 'queue';
+  const showSchedule = hasScheduleEnabled(shopConfig.settings ?? {});
   const shopName = shopConfig.name || appConfig.name;
   const headerIconUrl = homeContent?.branding?.headerIconUrl?.trim();
 
@@ -80,6 +83,25 @@ export function Navigation() {
   const handleLogout = () => {
     setIsMobileMenuOpen(false);
     logoutAndGoHome();
+  };
+
+  const handleCtaClick = (e: React.MouseEvent<HTMLAnchorElement>, to: string) => {
+    e.preventDefault();
+    const el = e.currentTarget;
+    el.classList.add('cta-pop-trigger', 'cta-pop-active');
+    let completed = false;
+    const done = () => {
+      if (completed) return;
+      completed = true;
+      el.removeEventListener('animationend', onEnd);
+      el.classList.remove('cta-pop-active');
+      navigate(to);
+    };
+    const onEnd = (ev: AnimationEvent) => {
+      if (ev.animationName === 'cta-pop') done();
+    };
+    el.addEventListener('animationend', onEnd);
+    setTimeout(done, 500);
   };
 
   const scrollToSection = (targetId: string) => {
@@ -216,7 +238,8 @@ export function Navigation() {
               <li>
                 <Link
                   to={ctaTo}
-                  className="inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] px-4 py-2.5 rounded-xl min-h-[44px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  onClick={(e) => handleCtaClick(e, ctaTo)}
+                  className="cta-pop-trigger inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] px-4 py-2.5 rounded-xl min-h-[44px] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
                   style={{
                     color: '#0a0a0a',
                     backgroundColor: 'var(--shop-accent, #D4AF37)',
@@ -242,7 +265,8 @@ export function Navigation() {
             <li>
               <Link
                 to={ctaTo}
-                className="inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] px-4 py-2.5 rounded-xl min-h-[44px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2"
+                onClick={(e) => handleCtaClick(e, ctaTo)}
+                className="cta-pop-trigger inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] px-4 py-2.5 rounded-xl min-h-[44px] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style={{
                   color: '#0a0a0a',
                   backgroundColor: 'var(--shop-accent, #D4AF37)',
@@ -349,6 +373,22 @@ export function Navigation() {
                     {navLabels.linkLocation}
                   </a>
                 </li>
+                {showSchedule && (
+                  <li>
+                    <Link
+                      to="/schedule"
+                      className="block text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)]"
+                      style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-lg">event</span>
+                      {navLabels.linkSchedule}
+                    </Link>
+                  </li>
+                )}
               </ul>
               <div className="relative z-10 mt-4 space-y-2 pt-4 border-t border-[rgba(255,255,255,0.1)]">
                 {user && (user.role === 'owner' || user.role === 'barber') ? (
@@ -382,11 +422,25 @@ export function Navigation() {
                   <>
                     <Link
                       to={ctaTo}
-                      className="flex items-center justify-center gap-2 w-full font-semibold text-sm px-4 py-3 rounded-xl min-h-[48px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2"
+                      className="cta-pop-trigger flex items-center justify-center gap-2 w-full font-semibold text-sm px-4 py-3 rounded-xl min-h-[48px] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2"
                       style={{ color: '#0a0a0a', backgroundColor: 'var(--shop-accent)' }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setIsMobileMenuOpen(false);
+                        e.preventDefault();
+                        const el = e.currentTarget;
+                        el.classList.add('cta-pop-active');
+                        let completed = false;
+                        const done = () => {
+                          if (completed) return;
+                          completed = true;
+                          el.removeEventListener('animationend', onEnd);
+                          el.classList.remove('cta-pop-active');
+                          setIsMobileMenuOpen(false);
+                          navigate(ctaTo);
+                        };
+                        const onEnd = (ev: AnimationEvent) => { if (ev.animationName === 'cta-pop') done(); };
+                        el.addEventListener('animationend', onEnd);
+                        setTimeout(done, 500);
                       }}
                     >
                       <span className="material-symbols-outlined text-lg" aria-hidden>{ctaIcon}</span>
@@ -407,11 +461,25 @@ export function Navigation() {
                 ) : (
                   <Link
                     to={ctaTo}
-                    className="flex items-center justify-center gap-2 w-full font-semibold text-sm px-4 py-3 rounded-xl min-h-[48px] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2"
+                    className="cta-pop-trigger flex items-center justify-center gap-2 w-full font-semibold text-sm px-4 py-3 rounded-xl min-h-[48px] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2"
                     style={{ color: '#0a0a0a', backgroundColor: 'var(--shop-accent)' }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setIsMobileMenuOpen(false);
+                      e.preventDefault();
+                      const el = e.currentTarget;
+                      el.classList.add('cta-pop-active');
+                      let completed = false;
+                      const done = () => {
+                        if (completed) return;
+                        completed = true;
+                        el.removeEventListener('animationend', onEnd);
+                        el.classList.remove('cta-pop-active');
+                        setIsMobileMenuOpen(false);
+                        navigate(ctaTo);
+                      };
+                      const onEnd = (ev: AnimationEvent) => { if (ev.animationName === 'cta-pop') done(); };
+                      el.addEventListener('animationend', onEnd);
+                      setTimeout(done, 500);
                     }}
                   >
                     <span className="material-symbols-outlined text-lg" aria-hidden>{ctaIcon}</span>

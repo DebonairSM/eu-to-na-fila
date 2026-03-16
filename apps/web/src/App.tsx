@@ -9,6 +9,7 @@ import { WaitTimesProvider } from './contexts/WaitTimesContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { SuspenseWithTimeoutFallback } from './components/SuspenseWithTimeout';
 import { NetworkStatusBanner } from './components/NetworkStatusBanner';
+import { TrackingConsentBanner } from './components/TrackingConsentBanner';
 import { api } from './lib/api';
 import { lazyWithRetry } from './lib/lazyWithRetry';
 
@@ -240,6 +241,7 @@ function App() {
   return (
     <ErrorBoundary fallbackErrorMessage={t('errors.generic')}>
       <NetworkStatusBanner />
+      <TrackingConsentBanner />
       <a href="#main-content" className="skip-link">
         {skipLinkText}
       </a>

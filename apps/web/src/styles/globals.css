@@ -682,6 +682,21 @@
   100% { opacity: 0; }
 }
 
+/* CTA "Entrar" / Join button – big click pop (squish then bounce) */
+@keyframes cta-pop {
+  0% { transform: scale(1); }
+  25% { transform: scale(0.88); }
+  55% { transform: scale(1.14); }
+  85% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cta-pop-trigger.cta-pop-active {
+    animation: cta-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
 /* Section divider (line / ornament / dots) */
 .section-divider {
   margin: 0;

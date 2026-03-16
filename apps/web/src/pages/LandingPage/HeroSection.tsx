@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button, Heading, Text, FadeIn, SlideIn, Container } from '@/components/design-system';
 import { useShopConfig, useShopHomeContent } from '@/contexts/ShopConfigContext';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -7,8 +7,26 @@ import { cn, hasScheduleEnabled } from '@/lib/utils';
 
 export function HeroSection() {
   const { t } = useLocale();
+  const navigate = useNavigate();
   const { config } = useShopConfig();
   const homeContent = useShopHomeContent();
+
+  const handleJoinClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const el = e.currentTarget;
+    el.classList.add('cta-pop-trigger', 'cta-pop-active');
+    let completed = false;
+    const done = () => {
+      if (completed) return;
+      completed = true;
+      el.removeEventListener('animationend', onEnd);
+      el.classList.remove('cta-pop-active');
+      navigate('/join');
+    };
+    const onEnd = (ev: AnimationEvent) => { if (ev.animationName === 'cta-pop') done(); };
+    el.addEventListener('animationend', onEnd);
+    setTimeout(done, 500);
+  };
   const { name, style } = config;
   const layout = style.layout ?? 'centered';
   const behavior = getLayoutBehavior(layout);
@@ -46,7 +64,7 @@ export function HeroSection() {
         {hero.subtitle}
       </Text>
       <div className={useSplitLayout ? 'flex gap-4 flex-wrap' : 'flex gap-4 justify-center flex-wrap'}>
-        <Link to="/join">
+        <Link to="/join" onClick={handleJoinClick} className="cta-pop-trigger inline-block">
           <Button variant="default" size="lg" className={cn('text-base px-8 py-4 font-semibold', behavior.heroOverlay && 'cta-join')}>
             {!ctaTextOnly && <span className="material-symbols-outlined text-xl">queue</span>}
             {t('join.joinTitle')}
@@ -56,7 +74,7 @@ export function HeroSection() {
           <Link to="/schedule">
             <Button variant="outline" size="lg">
               {!ctaTextOnly && <span className="material-symbols-outlined text-xl">event</span>}
-              {t('join.ctaQueueAndSchedule')}
+              {t('join.ctaSchedule')}
             </Button>
           </Link>
         )}
@@ -100,7 +118,7 @@ export function HeroSection() {
           </SlideIn>
           <SlideIn direction="up" delay={600}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
-              <Link to="/join">
+              <Link to="/join" onClick={handleJoinClick} className="cta-pop-trigger inline-block w-full sm:w-auto">
                 <Button variant="default" size="lg" fullWidth className="sm:w-auto text-base px-8 py-4 font-semibold">
                   {!ctaTextOnly && <span className="material-symbols-outlined text-xl">queue</span>}
                   {t('join.joinTitle')}
@@ -110,7 +128,7 @@ export function HeroSection() {
                 <Link to="/schedule">
                   <Button variant="outline" size="lg" fullWidth className="sm:w-auto">
                     {!ctaTextOnly && <span className="material-symbols-outlined text-xl">event</span>}
-                    {t('join.ctaQueueAndSchedule')}
+                    {t('join.ctaSchedule')}
                   </Button>
                 </Link>
               )}

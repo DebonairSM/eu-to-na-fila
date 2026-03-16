@@ -75,7 +75,8 @@
     "toggleMenu": "Abrir ou fechar menu",
     "myProfile": "Meu cadastro",
     "home": "Início",
-    "chooseLanguage": "Escolher idioma"
+    "chooseLanguage": "Escolher idioma",
+    "schedule": "Marcar horário"
   },
   "join": {
     "joinTitle": "Entrar na Fila",
@@ -124,6 +125,7 @@
     "submitErrorDefault": "Erro ao entrar na fila. Tente novamente.",
     "scheduleForLater": "Agendar para depois",
     "ctaQueueAndSchedule": "Entrar na fila e marcar um horário",
+    "ctaSchedule": "Marcar horário",
     "backToCheckIn": "Voltar ao check-in",
     "kioskMode": "Modo quiosque",
     "shopClosed": "Fechado no momento.",
@@ -191,9 +193,9 @@
     "referencePresetSameAsLast": "Igual ao último",
     "referencePresetShorterSides": "Laterais mais curtas",
     "referencePresetFade": "Degradê",
-    "referencePresetSkinFade": "Skin fade",
+    "referencePresetSkinFade": "Degradê na zero",
     "referencePresetBeardTrim": "Aparar barba",
-    "referencePresetUndercut": "Undercut",
+    "referencePresetUndercut": "Laterais raspadas",
     "referencePresetOther": "Outro",
     "referenceNotePlaceholder": "Anotação ou instruções para o próximo corte...",
     "uploadReferenceImage": "Enviar imagem de referência",
@@ -315,7 +317,7 @@
     "usernameBarbers": "(barbeiros)",
     "showPassword": "Mostrar senha",
     "hidePassword": "Ocultar senha",
-    "loginButton": "Entrar",
+    "loginButton": "Log in",
     "welcomeBack": "Você entrou! Bem-vindo de volta.",
     "accountCreated": "Conta criada. Você está conectado.",
     "entering": "Entrando...",
