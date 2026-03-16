@@ -357,15 +357,17 @@ export function ClientDetailPage() {
             </section>
           )}
 
-          {!isBarberView && (client.nextServicePreset || client.nextServiceNote || client.nextServiceImageUrl) && (
+          {!isBarberView && ((Array.isArray(client.nextServicePreset) && client.nextServicePreset.length > 0) || client.nextServiceNote || client.nextServiceImageUrl) && (
             <section className="bg-[color-mix(in_srgb,var(--shop-surface-secondary)_90%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-xl p-6">
               <h2 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[var(--shop-accent)]">image</span>
                 {t('account.referenceForNextService')}
               </h2>
-              {isReferencePresetId(client.nextServicePreset) && (
+              {Array.isArray(client.nextServicePreset) && client.nextServicePreset.length > 0 && (
                 <p className="text-[var(--shop-text-secondary)] mb-2">
-                  {t('account.referencePresetLabel')}: <span className="text-white">{t(referencePresetLabelKeys[client.nextServicePreset])}</span>
+                  {t('account.referencePresetLabel')}: <span className="text-white">
+                    {client.nextServicePreset.filter(isReferencePresetId).map((id) => t(referencePresetLabelKeys[id])).join(', ')}
+                  </span>
                 </p>
               )}
               {client.nextServiceNote && (

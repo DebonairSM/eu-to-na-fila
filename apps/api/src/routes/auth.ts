@@ -5,6 +5,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import crypto from 'crypto';
 import { REFERENCE_PRESET_IDS, type ReferencePresetId } from '@eutonafila/shared';
+import { parseNextServicePresets } from '../lib/referencePresets.js';
 import { db, schema } from '../db/index.js';
 import { eq, and, gt, gte, lt, or, inArray, desc, isNotNull, sql } from 'drizzle-orm';
 import { toZonedTime } from 'date-fns-tz';
@@ -972,7 +973,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       preferences: { emailReminders: prefs.emailReminders ?? true },
       nextServiceNote: (client as { nextServiceNote?: string | null }).nextServiceNote ?? null,
       nextServiceImageUrl: (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl ?? null,
-      nextServicePreset: (client as { nextServicePreset?: ReferencePresetId | null }).nextServicePreset ?? null,
+      nextServicePreset: parseNextServicePresets((client as { nextServicePreset?: string | null }).nextServicePreset),
       address,
       state,
       city,
@@ -998,28 +999,25 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     if (companyId == null) throw new NotFoundError('Shop not found');
 
     const rows = await db
-      .select({
-        preset: schema.clients.nextServicePreset,
-        count: sql<number>`count(*)::int`,
-      })
+      .select({ nextServicePreset: schema.clients.nextServicePreset })
       .from(schema.clients)
       .where(and(
         eq(schema.clients.companyId, companyId),
-        isNotNull(schema.clients.nextServicePreset),
-        sql`${schema.clients.nextServicePreset} <> 'other'`
-      ))
-      .groupBy(schema.clients.nextServicePreset);
+        isNotNull(schema.clients.nextServicePreset)
+      ));
 
+    const countByPreset: Record<string, number> = {};
+    for (const row of rows) {
+      const raw = (row as { nextServicePreset?: string | null }).nextServicePreset;
+      const ids = parseNextServicePresets(raw).filter((id) => id !== 'other');
+      for (const id of ids) {
+        countByPreset[id] = (countByPreset[id] ?? 0) + 1;
+      }
+    }
     const allowed = new Set<string>(REFERENCE_PRESET_IDS);
-    const presets = rows
-      .map((r) => {
-        if (!r.preset || !allowed.has(r.preset)) return null;
-        return {
-          preset: r.preset as ReferencePresetId,
-          count: r.count,
-        };
-      })
-      .filter((r): r is { preset: ReferencePresetId; count: number } => r != null)
+    const presets = Object.entries(countByPreset)
+      .filter(([id]) => allowed.has(id))
+      .map(([preset, count]) => ({ preset: preset as ReferencePresetId, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
@@ -1132,7 +1130,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       preferences: z.object({ emailReminders: z.boolean().optional() }).optional(),
       nextServiceNote: z.string().max(2000).nullable().optional(),
       nextServiceImageUrl: z.string().url().max(500).nullable().optional(),
-      nextServicePreset: z.enum(REFERENCE_PRESET_IDS).nullable().optional(),
+      nextServicePreset: z.array(z.enum(REFERENCE_PRESET_IDS)).nullable().optional(),
       address: z.string().max(500).nullable().optional(),
       state: z.string().max(2).nullable().optional(),
       city: z.string().max(200).nullable().optional(),
@@ -1169,7 +1167,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       preferences: { emailReminders: prefs.emailReminders ?? true },
       nextServiceNote: (client as { nextServiceNote?: string | null }).nextServiceNote ?? null,
       nextServiceImageUrl: (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl ?? null,
-      nextServicePreset: (client as { nextServicePreset?: ReferencePresetId | null }).nextServicePreset ?? null,
+      nextServicePreset: parseNextServicePresets((client as { nextServicePreset?: string | null }).nextServicePreset),
       address: resAddress,
       state: resState,
       city: resCity,

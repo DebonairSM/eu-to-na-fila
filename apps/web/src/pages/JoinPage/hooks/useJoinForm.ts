@@ -473,6 +473,18 @@ export function useJoinForm() {
     }
   }, [refetchBarbers, refetchServices, refetchQueue, refetchWaitTimes, isRefreshingJoinData]);
 
+  const applyTrackingConsentChoice = useCallback((value: boolean) => {
+    setTrackingConsent(value);
+    try {
+      localStorage.setItem(TRACKING_CONSENT_STORAGE_KEY, String(value));
+    } catch {
+      // ignore
+    }
+    if (!value) {
+      clearTrackingCookie();
+    }
+  }, []);
+
   return {
     combinedName,
     handleCombinedNameChange,
@@ -516,6 +528,7 @@ export function useJoinForm() {
     refreshJoinData,
     trackingConsent,
     setTrackingConsent,
+    applyTrackingConsentChoice,
     referralSource,
     setReferralSource,
   };

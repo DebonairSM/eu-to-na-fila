@@ -66,7 +66,7 @@ export function CustomerAccountPage() {
   const [refUploading, setRefUploading] = useState(false);
   const [refError, setRefError] = useState<string | null>(null);
   const [refSavedFeedback, setRefSavedFeedback] = useState(false);
-  const [refPreset, setRefPreset] = useState<ReferencePresetId | null>(null);
+  const [refPresets, setRefPresets] = useState<ReferencePresetId[]>([]);
   const [popularPresets, setPopularPresets] = useState<ReferencePresetId[]>([]);
   const refFileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -88,7 +88,7 @@ export function CustomerAccountPage() {
     setEmailReminders(profile.preferences?.emailReminders ?? true);
     setRefNote(profile.nextServiceNote ?? '');
     setRefImageUrl(profile.nextServiceImageUrl ?? null);
-    setRefPreset(profile.nextServicePreset ?? null);
+    setRefPresets(profile.nextServicePreset ?? []);
   }, [profile]);
 
   useEffect(() => {
@@ -229,7 +229,7 @@ export function CustomerAccountPage() {
     setRefSavedFeedback(false);
     try {
       await api.updateCustomerProfile(shopSlug, {
-        nextServicePreset: refPreset,
+        nextServicePreset: refPresets.length > 0 ? refPresets : null,
         nextServiceNote: refNote.trim() || null,
       });
       await refetch();
@@ -242,8 +242,10 @@ export function CustomerAccountPage() {
     }
   };
 
-  const handleSelectReferencePreset = (preset: ReferencePresetId) => {
-    setRefPreset(preset);
+  const handleToggleReferencePreset = (preset: ReferencePresetId) => {
+    setRefPresets((prev) =>
+      prev.includes(preset) ? prev.filter((p) => p !== preset) : [...prev, preset]
+    );
   };
 
   const orderedReferencePresets = useMemo(() => {
@@ -643,13 +645,13 @@ export function CustomerAccountPage() {
                       <p className="text-sm text-[var(--shop-text-secondary)]">{t('account.referencePresetPicker')}</p>
                       <div role="group" aria-label={t('account.referencePresetPicker')} className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {orderedReferencePresets.map((presetId) => {
-                          const selected = refPreset === presetId;
+                          const selected = refPresets.includes(presetId);
                           const isPopular = popularPresets.includes(presetId);
                           return (
                             <button
                               key={presetId}
                               type="button"
-                              onClick={() => handleSelectReferencePreset(presetId)}
+                              onClick={() => handleToggleReferencePreset(presetId)}
                               className={cn(
                                 'relative rounded-xl border p-3 text-left transition-colors',
                                 selected

@@ -20,7 +20,7 @@ import {
 } from '@/lib/utils';
 import type { Service } from '@eutonafila/shared';
 
-const QUEUE_LONG_THRESHOLD_MINUTES = 20;
+const QUEUE_LONG_THRESHOLD_MINUTES = 90;
 
 function serviceSubtotal(services: Service[]): number {
   return services.reduce((sum, s) => sum + ((s.price != null && s.price > 0 ? s.price : 0)), 0);
@@ -40,7 +40,7 @@ function ServiceChip({
       type="button"
       onClick={onToggle}
       className={`
-        w-full min-w-max text-left rounded-xl border-2 px-4 py-3 transition-all
+        w-full min-w-0 text-left rounded-xl border-2 px-4 py-3 transition-all
         flex items-center justify-between gap-2
         ${selected
           ? 'border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_12%,transparent)]'
@@ -48,7 +48,7 @@ function ServiceChip({
         }
       `}
     >
-      <span className="text-sm font-medium text-[var(--shop-text-primary)] min-w-0">{label}</span>
+      <span className="text-sm font-medium text-[var(--shop-text-primary)] min-w-0 truncate">{label}</span>
       {selected && (
         <span className="material-symbols-outlined text-[var(--shop-accent)] text-lg flex-shrink-0" aria-hidden>
           check_circle
@@ -92,7 +92,7 @@ export function JoinForm() {
     isRefreshingJoinData,
     refreshJoinData,
     trackingConsent,
-    setTrackingConsent,
+    applyTrackingConsentChoice,
     referralSource,
     setReferralSource,
   } = useJoinForm();
@@ -337,34 +337,6 @@ export function JoinForm() {
           <InputError id={nameErrorId} message={validationError || ''} />
         </div>
 
-        <div className="space-y-2">
-          <p className="text-sm text-[var(--shop-text-secondary)]">{t('join.trackingConsentLabel')}</p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setTrackingConsent(true)}
-              className={`flex-1 py-2.5 px-4 rounded-xl border-2 text-sm font-medium transition-colors ${
-                trackingConsent === true
-                  ? 'border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] text-[var(--shop-accent)]'
-                  : 'border-[rgba(255,255,255,0.2)] bg-transparent text-[var(--shop-text-secondary)] hover:border-[rgba(255,255,255,0.35)]'
-              }`}
-            >
-              {t('join.trackingAllow')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setTrackingConsent(false)}
-              className={`flex-1 py-2.5 px-4 rounded-xl border-2 text-sm font-medium transition-colors ${
-                trackingConsent === false
-                  ? 'border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] text-[var(--shop-accent)]'
-                  : 'border-[rgba(255,255,255,0.2)] bg-transparent text-[var(--shop-text-secondary)] hover:border-[rgba(255,255,255,0.35)]'
-              }`}
-            >
-              {t('join.trackingDeny')}
-            </button>
-          </div>
-        </div>
-
         {settings.showReferralSource && (
           <div className="space-y-2">
             <label htmlFor="referral-source" className="block text-sm text-[var(--shop-text-secondary)]">
@@ -386,7 +358,7 @@ export function JoinForm() {
           </div>
         )}
 
-        {hasScheduleEnabled(settings) && estimatedWaitMinutes != null && estimatedWaitMinutes >= QUEUE_LONG_THRESHOLD_MINUTES && (
+        {hasScheduleEnabled(settings) && estimatedWaitMinutes != null && estimatedWaitMinutes >= QUEUE_LONG_THRESHOLD_MINUTES && barbers.some((b) => b.isActive) && (
           <div className="rounded-xl border border-[color-mix(in_srgb,var(--shop-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] p-4 space-y-2">
             <p className="text-sm text-[var(--shop-text-primary)]">
               {t('join.queueLongBookSlot', { minutes: String(estimatedWaitMinutes) })}
@@ -473,8 +445,33 @@ export function JoinForm() {
   );
 
   return (
-    <Card variant="default" className="join-form-card shadow-lg min-w-[320px]">
-      <CardContent className="p-6 sm:p-8">
+    <>
+      <Modal
+        isOpen={trackingConsent === null}
+        onClose={() => applyTrackingConsentChoice(false)}
+        title={t('join.trackingConsentLabel')}
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => applyTrackingConsentChoice(true)}
+              className="flex-1 py-2.5 px-4 rounded-xl border-2 border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] text-[var(--shop-accent)] text-sm font-medium hover:bg-[color-mix(in_srgb,var(--shop-accent)_25%,transparent)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
+            >
+              {t('join.trackingAllow')}
+            </button>
+            <button
+              type="button"
+              onClick={() => applyTrackingConsentChoice(false)}
+              className="flex-1 py-2.5 px-4 rounded-xl border-2 border-[rgba(255,255,255,0.2)] bg-transparent text-[var(--shop-text-secondary)] text-sm font-medium hover:border-[rgba(255,255,255,0.35)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
+            >
+              {t('join.trackingDeny')}
+            </button>
+          </div>
+        </div>
+      </Modal>
+      <Card variant="default" className="join-form-card shadow-lg min-w-[320px]">
+        <CardContent className="p-6 sm:p-8">
         {loggedInView ? (
           loggedInView
         ) : (
@@ -502,34 +499,6 @@ export function JoinForm() {
               <InputError id={nameErrorId} message={validationError || ''} />
             </div>
 
-            <div className="space-y-2">
-              <p className="text-sm text-[var(--shop-text-secondary)]">{t('join.trackingConsentLabel')}</p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTrackingConsent(true)}
-                  className={`flex-1 py-2.5 px-4 rounded-xl border-2 text-sm font-medium transition-colors ${
-                    trackingConsent === true
-                      ? 'border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] text-[var(--shop-accent)]'
-                      : 'border-[rgba(255,255,255,0.2)] bg-transparent text-[var(--shop-text-secondary)] hover:border-[rgba(255,255,255,0.35)]'
-                  }`}
-                >
-                  {t('join.trackingAllow')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTrackingConsent(false)}
-                  className={`flex-1 py-2.5 px-4 rounded-xl border-2 text-sm font-medium transition-colors ${
-                    trackingConsent === false
-                      ? 'border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] text-[var(--shop-accent)]'
-                      : 'border-[rgba(255,255,255,0.2)] bg-transparent text-[var(--shop-text-secondary)] hover:border-[rgba(255,255,255,0.35)]'
-                  }`}
-                >
-                  {t('join.trackingDeny')}
-                </button>
-              </div>
-            </div>
-
             {settings.showReferralSource && (
               <div className="space-y-2">
                 <label htmlFor="referral-source-lg" className="block text-sm text-[var(--shop-text-secondary)]">
@@ -551,7 +520,7 @@ export function JoinForm() {
               </div>
             )}
 
-            {hasScheduleEnabled(settings) && estimatedWaitMinutes != null && estimatedWaitMinutes >= QUEUE_LONG_THRESHOLD_MINUTES && (
+            {hasScheduleEnabled(settings) && estimatedWaitMinutes != null && estimatedWaitMinutes >= QUEUE_LONG_THRESHOLD_MINUTES && barbers.some((b) => b.isActive) && (
               <div className="rounded-xl border border-[color-mix(in_srgb,var(--shop-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--shop-accent)_8%,transparent)] p-4 space-y-2">
                 <p className="text-sm text-[var(--shop-text-primary)]">
                   {t('join.queueLongBookSlot', { minutes: String(estimatedWaitMinutes) })}
@@ -781,12 +750,14 @@ export function JoinForm() {
         title={t('join.selectServicesModalTitle')}
         showCloseButton
       >
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0">
           {hasServices ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-0">
               {activeServices.map((s) => {
-                const label = `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}`;
                 const selected = selectedServiceIds.includes(s.id);
+                const label = selected
+                  ? s.name
+                  : `${s.name}${s.duration ? ` (${formatDurationMinutes(s.duration)})` : ''}`;
                 return (
                   <ServiceChip
                     key={s.id}
@@ -1018,5 +989,6 @@ export function JoinForm() {
         </div>
       </Modal>
     </Card>
+    </>
   );
 }

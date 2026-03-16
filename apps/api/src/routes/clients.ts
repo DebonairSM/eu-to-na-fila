@@ -8,6 +8,7 @@ import { NotFoundError, ForbiddenError } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { getPublicPath } from '../lib/paths.js';
+import { parseNextServicePresets } from '../lib/referencePresets.js';
 
 /**
  * Client routes.
@@ -163,7 +164,7 @@ export const clientsRoutes: FastifyPluginAsync = async (fastify) => {
         ...client,
         nextServiceNote: (client as { nextServiceNote?: string | null }).nextServiceNote ?? null,
         nextServiceImageUrl: (client as { nextServiceImageUrl?: string | null }).nextServiceImageUrl ?? null,
-        nextServicePreset: (client as { nextServicePreset?: string | null }).nextServicePreset ?? null,
+        nextServicePreset: parseNextServicePresets((client as { nextServicePreset?: string | null }).nextServicePreset),
       },
       clipNotes,
       serviceHistory,

@@ -8,7 +8,7 @@ export interface CustomerProfile {
   preferences: { emailReminders: boolean };
   nextServiceNote: string | null;
   nextServiceImageUrl: string | null;
-  nextServicePreset: ReferencePresetId | null;
+  nextServicePreset: ReferencePresetId[];
   address: string | null;
   state: string | null;
   city: string | null;
@@ -70,7 +70,7 @@ export interface AuthApi {
     preferences?: { emailReminders?: boolean };
     nextServiceNote?: string | null;
     nextServiceImageUrl?: string | null;
-    nextServicePreset?: ReferencePresetId | null;
+    nextServicePreset?: ReferencePresetId[] | null;
     address?: string | null;
     state?: string | null;
     city?: string | null;

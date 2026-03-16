@@ -3,6 +3,7 @@ import { schema } from '../db/index.js';
 import { eq, and, or, ilike, desc, asc, inArray, sql } from 'drizzle-orm';
 import { NotFoundError } from '../lib/errors.js';
 import type { ReferencePresetId } from '@eutonafila/shared';
+import { serializeNextServicePresets } from '../lib/referencePresets.js';
 
 export interface ClientListItem {
   id: number;
@@ -279,7 +280,7 @@ export class ClientService {
       preferences?: { emailReminders?: boolean; trackingConsent?: boolean };
       nextServiceNote?: string | null;
       nextServiceImageUrl?: string | null;
-      nextServicePreset?: ReferencePresetId | null;
+      nextServicePreset?: ReferencePresetId[] | null;
       address?: string | null;
       state?: string | null;
       city?: string | null;
@@ -310,7 +311,7 @@ export class ClientService {
       updateData.nextServiceImageUrl = data.nextServiceImageUrl === '' ? null : data.nextServiceImageUrl;
     }
     if (data.nextServicePreset !== undefined) {
-      updateData.nextServicePreset = data.nextServicePreset;
+      updateData.nextServicePreset = serializeNextServicePresets(data.nextServicePreset);
     }
     if (data.address !== undefined) {
       updateData.address = data.address === '' ? null : data.address;
