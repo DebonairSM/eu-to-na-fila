@@ -96,7 +96,7 @@ export function JoinForm() {
   } = useJoinForm();
   const { locale, t } = useLocale();
   const shopSlug = useShopSlug();
-  const { login, isCustomer } = useAuthContext();
+  const { login, isCustomer, user } = useAuthContext();
   const nameErrorId = useId();
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -955,7 +955,7 @@ export function JoinForm() {
             {celebrationIsSignup ? t('auth.accountCreated') : t('auth.welcomeBack')}
           </p>
           <p className="text-sm text-[var(--shop-text-secondary)] mt-2">
-            {t('join.loggedInAs', { name: combinedName.trim() || t('join.namePlaceholder') })}
+            {t('join.loggedInAs', { name: (user?.name ?? combinedName).trim() || t('join.namePlaceholder') })}
           </p>
           <Button className="mt-6" fullWidth onClick={() => setShowLoginCelebration(false)}>
             {t('common.close')}

@@ -189,6 +189,32 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       where: eq(schema.barbers.shopId, shop.id),
     });
 
+    // Rating stats per barber (period: since to until)
+    const barberIds = barbers.map(b => b.id);
+    const periodRatings =
+      barberIds.length > 0
+        ? await db.query.ticketRatings.findMany({
+            where: and(
+              inArray(schema.ticketRatings.barberId, barberIds),
+              gte(schema.ticketRatings.createdAt, since),
+              lt(schema.ticketRatings.createdAt, until),
+            ),
+            columns: { barberId: true, rating: true },
+          })
+        : [];
+    const ratingByBarber = new Map<number, { sum: number; count: number }>();
+    periodRatings.forEach((r) => {
+      const bid = r.barberId ?? 0;
+      if (!bid) return;
+      const cur = ratingByBarber.get(bid);
+      if (cur) {
+        cur.sum += r.rating;
+        cur.count += 1;
+      } else {
+        ratingByBarber.set(bid, { sum: r.rating, count: 1 });
+      }
+    });
+
     // Current month range for avgWorkTimeMinutesSinceMonthStart (UTC)
     const now = new Date();
     const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
@@ -250,6 +276,13 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
           ? Math.round(monthActivity / daysElapsedThisMonth)
           : null;
       
+      const ratingAgg = ratingByBarber.get(barber.id);
+      const ratingCount = ratingAgg?.count ?? 0;
+      const avgRating =
+        ratingCount > 0 && ratingAgg
+          ? Math.round((ratingAgg.sum / ratingCount) * 10) / 10
+          : null;
+
       return {
         id: barber.id,
         name: barber.name,
@@ -258,6 +291,8 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         isPresent: barber.isPresent,
         totalActivityMinutes: Math.round(totalActivityMinutes),
         avgWorkTimeMinutesSinceMonthStart,
+        ratingCount,
+        avgRating,
       };
     });
 
@@ -484,7 +519,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       }
     });
 
-    // Barber efficiency (tickets per day, completion rate)
+    // Barber efficiency (tickets per day, completion rate, ratings)
     const barberEfficiency = barbers.map(barber => {
       const barberTickets = tickets.filter(t => t.barberId === barber.id);
       const barberCompleted = barberTickets.filter(t => t.status === 'completed');
@@ -492,12 +527,20 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       const barberCompletionRate = barberTickets.length > 0 
         ? Math.round((barberCompleted.length / barberTickets.length) * 100) 
         : 0;
-      
+      const ratingAgg = ratingByBarber.get(barber.id);
+      const ratingCount = ratingAgg?.count ?? 0;
+      const avgRating =
+        ratingCount > 0 && ratingAgg
+          ? Math.round((ratingAgg.sum / ratingCount) * 10) / 10
+          : null;
+
       return {
         id: barber.id,
         name: barber.name,
         ticketsPerDay,
         completionRate: barberCompletionRate,
+        ratingCount,
+        avgRating,
       };
     });
 
@@ -1265,6 +1308,50 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       totalCompleted: row.totalCompleted,
     }));
 
+    // Rating stats for the period
+    const periodBarberRatings = await db.query.ticketRatings.findMany({
+      where: and(
+        eq(schema.ticketRatings.barberId, barberId),
+        gte(schema.ticketRatings.createdAt, since)
+      ),
+      columns: { rating: true, createdAt: true },
+    });
+    const ratingCount = periodBarberRatings.length;
+    const avgRating =
+      ratingCount > 0
+        ? Math.round((periodBarberRatings.reduce((s, r) => s + r.rating, 0) / ratingCount) * 10) / 10
+        : null;
+
+    // All-time rating stats (total ever)
+    const allTimeRatings = await db.query.ticketRatings.findMany({
+      where: eq(schema.ticketRatings.barberId, barberId),
+      columns: { rating: true, createdAt: true },
+    });
+    const ratingCountAllTime = allTimeRatings.length;
+    const avgRatingAllTime =
+      ratingCountAllTime > 0
+        ? Math.round((allTimeRatings.reduce((s, r) => s + r.rating, 0) / ratingCountAllTime) * 10) / 10
+        : null;
+
+    const tz = parseSettings(shop.settings).timezone ?? 'America/Sao_Paulo';
+    const now = new Date();
+    const todayInShop = toZonedTime(now, tz);
+    const todayStr = `${todayInShop.getFullYear()}-${String(todayInShop.getMonth() + 1).padStart(2, '0')}-${String(todayInShop.getDate()).padStart(2, '0')}`;
+    const todayRatings = allTimeRatings.filter((r) => {
+      const createdInShop = toZonedTime(new Date(r.createdAt), tz);
+      const createdStr = `${createdInShop.getFullYear()}-${String(createdInShop.getMonth() + 1).padStart(2, '0')}-${String(createdInShop.getDate()).padStart(2, '0')}`;
+      return createdStr === todayStr;
+    });
+    const ratingsTodayCount = todayRatings.length;
+    const ratingsTodayAvg =
+      ratingsTodayCount > 0
+        ? Math.round((todayRatings.reduce((s, r) => s + r.rating, 0) / ratingsTodayCount) * 10) / 10
+        : null;
+    const ratingsTodayByStar = [0, 0, 0, 0, 0];
+    todayRatings.forEach((r) => {
+      if (r.rating >= 1 && r.rating <= 5) ratingsTodayByStar[r.rating - 1]++;
+    });
+
     const summaryRevenueCents = canSeeProfits ? revenueCents : 0;
 
     return {
@@ -1287,6 +1374,17 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       serviceBreakdown,
       dayOfWeekDistribution,
       serviceTimeByWeekday,
+      ratings: {
+        ratingCount,
+        avgRating,
+        ratingCountAllTime,
+        avgRatingAllTime,
+        ratingsToday: {
+          count: ratingsTodayCount,
+          avg: ratingsTodayAvg,
+          byStar: ratingsTodayByStar,
+        },
+      },
     };
   });
 };

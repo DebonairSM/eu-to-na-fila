@@ -34,6 +34,11 @@ interface BarberAnalyticsData {
     avgDurationMinutes: number;
     totalCompleted: number;
   }>;
+  ratings?: {
+    ratingCount: number;
+    avgRating: number | null;
+    ratingsToday: { count: number; avg: number | null; byStar: number[] };
+  };
 }
 
 export function BarberAnalyticsPage() {
@@ -91,7 +96,7 @@ export function BarberAnalyticsPage() {
     );
   }
 
-  const { summary, ticketsByDay, serviceBreakdown, dayOfWeekDistribution, serviceTimeByWeekday } = data;
+  const { summary, ticketsByDay, serviceBreakdown, dayOfWeekDistribution, serviceTimeByWeekday, ratings } = data;
   const daysList = Object.entries(ticketsByDay).sort(([a], [b]) => a.localeCompare(b));
 
   return (
@@ -150,6 +155,36 @@ export function BarberAnalyticsPage() {
                 <p className="text-2xl font-bold text-white mt-1">{summary.avgServiceTime}</p>
               </CardContent>
             </Card>
+            {ratings && (ratings.ratingCount > 0 || ratings.ratingsToday.count > 0) && (
+              <Card variant="default" className="bg-white/5 border-white/10 sm:col-span-2">
+                <CardContent className="p-4">
+                  <Text size="sm" variant="secondary" className="uppercase tracking-wider">
+                    {t('analytics.ratings')}
+                  </Text>
+                  <div className="flex items-center gap-3 mt-2 flex-wrap">
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((value) => (
+                        <span
+                          key={value}
+                          className={`material-symbols-outlined text-xl ${ratings.avgRating != null && value <= Math.round(ratings.avgRating) ? 'text-[var(--shop-accent)]' : 'text-white/30'}`}
+                        >
+                          star
+                        </span>
+                      ))}
+                    </div>
+                    <span className="text-xl font-bold text-[var(--shop-accent)]">
+                      {ratings.avgRating != null ? ratings.avgRating.toFixed(1) : '—'}
+                    </span>
+                    <span className="text-white/70 text-sm">({ratings.ratingCount})</span>
+                    {ratings.ratingsToday.count > 0 && (
+                      <span className="text-white/60 text-sm">
+                        · {ratings.ratingsToday.count} {t('barberDashboard.today')}
+                      </span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           <Card variant="default" className="bg-white/5 border-white/10">

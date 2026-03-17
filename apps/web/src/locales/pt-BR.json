@@ -217,6 +217,7 @@
     "genderPlaceholder": "Opcional",
     "genderMale": "Masculino",
     "genderFemale": "Feminino",
+    "genderUnknown": "Não informado",
     "bestTimeTitle": "Melhor horário para visitar",
     "bestTimeQuieter": "Geralmente mais vazio neste local.",
     "visitCount": "Você veio {{count}} vezes",
@@ -280,6 +281,7 @@
     "linkToAccount": "Vincular a uma conta",
     "rateExperience": "Como foi seu corte?",
     "rateThanks": "Obrigado pela sua avaliação!",
+    "rateError": "Não foi possível enviar a avaliação. Tente novamente.",
     "createAccountToSeeHistory": "Crie uma conta para ver seu histórico de visitas",
     "firstInLine": "Primeiro da fila",
     "almostYourTurn": "Quase sua vez",
@@ -568,6 +570,7 @@
     "avgWorkTimeThisMonth": "Média de trabalho (este mês)",
     "serviceHistory": "Histórico de serviços",
     "viewHistory": "Ver histórico",
+    "ratings": "Avaliações",
     "historyDate": "Data",
     "historyStatus": "Status",
     "historyDuration": "Duração",
@@ -820,7 +823,10 @@
     "title": "Meu painel",
     "manageQueue": "Gerenciar Fila",
     "analytics": "Desempenho e financeiro",
-    "logout": "Sair"
+    "logout": "Sair",
+    "yourRating": "Sua avaliação",
+    "ratingsTodayUpdate": "As avaliações de hoje chegaram.",
+    "today": "hoje"
   },
   "servicesPage": {
     "title": "Gerenciar Serviços",

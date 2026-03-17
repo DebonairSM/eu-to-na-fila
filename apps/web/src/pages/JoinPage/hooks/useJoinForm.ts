@@ -160,8 +160,11 @@ export function useJoinForm() {
     return () => { mounted = false; };
   }, [isCustomer, shopSlug]);
 
-  // Remember my info: when phone changes, debounced lookup to prefill name
+  // Remember my info: when phone changes, debounced lookup to prefill name.
+  // When logged in as customer, do not prefill name from phone: the name must come from the
+  // account only, not from a coincidental match (another person with the same name).
   useEffect(() => {
+    if (isCustomer) return;
     const digits = customerPhone.replace(/\D/g, '');
     if (digits.length < 8) return;
 
@@ -181,7 +184,7 @@ export function useJoinForm() {
       }
     }, REMEMBER_PHONE_DEBOUNCE_MS);
     return () => clearTimeout(t);
-  }, [customerPhone, shopSlug]);
+  }, [isCustomer, customerPhone, shopSlug]);
 
   // Persist lightweight join contact state to improve return visits.
   useEffect(() => {

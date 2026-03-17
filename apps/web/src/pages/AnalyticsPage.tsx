@@ -56,6 +56,8 @@ interface AnalyticsData {
     isPresent: boolean;
     totalActivityMinutes?: number;
     avgWorkTimeMinutesSinceMonthStart?: number | null;
+    ratingCount?: number;
+    avgRating?: number | null;
   }>;
   barberServiceWeekdayStats?: Array<{
     barberId: number;
@@ -104,6 +106,8 @@ interface AnalyticsData {
     name: string;
     ticketsPerDay: number;
     completionRate: number;
+    ratingCount?: number;
+    avgRating?: number | null;
   }>;
   trends: {
     weekOverWeek: number;
@@ -1033,6 +1037,13 @@ export function AnalyticsPage() {
                                 Conclusão
                               </div>
                             </div>
+                            {(barber.avgRating != null && barber.ratingCount != null && barber.ratingCount > 0) && (
+                              <div className="col-span-2 text-center pt-2 border-t border-white/10">
+                                <span className="text-[var(--shop-accent)] font-semibold">{barber.avgRating.toFixed(1)}</span>
+                                <span className="material-symbols-outlined text-[var(--shop-accent)] text-lg align-middle ml-0.5">star</span>
+                                <span className="text-white/60 text-sm ml-1">({barber.ratingCount})</span>
+                              </div>
+                            )}
                           </div>
                           {barberInfo && (
                             <div className="mt-4 pt-4 border-t border-[var(--shop-border-color)]">
@@ -1103,6 +1114,15 @@ export function AnalyticsPage() {
                                 </div>
                                 <div className="text-xs text-white/50 uppercase">{t('analytics.avgWorkTimeThisMonth')}</div>
                               </div>
+                              {barber.avgRating != null && barber.ratingCount != null && barber.ratingCount > 0 && (
+                                <div className="text-center">
+                                  <div className="font-['Playfair_Display',serif] text-xl font-semibold text-[var(--shop-accent)] flex items-center justify-center gap-0.5">
+                                    {barber.avgRating.toFixed(1)}
+                                    <span className="material-symbols-outlined text-lg">star</span>
+                                  </div>
+                                  <div className="text-xs text-white/50 uppercase">{t('analytics.ratings')} ({barber.ratingCount})</div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1185,7 +1205,7 @@ export function AnalyticsPage() {
                       <div className="space-y-3">
                         {data.demographics.genderBreakdown.map((g) => (
                           <div key={g.gender} className="flex items-center justify-between gap-4">
-                            <span className="text-white font-medium">{g.gender === 'unknown' ? 'Não informado' : g.gender}</span>
+                            <span className="text-white font-medium">{g.gender === 'unknown' ? t('account.genderUnknown') : g.gender === 'male' ? t('account.genderMale') : g.gender === 'female' ? t('account.genderFemale') : g.gender}</span>
                             <span className="text-[#D4AF37] font-semibold">{g.count}</span>
                           </div>
                         ))}

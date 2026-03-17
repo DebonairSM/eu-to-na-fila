@@ -217,6 +217,7 @@
     "genderPlaceholder": "Optional",
     "genderMale": "Male",
     "genderFemale": "Female",
+    "genderUnknown": "Not specified",
     "bestTimeTitle": "Best time to visit",
     "bestTimeQuieter": "Usually quieter at this location.",
     "visitCount": "You've been here {{count}} times",
@@ -280,6 +281,7 @@
     "linkToAccount": "Link to account",
     "rateExperience": "How was your cut?",
     "rateThanks": "Thanks for your feedback!",
+    "rateError": "Could not send rating. Try again.",
     "createAccountToSeeHistory": "Create account to see your visit history",
     "firstInLine": "First in line",
     "almostYourTurn": "Almost your turn",
@@ -569,6 +571,7 @@
     "avgWorkTimeThisMonth": "Avg work time (this month)",
     "serviceHistory": "Service history",
     "viewHistory": "View history",
+    "ratings": "Ratings",
     "historyDate": "Date",
     "historyStatus": "Status",
     "historyDuration": "Duration",
@@ -821,7 +824,10 @@
     "title": "My dashboard",
     "manageQueue": "Manage queue",
     "analytics": "Performance and analytics",
-    "logout": "Log out"
+    "logout": "Log out",
+    "yourRating": "Your rating",
+    "ratingsTodayUpdate": "Today's ratings are in.",
+    "today": "today"
   },
   "servicesPage": {
     "title": "Manage Services",

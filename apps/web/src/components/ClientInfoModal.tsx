@@ -113,7 +113,7 @@ export function ClientInfoModal({ clientId, onClose }: ClientInfoModalProps) {
               {client.gender && (
                 <div>
                   <span className="text-xs text-white/50 uppercase tracking-wider block mb-1">{t('clients.gender')}</span>
-                  <p className="text-white">{client.gender}</p>
+                  <p className="text-white">{client.gender === 'male' ? t('account.genderMale') : client.gender === 'female' ? t('account.genderFemale') : client.gender}</p>
                 </div>
               )}
               {data?.clipNotes && data.clipNotes.length > 0 && (

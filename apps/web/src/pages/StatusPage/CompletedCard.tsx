@@ -7,9 +7,10 @@ interface CompletedCardProps {
   rating?: number | null;
   onRate?: (rating: number) => void | Promise<void>;
   isRatingSubmitting?: boolean;
+  ratingError?: string | null;
 }
 
-export function CompletedCard({ barberName, rating, onRate, isRatingSubmitting }: CompletedCardProps) {
+export function CompletedCard({ barberName, rating, onRate, isRatingSubmitting, ratingError }: CompletedCardProps) {
   const { t } = useLocale();
   const showRatingPrompt = onRate != null && rating == null && !isRatingSubmitting;
   const showThanks = rating != null && typeof rating === 'number';
@@ -78,7 +79,8 @@ export function CompletedCard({ barberName, rating, onRate, isRatingSubmitting }
                     key={value}
                     type="button"
                     onClick={() => onRate(value)}
-                    className="p-2 rounded-lg hover:bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)]"
+                    disabled={isRatingSubmitting}
+                    className="p-2 rounded-lg hover:bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] disabled:opacity-70 disabled:pointer-events-none min-w-[44px] min-h-[44px]"
                     aria-label={`${value} ${value === 1 ? 'star' : 'stars'}`}
                   >
                     <span className="material-symbols-outlined text-3xl sm:text-4xl text-[var(--shop-text-secondary)] hover:text-[var(--shop-accent)]">
@@ -87,6 +89,11 @@ export function CompletedCard({ barberName, rating, onRate, isRatingSubmitting }
                   </button>
                 ))}
               </div>
+              {ratingError && (
+                <p className="mt-2 text-sm text-red-400" role="alert">
+                  {ratingError}
+                </p>
+              )}
             </div>
           )}
           {showThanks && (

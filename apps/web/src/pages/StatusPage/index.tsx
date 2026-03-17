@@ -63,6 +63,7 @@ export function StatusPage() {
   const [rescheduleSubmitting, setRescheduleSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isRatingSubmitting, setIsRatingSubmitting] = useState(false);
+  const [ratingError, setRatingError] = useState<string | null>(null);
   const [showYouMovedUp, setShowYouMovedUp] = useState(false);
   const prevPositionRef = useRef<number | null>(null);
 
@@ -242,16 +243,20 @@ export function StatusPage() {
 
   const handleRate = useCallback(
     async (rating: number) => {
-      if (!ticketIdFromParams || isRatingSubmitting) return;
+      const ticketId = ticket?.id ?? ticketIdFromParams;
+      if (ticketId == null || isRatingSubmitting) return;
+      setRatingError(null);
       setIsRatingSubmitting(true);
       try {
-        await api.submitRating(ticketIdFromParams, rating);
+        await api.submitRating(ticketId, rating);
         await refetch();
+      } catch (err) {
+        setRatingError(getErrorMessage(err, t('status.rateError')));
       } finally {
         setIsRatingSubmitting(false);
       }
     },
-    [ticketIdFromParams, isRatingSubmitting, refetch]
+    [ticket?.id, ticketIdFromParams, isRatingSubmitting, refetch, t]
   );
 
   const ticketRating = (ticket as { rating?: number } | null)?.rating;
@@ -469,6 +474,7 @@ export function StatusPage() {
                 rating={ticketRating}
                 onRate={showRatingPrompt ? handleRate : undefined}
                 isRatingSubmitting={isRatingSubmitting}
+                ratingError={ratingError}
               />
               <div className="flex justify-center -mt-2">
                 <RefreshButton
@@ -557,6 +563,7 @@ export function StatusPage() {
                   rating={ticketRating}
                   onRate={showRatingPrompt ? handleRate : undefined}
                   isRatingSubmitting={isRatingSubmitting}
+                  ratingError={ratingError}
                 />
                 <div className="flex justify-center -mt-2">
                   <RefreshButton

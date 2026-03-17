@@ -1,3 +1,5 @@
+import { useLocale } from '@/contexts/LocaleContext';
+
 interface DemographicsInsightsProps {
   locationBreakdown: { city: string; state?: string; count: number }[];
   genderBreakdown: { gender: string; count: number }[];
@@ -17,6 +19,7 @@ export function DemographicsInsights({
   styleBreakdown,
   ruleBased = [],
 }: DemographicsInsightsProps) {
+  const { t } = useLocale();
   const insights: string[] = [...ruleBased];
 
   if (locationBreakdown.length > 0) {
@@ -52,7 +55,8 @@ export function DemographicsInsights({
     const topGender = genderBreakdown[0];
     if (topGender && topGender.gender !== 'unknown') {
       const pct = Math.round((topGender.count / totalGender) * 100);
-      insights.push(`${topGender.gender === 'male' ? 'Masculino' : topGender.gender === 'female' ? 'Feminino' : topGender.gender}: ${pct}%`);
+      const genderLabel = topGender.gender === 'male' ? t('account.genderMale') : topGender.gender === 'female' ? t('account.genderFemale') : topGender.gender === 'unknown' ? t('account.genderUnknown') : topGender.gender;
+      insights.push(`${genderLabel}: ${pct}%`);
     }
   }
 
