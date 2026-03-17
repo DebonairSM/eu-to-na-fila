@@ -196,13 +196,13 @@ export function useTicketPolling(
   const lastFetchTimeRef = useRef<number>(0);
   const intervalIdRef = useRef<number | null>(null);
 
-  const fetchTicket = useCallback(async () => {
+  const fetchTicket = useCallback(async (force = false) => {
     if (!ticketId) return;
 
-    // Throttle: do not start a new fetch if we fetched less than intervalMs ago
+    // Throttle: do not start a new fetch if we fetched less than intervalMs ago (skip when force, e.g. after rating)
     const now = Date.now();
-    if (now - lastFetchTimeRef.current < intervalMs) return;
-    if (document.hidden) return;
+    if (!force && now - lastFetchTimeRef.current < intervalMs) return;
+    if (!force && document.hidden) return;
 
     lastFetchTimeRef.current = now;
 
@@ -254,6 +254,7 @@ export function useTicketPolling(
     };
   }, [fetchTicket, intervalMs, enabled, ticketId]);
 
-  return { ticket, isLoading, error, refetch: fetchTicket };
+  const refetch = useCallback(() => fetchTicket(true), [fetchTicket]);
+  return { ticket, isLoading, error, refetch };
 }
 

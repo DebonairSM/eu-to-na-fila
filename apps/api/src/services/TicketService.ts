@@ -216,26 +216,10 @@ export class TicketService {
       (ticket as any).checkInTime = now;
     }
 
-    // Client resolution: use authenticated clientId when provided, otherwise resolve by phone
+    // Link to account only when the user actually logged in (clientId from auth). Do not set
+    // clientId from phone match alone — the right password was never entered, so it stays unassociated.
     const dataWithClient = data as CreateTicket & { clientId?: number };
-    let clientId: number | null = dataWithClient.clientId ?? null;
-    if (clientId == null && data.customerPhone && data.customerPhone.trim().length > 0) {
-      const companyId = (shop as { companyId?: number | null }).companyId;
-      if (companyId != null) {
-        try {
-          const client = await this.clientService.findOrCreateByPhone(
-            companyId,
-            data.customerPhone,
-            data.customerName,
-            undefined,
-            shopId
-          );
-          clientId = client.id;
-        } catch (err) {
-          console.warn('[TicketService] Client resolution failed:', err);
-        }
-      }
-    }
+    const clientId: number | null = dataWithClient.clientId ?? null;
     if (clientId != null) {
       await this.db
         .update(schema.tickets)
@@ -599,24 +583,8 @@ export class TicketService {
       .returning();
 
     const ticketNumber = `A-${ticket.id}`;
-    let clientId: number | null = data.clientId ?? null;
-    if (clientId == null && data.customerPhone && data.customerPhone.trim().length > 0) {
-      const companyId = (shop as { companyId?: number | null }).companyId;
-      if (companyId != null) {
-        try {
-          const client = await this.clientService.findOrCreateByPhone(
-            companyId,
-            data.customerPhone,
-            data.customerName,
-            undefined,
-            shopId
-          );
-          clientId = client.id;
-        } catch (err) {
-          console.warn('[TicketService] Client resolution failed for appointment:', err);
-        }
-      }
-    }
+    // Link to account only when the user actually logged in (clientId from auth). Do not set from phone.
+    const clientId: number | null = data.clientId ?? null;
 
     await this.db
       .update(schema.tickets)

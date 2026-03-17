@@ -5,7 +5,7 @@ import { POLL_INTERVALS } from '@/lib/constants';
 
 export function useTicketStatus(ticketId: number | null) {
   const [ticket, setTicket] = useState<Ticket | null>(null);
-  const previousDataRef = useRef<{ status: string; estimatedWaitTime: number | undefined; position: number } | null>(null);
+  const previousDataRef = useRef<{ status: string; estimatedWaitTime: number | undefined; position: number; rating: number | undefined } | null>(null);
 
   // When in line (waiting) or unknown: poll every 15s; otherwise every minute
   const interval =
@@ -18,7 +18,7 @@ export function useTicketStatus(ticketId: number | null) {
     enabled: !!ticketId,
   });
 
-  // Apply smart diffing to prevent unnecessary updates
+  // Apply smart diffing to prevent unnecessary updates (include rating so "Thanks" shows after submit)
   useEffect(() => {
     if (!polledTicket) {
       setTicket(null);
@@ -26,18 +26,21 @@ export function useTicketStatus(ticketId: number | null) {
     }
 
     const normalizedWait = polledTicket.estimatedWaitTime ?? undefined;
+    const polledRating = (polledTicket as { rating?: number }).rating;
     const prev = previousDataRef.current;
     const hasChanged =
       !prev ||
       polledTicket.status !== prev.status ||
       normalizedWait !== prev.estimatedWaitTime ||
-      polledTicket.position !== prev.position;
+      polledTicket.position !== prev.position ||
+      polledRating !== prev.rating;
 
     if (hasChanged) {
       previousDataRef.current = {
         status: polledTicket.status,
         estimatedWaitTime: normalizedWait,
         position: polledTicket.position,
+        rating: polledRating,
       };
       setTicket({ ...polledTicket, estimatedWaitTime: normalizedWait });
     }
