@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { toZonedTime } from 'date-fns-tz';
+import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { db, schema } from '../db/index.js';
 import { eq, and, gte, lt, inArray, isNotNull, desc, sql } from 'drizzle-orm';
 import { validateRequest } from '../lib/validation.js';
@@ -8,6 +8,11 @@ import { NotFoundError } from '../lib/errors.js';
 import { requireAuth, requireRole, requireBarberShop } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { parseSettings } from '../lib/settings.js';
+import {
+  countOpenDaysInUtcRange,
+  isWithinShopOpenHours,
+} from '../lib/analyticsOpenTime.js';
+import { fetchBarberServiceHistoryPage } from '../lib/barberServiceHistory.js';
 
 /**
  * Analytics routes.
@@ -44,6 +49,9 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    const settings = parseSettings(shop.settings);
+    const tz = settings.timezone ?? 'America/Sao_Paulo';
 
     let since: Date;
     let until: Date;
@@ -130,15 +138,16 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       ticketsByDay[day] = (ticketsByDay[day] || 0) + 1;
     });
 
-    // Average per day (for all-time, use days since first ticket or 1; for custom range use periodDays)
+    // Average per day: divide by shop open days in the period (or calendar days if no hours configured)
     const dayCount = useRange
-      ? periodDays
-      : (days !== undefined && days > 0 ? days : (() => {
-          const first = tickets.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
-          if (!first || total === 0) return 1;
-          const span = (Date.now() - first.createdAt.getTime()) / (1000 * 60 * 60 * 24);
-          return Math.max(1, Math.ceil(span));
-        })());
+      ? countOpenDaysInUtcRange(settings.operatingHours, tz, since, until)
+      : days !== undefined && days > 0
+        ? countOpenDaysInUtcRange(settings.operatingHours, tz, since, until)
+        : (() => {
+            const first = tickets.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
+            if (!first || total === 0) return 1;
+            return countOpenDaysInUtcRange(settings.operatingHours, tz, first.createdAt, until);
+          })();
     const avgPerDay = Math.round(total / dayCount);
 
     // Calculate average service time (for completed tickets)
@@ -179,8 +188,6 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       }
     });
 
-    const settings = parseSettings(shop.settings);
-
     // Day of week in shop timezone (for consistency with hourly distribution)
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
 
@@ -215,13 +222,16 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       }
     });
 
-    // Current month range for avgWorkTimeMinutesSinceMonthStart (UTC)
+    // Current month range for avgWorkTimeMinutesSinceMonthStart (shop TZ month; divisor = open days in month)
     const now = new Date();
-    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
-    const todayEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
-    const daysElapsedThisMonth = Math.max(1, now.getUTCDate());
+    const y = parseInt(formatInTimeZone(now, tz, 'yyyy'), 10);
+    const mo = parseInt(formatInTimeZone(now, tz, 'MM'), 10) - 1;
+    const d = parseInt(formatInTimeZone(now, tz, 'dd'), 10);
+    const monthStart = fromZonedTime(new Date(y, mo, 1, 0, 0, 0), tz);
+    const todayEnd = fromZonedTime(new Date(y, mo, d + 1, 0, 0, 0), tz);
+    const openDaysThisMonth = countOpenDaysInUtcRange(settings.operatingHours, tz, monthStart, todayEnd);
     const monthTickets =
-      daysElapsedThisMonth >= 1
+      openDaysThisMonth >= 1
         ? await db.query.tickets.findMany({
             where: and(
               eq(schema.tickets.shopId, shop.id),
@@ -272,8 +282,8 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         : 0;
       const monthActivity = monthCompletedByBarber.get(barber.id) ?? 0;
       const avgWorkTimeMinutesSinceMonthStart =
-        daysElapsedThisMonth >= 1 && monthActivity >= 0
-          ? Math.round(monthActivity / daysElapsedThisMonth)
+        openDaysThisMonth >= 1 && monthActivity >= 0
+          ? Math.round(monthActivity / openDaysThisMonth)
           : null;
       
       const ratingAgg = ratingByBarber.get(barber.id);
@@ -296,12 +306,12 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       };
     });
 
-    // Peak hours and hourly distribution (in shop timezone so "peak hour" matches local business hours)
-    const tz = settings.timezone ?? 'America/Sao_Paulo';
+    // Peak hours and hourly distribution (shop TZ; only tickets during open hours)
     const hourCounts: Record<number, number> = {};
     tickets.forEach(t => {
       const createdAtUtc = new Date(t.createdAt);
       const localInShop = toZonedTime(createdAtUtc, tz);
+      if (!isWithinShopOpenHours(settings.operatingHours, localInShop)) return;
       const hour = localInShop.getHours();
       hourCounts[hour] = (hourCounts[hour] || 0) + 1;
     });
@@ -393,10 +403,12 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         waitTimeByDay[day].count++;
 
         const localInShop = toZonedTime(new Date(t.createdAt), tz);
-        const hourKey = String(localInShop.getHours());
-        if (!waitTimeByHour[hourKey]) waitTimeByHour[hourKey] = { total: 0, count: 0 };
-        waitTimeByHour[hourKey].total += actualWaitTime;
-        waitTimeByHour[hourKey].count++;
+        if (isWithinShopOpenHours(settings.operatingHours, localInShop)) {
+          const hourKey = String(localInShop.getHours());
+          if (!waitTimeByHour[hourKey]) waitTimeByHour[hourKey] = { total: 0, count: 0 };
+          waitTimeByHour[hourKey].total += actualWaitTime;
+          waitTimeByHour[hourKey].count++;
+        }
 
         const weekKey = getMondayKey(localInShop);
         if (!waitTimeByWeek[weekKey]) waitTimeByWeek[weekKey] = { total: 0, count: 0 };
@@ -439,21 +451,25 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       const localInShop = toZonedTime(new Date(t.createdAt), tz);
       const dayName = dayNames[localInShop.getDay()];
       const hour = localInShop.getHours();
-      
+
       if (!cancellationRateByDay[dayName]) {
         cancellationRateByDay[dayName] = { cancelled: 0, total: 0 };
       }
-      if (!cancellationRateByHour[hour]) {
-        cancellationRateByHour[hour] = { cancelled: 0, total: 0 };
-      }
-      
       cancellationRateByDay[dayName].total++;
-      cancellationRateByHour[hour].total++;
-      
+
+      if (isWithinShopOpenHours(settings.operatingHours, localInShop)) {
+        if (!cancellationRateByHour[hour]) {
+          cancellationRateByHour[hour] = { cancelled: 0, total: 0 };
+        }
+        cancellationRateByHour[hour].total++;
         if (t.status === 'cancelled') {
+          cancellationRateByHour[hour].cancelled++;
+        }
+      }
+
+      if (t.status === 'cancelled') {
         cancellationRateByDay[dayName].cancelled++;
-        cancellationRateByHour[hour].cancelled++;
-        
+
         // Use actual cancellation time: cancelledAt - createdAt
         if (t.cancelledAt && t.createdAt) {
           const timeBeforeCancellation = (new Date(t.cancelledAt).getTime() - new Date(t.createdAt).getTime()) / (1000 * 60);
@@ -1099,64 +1115,70 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     });
     if (!barber) throw new NotFoundError(`Barber with ID ${barberId} not found`);
 
-    const conditions = [
-      eq(schema.tickets.shopId, shop.id),
-      eq(schema.tickets.barberId, barberId),
-    ];
-    if (sinceStr != null) {
-      conditions.push(gte(schema.tickets.createdAt, new Date(sinceStr + 'T00:00:00.000Z')));
-    }
-    if (untilStr != null) {
-      const untilDate = new Date(untilStr + 'T00:00:00.000Z');
-      untilDate.setUTCDate(untilDate.getUTCDate() + 1);
-      conditions.push(lt(schema.tickets.createdAt, untilDate));
-    }
-    const whereClause = and(...conditions);
+    const { tickets, total } = await fetchBarberServiceHistoryPage({
+      shopId: shop.id,
+      companyId: shop.companyId ?? null,
+      barberId,
+      sinceStr,
+      untilStr,
+      page,
+      limit,
+    });
 
-    const [tickets, countRows] = await Promise.all([
-      db.query.tickets.findMany({
-        where: whereClause,
-        orderBy: [desc(schema.tickets.createdAt)],
-        offset: (page - 1) * limit,
-        limit,
-        columns: {
-          id: true,
-          serviceId: true,
-          status: true,
-          createdAt: true,
-          startedAt: true,
-          completedAt: true,
-        },
+    return { tickets, total };
+  });
+
+  /**
+   * Same as owner barber history, for the authenticated barber (self).
+   *
+   * @route GET /api/shops/:slug/analytics/me/history
+   */
+  fastify.get('/shops/:slug/analytics/me/history', {
+    preHandler: [
+      requireAuth(),
+      requireRole(['barber']),
+      requireBarberShop(async (request) => {
+        const slug = (request.params as { slug: string }).slug;
+        const shop = await getShopBySlug(slug);
+        if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+        return shop.id;
       }),
-      db.select({ count: sql<number>`count(*)::int` }).from(schema.tickets).where(whereClause),
-    ]);
-    const total = countRows[0]?.count ?? 0;
-
-    const services = await db.query.services.findMany({
-      where: eq(schema.services.shopId, shop.id),
-      columns: { id: true, name: true },
+    ],
+  }, async (request, reply) => {
+    const paramsSchema = z.object({
+      slug: z.string().min(1),
     });
-    const serviceNameMap = new Map(services.map((s) => [s.id, s.name]));
+    const querySchema = z.object({
+      since: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(25),
+    });
+    const { slug } = validateRequest(paramsSchema, request.params);
+    const { since: sinceStr, until: untilStr, page, limit } = validateRequest(querySchema, request.query);
 
-    const ticketsWithMeta = tickets.map((t) => {
-      let durationMinutes: number | null = null;
-      if (t.completedAt && t.startedAt) {
-        const mins = (new Date(t.completedAt).getTime() - new Date(t.startedAt).getTime()) / (1000 * 60);
-        if (mins > 0 && mins < 120) durationMinutes = Math.round(mins);
-      }
-      return {
-        id: t.id,
-        serviceId: t.serviceId,
-        serviceName: serviceNameMap.get(t.serviceId) ?? `Service ${t.serviceId}`,
-        status: t.status,
-        createdAt: t.createdAt,
-        startedAt: t.startedAt,
-        completedAt: t.completedAt,
-        durationMinutes,
-      };
+    const shop = await getShopBySlug(slug);
+    if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    const barberId = request.user!.barberId;
+    if (barberId == null) throw new NotFoundError('Barber not found');
+
+    const barber = await db.query.barbers.findFirst({
+      where: and(eq(schema.barbers.id, barberId), eq(schema.barbers.shopId, shop.id)),
+    });
+    if (!barber) throw new NotFoundError(`Barber with ID ${barberId} not found`);
+
+    const { tickets, total } = await fetchBarberServiceHistoryPage({
+      shopId: shop.id,
+      companyId: shop.companyId ?? null,
+      barberId,
+      sinceStr,
+      untilStr,
+      page,
+      limit,
     });
 
-    return { tickets: ticketsWithMeta, total };
+    return { tickets, total };
   });
 
   /**
@@ -1190,6 +1212,9 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
+
+    const barberSettings = parseSettings(shop.settings);
+    const barberTz = barberSettings.timezone ?? 'America/Sao_Paulo';
 
     const barberId = request.user!.barberId!;
 
@@ -1229,7 +1254,8 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     const completionRate = total > 0 ? Math.round((completed.length / total) * 100) : 0;
     const cancellationRate = total > 0 ? Math.round((cancelled.length / total) * 100) : 0;
 
-    const dayCount = days > 0 ? days : Math.max(1, Math.ceil((Date.now() - since.getTime()) / (1000 * 60 * 60 * 24)));
+    const untilBarber = new Date();
+    const dayCount = countOpenDaysInUtcRange(barberSettings.operatingHours, barberTz, since, untilBarber);
     const avgPerDay = Math.round(total / dayCount * 10) / 10;
 
     let totalServiceTime = 0;
@@ -1266,8 +1292,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         serviceRevenueCents[ticket.serviceId] = (serviceRevenueCents[ticket.serviceId] || 0) + Math.round(svc.price * shareMultiplier);
       }
     });
-    const settings = parseSettings(shop.settings);
-    const canSeeProfits = settings.barbersCanSeeProfits !== false;
+    const canSeeProfits = barberSettings.barbersCanSeeProfits !== false;
 
     const serviceBreakdown = Object.entries(serviceCounts)
       .map(([serviceId, count]) => {
@@ -1333,7 +1358,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         ? Math.round((allTimeRatings.reduce((s, r) => s + r.rating, 0) / ratingCountAllTime) * 10) / 10
         : null;
 
-    const tz = parseSettings(shop.settings).timezone ?? 'America/Sao_Paulo';
+    const tz = barberTz;
     const now = new Date();
     const todayInShop = toZonedTime(now, tz);
     const todayStr = `${todayInShop.getFullYear()}-${String(todayInShop.getMonth() + 1).padStart(2, '0')}-${String(todayInShop.getDate()).padStart(2, '0')}`;

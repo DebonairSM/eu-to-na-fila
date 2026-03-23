@@ -6,10 +6,12 @@ import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
+import { BarberServiceWeekdayStatsTable } from '@/components/BarberServiceWeekdayStatsTable';
 import { Container, Heading, Text, Card, CardContent } from '@/components/design-system';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { formatCurrency, formatDate } from '@/lib/format';
+import type { BarberServiceHistoryResponse } from '@/lib/api/analytics';
 
 interface BarberAnalyticsData {
   period: { days: number; since: string; until: string };
@@ -52,6 +54,9 @@ export function BarberAnalyticsPage() {
   const [data, setData] = useState<BarberAnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [myHistory, setMyHistory] = useState<BarberServiceHistoryResponse | null>(null);
+  const [myHistoryPage, setMyHistoryPage] = useState(1);
+  const [myHistoryLoading, setMyHistoryLoading] = useState(false);
 
   if (!isBarber) {
     navigate(user?.role === 'owner' ? '/owner' : '/manage', { replace: true });
@@ -73,6 +78,26 @@ export function BarberAnalyticsPage() {
     };
     fetchAnalytics();
   }, [days, shopSlug, t]);
+
+  useEffect(() => {
+    if (!shopSlug) return;
+    let cancelled = false;
+    setMyHistoryLoading(true);
+    api
+      .getMyBarberServiceHistory(shopSlug, { page: myHistoryPage, limit: 25 })
+      .then((res) => {
+        if (!cancelled) setMyHistory(res);
+      })
+      .catch(() => {
+        if (!cancelled) setMyHistory(null);
+      })
+      .finally(() => {
+        if (!cancelled) setMyHistoryLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [shopSlug, myHistoryPage]);
 
   if (isLoading) {
     return (
@@ -266,31 +291,88 @@ export function BarberAnalyticsPage() {
                 <Text size="sm" variant="secondary" className="mb-4 block">
                   {t('analytics.myTimeByWeekdayIntro')}
                 </Text>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead>
-                      <tr className="text-white/50 border-b border-white/10">
-                        <th className="py-2 pr-4">{t('analytics.day')}</th>
-                        <th className="py-2 pr-4">{t('analytics.service')}</th>
-                        <th className="py-2 pr-4 text-right">{t('analytics.avgMin')}</th>
-                        <th className="py-2 text-right">{t('analytics.attendances')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {serviceTimeByWeekday.map((row, i) => (
-                        <tr key={`${row.serviceId}-${row.dayOfWeek}-${i}`} className="border-b border-white/5">
-                          <td className="py-2 pr-4 text-white/80">{row.dayName}</td>
-                          <td className="py-2 pr-4 text-white/90">{row.serviceName}</td>
-                          <td className="py-2 pr-4 text-right text-[var(--shop-accent)] font-medium">{row.avgDurationMinutes}</td>
-                          <td className="py-2 text-right text-white/70">{row.totalCompleted}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <BarberServiceWeekdayStatsTable
+                  rows={serviceTimeByWeekday}
+                  showBarberColumn={false}
+                  emptyMessage={t('barber.noDataInPeriod')}
+                  labelBarber={t('analytics.barber')}
+                  labelDay={t('analytics.day')}
+                  labelService={t('analytics.service')}
+                  labelAvgMinutes={t('analytics.avgMin')}
+                  labelAttendances={t('analytics.attendances')}
+                />
               </CardContent>
             </Card>
           )}
+
+          <Card variant="default" className="bg-white/5 border-white/10">
+            <CardContent className="p-6">
+              <Heading level={2} className="text-lg text-white mb-4">
+                {t('analytics.serviceHistory')}
+              </Heading>
+              {myHistoryLoading ? (
+                <div className="flex justify-center py-8">
+                  <LoadingSpinner size="md" />
+                </div>
+              ) : myHistory && myHistory.tickets.length > 0 ? (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead>
+                        <tr className="text-white/50 border-b border-white/10">
+                          <th className="py-2 pr-4">{t('analytics.historyDate')}</th>
+                          <th className="py-2 pr-4">{t('analytics.historyClient')}</th>
+                          <th className="py-2 pr-4">{t('analytics.service')}</th>
+                          <th className="py-2 pr-4">{t('analytics.historyStatus')}</th>
+                          <th className="py-2 text-right">{t('analytics.historyDuration')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {myHistory.tickets.map((ticket) => (
+                          <tr key={ticket.id} className="border-b border-white/5">
+                            <td className="py-2 pr-4 text-white/80">
+                              {formatDate(new Date(ticket.createdAt), locale, { dateStyle: 'short', timeStyle: 'short' })}
+                            </td>
+                            <td className="py-2 pr-4 text-white/90">{ticket.clientDisplayName}</td>
+                            <td className="py-2 pr-4 text-white/90">
+                              {(ticket.serviceNames?.length ? ticket.serviceNames : [ticket.serviceName]).join(' · ')}
+                            </td>
+                            <td className="py-2 pr-4 text-white/80">{ticket.status}</td>
+                            <td className="py-2 text-right text-[var(--shop-accent)]">
+                              {ticket.durationMinutes != null ? `${ticket.durationMinutes} min` : '—'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex items-center justify-center gap-4 mt-6">
+                    <button
+                      type="button"
+                      onClick={() => setMyHistoryPage((p) => Math.max(1, p - 1))}
+                      disabled={myHistoryPage <= 1}
+                      className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {t('common.back')}
+                    </button>
+                    <span className="text-white/70 text-sm">
+                      {myHistoryPage} / {Math.ceil(myHistory.total / 25) || 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setMyHistoryPage((p) => p + 1)}
+                      disabled={myHistoryPage * 25 >= myHistory.total}
+                      className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {t('common.next')}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <Text variant="secondary">{t('barber.noDataInPeriod')}</Text>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </Container>
     </div>

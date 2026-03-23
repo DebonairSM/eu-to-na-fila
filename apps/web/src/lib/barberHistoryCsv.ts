@@ -23,6 +23,7 @@ function formatIsoDateTime(iso: string): string {
 export interface BarberHistoryCsvLabels {
   date: string;
   service: string;
+  client: string;
   status: string;
   duration: string;
 }
@@ -66,16 +67,19 @@ export async function downloadBarberServiceHistoryCsv(
     page += 1;
   } while (allTickets.length < total);
 
-  const header = [labels.date, labels.service, labels.status, labels.duration]
+  const header = [labels.date, labels.service, labels.client, labels.status, labels.duration]
     .map(escapeCsvCell)
     .join(',');
 
   const rows = allTickets.map((t) => {
     const date = formatIsoDateTime(t.createdAt);
-    const service = escapeCsvCell(t.serviceName);
+    const names =
+      t.serviceNames && t.serviceNames.length > 0 ? t.serviceNames.join(' + ') : t.serviceName;
+    const service = escapeCsvCell(names);
+    const client = escapeCsvCell(t.clientDisplayName ?? '');
     const status = escapeCsvCell(t.status);
     const duration = t.durationMinutes != null ? String(t.durationMinutes) : '—';
-    return [date, service, status, duration].map(escapeCsvCell).join(',');
+    return [date, service, client, status, duration].map(escapeCsvCell).join(',');
   });
 
   const csv = [header, ...rows].join('\r\n');

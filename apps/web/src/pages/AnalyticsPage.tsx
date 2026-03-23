@@ -16,6 +16,7 @@ import { LocationChart } from '@/components/LocationChart';
 import { DemographicsInsights } from '@/components/DemographicsInsights';
 import { DayOfWeekChart } from '@/components/DayOfWeekChart';
 import { BarberProductivityByDayChart, type ProductivityTimeScope } from '@/components/BarberProductivityByDayChart';
+import { BarberServiceWeekdayStatsTable } from '@/components/BarberServiceWeekdayStatsTable';
 import { WaitTimeTrendChart } from '@/components/WaitTimeTrendChart';
 import { CancellationChart } from '@/components/CancellationChart';
 import { ServiceTimeDistributionChart } from '@/components/ServiceTimeDistributionChart';
@@ -28,6 +29,13 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { useDialogA11y } from '@/hooks/useDialogA11y';
 import { formatDate } from '@/lib/format';
 import { formatNameForDisplay } from '@/lib/utils';
+import {
+  dayKeyFromIso,
+  englishWeekdayFromUtcDayKey,
+  getDetailApiRange,
+  lastDateOfWeekdayInRange,
+  type TimeDetailFrame,
+} from '@/lib/timeAnalyticsDetail';
 
 interface AnalyticsData {
   period: {
@@ -210,6 +218,11 @@ export function AnalyticsPage() {
   const [temporalChartLoading, setTemporalChartLoading] = useState(false);
   const [temporalChartError, setTemporalChartError] = useState(false);
 
+  const [timeDetailFrame, setTimeDetailFrame] = useState<TimeDetailFrame>('month');
+  const [selectedDetailDayKey, setSelectedDetailDayKey] = useState<string | null>(null);
+  const [timeDetailData, setTimeDetailData] = useState<AnalyticsData | null>(null);
+  const [timeDetailLoading, setTimeDetailLoading] = useState(false);
+
   // Week options for productivity chart (Monday-based): this week, last week, 2 weeks ago, ... 5 weeks ago
   const weekOptionsForProductivity = (() => {
     const options: { value: string; label: string }[] = [];
@@ -240,6 +253,20 @@ export function AnalyticsPage() {
         return `${formatDate(mon, locale)} – ${formatDate(sun, locale)}`;
       })()
     : undefined;
+
+  const barberServiceWeekdayStatsRows = useMemo(() => {
+    const rows = data?.barberServiceWeekdayStats ?? [];
+    const filtered = selectedBarberId == null ? rows : rows.filter((row) => row.barberId === selectedBarberId);
+    return [...filtered].sort((a, b) => {
+      if (selectedBarberId == null) {
+        const barberNameCmp = a.barberName.localeCompare(b.barberName);
+        if (barberNameCmp !== 0) return barberNameCmp;
+      }
+      const dayCmp = a.dayOfWeek - b.dayOfWeek;
+      if (dayCmp !== 0) return dayCmp;
+      return a.serviceName.localeCompare(b.serviceName);
+    });
+  }, [data?.barberServiceWeekdayStats, selectedBarberId]);
 
   useEffect(() => {
     if (productivityTimeScope !== 'week' || !productivityWeekStart || !shopSlug) {
@@ -366,6 +393,41 @@ export function AnalyticsPage() {
       .finally(() => setTemporalChartLoading(false));
   }, [activeView, shopSlug, temporalChartMonth.year, temporalChartMonth.month]);
 
+  useEffect(() => {
+    if (!temporalChartData) return;
+    setSelectedDetailDayKey(dayKeyFromIso(temporalChartData.period.until));
+  }, [temporalChartData?.period.since, temporalChartData?.period.until]);
+
+  useEffect(() => {
+    if (activeView !== 'time' || !shopSlug || !temporalChartData) return;
+    if (timeDetailFrame === 'month') {
+      setTimeDetailLoading(false);
+      return;
+    }
+    const ms = dayKeyFromIso(temporalChartData.period.since);
+    const mu = dayKeyFromIso(temporalChartData.period.until);
+    const day = selectedDetailDayKey ?? mu;
+    const range = getDetailApiRange(timeDetailFrame, day, ms, mu);
+    if (!range) return;
+    let cancelled = false;
+    setTimeDetailLoading(true);
+    setTimeDetailData(null);
+    api
+      .getAnalytics(shopSlug, range)
+      .then((d) => {
+        if (!cancelled) setTimeDetailData(d);
+      })
+      .catch(() => {
+        if (!cancelled) setTimeDetailData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setTimeDetailLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeView, shopSlug, temporalChartData, timeDetailFrame, selectedDetailDayKey]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen h-full bg-gradient-to-br from-[var(--shop-background)] via-[var(--shop-surface-secondary)] to-[var(--shop-surface-secondary)]">
@@ -410,6 +472,35 @@ export function AnalyticsPage() {
       if (prev.month >= 12) return { year: prev.year + 1, month: 1 };
       return { year: prev.year, month: prev.month + 1 };
     });
+  };
+
+  const selectedDayEffective =
+    selectedDetailDayKey ?? (timeData ? dayKeyFromIso(timeData.period.until) : null);
+  const weekdayHighlightFromSelection =
+    selectedDayEffective != null ? englishWeekdayFromUtcDayKey(selectedDayEffective) : undefined;
+  const timeDetailChartsData: AnalyticsData | null =
+    timeData == null ? null : timeDetailFrame === 'month' ? timeData : timeDetailData;
+  const timeDetailChartsBusy = timeDetailFrame !== 'month' && timeDetailLoading;
+  const formatTimeDetailPeriodLabel = (d: AnalyticsData) => {
+    const s = new Date(`${dayKeyFromIso(d.period.since)}T12:00:00.000Z`);
+    const u = new Date(`${dayKeyFromIso(d.period.until)}T12:00:00.000Z`);
+    return `${formatDate(s, locale)} – ${formatDate(u, locale)}`;
+  };
+
+  const onTimeDailyBarSelect = (dayKey: string) => {
+    setSelectedDetailDayKey(dayKey);
+    setTimeDetailFrame('day');
+  };
+
+  const onTimeWeeklyPatternDayClick = (englishDay: string) => {
+    if (!timeData) return;
+    const ms = dayKeyFromIso(timeData.period.since);
+    const mu = dayKeyFromIso(timeData.period.until);
+    const picked = lastDateOfWeekdayInRange(ms, mu, englishDay);
+    if (picked) {
+      setSelectedDetailDayKey(picked);
+      setTimeDetailFrame('week');
+    }
   };
 
   return (
@@ -819,8 +910,8 @@ export function AnalyticsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                    <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden min-h-[420px] flex flex-col">
+                  <div className="w-screen max-w-[100vw] relative left-1/2 -translate-x-1/2 mb-8 md:mb-10">
+                    <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-6 sm:p-8 relative overflow-hidden">
                       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
                       <div className="mb-6 flex items-center justify-between gap-4 flex-shrink-0 flex-wrap">
                         <div className="flex items-center gap-4">
@@ -850,71 +941,146 @@ export function AnalyticsPage() {
                           </button>
                         </div>
                       </div>
-                      <div className="flex-1 min-h-[280px]">
-                        <DailyChart
-                          data={timeData.ticketsByDay}
-                          since={timeData.period.since.split('T')[0]}
-                          until={timeData.period.until.split('T')[0]}
+                      <DailyChart
+                        data={timeData.ticketsByDay}
+                        since={timeData.period.since.split('T')[0]}
+                        until={timeData.period.until.split('T')[0]}
+                        selectedDay={selectedDayEffective ?? undefined}
+                        onDaySelect={onTimeDailyBarSelect}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 mb-6">
+                    {(['day', 'week', 'month'] as const).map((frame) => (
+                      <button
+                        key={frame}
+                        type="button"
+                        onClick={() => setTimeDetailFrame(frame)}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                          timeDetailFrame === frame
+                            ? 'border-[var(--shop-accent)] bg-[color-mix(in_srgb,var(--shop-accent)_20%,transparent)] text-[var(--shop-accent)]'
+                            : 'border-[var(--shop-border-color)] text-white/80 hover:bg-white/10'
+                        }`}
+                      >
+                        {frame === 'day'
+                          ? t('analytics.timeDetailScopeDay')
+                          : frame === 'week'
+                            ? t('analytics.timeDetailScopeWeek')
+                            : t('analytics.timeDetailScopeMonth')}
+                      </button>
+                    ))}
+                  </div>
+
+                  {timeDetailChartsBusy && !timeDetailChartsData ? (
+                    <div className="flex items-center justify-center min-h-[280px] rounded-3xl border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)]">
+                      <LoadingSpinner size="lg" text={t('analytics.loading')} />
+                    </div>
+                  ) : !timeDetailChartsData ? (
+                    <div className="rounded-3xl border border-[var(--shop-border-color)] bg-[var(--shop-surface-secondary)] p-8">
+                      <ErrorDisplay error={new Error(t('analytics.loadError'))} />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                        <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden min-h-[380px] flex flex-col">
+                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
+                          <div className="mb-2 flex items-center gap-4 flex-shrink-0">
+                            <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">schedule</span>
+                            <div>
+                              <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                                {t('analytics.timeHourlyTitle')}
+                              </h2>
+                              <p className="text-sm text-white/60 mt-1">
+                                {t('analytics.timeDetailPeriodLabel').replace(
+                                  '{{range}}',
+                                  formatTimeDetailPeriodLabel(timeDetailChartsData)
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex-1 min-h-[260px]">
+                            <HourlyChart
+                              data={timeDetailChartsData.hourlyDistribution}
+                              peakHour={timeDetailChartsData.peakHour}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden min-h-[380px] flex flex-col">
+                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
+                          <div className="mb-2 flex items-center gap-4">
+                            <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">calendar_month</span>
+                            <div>
+                              <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                                {t('analytics.weeklyPatternTitle')}
+                              </h2>
+                              <p className="text-sm text-white/60 mt-1">
+                                {t('analytics.timeDetailPeriodLabel').replace(
+                                  '{{range}}',
+                                  formatTimeDetailPeriodLabel(timeDetailChartsData)
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                          <DayOfWeekChart
+                            data={timeDetailChartsData.dayOfWeekDistribution}
+                            highlightDay={weekdayHighlightFromSelection}
+                            onDayClick={onTimeWeeklyPatternDayClick}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden mt-8">
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
+                        <div className="mb-2 flex items-center gap-4">
+                          <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">trending_up</span>
+                          <div>
+                            <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
+                              {t('analytics.timeWaitTrendTitle')}
+                            </h2>
+                            <p className="text-sm text-white/60 mt-1">
+                              {t('analytics.timeDetailPeriodLabel').replace(
+                                '{{range}}',
+                                formatTimeDetailPeriodLabel(timeDetailChartsData)
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        <WaitTimeTrendChart
+                          data={timeDetailChartsData.waitTimeTrends}
+                          dataByHour={timeDetailChartsData.waitTimeTrendsByHour}
+                          dataByWeek={timeDetailChartsData.waitTimeTrendsByWeek}
+                          dataByMonth={timeDetailChartsData.waitTimeTrendsByMonth}
+                          dataByYear={timeDetailChartsData.waitTimeTrendsByYear}
+                          dailySince={dayKeyFromIso(timeDetailChartsData.period.since)}
+                          dailyUntil={dayKeyFromIso(timeDetailChartsData.period.until)}
                         />
                       </div>
-                    </div>
 
-                    <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden min-h-[420px] flex flex-col">
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
-                      <div className="mb-6 flex items-center gap-4 flex-shrink-0">
-                        <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">schedule</span>
-                        <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
-                          Atendimentos por Hora
-                        </h2>
-                      </div>
-                      <div className="flex-1 min-h-[280px]">
-                        <HourlyChart data={timeData.hourlyDistribution} peakHour={timeData.peakHour} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
-                    <div className="mb-6 flex items-center gap-4">
-                      <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">calendar_month</span>
-                      <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
-                        Padrão Semanal
-                      </h2>
-                    </div>
-                    <DayOfWeekChart data={timeData.dayOfWeekDistribution} />
-                  </div>
-
-                  <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
-                    <div className="mb-6 flex items-center gap-4">
-                      <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">trending_up</span>
-                      <h2 className="font-['Playfair_Display',serif] text-2xl lg:text-3xl text-white">
-                        Tendência de Tempo de Espera
-                      </h2>
-                    </div>
-                    <WaitTimeTrendChart
-                      data={timeData.waitTimeTrends}
-                      dataByHour={timeData.waitTimeTrendsByHour}
-                      dataByWeek={timeData.waitTimeTrendsByWeek}
-                      dataByMonth={timeData.waitTimeTrendsByMonth}
-                      dataByYear={timeData.waitTimeTrendsByYear}
-                      dailySince={timeData.period.since.split('T')[0]}
-                      dailyUntil={timeData.period.until.split('T')[0]}
-                    />
-                  </div>
-
-                  {timeData.peakHour && (
-                    <div className="bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_5%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-3xl p-10 text-center">
-                      <p className="text-sm text-white/70 uppercase tracking-wider mb-3">
-                        {t('analytics.peakHourLabel')}
-                      </p>
-                      <div className="font-['Playfair_Display',serif] text-6xl font-semibold text-[var(--shop-accent)] mb-3">
-                        {timeData.peakHour.hour}:00
-                      </div>
-                      <p className="text-base text-white/70">
-                        {timeData.peakHour.count} {timeData.peakHour.count === 1 ? t('analytics.attendanceOne') : t('analytics.attendanceMany')}
-                      </p>
-                    </div>
+                      {timeDetailChartsData.peakHour && (
+                        <div className="bg-gradient-to-br from-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)] to-[color-mix(in_srgb,var(--shop-accent)_5%,transparent)] border border-[color-mix(in_srgb,var(--shop-accent)_30%,transparent)] rounded-3xl p-10 text-center mt-8">
+                          <p className="text-sm text-white/70 uppercase tracking-wider mb-2">
+                            {t('analytics.peakHourLabel')}
+                          </p>
+                          <p className="text-sm text-white/50 mb-4">
+                            {t('analytics.timeDetailPeriodLabel').replace(
+                              '{{range}}',
+                              formatTimeDetailPeriodLabel(timeDetailChartsData)
+                            )}
+                          </p>
+                          <div className="font-['Playfair_Display',serif] text-6xl font-semibold text-[var(--shop-accent)] mb-3">
+                            {timeDetailChartsData.peakHour.hour}:00
+                          </div>
+                          <p className="text-base text-white/70">
+                            {timeDetailChartsData.peakHour.count}{' '}
+                            {timeDetailChartsData.peakHour.count === 1
+                              ? t('analytics.attendanceOne')
+                              : t('analytics.attendanceMany')}
+                          </p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </>
               )}
@@ -996,6 +1162,20 @@ export function AnalyticsPage() {
                     labelAllBarbers={t('analytics.allBarbersAverage')}
                     labelBarber={t('analytics.barber')}
                   />
+                  <div className="mt-8 pt-6 border-t border-[var(--shop-border-color)]">
+                    <h3 className="text-xl text-white mb-2">{t('analytics.timeByWeekdayTitle')}</h3>
+                    <p className="text-sm text-white/60 mb-4">{t('analytics.timeByWeekdayIntro')}</p>
+                    <BarberServiceWeekdayStatsTable
+                      rows={barberServiceWeekdayStatsRows}
+                      showBarberColumn={selectedBarberId == null}
+                      emptyMessage={t('analytics.timeByWeekdayEmpty')}
+                      labelBarber={t('analytics.barber')}
+                      labelDay={t('analytics.day')}
+                      labelService={t('analytics.service')}
+                      labelAvgMinutes={t('analytics.avgMin')}
+                      labelAttendances={t('analytics.attendances')}
+                    />
+                  </div>
                 </div>
               ) : null}
 
@@ -1422,6 +1602,7 @@ export function AnalyticsPage() {
                         {
                           date: t('analytics.historyDate'),
                           service: t('analytics.service'),
+                          client: t('analytics.historyClient'),
                           status: t('analytics.historyStatus'),
                           duration: t('analytics.historyDuration'),
                         },
@@ -1482,6 +1663,7 @@ export function AnalyticsPage() {
                           {
                             date: t('analytics.historyDate'),
                             service: t('analytics.service'),
+                            client: t('analytics.historyClient'),
                             status: t('analytics.historyStatus'),
                             duration: t('analytics.historyDuration'),
                           },
@@ -1522,6 +1704,7 @@ export function AnalyticsPage() {
                         <thead>
                           <tr className="text-white/50 border-b border-[var(--shop-border-color)]">
                             <th className="py-2 pr-4">{t('analytics.historyDate')}</th>
+                            <th className="py-2 pr-4">{t('analytics.historyClient')}</th>
                             <th className="py-2 pr-4">{t('analytics.service')}</th>
                             <th className="py-2 pr-4">{t('analytics.historyStatus')}</th>
                             <th className="py-2 text-right">{t('analytics.historyDuration')}</th>
@@ -1533,7 +1716,10 @@ export function AnalyticsPage() {
                               <td className="py-2 pr-4 text-white/80">
                                 {formatDate(new Date(ticket.createdAt), locale, { dateStyle: 'short', timeStyle: 'short' })}
                               </td>
-                              <td className="py-2 pr-4 text-white/90">{ticket.serviceName}</td>
+                              <td className="py-2 pr-4 text-white/90">{ticket.clientDisplayName}</td>
+                              <td className="py-2 pr-4 text-white/90">
+                                {(ticket.serviceNames?.length ? ticket.serviceNames : [ticket.serviceName]).join(' · ')}
+                              </td>
                               <td className="py-2 pr-4 text-white/80">{ticket.status}</td>
                               <td className="py-2 text-right text-[var(--shop-accent)]">
                                 {ticket.durationMinutes != null ? `${ticket.durationMinutes} min` : '—'}

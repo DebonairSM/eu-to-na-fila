@@ -5,7 +5,12 @@ export type AnalyticsQuery = number | { days?: number; since?: string; until?: s
 export interface BarberServiceHistoryTicket {
   id: number;
   serviceId: number;
+  /** First selected service (same as serviceNames[0]). */
   serviceName: string;
+  /** All services selected for this visit, in order. */
+  serviceNames: string[];
+  /** Client account name when linked, otherwise the name entered on the ticket. */
+  clientDisplayName: string;
   status: string;
   createdAt: string;
   startedAt: string | null;
@@ -49,6 +54,8 @@ export interface AnalyticsApi {
     barberId: number,
     params?: BarberServiceHistoryParams
   ): Promise<BarberServiceHistoryResponse>;
+  /** Service history for the logged-in barber (same shape as owner barber history). */
+  getMyBarberServiceHistory(shopSlug: string, params?: BarberServiceHistoryParams): Promise<BarberServiceHistoryResponse>;
 }
 
 const ANALYTICS_TIMEOUT_MS = 45000;
@@ -84,6 +91,10 @@ export function createAnalyticsApi(client: BaseApiClient): AnalyticsApi {
     getBarberServiceHistory: (shopSlug, barberId, params) => {
       const qs = buildQueryString(params ?? {});
       return c.get(`/shops/${shopSlug}/analytics/barbers/${barberId}/history${qs}`, ANALYTICS_TIMEOUT_MS);
+    },
+    getMyBarberServiceHistory: (shopSlug, params) => {
+      const qs = buildQueryString(params ?? {});
+      return c.get(`/shops/${shopSlug}/analytics/me/history${qs}`, ANALYTICS_TIMEOUT_MS);
     },
   };
 }
