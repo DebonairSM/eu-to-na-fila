@@ -28,7 +28,7 @@ export function DemographicsInsights({
       const cityLabel = topCity.state ? `${topCity.city} (${topCity.state})` : topCity.city;
       const alreadyInRuleBased = ruleBased.some((r) => r.includes(topCity.city));
       if (!alreadyInRuleBased) {
-        insights.push(`Principal local de origem: ${cityLabel} com ${topCity.count} clientes`);
+        insights.push(`Principal local de origem: ${cityLabel} com ${topCity.count} tickets`);
       }
     }
   }
@@ -47,7 +47,9 @@ export function DemographicsInsights({
   if (totalWithAge > 0) {
     const dominantRange = ageBreakdown.reduce((a, b) => (b.count > a.count ? b : a));
     const pct = Math.round((dominantRange.count / totalWithAge) * 100);
-    insights.push(`Faixa etária predominante: ${dominantRange.range} anos (${pct}% dos clientes com data de nascimento)`);
+    insights.push(
+      `Faixa etária predominante: ${dominantRange.range} anos (${pct}% dos tickets com idade informada)`
+    );
   }
 
   const totalGender = genderBreakdown.reduce((s, g) => s + g.count, 0);
@@ -56,7 +58,7 @@ export function DemographicsInsights({
     if (topGender && topGender.gender !== 'unknown') {
       const pct = Math.round((topGender.count / totalGender) * 100);
       const genderLabel = topGender.gender === 'male' ? t('account.genderMale') : topGender.gender === 'female' ? t('account.genderFemale') : topGender.gender === 'unknown' ? t('account.genderUnknown') : topGender.gender;
-      insights.push(`${genderLabel}: ${pct}%`);
+      insights.push(`${genderLabel}: ${topGender.count} tickets (${pct}% dos tickets com cliente neste período)`);
     }
   }
 

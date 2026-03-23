@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import { subDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { db, schema } from '../db/index.js';
 import { eq, and, gte, lt, inArray, isNotNull, desc, sql } from 'drizzle-orm';
@@ -9,7 +10,10 @@ import { requireAuth, requireRole, requireBarberShop } from '../middleware/auth.
 import { getShopBySlug } from '../lib/shop.js';
 import { parseSettings } from '../lib/settings.js';
 import {
+  countCalendarDaysInUtcRange,
   countOpenDaysInUtcRange,
+  filterTicketsByShopOpenHours,
+  instantWithinShopOpenHours,
   isWithinShopOpenHours,
 } from '../lib/analyticsOpenTime.js';
 import { fetchBarberServiceHistoryPage } from '../lib/barberServiceHistory.js';
@@ -96,19 +100,23 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
           gte(schema.tickets.createdAt, since)
         );
 
-    // Get all tickets in the period
-    const tickets = await db.query.tickets.findMany({
+    // Tickets in window, then keep only those created during shop open hours (shop TZ)
+    const ticketsRaw = await db.query.tickets.findMany({
       where: ticketConditions,
     });
-
-    // Get tickets from previous period for comparison
-    const previousPeriodTickets = await db.query.tickets.findMany({
+    const previousPeriodTicketsRaw = await db.query.tickets.findMany({
       where: and(
         eq(schema.tickets.shopId, shop.id),
         gte(schema.tickets.createdAt, previousPeriodStart),
         lt(schema.tickets.createdAt, since),
       ),
     });
+    const tickets = filterTicketsByShopOpenHours(ticketsRaw, settings.operatingHours, tz);
+    const previousPeriodTickets = filterTicketsByShopOpenHours(
+      previousPeriodTicketsRaw,
+      settings.operatingHours,
+      tz
+    );
     const previousPeriodCount = previousPeriodTickets.length;
 
     // Get services for service breakdown and revenue (omit sort_order for DBs before migration 0022)
@@ -131,10 +139,10 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
     const cancellationRate = total > 0 ? Math.round((cancelled / total) * 100) : 0;
 
-    // Tickets by day
+    // Tickets by day (shop-local date)
     const ticketsByDay: Record<string, number> = {};
     tickets.forEach(t => {
-      const day = t.createdAt.toISOString().split('T')[0];
+      const day = formatInTimeZone(t.createdAt, tz, 'yyyy-MM-dd');
       ticketsByDay[day] = (ticketsByDay[day] || 0) + 1;
     });
 
@@ -144,11 +152,12 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       : days !== undefined && days > 0
         ? countOpenDaysInUtcRange(settings.operatingHours, tz, since, until)
         : (() => {
-            const first = tickets.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
+            const first = [...tickets].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
             if (!first || total === 0) return 1;
             return countOpenDaysInUtcRange(settings.operatingHours, tz, first.createdAt, until);
           })();
     const avgPerDay = Math.round(total / dayCount);
+    const calendarDaysInPeriod = countCalendarDaysInUtcRange(tz, since, until);
 
     // Calculate average service time (for completed tickets)
     // Use actual timestamps: completedAt - startedAt
@@ -183,7 +192,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       const price = servicePriceMap.get(ticket.serviceId);
       if (price != null) {
         revenueCents += price;
-        const day = ticket.createdAt.toISOString().split('T')[0];
+        const day = formatInTimeZone(ticket.createdAt, tz, 'yyyy-MM-dd');
         revenueByDay[day] = (revenueByDay[day] || 0) + price;
       }
     });
@@ -198,13 +207,13 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Rating stats per barber (period: since to until)
     const barberIds = barbers.map(b => b.id);
+    const ticketIdsForRatings = tickets.map((t) => t.id);
     const periodRatings =
-      barberIds.length > 0
+      barberIds.length > 0 && ticketIdsForRatings.length > 0
         ? await db.query.ticketRatings.findMany({
             where: and(
               inArray(schema.ticketRatings.barberId, barberIds),
-              gte(schema.ticketRatings.createdAt, since),
-              lt(schema.ticketRatings.createdAt, until),
+              inArray(schema.ticketRatings.ticketId, ticketIdsForRatings),
             ),
             columns: { barberId: true, rating: true },
           })
@@ -230,7 +239,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     const monthStart = fromZonedTime(new Date(y, mo, 1, 0, 0, 0), tz);
     const todayEnd = fromZonedTime(new Date(y, mo, d + 1, 0, 0, 0), tz);
     const openDaysThisMonth = countOpenDaysInUtcRange(settings.operatingHours, tz, monthStart, todayEnd);
-    const monthTickets =
+    const monthTicketsRaw =
       openDaysThisMonth >= 1
         ? await db.query.tickets.findMany({
             where: and(
@@ -243,6 +252,11 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
             columns: { barberId: true, completedAt: true, startedAt: true, status: true },
           })
         : [];
+    const monthTickets = monthTicketsRaw.filter(
+      (t) =>
+        t.completedAt != null &&
+        instantWithinShopOpenHours(new Date(t.completedAt), settings.operatingHours, tz)
+    );
     const monthCompletedByBarber = new Map<number, number>();
     monthTickets
       .filter((t): t is typeof t & { completedAt: Date; startedAt: Date } => t.status === 'completed' && t.completedAt != null && t.startedAt != null)
@@ -306,12 +320,10 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       };
     });
 
-    // Peak hours and hourly distribution (shop TZ; only tickets during open hours)
+    // Peak hours and hourly distribution (shop TZ; tickets already filtered to open hours)
     const hourCounts: Record<number, number> = {};
     tickets.forEach(t => {
-      const createdAtUtc = new Date(t.createdAt);
-      const localInShop = toZonedTime(createdAtUtc, tz);
-      if (!isWithinShopOpenHours(settings.operatingHours, localInShop)) return;
+      const localInShop = toZonedTime(new Date(t.createdAt), tz);
       const hour = localInShop.getHours();
       hourCounts[hour] = (hourCounts[hour] || 0) + 1;
     });
@@ -397,7 +409,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       if (actualWaitTime !== null) {
-        const day = t.createdAt.toISOString().split('T')[0];
+        const day = formatInTimeZone(t.createdAt, tz, 'yyyy-MM-dd');
         if (!waitTimeByDay[day]) waitTimeByDay[day] = { total: 0, count: 0 };
         waitTimeByDay[day].total += actualWaitTime;
         waitTimeByDay[day].count++;
@@ -535,7 +547,52 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       }
     });
 
-    // Barber efficiency (tickets per day, completion rate, ratings)
+    // Per-barber, per-service, per-day-of-week stats (used for estimated line time + efficiency service averages)
+    const weekdayStatsRows = await db.query.barberServiceWeekdayStats.findMany({
+      where: eq(schema.barberServiceWeekdayStats.shopId, shop.id),
+      columns: { barberId: true, serviceId: true, dayOfWeek: true, avgDuration: true, totalCompleted: true },
+    });
+
+    /** Same threshold as queue wait estimate (QueueService / queue route). */
+    const MIN_SERVICE_SAMPLES_FOR_AVG = 10;
+    const serviceAvgByBarber = new Map<
+      number,
+      Array<{ serviceId: number; serviceName: string; avgMinutes: number; completedCount: number }>
+    >();
+    const byBarberServiceAgg = new Map<string, { weighted: number; count: number }>();
+    for (const row of weekdayStatsRows) {
+      const key = `${row.barberId}:${row.serviceId}`;
+      const dur = Number(row.avgDuration);
+      const completed = row.totalCompleted;
+      const w = dur * completed;
+      const cur = byBarberServiceAgg.get(key);
+      if (cur) {
+        cur.weighted += w;
+        cur.count += completed;
+      } else {
+        byBarberServiceAgg.set(key, { weighted: w, count: completed });
+      }
+    }
+    for (const [key, agg] of byBarberServiceAgg) {
+      if (agg.count < MIN_SERVICE_SAMPLES_FOR_AVG) continue;
+      const [bidStr, sidStr] = key.split(':');
+      const barberId = parseInt(bidStr, 10);
+      const serviceId = parseInt(sidStr, 10);
+      const avgMinutes = Math.round((agg.weighted / agg.count) * 10) / 10;
+      const list = serviceAvgByBarber.get(barberId) ?? [];
+      list.push({
+        serviceId,
+        serviceName: serviceMap.get(serviceId) ?? `Service ${serviceId}`,
+        avgMinutes,
+        completedCount: agg.count,
+      });
+      serviceAvgByBarber.set(barberId, list);
+    }
+    for (const [, list] of serviceAvgByBarber) {
+      list.sort((a, b) => a.serviceName.localeCompare(b.serviceName));
+    }
+
+    // Barber efficiency (tickets per day, completion rate, ratings; duration by service when enough samples)
     const barberEfficiency = barbers.map(barber => {
       const barberTickets = tickets.filter(t => t.barberId === barber.id);
       const barberCompleted = barberTickets.filter(t => t.status === 'completed');
@@ -557,13 +614,8 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         completionRate: barberCompletionRate,
         ratingCount,
         avgRating,
+        serviceAverages: serviceAvgByBarber.get(barber.id) ?? [],
       };
-    });
-
-    // Per-barber, per-service, per-day-of-week stats (used for estimated line time)
-    const weekdayStatsRows = await db.query.barberServiceWeekdayStats.findMany({
-      where: eq(schema.barberServiceWeekdayStats.shopId, shop.id),
-      columns: { barberId: true, serviceId: true, dayOfWeek: true, avgDuration: true, totalCompleted: true },
     });
     const barberMap = new Map(barbers.map(b => [b.id, b]));
     const barberServiceWeekdayStats = weekdayStatsRows.map(row => ({
@@ -632,7 +684,8 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
           t.status === 'completed' &&
           t.barberId != null &&
           t.startedAt != null &&
-          t.completedAt != null
+          t.completedAt != null &&
+          instantWithinShopOpenHours(new Date(t.completedAt), settings.operatingHours, tz)
       ) as Array<typeof tickets[0] & { barberId: number; startedAt: Date; completedAt: Date }>;
       const periodByBarberDay = new Map<string, { totalCompleted: number; totalDurationMin: number }>();
       for (const t of completedInPeriod) {
@@ -672,21 +725,22 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       ? Math.round(((total - previousPeriodCount) / previousPeriodCount) * 100) 
       : 0;
     
-    // Last 7 days comparison
+    // Last 7 days comparison (shop-local calendar days vs same weekday 7 days earlier)
     const last7DaysComparison: Array<{ day: string; change: number }> = [];
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6 - i));
-      return date.toISOString().split('T')[0];
-    });
-    
-    last7Days.forEach(day => {
-      const dayTickets = tickets.filter(t => t.createdAt.toISOString().split('T')[0] === day).length;
-      const previousDay = new Date(day);
-      previousDay.setDate(previousDay.getDate() - 7);
-      const previousDayStr = previousDay.toISOString().split('T')[0];
-      const previousDayTickets = previousPeriodTickets.filter(t => 
-        t.createdAt.toISOString().split('T')[0] === previousDayStr
+    const todayUtc = new Date();
+    const last7Days = Array.from({ length: 7 }, (_, i) =>
+      formatInTimeZone(subDays(todayUtc, 6 - i), tz, 'yyyy-MM-dd')
+    );
+
+    last7Days.forEach((day) => {
+      const dayTickets = tickets.filter(
+        (t) => formatInTimeZone(t.createdAt, tz, 'yyyy-MM-dd') === day
+      ).length;
+      const [y, m, d] = day.split('-').map(Number);
+      const anchor = fromZonedTime(new Date(y, m - 1, d, 12, 0, 0), tz);
+      const previousDayStr = formatInTimeZone(subDays(anchor, 7), tz, 'yyyy-MM-dd');
+      const previousDayTickets = previousPeriodTickets.filter(
+        (t) => formatInTimeZone(t.createdAt, tz, 'yyyy-MM-dd') === previousDayStr
       ).length;
       
       const change = previousDayTickets > 0 
@@ -710,7 +764,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     };
     const typeByDay: Record<string, { walkin: number; appointment: number }> = {};
     tickets.forEach((t) => {
-      const day = t.createdAt.toISOString().split('T')[0];
+      const day = formatInTimeZone(t.createdAt, tz, 'yyyy-MM-dd');
       if (!typeByDay[day]) typeByDay[day] = { walkin: 0, appointment: 0 };
       if ((t as { type?: string }).type === 'appointment') {
         typeByDay[day].appointment++;
@@ -863,7 +917,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       };
     }
 
-    // Rule-based correlations (cross-tabulations)
+    // Rule-based correlations (cross-tabulations) — counts are ticket-level from the period, not independent surveys
     const ruleBasedInsights: string[] = [];
     if (demographics) {
       const loc = demographics.locationBreakdown;
@@ -873,16 +927,21 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         const topCity = loc[0];
         const topStyle = style[0];
         if (topCity && topStyle) {
-          ruleBasedInsights.push(`${topCity.city}${topCity.state ? ` (${topCity.state})` : ''}: ${topCity.count} clientes`);
-          ruleBasedInsights.push(`Corte mais citado: ${topStyle.style} (${topStyle.count}x)`);
+          ruleBasedInsights.push(
+            `Cidade mais frequente no cadastro: ${topCity.city}${topCity.state ? ` (${topCity.state})` : ''} — ${topCity.count} tickets`
+          );
+          ruleBasedInsights.push(`Estilo mais citado em anotações: ${topStyle.style} (${topStyle.count} menções)`);
         }
       }
       if (gender.length > 0) {
         const top = gender[0];
         if (top) {
-          const total = gender.reduce((s, g) => s + g.count, 0);
-          const pct = total > 0 ? Math.round((top.count / total) * 100) : 0;
-          ruleBasedInsights.push(`${top.gender === 'unknown' ? 'Não informado' : top.gender}: ${pct}% dos clientes`);
+          const totalG = gender.reduce((s, g) => s + g.count, 0);
+          const pct = totalG > 0 ? Math.round((top.count / totalG) * 100) : 0;
+          const gLabel = top.gender === 'unknown' ? 'Não informado' : top.gender;
+          ruleBasedInsights.push(
+            `${gLabel}: ${top.count} tickets (${pct}% dos tickets com cliente neste período)`
+          );
         }
       }
     }
@@ -939,6 +998,10 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         days: periodDays,
         since: since.toISOString(),
         until: untilForResponse.toISOString(),
+        /** Calendar days (shop TZ) overlapping the analytics window; used for context vs open days. */
+        calendarDays: calendarDaysInPeriod,
+        /** Days used as denominator for avg/day and similar (scheduled open days, or calendar when no hours). */
+        openDays: dayCount,
       },
       summary: {
         total,
@@ -1036,8 +1099,9 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const byBarberDay = new Map<string, { totalCompleted: number; totalDurationMin: number }>();
     for (const t of weekTickets) {
-      const barberId = (t as { barberId: number }).barberId;
       const completedAt = new Date((t as { completedAt: Date }).completedAt);
+      if (!instantWithinShopOpenHours(completedAt, settings.operatingHours, tz)) continue;
+      const barberId = (t as { barberId: number }).barberId;
       const startedAt = new Date((t as { startedAt: Date }).startedAt);
       const dayOfWeek = toZonedTime(completedAt, tz).getDay();
       const durationMin = (completedAt.getTime() - startedAt.getTime()) / (1000 * 60);
@@ -1233,13 +1297,14 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     const revenueSharePercent = barber?.revenueSharePercent != null ? barber.revenueSharePercent : 100;
     const shareMultiplier = revenueSharePercent / 100;
 
-    const tickets = await db.query.tickets.findMany({
+    const ticketsRaw = await db.query.tickets.findMany({
       where: and(
         eq(schema.tickets.shopId, shop.id),
         eq(schema.tickets.barberId, barberId),
         gte(schema.tickets.createdAt, since)
       ),
     });
+    const tickets = filterTicketsByShopOpenHours(ticketsRaw, barberSettings.operatingHours, barberTz);
 
     const services = await db.query.services.findMany({
       where: eq(schema.services.shopId, shop.id),
@@ -1279,7 +1344,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const ticketsByDay: Record<string, number> = {};
     tickets.forEach(t => {
-      const day = t.createdAt.toISOString().split('T')[0];
+      const day = formatInTimeZone(t.createdAt, barberTz, 'yyyy-MM-dd');
       ticketsByDay[day] = (ticketsByDay[day] || 0) + 1;
     });
 
@@ -1324,14 +1389,37 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       ),
       columns: { serviceId: true, dayOfWeek: true, avgDuration: true, totalCompleted: true },
     });
-    const serviceTimeByWeekday = weekdayStatsRows.map(row => ({
-      serviceId: row.serviceId,
-      serviceName: serviceNameMap.get(row.serviceId) ?? `Service ${row.serviceId}`,
-      dayOfWeek: row.dayOfWeek,
-      dayName: dayNames[row.dayOfWeek],
-      avgDurationMinutes: Math.round(Number(row.avgDuration) * 10) / 10,
-      totalCompleted: row.totalCompleted,
-    }));
+    const MIN_SERVICE_SAMPLES_BARBER = 10;
+    const serviceAggBarber = new Map<number, { weighted: number; count: number }>();
+    for (const row of weekdayStatsRows) {
+      const sid = row.serviceId;
+      const dur = Number(row.avgDuration);
+      const completed = row.totalCompleted;
+      const w = dur * completed;
+      const cur = serviceAggBarber.get(sid);
+      if (cur) {
+        cur.weighted += w;
+        cur.count += completed;
+      } else {
+        serviceAggBarber.set(sid, { weighted: w, count: completed });
+      }
+    }
+    const serviceAveragesBarber: Array<{
+      serviceId: number;
+      serviceName: string;
+      avgMinutes: number;
+      completedCount: number;
+    }> = [];
+    for (const [serviceId, agg] of serviceAggBarber) {
+      if (agg.count < MIN_SERVICE_SAMPLES_BARBER) continue;
+      serviceAveragesBarber.push({
+        serviceId,
+        serviceName: serviceNameMap.get(serviceId) ?? `Service ${serviceId}`,
+        avgMinutes: Math.round((agg.weighted / agg.count) * 10) / 10,
+        completedCount: agg.count,
+      });
+    }
+    serviceAveragesBarber.sort((a, b) => a.serviceName.localeCompare(b.serviceName));
 
     // Rating stats for the period
     const periodBarberRatings = await db.query.ticketRatings.findMany({
@@ -1398,7 +1486,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       ticketsByDay,
       serviceBreakdown,
       dayOfWeekDistribution,
-      serviceTimeByWeekday,
+      serviceAverages: serviceAveragesBarber,
       ratings: {
         ratingCount,
         avgRating,

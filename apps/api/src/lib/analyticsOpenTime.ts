@@ -90,3 +90,36 @@ export function isWithinShopOpenHours(
   }
   return true;
 }
+
+/**
+ * True if the ticket was created during shop open hours (shop timezone). Used so analytics
+ * numerators match "open time" while denominators use {@link countOpenDaysInUtcRange}.
+ */
+export function ticketCreatedDuringShopOpenHours<T extends { createdAt: Date }>(
+  ticket: T,
+  operatingHours: OperatingHours | undefined,
+  timezone: string
+): boolean {
+  const localInShop = toZonedTime(new Date(ticket.createdAt), timezone);
+  return isWithinShopOpenHours(operatingHours, localInShop);
+}
+
+export function filterTicketsByShopOpenHours<T extends { createdAt: Date }>(
+  tickets: T[],
+  operatingHours: OperatingHours | undefined,
+  timezone: string
+): T[] {
+  return tickets.filter((t) => ticketCreatedDuringShopOpenHours(t, operatingHours, timezone));
+}
+
+/**
+ * True if `instantUtc` falls on shop-local open hours (e.g. completion time).
+ */
+export function instantWithinShopOpenHours(
+  instantUtc: Date,
+  operatingHours: OperatingHours | undefined,
+  timezone: string
+): boolean {
+  const localInShop = toZonedTime(instantUtc, timezone);
+  return isWithinShopOpenHours(operatingHours, localInShop);
+}

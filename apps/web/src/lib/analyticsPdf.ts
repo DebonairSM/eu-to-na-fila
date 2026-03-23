@@ -48,7 +48,13 @@ function ensureSpace(doc: jsPDF, y: number): number {
 }
 
 export interface AnalyticsDataForPdf {
-  period: { days: number; since: string; until: string };
+  period: {
+    days: number;
+    since: string;
+    until: string;
+    calendarDays?: number;
+    openDays?: number;
+  };
   summary: {
     total: number;
     completed: number;
@@ -167,6 +173,13 @@ export type AnalyticsPdfLabels = {
   topMovers7d?: string;
   serviceSharePct?: string;
   revenueSharePct?: string;
+  calendarDays?: string;
+  openDays?: string;
+  closedDays?: string;
+  avgPerOpenDay?: string;
+  ticketsPerOpenDay?: string;
+  dayBasisNote?: string;
+  hourlyOpenHoursNote?: string;
 };
 
 const DEFAULT_PDF_LABELS_PT: Required<AnalyticsPdfLabels> = {
@@ -234,6 +247,14 @@ const DEFAULT_PDF_LABELS_PT: Required<AnalyticsPdfLabels> = {
   topMovers7d: 'Variações dos últimos 7 dias',
   serviceSharePct: 'Participação %',
   revenueSharePct: 'Participação receita %',
+  calendarDays: 'Dias no calendario (periodo)',
+  openDays: 'Dias abertos (horario)',
+  closedDays: 'Dias fechados (sem expediente)',
+  avgPerOpenDay: 'Media por dia aberto',
+  ticketsPerOpenDay: 'Tickets/dia aberto',
+  dayBasisNote:
+    'Medias por dia e tickets/dia usam apenas dias com expediente configurado. Quando nao ha horario, calendario = dias abertos.',
+  hourlyOpenHoursNote: 'Contagens por hora: apenas tickets no horario de funcionamento (fora disso = 0).',
 };
 
 function pct(part: number, total: number): string {
@@ -289,7 +310,24 @@ export function downloadAnalyticsPdf(
       y
     );
   }
-  y += 14;
+  y += 8;
+  const calD = data.period.calendarDays;
+  const openD = data.period.openDays;
+  if (calD != null && openD != null) {
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    const closed = calD > openD ? calD - openD : 0;
+    doc.text(
+      normalizeForPdf(
+        `${L.dayBasisNote} ${L.calendarDays}: ${calD}; ${L.openDays}: ${openD}` +
+          (closed > 0 ? `; ${L.closedDays}: ${closed}.` : '.')
+      ),
+      margin,
+      y,
+      { maxWidth: 170 }
+    );
+    y += closed > 0 ? 12 : 8;
+  }
 
   // Summary
   y = ensureSpace(doc, y);
@@ -299,6 +337,13 @@ export function downloadAnalyticsPdf(
   y += 8;
 
   const summaryRows = [
+    ...(calD != null && openD != null
+      ? [
+          [L.calendarDays, String(calD)],
+          [L.openDays, String(openD)],
+          ...(calD > openD ? [[L.closedDays, String(calD - openD)]] : []),
+        ]
+      : []),
     [L.totalTickets, String(data.summary.total)],
     [L.completed, String(data.summary.completed)],
     [L.cancelled, String(data.summary.cancelled)],
@@ -307,7 +352,7 @@ export function downloadAnalyticsPdf(
     [L.pending, String(data.summary.pending ?? data.pending ?? 0)],
     [L.completionRate, `${data.summary.completionRate}%`],
     [L.cancellationRate, `${data.summary.cancellationRate}%`],
-    [L.avgPerDay, String(data.summary.avgPerDay)],
+    [L.avgPerOpenDay, String(data.summary.avgPerDay)],
     [L.avgServiceTime, `${data.summary.avgServiceTime} min`],
     ...(data.summary.revenueCents != null && data.summary.revenueCents > 0
       ? [[L.revenue, `R$ ${(data.summary.revenueCents / 100).toLocaleString(locale, { minimumFractionDigits: 2 })}`]]
@@ -336,6 +381,9 @@ export function downloadAnalyticsPdf(
   const quietest = bottomEntries(dayEntriesAll, 1)[0];
   const peak = data.peakHour;
   const compareRows: Array<[string, string]> = [
+    ...(calD != null && openD != null
+      ? [[`${L.calendarDays} / ${L.openDays}`, `${calD} / ${openD}`] as [string, string]]
+      : []),
     ['WoW (volume)', `${weekOverWeek >= 0 ? '+' : ''}${weekOverWeek}%`],
     [L.peakHour, peak ? `${String(peak.hour).padStart(2, '0')}:00 (${peak.count})` : '-'],
     ['Top service', topService ? `${topService.serviceName} (${topService.count} | ${topService.percentage}%)` : '-'],
@@ -478,7 +526,7 @@ export function downloadAnalyticsPdf(
     y += 8;
     autoTable(doc, {
       startY: y,
-      head: [[L.barber, L.ticketsPerDay, L.completionRatePct, L.serviceSharePct]].map((row) =>
+      head: [[L.barber, L.ticketsPerOpenDay, L.completionRatePct, L.serviceSharePct]].map((row) =>
         row.map((c) => normalizeForPdf(c)) as [string, string, string, string]
       ),
       body: data.barberEfficiency.map((b) => {
@@ -584,7 +632,13 @@ export function downloadAnalyticsPdf(
     doc.setFontSize(14);
     doc.setTextColor(...primary);
     doc.text(normalizeForPdf(L.demandByHour), margin, y);
-    y += 8;
+    y += 5;
+    doc.setFontSize(8);
+    doc.setTextColor(90, 90, 90);
+    doc.text(normalizeForPdf(L.hourlyOpenHoursNote), margin, y, { maxWidth: 170 });
+    y += 6;
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
     autoTable(doc, {
       startY: y,
       head: [[normalizeForPdf('Hour'), L.tickets, L.waitByHour, L.cancellationByHour]].map((row) =>
@@ -696,28 +750,6 @@ export function downloadAnalyticsPdf(
       margin: { left: margin, right: margin },
     });
     y = docAny.lastAutoTable.finalY + 12;
-  }
-
-  // Barber efficiency (always include when data present; add page if needed)
-  if (data.barberEfficiency.length > 0) {
-    y = ensureSpace(doc, y);
-    doc.setFontSize(14);
-    doc.setTextColor(...primary);
-    doc.text(normalizeForPdf(L.efficiencyByBarber), margin, y);
-    y += 8;
-
-    autoTable(doc, {
-      startY: y,
-      head: [[L.barber, L.ticketsPerDay, L.completionRatePct]].map((row) => row.map((c) => normalizeForPdf(c)) as [string, string, string]),
-      body: data.barberEfficiency.map((b) => [
-        normalizeForPdf(b.name),
-        String(b.ticketsPerDay),
-        String(b.completionRate),
-      ]),
-      theme: 'grid',
-      headStyles: { fillColor: [60, 60, 60], textColor: [255, 255, 255] },
-      margin: { left: margin, right: margin },
-    });
   }
 
   y = (docAny.lastAutoTable?.finalY ?? y) + 12;

@@ -3,6 +3,13 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { formatDurationMinutes } from '@/lib/formatDuration';
 
 interface AnalyticsData {
+  period?: {
+    days: number;
+    since: string;
+    until: string;
+    calendarDays?: number;
+    openDays?: number;
+  };
   summary: {
     total: number;
     completed: number;
@@ -44,7 +51,7 @@ interface AIAnalyticsAdvisorProps {
 }
 
 interface Insight {
-  type: 'insight' | 'prediction' | 'recommendation';
+  type: 'insight' | 'recommendation';
   category: 'traffic' | 'efficiency' | 'cancellation' | 'staffing' | 'growth';
   severity: 'info' | 'warning' | 'critical';
   title: string;
@@ -52,20 +59,59 @@ interface Insight {
   icon: string;
 }
 
+const MIN_TICKETS_FOR_HEURISTICS = 5;
+
+function strVars(vars: Record<string, string | number>): Record<string, string> {
+  const o: Record<string, string> = {};
+  for (const [k, v] of Object.entries(vars)) {
+    o[k] = String(v);
+  }
+  return o;
+}
+
 export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
   const { t } = useLocale();
   const insights = useMemo(() => {
     const result: Insight[] = [];
-    const { summary, barbers, peakHour, serviceBreakdown, cancellationAnalysis, barberEfficiency, trends } = data;
+    const { summary, peakHour, serviceBreakdown, cancellationAnalysis, barberEfficiency, trends, period } = data;
+    const total = summary.total;
+    const openDays = period?.openDays ?? period?.days;
+    const calendarDays = period?.calendarDays ?? openDays;
 
-    // Cancellation Analysis
+    // Factual period summary (API avg/day uses open days when available)
+    if (total > 0 && period && openDays != null && openDays > 0) {
+      result.push({
+        type: 'insight',
+        category: 'traffic',
+        severity: 'info',
+        title: t('analytics.advisor.periodFactsTitle'),
+        message: t(
+          'analytics.advisor.periodFactsBody',
+          strVars({
+            total,
+            openDays,
+            avgPerDay: Number(summary.avgPerDay.toFixed(1)),
+            calendarDays: calendarDays ?? openDays,
+          })
+        ),
+        icon: 'summarize',
+      });
+    }
+
+    if (total < MIN_TICKETS_FOR_HEURISTICS) {
+      return result;
+    }
+
     if (summary.cancellationRate > 20) {
       result.push({
         type: 'recommendation',
         category: 'cancellation',
         severity: 'critical',
-        title: 'Taxa de cancelamento alta',
-        message: `${summary.cancellationRate}% dos tickets foram cancelados. Considere revisar estimativas de tempo de espera ou qualidade do serviço.`,
+        title: t('analytics.advisor.cancellationHighTitle'),
+        message: t(
+          'analytics.advisor.cancellationHighBody',
+          strVars({ rate: summary.cancellationRate, cancelled: summary.cancelled, total })
+        ),
         icon: 'warning',
       });
     } else if (summary.cancellationRate > 10) {
@@ -73,99 +119,114 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
         type: 'insight',
         category: 'cancellation',
         severity: 'warning',
-        title: 'Taxa de cancelamento moderada',
-        message: `${summary.cancellationRate}% de cancelamentos. Monitore padrões para identificar causas.`,
+        title: t('analytics.advisor.cancellationModerateTitle'),
+        message: t('analytics.advisor.cancellationModerateBody', strVars({ rate: summary.cancellationRate })),
         icon: 'info',
       });
     }
 
-    if (cancellationAnalysis.avgTimeBeforeCancellation > 30) {
+    if (summary.cancelled > 0 && cancellationAnalysis.avgTimeBeforeCancellation > 30) {
       result.push({
         type: 'insight',
         category: 'cancellation',
         severity: 'warning',
-        title: 'Cancelamentos tardios',
-        message: `Clientes cancelam em média após ${formatDurationMinutes(cancellationAnalysis.avgTimeBeforeCancellation)}. Considere melhorar comunicação sobre tempo de espera.`,
+        title: t('analytics.advisor.lateCancelTitle'),
+        message: t(
+          'analytics.advisor.lateCancelBody',
+          strVars({
+            minutes: formatDurationMinutes(cancellationAnalysis.avgTimeBeforeCancellation),
+            cancelled: summary.cancelled,
+          })
+        ),
         icon: 'schedule',
       });
     }
 
-    // Peak Hour Staffing
-    if (peakHour) {
-      const presentBarbers = barbers.filter(b => b.isPresent).length;
-      const peakHourTraffic = peakHour.count;
-      const avgBarberCapacity = summary.avgPerDay / Math.max(presentBarbers, 1);
-      
-      if (peakHourTraffic > avgBarberCapacity * 1.5 && presentBarbers < 2) {
+    if (peakHour && total > 0) {
+      const share = Math.round((peakHour.count / total) * 100);
+      result.push({
+        type: 'insight',
+        category: 'traffic',
+        severity: 'info',
+        title: t('analytics.advisor.peakHourTitle'),
+        message: t(
+          'analytics.advisor.peakHourBody',
+          strVars({
+            hour: String(peakHour.hour).padStart(2, '0'),
+            count: peakHour.count,
+            share,
+            total,
+          })
+        ),
+        icon: 'schedule',
+      });
+    }
+
+    if (summary.completed > 0 && summary.avgServiceTime > 0) {
+      result.push({
+        type: 'insight',
+        category: 'efficiency',
+        severity: 'info',
+        title: t('analytics.advisor.serviceTimeTitle'),
+        message: t(
+          'analytics.advisor.serviceTimeBody',
+          strVars({
+            minutes: formatDurationMinutes(summary.avgServiceTime),
+            completed: summary.completed,
+          })
+        ),
+        icon: 'timer',
+      });
+    }
+
+    if (trends.weekOverWeek !== 0) {
+      if (trends.weekOverWeek < -10) {
         result.push({
           type: 'recommendation',
-          category: 'staffing',
+          category: 'growth',
           severity: 'warning',
-          title: 'Pico de demanda',
-          message: `Horário ${peakHour.hour}:00 tem ${peakHourTraffic} atendimentos. Considere adicionar mais barbeiros neste horário.`,
-          icon: 'groups',
+          title: t('analytics.advisor.wowDownTitle'),
+          message: t('analytics.advisor.wowDownBody', strVars({ pct: Math.abs(trends.weekOverWeek) })),
+          icon: 'trending_down',
+        });
+      } else if (trends.weekOverWeek > 10) {
+        result.push({
+          type: 'insight',
+          category: 'growth',
+          severity: 'info',
+          title: t('analytics.advisor.wowUpTitle'),
+          message: t('analytics.advisor.wowUpBody', strVars({ pct: trends.weekOverWeek })),
+          icon: 'trending_up',
         });
       }
     }
 
-    // Service Time Analysis
-    if (summary.avgServiceTime > 30) {
-      result.push({
-        type: 'recommendation',
-        category: 'efficiency',
-        severity: 'warning',
-        title: 'Tempo de serviço elevado',
-        message: `Tempo médio de ${formatDurationMinutes(summary.avgServiceTime)} por atendimento. Considere otimizar processos.`,
-        icon: 'timer',
-      });
-    } else if (summary.avgServiceTime < 15 && summary.avgServiceTime > 0) {
-      result.push({
-        type: 'insight',
-        category: 'efficiency',
-        severity: 'info',
-        title: 'Eficiência alta',
-        message: `Tempo médio de ${formatDurationMinutes(summary.avgServiceTime)} indica boa eficiência operacional.`,
-        icon: 'check_circle',
-      });
+    const effSorted = [...barberEfficiency].sort((a, b) => b.ticketsPerDay - a.ticketsPerDay);
+    const topBarber = effSorted[0];
+    const withVolume = barberEfficiency.filter((b) => b.ticketsPerDay > 0);
+    const lowBarber = [...withVolume].sort((a, b) => a.ticketsPerDay - b.ticketsPerDay)[0];
+
+    if (topBarber && lowBarber && withVolume.length >= 2 && topBarber.id !== lowBarber.id) {
+      if (topBarber.ticketsPerDay > lowBarber.ticketsPerDay * 2) {
+        result.push({
+          type: 'insight',
+          category: 'efficiency',
+          severity: 'info',
+          title: t('analytics.advisor.barberGapTitle'),
+          message: t(
+            'analytics.advisor.barberGapBody',
+            strVars({
+              topName: topBarber.name,
+              topTpd: topBarber.ticketsPerDay.toFixed(1),
+              lowName: lowBarber.name,
+              lowTpd: lowBarber.ticketsPerDay.toFixed(1),
+            })
+          ),
+          icon: 'balance',
+        });
+      }
     }
 
-    // Traffic Trends
-    if (trends.weekOverWeek < -10) {
-      result.push({
-        type: 'recommendation',
-        category: 'growth',
-        severity: 'warning',
-        title: 'Queda no tráfego',
-        message: `Tráfego ${Math.abs(trends.weekOverWeek)}% menor que o período anterior. Revise estratégias de marketing ou ofertas.`,
-        icon: 'trending_down',
-      });
-    } else if (trends.weekOverWeek > 10) {
-      result.push({
-        type: 'insight',
-        category: 'growth',
-        severity: 'info',
-        title: 'Crescimento positivo',
-        message: `Tráfego ${trends.weekOverWeek}% maior que o período anterior. Continue monitorando para manter o crescimento.`,
-        icon: 'trending_up',
-      });
-    }
-
-    // Barber Performance
-    const topBarber = barberEfficiency.sort((a, b) => b.ticketsPerDay - a.ticketsPerDay)[0];
-    const lowBarber = barberEfficiency.filter(b => b.ticketsPerDay > 0).sort((a, b) => a.ticketsPerDay - b.ticketsPerDay)[0];
-    
-    if (topBarber && lowBarber && topBarber.ticketsPerDay > lowBarber.ticketsPerDay * 2) {
-      result.push({
-        type: 'insight',
-        category: 'efficiency',
-        severity: 'info',
-        title: 'Disparidade de desempenho',
-        message: `${topBarber.name} atende ${topBarber.ticketsPerDay.toFixed(1)} tickets/dia, enquanto ${lowBarber.name} atende ${lowBarber.ticketsPerDay.toFixed(1)}. Considere balancear a distribuição.`,
-        icon: 'balance',
-      });
-    }
-
-    // Service Popularity
     if (serviceBreakdown.length > 0) {
       const topService = serviceBreakdown[0];
       if (topService.percentage > 60) {
@@ -173,43 +234,55 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
           type: 'insight',
           category: 'traffic',
           severity: 'info',
-          title: 'Serviço dominante',
-          message: `${topService.serviceName} representa ${topService.percentage}% dos atendimentos. Considere promover outros serviços.`,
+          title: t('analytics.advisor.serviceDominantTitle'),
+          message: t(
+            'analytics.advisor.serviceDominantBody',
+            strVars({
+              name: topService.serviceName,
+              pct: topService.percentage,
+              count: topService.count,
+              total,
+            })
+          ),
           icon: 'star',
         });
       }
     }
 
-    // Day of Week Patterns
-    const dayEntries = Object.entries(data.dayOfWeekDistribution);
-    const maxDay = dayEntries.reduce((max, [day, count]) => count > max.count ? { day, count } : max, { day: '', count: 0 });
-    const minDay = dayEntries.reduce((min, [day, count]) => count < min.count && count > 0 ? { day, count } : min, { day: '', count: Infinity });
-    
-    if (maxDay.count > minDay.count * 2 && minDay.count > 0) {
-      const maxDayLabel = t(`common.dayFull.${maxDay.day}`) || maxDay.day;
-      const minDayLabel = t(`common.dayFull.${minDay.day}`) || minDay.day;
-      result.push({
-        type: 'insight',
-        category: 'traffic',
-        severity: 'info',
-        title: t('analytics.weeklyPatternTitle'),
-        message: t('analytics.weeklyPatternMessage')
-          .replace('{busiest}', maxDayLabel)
-          .replace('{busiestCount}', String(maxDay.count))
-          .replace('{quietest}', minDayLabel)
-          .replace('{quietestCount}', String(minDay.count)),
-        icon: 'calendar_month',
-      });
+    const dayPositive = Object.entries(data.dayOfWeekDistribution).filter(([, c]) => c > 0);
+    if (dayPositive.length >= 2) {
+      const sorted = [...dayPositive].sort((a, b) => b[1] - a[1]);
+      const maxDay = { day: sorted[0][0], count: sorted[0][1] };
+      const minEntry = sorted[sorted.length - 1];
+      const minDay = { day: minEntry[0], count: minEntry[1] };
+      if (maxDay.count > minDay.count * 2) {
+        const maxDayLabel = t(`common.dayFull.${maxDay.day}`) || maxDay.day;
+        const minDayLabel = t(`common.dayFull.${minDay.day}`) || minDay.day;
+        result.push({
+          type: 'insight',
+          category: 'traffic',
+          severity: 'info',
+          title: t('analytics.weeklyPatternTitle'),
+          message: t('analytics.weeklyPatternMessage')
+            .replace('{busiest}', maxDayLabel)
+            .replace('{busiestCount}', String(maxDay.count))
+            .replace('{quietest}', minDayLabel)
+            .replace('{quietestCount}', String(minDay.count)),
+          icon: 'calendar_month',
+        });
+      }
     }
 
-    // Completion Rate
     if (summary.completionRate < 70) {
       result.push({
         type: 'recommendation',
         category: 'efficiency',
         severity: 'warning',
-        title: 'Taxa de conclusão baixa',
-        message: `Apenas ${summary.completionRate}% dos tickets são concluídos. Revise processos para melhorar a conclusão.`,
+        title: t('analytics.advisor.completionLowTitle'),
+        message: t(
+          'analytics.advisor.completionLowBody',
+          strVars({ rate: summary.completionRate, completed: summary.completed, total })
+        ),
         icon: 'error',
       });
     } else if (summary.completionRate > 90) {
@@ -217,33 +290,12 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
         type: 'insight',
         category: 'efficiency',
         severity: 'info',
-        title: 'Alta taxa de conclusão',
-        message: `${summary.completionRate}% de conclusão indica boa retenção de clientes.`,
+        title: t('analytics.advisor.completionHighTitle'),
+        message: t(
+          'analytics.advisor.completionHighBody',
+          strVars({ rate: summary.completionRate, completed: summary.completed, total })
+        ),
         icon: 'check_circle',
-      });
-    }
-
-    // Predictions
-    const avgDailyTraffic = summary.avgPerDay;
-    const predictedNextWeek = Math.round(avgDailyTraffic * 7);
-    result.push({
-      type: 'prediction',
-      category: 'traffic',
-      severity: 'info',
-      title: 'Previsão próxima semana',
-      message: `Baseado nos padrões atuais, espera-se aproximadamente ${predictedNextWeek} atendimentos na próxima semana.`,
-      icon: 'auto_awesome',
-    });
-
-    if (peakHour) {
-      const recommendedStaffing = Math.ceil(peakHour.count / (summary.avgServiceTime || 30) * 60);
-      result.push({
-        type: 'prediction',
-        category: 'staffing',
-        severity: 'info',
-        title: 'Recomendação de equipe',
-        message: `Para o horário de pico (${peakHour.hour}:00), recomenda-se ${Math.max(recommendedStaffing, 2)} barbeiros presentes.`,
-        icon: 'people',
       });
     }
 
@@ -251,9 +303,8 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
   }, [data, t]);
 
   const insightsByType = {
-    insight: insights.filter(i => i.type === 'insight'),
-    prediction: insights.filter(i => i.type === 'prediction'),
-    recommendation: insights.filter(i => i.type === 'recommendation'),
+    insight: insights.filter((i) => i.type === 'insight'),
+    recommendation: insights.filter((i) => i.type === 'recommendation'),
   };
 
   const getSeverityColor = (severity: string) => {
@@ -297,7 +348,7 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
           <div>
             <h3 className="text-lg font-semibold text-[var(--shop-text-primary)] mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-[var(--shop-accent)]">lightbulb</span>
-              Recomendações
+              {t('analytics.advisor.sectionRecommendations')}
             </h3>
             <div className="space-y-3">
               {insightsByType.recommendation.map((insight, idx) => (
@@ -320,38 +371,11 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
           </div>
         )}
 
-        {insightsByType.prediction.length > 0 && (
-          <div>
-            <h3 className="text-lg font-semibold text-[var(--shop-text-primary)] mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[var(--shop-accent)]">trending_up</span>
-              Previsões
-            </h3>
-            <div className="space-y-3">
-              {insightsByType.prediction.map((insight, idx) => (
-                <div
-                  key={`pred-${idx}`}
-                  className={`p-4 rounded-xl border-2 ${getSeverityColor(insight.severity)}`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className={`material-symbols-outlined ${getSeverityIconColor(insight.severity)} flex-shrink-0`}>
-                      {insight.icon}
-                    </span>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-[var(--shop-text-primary)] mb-1">{insight.title}</h4>
-                      <p className="text-sm text-[var(--shop-text-secondary)]">{insight.message}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {insightsByType.insight.length > 0 && (
           <div>
             <h3 className="text-lg font-semibold text-[var(--shop-text-primary)] mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-[var(--shop-accent)]">insights</span>
-              Insights
+              {t('analytics.advisor.sectionInsights')}
             </h3>
             <div className="space-y-3">
               {insightsByType.insight.map((insight, idx) => (
@@ -377,4 +401,3 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
     </div>
   );
 }
-

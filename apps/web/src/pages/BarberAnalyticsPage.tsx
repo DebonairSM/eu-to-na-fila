@@ -6,7 +6,6 @@ import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
-import { BarberServiceWeekdayStatsTable } from '@/components/BarberServiceWeekdayStatsTable';
 import { Container, Heading, Text, Card, CardContent } from '@/components/design-system';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
@@ -28,13 +27,11 @@ interface BarberAnalyticsData {
   ticketsByDay: Record<string, number>;
   serviceBreakdown: Array<{ serviceId: number; serviceName: string; count: number; percentage: number; revenueCents?: number }>;
   dayOfWeekDistribution: Record<string, number>;
-  serviceTimeByWeekday?: Array<{
+  serviceAverages?: Array<{
     serviceId: number;
     serviceName: string;
-    dayOfWeek: number;
-    dayName: string;
-    avgDurationMinutes: number;
-    totalCompleted: number;
+    avgMinutes: number;
+    completedCount: number;
   }>;
   ratings?: {
     ratingCount: number;
@@ -121,7 +118,7 @@ export function BarberAnalyticsPage() {
     );
   }
 
-  const { summary, ticketsByDay, serviceBreakdown, dayOfWeekDistribution, serviceTimeByWeekday, ratings } = data;
+  const { summary, ticketsByDay, serviceBreakdown, dayOfWeekDistribution, serviceAverages, ratings } = data;
   const daysList = Object.entries(ticketsByDay).sort(([a], [b]) => a.localeCompare(b));
 
   return (
@@ -172,14 +169,6 @@ export function BarberAnalyticsPage() {
                 <p className="text-2xl font-bold text-white mt-1">{summary.avgPerDay}</p>
               </CardContent>
             </Card>
-            <Card variant="default" className="bg-white/5 border-white/10">
-              <CardContent className="p-4">
-                <Text size="sm" variant="secondary" className="uppercase tracking-wider">
-                  Tempo médio (min)
-                </Text>
-                <p className="text-2xl font-bold text-white mt-1">{summary.avgServiceTime}</p>
-              </CardContent>
-            </Card>
             {ratings && (ratings.ratingCount > 0 || ratings.ratingsToday.count > 0) && (
               <Card variant="default" className="bg-white/5 border-white/10 sm:col-span-2">
                 <CardContent className="p-4">
@@ -211,6 +200,35 @@ export function BarberAnalyticsPage() {
               </Card>
             )}
           </div>
+
+          <Card variant="default" className="bg-white/5 border-white/10">
+            <CardContent className="p-6">
+              <Heading level={2} className="text-lg text-white mb-2">
+                {t('analytics.efficiencyAvgByServiceTitle')}
+              </Heading>
+              <Text size="sm" variant="secondary" className="mb-3 block">
+                {t('barber.avgDurationPeriodHint', { minutes: String(summary.avgServiceTime) })}
+              </Text>
+              {serviceAverages && serviceAverages.length > 0 ? (
+                <ul className="space-y-2">
+                  {serviceAverages.map((s) => (
+                    <li key={s.serviceId} className="flex justify-between gap-3 text-sm">
+                      <span className="text-white/90 truncate">{s.serviceName}</span>
+                      <span className="text-[var(--shop-accent)] font-medium shrink-0">
+                        {s.avgMinutes} min
+                        <span className="text-white/50 font-normal text-xs ml-1">({s.completedCount})</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <Text variant="secondary">{t('analytics.efficiencyAvgByServiceInsufficient')}</Text>
+              )}
+              <Text size="sm" variant="secondary" className="mt-4 block">
+                {t('analytics.efficiencyAvgByServiceNote')}
+              </Text>
+            </CardContent>
+          </Card>
 
           <Card variant="default" className="bg-white/5 border-white/10">
             <CardContent className="p-6">
@@ -281,29 +299,6 @@ export function BarberAnalyticsPage() {
               </ul>
             </CardContent>
           </Card>
-
-          {serviceTimeByWeekday && serviceTimeByWeekday.length > 0 && (
-            <Card variant="default" className="bg-white/5 border-white/10">
-              <CardContent className="p-6">
-                <Heading level={2} className="text-lg text-white mb-2">
-                  {t('analytics.myTimeByWeekdayTitle')}
-                </Heading>
-                <Text size="sm" variant="secondary" className="mb-4 block">
-                  {t('analytics.myTimeByWeekdayIntro')}
-                </Text>
-                <BarberServiceWeekdayStatsTable
-                  rows={serviceTimeByWeekday}
-                  showBarberColumn={false}
-                  emptyMessage={t('barber.noDataInPeriod')}
-                  labelBarber={t('analytics.barber')}
-                  labelDay={t('analytics.day')}
-                  labelService={t('analytics.service')}
-                  labelAvgMinutes={t('analytics.avgMin')}
-                  labelAttendances={t('analytics.attendances')}
-                />
-              </CardContent>
-            </Card>
-          )}
 
           <Card variant="default" className="bg-white/5 border-white/10">
             <CardContent className="p-6">

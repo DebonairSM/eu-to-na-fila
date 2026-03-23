@@ -16,7 +16,6 @@ import { LocationChart } from '@/components/LocationChart';
 import { DemographicsInsights } from '@/components/DemographicsInsights';
 import { DayOfWeekChart } from '@/components/DayOfWeekChart';
 import { BarberProductivityByDayChart, type ProductivityTimeScope } from '@/components/BarberProductivityByDayChart';
-import { BarberServiceWeekdayStatsTable } from '@/components/BarberServiceWeekdayStatsTable';
 import { WaitTimeTrendChart } from '@/components/WaitTimeTrendChart';
 import { CancellationChart } from '@/components/CancellationChart';
 import { ServiceTimeDistributionChart } from '@/components/ServiceTimeDistributionChart';
@@ -42,6 +41,10 @@ interface AnalyticsData {
     days: number;
     since: string;
     until: string;
+    /** Calendar days (shop TZ) overlapping the window; context vs openDays. */
+    calendarDays?: number;
+    /** Days used for avg/day and barber tickets/day (scheduled open days, or calendar if no hours). */
+    openDays?: number;
   };
   summary: {
     total: number;
@@ -116,6 +119,12 @@ interface AnalyticsData {
     completionRate: number;
     ratingCount?: number;
     avgRating?: number | null;
+    serviceAverages?: Array<{
+      serviceId: number;
+      serviceName: string;
+      avgMinutes: number;
+      completedCount: number;
+    }>;
   }>;
   trends: {
     weekOverWeek: number;
@@ -253,20 +262,6 @@ export function AnalyticsPage() {
         return `${formatDate(mon, locale)} – ${formatDate(sun, locale)}`;
       })()
     : undefined;
-
-  const barberServiceWeekdayStatsRows = useMemo(() => {
-    const rows = data?.barberServiceWeekdayStats ?? [];
-    const filtered = selectedBarberId == null ? rows : rows.filter((row) => row.barberId === selectedBarberId);
-    return [...filtered].sort((a, b) => {
-      if (selectedBarberId == null) {
-        const barberNameCmp = a.barberName.localeCompare(b.barberName);
-        if (barberNameCmp !== 0) return barberNameCmp;
-      }
-      const dayCmp = a.dayOfWeek - b.dayOfWeek;
-      if (dayCmp !== 0) return dayCmp;
-      return a.serviceName.localeCompare(b.serviceName);
-    });
-  }, [data?.barberServiceWeekdayStats, selectedBarberId]);
 
   useEffect(() => {
     if (productivityTimeScope !== 'week' || !productivityWeekStart || !shopSlug) {
@@ -597,6 +592,13 @@ export function AnalyticsPage() {
                         efficiencyByBarber: t('analytics.pdf.efficiencyByBarber'),
                         ticketsPerDay: t('analytics.pdf.ticketsPerDay'),
                         completionRatePct: t('analytics.pdf.completionRatePct'),
+                        calendarDays: t('analytics.pdf.calendarDays'),
+                        openDays: t('analytics.pdf.openDays'),
+                        closedDays: t('analytics.pdf.closedDays'),
+                        avgPerOpenDay: t('analytics.pdf.avgPerOpenDay'),
+                        ticketsPerOpenDay: t('analytics.pdf.ticketsPerOpenDay'),
+                        dayBasisNote: t('analytics.pdf.dayBasisNote'),
+                        hourlyOpenHoursNote: t('analytics.pdf.hourlyOpenHoursNote'),
                       },
                     }
                   );
@@ -902,7 +904,7 @@ export function AnalyticsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="w-screen max-w-[100vw] relative left-1/2 -translate-x-1/2 mb-8 md:mb-10">
+                  <div className="mb-8 md:mb-10">
                     <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-6 sm:p-8 relative overflow-hidden">
                       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
                       <div className="mb-6 flex items-center justify-between gap-4 flex-shrink-0 flex-wrap">
@@ -1154,20 +1156,6 @@ export function AnalyticsPage() {
                     labelAllBarbers={t('analytics.allBarbersAverage')}
                     labelBarber={t('analytics.barber')}
                   />
-                  <div className="mt-8 pt-6 border-t border-[var(--shop-border-color)]">
-                    <h3 className="text-xl text-white mb-2">{t('analytics.timeByWeekdayTitle')}</h3>
-                    <p className="text-sm text-white/60 mb-4">{t('analytics.timeByWeekdayIntro')}</p>
-                    <BarberServiceWeekdayStatsTable
-                      rows={barberServiceWeekdayStatsRows}
-                      showBarberColumn={selectedBarberId == null}
-                      emptyMessage={t('analytics.timeByWeekdayEmpty')}
-                      labelBarber={t('analytics.barber')}
-                      labelDay={t('analytics.day')}
-                      labelService={t('analytics.service')}
-                      labelAvgMinutes={t('analytics.avgMin')}
-                      labelAttendances={t('analytics.attendances')}
-                    />
-                  </div>
                 </div>
               ) : null}
 
@@ -1217,12 +1205,31 @@ export function AnalyticsPage() {
                           {barberInfo && (
                             <div className="mt-4 pt-4 border-t border-[var(--shop-border-color)]">
                               <div className="flex items-center justify-between text-sm">
-                                <span className="text-white/70">Atendidos:</span>
+                                <span className="text-white/70">{t('analytics.efficiencyServed')}</span>
                                 <span className="text-white font-semibold">{barberInfo.totalServed}</span>
                               </div>
-                              <div className="flex items-center justify-between text-sm mt-2">
-                                <span className="text-white/70">Tempo médio:</span>
-                                <span className="text-white font-semibold">{barberInfo.avgServiceTime}m</span>
+                              <div className="mt-3 text-left">
+                                <p className="text-xs text-white/50 uppercase mb-2">{t('analytics.efficiencyAvgByServiceTitle')}</p>
+                                {barber.serviceAverages && barber.serviceAverages.length > 0 ? (
+                                  <ul className="space-y-1.5 text-sm">
+                                    {barber.serviceAverages.map((s) => (
+                                      <li key={s.serviceId} className="flex justify-between gap-2">
+                                        <span className="text-white/80 truncate" title={s.serviceName}>
+                                          {s.serviceName}
+                                        </span>
+                                        <span className="text-white font-medium shrink-0">
+                                          {s.avgMinutes}m
+                                          <span className="text-white/45 font-normal text-xs ml-1">
+                                            ({s.completedCount})
+                                          </span>
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="text-sm text-white/50">{t('analytics.efficiencyAvgByServiceInsufficient')}</p>
+                                )}
+                                <p className="text-xs text-white/40 mt-2">{t('analytics.efficiencyAvgByServiceNote')}</p>
                               </div>
                             </div>
                           )}
