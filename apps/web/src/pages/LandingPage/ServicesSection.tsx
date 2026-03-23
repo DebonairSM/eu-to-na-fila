@@ -42,13 +42,13 @@ export function ServicesSection() {
             {activeServices.map((service) => (
               <Card key={service.id} hover className="service-card text-center min-w-max">
                 <CardContent className="py-6 px-3 min-w-0">
-                  <span className="service-card__icon material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)] mb-4 block">
+                  <span className="service-card__icon material-symbols-outlined text-5xl text-[var(--shop-accent)] mb-4 block">
                     content_cut
                   </span>
                   <Heading level={3} className="service-card__title mb-2 text-xl">
                     {service.name}
                   </Heading>
-                  <Text size="lg" className="service-card__price text-[var(--shop-accent,#D4AF37)] font-semibold">
+                  <Text size="lg" className="service-card__price text-[var(--shop-accent)] font-semibold">
                     {formatCurrency(service.price, locale)}
                   </Text>
                 </CardContent>
@@ -64,13 +64,13 @@ export function ServicesSection() {
             const serviceCard = (service: (typeof activeServices)[0]) => (
               <Card key={service.id} hover className="service-card text-center h-full min-w-max">
                 <CardContent className="py-8 px-4 min-w-0">
-                  <span className="service-card__icon material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)] mb-4 block">
+                  <span className="service-card__icon material-symbols-outlined text-5xl text-[var(--shop-accent)] mb-4 block">
                     content_cut
                   </span>
                   <Heading level={3} className="service-card__title mb-4 text-2xl">
                     {service.name}
                   </Heading>
-                  <Text size="xl" className="service-card__price text-[var(--shop-accent,#D4AF37)] font-semibold text-2xl">
+                  <Text size="xl" className="service-card__price text-[var(--shop-accent)] font-semibold text-2xl">
                     {formatCurrency(service.price, locale)}
                   </Text>
                 </CardContent>

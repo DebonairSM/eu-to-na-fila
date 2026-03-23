@@ -145,7 +145,7 @@ export function Navigation() {
           : 'py-0.5 sm:py-2'
       }`}
       style={{
-        backgroundColor: 'var(--shop-nav-bg, #0a0a0a)',
+        backgroundColor: 'var(--shop-nav-bg)',
       }}
       role="navigation"
       aria-label={t('accessibility.mainNav')}
@@ -155,7 +155,7 @@ export function Navigation() {
         <Link
           to="/home"
           className="font-['Playfair_Display',serif] text-base sm:text-2xl font-semibold flex items-center justify-center gap-1 sm:gap-3 min-h-[48px] min-w-[48px] px-1 sm:px-2 py-0 rounded transition-all flex-shrink-0 [&:hover]:opacity-90"
-          style={{ color: 'var(--shop-accent, #D4AF37)' }}
+          style={{ color: 'var(--shop-accent)' }}
           aria-label={`${shopName} - ${t('nav.home')}`}
         >
           {headerIconUrl ? (
@@ -176,7 +176,7 @@ export function Navigation() {
               onClick={(e) => handleHashLink(e, '#services')}
               className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-nav-bg)] cursor-pointer [&:hover]:[color:var(--shop-accent)]"
               style={{
-                color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
+                color: 'var(--shop-text-secondary)',
               }}
             >
               {navLabels.linkServices}
@@ -188,7 +188,7 @@ export function Navigation() {
               onClick={(e) => handleHashLink(e, '#about')}
               className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-nav-bg)] cursor-pointer [&:hover]:[color:var(--shop-accent)]"
               style={{
-                color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
+                color: 'var(--shop-text-secondary)',
               }}
             >
               {navLabels.linkAbout}
@@ -200,7 +200,7 @@ export function Navigation() {
               onClick={(e) => handleHashLink(e, '#location')}
               className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-nav-bg)] cursor-pointer [&:hover]:[color:var(--shop-accent)]"
               style={{
-                color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
+                color: 'var(--shop-text-secondary)',
               }}
             >
               {navLabels.linkLocation}
@@ -213,7 +213,7 @@ export function Navigation() {
                   to={user.role === 'owner' ? '/owner' : '/barber'}
                   className="font-semibold text-[0.9rem] px-4 py-2.5 rounded-lg min-h-[48px] flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
                   style={{
-                    backgroundColor: 'var(--shop-accent, #D4AF37)',
+                    backgroundColor: 'var(--shop-accent)',
                     color: '#0a0a0a',
                   }}
                 >
@@ -226,7 +226,7 @@ export function Navigation() {
                   onClick={handleLogout}
                   className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 [&:hover]:[color:var(--shop-accent)]"
                   style={{
-                    color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
+                    color: 'var(--shop-text-secondary)',
                   }}
                 >
                   {navLabels.labelLogout}
@@ -242,7 +242,7 @@ export function Navigation() {
                   className="cta-pop-trigger inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] px-4 py-2.5 rounded-xl min-h-[44px] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
                   style={{
                     color: '#0a0a0a',
-                    backgroundColor: 'var(--shop-accent, #D4AF37)',
+                    backgroundColor: 'var(--shop-accent)',
                   }}
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden>{ctaIcon}</span>
@@ -254,7 +254,7 @@ export function Navigation() {
                   to="/account"
                   className="text-[0.9rem] font-medium transition-colors px-3 py-2 rounded min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 [&:hover]:[color:var(--shop-accent)]"
                   style={{
-                    color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
+                    color: 'var(--shop-text-secondary)',
                   }}
                 >
                   {navLabels.linkAccount}
@@ -269,7 +269,7 @@ export function Navigation() {
                 className="cta-pop-trigger inline-flex items-center justify-center gap-2 font-semibold text-[0.9rem] px-4 py-2.5 rounded-xl min-h-[44px] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style={{
                   color: '#0a0a0a',
-                  backgroundColor: 'var(--shop-accent, #D4AF37)',
+                  backgroundColor: 'var(--shop-accent)',
                 }}
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden>{ctaIcon}</span>
@@ -285,7 +285,7 @@ export function Navigation() {
         {/* Mobile Menu Button */}
         <button
           className="lg:hidden bg-transparent border-0 cursor-pointer p-0 min-w-[48px] min-h-[48px] rounded-lg flex items-center justify-center transition-all hover:bg-[rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 flex-shrink-0"
-          style={{ color: 'var(--shop-text-primary, #fff)' }}
+          style={{ color: 'var(--shop-text-primary)' }}
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label={t('nav.toggleMenu')}
           aria-expanded={isMobileMenuOpen}
@@ -314,8 +314,8 @@ export function Navigation() {
             style={{
               animationDuration: '250ms',
               animationFillMode: 'both',
-              backgroundColor: 'var(--shop-nav-bg, #0a0a0a)',
-              borderRight: '1px solid var(--shop-border-color, rgba(255,255,255,0.08))',
+              backgroundColor: 'var(--shop-nav-bg)',
+              borderRight: '1px solid var(--shop-border-color)',
             }}
           >
             <div className="flex items-center justify-between mb-4 pb-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
@@ -342,7 +342,7 @@ export function Navigation() {
                       handleHashLink(e, '#services');
                     }}
                     className="block text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] cursor-pointer [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)]"
-                    style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
+                    style={{ color: 'var(--shop-text-secondary)' }}
                   >
                     {navLabels.linkServices}
                   </a>
@@ -355,7 +355,7 @@ export function Navigation() {
                       handleHashLink(e, '#about');
                     }}
                     className="block text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] cursor-pointer [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)]"
-                    style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
+                    style={{ color: 'var(--shop-text-secondary)' }}
                   >
                     {navLabels.linkAbout}
                   </a>
@@ -368,7 +368,7 @@ export function Navigation() {
                       handleHashLink(e, '#location');
                     }}
                     className="block text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] cursor-pointer [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)]"
-                    style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
+                    style={{ color: 'var(--shop-text-secondary)' }}
                   >
                     {navLabels.linkLocation}
                   </a>
@@ -378,7 +378,7 @@ export function Navigation() {
                     <Link
                       to="/schedule"
                       className="block text-sm font-medium px-3 py-3 rounded-md transition-all min-h-[48px] flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] [&:hover]:[color:var(--shop-accent)] [&:hover]:[background-color:var(--shop-surface-secondary)]"
-                      style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
+                      style={{ color: 'var(--shop-text-secondary)' }}
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsMobileMenuOpen(false);

@@ -18,7 +18,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           'inline-flex items-center justify-center gap-2 sm:gap-3',
           'font-semibold rounded-lg',
           'transition-all',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--shop-accent,#D4AF37)] focus-visible:ring-offset-2',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--shop-accent)] focus-visible:ring-offset-2',
           'disabled:pointer-events-none disabled:opacity-50',
           // Touch target minimum
           'min-h-[48px]',
@@ -26,11 +26,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           'active:scale-[0.98]',
           // Variants
           {
-            'bg-[var(--shop-accent,#D4AF37)] text-[var(--shop-text-on-accent,#0a0a0a)] hover:bg-[var(--shop-accent-hover,#E8C547)]':
+            'bg-[var(--shop-accent)] text-[var(--shop-text-on-accent)] hover:bg-[var(--shop-accent-hover)]':
               variant === 'default',
-            'bg-transparent text-white border-[length:var(--shop-border-width,1px)] border-[style:var(--shop-border-style,solid)] border-[rgba(255,255,255,0.25)] hover:border-[var(--shop-accent,#D4AF37)] hover:text-[var(--shop-accent,#D4AF37)]':
+            'bg-transparent text-white border-[length:var(--shop-border-width,1px)] border-[style:var(--shop-border-style,solid)] border-[rgba(255,255,255,0.25)] hover:border-[var(--shop-accent)] hover:text-[var(--shop-accent)]':
               variant === 'outline',
-            'bg-transparent text-[rgba(255,255,255,0.7)] hover:text-[var(--shop-accent,#D4AF37)] hover:bg-[color-mix(in_srgb,var(--shop-accent,#D4AF37)_15%,transparent)]':
+            'bg-transparent text-[rgba(255,255,255,0.7)] hover:text-[var(--shop-accent)] hover:bg-[color-mix(in_srgb,var(--shop-accent)_15%,transparent)]':
               variant === 'ghost',
             'bg-[#ef4444] text-white hover:bg-[#dc2626]':
               variant === 'destructive',

@@ -61,8 +61,8 @@ export function TrackingConsentBanner() {
       aria-label={t('join.trackingConsentLabel')}
       className="fixed bottom-0 left-0 right-0 z-[9998] p-4 safe-area-pb"
       style={{
-        backgroundColor: 'var(--shop-surface-secondary, #1a1a1a)',
-        borderTop: '1px solid var(--shop-border-color, rgba(255,255,255,0.08))',
+        backgroundColor: 'var(--shop-surface-secondary)',
+        borderTop: '1px solid var(--shop-border-color)',
         boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
       }}
     >
@@ -84,7 +84,7 @@ export function TrackingConsentBanner() {
             className="py-2 px-4 rounded-lg font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-surface-secondary)]"
             style={{
               color: '#0a0a0a',
-              backgroundColor: 'var(--shop-accent, #D4AF37)',
+              backgroundColor: 'var(--shop-accent)',
             }}
           >
             {t('join.trackingAllow')}

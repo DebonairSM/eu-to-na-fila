@@ -263,7 +263,7 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
       case 'warning':
         return 'border-[#f59e0b] bg-[rgba(245,158,11,0.1)]';
       default:
-        return 'border-[#3b82f6] bg-[rgba(59,130,246,0.1)]';
+        return 'border-[color-mix(in_srgb,var(--shop-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--shop-accent)_12%,transparent)]';
     }
   };
 
@@ -274,7 +274,7 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
       case 'warning':
         return 'text-[#f59e0b]';
       default:
-        return 'text-[#3b82f6]';
+        return 'text-[var(--shop-accent)]';
     }
   };
 
@@ -283,11 +283,11 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
   }
 
   return (
-    <div className="bg-[#242424] border border-[rgba(255,255,255,0.05)] rounded-3xl p-8 relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4AF37] to-[#E8C547]" />
+    <div className="bg-[var(--shop-surface-secondary)] border border-[var(--shop-border-color)] rounded-3xl p-8 relative overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--shop-accent)] to-[var(--shop-accent-hover)]" />
       <div className="mb-6 flex items-center gap-4">
-        <span className="material-symbols-outlined text-[#D4AF37] text-3xl">auto_awesome</span>
-        <h2 className="font-['Playfair_Display',serif] text-3xl text-white">
+        <span className="material-symbols-outlined text-[var(--shop-accent)] text-3xl">auto_awesome</span>
+        <h2 className="font-['Playfair_Display',serif] text-3xl text-[var(--shop-text-primary)]">
           {t('analytics.advisorTitle')}
         </h2>
       </div>
@@ -295,8 +295,8 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
       <div className="space-y-6">
         {insightsByType.recommendation.length > 0 && (
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#D4AF37]">lightbulb</span>
+            <h3 className="text-lg font-semibold text-[var(--shop-text-primary)] mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[var(--shop-accent)]">lightbulb</span>
               Recomendações
             </h3>
             <div className="space-y-3">
@@ -310,8 +310,8 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
                       {insight.icon}
                     </span>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-white mb-1">{insight.title}</h4>
-                      <p className="text-sm text-white/70">{insight.message}</p>
+                      <h4 className="font-semibold text-[var(--shop-text-primary)] mb-1">{insight.title}</h4>
+                      <p className="text-sm text-[var(--shop-text-secondary)]">{insight.message}</p>
                     </div>
                   </div>
                 </div>
@@ -322,8 +322,8 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
 
         {insightsByType.prediction.length > 0 && (
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#D4AF37]">trending_up</span>
+            <h3 className="text-lg font-semibold text-[var(--shop-text-primary)] mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[var(--shop-accent)]">trending_up</span>
               Previsões
             </h3>
             <div className="space-y-3">
@@ -337,8 +337,8 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
                       {insight.icon}
                     </span>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-white mb-1">{insight.title}</h4>
-                      <p className="text-sm text-white/70">{insight.message}</p>
+                      <h4 className="font-semibold text-[var(--shop-text-primary)] mb-1">{insight.title}</h4>
+                      <p className="text-sm text-[var(--shop-text-secondary)]">{insight.message}</p>
                     </div>
                   </div>
                 </div>
@@ -349,8 +349,8 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
 
         {insightsByType.insight.length > 0 && (
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#D4AF37]">insights</span>
+            <h3 className="text-lg font-semibold text-[var(--shop-text-primary)] mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[var(--shop-accent)]">insights</span>
               Insights
             </h3>
             <div className="space-y-3">
@@ -364,8 +364,8 @@ export function AIAnalyticsAdvisor({ data }: AIAnalyticsAdvisorProps) {
                       {insight.icon}
                     </span>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-white mb-1">{insight.title}</h4>
-                      <p className="text-sm text-white/70">{insight.message}</p>
+                      <h4 className="font-semibold text-[var(--shop-text-primary)] mb-1">{insight.title}</h4>
+                      <p className="text-sm text-[var(--shop-text-secondary)]">{insight.message}</p>
                     </div>
                   </div>
                 </div>

@@ -58,7 +58,7 @@ export function HeroSection() {
         </div>
       )}
       <Heading level={1} className="mb-6">
-        <span className="text-[var(--shop-accent,#D4AF37)]">{name}</span>
+        <span className="text-[var(--shop-accent)]">{name}</span>
       </Heading>
       <Text size="xl" variant="secondary" className={cn('mb-12', useSplitLayout ? '' : 'max-w-[500px] mx-auto text-center')}>
         {hero.subtitle}
@@ -91,14 +91,14 @@ export function HeroSection() {
   return (
     <section
       className={cn(
-        'hero relative min-h-screen overflow-hidden',
-        heroBanner ? 'flex flex-col justify-end pt-16 lg:pt-0 lg:min-h-[85vh]' : 'flex items-start justify-center pt-16 lg:items-center lg:pt-0'
+        'hero relative min-h-[calc(100vh-4rem)] sm:min-h-screen overflow-hidden flex flex-col',
+        heroBanner ? 'justify-end pt-16 lg:pt-0 lg:min-h-[85vh]' : 'justify-center pt-16 pb-8 lg:pt-0 lg:pb-0 lg:items-center'
       )}
-      style={{ backgroundColor: 'var(--shop-background, #0a0a0a)' }}
+      style={{ backgroundColor: 'var(--shop-background)' }}
     >
       {behavior.heroOverlay && <div className="hero-gradient-overlay absolute inset-0 pointer-events-none z-[1]" aria-hidden />}
-      <Container size="2xl" className={cn('relative z-10 w-full', heroBanner && 'hero-banner-container')}>
-        <div className={cn('lg:hidden text-center', heroBanner && 'hero-band')}>
+      <Container size="2xl" className={cn('relative z-10 w-full flex flex-col flex-1 justify-center', heroBanner && 'hero-banner-container')}>
+        <div className={cn('lg:hidden text-center flex flex-col justify-center flex-1 min-h-0', heroBanner && 'hero-band')}>
           <FadeIn delay={0}>
             {showBadge && (
               <div className={badgeClass}>
@@ -108,7 +108,7 @@ export function HeroSection() {
           </FadeIn>
           <SlideIn direction="up" delay={200}>
             <Heading level={1} className="mb-6">
-              <span className="text-[var(--shop-accent,#D4AF37)]">{name}</span>
+              <span className="text-[var(--shop-accent)]">{name}</span>
             </Heading>
           </SlideIn>
           <SlideIn direction="up" delay={400}>
@@ -154,7 +154,7 @@ export function HeroSection() {
           {showDecorativeBlock && heroAsymmetric && (
             <FadeIn delay={400} className="order-1 flex items-center justify-center">
               <div className="w-full max-w-[220px] aspect-square rounded-2xl border-[length:var(--shop-border-width,1px)] border-[style:var(--shop-border-style,solid)] border-[rgba(255,255,255,0.08)] flex items-center justify-center bg-[rgba(255,255,255,0.02)]">
-                <span className="material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)]/20">
+                <span className="material-symbols-outlined text-5xl text-[var(--shop-accent)]/20">
                   content_cut
                 </span>
               </div>
@@ -168,7 +168,7 @@ export function HeroSection() {
                 !useSplitLayout && 'text-center mx-auto',
                 !useSplitLayout && !heroNarrow && 'max-w-[760px]',
                 heroNarrow && 'max-w-md',
-                behavior.heroFrame && !heroCard && 'hero-frame max-w-3xl mx-auto border border-[var(--shop-border-color,rgba(255,255,255,0.12))] rounded-lg px-8 py-10',
+                behavior.heroFrame && !heroCard && 'hero-frame max-w-3xl mx-auto border border-[var(--shop-border-color)] rounded-lg px-8 py-10',
                 heroCard && 'hero-card mx-auto',
                 heroBanner && 'hero-band'
               )}
@@ -181,7 +181,7 @@ export function HeroSection() {
             <FadeIn delay={400}>
               <div className="flex items-center justify-center">
                 <div className="w-full max-w-[200px] aspect-square rounded-2xl border-[length:var(--shop-border-width,1px)] border-[style:var(--shop-border-style,solid)] border-[rgba(255,255,255,0.08)] flex items-center justify-center bg-[rgba(255,255,255,0.02)]">
-                  <span className="material-symbols-outlined text-5xl text-[var(--shop-accent,#D4AF37)]/20">
+                  <span className="material-symbols-outlined text-5xl text-[var(--shop-accent)]/20">
                     content_cut
                   </span>
                 </div>

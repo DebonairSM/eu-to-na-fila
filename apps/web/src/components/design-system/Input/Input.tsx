@@ -16,17 +16,17 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         className={cn(
           // Base styles
           'flex w-full rounded-lg',
-          'bg-[var(--shop-surface-secondary,#1a1a1a)] border',
+          'bg-[var(--shop-surface-secondary)] border',
           'px-4 py-3.5',
-          'text-[var(--shop-text-primary,#ffffff)] placeholder:text-[var(--shop-text-secondary,rgba(255,255,255,0.5))]',
+          'text-[var(--shop-text-primary)] placeholder:text-[var(--shop-text-secondary)]',
           'text-base', // 16px minimum for mobile
           'min-h-[52px]', // Touch-friendly height
           'transition-all',
-          'focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent,#D4AF37)] focus:border-[var(--shop-accent,#D4AF37)]',
+          'focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:border-[var(--shop-accent)]',
           // Error state
           error
             ? 'border-[#ef4444] focus:ring-[#ef4444]'
-            : 'border-[var(--shop-border-color,rgba(255,255,255,0.2))]',
+            : 'border-[var(--shop-border-color)]',
           className
         )}
         style={{
@@ -49,7 +49,7 @@ const InputLabel = React.forwardRef<
       ref={ref}
       className={cn(
         'block text-xs font-medium uppercase tracking-wide mb-2',
-        'text-[var(--shop-text-secondary,rgba(255,255,255,0.7))]',
+        'text-[var(--shop-text-secondary)]',
         className
       )}
       {...props}

@@ -18,3 +18,15 @@ export function formatDate(
 export function formatDayShort(date: Date, locale: string): string {
   return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(date);
 }
+
+/** Weekday for a UTC calendar date (matches API `YYYY-MM-DD` keys from `toISOString().slice(0, 10)`). */
+export function formatDayShortUtc(date: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' }).format(date);
+}
+
+/** Day/month for a UTC calendar date key (same semantics as analytics `ticketsByDay` / `waitTimeTrends`). */
+export function formatDayMonthUtc(dayKey: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', timeZone: 'UTC' }).format(
+    new Date(`${dayKey}T12:00:00.000Z`)
+  );
+}

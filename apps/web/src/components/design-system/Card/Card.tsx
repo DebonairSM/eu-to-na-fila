@@ -24,8 +24,8 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
             'bg-transparent border-[length:var(--shop-border-width,1px)] border-[style:var(--shop-border-style,solid)] border-[rgba(255,255,255,0.15)]':
               variant === 'outlined',
           },
-          variant !== 'outlined' && 'border-[var(--shop-border-color,rgba(255,255,255,0.08))]',
-          hover && 'lg:hover:border-[color-mix(in_srgb,var(--shop-accent,#D4AF37)_35%,transparent)]',
+          variant !== 'outlined' && 'border-[var(--shop-border-color)]',
+          hover && 'lg:hover:border-[color-mix(in_srgb,var(--shop-accent)_35%,transparent)]',
           className
         )}
         style={{
@@ -54,7 +54,7 @@ const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTML
   ({ className, ...props }, ref) => (
     <h3
       ref={ref}
-      className={cn('text-xl sm:text-2xl font-semibold leading-tight', 'text-[var(--shop-text-primary,#ffffff)]', className)}
+      className={cn('text-xl sm:text-2xl font-semibold leading-tight', 'text-[var(--shop-text-primary)]', className)}
       {...props}
     />
   )

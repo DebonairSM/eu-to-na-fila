@@ -231,7 +231,7 @@ export function AppearanceForm({
               key={`saved-${palette.label}-${idx}`}
               type="button"
               onClick={() => applyPalette(palette)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--shop-accent,#D4AF37)]/40 bg-[var(--shop-accent,#D4AF37)]/5 hover:bg-[var(--shop-accent,#D4AF37)]/10 transition-colors text-left"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--shop-accent)]/40 bg-[var(--shop-accent)]/5 hover:bg-[var(--shop-accent)]/10 transition-colors text-left"
             >
               <div className="flex rounded overflow-hidden border border-white/10 h-8 w-16 shrink-0">
                 <div className="flex-1" style={{ backgroundColor: palette.theme.background }} title={t('appearance.backgroundTitle')} />
@@ -264,7 +264,7 @@ export function AppearanceForm({
                   <button
                     type="button"
                     onClick={handleSavePalette}
-                    className="px-3 py-2 rounded-lg bg-[var(--shop-accent,#D4AF37)]/20 text-[var(--shop-accent,#D4AF37)] text-xs font-medium hover:bg-[var(--shop-accent,#D4AF37)]/30"
+                    className="px-3 py-2 rounded-lg bg-[var(--shop-accent)]/20 text-[var(--shop-accent)] text-xs font-medium hover:bg-[var(--shop-accent)]/30"
                   >
                     {t('common.save')}
                   </button>

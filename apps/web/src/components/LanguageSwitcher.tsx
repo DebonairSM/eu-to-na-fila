@@ -13,9 +13,9 @@ export function LanguageSwitcher() {
   //           key={loc}
   //           type="button"
   //           onClick={() => setLocale(loc)}
-  //           className="min-w-[44px] min-h-[44px] px-2 py-1.5 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-nav-bg,#0a0a0a)]"
+  //           className="min-w-[44px] min-h-[44px] px-2 py-1.5 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--shop-accent)] focus:ring-offset-2 focus:ring-offset-[var(--shop-nav-bg)]"
   //           style={{
-  //             color: isActive ? 'var(--shop-accent, #D4AF37)' : 'var(--shop-text-secondary, rgba(255,255,255,0.7))',
+  //             color: isActive ? 'var(--shop-accent)' : 'var(--shop-text-secondary)',
   //             backgroundColor: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
   //           }}
   //           aria-pressed={isActive}

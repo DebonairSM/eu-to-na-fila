@@ -26,10 +26,60 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
-    <!-- Critical CSS to prevent black/white screens -->
+    <!-- Match apps/web/src/styles/globals.css :root shop tokens; localStorage can override before first paint -->
+    <script>
+      (function () {
+        function shopSlug() {
+          if (window.__SHOP_SLUG__) return window.__SHOP_SLUG__;
+          var p = location.pathname;
+          var m = /^\/projects\/([^/]+)/.exec(p);
+          if (m) return m[1];
+          var R = { api: 1, company: 1, companies: 1, projects: 1, about: 1, contact: 1, health: 1, test: 1, ws: 1 };
+          m = /^\/([^/]+)/.exec(p);
+          if (m && !R[m[1]]) return m[1];
+          try {
+            var q = new URLSearchParams(location.search).get('shop');
+            if (q && q.trim()) return q.trim();
+          } catch (e) {}
+          return 'shop';
+        }
+        try {
+          var raw = localStorage.getItem('eutonafila_shop_theme_v1:' + shopSlug());
+          if (!raw) return;
+          var t = JSON.parse(raw);
+          var r = document.documentElement.style;
+          if (t.primary) r.setProperty('--shop-primary', t.primary);
+          if (t.accent) r.setProperty('--shop-accent', t.accent);
+          if (t.background) r.setProperty('--shop-background', t.background);
+          if (t.surfacePrimary) r.setProperty('--shop-surface-primary', t.surfacePrimary);
+          if (t.surfaceSecondary) r.setProperty('--shop-surface-secondary', t.surfaceSecondary);
+          if (t.navBg) r.setProperty('--shop-nav-bg', t.navBg);
+          if (t.textPrimary) r.setProperty('--shop-text-primary', t.textPrimary);
+          if (t.textSecondary) r.setProperty('--shop-text-secondary', t.textSecondary);
+          if (t.borderColor) r.setProperty('--shop-border-color', t.borderColor);
+          if (t.textOnAccent) r.setProperty('--shop-text-on-accent', t.textOnAccent);
+          if (t.accentHover) r.setProperty('--shop-accent-hover', t.accentHover);
+        } catch (e) {}
+      })();
+    </script>
     <style>
-      html, body, #root {
-        background-color: #0a0a0a !important;
+      :root {
+        --shop-primary: #3e2723;
+        --shop-accent: #d4af37;
+        --shop-background: #0a0a0a;
+        --shop-surface-primary: #0a0a0a;
+        --shop-surface-secondary: #1a1a1a;
+        --shop-nav-bg: #0a0a0a;
+        --shop-text-primary: #ffffff;
+        --shop-text-secondary: rgba(255, 255, 255, 0.7);
+        --shop-border-color: rgba(255, 255, 255, 0.08);
+        --shop-text-on-accent: #0a0a0a;
+        --shop-accent-hover: #e8c547;
+      }
+      html,
+      body,
+      #root {
+        background-color: var(--shop-background);
         margin: 0;
         padding: 0;
         min-height: 100vh;
@@ -39,8 +89,9 @@
         font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        color: var(--shop-text-secondary);
       }
-      
+
       /* Recovery UI for stuck app */
       .app-recovery {
         display: none;
@@ -49,8 +100,8 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: #0a0a0a;
-        color: #fff;
+        background: var(--shop-background);
+        color: var(--shop-text-primary);
         z-index: 99999;
         flex-direction: column;
         align-items: center;
@@ -59,12 +110,23 @@
         padding: 24px;
         font-family: 'Roboto', -apple-system, sans-serif;
       }
-      .app-recovery.visible { display: flex; }
-      .app-recovery h2 { margin: 0 0 12px; font-size: 18px; font-weight: 500; }
-      .app-recovery p { margin: 0 0 24px; font-size: 14px; color: rgba(255,255,255,0.7); max-width: 300px; }
+      .app-recovery.visible {
+        display: flex;
+      }
+      .app-recovery h2 {
+        margin: 0 0 12px;
+        font-size: 18px;
+        font-weight: 500;
+      }
+      .app-recovery p {
+        margin: 0 0 24px;
+        font-size: 14px;
+        color: var(--shop-text-secondary);
+        max-width: 300px;
+      }
       .app-recovery button {
-        background: #D4AF37;
-        color: #000;
+        background: var(--shop-accent);
+        color: var(--shop-text-on-accent);
         border: none;
         padding: 12px 32px;
         border-radius: 8px;
@@ -73,8 +135,13 @@
         cursor: pointer;
         transition: opacity 0.2s;
       }
-      .app-recovery button:hover { opacity: 0.9; }
-      .app-recovery button:disabled { opacity: 0.5; cursor: not-allowed; }
+      .app-recovery button:hover {
+        opacity: 0.9;
+      }
+      .app-recovery button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     </style>
     
     <title>Barbearia Mineiro - EuToNaFila</title>

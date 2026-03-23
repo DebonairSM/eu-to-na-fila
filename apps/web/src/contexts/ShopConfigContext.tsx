@@ -15,6 +15,7 @@ import { useShopSlug } from './ShopSlugContext';
 import { config as appConfig } from '@/lib/config';
 import { ensureGoogleFontsLoaded, fontTokenToStack } from '@/lib/shopStyle';
 import { ensureMaterialSymbolsFontFace } from '@/lib/materialSymbols';
+import { applyShopThemeToDocument, persistShopTheme } from '@/lib/shopThemeDom';
 
 export type { ShopTheme };
 
@@ -62,19 +63,7 @@ const ShopConfigContext = createContext<ShopConfigContextValue>({
 const cache = new Map<string, ShopConfig>();
 
 function applyTheme(theme: ShopTheme) {
-  if (typeof document === 'undefined') return;
-  const t = { ...defaultTheme, ...theme };
-  document.documentElement.style.setProperty('--shop-primary', t.primary);
-  document.documentElement.style.setProperty('--shop-accent', t.accent);
-  document.documentElement.style.setProperty('--shop-background', t.background ?? '#0a0a0a');
-  document.documentElement.style.setProperty('--shop-surface-primary', t.surfacePrimary ?? '#0a0a0a');
-  document.documentElement.style.setProperty('--shop-surface-secondary', t.surfaceSecondary ?? '#1a1a1a');
-  document.documentElement.style.setProperty('--shop-nav-bg', t.navBg ?? '#0a0a0a');
-  document.documentElement.style.setProperty('--shop-text-primary', t.textPrimary ?? '#ffffff');
-  document.documentElement.style.setProperty('--shop-text-secondary', t.textSecondary ?? 'rgba(255,255,255,0.7)');
-  document.documentElement.style.setProperty('--shop-border-color', t.borderColor ?? 'rgba(255,255,255,0.08)');
-  document.documentElement.style.setProperty('--shop-text-on-accent', t.textOnAccent ?? '#0a0a0a');
-  document.documentElement.style.setProperty('--shop-accent-hover', t.accentHover ?? '#E8C547');
+  applyShopThemeToDocument(theme);
 }
 
 function applyStyle(style: ShopStyleResolved) {
@@ -162,6 +151,7 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
       setIsLoading(false);
       setError(null);
       applyTheme(cached.theme);
+      persistShopTheme(shopSlug, cached.theme);
       applyStyle(cached.style);
       applyFavicon(cached.homeContent?.branding?.faviconUrl);
       return () => {
@@ -195,6 +185,7 @@ export function ShopConfigProvider({ children }: { children: React.ReactNode }) 
         setConfig(shopConfig);
         setError(null);
         applyTheme(shopConfig.theme);
+        persistShopTheme(shopSlug, shopConfig.theme);
         applyStyle(shopConfig.style);
         applyFavicon(shopConfig.homeContent?.branding?.faviconUrl);
       })

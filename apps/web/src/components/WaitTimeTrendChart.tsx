@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocale } from '@/contexts/LocaleContext';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatDayMonthUtc } from '@/lib/format';
 import { formatDurationMinutes } from '@/lib/formatDuration';
 
 export type WaitTimeScope = 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -11,6 +11,22 @@ interface WaitTimeTrendChartProps {
   dataByWeek?: Record<string, number>;
   dataByMonth?: Record<string, number>;
   dataByYear?: Record<string, number>;
+  /** When set (YYYY-MM-DD), daily scope shows every day in [dailySince, dailyUntil] so the axis matches the analytics period. */
+  dailySince?: string;
+  dailyUntil?: string;
+}
+
+/** UTC day keys from since through until inclusive (same as DailyChart). */
+function buildDayKeysInRange(since: string, until: string): string[] {
+  const start = new Date(since + 'T00:00:00.000Z');
+  const end = new Date(until + 'T00:00:00.000Z');
+  const days: string[] = [];
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    days.push(cursor.toISOString().split('T')[0]);
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return days;
 }
 
 function useSortedKeys(
@@ -19,7 +35,9 @@ function useSortedKeys(
   dataByHour?: Record<string, number>,
   dataByWeek?: Record<string, number>,
   dataByMonth?: Record<string, number>,
-  dataByYear?: Record<string, number>
+  dataByYear?: Record<string, number>,
+  dailySince?: string,
+  dailyUntil?: string
 ): { keys: string[]; series: Record<string, number> } {
   if (scope === 'hourly' && dataByHour) {
     const keys = Array.from({ length: 24 }, (_, i) => String(i));
@@ -39,13 +57,21 @@ function useSortedKeys(
     const keys = Object.keys(dataByYear).sort();
     return { keys, series: dataByYear };
   }
+  if (dailySince != null && dailyUntil != null) {
+    const keys = buildDayKeysInRange(dailySince, dailyUntil);
+    const series: Record<string, number> = {};
+    keys.forEach((k) => {
+      series[k] = data[k] ?? 0;
+    });
+    return { keys, series };
+  }
   const keys = Object.keys(data).sort();
   return { keys, series: data };
 }
 
 function formatLabel(key: string, scope: WaitTimeScope, locale: string): string {
   if (scope === 'hourly') return `${key}h`;
-  if (scope === 'daily') return formatDate(new Date(key + 'T12:00:00'), locale, { day: '2-digit', month: '2-digit' });
+  if (scope === 'daily') return formatDayMonthUtc(key, locale);
   if (scope === 'weekly') return formatDate(new Date(key + 'T12:00:00'), locale, { day: '2-digit', month: 'short' });
   if (scope === 'monthly') {
     const [y, m] = key.split('-').map(Number);
@@ -61,11 +87,22 @@ export function WaitTimeTrendChart({
   dataByWeek,
   dataByMonth,
   dataByYear,
+  dailySince,
+  dailyUntil,
 }: WaitTimeTrendChartProps) {
   const { locale, t } = useLocale();
   const [scope, setScope] = useState<WaitTimeScope>('daily');
 
-  const { keys, series } = useSortedKeys(scope, data, dataByHour, dataByWeek, dataByMonth, dataByYear);
+  const { keys, series } = useSortedKeys(
+    scope,
+    data,
+    dataByHour,
+    dataByWeek,
+    dataByMonth,
+    dataByYear,
+    scope === 'daily' ? dailySince : undefined,
+    scope === 'daily' ? dailyUntil : undefined
+  );
 
   if (keys.length === 0) {
     return (

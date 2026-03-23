@@ -58,7 +58,7 @@ export function AboutSection() {
     mapQuery: '',
   };
   const loc = homeContent?.location ?? fallbackLocation;
-  const accentClass = 'text-[var(--shop-accent,#D4AF37)] hover:underline';
+  const accentClass = 'text-[var(--shop-accent)] hover:underline';
   const locationItems = [
     { icon: 'location_on' as const, title: loc.labelAddress ?? t('management.address'), content: loc.address, link: loc.addressLink, linkLabel: loc.linkMaps ?? t('management.viewOnGoogleMaps') },
     { icon: 'schedule' as const, title: loc.labelHours ?? t('management.hours'), content: loc.hours },
@@ -75,7 +75,7 @@ export function AboutSection() {
       <Grid cols={{ mobile: 2 }} gap="lg">
         {features.map((feature) => (
           <div key={feature.text} className="flex items-center gap-4">
-            <span className="material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-2xl" style={{ fontWeight: style?.iconWeight ?? 300 }}>
+            <span className="material-symbols-outlined text-[var(--shop-accent)] text-2xl" style={{ fontWeight: style?.iconWeight ?? 300 }}>
               {feature.icon}
             </span>
             <Text size="base" variant="secondary">
@@ -91,7 +91,7 @@ export function AboutSection() {
     <Stack spacing="lg">
       {locationItems.map((item) => (
         <div key={item.title} className="location-info-card flex gap-4">
-          <span className="location-info-card__icon material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-xl flex-shrink-0">
+          <span className="location-info-card__icon material-symbols-outlined text-[var(--shop-accent)] text-xl flex-shrink-0">
             {item.icon}
           </span>
           <div className="location-info-card__body min-w-0">

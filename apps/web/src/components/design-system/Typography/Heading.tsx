@@ -11,7 +11,7 @@ const Heading = React.forwardRef<HTMLHeadingElement, HeadingProps>(
     const headingLevel = level || (as ? parseInt(as.substring(1)) : 1);
     const tagName = (as || (`h${headingLevel}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6')) as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 
-    const baseStyles = 'text-[var(--shop-text-primary,#ffffff)]';
+    const baseStyles = 'text-[var(--shop-text-primary)]';
 
     const sizeClasses = {
       1: 'text-[clamp(2.2rem,7vw,4.5rem)] lg:text-[clamp(3rem,5vw,5.5rem)]',

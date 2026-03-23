@@ -199,10 +199,11 @@ export function BarberAnalyticsPage() {
                   {daysList.map(([day, count]) => (
                     <li key={day} className="flex justify-between text-sm">
                       <span className="text-white/80">
-                        {formatDate(new Date(day + 'T12:00:00'), locale, {
+                        {formatDate(new Date(`${day}T12:00:00.000Z`), locale, {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric',
+                          timeZone: 'UTC',
                         })}
                       </span>
                       <span className="text-[var(--shop-accent)] font-medium">{count}</span>

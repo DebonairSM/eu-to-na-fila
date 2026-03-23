@@ -60,9 +60,9 @@ export function SuspenseWithTimeoutFallback({ timeoutMs = NAVIGATION_TIMEOUT_MS 
     return (
       <div
         className="min-h-screen text-white flex flex-col items-center justify-center p-6"
-        style={{ backgroundColor: 'var(--shop-background, #0a0a0a)' }}
+        style={{ backgroundColor: 'var(--shop-background)' }}
       >
-        <p className="text-sm mb-4" style={{ color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}>
+        <p className="text-sm mb-4" style={{ color: 'var(--shop-text-secondary)' }}>
           {t('errors.loadFailed')} {t('errors.generic')}
         </p>
         <div className="flex gap-2 flex-wrap justify-center">
@@ -80,13 +80,13 @@ export function SuspenseWithTimeoutFallback({ timeoutMs = NAVIGATION_TIMEOUT_MS 
   return (
     <div
       className="min-h-screen text-white flex flex-col"
-      style={{ backgroundColor: 'var(--shop-background, #0a0a0a)' }}
+      style={{ backgroundColor: 'var(--shop-background)' }}
       role="status"
       aria-live="polite"
     >
       <div
         className="h-1 w-full animate-pulse shrink-0"
-        style={{ backgroundColor: 'color-mix(in srgb, var(--shop-accent, #D4AF37) 40%, transparent)' }}
+        style={{ backgroundColor: 'color-mix(in srgb, var(--shop-accent) 40%, transparent)' }}
       />
       <div className="flex-1 flex items-center justify-center p-6">
         <LoadingSpinner text={loadingText} />

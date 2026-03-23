@@ -10,7 +10,7 @@ export interface SectionProps extends React.HTMLAttributes<HTMLElement> {
 
 const Section = React.forwardRef<HTMLElement, SectionProps>(
   ({ className, variant = 'primary', containerSize = '2xl', fullWidth = false, children, ...props }, ref) => {
-    const bgVar = variant === 'primary' ? 'var(--shop-surface-primary, #0a0a0a)' : 'var(--shop-surface-secondary, #1a1a1a)';
+    const bgVar = variant === 'primary' ? 'var(--shop-surface-primary)' : 'var(--shop-surface-secondary)';
 
     return (
       <section

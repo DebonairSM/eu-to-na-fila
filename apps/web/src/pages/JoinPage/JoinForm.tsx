@@ -157,16 +157,24 @@ export function JoinForm() {
     return () => window.clearInterval(timer);
   }, []);
 
+  const wasAuthModalOpenRef = useRef(false);
+
+  /** Seed auth modal once when it opens — do not re-sync while user edits (avoids identifier/email snapping back). */
   useEffect(() => {
-    if (!isAuthModalOpen) return;
-    const fromJoin = customerEmail.trim() || customerPhone.trim() || '';
-    if (fromJoin && !authIdentifier) {
-      setAuthIdentifier(fromJoin);
-    }
-    if (customerEmail.trim() && !signupEmail) {
-      setSignupEmail(customerEmail.trim());
-    }
-  }, [isAuthModalOpen, authIdentifier, customerEmail, customerPhone, signupEmail]);
+    const justOpened = isAuthModalOpen && !wasAuthModalOpenRef.current;
+    wasAuthModalOpenRef.current = isAuthModalOpen;
+    if (!justOpened) return;
+
+    const email = customerEmail.trim();
+    const phone = customerPhone.trim();
+    setAuthIdentifier(email || phone || '');
+    setSignupEmail(email);
+    setSignupName(combinedName.trim());
+    setAuthPassword('');
+    setSignupConfirmPassword('');
+    setSignupBirthday('');
+    setAuthError(null);
+  }, [isAuthModalOpen, customerEmail, customerPhone, combinedName]);
 
   const applyFormattedName = () => {
     const formatted = formatNameWithConnectors(combinedName);
@@ -817,7 +825,10 @@ export function JoinForm() {
 
       <Modal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setIsSignupExpanded(false);
+        }}
         title={isSignupExpanded ? t('auth.createAccount') : t('auth.login')}
         showCloseButton
       >
@@ -919,8 +930,20 @@ export function JoinForm() {
             <button
               type="button"
               onClick={() => {
-                setIsSignupExpanded(true);
                 setAuthError(null);
+                setSignupEmail((prev) => {
+                  const p = prev.trim();
+                  if (p) return p;
+                  const id = authIdentifier.trim();
+                  if (id.includes('@')) return id;
+                  return customerEmail.trim() || '';
+                });
+                setSignupName((prev) => {
+                  const p = prev.trim();
+                  if (p) return p;
+                  return combinedName.trim();
+                });
+                setIsSignupExpanded(true);
               }}
               className="w-full text-sm text-[var(--shop-accent)] hover:underline"
             >
@@ -928,17 +951,19 @@ export function JoinForm() {
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={() => {
-              setIsSignupExpanded(false);
-              setAuthError(null);
-            }}
-            className="w-full flex items-center justify-center text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)]"
-            aria-label={t('join.collapseSignup')}
-          >
-            <span className="material-symbols-outlined">keyboard_arrow_up</span>
-          </button>
+          {isSignupExpanded && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignupExpanded(false);
+                setAuthError(null);
+              }}
+              className="w-full flex items-center justify-center text-[var(--shop-text-secondary)] hover:text-[var(--shop-text-primary)]"
+              aria-label={t('join.collapseSignup')}
+            >
+              <span className="material-symbols-outlined">keyboard_arrow_up</span>
+            </button>
+          )}
         </form>
       </Modal>
 

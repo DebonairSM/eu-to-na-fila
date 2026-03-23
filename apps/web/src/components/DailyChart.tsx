@@ -1,5 +1,5 @@
 import { useLocale } from '@/contexts/LocaleContext';
-import { formatDayShort } from '@/lib/format';
+import { formatDayShortUtc } from '@/lib/format';
 
 /** Max bars to show so the chart stays readable; when period is longer, show the most recent days. */
 const MAX_DAYS_DISPLAYED = 31;
@@ -25,6 +25,12 @@ function buildDaysInRange(since: string, until: string): string[] {
   return days.slice(-MAX_DAYS_DISPLAYED);
 }
 
+/** Parse `YYYY-MM-DD` as a UTC calendar date (same semantics as analytics API day keys). */
+function utcDateFromDayKey(day: string): Date {
+  const [y, m, d] = day.split('-').map(Number);
+  return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1));
+}
+
 export function DailyChart({ data, since, until }: DailyChartProps) {
   const { locale } = useLocale();
   const days =
@@ -32,7 +38,7 @@ export function DailyChart({ data, since, until }: DailyChartProps) {
       ? buildDaysInRange(since, until)
       : Array.from({ length: 7 }, (_, i) => {
           const date = new Date();
-          date.setDate(date.getDate() - (6 - i));
+          date.setUTCDate(date.getUTCDate() - (6 - i));
           return date.toISOString().split('T')[0];
         });
 
@@ -45,9 +51,9 @@ export function DailyChart({ data, since, until }: DailyChartProps) {
       {days.map((day) => {
         const value = data[day] || 0;
         const heightPx = maxValue > 0 ? (value / maxValue) * barAreaHeight : 0;
-        const date = new Date(day);
-        const dayName = formatDayShort(date, locale);
-        const dayNum = date.getDate();
+        const date = utcDateFromDayKey(day);
+        const dayName = formatDayShortUtc(date, locale);
+        const dayNum = date.getUTCDate();
 
         return (
           <div key={day} className="daily-bar flex-1 flex flex-col items-center min-w-[35px] sm:min-w-[40px] group">

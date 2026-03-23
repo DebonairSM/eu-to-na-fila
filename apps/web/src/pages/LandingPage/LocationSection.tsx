@@ -28,7 +28,7 @@ export function LocationSection() {
     mapQuery: '',
   };
   const loc = homeContent?.location ?? fallbackLocation;
-  const accentClass = 'text-[var(--shop-accent,#D4AF37)] hover:underline';
+  const accentClass = 'text-[var(--shop-accent)] hover:underline';
 
   const locationItems = [
     {
@@ -106,7 +106,7 @@ export function LocationSection() {
         <Stack spacing="lg">
           {locationItems.map((item) => (
             <div key={item.title} className="location-info-card flex gap-4 lg:gap-6">
-              <span className="location-info-card__icon material-symbols-outlined text-[var(--shop-accent,#D4AF37)] text-xl lg:text-2xl flex-shrink-0">
+              <span className="location-info-card__icon material-symbols-outlined text-[var(--shop-accent)] text-xl lg:text-2xl flex-shrink-0">
                 {item.icon}
               </span>
               <div className="location-info-card__body min-w-0">

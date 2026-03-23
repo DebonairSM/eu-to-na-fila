@@ -53,7 +53,7 @@ function AppContent() {
   const shopProtectedLoading = (
     <div
       className="min-h-screen flex items-center justify-center"
-      style={{ backgroundColor: 'var(--shop-background, #0a0a0a)', color: 'var(--shop-text-secondary, rgba(255,255,255,0.7))' }}
+      style={{ backgroundColor: 'var(--shop-background)', color: 'var(--shop-text-secondary)' }}
       role="status"
       aria-live="polite"
     >

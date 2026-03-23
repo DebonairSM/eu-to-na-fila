@@ -53,12 +53,12 @@ export function LandingPage() {
   }, [location.hash]);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--shop-background, #0a0a0a)' }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--shop-background)' }}>
       <Navigation />
       {showLeaveFailed && (
         <div
           className="px-4 py-3 text-center text-sm"
-          style={{ backgroundColor: 'var(--shop-accent, #3b82f6)', color: 'fff' }}
+          style={{ backgroundColor: 'var(--shop-accent)', color: 'var(--shop-text-on-accent)' }}
           role="alert"
         >
           <span>{t('status.leaveFailedOnHome')}</span>
@@ -72,34 +72,36 @@ export function LandingPage() {
           </button>
         </div>
       )}
-      <HeroSection />
-      <SectionDivider />
-      <ServicesSection />
-      <SectionDivider />
-      {aboutLast ? (
-        <>
-          <LocationSection />
-          <SectionDivider />
-          <AboutSection />
-        </>
-      ) : (
-        <>
-          <AboutSection />
-          <SectionDivider />
-          <LocationSection />
-        </>
-      )}
-      <section className="py-12 sm:py-16 border-t border-[rgba(255,255,255,0.08)]">
-        <Container size="lg" className="text-center space-y-4">
-          <p className="text-sm text-[var(--shop-text-secondary)]">{t('join.bottomLoginHint')}</p>
-          <Link
-            to="/shop/login"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-xl min-h-[44px] font-semibold text-[var(--shop-text-on-accent)] bg-[var(--shop-accent)] hover:bg-[var(--shop-accent-hover)] transition-colors"
-          >
-            {t('auth.login')}
-          </Link>
-        </Container>
-      </section>
+      <main className="flex-1 flex flex-col">
+        <HeroSection />
+        <SectionDivider />
+        <ServicesSection />
+        <SectionDivider />
+        {aboutLast ? (
+          <>
+            <LocationSection />
+            <SectionDivider />
+            <AboutSection />
+          </>
+        ) : (
+          <>
+            <AboutSection />
+            <SectionDivider />
+            <LocationSection />
+          </>
+        )}
+        <section className="py-12 sm:py-16 border-t border-[rgba(255,255,255,0.08)]">
+          <Container size="lg" className="text-center space-y-4">
+            <p className="text-sm text-[var(--shop-text-secondary)]">{t('join.bottomLoginHint')}</p>
+            <Link
+              to="/shop/login"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-xl min-h-[44px] font-semibold text-[var(--shop-text-on-accent)] bg-[var(--shop-accent)] hover:bg-[var(--shop-accent-hover)] transition-colors"
+            >
+              {t('auth.login')}
+            </Link>
+          </Container>
+        </section>
+      </main>
     </div>
   );
 }
