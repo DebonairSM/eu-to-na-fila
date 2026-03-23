@@ -562,15 +562,7 @@ export function AnalyticsPage() {
                 type="button"
                 onClick={() => {
                   downloadAnalyticsPdf(
-                    {
-                      period: data.period,
-                      summary: data.summary,
-                      barbers: data.barbers,
-                      serviceBreakdown: data.serviceBreakdown,
-                      dayOfWeekDistribution: data.dayOfWeekDistribution,
-                      cancellationAnalysis: data.cancellationAnalysis,
-                      barberEfficiency: data.barberEfficiency,
-                    },
+                    data,
                     {
                       shopName: shopConfig.name,
                       periodLabel: periodLabel(data.period.days, data.period.since, data.period.until),
