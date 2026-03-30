@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback } f
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { api } from '@/lib/api';
 import { logError } from '@/lib/logger';
-import { API_TIMEOUT_WAIT_TIMES_MS } from '@/lib/constants';
+import { API_TIMEOUT_WAIT_TIMES_MS, POLL_INTERVALS } from '@/lib/constants';
 import { getCachedWaitTimes, setCachedWaitTimes, type WaitTimesData } from '@/lib/cache/waitTimesCache';
 
 export type { WaitTimesData };
@@ -20,7 +20,7 @@ type WaitTimesContextValue = {
 
 const WaitTimesContext = createContext<WaitTimesContextValue | null>(null);
 
-const POLL_INTERVAL_MS = 20000;
+const POLL_INTERVAL_MS = POLL_INTERVALS.WAIT_TIMES;
 
 /**
  * Single source for wait-times on the join route. Fetches as soon as the provider

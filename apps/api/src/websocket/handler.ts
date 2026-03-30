@@ -10,6 +10,11 @@ interface SubscribeMessage {
   companyId: number;
 }
 
+interface SubscribeQueueMessage {
+  type: 'subscribe.queue';
+  shopSlug: string;
+}
+
 interface AdsUpdatedMessage {
   type: 'ads.updated';
   companyId: number;
@@ -17,7 +22,13 @@ interface AdsUpdatedMessage {
   manifestVersion: number;
 }
 
-type ClientMessage = SubscribeMessage;
+interface QueueUpdatedMessage {
+  type: 'queue.updated';
+  shopSlug: string;
+  queueVersion: number;
+}
+
+type ClientMessage = SubscribeMessage | SubscribeQueueMessage;
 
 /**
  * WebSocket connection with subscription info
@@ -25,6 +36,7 @@ type ClientMessage = SubscribeMessage;
 interface WSConnection {
   socket: WSWebSocket;
   companyId: number | null;
+  shopSlugs: Set<string>;
 }
 
 /**
@@ -41,6 +53,7 @@ export class WebSocketManager {
     const conn: WSConnection = {
       socket,
       companyId: null,
+      shopSlugs: new Set(),
     };
     this.connections.add(conn);
 
@@ -74,6 +87,15 @@ export class WebSocketManager {
       conn.socket.send(JSON.stringify({
         type: 'subscribed',
         companyId: message.companyId,
+      }));
+      return;
+    }
+
+    if (message.type === 'subscribe.queue') {
+      conn.shopSlugs.add(message.shopSlug);
+      conn.socket.send(JSON.stringify({
+        type: 'subscribed.queue',
+        shopSlug: message.shopSlug,
       }));
     }
   }
@@ -112,6 +134,31 @@ export class WebSocketManager {
     // Log broadcast for debugging (optional)
     if (sentCount > 0) {
       console.log(`[WS] Broadcasted ads updated to ${sentCount} client(s): companyId=${companyId}, shopId=${shopId}, manifestVersion=${message.manifestVersion}`);
+    }
+  }
+
+  broadcastQueueUpdated(shopSlug: string, queueVersion?: number): void {
+    const message: QueueUpdatedMessage = {
+      type: 'queue.updated',
+      shopSlug,
+      queueVersion: queueVersion ?? Date.now(),
+    };
+    const messageStr = JSON.stringify(message);
+    let sentCount = 0;
+
+    for (const conn of this.connections) {
+      if (conn.shopSlugs.has(shopSlug) && conn.socket.readyState === 1) {
+        try {
+          conn.socket.send(messageStr);
+          sentCount++;
+        } catch (error) {
+          this.connections.delete(conn);
+        }
+      }
+    }
+
+    if (sentCount > 0) {
+      console.log(`[WS] Broadcasted queue updated to ${sentCount} client(s): shopSlug=${shopSlug}, queueVersion=${message.queueVersion}`);
     }
   }
 

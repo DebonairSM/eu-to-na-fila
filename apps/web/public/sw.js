@@ -12,17 +12,19 @@ function dbg() {}
 
 // Bump this when deploying changes that affect built asset graphs.
 // A stale cached HTML/JS combo is the most common cause of "blank black screen" after deploy.
-const CACHE_VERSION = 'v10';
+const CACHE_VERSION = 'v12';
 
 const STATIC_CACHE_NAME = `eutonafila-static-${CACHE_VERSION}`;
 const PAGE_CACHE_NAME = `eutonafila-pages-${CACHE_VERSION}`;
 const API_CACHE_NAME = `eutonafila-api-${CACHE_VERSION}`;
 const VIDEO_CACHE_NAME = `eutonafila-video-${CACHE_VERSION}`;
+const EXTERNAL_IMAGE_CACHE_NAME = `eutonafila-external-images-${CACHE_VERSION}`;
 
 // Cache size limits (in bytes)
-const MAX_CACHE_SIZE = 50 * 1024 * 1024; // 50MB total
-const MAX_VIDEO_CACHE_SIZE = 10 * 1024 * 1024; // 10MB for videos
+const MAX_CACHE_SIZE = 200 * 1024 * 1024; // 200MB total
+const MAX_VIDEO_CACHE_SIZE = 120 * 1024 * 1024; // 120MB for videos
 const MAX_API_CACHE_SIZE = 5 * 1024 * 1024; // 5MB for API responses
+const MAX_EXTERNAL_IMAGE_CACHE_SIZE = 80 * 1024 * 1024; // 80MB for Supabase images
 
 function getScopePath() {
   try {
@@ -86,7 +88,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== STATIC_CACHE_NAME && name !== PAGE_CACHE_NAME && name !== API_CACHE_NAME && name !== VIDEO_CACHE_NAME)
+          .filter((name) => name !== STATIC_CACHE_NAME && name !== PAGE_CACHE_NAME && name !== API_CACHE_NAME && name !== VIDEO_CACHE_NAME && name !== EXTERNAL_IMAGE_CACHE_NAME)
           .map((name) => {
             console.log('[SW] Deleting old cache:', name);
             return caches.delete(name);
@@ -138,6 +140,28 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
+    const isSupabaseHost = url.hostname.includes('supabase.co');
+    const isVideoRequest = request.destination === 'video' ||
+      url.pathname.endsWith('.mp4') || url.pathname.endsWith('.webm') || url.pathname.endsWith('.ogg');
+    const hasRangeRequest = request.headers.has('range');
+    const isSupabaseImageRequest =
+      url.origin !== self.location.origin &&
+      isSupabaseHost &&
+      !isVideoRequest &&
+      (request.destination === 'image' || /\.(png|jpe?g|webp|gif|svg)$/i.test(url.pathname));
+
+    if (isSupabaseImageRequest) {
+      event.respondWith(externalImageCacheStrategy(request));
+      return;
+    }
+
+    // Supabase video requests can be cached safely only when not using byte ranges.
+    // Range requests are common for <video> and should pass through unchanged.
+    if (isSupabaseHost && isVideoRequest && !hasRangeRequest) {
+      event.respondWith(videoCacheStrategy(request));
+      return;
+    }
+
     // Skip external storage URLs (S3, R2, CDN, etc.) - let browser handle directly
     // These are cross-origin and shouldn't be cached by service worker to avoid CSP violations
     const isExternalStorage = url.origin !== self.location.origin && 
@@ -146,6 +170,7 @@ self.addEventListener('fetch', (event) => {
        url.hostname.includes('amazonaws.com') ||
        url.hostname.includes('cloudflarestorage.com') ||
        url.hostname.includes('r2.dev') ||
+       url.hostname.includes('supabase.co') ||
        (url.hostname === 'localhost' && url.port === '9000'));
     
     if (isExternalStorage) {
@@ -157,10 +182,12 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
-    // Don't intercept ad media (GET /api/ads/:id/media) - let browser handle directly.
-    // SW fetch() can fail for range requests (video), binary responses, or network issues,
-    // causing "Failed to fetch" and breaking kiosk ad display on tablets/laptops.
+    // Don't intercept ad media when byte ranges are requested.
+    // For non-range requests, the generic video strategy below can cache full responses.
     if (/^\/api\/ads\/\d+\/media$/.test(url.pathname)) {
+      if (!hasRangeRequest) {
+        event.respondWith(videoCacheStrategy(request));
+      }
       return;
     }
 
@@ -406,7 +433,7 @@ async function videoCacheStrategy(request) {
     console.log('[SW] Fetching video from network:', request.url);
     const response = await fetch(request);
     
-    if (response.status === 200) {
+    if (response.ok || response.type === 'opaque') {
       // Check cache size before adding video
       await enforceCacheSizeLimit(VIDEO_CACHE_NAME, MAX_VIDEO_CACHE_SIZE);
       cache.put(request, response.clone());
@@ -417,6 +444,34 @@ async function videoCacheStrategy(request) {
     console.error('[SW] Video fetch failed:', error);
     throw error;
   }
+}
+
+/**
+ * Cache-first strategy for external Supabase images.
+ * Keeps ad/reference images local between visits to reduce Supabase egress.
+ */
+async function externalImageCacheStrategy(request) {
+  const cache = await caches.open(EXTERNAL_IMAGE_CACHE_NAME);
+  const cached = await cache.match(request);
+
+  if (cached) {
+    fetch(request).then(async (response) => {
+      if (response.status === 200) {
+        await enforceCacheSizeLimit(EXTERNAL_IMAGE_CACHE_NAME, MAX_EXTERNAL_IMAGE_CACHE_SIZE);
+        cache.put(request, response.clone());
+      }
+    }).catch(() => {
+      // Ignore background refresh failures
+    });
+    return cached;
+  }
+
+  const response = await fetch(request);
+  if (response.status === 200) {
+    await enforceCacheSizeLimit(EXTERNAL_IMAGE_CACHE_NAME, MAX_EXTERNAL_IMAGE_CACHE_SIZE);
+    cache.put(request, response.clone());
+  }
+  return response;
 }
 
 /**
@@ -440,11 +495,9 @@ async function enforceCacheSizeLimit(cacheName, maxSize) {
     }
   }
   
-  // If over limit, remove oldest entries (FIFO)
+  // If over limit, remove oldest entries (FIFO, deterministic).
+  // Cache.keys() preserves insertion order for a given cache.
   if (totalSize > maxSize) {
-    // Sort by key (which includes timestamp in some cases) or just remove oldest
-    entries.sort((a, b) => a.size - b.size); // Remove smallest first to maximize space freed
-    
     let freedSize = 0;
     for (const entry of entries) {
       if (totalSize - freedSize <= maxSize) break;

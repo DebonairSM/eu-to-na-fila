@@ -255,6 +255,7 @@ export const tickets = pgTable('tickets', {
 }, (table) => ({
   shopDeviceIdx: index('tickets_shop_device_idx').on(table.shopId, table.deviceId),
   shopStatusIdx: index('tickets_shop_status_idx').on(table.shopId, table.status),
+  shopStatusPositionIdx: index('tickets_shop_status_position_idx').on(table.shopId, table.status, table.position),
   shopCreatedIdx: index('tickets_shop_created_idx').on(table.shopId, table.createdAt),
   clientIdIdx: index('tickets_client_id_idx').on(table.clientId),
 }));

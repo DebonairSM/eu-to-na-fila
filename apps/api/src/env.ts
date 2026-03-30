@@ -41,6 +41,34 @@ const envSchema = z.object({
   STORAGE_ACCESS_KEY_ID: z.string().optional(),
   STORAGE_SECRET_ACCESS_KEY: z.string().optional(),
   STORAGE_PUBLIC_BASE_URL: z.string().optional(), // Public base URL for accessing files (CDN or storage public URL)
+  /** Uploaded ad image max width in pixels before resize. */
+  AD_IMAGE_MAX_WIDTH: z.string().transform(Number).default('1920'),
+  /** Uploaded ad image max height in pixels before resize. */
+  AD_IMAGE_MAX_HEIGHT: z.string().transform(Number).default('1080'),
+  /** Uploaded ad image WebP quality (1-100). */
+  AD_IMAGE_WEBP_QUALITY: z.string().transform(Number).default('82'),
+  /** Max uploaded ad image size in MB before optimization. */
+  AD_IMAGE_MAX_UPLOAD_MB: z.string().transform(Number).default('10'),
+  /** Max uploaded ad video size in MB. */
+  AD_VIDEO_MAX_UPLOAD_MB: z.string().transform(Number).default('20'),
+  /** Warning threshold for uploaded ad video size in MB. */
+  AD_VIDEO_WARN_UPLOAD_MB: z.string().transform(Number).default('12'),
+  /** Enable server-side ad video normalization (mp4/h264 profile for kiosk delivery). */
+  AD_VIDEO_NORMALIZE_ENABLED: z
+    .string()
+    .optional()
+    .transform((value) => {
+      if (value == null || value === '') return true;
+      return !['0', 'false', 'off', 'no'].includes(value.toLowerCase());
+    }),
+  /** Normalized ad video max width in pixels. */
+  AD_VIDEO_MAX_WIDTH: z.string().transform(Number).default('1280'),
+  /** Target video bitrate in kbps for normalized ad videos. */
+  AD_VIDEO_TARGET_BITRATE_KBPS: z.string().transform(Number).default('1800'),
+  /** Max video bitrate in kbps for normalized ad videos. */
+  AD_VIDEO_MAXRATE_KBPS: z.string().transform(Number).default('2400'),
+  /** Audio bitrate in kbps for normalized ad videos. */
+  AD_VIDEO_AUDIO_BITRATE_KBPS: z.string().transform(Number).default('128'),
   /** Google Places API key for address lookup. If set, Google Places is used; otherwise Nominatim (OpenStreetMap) is used for free. */
   GOOGLE_PLACES_API_KEY: z.string().optional(),
   /** Nominatim base URL (e.g. self-hosted). Defaults to https://nominatim.openstreetmap.org. Only used when GOOGLE_PLACES_API_KEY is not set. */
@@ -63,6 +91,14 @@ const envSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   /** Public URL of the frontend (root site) for Stripe success/cancel redirects. No trailing slash. */
   FRONTEND_PUBLIC_URL: z.string().url().optional(),
+  /** Enable websocket queue.updated broadcasts. Keep true unless diagnosing websocket issues. */
+  QUEUE_WS_ENABLED: z
+    .string()
+    .optional()
+    .transform((value) => {
+      if (value == null || value === '') return true;
+      return !['0', 'false', 'off', 'no'].includes(value.toLowerCase());
+    }),
 });
 
 let env: z.infer<typeof envSchema>;

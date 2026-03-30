@@ -6,7 +6,7 @@ import { CompanyNav } from '@/components/CompanyNav';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { api } from '@/lib/api';
-import type { CompanyUsageResponse, CompanyUsageAlert } from '@/lib/api/companies';
+import type { CompanyUsageResponse, CompanyUsageAlert, AdsUsageResponse } from '@/lib/api/companies';
 import { getErrorMessage } from '@/lib/utils';
 import { Container } from '@/components/design-system/Spacing/Container';
 
@@ -17,6 +17,7 @@ export function CompanyUsagePage() {
   const { t } = useLocale();
   const [usage, setUsage] = useState<CompanyUsageResponse | null>(null);
   const [alerts, setAlerts] = useState<CompanyUsageAlert[]>([]);
+  const [adsUsage, setAdsUsage] = useState<AdsUsageResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [resolvingId, setResolvingId] = useState<number | null>(null);
@@ -32,6 +33,12 @@ export function CompanyUsagePage() {
       ]);
       setUsage(usageRes);
       setAlerts(alertsRes.alerts);
+      try {
+        const adsUsageRes = await api.getAdsUsage();
+        setAdsUsage(adsUsageRes);
+      } catch {
+        setAdsUsage(null);
+      }
     } catch (err) {
       setError(getErrorMessage(err, t('company.loadError')));
     } finally {
@@ -62,6 +69,13 @@ export function CompanyUsagePage() {
     1,
     ...(usage?.timeSeries?.map((d) => d.requestCount) ?? [])
   );
+  const formatBytes = (bytes: number): string => {
+    if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  };
 
   return (
     <div className="min-h-screen h-full bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
@@ -200,6 +214,64 @@ export function CompanyUsagePage() {
                   <p className="text-white/60">{t('company.noShopsWithTraffic')}</p>
                 )}
               </section>
+
+              {adsUsage && (
+                <section className="border border-white/10 bg-white/5 rounded-xl p-6 mb-8">
+                  <h2 className="text-lg font-semibold text-white mb-4">
+                    Ad/media usage
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                      <div className="text-xs text-white/60 mb-1">Ad media estimated bytes</div>
+                      <div className="text-xl font-semibold text-white">{formatBytes(adsUsage.adMedia.estimatedBytes)}</div>
+                    </div>
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                      <div className="text-xs text-white/60 mb-1">Redirect ratio</div>
+                      <div className="text-xl font-semibold text-white">
+                        {adsUsage.adMedia.requests > 0
+                          ? `${Math.round((adsUsage.adMedia.redirects / adsUsage.adMedia.requests) * 100)}%`
+                          : '0%'}
+                      </div>
+                    </div>
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                      <div className="text-xs text-white/60 mb-1">Upload mix (video/image)</div>
+                      <div className="text-xl font-semibold text-white">
+                        {adsUsage.uploads.videoCount}/{adsUsage.uploads.imageCount}
+                      </div>
+                    </div>
+                  </div>
+
+                  <h3 className="text-sm font-semibold text-white/90 mb-2">Top ad byte contributors</h3>
+                  {adsUsage.topAds.length > 0 ? (
+                    <div className="overflow-x-auto mb-4">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-left text-white/70 border-b border-white/10">
+                            <th className="py-2 pr-4">Ad</th>
+                            <th className="py-2 pr-4">Requests</th>
+                            <th className="py-2 pr-4">Redirects</th>
+                            <th className="py-2 pr-4">Estimated bytes</th>
+                            <th className="py-2">Last seen</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {adsUsage.topAds.slice(0, 10).map((ad) => (
+                            <tr key={ad.adId} className="border-b border-white/5 text-white/90">
+                              <td className="py-2 pr-4 font-mono">#{ad.adId}</td>
+                              <td className="py-2 pr-4">{ad.requests.toLocaleString()}</td>
+                              <td className="py-2 pr-4">{ad.redirects.toLocaleString()}</td>
+                              <td className="py-2 pr-4">{formatBytes(ad.estimatedBytes)}</td>
+                              <td className="py-2">{new Date(ad.lastSeenAt).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-white/60 text-sm mb-4">No ad media traffic captured yet.</p>
+                  )}
+                </section>
+              )}
 
               <section className="border border-white/10 bg-white/5 rounded-xl p-6">
                 <h2 className="text-lg font-semibold text-white mb-4">

@@ -8,9 +8,13 @@
  */
 export const POLL_INTERVALS = {
   /** Standard queue polling interval */
-  QUEUE: 5000,
+  QUEUE: 8000,
   /** Minimum queue poll interval; values below this are clamped to avoid API hammering */
   QUEUE_MIN_MS: 3000,
+  /** Window to treat incoming queue WebSocket updates as "recent". */
+  QUEUE_WS_RECENT_WINDOW_MS: 60000,
+  /** Heartbeat fallback poll while WS is connected but no recent updates arrived. */
+  QUEUE_WS_HEARTBEAT_MS: 12000,
   /** Ticket status polling when not in line (1 minute) */
   TICKET_STATUS: 60000,
   /** Ticket status polling when in line / check-in */
@@ -20,11 +24,13 @@ export const POLL_INTERVALS = {
   /** Kiosk mode queue polling interval */
   KIOSK_QUEUE: 15000,
   /** Kiosk mode barber presence polling interval */
-  KIOSK_BARBER_POLL: 10000,
+  KIOSK_BARBER_POLL: 15000,
   /** Management/barber queue polling interval */
-  MANAGEMENT_QUEUE: 5000,
+  MANAGEMENT_QUEUE: 8000,
+  /** Public join page queue polling interval */
+  JOIN_PUBLIC_QUEUE: 20000,
   /** Status page queue polling (customer watching their position) */
-  STATUS_PAGE_QUEUE: 4000,
+  STATUS_PAGE_QUEUE: 7000,
 } as const;
 
 /**

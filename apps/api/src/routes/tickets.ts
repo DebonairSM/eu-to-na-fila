@@ -45,6 +45,17 @@ function invalidateActiveTicketCache(slug: string, deviceId: string): void {
  * Handles ticket creation, retrieval, and updates.
  */
 export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
+  const broadcastQueueUpdated = (shopSlug: string) => {
+    if (!env.QUEUE_WS_ENABLED) return;
+    const wsManager = (fastify as any).wsManager;
+    if (!wsManager || typeof wsManager.broadcastQueueUpdated !== 'function') return;
+    try {
+      wsManager.broadcastQueueUpdated(shopSlug);
+    } catch (error) {
+      fastify.log.warn({ err: error, shopSlug }, 'Failed to broadcast queue update');
+    }
+  };
+
   const activeTicketRateLimit = createRateLimit({
     max: 10,
     timeWindow: '1 minute',
@@ -177,6 +188,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     if (data.deviceId && data.deviceId.trim().length > 0) {
       invalidateActiveTicketCache(slug, data.deviceId);
     }
+    broadcastQueueUpdated(slug);
     return reply.status(201).send(shapeWithShop(ticket as Record<string, unknown>));
   });
 
@@ -387,6 +399,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
       );
     }
     const ticket = await ticketService.checkIn(id);
+    broadcastQueueUpdated(slug);
     return reply.send(shapeTicketResponse(ticket as Record<string, unknown>));
   });
 
@@ -612,7 +625,10 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const updatedTicket = await ticketService.updateStatus(id, updateData);
-
+    const updatedShopSlug = (existingTicket as { shop?: { slug?: string } }).shop?.slug;
+    if (updatedShopSlug) {
+      broadcastQueueUpdated(updatedShopSlug);
+    }
     return updatedTicket;
   });
 
@@ -689,6 +705,10 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const ticket = await ticketService.cancelWithExisting(existingTicket, 'Customer cancelled', 'customer');
+    const cancelledShopSlug = (existingTicket as { shop?: { slug?: string } }).shop?.slug;
+    if (cancelledShopSlug) {
+      broadcastQueueUpdated(cancelledShopSlug);
+    }
     return ticket;
   });
 
@@ -721,7 +741,10 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const ticket = await ticketService.cancel(id, 'Cancelled by staff/owner', 'staff');
-
+    const cancelledShopSlug = (existingTicket as { shop?: { slug?: string } }).shop?.slug;
+    if (cancelledShopSlug) {
+      broadcastQueueUpdated(cancelledShopSlug);
+    }
     return ticket;
   });
 
@@ -764,7 +787,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
         .returning({ id: schema.tickets.id });
       return deleted.length;
     });
-
+    broadcastQueueUpdated(slug);
     return { deletedCount: result };
   });
 };

@@ -57,7 +57,7 @@ export function BarberQueueManager() {
 
   const pollInterval = POLL_INTERVALS.MANAGEMENT_QUEUE;
   const barberPollInterval = isKioskMode ? POLL_INTERVALS.KIOSK_BARBER_POLL : 0;
-  const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval);
+  const { data: queueData, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(pollInterval, { scope: 'full' });
   const { barbers, togglePresence } = useBarbers(barberPollInterval);
   const { activeServices } = useServices();
   const { isBarber, user } = useAuthContext();
@@ -264,13 +264,31 @@ export function BarberQueueManager() {
       if (a.position !== b.position) return a.position - b.position;
       return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
     });
+    const sortedInProgressTickets = [...inProgressTickets].sort((a, b) => {
+      if (isBarber && user) {
+        const aMine = a.barberId === user.id ? 1 : 0;
+        const bMine = b.barberId === user.id ? 1 : 0;
+        if (aMine !== bMine) return bMine - aMine;
+      }
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
     return {
-      sortedTickets: [...sortedWaitingTickets, ...inProgressTickets],
+      sortedTickets: [...sortedInProgressTickets, ...sortedWaitingTickets],
       waitingCount: waitingTickets.length,
       servingCount: inProgressTickets.length,
       pendingTickets: sortedPending,
     };
-  }, [tickets]);
+  }, [tickets, isBarber, user]);
+
+  /** Waiting-line position (1-based); null for in_progress so badges stay correct when serving rows are first. */
+  const queueRows = useMemo(() => {
+    let waitPos = 0;
+    return sortedTickets.map((ticket) => {
+      const isServing = ticket.status === 'in_progress';
+      const displayPosition = isServing ? null : ++waitPos;
+      return { ticket, displayPosition };
+    });
+  }, [sortedTickets]);
 
   // Get the ticket being edited for rescheduling
   const editTicket = editAppointmentTicketId != null ? pendingTickets.find((t) => t.id === editAppointmentTicketId) : undefined;
@@ -684,11 +702,9 @@ export function BarberQueueManager() {
                     <p className="text-lg text-white/30 mt-2">{t('barber.tapToAdd')}</p>
                   </div>
                 ) : (
-                  sortedTickets.map((ticket, index) => {
+                  queueRows.map(({ ticket, displayPosition }) => {
                     const assignedBarber = getAssignedBarber(ticket);
                     const isServing = ticket.status === 'in_progress';
-                    // Calculate display position based on index in sorted waiting tickets
-                    const displayPosition = isServing ? null : index + 1;
 
                     return (
                       <div
@@ -1134,14 +1150,12 @@ export function BarberQueueManager() {
                   {t('barber.noClientInQueue')}
                 </div>
               ) : (
-                sortedTickets.map((ticket, index) => {
+                queueRows.map(({ ticket, displayPosition }) => {
                   const assignedBarber = getAssignedBarber(ticket);
                   const isServing = ticket.status === 'in_progress';
                   const canOpenNotesAsBarber = !isBarber || (user && assignedBarber?.id === user.id);
                   const hasClientRecord = (ticket as { clientId?: number | null }).clientId != null;
                   const showNotesButton = isServing && canOpenNotesAsBarber && hasClientRecord;
-                  // Calculate display position based on index in sorted waiting tickets
-                  const displayPosition = isServing ? null : index + 1;
                   const preferredBarberId = (ticket as { preferredBarberId?: number }).preferredBarberId;
                   const preferredBarberName = settings.allowBarberPreference && preferredBarberId != null ? barbers.find((b) => b.id === preferredBarberId)?.name ?? null : null;
                     return (
@@ -1643,8 +1657,10 @@ export function BarberQueueManager() {
       {isMobile && ticketActionSheetModal.isOpen && selectedCustomerId && (() => {
         const selectedTicket = tickets.find((t) => t.id === selectedCustomerId);
         const assignedBarberForSheet = selectedTicket ? getAssignedBarber(selectedTicket) : null;
-        const idx = selectedTicket ? sortedTickets.findIndex((t) => t.id === selectedTicket.id) : -1;
-        const displayPos = selectedTicket?.status === 'in_progress' ? null : idx >= 0 ? idx + 1 : null;
+        const displayPos =
+          selectedTicket != null
+            ? queueRows.find((r) => r.ticket.id === selectedTicket.id)?.displayPosition ?? null
+            : null;
         const isServingSheet = selectedTicket?.status === 'in_progress';
         const canOpenNotesAsBarber = !isBarber || (user && assignedBarberForSheet?.id === user.id);
         const hasClientRecordSheet = (selectedTicket as { clientId?: number | null } | undefined)?.clientId != null;

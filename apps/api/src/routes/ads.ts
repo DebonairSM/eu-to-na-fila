@@ -6,12 +6,100 @@ import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
 import { join } from 'path';
-import { mkdir, writeFile, unlink } from 'fs/promises';
+import { mkdir, writeFile, unlink, mkdtemp, readFile, rm } from 'fs/promises';
 import { existsSync, createReadStream, statSync } from 'fs';
+import { tmpdir } from 'os';
+import { spawn } from 'child_process';
+import ffmpegPath from 'ffmpeg-static';
+import sharp from 'sharp';
 import { env } from '../env.js';
 import { getPublicPath } from '../lib/paths.js';
 import { uploadAdFile, getAdFileUrl, deleteAdFile } from '../lib/storage.js';
 import { getShopBySlug } from '../lib/shop.js';
+import { getEgressStatsService } from '../services/EgressStatsService.js';
+
+function isAbsoluteHttpUrl(url: string): boolean {
+  return url.startsWith('http://') || url.startsWith('https://');
+}
+
+function withVersionParam(url: string, version: number): string {
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}v=${version}`;
+}
+
+async function optimizeAdImageToHd(input: Buffer): Promise<Buffer> {
+  return sharp(input, { failOn: 'none' })
+    .rotate()
+    .resize({
+      width: env.AD_IMAGE_MAX_WIDTH,
+      height: env.AD_IMAGE_MAX_HEIGHT,
+      fit: 'inside',
+      withoutEnlargement: true,
+    })
+    .webp({
+      quality: Math.max(1, Math.min(100, env.AD_IMAGE_WEBP_QUALITY)),
+      effort: 4,
+    })
+    .toBuffer();
+}
+
+async function runFfmpeg(args: string[]): Promise<void> {
+  const ffmpegBinary = ffmpegPath as unknown as string;
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(ffmpegBinary, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    let stderr = '';
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.once('error', reject);
+    child.once('close', (code) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+      reject(new Error(`ffmpeg exited with code ${code ?? 'unknown'}: ${stderr.slice(-1200)}`));
+    });
+  });
+}
+
+async function optimizeAdVideoForStreaming(input: Buffer): Promise<Buffer> {
+  const ffmpegBinary = ffmpegPath as unknown as string | null;
+  if (!ffmpegBinary || !existsSync(ffmpegBinary)) {
+    throw new Error('ffmpeg-static binary not available');
+  }
+  const workDir = await mkdtemp(join(tmpdir(), 'eutonafila-ad-video-'));
+  const inputPath = join(workDir, 'input.mp4');
+  const outputPath = join(workDir, 'output.mp4');
+  try {
+    await writeFile(inputPath, input);
+    const targetBitrate = Math.max(300, env.AD_VIDEO_TARGET_BITRATE_KBPS);
+    const maxrate = Math.max(targetBitrate, env.AD_VIDEO_MAXRATE_KBPS);
+    const audioBitrate = Math.max(64, env.AD_VIDEO_AUDIO_BITRATE_KBPS);
+    const maxWidth = Math.max(640, env.AD_VIDEO_MAX_WIDTH);
+    await runFfmpeg([
+      '-hide_banner',
+      '-loglevel', 'error',
+      '-y',
+      '-i', inputPath,
+      '-vf', `scale='if(gt(iw,${maxWidth}),${maxWidth},iw)':-2`,
+      '-c:v', 'libx264',
+      '-profile:v', 'main',
+      '-preset', 'veryfast',
+      '-pix_fmt', 'yuv420p',
+      '-b:v', `${targetBitrate}k`,
+      '-maxrate', `${maxrate}k`,
+      '-bufsize', `${Math.max(maxrate * 2, targetBitrate * 2)}k`,
+      '-c:a', 'aac',
+      '-b:a', `${audioBitrate}k`,
+      '-ac', '2',
+      '-movflags', '+faststart',
+      outputPath,
+    ]);
+    return await readFile(outputPath);
+  } finally {
+    await rm(workDir, { recursive: true, force: true });
+  }
+}
 
 /**
  * Ad management routes.
@@ -22,7 +110,9 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
   const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
   const ALLOWED_VIDEO_TYPES = ['video/mp4'];
   const ALLOWED_MIME_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES];
-  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB max
+  const MAX_IMAGE_FILE_SIZE = Math.max(1, env.AD_IMAGE_MAX_UPLOAD_MB) * 1024 * 1024;
+  const MAX_VIDEO_FILE_SIZE = Math.max(1, env.AD_VIDEO_MAX_UPLOAD_MB) * 1024 * 1024;
+  const WARN_VIDEO_FILE_SIZE = Math.max(1, env.AD_VIDEO_WARN_UPLOAD_MB) * 1024 * 1024;
 
   // Get public directory path using shared utility to ensure consistency
   const publicPath = getPublicPath();
@@ -104,16 +194,51 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         ]);
       }
 
-      // Validate file size
-      if (fileBytesRead > MAX_FILE_SIZE) {
-        throw new ValidationError(`File too large. Maximum size: ${MAX_FILE_SIZE / 1024 / 1024}MB`, [
-          { field: 'file', message: 'File size exceeds limit' },
-        ]);
-      }
-
       // Determine media type and extension
       const isImage = ALLOWED_IMAGE_TYPES.includes(fileMimetype);
       const mediaType = isImage ? 'image' : 'video';
+      const maxAllowedBytes = isImage ? MAX_IMAGE_FILE_SIZE : MAX_VIDEO_FILE_SIZE;
+      if (fileBytesRead > maxAllowedBytes) {
+        const maxMb = isImage ? env.AD_IMAGE_MAX_UPLOAD_MB : env.AD_VIDEO_MAX_UPLOAD_MB;
+        const fileTypeLabel = isImage ? 'image' : 'video';
+        throw new ValidationError(`File too large. Maximum ${fileTypeLabel} size: ${maxMb}MB`, [
+          { field: 'file', message: `File size exceeds ${fileTypeLabel} limit` },
+        ]);
+      }
+
+      if (isImage) {
+        try {
+          fileBuffer = await optimizeAdImageToHd(fileBuffer);
+          fileMimetype = 'image/webp';
+          fileBytesRead = fileBuffer.length;
+        } catch (error) {
+          request.log.warn({ err: error }, 'Failed to optimize ad image, keeping original upload');
+        }
+      } else {
+        if (env.AD_VIDEO_NORMALIZE_ENABLED) {
+          try {
+            const optimizedVideo = await optimizeAdVideoForStreaming(fileBuffer);
+            if (optimizedVideo.length > 0 && optimizedVideo.length < fileBuffer.length) {
+              fileBuffer = optimizedVideo;
+              fileMimetype = 'video/mp4';
+              fileBytesRead = optimizedVideo.length;
+            }
+          } catch (error) {
+            request.log.warn({ err: error }, 'Failed to normalize ad video, keeping original upload');
+          }
+        }
+        if (fileBytesRead > WARN_VIDEO_FILE_SIZE) {
+          request.log.warn(
+            {
+              bytes: fileBytesRead,
+              warnThresholdMb: env.AD_VIDEO_WARN_UPLOAD_MB,
+              hardLimitMb: env.AD_VIDEO_MAX_UPLOAD_MB,
+            },
+            'Large ad video uploaded; consider shorter/lower-bitrate video to reduce Supabase egress'
+          );
+        }
+      }
+
       const mimeToExt: Record<string, string> = {
         'image/png': '.png',
         'image/jpeg': '.jpg',
@@ -224,6 +349,8 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
 
+      getEgressStatsService().recordUpload(fileBytesRead, mediaType, companyId);
+
       return {
         message: 'Ad uploaded successfully',
         ad: {
@@ -278,14 +405,24 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
     if (!ad.publicUrl) {
       throw new NotFoundError(`Ad ${id} has no associated file`);
     }
+    const mediaEtag = `"${ad.id}-${ad.version}"`;
+    const isVersionedRequest = v !== undefined;
+    const immutableCacheControl = 'public, max-age=31536000, immutable';
+    const shortCacheControl = 'public, max-age=86400, stale-while-revalidate=604800';
+    const cacheControl = isVersionedRequest ? immutableCacheControl : shortCacheControl;
+    const ifNoneMatch = request.headers['if-none-match'];
 
     // If publicUrl is a full URL (Supabase Storage), redirect to it
-    if (ad.publicUrl.startsWith('http://') || ad.publicUrl.startsWith('https://')) {
-      // Set cache headers
-      reply.header('Cache-Control', 'public, max-age=604800'); // 1 week
-      if (v !== undefined || ad.version) {
-        reply.header('ETag', `"${ad.id}-${ad.version}"`);
+    if (isAbsoluteHttpUrl(ad.publicUrl)) {
+      if (typeof ifNoneMatch === 'string' && ifNoneMatch === mediaEtag) {
+        reply.header('Cache-Control', cacheControl);
+        reply.header('ETag', mediaEtag);
+        return reply.code(304).send();
       }
+      getEgressStatsService().recordAdMediaRequest(ad.bytes, true, ad.id, ad.companyId);
+      // Set cache headers
+      reply.header('Cache-Control', cacheControl);
+      reply.header('ETag', mediaEtag);
       // Redirect to Supabase Storage URL (CDN-backed, handles range requests automatically)
       return reply.redirect(302, ad.publicUrl);
     }
@@ -304,10 +441,14 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         try {
           const supabaseUrl = getAdFileUrl(ad.companyId, id, ad.mimeType);
           fastify.log.info({ adId: id, supabaseUrl }, 'Legacy ad not found locally, redirecting to Supabase');
-          reply.header('Cache-Control', 'public, max-age=604800');
-          if (v !== undefined || ad.version) {
-            reply.header('ETag', `"${ad.id}-${ad.version}"`);
+          if (typeof ifNoneMatch === 'string' && ifNoneMatch === mediaEtag) {
+            reply.header('Cache-Control', cacheControl);
+            reply.header('ETag', mediaEtag);
+            return reply.code(304).send();
           }
+          reply.header('Cache-Control', cacheControl);
+          reply.header('ETag', mediaEtag);
+          getEgressStatsService().recordAdMediaRequest(ad.bytes, true, ad.id, ad.companyId);
           return reply.redirect(302, supabaseUrl);
         } catch (error) {
           fastify.log.warn({ adId: id, err: error }, 'Failed to construct Supabase URL for legacy ad');
@@ -334,10 +475,11 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     // Set cache headers with version for cache busting
-    reply.header('Cache-Control', 'public, max-age=604800'); // 1 week
-    if (v !== undefined || ad.version) {
-      // Version is already in query param or we can add it
-      reply.header('ETag', `"${ad.id}-${ad.version}"`);
+    reply.header('Cache-Control', cacheControl);
+    reply.header('ETag', mediaEtag);
+    reply.header('Vary', 'Range');
+    if (!request.headers.range && typeof ifNoneMatch === 'string' && ifNoneMatch === mediaEtag) {
+      return reply.code(304).send();
     }
 
     // Support range requests for video streaming (essential for <video> tags)
@@ -359,12 +501,14 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
       reply.header('Content-Length', chunksize.toString());
 
       // Stream the requested range
+      getEgressStatsService().recordAdMediaRequest(chunksize, false, ad.id, ad.companyId);
       const stream = createReadStream(filePath, { start, end });
       return reply.send(stream);
     } else {
       // No range requested - send full file
       reply.header('Content-Length', fileSize.toString());
       reply.header('Accept-Ranges', 'bytes');
+      getEgressStatsService().recordAdMediaRequest(fileSize, false, ad.id, ad.companyId);
       const stream = createReadStream(filePath);
       return reply.send(stream);
     }
@@ -444,11 +588,21 @@ export const adsRoutes: FastifyPluginAsync = async (fastify) => {
         id: ad.id,
         position: ad.position,
         mediaType: ad.mediaType,
-        url: buildAdUrl(ad.id, ad.version),
+        url: isAbsoluteHttpUrl(ad.publicUrl) ? withVersionParam(ad.publicUrl, ad.version) : buildAdUrl(ad.id, ad.version),
         version: ad.version,
       })),
     };
-    
+
+    // Keep manifest fresh while allowing 304 on unchanged payload.
+    const etag = `"ads-manifest:${shop.id}:${manifest.ads.map((ad) => `${ad.id}:${ad.version}`).join('|')}"`;
+    reply.header('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
+    reply.header('ETag', etag);
+    reply.header('Vary', 'Origin');
+    const ifNoneMatch = request.headers['if-none-match'];
+    if (typeof ifNoneMatch === 'string' && ifNoneMatch === etag) {
+      return reply.code(304).send();
+    }
+
     return manifest;
   });
 

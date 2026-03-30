@@ -42,6 +42,13 @@ test.describe('Ads Management API', () => {
     }
   });
 
+  async function getAnyShopSlug(request: import('@playwright/test').APIRequestContext): Promise<string> {
+    const shopsResponse = await request.get(`${API_BASE}/shops`);
+    if (!shopsResponse.ok()) return 'mineiro';
+    const shops = (await shopsResponse.json()) as Array<{ slug?: string }>;
+    return shops.find((shop) => typeof shop.slug === 'string' && shop.slug.length > 0)?.slug ?? 'mineiro';
+  }
+
   test.describe('GET /api/ads', () => {
     test('should return all ads for company admin', async ({ request }) => {
       if (!adminToken) {
@@ -101,6 +108,36 @@ test.describe('Ads Management API', () => {
         const data = await response.json();
         expect(Array.isArray(data)).toBe(true);
       }
+    });
+  });
+
+  test.describe('GET /api/ads/public/manifest', () => {
+    test('should return cache headers and support 304 via ETag', async ({ request }) => {
+      const shopSlug = await getAnyShopSlug(request);
+      const response = await request.get(`${API_BASE}/ads/public/manifest?shopSlug=${encodeURIComponent(shopSlug)}`);
+
+      expect(response.status()).toBe(200);
+      const etag = response.headers()['etag'];
+      const cacheControl = response.headers()['cache-control'];
+      expect(etag).toBeTruthy();
+      expect(cacheControl).toContain('max-age=');
+
+      const manifest = await response.json();
+      expect(manifest).toHaveProperty('manifestVersion');
+      expect(Array.isArray(manifest.ads)).toBe(true);
+      if (manifest.ads.length > 0) {
+        expect(typeof manifest.ads[0].url).toBe('string');
+        expect(
+          manifest.ads[0].url.startsWith('/api/ads/') ||
+          manifest.ads[0].url.startsWith('http://') ||
+          manifest.ads[0].url.startsWith('https://')
+        ).toBe(true);
+      }
+
+      const notModified = await request.get(`${API_BASE}/ads/public/manifest?shopSlug=${encodeURIComponent(shopSlug)}`, {
+        headers: { 'If-None-Match': etag },
+      });
+      expect(notModified.status()).toBe(304);
     });
   });
 

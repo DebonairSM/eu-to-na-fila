@@ -29,6 +29,17 @@ interface Ad {
   updatedAt: Date;
 }
 
+const MAX_IMAGE_UPLOAD_BYTES = 10 * 1024 * 1024;
+const MAX_VIDEO_UPLOAD_BYTES = 20 * 1024 * 1024;
+
+function getAdPreviewUrl(ad: Ad): string {
+  if (ad.publicUrl.startsWith('http://') || ad.publicUrl.startsWith('https://')) {
+    const separator = ad.publicUrl.includes('?') ? '&' : '?';
+    return `${ad.publicUrl}${separator}v=${ad.version}`;
+  }
+  return `/api/ads/${ad.id}/media?v=${ad.version}`;
+}
+
 export function AdManagementPage() {
   const { isCompanyAdmin, user } = useAuthContext();
   const { t } = useLocale();
@@ -127,10 +138,10 @@ export function AdManagementPage() {
       return;
     }
 
-    // Validate file size (50MB max)
-    const maxSize = 50 * 1024 * 1024;
+    // Validate file size by media type
+    const maxSize = isVideo ? MAX_VIDEO_UPLOAD_BYTES : MAX_IMAGE_UPLOAD_BYTES;
     if (file.size > maxSize) {
-      setError(t('ads.fileTooBig'));
+      setError(isVideo ? t('ads.fileTooBigVideo') : t('ads.fileTooBigImage'));
       return;
     }
 
@@ -513,6 +524,12 @@ export function AdManagementPage() {
               <p className="text-xs text-white/40 mt-2">
               {t('ads.maxSizeHint')}
               </p>
+              <p className="text-xs text-white/40 mt-1">
+                {t('ads.videoUploadGuide')}
+              </p>
+              <p className="text-xs text-white/40 mt-1">
+                {t('ads.videoDeliveryHint')}
+              </p>
             </div>
 
           {loading ? (
@@ -538,7 +555,7 @@ export function AdManagementPage() {
                       <div className="flex-shrink-0">
                         {ad.mediaType === 'image' ? (
                           <img
-                            src={`/api/ads/${ad.id}/media?v=${ad.version}`}
+                            src={getAdPreviewUrl(ad)}
                             alt={`Anúncio ${ad.position}`}
                             className="w-32 h-32 object-contain bg-black rounded-lg border border-white/10"
                     onError={(e) => {
@@ -547,7 +564,7 @@ export function AdManagementPage() {
                   />
                         ) : (
                           <video
-                            src={`/api/ads/${ad.id}/media?v=${ad.version}`}
+                            src={getAdPreviewUrl(ad)}
                             className="w-32 h-32 object-contain bg-black rounded-lg border border-white/10"
                             controls={false}
                             muted
@@ -850,6 +867,12 @@ export function AdManagementPage() {
             <p className="text-xs text-white/40 mt-2">
               {t('ads.maxSizeHint')}
             </p>
+            <p className="text-xs text-white/40 mt-1">
+              {t('ads.videoUploadGuide')}
+            </p>
+            <p className="text-xs text-white/40 mt-1">
+              {t('ads.videoDeliveryHint')}
+            </p>
           </div>
 
           {loading ? (
@@ -873,7 +896,7 @@ export function AdManagementPage() {
                       <div className="flex-shrink-0">
                         {ad.mediaType === 'image' ? (
                           <img
-                            src={`/api/ads/${ad.id}/media?v=${ad.version}`}
+                            src={getAdPreviewUrl(ad)}
                             alt={`${t('ads.adPosition')}${ad.position}`}
                             className="w-32 h-32 object-contain bg-black rounded-lg border border-white/10"
                             onError={(e) => {
@@ -882,7 +905,7 @@ export function AdManagementPage() {
                           />
                         ) : (
                           <video
-                            src={`/api/ads/${ad.id}/media?v=${ad.version}`}
+                            src={getAdPreviewUrl(ad)}
                             className="w-32 h-32 object-contain bg-black rounded-lg border border-white/10"
                             controls={false}
                             muted

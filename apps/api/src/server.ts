@@ -28,6 +28,7 @@ import { propagandasPublicRoutes } from './routes/propagandas-public.js';
 import { stripeWebhookRoutes } from './routes/stripe-webhook.js';
 import { clientsRoutes } from './routes/clients.js';
 import { projectsRoutes } from './routes/projects.js';
+import { usageRoutes } from './routes/usage.js';
 import { isEmailConfigured, getEmailTransportKind, sendTestEmail } from './services/EmailService.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { toLoggableError } from './lib/errors.js';
@@ -38,6 +39,7 @@ import { startQueueCountdown } from './jobs/queueCountdown.js';
 import { startBarberPresenceJob } from './jobs/barberPresenceJob.js';
 import { startUsageAnomalyJob } from './jobs/usageAnomalyJob.js';
 import { getUsageService, UsageService } from './services/UsageService.js';
+import { getEgressStatsService } from './services/EgressStatsService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -208,6 +210,34 @@ const publicPath = getPublicPath();
 const projectsMineiroPath = join(publicPath, 'projects', 'mineiro');
 const rootPath = join(publicPath, 'root');
 
+function getContentTypeForAsset(pathSuffix: string): string {
+  const ext = pathSuffix.split('/').pop()?.split('.').pop()?.toLowerCase() ?? '';
+  if (pathSuffix === 'sw.js' || ext === 'js') return 'application/javascript';
+  if (pathSuffix === 'manifest.json' || ext === 'json') return 'application/json';
+  if (pathSuffix === 'favicon.svg' || ext === 'svg') return 'image/svg+xml';
+  if (ext === 'css') return 'text/css';
+  if (ext === 'png') return 'image/png';
+  if (ext === 'ico') return 'image/x-icon';
+  if (ext === 'woff2') return 'font/woff2';
+  if (ext === 'woff') return 'font/woff';
+  if (ext === 'ttf') return 'font/ttf';
+  return 'application/octet-stream';
+}
+
+function applyStaticCacheHeaders(reply: { header: (name: string, value: string) => unknown }, pathSuffix: string): void {
+  if (pathSuffix.includes('assets/') && /\.[a-f0-9]{8,}\.(js|css)$/i.test(pathSuffix)) {
+    reply.header('Cache-Control', 'public, max-age=31536000, immutable');
+    return;
+  }
+  if (/\.(woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|ico)$/i.test(pathSuffix)) {
+    reply.header('Cache-Control', 'public, max-age=604800');
+    return;
+  }
+  if (/\.(html|js|json)$/i.test(pathSuffix) && !pathSuffix.includes('assets/')) {
+    reply.header('Cache-Control', 'no-cache, must-revalidate');
+  }
+}
+
 // Log static file directory status
 if (!existsSync(projectsMineiroPath)) {
   fastify.log.warn(`Static files directory not found: ${projectsMineiroPath}. Static assets will not be served.`);
@@ -258,24 +288,19 @@ for (const filename of STATIC_ASSET_FILES) {
     const filePath = join(projectsMineiroPath, filename);
     if (!existsSync(filePath)) return reply.code(404).send({ error: 'Not found' });
     const content = readFileSync(filePath);
-    const mime: Record<string, string> = {
-      'sw.js': 'application/javascript',
-      'favicon.svg': 'image/svg+xml',
-      'favicon.png': 'image/png',
-      'manifest.json': 'application/json',
-      'icon-192.png': 'image/png',
-      'icon-512.png': 'image/png',
-    };
-    return reply.type(mime[filename] ?? 'application/octet-stream').send(content);
+    applyStaticCacheHeaders(reply, filename);
+    return reply.type(getContentTypeForAsset(filename)).send(content);
   });
 }
 
 // Serve fonts under /projects/:slug/fonts/:filename so SW precache and app work for any slug
 fastify.get('/projects/:slug/fonts/:filename', async (request, reply) => {
   const { filename } = request.params as { slug: string; filename: string };
-  const filePath = join(projectsMineiroPath, 'fonts', filename);
+  const pathSuffix = `fonts/${filename}`;
+  const filePath = join(projectsMineiroPath, pathSuffix);
   if (!existsSync(filePath)) return reply.code(404).send({ error: 'Not found' });
-  const mime = filename.endsWith('.ttf') ? 'font/ttf' : filename.endsWith('.woff2') ? 'font/woff2' : 'application/octet-stream';
+  applyStaticCacheHeaders(reply, pathSuffix);
+  const mime = getContentTypeForAsset(pathSuffix);
   return reply.type(mime).send(readFileSync(filePath));
 });
 
@@ -399,6 +424,7 @@ fastify.register(
     instance.register(stripeWebhookRoutes);
     instance.register(clientsRoutes);
     instance.register(projectsRoutes);
+    instance.register(usageRoutes);
   },
   { prefix: '/api' }
 );
@@ -408,6 +434,7 @@ fastify.get('/', async (request, reply) => {
   const rootIndexPath = join(rootPath, 'root.html');
   if (existsSync(rootIndexPath)) {
     const fileContent = readFileSync(rootIndexPath, 'utf-8');
+    applyStaticCacheHeaders(reply, 'root.html');
     return reply.type('text/html').send(fileContent);
   }
   return reply.redirect(302, '/projects');
@@ -438,6 +465,7 @@ fastify.get('/projects/:slug/', async (request, reply) => {
   const indexPath = join(projectsMineiroPath, 'index.html');
   if (existsSync(indexPath)) {
     const fileContent = readFileSync(indexPath, 'utf-8');
+    applyStaticCacheHeaders(reply, 'index.html');
     return reply.type('text/html').send(fileContent);
   }
   return reply.code(404).send({ error: 'Not found' });
@@ -486,18 +514,8 @@ fastify.get<{ Params: { segment: string; '*': string } }>('/:segment/*', async (
   if (isKnownAsset) {
     const filePath = join(projectsMineiroPath, pathSuffix);
     if (existsSync(filePath)) {
-      const mime: Record<string, string> = {
-        'sw.js': 'application/javascript',
-        'favicon.svg': 'image/svg+xml',
-        'favicon.png': 'image/png',
-        'manifest.json': 'application/json',
-        'icon-192.png': 'image/png',
-        'icon-512.png': 'image/png',
-      };
-      const ext = pathSuffix.split('/').pop()?.split('.').pop() ?? '';
-      const contentType =
-        mime[pathSuffix] ??
-        (ext === 'js' ? 'application/javascript' : ext === 'css' ? 'text/css' : ext === 'json' ? 'application/json' : 'application/octet-stream');
+      applyStaticCacheHeaders(reply, pathSuffix);
+      const contentType = getContentTypeForAsset(pathSuffix);
       return reply.type(contentType).send(readFileSync(filePath));
     }
   }
@@ -512,6 +530,7 @@ fastify.get<{ Params: { segment: string; '*': string } }>('/:segment/*', async (
     const shopSlug = (shop?.slug ?? project?.slug ?? '').replace(/"/g, '\\"');
     const inject = `<script>window.__SHOP_SLUG__="${shopSlug}";window.__SHOP_PATH__="${projectPath.replace(/"/g, '\\"')}";</script>`;
     fileContent = fileContent.replace('</body>', `${inject}\n</body>`);
+    applyStaticCacheHeaders(reply, 'index.html');
     return reply.type('text/html').send(fileContent);
   }
   return reply.callNotFound();
@@ -579,18 +598,8 @@ fastify.setNotFoundHandler(async (request, reply) => {
           ? join(projectsMineiroPath, pathSuffix)
           : join(projectsMineiroPath, pathSuffix);
       if (existsSync(filePath)) {
-        const mime: Record<string, string> = {
-          'sw.js': 'application/javascript',
-          'favicon.svg': 'image/svg+xml',
-          'favicon.png': 'image/png',
-          'manifest.json': 'application/json',
-          'icon-192.png': 'image/png',
-          'icon-512.png': 'image/png',
-        };
-        const ext = pathSuffix.split('/').pop()?.split('.').pop() ?? '';
-        const contentType =
-          mime[pathSuffix] ??
-          (ext === 'js' ? 'application/javascript' : ext === 'css' ? 'text/css' : ext === 'json' ? 'application/json' : 'application/octet-stream');
+        applyStaticCacheHeaders(reply, pathSuffix);
+        const contentType = getContentTypeForAsset(pathSuffix);
         return reply.type(contentType).send(readFileSync(filePath));
       }
     }
@@ -609,6 +618,7 @@ fastify.setNotFoundHandler(async (request, reply) => {
         const slugForInject = (shop?.slug ?? project.slug).replace(/"/g, '\\"');
         const inject = `<script>window.__SHOP_SLUG__="${slugForInject}";window.__SHOP_PATH__="${projectPath.replace(/"/g, '\\"')}";</script>`;
         fileContent = fileContent.replace('</body>', `${inject}\n</body>`);
+        applyStaticCacheHeaders(reply, 'index.html');
         return reply.type('text/html').send(fileContent);
       } catch (error) {
         fastify.log.error({ err: toLoggableError(error), path: indexPath }, 'Error reading index.html for SPA fallback');
@@ -633,6 +643,7 @@ fastify.setNotFoundHandler(async (request, reply) => {
     if (existsSync(indexPath)) {
       try {
         const fileContent = readFileSync(indexPath, 'utf-8');
+        applyStaticCacheHeaders(reply, 'index.html');
         return reply.type('text/html').send(fileContent);
       } catch (error) {
         fastify.log.error({ err: toLoggableError(error), path: indexPath }, 'Error reading index.html for SPA fallback');
@@ -646,6 +657,7 @@ fastify.setNotFoundHandler(async (request, reply) => {
     if (existsSync(rootIndexPath)) {
       try {
         const fileContent = readFileSync(rootIndexPath, 'utf-8');
+        applyStaticCacheHeaders(reply, 'root.html');
         return reply.type('text/html').send(fileContent);
       } catch (error) {
         fastify.log.error({ err: toLoggableError(error), path: rootIndexPath }, 'Error reading root.html for SPA fallback');
@@ -665,6 +677,15 @@ fastify.addHook('onRequest', async (request, reply) => {
 // Note: Per-visitor or per-device tracking must respect ticket.tracking_consent and client.preferences.trackingConsent.
 fastify.addHook('onResponse', (request, reply, done) => {
   const path = (request.url ?? '').split('?')[0] ?? '';
+  const contentLengthHeader = reply.getHeader('content-length');
+  const contentLength =
+    typeof contentLengthHeader === 'string'
+      ? parseInt(contentLengthHeader, 10)
+      : typeof contentLengthHeader === 'number'
+        ? contentLengthHeader
+        : 0;
+  getEgressStatsService().record(path, reply.statusCode, Number.isFinite(contentLength) ? contentLength : 0);
+
   if (!path.startsWith('/api/')) return done();
   const slug = UsageService.getShopSlugFromPath(path);
   const companyIdFromPath = UsageService.getCompanyIdFromPath(path);

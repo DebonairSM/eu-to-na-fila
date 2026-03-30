@@ -54,6 +54,7 @@ export interface CompaniesApi {
   getCompany(companyId: number): Promise<{ id: number; name: string; propagandasReminderEmail?: string | null }>;
   patchCompany(companyId: number, data: { propagandas_reminder_email?: string | null }): Promise<{ id: number; name: string; propagandasReminderEmail?: string | null }>;
   getCompanyUsage(companyId: number, params?: { days?: number }): Promise<CompanyUsageResponse>;
+  getAdsUsage(): Promise<AdsUsageResponse>;
   getCompanyUsageAlerts(companyId: number, params?: { resolved?: 'true' | 'false' }): Promise<{ alerts: CompanyUsageAlert[] }>;
   resolveUsageAlert(companyId: number, alertId: number): Promise<{ ok: boolean; resolvedAt: string }>;
 }
@@ -78,6 +79,46 @@ export interface CompanyUsageAlert {
   baselineCount: number;
   reason: string;
   resolvedAt: string | null;
+}
+
+export interface AdsUsageResponse {
+  since: string;
+  uploads: {
+    totalCount: number;
+    totalBytes: number;
+    imageCount: number;
+    imageBytes: number;
+    videoCount: number;
+    videoBytes: number;
+    lastSeenAt: string | null;
+  };
+  adMedia: {
+    requests: number;
+    redirects: number;
+    estimatedBytes: number;
+    lastSeenAt: string | null;
+  };
+  topAds: Array<{
+    adId: number;
+    companyId: number | null;
+    requests: number;
+    redirects: number;
+    estimatedBytes: number;
+    lastSeenAt: string;
+  }>;
+  uploadTrend: Array<{
+    hour: string;
+    uploads: number;
+    totalBytes: number;
+    imageBytes: number;
+    videoBytes: number;
+  }>;
+  adMediaEndpoint: {
+    endpoint: string;
+    requests: number;
+    bytes: number;
+    status304: number;
+  } | null;
 }
 
 export interface AdOrder {
@@ -158,6 +199,7 @@ export function createCompaniesApi(client: BaseApiClient): CompaniesApi {
       const q = params?.days != null ? `?days=${params.days}` : '';
       return c.get(`/companies/${companyId}/usage${q}`);
     },
+    getAdsUsage: () => c.get('/usage/ads'),
     getCompanyUsageAlerts: (companyId, params) => {
       const q = params?.resolved != null ? `?resolved=${params.resolved}` : '';
       return c.get(`/companies/${companyId}/usage/alerts${q}`);

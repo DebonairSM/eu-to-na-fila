@@ -14,7 +14,7 @@ import { getShopStatus } from '@eutonafila/shared';
 import { getErrorMessage, formatNameWithConnectors, getOrCreateDeviceId, redirectToStatusPage } from '@/lib/utils';
 import { applyTrackingConsent, clearTrackingCookie } from '@/lib/trackingCookie';
 import { logError } from '@/lib/logger';
-import { STORAGE_KEYS } from '@/lib/constants';
+import { STORAGE_KEYS, POLL_INTERVALS } from '@/lib/constants';
 import { useWaitTimes } from '@/contexts/WaitTimesContext';
 
 const STORAGE_KEY = STORAGE_KEYS.ACTIVE_TICKET_ID;
@@ -64,7 +64,7 @@ export function useJoinForm() {
   const needsProfileCompletion = isCustomer && user?.name && !isSufficientName(user.name);
   const settings = shopConfig.settings;
   const { validateName } = useProfanityFilter();
-  const { data, refetch: refetchQueue } = useQueue(20000); // 20s on join page to limit API rate
+  const { data, refetch: refetchQueue } = useQueue(POLL_INTERVALS.JOIN_PUBLIC_QUEUE, { scope: 'public' });
   const { barbers, refetch: refetchBarbers } = useBarbers();
   const { services: servicesList, activeServices, isLoading: isLoadingServices, refetch: refetchServices } = useServices();
   const [isRefreshingJoinData, setIsRefreshingJoinData] = useState(false);

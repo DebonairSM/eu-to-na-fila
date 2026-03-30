@@ -36,7 +36,7 @@ export function StatusPage() {
   const shopSlug = useShopSlug();
   const ticketIdFromParams = id ? parseInt(id, 10) : null;
   const { ticket, isLoading, error, refetch } = useTicketStatus(ticketIdFromParams);
-  const { data: queueData } = useQueue(POLL_INTERVALS.STATUS_PAGE_QUEUE);
+  const { data: queueData } = useQueue(POLL_INTERVALS.STATUS_PAGE_QUEUE, { scope: 'status' });
   const { getServiceById } = useServices();
   const { barbers } = useBarbers();
   const [shareSuccess, setShareSuccess] = useState(false);
@@ -92,7 +92,7 @@ export function StatusPage() {
   }, [isLoading, ticket, ticketShopSlug, shopSlug]);
 
   // Poll general-line wait time at most once per 20 seconds when waiting with a preferred barber
-  const WAIT_TIME_POLL_MS = 20000;
+  const WAIT_TIME_POLL_MS = POLL_INTERVALS.WAIT_TIMES;
   const lastWaitTimeFetchAtRef = useRef(0);
   useEffect(() => {
     if (!shopSlug || ticket?.status !== 'waiting' || preferredBarberId == null) {

@@ -149,6 +149,7 @@ export function useKiosk() {
     if (!isKioskMode) return;
 
     const intervalId = setInterval(() => {
+      if (document.hidden) return;
       void fetchManifest();
     }, MANIFEST_POLL_INTERVAL_MS);
     manifestPollIntervalRef.current = intervalId;

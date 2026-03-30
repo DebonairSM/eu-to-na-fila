@@ -8,11 +8,22 @@ interface SubscribeMessage {
   companyId: number;
 }
 
-interface AdUpdatedMessage {
+interface SubscribeQueueMessage {
+  type: 'subscribe.queue';
+  shopSlug: string;
+}
+
+interface AdsUpdatedMessage {
   type: 'ads.updated';
   companyId: number;
-  adType: 'ad1' | 'ad2';
-  version: number;
+  shopId: number | null;
+  manifestVersion: number;
+}
+
+interface QueueUpdatedMessage {
+  type: 'queue.updated';
+  shopSlug: string;
+  queueVersion: number;
 }
 
 interface SubscribedMessage {
@@ -20,12 +31,17 @@ interface SubscribedMessage {
   companyId: number;
 }
 
+interface SubscribedQueueMessage {
+  type: 'subscribed.queue';
+  shopSlug: string;
+}
+
 interface ErrorMessage {
   type: 'error';
   message: string;
 }
 
-type ServerMessage = AdUpdatedMessage | SubscribedMessage | ErrorMessage;
+type ServerMessage = AdsUpdatedMessage | QueueUpdatedMessage | SubscribedMessage | SubscribedQueueMessage | ErrorMessage;
 
 /**
  * WebSocket client for real-time ad updates
@@ -36,6 +52,8 @@ export class WebSocketClient {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
   private subscribers: Map<number, Set<(adType: 'ad1' | 'ad2', version: number) => void>> = new Map();
+  private queueSubscribers: Map<string, Set<(queueVersion: number) => void>> = new Map();
+  private connectionSubscribers: Set<(connected: boolean) => void> = new Set();
   private isConnecting = false;
 
   /**
@@ -64,6 +82,7 @@ export class WebSocketClient {
         this.isConnecting = false;
         this.reconnectAttempts = 0;
         console.log('[WS] Connected to WebSocket server');
+        this.notifyConnectionState(true);
         
         // Resubscribe to all active subscriptions by sending subscribe messages
         for (const companyId of this.subscribers.keys()) {
@@ -71,6 +90,15 @@ export class WebSocketClient {
             const message: SubscribeMessage = {
               type: 'subscribe',
               companyId,
+            };
+            this.ws.send(JSON.stringify(message));
+          }
+        }
+        for (const shopSlug of this.queueSubscribers.keys()) {
+          if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            const message: SubscribeQueueMessage = {
+              type: 'subscribe.queue',
+              shopSlug,
             };
             this.ws.send(JSON.stringify(message));
           }
@@ -89,12 +117,14 @@ export class WebSocketClient {
       this.ws.onerror = (error) => {
         console.error('[WS] WebSocket error:', error);
         this.isConnecting = false;
+        this.notifyConnectionState(false);
       };
 
       this.ws.onclose = () => {
         this.isConnecting = false;
         this.ws = null;
         console.log('[WS] WebSocket connection closed');
+        this.notifyConnectionState(false);
         
         // Attempt to reconnect if we have subscribers
         if (this.subscribers.size > 0 && this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -119,17 +149,41 @@ export class WebSocketClient {
       if (callbacks) {
         callbacks.forEach(callback => {
           try {
-            callback(message.adType, message.version);
+            callback('ad1', message.manifestVersion);
+            callback('ad2', message.manifestVersion);
           } catch (error) {
             console.error('[WS] Error in ad update callback:', error);
           }
         });
       }
+    } else if (message.type === 'queue.updated') {
+      const callbacks = this.queueSubscribers.get(message.shopSlug);
+      if (callbacks) {
+        callbacks.forEach((callback) => {
+          try {
+            callback(message.queueVersion);
+          } catch (error) {
+            console.error('[WS] Error in queue update callback:', error);
+          }
+        });
+      }
     } else if (message.type === 'subscribed') {
       console.log(`[WS] Subscribed to company ${message.companyId}`);
+    } else if (message.type === 'subscribed.queue') {
+      console.log(`[WS] Subscribed to queue ${message.shopSlug}`);
     } else if (message.type === 'error') {
       console.error('[WS] Server error:', message.message);
     }
+  }
+
+  private notifyConnectionState(connected: boolean): void {
+    this.connectionSubscribers.forEach((callback) => {
+      try {
+        callback(connected);
+      } catch (error) {
+        console.error('[WS] Error in connection callback:', error);
+      }
+    });
   }
 
   /**
@@ -168,6 +222,47 @@ export class WebSocketClient {
     };
   }
 
+  subscribeQueue(shopSlug: string, callback: (queueVersion: number) => void): () => void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      this.connect();
+    }
+
+    if (!this.queueSubscribers.has(shopSlug)) {
+      this.queueSubscribers.set(shopSlug, new Set());
+    }
+    this.queueSubscribers.get(shopSlug)!.add(callback);
+
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      const message: SubscribeQueueMessage = {
+        type: 'subscribe.queue',
+        shopSlug,
+      };
+      this.ws.send(JSON.stringify(message));
+    }
+
+    return () => {
+      const callbacks = this.queueSubscribers.get(shopSlug);
+      if (callbacks) {
+        callbacks.delete(callback);
+        if (callbacks.size === 0) {
+          this.queueSubscribers.delete(shopSlug);
+        }
+      }
+    };
+  }
+
+  onConnectionStateChange(callback: (connected: boolean) => void): () => void {
+    this.connectionSubscribers.add(callback);
+    callback(this.ws?.readyState === WebSocket.OPEN);
+    return () => {
+      this.connectionSubscribers.delete(callback);
+    };
+  }
+
+  isConnected(): boolean {
+    return this.ws?.readyState === WebSocket.OPEN;
+  }
+
   /**
    * Disconnect from WebSocket server
    */
@@ -177,6 +272,8 @@ export class WebSocketClient {
       this.ws = null;
     }
     this.subscribers.clear();
+    this.queueSubscribers.clear();
+    this.connectionSubscribers.clear();
     this.reconnectAttempts = this.maxReconnectAttempts; // Prevent reconnection
   }
 }

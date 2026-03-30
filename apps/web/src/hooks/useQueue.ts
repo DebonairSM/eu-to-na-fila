@@ -3,20 +3,45 @@ import { api } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { POLL_INTERVALS } from '@/lib/constants';
 import type { GetQueueResponse } from '@eutonafila/shared';
+import { wsClient } from '@/lib/ws';
 
 const MIN_POLL_MS = POLL_INTERVALS.QUEUE_MIN_MS;
 
-export function useQueue(pollInterval?: number) {
+type QueueScope = 'full' | 'public' | 'status';
+
+interface UseQueueOptions {
+  scope?: QueueScope;
+}
+
+export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
   const shopSlug = useShopSlug();
   const [data, setData] = useState<GetQueueResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isWsConnected, setIsWsConnected] = useState(false);
+  const [lastWsQueueEventAt, setLastWsQueueEventAt] = useState(0);
   const previousDataRef = useRef<string>('');
+  const lastWsRefetchAtRef = useRef(0);
+  const wsEventExpiryTimeoutRef = useRef<number | null>(null);
+  const scope: QueueScope = options.scope ?? 'full';
 
   const effectiveInterval =
     pollInterval != null && pollInterval > 0
       ? Math.max(pollInterval, MIN_POLL_MS)
       : undefined;
+  const wsUpdateIsRecent =
+    Date.now() - lastWsQueueEventAt < POLL_INTERVALS.QUEUE_WS_RECENT_WINDOW_MS;
+  const wsBackoffInterval = Math.max(effectiveInterval ?? POLL_INTERVALS.QUEUE, 20000);
+  const wsHeartbeatInterval = Math.max(
+    effectiveInterval ?? POLL_INTERVALS.QUEUE,
+    POLL_INTERVALS.QUEUE_WS_HEARTBEAT_MS
+  );
+  const activePollInterval =
+    scope !== 'status' && isWsConnected
+      ? wsUpdateIsRecent
+        ? wsBackoffInterval
+        : wsHeartbeatInterval
+      : effectiveInterval;
 
   const fetchQueue = useCallback(async () => {
     // Skip if page is hidden (Page Visibility API)
@@ -26,7 +51,10 @@ export function useQueue(pollInterval?: number) {
 
     try {
       setError(null);
-      const queueData = await api.getQueue(shopSlug);
+      let queueData = await api.getQueue(shopSlug, { scope });
+      if (scope === 'public' && (!queueData || !Array.isArray(queueData.tickets))) {
+        queueData = await api.getQueue(shopSlug, { scope: 'full' });
+      }
 
       // Smart diffing: only update if data actually changed
       const dataString = JSON.stringify(queueData);
@@ -36,15 +64,30 @@ export function useQueue(pollInterval?: number) {
         setIsLoading(false);
       }
     } catch (err) {
+      if (scope === 'public') {
+        try {
+          const fallbackData = await api.getQueue(shopSlug, { scope: 'full' });
+          const dataString = JSON.stringify(fallbackData);
+          if (dataString !== previousDataRef.current) {
+            previousDataRef.current = dataString;
+            setData(fallbackData);
+          }
+          setError(null);
+          setIsLoading(false);
+          return;
+        } catch {
+          // Ignore fallback failure and report original error below.
+        }
+      }
       setError(err instanceof Error ? err : new Error('Failed to fetch queue'));
       setIsLoading(false);
     }
-  }, [shopSlug]);
+  }, [shopSlug, scope]);
 
   useEffect(() => {
     fetchQueue();
 
-    if (!effectiveInterval || effectiveInterval <= 0) {
+    if (!activePollInterval || activePollInterval <= 0) {
       return;
     }
 
@@ -59,12 +102,12 @@ export function useQueue(pollInterval?: number) {
       } else {
         if (!intervalId) {
           fetchQueue();
-          intervalId = window.setInterval(fetchQueue, effectiveInterval);
+          intervalId = window.setInterval(fetchQueue, activePollInterval);
         }
       }
     };
 
-    intervalId = window.setInterval(fetchQueue, effectiveInterval);
+    intervalId = window.setInterval(fetchQueue, activePollInterval);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
@@ -73,7 +116,39 @@ export function useQueue(pollInterval?: number) {
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [fetchQueue, effectiveInterval]);
+  }, [fetchQueue, activePollInterval]);
+
+  useEffect(() => {
+    if (scope === 'status') return;
+
+    const unsubscribeQueue = wsClient.subscribeQueue(shopSlug, () => {
+      const now = Date.now();
+      setLastWsQueueEventAt(now);
+      if (wsEventExpiryTimeoutRef.current) {
+        clearTimeout(wsEventExpiryTimeoutRef.current);
+      }
+      wsEventExpiryTimeoutRef.current = window.setTimeout(() => {
+        setLastWsQueueEventAt(0);
+      }, POLL_INTERVALS.QUEUE_WS_RECENT_WINDOW_MS);
+      if (now - lastWsRefetchAtRef.current < 1000) return;
+      lastWsRefetchAtRef.current = now;
+      void fetchQueue();
+    });
+    const unsubscribeConn = wsClient.onConnectionStateChange((connected) => {
+      setIsWsConnected(connected);
+    });
+
+    return () => {
+      unsubscribeQueue();
+      unsubscribeConn();
+      if (wsEventExpiryTimeoutRef.current) {
+        clearTimeout(wsEventExpiryTimeoutRef.current);
+        wsEventExpiryTimeoutRef.current = null;
+      }
+      setIsWsConnected(false);
+      setLastWsQueueEventAt(0);
+    };
+  }, [shopSlug, scope, fetchQueue]);
 
   const waitingTickets = data?.tickets.filter((t) => t.status === 'waiting') || [];
   const inProgressTickets = data?.tickets.filter((t) => t.status === 'in_progress') || [];

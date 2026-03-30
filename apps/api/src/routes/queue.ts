@@ -9,12 +9,37 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getShopBySlug } from '../lib/shop.js';
 import { shapeTicketResponse } from '../lib/ticketResponse.js';
 import { parseSettings } from '../lib/settings.js';
+import { env } from '../env.js';
+
+function buildQueueEtag(
+  shopId: number,
+  tickets: Array<{ id: number; status: string; position: number; updatedAt?: string | Date | null }>
+): string {
+  const stamp = tickets
+    .map((ticket) => {
+      const updatedAt = ticket.updatedAt ? new Date(ticket.updatedAt).getTime() : 0;
+      return `${ticket.id}:${ticket.status}:${ticket.position}:${updatedAt}`;
+    })
+    .join('|');
+  return `"queue:${shopId}:${tickets.length}:${stamp}"`;
+}
 
 /**
  * Queue routes.
  * Handles queue viewing and metrics.
  */
 export const queueRoutes: FastifyPluginAsync = async (fastify) => {
+  const broadcastQueueUpdated = (shopSlug: string) => {
+    if (!env.QUEUE_WS_ENABLED) return;
+    const wsManager = (fastify as any).wsManager;
+    if (!wsManager || typeof wsManager.broadcastQueueUpdated !== 'function') return;
+    try {
+      wsManager.broadcastQueueUpdated(shopSlug);
+    } catch (error) {
+      fastify.log.warn({ err: error, shopSlug }, 'Failed to broadcast queue update');
+    }
+  };
+
   /**
    * Get current queue for a shop.
    * 
@@ -29,16 +54,72 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
       slug: z.string().min(1),
     });
     const { slug } = validateRequest(paramsSchema, request.params);
+    const querySchema = z.object({
+      scope: z.enum(['full', 'public', 'status']).optional(),
+    });
+    const { scope } = validateRequest(querySchema, request.query);
 
     const shop = await getShopBySlug(slug);
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
-    const settings = parseSettings(shop.settings);
-    const tickets = await ticketService.getByShop(shop.id, undefined, settings);
+    const scopeMode = scope === 'public' || scope === 'status' ? scope : 'full';
+    let responseTickets: unknown[] = [];
+    let etagSource: Array<{ id: number; status: string; position: number; updatedAt?: string | Date | null }> = [];
+
+    if (scopeMode === 'full') {
+      const settings = parseSettings(shop.settings);
+      const tickets = await ticketService.getByShop(shop.id, undefined, settings);
+      const shapedTickets = tickets.map((ticket) => shapeTicketResponse(ticket as Record<string, unknown>));
+      responseTickets = shapedTickets;
+      etagSource = tickets as Array<{ id: number; status: string; position: number; updatedAt?: string | Date | null }>;
+    } else {
+      const lightweightTickets = await db.query.tickets.findMany({
+        where: and(
+          eq(schema.tickets.shopId, shop.id),
+          scopeMode === 'public'
+            ? inArray(schema.tickets.status, ['waiting', 'in_progress'])
+            : inArray(schema.tickets.status, ['waiting', 'in_progress', 'completed', 'cancelled', 'pending'])
+        ),
+        columns: {
+          id: true,
+          shopId: true,
+          serviceId: true,
+          barberId: true,
+          customerName: true,
+          status: true,
+          position: true,
+          estimatedWaitTime: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: [asc(schema.tickets.position), asc(schema.tickets.createdAt)],
+      });
+      etagSource = lightweightTickets as Array<{ id: number; status: string; position: number; updatedAt?: string | Date | null }>;
+      responseTickets =
+        scopeMode === 'status'
+          ? lightweightTickets.map((ticket) => ({
+              id: ticket.id,
+              shopId: ticket.shopId,
+              status: ticket.status,
+              position: ticket.position,
+              estimatedWaitTime: ticket.estimatedWaitTime,
+              createdAt: ticket.createdAt,
+              updatedAt: ticket.updatedAt,
+            }))
+          : lightweightTickets;
+    }
+
+    const etag = buildQueueEtag(shop.id, etagSource);
+    const ifNoneMatch = request.headers['if-none-match'];
+    reply.header('Cache-Control', 'no-cache, must-revalidate');
+    reply.header('ETag', etag);
+    if (typeof ifNoneMatch === 'string' && ifNoneMatch === etag) {
+      return reply.code(304).send();
+    }
 
     return {
       shop,
-      tickets: tickets.map((t) => shapeTicketResponse(t as Record<string, unknown>)),
+      tickets: responseTickets,
     };
   });
 
@@ -274,6 +355,7 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
     if (!shop) throw new NotFoundError(`Shop with slug "${slug}" not found`);
 
     await ticketService.recalculateShopQueue(shop.id);
+    broadcastQueueUpdated(slug);
     return { ok: true };
   });
 };
