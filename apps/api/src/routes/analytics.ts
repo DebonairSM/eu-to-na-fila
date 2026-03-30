@@ -17,6 +17,7 @@ import {
   isWithinShopOpenHours,
 } from '../lib/analyticsOpenTime.js';
 import { fetchBarberServiceHistoryPage } from '../lib/barberServiceHistory.js';
+import { allServiceIdsForTicket } from '../lib/ticketServices.js';
 
 /**
  * Analytics routes.
@@ -189,11 +190,18 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     let revenueCents = 0;
     const revenueByDay: Record<string, number> = {};
     completedTickets.forEach(ticket => {
-      const price = servicePriceMap.get(ticket.serviceId);
-      if (price != null) {
-        revenueCents += price;
-        const day = formatInTimeZone(ticket.createdAt, tz, 'yyyy-MM-dd');
-        revenueByDay[day] = (revenueByDay[day] || 0) + price;
+      const ids = allServiceIdsForTicket({
+        serviceId: ticket.serviceId,
+        mainServiceId: ticket.mainServiceId,
+        complementaryServiceIds: ticket.complementaryServiceIds,
+      });
+      for (const sid of ids) {
+        const price = servicePriceMap.get(sid);
+        if (price != null) {
+          revenueCents += price;
+          const day = formatInTimeZone(ticket.createdAt, tz, 'yyyy-MM-dd');
+          revenueByDay[day] = (revenueByDay[day] || 0) + price;
+        }
       }
     });
 
@@ -340,12 +348,26 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     const serviceCounts: Record<number, number> = {};
     const serviceRevenueCents: Record<number, number> = {};
     tickets.forEach(t => {
-      serviceCounts[t.serviceId] = (serviceCounts[t.serviceId] || 0) + 1;
+      const ids = allServiceIdsForTicket({
+        serviceId: t.serviceId,
+        mainServiceId: t.mainServiceId,
+        complementaryServiceIds: t.complementaryServiceIds,
+      });
+      for (const sid of ids) {
+        serviceCounts[sid] = (serviceCounts[sid] || 0) + 1;
+      }
     });
     completedTickets.forEach(t => {
-      const price = servicePriceMap.get(t.serviceId);
-      if (price != null) {
-        serviceRevenueCents[t.serviceId] = (serviceRevenueCents[t.serviceId] || 0) + price;
+      const ids = allServiceIdsForTicket({
+        serviceId: t.serviceId,
+        mainServiceId: t.mainServiceId,
+        complementaryServiceIds: t.complementaryServiceIds,
+      });
+      for (const sid of ids) {
+        const price = servicePriceMap.get(sid);
+        if (price != null) {
+          serviceRevenueCents[sid] = (serviceRevenueCents[sid] || 0) + price;
+        }
       }
     });
     const serviceBreakdown = Object.entries(serviceCounts)
@@ -1338,8 +1360,15 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
 
     let revenueCents = 0;
     completed.forEach(ticket => {
-      const svc = serviceMap.get(ticket.serviceId);
-      if (svc?.price != null) revenueCents += Math.round(svc.price * shareMultiplier);
+      const ids = allServiceIdsForTicket({
+        serviceId: ticket.serviceId,
+        mainServiceId: ticket.mainServiceId,
+        complementaryServiceIds: ticket.complementaryServiceIds,
+      });
+      for (const sid of ids) {
+        const svc = serviceMap.get(sid);
+        if (svc?.price != null) revenueCents += Math.round(svc.price * shareMultiplier);
+      }
     });
 
     const ticketsByDay: Record<string, number> = {};
@@ -1351,10 +1380,17 @@ export const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     const serviceCounts: Record<number, number> = {};
     const serviceRevenueCents: Record<number, number> = {};
     completed.forEach(ticket => {
-      serviceCounts[ticket.serviceId] = (serviceCounts[ticket.serviceId] || 0) + 1;
-      const svc = serviceMap.get(ticket.serviceId);
-      if (svc?.price != null) {
-        serviceRevenueCents[ticket.serviceId] = (serviceRevenueCents[ticket.serviceId] || 0) + Math.round(svc.price * shareMultiplier);
+      const ids = allServiceIdsForTicket({
+        serviceId: ticket.serviceId,
+        mainServiceId: ticket.mainServiceId,
+        complementaryServiceIds: ticket.complementaryServiceIds,
+      });
+      for (const sid of ids) {
+        serviceCounts[sid] = (serviceCounts[sid] || 0) + 1;
+        const svc = serviceMap.get(sid);
+        if (svc?.price != null) {
+          serviceRevenueCents[sid] = (serviceRevenueCents[sid] || 0) + Math.round(svc.price * shareMultiplier);
+        }
       }
     });
     const canSeeProfits = barberSettings.barbersCanSeeProfits !== false;

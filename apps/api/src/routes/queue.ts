@@ -10,6 +10,7 @@ import { getShopBySlug } from '../lib/shop.js';
 import { shapeTicketResponse } from '../lib/ticketResponse.js';
 import { parseSettings } from '../lib/settings.js';
 import { env } from '../env.js';
+import { addBundleServiceIdsToSet, totalBundleMinutes } from '../lib/ticketServices.js';
 
 function buildQueueEtag(
   shopId: number,
@@ -212,8 +213,8 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Pre-load service durations
     const serviceIds = new Set<number>();
-    for (const t of inProgressWithBarbers) serviceIds.add(t.serviceId);
-    for (const t of generalWaiting) serviceIds.add(t.serviceId);
+    for (const t of inProgressWithBarbers) addBundleServiceIdsToSet(t, serviceIds);
+    for (const t of generalWaiting) addBundleServiceIdsToSet(t, serviceIds);
     const durationMap = new Map<number, number>();
     if (serviceIds.size > 0) {
       const svcs = await db.query.services.findMany({
@@ -256,7 +257,9 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
         const startTime = ip.startedAt ? new Date(ip.startedAt) :
                           ip.updatedAt ? new Date(ip.updatedAt) : now;
         const elapsed = Math.max(0, (now.getTime() - startTime.getTime()) / 60000);
-        barberAvailability.push(Math.max(0, getDuration(ip.serviceId, barber.id) - elapsed));
+        barberAvailability.push(
+          Math.max(0, totalBundleMinutes(ip, getDuration, barber.id) - elapsed)
+        );
       } else {
         barberAvailability.push(0);
       }
@@ -269,7 +272,7 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
       const minTime = Math.min(...simAvailability);
       const minIdx = simAvailability.indexOf(minTime);
       const barberId = activeBarbers[minIdx]?.id;
-      simAvailability[minIdx] += getDuration(generalWaiting[i].serviceId, barberId);
+      simAvailability[minIdx] += totalBundleMinutes(generalWaiting[i], getDuration, barberId);
     }
     const sampleEstimateForNext = Math.ceil(Math.min(...simAvailability));
 

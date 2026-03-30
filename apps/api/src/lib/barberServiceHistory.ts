@@ -1,15 +1,8 @@
 import { db, schema } from '../db/index.js';
 import { eq, and, gte, lt, inArray, desc, sql } from 'drizzle-orm';
+import { allServiceIdsForTicket } from './ticketServices.js';
 
-/** Matches queue/status pages: full selection is in complementaryServiceIds when non-empty. */
-export function allServiceIdsForTicket(t: {
-  serviceId: number;
-  complementaryServiceIds: number[] | null;
-}): number[] {
-  const extra = t.complementaryServiceIds;
-  if (extra && extra.length > 0) return extra;
-  return [t.serviceId];
-}
+export { allServiceIdsForTicket };
 
 export interface BarberServiceHistoryTicketRow {
   id: number;
@@ -55,6 +48,7 @@ export async function fetchBarberServiceHistoryPage(params: {
       columns: {
         id: true,
         serviceId: true,
+        mainServiceId: true,
         complementaryServiceIds: true,
         customerName: true,
         clientId: true,
@@ -91,10 +85,11 @@ export async function fetchBarberServiceHistoryPage(params: {
   const tickets: BarberServiceHistoryTicketRow[] = ticketRows.map((t) => {
     const ids = allServiceIdsForTicket({
       serviceId: t.serviceId,
+      mainServiceId: t.mainServiceId,
       complementaryServiceIds: t.complementaryServiceIds,
     });
     const serviceNames = ids.map((id) => serviceNameMap.get(id) ?? `Service ${id}`);
-    const primaryId = ids[0] ?? t.serviceId;
+    const primaryId = t.mainServiceId ?? ids[0] ?? t.serviceId;
     let durationMinutes: number | null = null;
     if (t.completedAt && t.startedAt) {
       const mins = (new Date(t.completedAt).getTime() - new Date(t.startedAt).getTime()) / (1000 * 60);

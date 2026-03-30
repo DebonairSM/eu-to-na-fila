@@ -3,22 +3,26 @@ import { schema } from '../db/index.js';
 import { eq, and, asc, inArray, gt } from 'drizzle-orm';
 import type { AuditService } from './AuditService.js';
 import type { ShopSettings } from '@eutonafila/shared';
+import {
+  addBundleServiceIdsToSet,
+  allServiceIdsForTicket,
+  totalBundleMinutes,
+  type TicketServiceBundle,
+} from '../lib/ticketServices.js';
 
 /** Minimal ticket shape for wait-time computation. */
-export interface TicketForRecalc {
+export type TicketForRecalc = TicketServiceBundle & {
   id: number;
-  serviceId: number;
   preferredBarberId: number | null;
   createdAt: Date;
-}
+};
 
 /** In-progress ticket shape for wave simulation. */
-export interface InProgressForRecalc {
+export type InProgressForRecalc = TicketServiceBundle & {
   barberId: number | null;
-  serviceId: number;
   startedAt: Date | null;
   updatedAt: Date | null;
-}
+};
 
 /** Barber shape for context. */
 export interface BarberForRecalc {
@@ -147,13 +151,15 @@ export class QueueService {
     const inProgressTickets: InProgressForRecalc[] = inProgressRows.map((t) => ({
       barberId: t.barberId,
       serviceId: t.serviceId,
+      mainServiceId: t.mainServiceId,
+      complementaryServiceIds: t.complementaryServiceIds,
       startedAt: t.startedAt,
       updatedAt: t.updatedAt,
     }));
 
     const serviceIds = new Set<number>();
-    for (const t of waitingTickets) serviceIds.add(t.serviceId);
-    for (const t of inProgressRows) serviceIds.add(t.serviceId);
+    for (const t of waitingTickets) addBundleServiceIdsToSet(t, serviceIds);
+    for (const t of inProgressRows) addBundleServiceIdsToSet(t, serviceIds);
 
     const barberIds = barbers.map((b) => b.id);
     const [serviceDurations, barberStats] = await Promise.all([
@@ -232,15 +238,16 @@ export class QueueService {
             0,
             (now.getTime() - startTime.getTime()) / 60000
           );
-          const serviceDuration = getDuration(
-            inProgressForBarber.serviceId,
-            ticket.preferredBarberId
+          const serviceDuration = totalBundleMinutes(
+            inProgressForBarber,
+            getDuration,
+            ticket.preferredBarberId ?? undefined
           );
           barberAvailability = Math.max(0, serviceDuration - elapsedMinutes);
         }
         let totalWait = barberAvailability;
         for (const t of ticketsAhead) {
-          totalWait += getDuration(t.serviceId, ticket.preferredBarberId);
+          totalWait += totalBundleMinutes(t, getDuration, ticket.preferredBarberId ?? undefined);
         }
         estimatedWaitTime = position === 0 ? null : Math.ceil(totalWait);
       } else {
@@ -263,7 +270,7 @@ export class QueueService {
               0,
               (now.getTime() - startTime.getTime()) / 60000
             );
-            const serviceDuration = getDuration(inProgress.serviceId, barber.id);
+            const serviceDuration = totalBundleMinutes(inProgress, getDuration, barber.id);
             barberAvailability.push(Math.max(0, serviceDuration - elapsedMinutes));
           } else {
             barberAvailability.push(0);
@@ -275,7 +282,7 @@ export class QueueService {
           const minTime = Math.min(...barberAvailability);
           const minIdx = barberAvailability.indexOf(minTime);
           const barberId = activeBarbers[minIdx]?.id;
-          barberAvailability[minIdx] += getDuration(t.serviceId, barberId);
+          barberAvailability[minIdx] += totalBundleMinutes(t, getDuration, barberId);
         }
         estimatedWaitTime =
           position === 0 ? null : Math.ceil(Math.min(...barberAvailability));
@@ -300,8 +307,8 @@ export class QueueService {
    */
   private runWaveWaitTimeInMemory(
     presentBarbers: Array<{ id: number }>,
-    inProgressWithBarbers: Array<{ barberId: number; serviceId: number; startedAt: Date | null; updatedAt: Date | null }>,
-    ticketsAhead: Array<{ serviceId: number; preferredBarberId: number | null }>,
+    inProgressWithBarbers: InProgressForRecalc[],
+    ticketsAhead: Array<TicketServiceBundle & { preferredBarberId: number | null }>,
     serviceDurations: Map<number, number>,
     barberStats: Map<string, number>,
     defaultServiceDuration: number,
@@ -325,7 +332,7 @@ export class QueueService {
             ? new Date(inProgress.updatedAt)
             : now;
         const elapsedMinutes = Math.max(0, (now.getTime() - startTime.getTime()) / 60000);
-        const serviceDuration = getDuration(inProgress.serviceId, barber.id);
+        const serviceDuration = totalBundleMinutes(inProgress, getDuration, barber.id);
         barberAvailability.push(Math.max(0, serviceDuration - elapsedMinutes));
       } else {
         barberAvailability.push(0);
@@ -336,7 +343,7 @@ export class QueueService {
       const minTime = Math.min(...barberAvailability);
       const minIdx = barberAvailability.indexOf(minTime);
       const barberId = presentBarbers[minIdx]?.id;
-      barberAvailability[minIdx] += getDuration(ticket.serviceId, barberId);
+      barberAvailability[minIdx] += totalBundleMinutes(ticket, getDuration, barberId);
     }
     return Math.ceil(Math.min(...barberAvailability));
   }
@@ -346,8 +353,8 @@ export class QueueService {
    */
   private computePreferredBarberWaitInMemory(
     preferredBarberId: number,
-    ticketsAhead: Array<{ serviceId: number }>,
-    inProgressTicket: { serviceId: number; startedAt: Date | null; updatedAt: Date | null } | null,
+    ticketsAhead: TicketServiceBundle[],
+    inProgressTicket: InProgressForRecalc | null,
     serviceDurations: Map<number, number>,
     barberStats: Map<string, number>,
     defaultServiceDuration: number,
@@ -366,12 +373,12 @@ export class QueueService {
           ? new Date(inProgressTicket.updatedAt)
           : now;
       const elapsedMinutes = Math.max(0, (now.getTime() - startTime.getTime()) / 60000);
-      const serviceDuration = getDuration(inProgressTicket.serviceId);
+      const serviceDuration = totalBundleMinutes(inProgressTicket, (sid) => getDuration(sid));
       barberAvailability = Math.max(0, serviceDuration - elapsedMinutes);
     }
     let totalWait = barberAvailability;
     for (const ticket of ticketsAhead) {
-      totalWait += getDuration(ticket.serviceId);
+      totalWait += totalBundleMinutes(ticket, (sid) => getDuration(sid));
     }
     return Math.ceil(totalWait);
   }
@@ -379,7 +386,7 @@ export class QueueService {
   /** Run wave simulation for a given list of tickets ahead; returns wait in minutes. */
   private async runWaveWaitTime(
     shopId: number,
-    ticketsAhead: Array<{ serviceId: number; preferredBarberId: number | null }>,
+    ticketsAhead: Array<TicketServiceBundle & { preferredBarberId: number | null }>,
     defaultServiceDuration: number
   ): Promise<number | null> {
     if (ticketsAhead.length === 0) return 0;
@@ -402,8 +409,8 @@ export class QueueService {
     const inProgressWithBarbers = inProgressTickets.filter(t => t.barberId !== null);
 
     const serviceIds = new Set<number>();
-    for (const t of inProgressWithBarbers) serviceIds.add(t.serviceId);
-    for (const t of ticketsAhead) serviceIds.add(t.serviceId);
+    for (const t of inProgressWithBarbers) addBundleServiceIdsToSet(t, serviceIds);
+    for (const t of ticketsAhead) addBundleServiceIdsToSet(t, serviceIds);
     const durations = await this.loadAllServiceDurationsForShop(shopId);
 
     const barberIds = activeBarbers.map((b) => b.id);
@@ -425,7 +432,7 @@ export class QueueService {
           ? new Date(inProgress.startedAt)
           : inProgress.updatedAt ? new Date(inProgress.updatedAt) : now;
         const elapsedMinutes = Math.max(0, (now.getTime() - startTime.getTime()) / 60000);
-        const serviceDuration = getDuration(inProgress.serviceId, barber.id);
+        const serviceDuration = totalBundleMinutes(inProgress, getDuration, barber.id);
         barberAvailability.push(Math.max(0, serviceDuration - elapsedMinutes));
       } else {
         barberAvailability.push(0);
@@ -440,7 +447,7 @@ export class QueueService {
       const minTime = Math.min(...barberAvailability);
       const minIdx = barberAvailability.indexOf(minTime);
       const barberId = activeBarbers[minIdx]?.id;
-      barberAvailability[minIdx] += getDuration(ticket.serviceId, barberId);
+      barberAvailability[minIdx] += totalBundleMinutes(ticket, getDuration, barberId);
     }
 
     return Math.ceil(Math.min(...barberAvailability));
@@ -449,7 +456,12 @@ export class QueueService {
   async calculateWaitTime(shopId: number, position: number, defaultServiceDuration: number = 20): Promise<number | null> {
     if (position === 0) return null;
     const generalLineTickets = await this.getGeneralLineWaitingTickets(shopId);
-    const ticketsAhead = generalLineTickets.slice(0, Math.max(position - 1, 0));
+    const ticketsAhead = generalLineTickets.slice(0, Math.max(position - 1, 0)).map((t) => ({
+      serviceId: t.serviceId,
+      mainServiceId: t.mainServiceId,
+      complementaryServiceIds: t.complementaryServiceIds,
+      preferredBarberId: t.preferredBarberId,
+    }));
     return this.runWaveWaitTime(shopId, ticketsAhead, defaultServiceDuration);
   }
 
@@ -463,7 +475,13 @@ export class QueueService {
   ): Promise<number> {
     const generalLineTickets = await this.getGeneralLineWaitingTickets(shopId);
     if (generalLineTickets.length === 0) return 0;
-    const minutes = await this.runWaveWaitTime(shopId, generalLineTickets, defaultServiceDuration);
+    const ticketsAhead = generalLineTickets.map((t) => ({
+      serviceId: t.serviceId,
+      mainServiceId: t.mainServiceId,
+      complementaryServiceIds: t.complementaryServiceIds,
+      preferredBarberId: t.preferredBarberId,
+    }));
+    const minutes = await this.runWaveWaitTime(shopId, ticketsAhead, defaultServiceDuration);
     return minutes ?? 0;
   }
 
@@ -502,8 +520,6 @@ export class QueueService {
       scheduledTime: (t as { scheduledTime?: Date | string | null }).scheduledTime ?? null,
       checkInTime: (t as { checkInTime?: Date | string | null }).checkInTime ?? null,
       createdAt: t.createdAt,
-      serviceId: t.serviceId,
-      preferredBarberId: t.preferredBarberId,
     }));
     const pendingAsWaiting = generalLinePending.map((a) => ({
       ...a,
@@ -529,7 +545,12 @@ export class QueueService {
     const ticketsAhead = merged.slice(0, appointmentIndex);
     return this.runWaveWaitTime(
       shopId,
-      ticketsAhead.map((t) => ({ serviceId: t.serviceId, preferredBarberId: t.preferredBarberId })),
+      ticketsAhead.map((t) => ({
+        serviceId: t.serviceId,
+        mainServiceId: (t as { mainServiceId?: number | null }).mainServiceId,
+        complementaryServiceIds: (t as { complementaryServiceIds?: number[] | null }).complementaryServiceIds,
+        preferredBarberId: t.preferredBarberId,
+      })),
       defaultServiceDuration
     );
   }
@@ -590,7 +611,12 @@ export class QueueService {
     );
     return this.runWaveWaitTime(
       shopId,
-      merged.map((t) => ({ serviceId: t.serviceId, preferredBarberId: t.preferredBarberId })),
+      merged.map((t) => ({
+        serviceId: t.serviceId,
+        mainServiceId: (t as { mainServiceId?: number | null }).mainServiceId,
+        complementaryServiceIds: (t as { complementaryServiceIds?: number[] | null }).complementaryServiceIds,
+        preferredBarberId: t.preferredBarberId,
+      })),
       defaultDuration
     );
   }
@@ -669,6 +695,8 @@ export class QueueService {
       .map((t) => ({
         barberId: t.barberId!,
         serviceId: t.serviceId,
+        mainServiceId: t.mainServiceId,
+        complementaryServiceIds: t.complementaryServiceIds,
         startedAt: t.startedAt,
         updatedAt: t.updatedAt,
       }));
@@ -699,9 +727,9 @@ export class QueueService {
     }
 
     const serviceIds = new Set<number>();
-    for (const t of waitingTickets) serviceIds.add(t.serviceId);
-    for (const t of inProgressTickets) serviceIds.add(t.serviceId);
-    for (const t of pendingAppointments) serviceIds.add(t.serviceId);
+    for (const t of waitingTickets) addBundleServiceIdsToSet(t, serviceIds);
+    for (const t of inProgressTickets) addBundleServiceIdsToSet(t, serviceIds);
+    for (const t of pendingAppointments) addBundleServiceIdsToSet(t, serviceIds);
     const barberIds = barbersRows.map((b) => b.id);
 
     const [serviceDurations, barberStats] = await Promise.all([
@@ -713,6 +741,8 @@ export class QueueService {
     if (pendingAppointments.length === 0) {
       const ticketsAhead = generalLineTickets.map((t) => ({
         serviceId: t.serviceId,
+        mainServiceId: t.mainServiceId,
+        complementaryServiceIds: t.complementaryServiceIds,
         preferredBarberId: t.preferredBarberId,
       }));
       standardWaitTime =
@@ -729,22 +759,18 @@ export class QueueService {
             );
     } else {
       const generalWithType = generalLineTickets.map((t) => ({
+        ...t,
         type: (t as { type?: string }).type ?? 'walkin',
         scheduledTime: (t as { scheduledTime?: Date | string | null }).scheduledTime ?? null,
         checkInTime: (t as { checkInTime?: Date | string | null }).checkInTime ?? null,
         createdAt: t.createdAt,
-        id: t.id,
-        serviceId: t.serviceId,
-        preferredBarberId: t.preferredBarberId,
       }));
       const pendingAsWaiting = pendingAppointments.map((a) => ({
+        ...a,
         type: 'appointment' as const,
         scheduledTime: a.scheduledTime,
         checkInTime: now,
         createdAt: now as unknown as Date,
-        id: a.id,
-        serviceId: a.serviceId,
-        preferredBarberId: a.preferredBarberId,
       }));
       const merged = this.sortWaitingTicketsByWeighted(
         [...generalWithType, ...pendingAsWaiting] as Array<{
@@ -760,6 +786,8 @@ export class QueueService {
       );
       const ticketsAhead = merged.map((t) => ({
         serviceId: t.serviceId,
+        mainServiceId: (t as { mainServiceId?: number | null }).mainServiceId,
+        complementaryServiceIds: (t as { complementaryServiceIds?: number[] | null }).complementaryServiceIds,
         preferredBarberId: t.preferredBarberId,
       }));
       standardWaitTime =
@@ -778,7 +806,11 @@ export class QueueService {
 
     const barberWaitTimes = barbersRows.map((barber) => {
       const waitingForBarber = perBarberWaiting.get(barber.id) ?? [];
-      const ticketsAhead = waitingForBarber.map((t) => ({ serviceId: t.serviceId }));
+      const ticketsAhead = waitingForBarber.map((t) => ({
+        serviceId: t.serviceId,
+        mainServiceId: t.mainServiceId,
+        complementaryServiceIds: t.complementaryServiceIds,
+      }));
       const inProgressForBarber = inProgressTickets.find(
         (t) => t.barberId === barber.id
       );
@@ -790,7 +822,10 @@ export class QueueService {
               ticketsAhead,
               inProgressForBarber
                 ? {
+                    barberId: inProgressForBarber.barberId,
                     serviceId: inProgressForBarber.serviceId,
+                    mainServiceId: inProgressForBarber.mainServiceId,
+                    complementaryServiceIds: inProgressForBarber.complementaryServiceIds,
                     startedAt: inProgressForBarber.startedAt,
                     updatedAt: inProgressForBarber.updatedAt,
                   }
@@ -939,7 +974,22 @@ export class QueueService {
       );
       if (nextAppointment?.scheduledTime) {
         const scheduledTime = new Date(nextAppointment.scheduledTime);
-        const serviceDuration = next.service?.duration ?? settings.defaultServiceDuration;
+        const bundle = next as TicketServiceBundle & { service?: { duration?: number } };
+        const ids = allServiceIdsForTicket(bundle);
+        let serviceDuration: number;
+        if (ids.length <= 1) {
+          serviceDuration = bundle.service?.duration ?? settings.defaultServiceDuration;
+        } else {
+          const rows = await this.db.query.services.findMany({
+            where: inArray(schema.services.id, ids),
+            columns: { id: true, duration: true },
+          });
+          const dmap = new Map(rows.map((r) => [r.id, r.duration]));
+          serviceDuration = ids.reduce(
+            (s, id) => s + (dmap.get(id) ?? settings.defaultServiceDuration),
+            0
+          );
+        }
         const endOfService = new Date(now.getTime() + serviceDuration * 60 * 1000);
         if (endOfService > scheduledTime) {
           deadZoneWarning = {
@@ -1008,8 +1058,8 @@ export class QueueService {
     const durations = await this.loadAllServiceDurationsForShop(shopId);
 
     const serviceIds = new Set<number>();
-    for (const t of ticketsAhead) serviceIds.add(t.serviceId);
-    if (inProgressTicket) serviceIds.add(inProgressTicket.serviceId);
+    for (const t of ticketsAhead) addBundleServiceIdsToSet(t, serviceIds);
+    if (inProgressTicket) addBundleServiceIdsToSet(inProgressTicket, serviceIds);
 
     const barberStats = await this.loadBarberWeekdayStats(
       [preferredBarberId],
@@ -1028,13 +1078,13 @@ export class QueueService {
         ? new Date(inProgressTicket.startedAt)
         : inProgressTicket.updatedAt ? new Date(inProgressTicket.updatedAt) : now;
       const elapsedMinutes = Math.max(0, (now.getTime() - startTime.getTime()) / 60000);
-      const serviceDuration = getDuration(inProgressTicket.serviceId);
+      const serviceDuration = totalBundleMinutes(inProgressTicket, (sid) => getDuration(sid));
       barberAvailability = Math.max(0, serviceDuration - elapsedMinutes);
     }
 
     let totalWait = barberAvailability;
     for (const ticket of ticketsAhead) {
-      totalWait += getDuration(ticket.serviceId);
+      totalWait += totalBundleMinutes(ticket, (sid) => getDuration(sid));
     }
     return Math.ceil(totalWait);
   }

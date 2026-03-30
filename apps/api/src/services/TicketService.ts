@@ -7,6 +7,11 @@ import type { AuditService } from './AuditService.js';
 import type { ClientService } from './ClientService.js';
 import { ConflictError, NotFoundError, ValidationError } from '../lib/errors.js';
 import { parseSettings } from '../lib/settings.js';
+import {
+  dedupePreserveOrder,
+  resolveTicketServiceColumns,
+  allServiceIdsForTicket,
+} from '../lib/ticketServices.js';
 
 /**
  * Service for managing ticket operations.
@@ -18,6 +23,28 @@ export class TicketService {
     private auditService: AuditService,
     private clientService: ClientService
   ) {}
+
+  /** Validate shop membership + active flags; resolve main vs complementary from owner service kinds. */
+  private async resolveValidatedServiceSelection(
+    shopId: number,
+    orderedUniqueIds: number[]
+  ): Promise<{ serviceId: number; mainServiceId: number | null; complementaryServiceIds: number[] }> {
+    if (orderedUniqueIds.length === 0) {
+      throw new ValidationError('At least one service is required');
+    }
+    const rows = await this.db.query.services.findMany({
+      where: and(inArray(schema.services.id, orderedUniqueIds), eq(schema.services.shopId, shopId)),
+      columns: { id: true, isActive: true, kind: true },
+    });
+    const rowMap = new Map(rows.map((r) => [r.id, r]));
+    for (const id of orderedUniqueIds) {
+      const s = rowMap.get(id);
+      if (!s) throw new NotFoundError('Service not found');
+      if (!s.isActive) throw new ConflictError('Service is not active');
+    }
+    const kindById = new Map(rows.map((r) => [r.id, r.kind ?? 'complementary']));
+    return resolveTicketServiceColumns(orderedUniqueIds, kindById);
+  }
 
   async getById(id: number): Promise<Ticket | null> {
     const ticket = await this.db.query.tickets.findFirst({
@@ -104,33 +131,23 @@ export class TicketService {
     const settings = parseSettings(shop.settings);
 
     const dataExt = data as CreateTicket & { complementaryServiceIds?: number[] };
-    const selectedIds = dataExt.complementaryServiceIds?.length ? dataExt.complementaryServiceIds : null;
-    let primaryServiceId: number;
-
-    if (selectedIds && selectedIds.length > 0) {
-      const services = await this.db.query.services.findMany({
-        where: and(inArray(schema.services.id, selectedIds), eq(schema.services.shopId, shopId)),
-        columns: { id: true, isActive: true },
-      });
-      const serviceMap = new Map(services.map((s) => [s.id, s]));
-      for (const id of selectedIds) {
-        const svc = serviceMap.get(id);
-        if (!svc) throw new NotFoundError('Service not found');
-        if (!svc.isActive) throw new ConflictError('Service is not active');
-      }
-      primaryServiceId = selectedIds[0];
+    let orderedUniqueIds: number[];
+    if (dataExt.complementaryServiceIds?.length) {
+      orderedUniqueIds = dedupePreserveOrder(dataExt.complementaryServiceIds);
     } else if (data.serviceId != null) {
-      primaryServiceId = data.serviceId;
+      orderedUniqueIds = [data.serviceId];
     } else {
-      // Legacy path with no serviceId: use first active service
       const first = await this.db.query.services.findFirst({
         where: and(eq(schema.services.shopId, shopId), eq(schema.services.isActive, true)),
         columns: { id: true },
         orderBy: (s, { asc }) => [asc(s.sortOrder), asc(s.id)],
       });
       if (!first) throw new ValidationError('Shop has no active services.');
-      primaryServiceId = first.id;
+      orderedUniqueIds = [first.id];
     }
+
+    const resolved = await this.resolveValidatedServiceSelection(shopId, orderedUniqueIds);
+    const primaryServiceId = resolved.serviceId;
 
     const service = await this.db.query.services.findFirst({
       where: and(eq(schema.services.id, primaryServiceId), eq(schema.services.shopId, shopId)),
@@ -183,9 +200,9 @@ export class TicketService {
     const referralSource = (data as CreateTicket & { referralSource?: string }).referralSource ?? null;
     const insertValues: Record<string, unknown> = {
       shopId,
-      serviceId: primaryServiceId,
-      mainServiceId: null,
-      complementaryServiceIds: dataExt.complementaryServiceIds ?? [],
+      serviceId: resolved.serviceId,
+      mainServiceId: resolved.mainServiceId,
+      complementaryServiceIds: resolved.complementaryServiceIds,
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       deviceId: data.deviceId || null,
@@ -328,7 +345,7 @@ export class TicketService {
       this.auditService.logTicketCancelled(id, existingTicket.shopId, { reason: 'Status updated to cancelled', actorType: 'staff' });
     }
 
-    // Update per-barber weekday stats when a ticket is completed
+    // Update per-barber weekday stats when a ticket is completed (main + each selected child service)
     if (data.status === 'completed' && existingTicket.status !== 'completed') {
       const completedBarberId = ticket.barberId ?? existingTicket.barberId;
       const completedStartedAt = existingTicket.startedAt ? new Date(existingTicket.startedAt) : null;
@@ -336,30 +353,43 @@ export class TicketService {
         const serviceTimeMinutes = (now.getTime() - completedStartedAt.getTime()) / 60000;
         if (serviceTimeMinutes > 0 && serviceTimeMinutes < 120) {
           const dayOfWeek = now.getDay();
-          await this.db
-            .insert(schema.barberServiceWeekdayStats)
-            .values({
-              barberId: completedBarberId,
-              serviceId: existingTicket.serviceId,
-              shopId: existingTicket.shopId,
-              dayOfWeek,
-              avgDuration: serviceTimeMinutes,
-              totalCompleted: 1,
-              createdAt: now,
-              updatedAt: now,
-            })
-            .onConflictDoUpdate({
-              target: [
-                schema.barberServiceWeekdayStats.barberId,
-                schema.barberServiceWeekdayStats.serviceId,
-                schema.barberServiceWeekdayStats.dayOfWeek,
-              ],
-              set: {
-                totalCompleted: sql`${schema.barberServiceWeekdayStats.totalCompleted} + 1`,
-                avgDuration: sql`(${schema.barberServiceWeekdayStats.avgDuration} * ${schema.barberServiceWeekdayStats.totalCompleted} + ${serviceTimeMinutes}) / (${schema.barberServiceWeekdayStats.totalCompleted} + 1)`,
+          const ex = existingTicket as {
+            serviceId: number;
+            mainServiceId?: number | null;
+            complementaryServiceIds?: number[] | null;
+            shopId: number;
+          };
+          const serviceIdsDone = allServiceIdsForTicket({
+            serviceId: ex.serviceId,
+            mainServiceId: ex.mainServiceId,
+            complementaryServiceIds: ex.complementaryServiceIds,
+          });
+          for (const svcId of serviceIdsDone) {
+            await this.db
+              .insert(schema.barberServiceWeekdayStats)
+              .values({
+                barberId: completedBarberId,
+                serviceId: svcId,
+                shopId: ex.shopId,
+                dayOfWeek,
+                avgDuration: serviceTimeMinutes,
+                totalCompleted: 1,
+                createdAt: now,
                 updatedAt: now,
-              },
-            });
+              })
+              .onConflictDoUpdate({
+                target: [
+                  schema.barberServiceWeekdayStats.barberId,
+                  schema.barberServiceWeekdayStats.serviceId,
+                  schema.barberServiceWeekdayStats.dayOfWeek,
+                ],
+                set: {
+                  totalCompleted: sql`${schema.barberServiceWeekdayStats.totalCompleted} + 1`,
+                  avgDuration: sql`(${schema.barberServiceWeekdayStats.avgDuration} * ${schema.barberServiceWeekdayStats.totalCompleted} + ${serviceTimeMinutes}) / (${schema.barberServiceWeekdayStats.totalCompleted} + 1)`,
+                  updatedAt: now,
+                },
+              });
+          }
         }
       }
     }
@@ -441,6 +471,8 @@ export class TicketService {
     const ticketsForRecalc = waitingTickets.map((t) => ({
       id: t.id,
       serviceId: t.serviceId,
+      mainServiceId: (t as { mainServiceId?: number | null }).mainServiceId ?? null,
+      complementaryServiceIds: (t as { complementaryServiceIds?: number[] | null }).complementaryServiceIds ?? null,
       preferredBarberId: t.preferredBarberId ?? null,
       createdAt: new Date(t.createdAt),
     }));
@@ -511,7 +543,7 @@ export class TicketService {
   /**
    * Create an appointment (staff or public book). Requires shop settings.allowAppointments.
    * Inserts with type=appointment, status=pending, scheduledTime; ticket_number set to A-{id}.
-   * When complementaryServiceIds is provided, serviceId is the first element and all are stored.
+   * Resolves serviceId / mainServiceId / complementaryServiceIds from selection using owner service kinds.
    */
   async createAppointment(
     shopId: number,
@@ -532,17 +564,10 @@ export class TicketService {
     const settings = parseSettings(shop.settings);
     if (!settings.allowAppointments) throw new ConflictError('Appointments are not enabled for this shop');
 
-    const idsToValidate = data.complementaryServiceIds?.length ? data.complementaryServiceIds : [data.serviceId];
-    const services = await this.db.query.services.findMany({
-      where: and(inArray(schema.services.id, idsToValidate), eq(schema.services.shopId, shopId)),
-      columns: { id: true, isActive: true },
-    });
-    const serviceMap = new Map(services.map((s) => [s.id, s]));
-    for (const id of idsToValidate) {
-      const svc = serviceMap.get(id);
-      if (!svc) throw new NotFoundError('Service not found');
-      if (!svc.isActive) throw new ConflictError('Service is not active');
-    }
+    const orderedUniqueIds = dedupePreserveOrder(
+      data.complementaryServiceIds?.length ? data.complementaryServiceIds : [data.serviceId]
+    );
+    const resolved = await this.resolveValidatedServiceSelection(shopId, orderedUniqueIds);
 
     const scheduledTime = typeof data.scheduledTime === 'string' ? new Date(data.scheduledTime) : data.scheduledTime;
     if (isNaN(scheduledTime.getTime())) throw new ValidationError('Invalid scheduledTime');
@@ -560,14 +585,14 @@ export class TicketService {
       throw new ConflictError('Appointment capacity reached. Maximum appointments for this queue is ' + appointmentCap + '.');
     }
 
-    const complementaryIds = data.complementaryServiceIds ?? [];
     const now = new Date();
     const [ticket] = await this.db
       .insert(schema.tickets)
       .values({
         shopId,
-        serviceId: data.serviceId,
-        complementaryServiceIds: complementaryIds,
+        serviceId: resolved.serviceId,
+        mainServiceId: resolved.mainServiceId,
+        complementaryServiceIds: resolved.complementaryServiceIds,
         customerName: data.customerName,
         customerPhone: data.customerPhone ?? null,
         deviceId: null,
@@ -597,7 +622,7 @@ export class TicketService {
 
     this.auditService.logTicketCreated(ticket.id, shopId, {
       customerName: data.customerName,
-      serviceId: data.serviceId,
+      serviceId: resolved.serviceId,
       preferredBarberId: data.preferredBarberId,
       actorType: 'staff',
     });

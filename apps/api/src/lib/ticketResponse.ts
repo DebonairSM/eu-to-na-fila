@@ -23,7 +23,7 @@ export function shapeTicketResponse(ticket: Record<string, unknown>): Record<str
       : undefined;
 
   const keys = [
-    'id', 'shopId', 'serviceId', 'barberId', 'preferredBarberId', 'clientId', 'customerName', 'customerPhone',
+    'id', 'shopId', 'serviceId', 'mainServiceId', 'barberId', 'preferredBarberId', 'clientId', 'customerName', 'customerPhone',
     'deviceId', 'trackingConsent', 'status', 'position', 'estimatedWaitTime', 'type', 'scheduledTime', 'checkInTime',
     'ticketNumber', 'createdAt', 'updatedAt', 'startedAt', 'completedAt', 'cancelledAt', 'barberAssignedAt',
     'complementaryServiceIds',

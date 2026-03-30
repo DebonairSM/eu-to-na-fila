@@ -228,9 +228,9 @@ export const clientClipNotes = pgTable('client_clip_notes', {
 export const tickets = pgTable('tickets', {
   id: serial('id').primaryKey(),
   shopId: integer('shop_id').notNull().references(() => shops.id),
-  serviceId: integer('service_id').notNull().references(() => services.id),
-  mainServiceId: integer('main_service_id').references(() => services.id),
-  complementaryServiceIds: integer('complementary_service_ids').array().notNull().default([]),
+  serviceId: integer('service_id').notNull().references(() => services.id), // Anchor row for relations: main when selection has kind=main, else first selected
+  mainServiceId: integer('main_service_id').references(() => services.id), // First selected service with services.kind=main; null if none
+  complementaryServiceIds: integer('complementary_service_ids').array().notNull().default([]), // Full ordered selection (deduped); child services are kind=complementary in catalog
   barberId: integer('barber_id').references(() => barbers.id),
   preferredBarberId: integer('preferred_barber_id').references(() => barbers.id),
   clientId: integer('client_id').references(() => clients.id),

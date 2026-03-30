@@ -17,6 +17,8 @@ export const ticketSchema = z.object({
   shopId: z.number(),
   shopSlug: z.string().optional(), // Present when API loads shop relation; used for per-shop status redirects
   serviceId: z.number(),
+  /** First service with kind=main in the selection, when set; complements owner service settings. */
+  mainServiceId: z.number().optional().nullable(),
   service: ticketServiceSchema.optional(), // Present when API embeds service for display
   barberId: z.number().optional(),
   preferredBarberId: z.number().optional(),
@@ -50,7 +52,7 @@ export const createTicketSchema = z.object({
   shopId: z.number(),
   /** Single service (optional; used when only one service is selected). */
   serviceId: z.number().optional(),
-  /** Selected service ids; first is used as primary for display. Backend uses first as service_id, all stored as complementary_service_ids. */
+  /** Full ordered selection; stored as complementary_service_ids. Backend sets service_id/main_service_id from owner service kinds (main vs complementary). */
   complementaryServiceIds: z.array(z.number().int().positive()).optional(),
   customerName: z.string().min(1).max(200),
   customerPhone: z.string().optional(),
