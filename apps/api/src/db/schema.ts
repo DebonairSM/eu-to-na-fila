@@ -186,11 +186,13 @@ export const apiUsageBuckets = pgTable(
     bucketStart: timestamp('bucket_start', { withTimezone: true }).notNull(),
     endpointTag: text('endpoint_tag').notNull(),
     method: text('method').notNull(),
+    clientContext: text('client_context').notNull().default('unknown'),
     requestCount: integer('request_count').notNull().default(0),
   },
   (table) => ({
     shopBucketIdx: index('api_usage_buckets_shop_bucket_idx').on(table.shopId, table.bucketStart),
     companyBucketIdx: index('api_usage_buckets_company_bucket_idx').on(table.companyId, table.bucketStart),
+    companyContextIdx: index('api_usage_buckets_company_context_idx').on(table.companyId, table.bucketStart, table.clientContext),
     bucketStartIdx: index('api_usage_buckets_bucket_start_idx').on(table.bucketStart),
   })
 );

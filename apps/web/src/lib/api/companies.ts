@@ -65,6 +65,8 @@ export interface CompanyUsageResponse {
   until: string;
   perShop: Array<{ shopId: number; shopName: string; shopSlug: string; requestCount: number }>;
   timeSeries: Array<{ date: string; requestCount: number }>;
+  byClientContext: Array<{ clientContext: string; requestCount: number }>;
+  topEndpoints: Array<{ endpointTag: string; method: string; requestCount: number }>;
 }
 
 export interface CompanyUsageAlert {

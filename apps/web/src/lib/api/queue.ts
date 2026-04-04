@@ -2,6 +2,7 @@ import type { GetQueueResponse, GetMetricsResponse, GetStatisticsResponse, Ticke
 import type { BaseApiClient } from './client.js';
 import { API_TIMEOUT_WAIT_TIMES_MS } from '../constants';
 import { ApiError } from './errors.js';
+import { getWebClientContextHeaderValue } from './clientContextHeader.js';
 
 export interface QueueNextResponse {
   next: Ticket | null;
@@ -35,6 +36,7 @@ export function createQueueApi(client: BaseApiClient): QueueApi {
       const cacheKey = `queue:${shopSlug}:${options?.scope ?? 'full'}`;
       const headers: Record<string, string> = {};
       if (c.authToken) headers.Authorization = `Bearer ${c.authToken}`;
+      headers['X-Client-Context'] = getWebClientContextHeaderValue();
       const existingEtag = queueEtagCache.get(cacheKey);
       if (existingEtag) headers['If-None-Match'] = existingEtag;
 

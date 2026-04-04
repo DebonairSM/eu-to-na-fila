@@ -40,6 +40,7 @@ import { startBarberPresenceJob } from './jobs/barberPresenceJob.js';
 import { startUsageAnomalyJob } from './jobs/usageAnomalyJob.js';
 import { getUsageService, UsageService } from './services/UsageService.js';
 import { getEgressStatsService } from './services/EgressStatsService.js';
+import { resolveClientContext } from './lib/clientContext.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -694,7 +695,11 @@ fastify.addHook('onResponse', (request, reply, done) => {
   if (!path.startsWith('/api/')) return done();
   const slug = UsageService.getShopSlugFromPath(path);
   const companyIdFromPath = UsageService.getCompanyIdFromPath(path);
-  getUsageService().recordRequest(slug, request.method, path, companyIdFromPath);
+  const clientContext = resolveClientContext(
+    request.headers as Record<string, string | string[] | undefined>,
+    request.url ?? ''
+  );
+  getUsageService().recordRequest(slug, request.method, path, companyIdFromPath, clientContext);
   done();
 });
 

@@ -1,5 +1,6 @@
 import { pool } from '../db/index.js';
 import { getShopBySlug } from '../lib/shop.js';
+import type { ClientContext } from '../lib/clientContext.js';
 
 const FLUSH_INTERVAL_MS = 5 * 60 * 1000;  // 5 min
 const BUCKET_MS = 60 * 60 * 1000;         // 1 hour
@@ -41,12 +42,18 @@ export class UsageService {
    * Pass slug for /api/shops/:slug/..., or companyId for /api/companies/:id/..., or both null for global.
    * Slug resolution happens in flush(); companyId is written as-is.
    */
-  recordRequest(slug: string | null, method: string, path: string, companyIdFromPath: number | null = null): void {
+  recordRequest(
+    slug: string | null,
+    method: string,
+    path: string,
+    companyIdFromPath: number | null = null,
+    clientContext: ClientContext = 'unknown'
+  ): void {
     const tag = normalizeEndpoint(method, path);
     const bucketStart = getBucketStart();
     const slugPart =
       companyIdFromPath != null ? `c${companyIdFromPath}` : slug != null ? slug : 'g';
-    const key = [slugPart, bucketStart.getTime(), tag, method].join(KEY_SEP);
+    const key = [slugPart, bucketStart.getTime(), tag, method, clientContext].join(KEY_SEP);
     this.counters.set(key, (this.counters.get(key) ?? 0) + 1);
   }
 
@@ -61,7 +68,7 @@ export class UsageService {
     const uniqueSlugs = new Set<string>();
     for (const key of snapshot.keys()) {
       const parts = key.split(KEY_SEP);
-      if (parts.length < 4) continue;
+      if (parts.length < 5) continue;
       const [slugPart] = parts;
       if (slugPart !== 'g' && !slugPart.startsWith('c')) uniqueSlugs.add(slugPart);
     }
@@ -75,13 +82,24 @@ export class UsageService {
       }
     }
 
-    const rows: { shopId: number | null; companyId: number | null; bucketStart: Date; endpointTag: string; method: string; requestCount: number }[] = [];
+    const rows: {
+      shopId: number | null;
+      companyId: number | null;
+      bucketStart: Date;
+      endpointTag: string;
+      method: string;
+      clientContext: ClientContext;
+      requestCount: number;
+    }[] = [];
     for (const [key, count] of snapshot) {
       const parts = key.split(KEY_SEP);
-      if (parts.length < 4) continue;
-      const [slugPart, ts, tag, method] = parts;
+      if (parts.length < 5) continue;
+      const [slugPart, ts, tag, method, clientContextRaw] = parts;
       const bucketStart = new Date(parseInt(ts, 10));
       if (isNaN(bucketStart.getTime())) continue;
+      const clientContext: ClientContext = clientContextRaw === 'web' || clientContextRaw === 'kiosk' || clientContextRaw === 'company_admin' || clientContextRaw === 'unknown'
+        ? clientContextRaw
+        : 'unknown';
 
       let shopId: number | null = null;
       let companyId: number | null = null;
@@ -102,15 +120,16 @@ export class UsageService {
         bucketStart,
         endpointTag: tag,
         method,
+        clientContext,
         requestCount: count,
       });
     }
 
     for (const row of rows) {
       await pool.query(
-        `INSERT INTO api_usage_buckets (shop_id, company_id, bucket_start, endpoint_tag, method, request_count)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT ((COALESCE(shop_id, -1)), (COALESCE(company_id, -1)), bucket_start, endpoint_tag, method)
+        `INSERT INTO api_usage_buckets (shop_id, company_id, bucket_start, endpoint_tag, method, client_context, request_count)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT ((COALESCE(shop_id, -1)), (COALESCE(company_id, -1)), bucket_start, endpoint_tag, method, client_context)
          DO UPDATE SET request_count = api_usage_buckets.request_count + EXCLUDED.request_count`,
         [
           row.shopId,
@@ -118,6 +137,7 @@ export class UsageService {
           row.bucketStart.toISOString(),
           row.endpointTag,
           row.method,
+          row.clientContext,
           row.requestCount,
         ]
       );

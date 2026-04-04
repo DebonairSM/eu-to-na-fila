@@ -1,5 +1,6 @@
 import type { ApiErrorResponse } from '@eutonafila/shared';
 import { ApiError } from './errors.js';
+import { getWebClientContextHeaderValue } from './clientContextHeader.js';
 
 /**
  * Base API client. Handles HTTP requests, auth tokens, and error transformation.
@@ -119,6 +120,7 @@ export class BaseApiClient {
     if (this.authToken) {
       headers['Authorization'] = `Bearer ${this.authToken}`;
     }
+    headers['X-Client-Context'] = getWebClientContextHeaderValue();
     if (fetchOptions.headers) {
       Object.assign(headers, fetchOptions.headers);
     }

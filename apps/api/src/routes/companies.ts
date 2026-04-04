@@ -321,6 +321,9 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         .select({
           shopId: schema.apiUsageBuckets.shopId,
           bucketStart: schema.apiUsageBuckets.bucketStart,
+          endpointTag: schema.apiUsageBuckets.endpointTag,
+          method: schema.apiUsageBuckets.method,
+          clientContext: schema.apiUsageBuckets.clientContext,
           requestCount: schema.apiUsageBuckets.requestCount,
         })
         .from(schema.apiUsageBuckets)
@@ -364,12 +367,39 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([date, requestCount]) => ({ date, requestCount }));
 
+      const byClientContextMap = new Map<string, number>();
+      const endpointTotalsMap = new Map<string, { endpointTag: string; method: string; requestCount: number }>();
+      for (const r of buckets) {
+        const context = r.clientContext ?? 'unknown';
+        byClientContextMap.set(context, (byClientContextMap.get(context) ?? 0) + (r.requestCount ?? 0));
+
+        const endpointKey = `${r.endpointTag}:${r.method}`;
+        const existing = endpointTotalsMap.get(endpointKey);
+        if (existing) {
+          existing.requestCount += r.requestCount ?? 0;
+        } else {
+          endpointTotalsMap.set(endpointKey, {
+            endpointTag: r.endpointTag,
+            method: r.method,
+            requestCount: r.requestCount ?? 0,
+          });
+        }
+      }
+      const byClientContext = Array.from(byClientContextMap.entries())
+        .map(([clientContext, requestCount]) => ({ clientContext, requestCount }))
+        .sort((a, b) => b.requestCount - a.requestCount);
+      const topEndpoints = Array.from(endpointTotalsMap.values())
+        .sort((a, b) => b.requestCount - a.requestCount)
+        .slice(0, 15);
+
       return reply.send({
         totalRequests,
         since: since.toISOString(),
         until: until.toISOString(),
         perShop,
         timeSeries,
+        byClientContext,
+        topEndpoints,
       });
     }
   );

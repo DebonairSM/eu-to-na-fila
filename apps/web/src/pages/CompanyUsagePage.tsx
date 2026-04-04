@@ -76,6 +76,13 @@ export function CompanyUsagePage() {
     if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   };
+  const clientContextLabel = (context: string): string => {
+    const key =
+      context === 'web' || context === 'kiosk' || context === 'company_admin' || context === 'unknown'
+        ? context
+        : 'unknown';
+    return t(`company.clientContext.${key}`);
+  };
 
   return (
     <div className="min-h-screen h-full bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
@@ -147,6 +154,71 @@ export function CompanyUsagePage() {
                   </div>
                 </div>
               </div>
+
+              <section className="border border-white/10 bg-white/5 rounded-xl p-6 mb-8">
+                <h2 className="text-lg font-semibold text-white mb-4">
+                  {t('company.trafficBySource')}
+                </h2>
+                {usage.byClientContext && usage.byClientContext.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-white/70 border-b border-white/10">
+                          <th className="py-2 pr-4">{t('company.source')}</th>
+                          <th className="py-2 pr-4">{t('company.requestCount')}</th>
+                          <th className="py-2">{t('company.share')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {usage.byClientContext.map((row) => {
+                          const share = totalRequests30d > 0
+                            ? `${((row.requestCount / totalRequests30d) * 100).toFixed(1)}%`
+                            : '—';
+                          return (
+                            <tr key={row.clientContext} className="border-b border-white/5 text-white/90">
+                              <td className="py-2 pr-4">{clientContextLabel(row.clientContext)}</td>
+                              <td className="py-2 pr-4">{row.requestCount.toLocaleString()}</td>
+                              <td className="py-2">{share}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-white/60">{t('company.usageNoClientContextData')}</p>
+                )}
+              </section>
+
+              <section className="border border-white/10 bg-white/5 rounded-xl p-6 mb-8">
+                <h2 className="text-lg font-semibold text-white mb-4">
+                  {t('company.topApiGroups')}
+                </h2>
+                {usage.topEndpoints && usage.topEndpoints.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-white/70 border-b border-white/10">
+                          <th className="py-2 pr-4">{t('company.endpointGroup')}</th>
+                          <th className="py-2 pr-4">{t('company.method')}</th>
+                          <th className="py-2">{t('company.requestCount')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {usage.topEndpoints.map((row) => (
+                          <tr key={`${row.endpointTag}:${row.method}`} className="border-b border-white/5 text-white/90">
+                            <td className="py-2 pr-4 font-mono">{row.endpointTag}</td>
+                            <td className="py-2 pr-4">{row.method}</td>
+                            <td className="py-2">{row.requestCount.toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-white/60">{t('company.usageNoEndpointData')}</p>
+                )}
+              </section>
 
               {usage.timeSeries && usage.timeSeries.length > 0 && (
                 <section className="border border-white/10 bg-white/5 rounded-xl p-6 mb-8">
