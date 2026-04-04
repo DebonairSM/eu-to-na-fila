@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { CountryCode } from 'libphonenumber-js';
 import { api, ApiError } from '@/lib/api';
+import { invalidateQueueHttpCache } from '@/lib/api/queue';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { useShopConfig } from '@/contexts/ShopConfigContext';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -423,6 +424,7 @@ export function useJoinForm() {
 
     try {
       const ticket = await api.createTicket(shopSlug, payload);
+      invalidateQueueHttpCache(shopSlug);
 
       // Store ticket ID in localStorage for persistence
       localStorage.setItem(STORAGE_KEY, ticket.id.toString());

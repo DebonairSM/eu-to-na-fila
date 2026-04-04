@@ -56,6 +56,10 @@ export class WebSocketClient {
   private connectionSubscribers: Set<(connected: boolean) => void> = new Set();
   private isConnecting = false;
 
+  private hasActiveSubscriptions(): boolean {
+    return this.subscribers.size > 0 || this.queueSubscribers.size > 0;
+  }
+
   /**
    * Connect to WebSocket server
    */
@@ -126,8 +130,8 @@ export class WebSocketClient {
         console.log('[WS] WebSocket connection closed');
         this.notifyConnectionState(false);
         
-        // Attempt to reconnect if we have subscribers
-        if (this.subscribers.size > 0 && this.reconnectAttempts < this.maxReconnectAttempts) {
+        // Attempt to reconnect if we still have active subscribers.
+        if (this.hasActiveSubscriptions() && this.reconnectAttempts < this.maxReconnectAttempts) {
           this.reconnectAttempts++;
           const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
           console.log(`[WS] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);

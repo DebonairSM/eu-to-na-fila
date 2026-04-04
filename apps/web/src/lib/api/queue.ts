@@ -15,6 +15,27 @@ export interface GetQueueOptions {
 
 const queueEtagCache = new Map<string, string>();
 const queueDataCache = new Map<string, GetQueueResponse>();
+const QUEUE_CACHE_KEY_PREFIX = 'queue:';
+
+function buildQueueCacheKey(shopSlug: string, scope: GetQueueOptions['scope'] = 'full'): string {
+  return `${QUEUE_CACHE_KEY_PREFIX}${shopSlug}:${scope}`;
+}
+
+export function invalidateQueueHttpCache(shopSlug?: string): void {
+  if (!shopSlug) {
+    queueEtagCache.clear();
+    queueDataCache.clear();
+    return;
+  }
+
+  const prefix = `${QUEUE_CACHE_KEY_PREFIX}${shopSlug}:`;
+  for (const key of queueEtagCache.keys()) {
+    if (key.startsWith(prefix)) queueEtagCache.delete(key);
+  }
+  for (const key of queueDataCache.keys()) {
+    if (key.startsWith(prefix)) queueDataCache.delete(key);
+  }
+}
 
 /** Queue + metrics domain methods. */
 export interface QueueApi {
@@ -31,41 +52,47 @@ export function createQueueApi(client: BaseApiClient): QueueApi {
   const c = client as any; // access protected methods
   return {
     getQueue: async (shopSlug, options) => {
-      const scope = options?.scope && options.scope !== 'full' ? `?scope=${options.scope}` : '';
+      const scopeValue = options?.scope ?? 'full';
+      const scope = scopeValue !== 'full' ? `?scope=${scopeValue}` : '';
       const path = `/shops/${shopSlug}/queue${scope}`;
-      const cacheKey = `queue:${shopSlug}:${options?.scope ?? 'full'}`;
-      const headers: Record<string, string> = {};
-      if (c.authToken) headers.Authorization = `Bearer ${c.authToken}`;
-      headers['X-Client-Context'] = getWebClientContextHeaderValue();
-      const existingEtag = queueEtagCache.get(cacheKey);
-      if (existingEtag) headers['If-None-Match'] = existingEtag;
+      const cacheKey = buildQueueCacheKey(shopSlug, scopeValue);
+      const requestQueue = async (withEtag: boolean): Promise<Response> => {
+        const headers: Record<string, string> = {};
+        if (c.authToken) headers.Authorization = `Bearer ${c.authToken}`;
+        headers['X-Client-Context'] = getWebClientContextHeaderValue();
+        const existingEtag = withEtag ? queueEtagCache.get(cacheKey) : undefined;
+        if (existingEtag) headers['If-None-Match'] = existingEtag;
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
-      let response: Response;
-      try {
-        response = await fetch(`${c.getBaseUrl()}${path}`, {
-          method: 'GET',
-          headers,
-          cache: 'no-store',
-          signal: controller.signal,
-          credentials: 'omit',
-        });
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw new ApiError(
-          error instanceof Error && error.name === 'AbortError'
-            ? 'Request timed out - please check your connection'
-            : 'Network error - please check your connection',
-          error instanceof Error && error.name === 'AbortError' ? 408 : 0,
-          error instanceof Error && error.name === 'AbortError' ? 'TIMEOUT_ERROR' : 'NETWORK_ERROR'
-        );
-      }
-      clearTimeout(timeoutId);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        try {
+          return await fetch(`${c.getBaseUrl()}${path}`, {
+            method: 'GET',
+            headers,
+            cache: 'no-store',
+            signal: controller.signal,
+            credentials: 'omit',
+          });
+        } catch (error) {
+          throw new ApiError(
+            error instanceof Error && error.name === 'AbortError'
+              ? 'Request timed out - please check your connection'
+              : 'Network error - please check your connection',
+            error instanceof Error && error.name === 'AbortError' ? 408 : 0,
+            error instanceof Error && error.name === 'AbortError' ? 'TIMEOUT_ERROR' : 'NETWORK_ERROR'
+          );
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      };
+
+      let response = await requestQueue(true);
 
       if (response.status === 304) {
         const cached = queueDataCache.get(cacheKey);
         if (cached) return cached;
+        // If ETag exists but body cache is missing, force a fresh request.
+        response = await requestQueue(false);
       }
 
       if (!response.ok) {

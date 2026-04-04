@@ -30,6 +30,10 @@ function buildQueueEtag(
  * Handles queue viewing and metrics.
  */
 export const queueRoutes: FastifyPluginAsync = async (fastify) => {
+  const setDynamicNoStore = (reply: any) => {
+    reply.header('Cache-Control', 'private, no-store');
+  };
+
   const broadcastQueueUpdated = (shopSlug: string) => {
     if (!env.QUEUE_WS_ENABLED) return;
     const wsManager = (fastify as any).wsManager;
@@ -129,6 +133,7 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
    * @route GET /api/shops/:slug/queue/next
    */
   fastify.get('/shops/:slug/queue/next', async (request, reply) => {
+    setDynamicNoStore(reply);
     const paramsSchema = z.object({ slug: z.string().min(1) });
     const { slug } = validateRequest(paramsSchema, request.params);
     const shop = await getShopBySlug(slug);
@@ -152,6 +157,7 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {404} If shop not found
    */
   fastify.get('/shops/:slug/metrics', async (request, reply) => {
+    setDynamicNoStore(reply);
     const paramsSchema = z.object({
       slug: z.string().min(1),
     });
@@ -175,6 +181,7 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
    */
   if (process.env.NODE_ENV !== 'production') {
   fastify.get('/shops/:slug/wait-debug', async (request, reply) => {
+    setDynamicNoStore(reply);
     const paramsSchema = z.object({
       slug: z.string().min(1),
     });
@@ -297,6 +304,7 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {404} If shop not found
    */
   fastify.get('/shops/:slug/statistics', async (request, reply) => {
+    setDynamicNoStore(reply);
     const paramsSchema = z.object({
       slug: z.string().min(1),
     });
@@ -329,6 +337,7 @@ export const queueRoutes: FastifyPluginAsync = async (fastify) => {
    * @throws {404} If shop not found
    */
   fastify.get('/shops/:slug/wait-times', async (request, reply) => {
+    setDynamicNoStore(reply);
     const paramsSchema = z.object({
       slug: z.string().min(1),
     });

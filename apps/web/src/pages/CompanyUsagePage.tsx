@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -10,7 +10,7 @@ import type { CompanyUsageResponse, CompanyUsageAlert, AdsUsageResponse } from '
 import { getErrorMessage } from '@/lib/utils';
 import { Container } from '@/components/design-system/Spacing/Container';
 
-const DAYS = 30;
+type Preset = '7' | '30' | '90' | 'custom';
 
 export function CompanyUsagePage() {
   const { user } = useAuthContext();
@@ -21,33 +21,70 @@ export function CompanyUsagePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [resolvingId, setResolvingId] = useState<number | null>(null);
+  const [shopOptions, setShopOptions] = useState<Array<{ id: number; name: string; slug: string }>>([]);
+  const [selectedShopId, setSelectedShopId] = useState<'all' | number>('all');
+  const [preset, setPreset] = useState<Preset>('30');
+  const [customSince, setCustomSince] = useState('');
+  const [customUntil, setCustomUntil] = useState('');
+  const loadSeqRef = useRef(0);
+
+  const usageParams = useMemo(() => {
+    if (preset === 'custom' && customSince && customUntil) {
+      return {
+        since: new Date(`${customSince}T00:00:00.000Z`).toISOString(),
+        until: new Date(`${customUntil}T23:59:59.999Z`).toISOString(),
+      };
+    }
+    return { days: Number(preset) };
+  }, [preset, customSince, customUntil]);
 
   const load = useCallback(async () => {
     if (!user?.companyId) return;
+    if (preset === 'custom' && (!customSince || !customUntil)) return;
+    const requestId = ++loadSeqRef.current;
     try {
       setLoading(true);
       setError(null);
+      const usageQuery: { days?: number; since?: string; until?: string; shopId?: number } = {
+        ...usageParams,
+      };
+      if (selectedShopId !== 'all') usageQuery.shopId = selectedShopId;
       const [usageRes, alertsRes] = await Promise.all([
-        api.getCompanyUsage(user.companyId, { days: DAYS }),
+        api.getCompanyUsage(user.companyId, usageQuery),
         api.getCompanyUsageAlerts(user.companyId, { resolved: 'false' }),
       ]);
+      if (requestId !== loadSeqRef.current) return;
       setUsage(usageRes);
       setAlerts(alertsRes.alerts);
       try {
         const adsUsageRes = await api.getAdsUsage();
+        if (requestId !== loadSeqRef.current) return;
         setAdsUsage(adsUsageRes);
       } catch {
+        if (requestId !== loadSeqRef.current) return;
         setAdsUsage(null);
       }
     } catch (err) {
+      if (requestId !== loadSeqRef.current) return;
       setError(getErrorMessage(err, t('company.loadError')));
     } finally {
-      setLoading(false);
+      if (requestId === loadSeqRef.current) setLoading(false);
     }
-  }, [user?.companyId, t]);
+  }, [user?.companyId, t, usageParams, selectedShopId, preset, customSince, customUntil]);
 
   useEffect(() => {
-    if (user?.companyId) load();
+    if (!user?.companyId) return;
+    api.getCompanyShops(user.companyId)
+      .then((shops) => setShopOptions(shops.map((s) => ({ id: s.id, name: s.name, slug: s.slug }))))
+      .catch(() => setShopOptions([]));
+  }, [user?.companyId]);
+
+  useEffect(() => {
+    if (!user?.companyId) return;
+    const timeout = window.setTimeout(() => {
+      void load();
+    }, 250);
+    return () => clearTimeout(timeout);
   }, [user?.companyId, load]);
 
   const handleResolve = async (alertId: number) => {
@@ -83,6 +120,14 @@ export function CompanyUsagePage() {
         : 'unknown';
     return t(`company.clientContext.${key}`);
   };
+  const graphQueryBase = useMemo(() => {
+    const p = new URLSearchParams();
+    if (selectedShopId !== 'all') p.set('shopId', String(selectedShopId));
+    if ('days' in usageParams) p.set('days', String(usageParams.days));
+    if ('since' in usageParams && usageParams.since) p.set('since', usageParams.since);
+    if ('until' in usageParams && usageParams.until) p.set('until', usageParams.until);
+    return p;
+  }, [selectedShopId, usageParams]);
 
   return (
     <div className="min-h-screen h-full bg-gradient-to-b from-[#071124] via-[#0b1a33] to-[#0e1f3d] text-white">
@@ -119,6 +164,68 @@ export function CompanyUsagePage() {
 
           {!loading && !error && usage && (
             <>
+              <section className="border border-white/10 bg-white/5 rounded-xl p-4 sm:p-6 mb-8">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                  <div>
+                    <p className="text-sm text-white/70 mb-2">{t('company.timeSpan')}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {(['7', '30', '90', 'custom'] as Preset[]).map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setPreset(opt)}
+                          className={`px-3 py-1.5 rounded border text-sm transition ${
+                            preset === opt
+                              ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10'
+                              : 'border-white/20 text-white/80 hover:bg-white/10'
+                          }`}
+                        >
+                          {opt === 'custom' ? t('company.customRange') : t(`company.timeSpan${opt}d`)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="min-w-[220px]">
+                    <label className="text-sm text-white/70 mb-2 block">{t('company.scopeShop')}</label>
+                    <select
+                      value={selectedShopId}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setSelectedShopId(v === 'all' ? 'all' : Number(v));
+                      }}
+                      className="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-white"
+                    >
+                      <option value="all">{t('company.scopeAllShops')}</option>
+                      {shopOptions.map((s) => (
+                        <option key={s.id} value={s.id}>{s.name} ({s.slug})</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                {preset === 'custom' && (
+                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label className="text-sm text-white/80">
+                      {t('company.since')}
+                      <input
+                        type="date"
+                        value={customSince}
+                        onChange={(e) => setCustomSince(e.target.value)}
+                        className="mt-1 w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-white"
+                      />
+                    </label>
+                    <label className="text-sm text-white/80">
+                      {t('company.until')}
+                      <input
+                        type="date"
+                        value={customUntil}
+                        onChange={(e) => setCustomUntil(e.target.value)}
+                        className="mt-1 w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-white"
+                      />
+                    </label>
+                  </div>
+                )}
+              </section>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                 <div className="border border-white/10 bg-white/5 rounded-xl p-6">
                   <div className="text-3xl text-[#D4AF37] mb-2">
@@ -174,9 +281,19 @@ export function CompanyUsagePage() {
                           const share = totalRequests30d > 0
                             ? `${((row.requestCount / totalRequests30d) * 100).toFixed(1)}%`
                             : '—';
+                          const query = new URLSearchParams(graphQueryBase);
+                          query.set('group', 'source');
+                          query.set('clientContext', row.clientContext);
                           return (
                             <tr key={row.clientContext} className="border-b border-white/5 text-white/90">
-                              <td className="py-2 pr-4">{clientContextLabel(row.clientContext)}</td>
+                              <td className="py-2 pr-4">
+                                <Link
+                                  to={`/company/usage/graph?${query.toString()}`}
+                                  className="text-[#D4AF37] hover:text-[#e5c35a] transition-colors"
+                                >
+                                  {clientContextLabel(row.clientContext)}
+                                </Link>
+                              </td>
                               <td className="py-2 pr-4">{row.requestCount.toLocaleString()}</td>
                               <td className="py-2">{share}</td>
                             </tr>
@@ -205,13 +322,26 @@ export function CompanyUsagePage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {usage.topEndpoints.map((row) => (
-                          <tr key={`${row.endpointTag}:${row.method}`} className="border-b border-white/5 text-white/90">
-                            <td className="py-2 pr-4 font-mono">{row.endpointTag}</td>
-                            <td className="py-2 pr-4">{row.method}</td>
-                            <td className="py-2">{row.requestCount.toLocaleString()}</td>
-                          </tr>
-                        ))}
+                        {usage.topEndpoints.map((row) => {
+                          const query = new URLSearchParams(graphQueryBase);
+                          query.set('group', 'endpoint');
+                          query.set('endpointTag', row.endpointTag);
+                          query.set('method', row.method);
+                          return (
+                            <tr key={`${row.endpointTag}:${row.method}`} className="border-b border-white/5 text-white/90">
+                              <td className="py-2 pr-4 font-mono">
+                                <Link
+                                  to={`/company/usage/graph?${query.toString()}`}
+                                  className="text-[#D4AF37] hover:text-[#e5c35a] transition-colors"
+                                >
+                                  {row.endpointTag}
+                                </Link>
+                              </td>
+                              <td className="py-2 pr-4">{row.method}</td>
+                              <td className="py-2">{row.requestCount.toLocaleString()}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

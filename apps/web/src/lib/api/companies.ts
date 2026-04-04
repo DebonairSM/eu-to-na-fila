@@ -53,7 +53,18 @@ export interface CompaniesApi {
   putAdPricing(companyId: number, pricing: { 10?: number; 15?: number; 20?: number; 30?: number }): Promise<Record<string, number>>;
   getCompany(companyId: number): Promise<{ id: number; name: string; propagandasReminderEmail?: string | null }>;
   patchCompany(companyId: number, data: { propagandas_reminder_email?: string | null }): Promise<{ id: number; name: string; propagandasReminderEmail?: string | null }>;
-  getCompanyUsage(companyId: number, params?: { days?: number }): Promise<CompanyUsageResponse>;
+  getCompanyUsage(companyId: number, params?: { days?: number; since?: string; until?: string; shopId?: number }): Promise<CompanyUsageResponse>;
+  getCompanyUsageDrilldown(companyId: number, params?: {
+    days?: number;
+    since?: string;
+    until?: string;
+    shopId?: number;
+    group?: 'endpoint' | 'source';
+    endpointTag?: string;
+    method?: string;
+    clientContext?: 'web' | 'kiosk' | 'company_admin' | 'unknown';
+    limit?: number;
+  }): Promise<CompanyUsageDrilldownResponse>;
   getAdsUsage(): Promise<AdsUsageResponse>;
   getCompanyUsageAlerts(companyId: number, params?: { resolved?: 'true' | 'false' }): Promise<{ alerts: CompanyUsageAlert[] }>;
   resolveUsageAlert(companyId: number, alertId: number): Promise<{ ok: boolean; resolvedAt: string }>;
@@ -67,6 +78,16 @@ export interface CompanyUsageResponse {
   timeSeries: Array<{ date: string; requestCount: number }>;
   byClientContext: Array<{ clientContext: string; requestCount: number }>;
   topEndpoints: Array<{ endpointTag: string; method: string; requestCount: number }>;
+}
+
+export interface CompanyUsageDrilldownResponse {
+  since: string;
+  until: string;
+  group: 'endpoint' | 'source';
+  scope: { shopId: number | null; shopName: string | null; shopSlug: string | null };
+  filters: { endpointTag: string | null; method: string | null; clientContext: string | null };
+  nodes: Array<{ id: string; label: string; type: 'root' | 'shop' | 'detail'; requestCount: number; parentId: string | null }>;
+  edges: Array<{ from: string; to: string; weight: number }>;
 }
 
 export interface CompanyUsageAlert {
@@ -198,8 +219,27 @@ export function createCompaniesApi(client: BaseApiClient): CompaniesApi {
     getCompany: (companyId) => c.get(`/companies/${companyId}`),
     patchCompany: (companyId, data) => c.patch(`/companies/${companyId}`, data),
     getCompanyUsage: (companyId, params) => {
-      const q = params?.days != null ? `?days=${params.days}` : '';
-      return c.get(`/companies/${companyId}/usage${q}`);
+      const search = new URLSearchParams();
+      if (params?.days != null) search.set('days', String(params.days));
+      if (params?.since) search.set('since', params.since);
+      if (params?.until) search.set('until', params.until);
+      if (params?.shopId != null) search.set('shopId', String(params.shopId));
+      const q = search.toString();
+      return c.get(`/companies/${companyId}/usage${q ? `?${q}` : ''}`);
+    },
+    getCompanyUsageDrilldown: (companyId, params) => {
+      const search = new URLSearchParams();
+      if (params?.days != null) search.set('days', String(params.days));
+      if (params?.since) search.set('since', params.since);
+      if (params?.until) search.set('until', params.until);
+      if (params?.shopId != null) search.set('shopId', String(params.shopId));
+      if (params?.group) search.set('group', params.group);
+      if (params?.endpointTag) search.set('endpointTag', params.endpointTag);
+      if (params?.method) search.set('method', params.method);
+      if (params?.clientContext) search.set('clientContext', params.clientContext);
+      if (params?.limit != null) search.set('limit', String(params.limit));
+      const q = search.toString();
+      return c.get(`/companies/${companyId}/usage/drilldown${q ? `?${q}` : ''}`);
     },
     getAdsUsage: () => c.get('/usage/ads'),
     getCompanyUsageAlerts: (companyId, params) => {

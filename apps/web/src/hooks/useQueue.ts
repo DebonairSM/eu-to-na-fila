@@ -39,7 +39,7 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
     POLL_INTERVALS.QUEUE_WS_HEARTBEAT_MS
   );
   const activePollInterval =
-    scope !== 'status' && isWsConnected
+    isWsConnected
       ? wsUpdateIsRecent
         ? wsBackoffInterval
         : wsHeartbeatInterval
@@ -130,8 +130,6 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
   }, [fetchQueue, activePollInterval]);
 
   useEffect(() => {
-    if (scope === 'status') return;
-
     const unsubscribeQueue = wsClient.subscribeQueue(shopSlug, () => {
       const now = Date.now();
       setLastWsQueueEventAt(now);

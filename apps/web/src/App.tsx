@@ -37,6 +37,7 @@ const AdManagementPage = lazyWithRetry(() => import('./pages/AdManagementPage').
 const CompanyDashboard = lazyWithRetry(() => import('./pages/CompanyDashboard').then((m) => ({ default: m.CompanyDashboard })));
 const ShopManagementPage = lazyWithRetry(() => import('./pages/ShopManagementPage').then((m) => ({ default: m.ShopManagementPage })));
 const CompanyUsagePage = lazyWithRetry(() => import('./pages/CompanyUsagePage').then((m) => ({ default: m.CompanyUsagePage })));
+const CompanyUsageGraphPage = lazyWithRetry(() => import('./pages/CompanyUsageGraphPage').then((m) => ({ default: m.CompanyUsageGraphPage })));
 const SchedulePage = lazyWithRetry(() => import('./pages/SchedulePage').then((m) => ({ default: m.SchedulePage })));
 const AppointmentConfirmPage = lazyWithRetry(() => import('./pages/AppointmentConfirmPage').then((m) => ({ default: m.AppointmentConfirmPage })));
 const CheckInConfirmPage = lazyWithRetry(() => import('./pages/CheckInConfirmPage').then((m) => ({ default: m.CheckInConfirmPage })));
@@ -208,6 +209,14 @@ function AppContent() {
         element={
           <ProtectedRoute {...shopProtectedProps} requireCompanyAdmin>
             <CompanyUsagePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/company/usage/graph"
+        element={
+          <ProtectedRoute {...shopProtectedProps} requireCompanyAdmin>
+            <CompanyUsageGraphPage />
           </ProtectedRoute>
         }
       />

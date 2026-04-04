@@ -6,8 +6,22 @@ import { validateRequest } from '../lib/validation.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { requireAuth, requireCompanyAdmin } from '../middleware/auth.js';
 import { env } from '../env.js';
+import { buildUsageDrilldownGraph } from '../lib/usageDrilldown.js';
 
 let lastNominatimRequest = 0;
+const MAX_USAGE_DAYS = 180;
+const MAX_DRILLDOWN_LIMIT = 50;
+
+function getUsageWindow(query: { days?: number; since?: string; until?: string }): { since: Date; until: Date } {
+  const now = new Date();
+  const until = query.until ? new Date(query.until) : now;
+  const defaultDays = query.days ?? 30;
+  const clampedDays = Math.max(1, Math.min(MAX_USAGE_DAYS, defaultDays));
+  const rawSince = query.since ? new Date(query.since) : new Date(until.getTime() - clampedDays * 24 * 60 * 60 * 1000);
+  const maxSince = new Date(until.getTime() - MAX_USAGE_DAYS * 24 * 60 * 60 * 1000);
+  const since = rawSince < maxSince ? maxSince : rawSince;
+  return { since, until };
+}
 
 /**
  * Company routes.
@@ -300,6 +314,7 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         days: z.string().transform((v) => parseInt(v, 10)).optional(),
         since: z.string().datetime().optional(),
         until: z.string().datetime().optional(),
+        shopId: z.string().transform((v) => parseInt(v, 10)).optional(),
       });
       const { id } = validateRequest(paramsSchema, request.params);
       const query = validateRequest(querySchema, request.query as Record<string, unknown>);
@@ -312,10 +327,18 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         });
       }
 
-      const now = new Date();
-      const days = query.days ?? 30;
-      const until = query.until ? new Date(query.until) : now;
-      const since = query.since ? new Date(query.since) : new Date(until.getTime() - days * 24 * 60 * 60 * 1000);
+      const { since, until } = getUsageWindow(query);
+      let scopedShopId: number | undefined;
+      if (query.shopId != null && Number.isFinite(query.shopId)) {
+        const shop = await db.query.shops.findFirst({
+          where: and(eq(schema.shops.id, query.shopId), eq(schema.shops.companyId, id)),
+          columns: { id: true },
+        });
+        if (!shop) {
+          return reply.status(404).send({ error: 'Shop not found for this company' });
+        }
+        scopedShopId = shop.id;
+      }
 
       const buckets = await db
         .select({
@@ -331,7 +354,8 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
           and(
             eq(schema.apiUsageBuckets.companyId, id),
             gte(schema.apiUsageBuckets.bucketStart, since),
-            lt(schema.apiUsageBuckets.bucketStart, until)
+            lt(schema.apiUsageBuckets.bucketStart, until),
+            scopedShopId ? eq(schema.apiUsageBuckets.shopId, scopedShopId) : sql`TRUE`
           )
         );
 
@@ -400,6 +424,120 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         timeSeries,
         byClientContext,
         topEndpoints,
+      });
+    }
+  );
+
+  /**
+   * GET /api/companies/:id/usage/drilldown
+   * Company admin only. Returns graph-ready aggregated usage nodes/edges for a selected scope.
+   */
+  fastify.get(
+    '/companies/:id/usage/drilldown',
+    {
+      preHandler: [requireAuth(), requireCompanyAdmin()],
+    },
+    async (request, reply) => {
+      if (!request.user || request.user.companyId === undefined) {
+        return reply.status(403).send({
+          error: 'Company admin access required',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+
+      const paramsSchema = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      });
+      const querySchema = z.object({
+        days: z.string().transform((v) => parseInt(v, 10)).optional(),
+        since: z.string().datetime().optional(),
+        until: z.string().datetime().optional(),
+        shopId: z.string().transform((v) => parseInt(v, 10)).optional(),
+        group: z.enum(['endpoint', 'source']).optional(),
+        endpointTag: z.string().max(48).optional(),
+        method: z.string().max(10).optional(),
+        clientContext: z.enum(['web', 'kiosk', 'company_admin', 'unknown']).optional(),
+        limit: z.string().transform((v) => parseInt(v, 10)).optional(),
+      });
+      const { id } = validateRequest(paramsSchema, request.params);
+      const query = validateRequest(querySchema, request.query as Record<string, unknown>);
+
+      if (request.user.companyId !== id) {
+        return reply.status(403).send({
+          error: 'Access denied to this company',
+          statusCode: 403,
+          code: 'FORBIDDEN',
+        });
+      }
+
+      const group = query.group ?? 'endpoint';
+      const { since, until } = getUsageWindow(query);
+      const limit = Math.max(1, Math.min(MAX_DRILLDOWN_LIMIT, query.limit ?? 20));
+
+      let scopedShop: { id: number; name: string; slug: string } | null = null;
+      if (query.shopId != null && Number.isFinite(query.shopId)) {
+        const found = await db.query.shops.findFirst({
+          where: and(eq(schema.shops.id, query.shopId), eq(schema.shops.companyId, id)),
+          columns: { id: true, name: true, slug: true },
+        });
+        if (!found) {
+          return reply.status(404).send({ error: 'Shop not found for this company' });
+        }
+        scopedShop = found;
+      }
+
+      const buckets = await db
+        .select({
+          shopId: schema.apiUsageBuckets.shopId,
+          endpointTag: schema.apiUsageBuckets.endpointTag,
+          method: schema.apiUsageBuckets.method,
+          clientContext: schema.apiUsageBuckets.clientContext,
+          requestCount: schema.apiUsageBuckets.requestCount,
+        })
+        .from(schema.apiUsageBuckets)
+        .where(
+          and(
+            eq(schema.apiUsageBuckets.companyId, id),
+            gte(schema.apiUsageBuckets.bucketStart, since),
+            lt(schema.apiUsageBuckets.bucketStart, until),
+            scopedShop ? eq(schema.apiUsageBuckets.shopId, scopedShop.id) : sql`TRUE`,
+            query.endpointTag ? eq(schema.apiUsageBuckets.endpointTag, query.endpointTag) : sql`TRUE`,
+            query.method ? eq(schema.apiUsageBuckets.method, query.method) : sql`TRUE`,
+            query.clientContext ? eq(schema.apiUsageBuckets.clientContext, query.clientContext) : sql`TRUE`
+          )
+        );
+
+      const shopIds = [...new Set(buckets.map((b) => b.shopId).filter((v): v is number => typeof v === 'number'))];
+      const shops = shopIds.length > 0
+        ? await db.query.shops.findMany({
+            where: and(eq(schema.shops.companyId, id), inArray(schema.shops.id, shopIds)),
+            columns: { id: true, name: true, slug: true },
+          })
+        : [];
+      const shopMap = new Map(shops.map((s) => [s.id, s]));
+
+      const rootLabel = group === 'source'
+        ? (query.clientContext ?? 'all_sources')
+        : `${query.endpointTag ?? 'all_endpoints'}${query.method ? `:${query.method}` : ''}`;
+      const { nodes, edges } = buildUsageDrilldownGraph(buckets, shops, group, rootLabel, limit);
+
+      return reply.send({
+        since: since.toISOString(),
+        until: until.toISOString(),
+        group,
+        scope: {
+          shopId: scopedShop?.id ?? null,
+          shopName: scopedShop?.name ?? null,
+          shopSlug: scopedShop?.slug ?? null,
+        },
+        filters: {
+          endpointTag: query.endpointTag ?? null,
+          method: query.method ?? null,
+          clientContext: query.clientContext ?? null,
+        },
+        nodes,
+        edges,
       });
     }
   );

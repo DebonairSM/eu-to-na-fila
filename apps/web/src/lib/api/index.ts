@@ -105,6 +105,7 @@ class ApiClient extends BaseApiClient {
   getCompany = this._companies.getCompany;
   patchCompany = this._companies.patchCompany;
   getCompanyUsage = this._companies.getCompanyUsage;
+  getCompanyUsageDrilldown = this._companies.getCompanyUsageDrilldown;
   getAdsUsage = this._companies.getAdsUsage;
   getCompanyUsageAlerts = this._companies.getCompanyUsageAlerts;
   resolveUsageAlert = this._companies.resolveUsageAlert;
