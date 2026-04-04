@@ -424,9 +424,6 @@ export function useJoinForm() {
 
     try {
       const ticket = await api.createTicket(shopSlug, payload);
-      // #region agent log
-      fetch('http://127.0.0.1:7715/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'join-add-run',hypothesisId:'H1',location:'useJoinForm.ts:createTicket:success',message:'createTicket returned success',data:{shopSlug,ticketId:ticket.id,ticketShopSlug:ticket.shopSlug??null,hasDeviceId:!!deviceId,selectedServices:validSelected.length},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       invalidateQueueHttpCache(shopSlug);
 
       // Store ticket ID in localStorage for persistence
@@ -450,14 +447,8 @@ export function useJoinForm() {
       applyTrackingConsent(consentToSend, deviceId);
 
       // Navigate to status page (use ticket's shop when present for correct barbershop context)
-      // #region agent log
-      fetch('http://127.0.0.1:7715/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'join-add-run',hypothesisId:'H2',location:'useJoinForm.ts:redirectToStatusPage:before',message:'about to redirect after successful add',data:{ticketId:ticket.id,ticketShopSlug:ticket.shopSlug??null,currentShopSlug:shopSlug},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       redirectToStatusPage(ticket.id, ticket.shopSlug, navigate, shopSlug);
     } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7715/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'join-add-run',hypothesisId:'H1',location:'useJoinForm.ts:createTicket:error',message:'createTicket failed in submitJoin',data:{shopSlug,errorType:error instanceof Error?error.name:typeof error,errorMessage:error instanceof Error?error.message:String(error)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       // Check if this is a name collision error (409 Conflict)
       if (error instanceof ApiError && error.isConflictError()) {
         const errorMessage = getErrorMessage(error, '');

@@ -81,9 +81,6 @@ export function CompanyUsagePage() {
         api.getCompanyUsageAlerts(user.companyId, { resolved: 'false' }),
       ]);
       if (requestId !== loadSeqRef.current) return;
-      // #region agent log
-      fetch('http://127.0.0.1:7715/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'usage-drilldown-run',hypothesisId:'H7',location:'CompanyUsagePage.tsx:load:usageSuccess',message:'usage list payload loaded',data:{companyId:user.companyId,selectedShopId:selectedShopId==='all'?null:selectedShopId,preset,customSince:customSince||null,customUntil:customUntil||null,totalRequests:usageRes.totalRequests,perShopCount:usageRes.perShop.length,sourceRows:usageRes.byClientContext.length,endpointRows:usageRes.topEndpoints.length},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       setUsage(usageRes);
       setAlerts(alertsRes.alerts);
       try {

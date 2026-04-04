@@ -260,14 +260,8 @@ export function redirectToStatusPage(
   if (ticketShopSlug) {
     const basePath =
       currentShopSlug === ticketShopSlug ? getShopBasePath() : `/${ticketShopSlug}`;
-    // #region agent log
-    fetch('http://127.0.0.1:7715/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'join-add-run',hypothesisId:'H2',location:'utils.ts:redirectToStatusPage:windowAssign',message:'redirect via window.location.assign',data:{ticketId,ticketShopSlug,currentShopSlug:currentShopSlug??null,basePath,target:`${basePath}/status/${ticketId}`},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     window.location.assign(`${basePath}/status/${ticketId}`);
     return;
   }
-  // #region agent log
-  fetch('http://127.0.0.1:7715/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'join-add-run',hypothesisId:'H2',location:'utils.ts:redirectToStatusPage:navigate',message:'redirect via react navigate',data:{ticketId,currentShopSlug:currentShopSlug??null,target:`/status/${ticketId}`},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   navigate(`/status/${ticketId}`, { replace: true });
 }
