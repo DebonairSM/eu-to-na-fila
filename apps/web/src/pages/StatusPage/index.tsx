@@ -38,7 +38,7 @@ export function StatusPage() {
   const { ticket, isLoading, error, refetch } = useTicketStatus(ticketIdFromParams);
   const { data: queueData } = useQueue(POLL_INTERVALS.STATUS_PAGE_QUEUE, { scope: 'status' });
   const { getServiceById } = useServices();
-  const { barbers } = useBarbers();
+  const { barbers, isLoading: barbersLoading } = useBarbers();
   const [shareSuccess, setShareSuccess] = useState(false);
   const [generalLineWaitTime, setGeneralLineWaitTime] = useState<number | null>(null);
   const { config: shopConfig } = useShopConfig();
@@ -49,7 +49,11 @@ export function StatusPage() {
     ticket && !isCustomer
       ? `/shop/login?redirect=${encodeURIComponent(location.pathname)}`
       : null;
-  const { barber, isLeaving, handleLeaveQueue, handleShareTicket, leaveError, clearLeaveError } = useStatusDisplay(ticket);
+  const { barber, isLeaving, handleLeaveQueue, handleShareTicket, leaveError, clearLeaveError } = useStatusDisplay(
+    ticket,
+    barbers,
+    barbersLoading
+  );
   const [checkInError, setCheckInError] = useState<string | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [checkInCooldownUntil, setCheckInCooldownUntil] = useState<number | null>(null);

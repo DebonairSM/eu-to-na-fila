@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { CompanyNav } from '@/components/CompanyNav';
@@ -15,6 +15,7 @@ type Preset = '7' | '30' | '90' | 'custom';
 export function CompanyUsagePage() {
   const { user } = useAuthContext();
   const { t } = useLocale();
+  const [searchParams] = useSearchParams();
   const [usage, setUsage] = useState<CompanyUsageResponse | null>(null);
   const [alerts, setAlerts] = useState<CompanyUsageAlert[]>([]);
   const [adsUsage, setAdsUsage] = useState<AdsUsageResponse | null>(null);
@@ -27,6 +28,32 @@ export function CompanyUsagePage() {
   const [customSince, setCustomSince] = useState('');
   const [customUntil, setCustomUntil] = useState('');
   const loadSeqRef = useRef(0);
+  const [queryReady, setQueryReady] = useState(false);
+
+  useEffect(() => {
+    const shopIdRaw = searchParams.get('shopId');
+    if (shopIdRaw) {
+      const parsed = Number(shopIdRaw);
+      if (Number.isFinite(parsed) && parsed > 0) setSelectedShopId(parsed);
+    } else {
+      setSelectedShopId('all');
+    }
+
+    const sinceRaw = searchParams.get('since');
+    const untilRaw = searchParams.get('until');
+    const daysRaw = searchParams.get('days');
+
+    if (sinceRaw && untilRaw) {
+      setPreset('custom');
+      setCustomSince(sinceRaw.slice(0, 10));
+      setCustomUntil(untilRaw.slice(0, 10));
+    } else if (daysRaw === '7' || daysRaw === '30' || daysRaw === '90') {
+      setPreset(daysRaw);
+      setCustomSince('');
+      setCustomUntil('');
+    }
+    setQueryReady(true);
+  }, [searchParams]);
 
   const usageParams = useMemo(() => {
     if (preset === 'custom' && customSince && customUntil) {
@@ -80,12 +107,12 @@ export function CompanyUsagePage() {
   }, [user?.companyId]);
 
   useEffect(() => {
-    if (!user?.companyId) return;
+    if (!user?.companyId || !queryReady) return;
     const timeout = window.setTimeout(() => {
       void load();
     }, 250);
     return () => clearTimeout(timeout);
-  }, [user?.companyId, load]);
+  }, [user?.companyId, load, queryReady]);
 
   const handleResolve = async (alertId: number) => {
     if (!user?.companyId) return;

@@ -34,6 +34,23 @@ export function CompanyUsageGraphPage() {
       limit: limitRaw ? Number(limitRaw) : undefined,
     };
   }, [searchParams]);
+  const backToUsageQuery = useMemo(() => {
+    const q = new URLSearchParams();
+    if (params.days != null) q.set('days', String(params.days));
+    if (params.since) q.set('since', params.since);
+    if (params.until) q.set('until', params.until);
+    if (params.shopId != null) q.set('shopId', String(params.shopId));
+    return q.toString();
+  }, [params.days, params.since, params.until, params.shopId]);
+
+  const clientContextLabel = (context: string | null): string => {
+    if (!context) return '-';
+    const key =
+      context === 'web' || context === 'kiosk' || context === 'company_admin' || context === 'unknown'
+        ? context
+        : 'unknown';
+    return t(`company.clientContext.${key}`);
+  };
 
   useEffect(() => {
     if (!user?.companyId) return;
@@ -79,7 +96,7 @@ export function CompanyUsageGraphPage() {
               <h1 className="text-3xl sm:text-4xl font-light tracking-tight text-white">{t('company.usageGraphTitle')}</h1>
               <p className="text-white/70 text-base sm:text-lg mt-1">{t('company.usageGraphSubtitle')}</p>
             </div>
-            <Link to="/company/usage" className="text-[#D4AF37] hover:text-[#D4AF37]/90 text-sm font-medium flex items-center gap-1">
+            <Link to={`/company/usage${backToUsageQuery ? `?${backToUsageQuery}` : ''}`} className="text-[#D4AF37] hover:text-[#D4AF37]/90 text-sm font-medium flex items-center gap-1">
               <span className="material-symbols-outlined text-lg">arrow_back</span>
               {t('company.backToUsage')}
             </Link>
@@ -95,6 +112,11 @@ export function CompanyUsageGraphPage() {
                 <div className="rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/10 p-4 sm:p-5">
                   <div className="text-lg sm:text-xl font-semibold">{root.label}</div>
                   <div className="text-sm text-white/70 mt-1">{root.requestCount.toLocaleString()} {t('company.requestCount')}</div>
+                  {data.group === 'source' && data.filters.clientContext && (
+                    <div className="text-xs text-white/60 mt-2">
+                      {t('company.source')}: {clientContextLabel(data.filters.clientContext)}
+                    </div>
+                  )}
                 </div>
               </div>
 

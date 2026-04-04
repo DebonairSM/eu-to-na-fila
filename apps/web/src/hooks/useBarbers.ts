@@ -7,6 +7,11 @@ import type { Barber } from '@eutonafila/shared';
 
 const MIN_BARBER_POLL_MS = POLL_INTERVALS.QUEUE_MIN_MS;
 
+/** When polling, do not hit the network more often than this (uses in-memory barbers cache between calls). */
+function minBarberHttpGapMs(pollIntervalMs: number): number {
+  return Math.max(pollIntervalMs * 2, 28_000);
+}
+
 export function useBarbers(pollInterval?: number) {
   const shopSlug = useShopSlug();
   const cached = getCachedBarbers(shopSlug);
@@ -20,31 +25,50 @@ export function useBarbers(pollInterval?: number) {
       ? Math.max(pollInterval, MIN_BARBER_POLL_MS)
       : undefined;
 
-  const fetchBarbers = useCallback(async () => {
-    if (document.hidden) {
-      return;
-    }
+  const fetchBarbers = useCallback(
+    async (force = false) => {
+      if (document.hidden) {
+        return;
+      }
 
-    try {
-      setError(null);
-      const barbersList = await api.getBarbers(shopSlug);
-      setCachedBarbers(shopSlug, barbersList);
+      const polling = effectivePollInterval != null && effectivePollInterval > 0;
+      const minGap = polling && !force ? minBarberHttpGapMs(effectivePollInterval) : 0;
 
-      if (effectivePollInterval != null && effectivePollInterval > 0) {
-        const dataString = JSON.stringify(barbersList);
-        if (dataString !== previousDataRef.current) {
-          previousDataRef.current = dataString;
+      if (minGap > 0) {
+        const cachedFresh = getCachedBarbers(shopSlug, minGap);
+        if (cachedFresh !== undefined) {
+          const dataString = JSON.stringify(cachedFresh);
+          if (dataString !== previousDataRef.current) {
+            previousDataRef.current = dataString;
+            setBarbers(cachedFresh);
+          }
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      try {
+        setError(null);
+        const barbersList = await api.getBarbers(shopSlug);
+        setCachedBarbers(shopSlug, barbersList);
+
+        if (polling) {
+          const dataString = JSON.stringify(barbersList);
+          if (dataString !== previousDataRef.current) {
+            previousDataRef.current = dataString;
+            setBarbers(barbersList);
+          }
+        } else {
           setBarbers(barbersList);
         }
-      } else {
-        setBarbers(barbersList);
+        setIsLoading(false);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch barbers'));
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch barbers'));
-      setIsLoading(false);
-    }
-  }, [effectivePollInterval, shopSlug]);
+    },
+    [effectivePollInterval, shopSlug]
+  );
 
   useEffect(() => {
     const cachedNow = getCachedBarbers(shopSlug);
@@ -55,9 +79,10 @@ export function useBarbers(pollInterval?: number) {
     } else {
       setIsLoading(true);
     }
-    fetchBarbers();
+    const polling = effectivePollInterval != null && effectivePollInterval > 0;
+    void fetchBarbers(polling);
 
-    if (!effectivePollInterval || effectivePollInterval <= 0) {
+    if (!polling) {
       return;
     }
 
@@ -71,13 +96,13 @@ export function useBarbers(pollInterval?: number) {
         }
       } else {
         if (!intervalId) {
-          fetchBarbers();
-          intervalId = window.setInterval(fetchBarbers, effectivePollInterval);
+          void fetchBarbers(true);
+          intervalId = window.setInterval(() => void fetchBarbers(false), effectivePollInterval);
         }
       }
     };
 
-    intervalId = window.setInterval(fetchBarbers, effectivePollInterval);
+    intervalId = window.setInterval(() => void fetchBarbers(false), effectivePollInterval);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
@@ -87,6 +112,8 @@ export function useBarbers(pollInterval?: number) {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [fetchBarbers, effectivePollInterval]);
+
+  const refetchBarbers = useCallback(() => fetchBarbers(true), [fetchBarbers]);
 
   const togglePresence = useCallback(
     async (barberId: number, isPresent: boolean) => {
@@ -104,7 +131,7 @@ export function useBarbers(pollInterval?: number) {
         // Optimistic update already maintains order, no need to refetch
       } catch (err) {
         // Revert on error
-        await fetchBarbers();
+        await fetchBarbers(true);
         throw err;
       }
     },
@@ -120,7 +147,7 @@ export function useBarbers(pollInterval?: number) {
     absentBarbers,
     isLoading,
     error,
-    refetch: fetchBarbers,
+    refetch: refetchBarbers,
     togglePresence,
   };
 }

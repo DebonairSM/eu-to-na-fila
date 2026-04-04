@@ -7,6 +7,15 @@ import { wsClient } from '@/lib/ws';
 
 const MIN_POLL_MS = POLL_INTERVALS.QUEUE_MIN_MS;
 
+/** Skip timer-driven fetches if another queue request finished recently (coalesces with WS-triggered refetches). */
+const MIN_QUEUE_HTTP_COALESCE_MS = 2200;
+
+/** Batch rapid WebSocket queue notifications into one refetch. */
+const QUEUE_WS_DEBOUNCE_MS = 450;
+
+/** After a WS-driven refetch, ignore further WS triggers briefly (debounce handles bursts). */
+const QUEUE_WS_MIN_REFETCH_GAP_MS = 1800;
+
 type QueueScope = 'full' | 'public' | 'status';
 
 interface UseQueueOptions {
@@ -22,7 +31,9 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
   const [lastWsQueueEventAt, setLastWsQueueEventAt] = useState(0);
   const previousDataRef = useRef<string>('');
   const lastWsRefetchAtRef = useRef(0);
+  const lastQueueHttpAtRef = useRef(0);
   const wsEventExpiryTimeoutRef = useRef<number | null>(null);
+  const wsDebounceTimerRef = useRef<number | null>(null);
   /** Pause polling after 429 / 431 to avoid amplifying rate or header limits. */
   const pollBackoffUntilRef = useRef(0);
   const scope: QueueScope = options.scope ?? 'full';
@@ -33,7 +44,10 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
       : undefined;
   const wsUpdateIsRecent =
     Date.now() - lastWsQueueEventAt < POLL_INTERVALS.QUEUE_WS_RECENT_WINDOW_MS;
-  const wsBackoffInterval = Math.max(effectiveInterval ?? POLL_INTERVALS.QUEUE, 20000);
+  const wsBackoffInterval = Math.max(
+    effectiveInterval ?? POLL_INTERVALS.QUEUE,
+    POLL_INTERVALS.QUEUE_WS_ACTIVE_POLL_MIN_MS
+  );
   const wsHeartbeatInterval = Math.max(
     effectiveInterval ?? POLL_INTERVALS.QUEUE,
     POLL_INTERVALS.QUEUE_WS_HEARTBEAT_MS
@@ -45,58 +59,71 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
         : wsHeartbeatInterval
       : effectiveInterval;
 
-  const fetchQueue = useCallback(async () => {
-    // Skip if page is hidden (Page Visibility API)
-    if (document.hidden) {
-      return;
-    }
-    if (Date.now() < pollBackoffUntilRef.current) {
-      return;
-    }
-
-    try {
-      setError(null);
-      let queueData = await api.getQueue(shopSlug, { scope });
-      if (scope === 'public' && (!queueData || !Array.isArray(queueData.tickets))) {
-        queueData = await api.getQueue(shopSlug, { scope: 'full' });
+  const fetchQueue = useCallback(
+    async (force = false) => {
+      if (document.hidden) {
+        return;
+      }
+      if (Date.now() < pollBackoffUntilRef.current) {
+        return;
       }
 
-      // Smart diffing: only update if data actually changed
-      const dataString = JSON.stringify(queueData);
-      if (dataString !== previousDataRef.current) {
-        previousDataRef.current = dataString;
-        setData(queueData);
+      const now = Date.now();
+      if (
+        !force &&
+        lastQueueHttpAtRef.current > 0 &&
+        now - lastQueueHttpAtRef.current < MIN_QUEUE_HTTP_COALESCE_MS
+      ) {
+        return;
+      }
+
+      try {
+        setError(null);
+        let queueData = await api.getQueue(shopSlug, { scope });
+        if (scope === 'public' && (!queueData || !Array.isArray(queueData.tickets))) {
+          queueData = await api.getQueue(shopSlug, { scope: 'full' });
+        }
+
+        lastQueueHttpAtRef.current = Date.now();
+
+        const dataString = JSON.stringify(queueData);
+        if (dataString !== previousDataRef.current) {
+          previousDataRef.current = dataString;
+          setData(queueData);
+        }
+        setIsLoading(false);
+        pollBackoffUntilRef.current = 0;
+      } catch (err) {
+        if (scope === 'public') {
+          try {
+            const fallbackData = await api.getQueue(shopSlug, { scope: 'full' });
+            lastQueueHttpAtRef.current = Date.now();
+            const dataString = JSON.stringify(fallbackData);
+            if (dataString !== previousDataRef.current) {
+              previousDataRef.current = dataString;
+              setData(fallbackData);
+            }
+            setError(null);
+            setIsLoading(false);
+            pollBackoffUntilRef.current = 0;
+            return;
+          } catch {
+            // Ignore fallback failure and report original error below.
+          }
+        }
+        if (err instanceof ApiError && (err.statusCode === 429 || err.statusCode === 431)) {
+          const ms = err.statusCode === 431 ? 45000 : 20000;
+          pollBackoffUntilRef.current = Date.now() + ms;
+        }
+        setError(err instanceof Error ? err : new Error('Failed to fetch queue'));
         setIsLoading(false);
       }
-      pollBackoffUntilRef.current = 0;
-    } catch (err) {
-      if (scope === 'public') {
-        try {
-          const fallbackData = await api.getQueue(shopSlug, { scope: 'full' });
-          const dataString = JSON.stringify(fallbackData);
-          if (dataString !== previousDataRef.current) {
-            previousDataRef.current = dataString;
-            setData(fallbackData);
-          }
-          setError(null);
-          setIsLoading(false);
-          pollBackoffUntilRef.current = 0;
-          return;
-        } catch {
-          // Ignore fallback failure and report original error below.
-        }
-      }
-      if (err instanceof ApiError && (err.statusCode === 429 || err.statusCode === 431)) {
-        const ms = err.statusCode === 431 ? 45000 : 20000;
-        pollBackoffUntilRef.current = Date.now() + ms;
-      }
-      setError(err instanceof Error ? err : new Error('Failed to fetch queue'));
-      setIsLoading(false);
-    }
-  }, [shopSlug, scope]);
+    },
+    [shopSlug, scope]
+  );
 
   useEffect(() => {
-    fetchQueue();
+    void fetchQueue(true);
 
     if (!activePollInterval || activePollInterval <= 0) {
       return;
@@ -112,13 +139,13 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
         }
       } else {
         if (!intervalId) {
-          fetchQueue();
-          intervalId = window.setInterval(fetchQueue, activePollInterval);
+          void fetchQueue(true);
+          intervalId = window.setInterval(() => void fetchQueue(false), activePollInterval);
         }
       }
     };
 
-    intervalId = window.setInterval(fetchQueue, activePollInterval);
+    intervalId = window.setInterval(() => void fetchQueue(false), activePollInterval);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
@@ -130,6 +157,16 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
   }, [fetchQueue, activePollInterval]);
 
   useEffect(() => {
+    const runWsRefetch = () => {
+      wsDebounceTimerRef.current = null;
+      const t = Date.now();
+      if (t - lastWsRefetchAtRef.current < QUEUE_WS_MIN_REFETCH_GAP_MS) {
+        return;
+      }
+      lastWsRefetchAtRef.current = t;
+      void fetchQueue(true);
+    };
+
     const unsubscribeQueue = wsClient.subscribeQueue(shopSlug, () => {
       const now = Date.now();
       setLastWsQueueEventAt(now);
@@ -139,9 +176,11 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
       wsEventExpiryTimeoutRef.current = window.setTimeout(() => {
         setLastWsQueueEventAt(0);
       }, POLL_INTERVALS.QUEUE_WS_RECENT_WINDOW_MS);
-      if (now - lastWsRefetchAtRef.current < 1000) return;
-      lastWsRefetchAtRef.current = now;
-      void fetchQueue();
+
+      if (wsDebounceTimerRef.current !== null) {
+        clearTimeout(wsDebounceTimerRef.current);
+      }
+      wsDebounceTimerRef.current = window.setTimeout(runWsRefetch, QUEUE_WS_DEBOUNCE_MS);
     });
     const unsubscribeConn = wsClient.onConnectionStateChange((connected) => {
       setIsWsConnected(connected);
@@ -150,6 +189,10 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
     return () => {
       unsubscribeQueue();
       unsubscribeConn();
+      if (wsDebounceTimerRef.current !== null) {
+        clearTimeout(wsDebounceTimerRef.current);
+        wsDebounceTimerRef.current = null;
+      }
       if (wsEventExpiryTimeoutRef.current) {
         clearTimeout(wsEventExpiryTimeoutRef.current);
         wsEventExpiryTimeoutRef.current = null;
@@ -158,6 +201,8 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
       setLastWsQueueEventAt(0);
     };
   }, [shopSlug, scope, fetchQueue]);
+
+  const refetchQueue = useCallback(() => fetchQueue(true), [fetchQueue]);
 
   const waitingTickets = data?.tickets.filter((t) => t.status === 'waiting') || [];
   const inProgressTickets = data?.tickets.filter((t) => t.status === 'in_progress') || [];
@@ -172,6 +217,6 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
     completedTickets,
     isLoading,
     error,
-    refetch: fetchQueue,
+    refetch: refetchQueue,
   };
 }

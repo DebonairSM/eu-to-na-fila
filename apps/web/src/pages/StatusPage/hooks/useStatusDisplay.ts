@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
-import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { getShopBasePath } from '@/lib/config';
 import { logError } from '@/lib/logger';
 import type { Ticket, Barber } from '@eutonafila/shared';
 
 const STORAGE_KEY = 'eutonafila_active_ticket_id';
 
-export function useStatusDisplay(ticket: Ticket | null) {
-  const shopSlug = useShopSlug();
+export function useStatusDisplay(
+  ticket: Ticket | null,
+  barbers: Barber[],
+  barbersLoading: boolean
+) {
   const [barber, setBarber] = useState<Barber | null>(null);
   const [isLeaving, setIsLeaving] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
@@ -17,26 +19,18 @@ export function useStatusDisplay(ticket: Ticket | null) {
   const hasStoredTicketRef = useRef(false);
   const navigate = useNavigate();
 
-  // Fetch barber information when ticket has barberId
+  // Resolve assigned barber from the same list as useBarbers (avoids a duplicate GET /barbers).
   useEffect(() => {
-    const fetchBarber = async () => {
-      if (!ticket?.barberId) {
-        setBarber(null);
-        return;
-      }
-
-      try {
-        const barbers = await api.getBarbers(shopSlug);
-        const assignedBarber = barbers.find(b => b.id === ticket.barberId);
-        setBarber(assignedBarber || null);
-      } catch (error) {
-        logError('Failed to fetch barber', error);
-        setBarber(null);
-      }
-    };
-
-    fetchBarber();
-  }, [ticket?.barberId, shopSlug]);
+    if (!ticket?.barberId) {
+      setBarber(null);
+      return;
+    }
+    if (barbersLoading) {
+      return;
+    }
+    const assignedBarber = barbers.find((b) => b.id === ticket.barberId);
+    setBarber(assignedBarber ?? null);
+  }, [ticket?.barberId, barbers, barbersLoading]);
 
   // Handle localStorage updates based on ticket status
   useEffect(() => {
