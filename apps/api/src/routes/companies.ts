@@ -358,6 +358,9 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
             scopedShopId ? eq(schema.apiUsageBuckets.shopId, scopedShopId) : sql`TRUE`
           )
         );
+      // #region agent log
+      fetch('http://127.0.0.1:7715/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'usage-drilldown-run',hypothesisId:'H5',location:'companies.ts:usageDrilldown:buckets',message:'drilldown buckets fetched',data:{companyId:id,group,scopedShopId:scopedShop?.id??null,bucketCount:buckets.length,bucketsWithShopId:buckets.filter((b)=>typeof b.shopId==='number').length,bucketsWithoutShopId:buckets.filter((b)=>typeof b.shopId!=='number').length,clientContext:query.clientContext??null,endpointTag:query.endpointTag??null,method:query.method??null,limit},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
 
       const totalRequests = buckets.reduce((sum, r) => sum + (r.requestCount ?? 0), 0);
 
@@ -521,6 +524,9 @@ export const companiesRoutes: FastifyPluginAsync = async (fastify) => {
         ? (query.clientContext ?? 'all_sources')
         : `${query.endpointTag ?? 'all_endpoints'}${query.method ? `:${query.method}` : ''}`;
       const { nodes, edges } = buildUsageDrilldownGraph(buckets, shops, group, rootLabel, limit);
+      // #region agent log
+      fetch('http://127.0.0.1:7715/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'usage-drilldown-run',hypothesisId:'H8',location:'companies.ts:usageDrilldown:graphBuilt',message:'drilldown graph built',data:{nodeCount:nodes.length,edgeCount:edges.length,shopNodeCount:nodes.filter((n)=>n.type==='shop').length,detailNodeCount:nodes.filter((n)=>n.type==='detail').length,rootLabel},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
 
       return reply.send({
         since: since.toISOString(),

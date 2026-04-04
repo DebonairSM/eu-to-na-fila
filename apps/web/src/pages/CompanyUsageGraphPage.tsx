@@ -61,6 +61,9 @@ export function CompanyUsageGraphPage() {
     api.getCompanyUsageDrilldown(user.companyId, params)
       .then((res: CompanyUsageDrilldownResponse) => {
         if (cancelled) return;
+        // #region agent log
+        fetch('http://127.0.0.1:7715/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'usage-drilldown-run',hypothesisId:'H6',location:'CompanyUsageGraphPage.tsx:drilldown:success',message:'graph page received drilldown payload',data:{group:res.group,scopeShopId:res.scope.shopId??null,filterClientContext:res.filters.clientContext??null,nodes:res.nodes.length,edges:res.edges.length,shopNodes:res.nodes.filter((n)=>n.type==='shop').length,detailNodes:res.nodes.filter((n)=>n.type==='detail').length,params},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         setData(res);
         setTimeout(() => setEntered(true), 30);
       })
@@ -85,6 +88,13 @@ export function CompanyUsageGraphPage() {
     list.push(n);
     detailByParent.set(n.parentId, list);
   });
+  useEffect(() => {
+    if (loading || error || !data) return;
+    if (shops.length > 0) return;
+    // #region agent log
+    fetch('http://127.0.0.1:7715/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'usage-drilldown-run',hypothesisId:'H8',location:'CompanyUsageGraphPage.tsx:render:noShops',message:'graph rendered with zero shop nodes',data:{group:data.group,filters:data.filters,nodeCount:data.nodes.length,edgeCount:data.edges.length,scope:data.scope},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+  }, [loading, error, data, shops.length]);
 
   return (
     <div className="min-h-screen h-full bg-gradient-to-b from-[#060d1f] via-[#0a1730] to-[#0f2345] text-white">
