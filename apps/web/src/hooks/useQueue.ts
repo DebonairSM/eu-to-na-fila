@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';
 import { POLL_INTERVALS } from '@/lib/constants';
 import type { GetQueueResponse } from '@eutonafila/shared';
@@ -23,6 +23,8 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
   const previousDataRef = useRef<string>('');
   const lastWsRefetchAtRef = useRef(0);
   const wsEventExpiryTimeoutRef = useRef<number | null>(null);
+  /** Pause polling after 429 / 431 to avoid amplifying rate or header limits. */
+  const pollBackoffUntilRef = useRef(0);
   const scope: QueueScope = options.scope ?? 'full';
 
   const effectiveInterval =
@@ -48,6 +50,9 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
     if (document.hidden) {
       return;
     }
+    if (Date.now() < pollBackoffUntilRef.current) {
+      return;
+    }
 
     try {
       setError(null);
@@ -63,6 +68,7 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
         setData(queueData);
         setIsLoading(false);
       }
+      pollBackoffUntilRef.current = 0;
     } catch (err) {
       if (scope === 'public') {
         try {
@@ -74,10 +80,15 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
           }
           setError(null);
           setIsLoading(false);
+          pollBackoffUntilRef.current = 0;
           return;
         } catch {
           // Ignore fallback failure and report original error below.
         }
+      }
+      if (err instanceof ApiError && (err.statusCode === 429 || err.statusCode === 431)) {
+        const ms = err.statusCode === 431 ? 45000 : 20000;
+        pollBackoffUntilRef.current = Date.now() + ms;
       }
       setError(err instanceof Error ? err : new Error('Failed to fetch queue'));
       setIsLoading(false);

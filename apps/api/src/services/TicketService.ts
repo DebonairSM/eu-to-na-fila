@@ -157,7 +157,11 @@ export class TicketService {
     if (!service.isActive) throw new ConflictError('Service is not active');
 
     if (settings.deviceDeduplication && data.deviceId && data.deviceId.trim().length > 0) {
-      const existingTicketByDevice = await this.findActiveTicketByDevice(shopId, data.deviceId);
+      const did = data.deviceId.trim();
+      // Serialize join attempts per (shop, device) so concurrent POSTs cannot both pass the
+      // "no active ticket" check before insert (race → duplicate queue rows).
+      await this.db.execute(sql`SELECT pg_advisory_xact_lock(${shopId}, hashtext(${did}))`);
+      const existingTicketByDevice = await this.findActiveTicketByDevice(shopId, did);
       if (existingTicketByDevice) return existingTicketByDevice;
     }
 

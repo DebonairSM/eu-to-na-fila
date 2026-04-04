@@ -132,6 +132,9 @@ export class BaseApiClient {
         headers,
         signal: controller.signal,
         cache: method === 'GET' ? 'no-store' : fetchOptions.cache,
+        // API auth uses Bearer in headers only; omit cookies so large third-party / tracking Cookie
+        // headers do not trigger 431 Request Header Fields Too Large on reverse proxies.
+        credentials: 'omit',
       });
 
       const responseText = await response.text();

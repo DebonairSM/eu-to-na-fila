@@ -47,6 +47,7 @@ export function createQueueApi(client: BaseApiClient): QueueApi {
           headers,
           cache: 'no-store',
           signal: controller.signal,
+          credentials: 'omit',
         });
       } catch (error) {
         clearTimeout(timeoutId);

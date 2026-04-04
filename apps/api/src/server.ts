@@ -189,6 +189,11 @@ fastify.register(fastifyRateLimit, {
     if (request.url.startsWith('/api/shops/') && request.url.includes('/wait-times')) {
       return true;
     }
+    // Public queue polling (ETag + WebSocket refetch) can be very chatty per IP; omit from global cap.
+    const pathNoQuery = request.url.split('?')[0] ?? '';
+    if (request.method === 'GET' && /\/api\/shops\/[^/]+\/queue$/.test(pathNoQuery)) {
+      return true;
+    }
     // Skip global rate limit for static files (SPA assets, PWA manifest, service worker)
     // These are served as static files and shouldn't be rate limited
     if (request.url.startsWith('/projects/mineiro/') || request.url.startsWith('/companies/') || /^\/[^/]+\//.test(request.url?.split('?')[0] ?? '')) {

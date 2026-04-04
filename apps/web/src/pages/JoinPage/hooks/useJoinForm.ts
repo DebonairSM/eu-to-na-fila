@@ -51,6 +51,8 @@ export function useJoinForm() {
   const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
   const [trackingConsent, setTrackingConsent] = useState<boolean | null>(null);
   const [referralSource, setReferralSource] = useState<string>('');
+  /** Prevents overlapping submitJoin runs (double tap / slow network before isSubmitting flips). */
+  const joinSubmitLockRef = useRef(false);
   const { waitTimes, isLoading: isLoadingWaitTimes, refetch: refetchWaitTimes } = useWaitTimes();
   const combinedNameRef = useRef(combinedName);
   combinedNameRef.current = combinedName;
@@ -265,6 +267,9 @@ export function useJoinForm() {
   };
 
   const submitJoin = async () => {
+    if (joinSubmitLockRef.current) return;
+    joinSubmitLockRef.current = true;
+    try {
     setSubmitError(null);
     setClosedReason(null);
     setIsAlreadyInQueue(false);
@@ -459,6 +464,9 @@ export function useJoinForm() {
     } finally {
       setIsSubmitting(false);
     }
+  } finally {
+    joinSubmitLockRef.current = false;
+  }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

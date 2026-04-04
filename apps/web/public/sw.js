@@ -335,7 +335,8 @@ async function staticCacheFirstStrategy(request) {
     return response;
   } catch (error) {
     console.error('[SW] Fetch failed:', error);
-    throw error;
+    // Avoid unhandled rejection in respondWith; let the app retry or use cached HTML path.
+    return Response.error();
   }
 }
 
