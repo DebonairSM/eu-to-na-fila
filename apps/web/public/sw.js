@@ -80,12 +80,12 @@ function shouldUsePageNetworkFirstStrategy(request, url) {
   return false;
 }
 
-/** High-churn reads: never intercept so SW API cache cannot serve stale queue state. */
-function isLiveQueueOrTicketApiPath(pathname) {
-  if (/^\/api\/shops\/[^/]+\/(queue(?:\/next)?|metrics|wait-times|statistics|wait-debug)$/.test(pathname)) {
-    return true;
-  }
-  if (/^\/api\/shops\/[^/]+\/tickets\/active$/.test(pathname)) {
+/**
+ * Live shop/ticket APIs: bypass SW so client-backend queue state is always direct network.
+ * This avoids heavy API cache maintenance on mobile browsers for high-churn endpoints.
+ */
+function isLiveShopOrTicketApiPath(pathname) {
+  if (/^\/api\/shops\/[^/]+\/.+/.test(pathname)) {
     return true;
   }
   if (/^\/api\/tickets\/\d+$/.test(pathname)) {
@@ -252,8 +252,8 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
-    // Live queue / ticket reads — bypass SW entirely (no apiNetworkFirstStrategy cache).
-    if (url.origin === self.location.origin && isLiveQueueOrTicketApiPath(url.pathname)) {
+    // Live shop/ticket API reads — bypass SW entirely (no apiNetworkFirstStrategy cache).
+    if (url.origin === self.location.origin && isLiveShopOrTicketApiPath(url.pathname)) {
       return;
     }
 
