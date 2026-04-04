@@ -27,7 +27,7 @@ export function useBarbers(pollInterval?: number) {
 
   const fetchBarbers = useCallback(
     async (force = false) => {
-      if (document.hidden) {
+      if (document.hidden && !force) {
         return;
       }
 
@@ -80,7 +80,7 @@ export function useBarbers(pollInterval?: number) {
       setIsLoading(true);
     }
     const polling = effectivePollInterval != null && effectivePollInterval > 0;
-    void fetchBarbers(polling);
+    void fetchBarbers(true);
 
     if (!polling) {
       return;
@@ -95,8 +95,8 @@ export function useBarbers(pollInterval?: number) {
           intervalId = null;
         }
       } else {
+        void fetchBarbers(true);
         if (!intervalId) {
-          void fetchBarbers(true);
           intervalId = window.setInterval(() => void fetchBarbers(false), effectivePollInterval);
         }
       }

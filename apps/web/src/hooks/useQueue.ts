@@ -61,10 +61,16 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
 
   const fetchQueue = useCallback(
     async (force = false) => {
-      if (document.hidden) {
+      // Allow forced fetches while hidden so the first load / WS refetch can complete; otherwise
+      // a background-tab start leaves isLoading true forever because the visibility handler does
+      // not refetch when the interval was never cleared (intervalId already set).
+      if (document.hidden && !force) {
         return;
       }
       if (Date.now() < pollBackoffUntilRef.current) {
+        // #region agent log
+        fetch('http://127.0.0.1:7807/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'queue-fetch',hypothesisId:'H3',location:'useQueue.ts:fetchQueue',message:'skipped poll backoff',data:{shopSlug,force,until:pollBackoffUntilRef.current},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         return;
       }
 
@@ -74,11 +80,17 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
         lastQueueHttpAtRef.current > 0 &&
         now - lastQueueHttpAtRef.current < MIN_QUEUE_HTTP_COALESCE_MS
       ) {
+        // #region agent log
+        fetch('http://127.0.0.1:7807/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'queue-fetch',hypothesisId:'H4',location:'useQueue.ts:fetchQueue',message:'skipped http coalesce',data:{shopSlug,force,msSinceHttp:now-lastQueueHttpAtRef.current},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         return;
       }
 
       try {
         setError(null);
+        // #region agent log
+        fetch('http://127.0.0.1:7807/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'queue-fetch',hypothesisId:'H1',location:'useQueue.ts:fetchQueue',message:'queue http start',data:{shopSlug,scope,force,hidden:document.hidden},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         let queueData = await api.getQueue(shopSlug, { scope });
         if (scope === 'public' && (!queueData || !Array.isArray(queueData.tickets))) {
           queueData = await api.getQueue(shopSlug, { scope: 'full' });
@@ -93,6 +105,9 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
         }
         setIsLoading(false);
         pollBackoffUntilRef.current = 0;
+        // #region agent log
+        fetch('http://127.0.0.1:7807/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'queue-fetch',hypothesisId:'H2',location:'useQueue.ts:fetchQueue',message:'queue http ok',data:{shopSlug,scope,ticketCount:Array.isArray(queueData.tickets)?queueData.tickets.length:-1},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
       } catch (err) {
         if (scope === 'public') {
           try {
@@ -138,8 +153,8 @@ export function useQueue(pollInterval?: number, options: UseQueueOptions = {}) {
           intervalId = null;
         }
       } else {
+        void fetchQueue(true);
         if (!intervalId) {
-          void fetchQueue(true);
           intervalId = window.setInterval(() => void fetchQueue(false), activePollInterval);
         }
       }
