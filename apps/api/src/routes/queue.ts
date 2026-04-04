@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import { createHash } from 'node:crypto';
 import { db, schema } from '../db/index.js';
 import { eq, and, asc, inArray } from 'drizzle-orm';
 import { ticketService, queueService } from '../services/index.js';
@@ -22,7 +23,9 @@ function buildQueueEtag(
       return `${ticket.id}:${ticket.status}:${ticket.position}:${updatedAt}`;
     })
     .join('|');
-  return `"queue:${shopId}:${tickets.length}:${stamp}"`;
+  // Keep ETag small: reverse proxies can reject large If-None-Match headers with 431.
+  const digest = createHash('sha1').update(stamp).digest('hex');
+  return `"queue:${shopId}:${tickets.length}:${digest}"`;
 }
 
 /**
