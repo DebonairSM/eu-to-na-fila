@@ -21,6 +21,9 @@ export function useTicketStatus(ticketId: number | null) {
   // Apply smart diffing to prevent unnecessary updates (include rating so "Thanks" shows after submit)
   useEffect(() => {
     if (!polledTicket) {
+      // #region agent log
+      fetch('http://127.0.0.1:7715/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'join-add-run',hypothesisId:'H3',location:'useTicketStatus.ts:polledTicket:null',message:'ticket polling returned null',data:{ticketId:ticketId??null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       setTicket(null);
       return;
     }
@@ -36,6 +39,9 @@ export function useTicketStatus(ticketId: number | null) {
       polledRating !== prev.rating;
 
     if (hasChanged) {
+      // #region agent log
+      fetch('http://127.0.0.1:7715/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'join-add-run',hypothesisId:'H3',location:'useTicketStatus.ts:polledTicket:changed',message:'ticket polling data changed and state updated',data:{ticketId:polledTicket.id,status:polledTicket.status,position:polledTicket.position,estimatedWaitTime:normalizedWait??null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       previousDataRef.current = {
         status: polledTicket.status,
         estimatedWaitTime: normalizedWait,

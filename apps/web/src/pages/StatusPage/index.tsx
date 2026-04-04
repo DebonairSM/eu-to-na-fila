@@ -88,6 +88,9 @@ export function StatusPage() {
   const ticketShopSlug = (ticket as { shopSlug?: string } | null)?.shopSlug;
   useEffect(() => {
     if (isLoading || !ticket || !ticketShopSlug || ticketShopSlug === shopSlug) return;
+    // #region agent log
+    fetch('http://127.0.0.1:7715/ingest/c5f9b148-dd94-43ba-849b-22997c31e044',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1b841d'},body:JSON.stringify({sessionId:'1b841d',runId:'join-add-run',hypothesisId:'H4',location:'StatusPage.tsx:crossShopRedirect',message:'status page detected ticket from different shop and is redirecting',data:{ticketId:ticket.id,ticketShopSlug,currentShopSlug:shopSlug},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     const basePath =
       ticketShopSlug === shopSlug
         ? (typeof window !== 'undefined' && (window as unknown as { __SHOP_PATH__?: string }).__SHOP_PATH__?.replace(/\/+$/, '')) || `/${ticketShopSlug}`
