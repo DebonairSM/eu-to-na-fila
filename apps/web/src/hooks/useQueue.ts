@@ -1,3 +1,6 @@
+/**
+ * Shop queue for management/public views: combines polling, WS-driven refetch (see lib/ws.ts), and getQueue ETag flow (lib/api/queue.ts).
+ */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { api, ApiError } from '@/lib/api';
 import { useShopSlug } from '@/contexts/ShopSlugContext';

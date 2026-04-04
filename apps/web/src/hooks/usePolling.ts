@@ -62,9 +62,8 @@ export function useQueuePolling(
   const errorCountRef = useRef(0);
   const backoffTimeoutRef = useRef<number | null>(null);
 
-  const fetchQueue = useCallback(async () => {
-    // Skip if page is hidden (Page Visibility API)
-    if (document.hidden) {
+  const fetchQueue = useCallback(async (force = false) => {
+    if (document.hidden && !force) {
       return;
     }
 
@@ -115,14 +114,14 @@ export function useQueuePolling(
     if (window.requestIdleCallback && errorCountRef.current === 0) {
       backoffTimeoutRef.current = window.requestIdleCallback(
         () => {
-          fetchQueue();
+          void fetchQueue(false);
           scheduleNextPoll();
         },
         { timeout: effectiveInterval }
       ) as unknown as number;
     } else {
       backoffTimeoutRef.current = window.setTimeout(() => {
-        fetchQueue();
+        void fetchQueue(false);
         scheduleNextPoll();
       }, effectiveInterval);
     }
@@ -135,16 +134,12 @@ export function useQueuePolling(
       return;
     }
 
-    // Fetch immediately on mount
-    fetchQueue();
+    void fetchQueue(true);
 
-    // Start polling schedule
     scheduleNextPoll();
 
-    // Handle Page Visibility API - pause when hidden, resume when visible
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // Page is hidden, clear any pending polls
         if (backoffTimeoutRef.current) {
           if (window.cancelIdleCallback) {
             window.cancelIdleCallback(backoffTimeoutRef.current as unknown as number);
@@ -154,8 +149,7 @@ export function useQueuePolling(
           backoffTimeoutRef.current = null;
         }
       } else {
-        // Page is visible, resume polling
-        fetchQueue();
+        void fetchQueue(true);
         scheduleNextPoll();
       }
     };
@@ -175,7 +169,7 @@ export function useQueuePolling(
     };
   }, [fetchQueue, scheduleNextPoll, enabled]);
 
-  return { data, isLoading, error, refetch: fetchQueue };
+  return { data, isLoading, error, refetch: () => void fetchQueue(true) };
 }
 
 /**
@@ -199,10 +193,10 @@ export function useTicketPolling(
   const fetchTicket = useCallback(async (force = false) => {
     if (!ticketId) return;
 
-    // Throttle: do not start a new fetch if we fetched less than intervalMs ago (skip when force, e.g. after rating)
+    if (document.hidden && !force) return;
+
     const now = Date.now();
     if (!force && now - lastFetchTimeRef.current < intervalMs) return;
-    if (!force && document.hidden) return;
 
     lastFetchTimeRef.current = now;
 
@@ -232,8 +226,8 @@ export function useTicketPolling(
 
     const startPolling = () => {
       if (intervalIdRef.current) return;
-      fetchTicket();
-      intervalIdRef.current = window.setInterval(fetchTicket, intervalMs);
+      void fetchTicket(true);
+      intervalIdRef.current = window.setInterval(() => void fetchTicket(false), intervalMs);
     };
 
     const stopPolling = () => {

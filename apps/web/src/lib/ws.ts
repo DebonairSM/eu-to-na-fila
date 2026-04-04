@@ -44,7 +44,9 @@ interface ErrorMessage {
 type ServerMessage = AdsUpdatedMessage | QueueUpdatedMessage | SubscribedMessage | SubscribedQueueMessage | ErrorMessage;
 
 /**
- * WebSocket client for real-time ad updates
+ * WebSocket client for ads and queue invalidation.
+ * Queue: subscribeQueue(shopSlug) receives queue.updated; consumers should refetch HTTP GET /shops/:slug/queue
+ * (useQueue debounces refetches). WS does not carry ticket payloads.
  */
 export class WebSocketClient {
   private ws: WebSocket | null = null;

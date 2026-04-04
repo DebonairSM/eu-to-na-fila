@@ -4,6 +4,16 @@ import { API_TIMEOUT_WAIT_TIMES_MS } from '../constants';
 import { ApiError } from './errors.js';
 import { getWebClientContextHeaderValue } from './clientContextHeader.js';
 
+/**
+ * Queue HTTP contract (with hooks/useQueue.ts + lib/ws.ts):
+ * - Authoritative state comes from GET /shops/:slug/queue via getQueue(): fetch cache 'no-store', optional If-None-Match,
+ *   and in-memory queueEtagCache + queueDataCache for 304 → reuse body without re-downloading JSON.
+ * - After mutations that change the queue (e.g. join), call invalidateQueueHttpCache(shopSlug) so the client does not
+ *   keep a stale body if the server ETag would still match incorrectly.
+ * - WebSocket queue.updated is an invalidation signal only; UI refetches via HTTP (see wsClient.subscribeQueue in useQueue).
+ * BaseApiClient GETs already use cache: 'no-store'; live queue paths are also excluded from the service worker API cache.
+ */
+
 export interface QueueNextResponse {
   next: Ticket | null;
   deadZoneWarning?: { message: string; appointmentTicketNumber?: string };

@@ -12,7 +12,7 @@ function dbg() {}
 
 // Bump this when deploying changes that affect built asset graphs.
 // A stale cached HTML/JS combo is the most common cause of "blank black screen" after deploy.
-const CACHE_VERSION = 'v12';
+const CACHE_VERSION = 'v13';
 
 const STATIC_CACHE_NAME = `eutonafila-static-${CACHE_VERSION}`;
 const PAGE_CACHE_NAME = `eutonafila-pages-${CACHE_VERSION}`;
@@ -39,6 +39,61 @@ function getScopePath() {
 
 // Assets to cache on install (relative to the SW scope)
 const SCOPE_PATH = getScopePath();
+
+/** Scope directory without trailing slash; '/' means whole origin (root deploy). */
+function normalizeScopeDir(scopePath) {
+  const trimmed = scopePath.replace(/\/+$/, '');
+  return trimmed === '' ? '/' : trimmed;
+}
+
+const SCOPE_DIR = normalizeScopeDir(SCOPE_PATH);
+
+function pathnameUnderShopScope(pathname) {
+  if (SCOPE_DIR === '/') {
+    return pathname.startsWith('/') && !pathname.startsWith('/api/');
+  }
+  return pathname === SCOPE_DIR || pathname.startsWith(`${SCOPE_DIR}/`);
+}
+
+function looksLikeStaticAssetPath(pathname) {
+  if (/\.[a-f0-9]{8,}\.(js|css)$/.test(pathname)) return true;
+  if (/-([\w]{8,})\.(js|css)$/.test(pathname)) return true;
+  return /\.(js|mjs|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|eot|map|json|txt|xml|webmanifest)$/i.test(
+    pathname
+  );
+}
+
+/**
+ * Document / SPA shell requests must not use staticCacheFirstStrategy (see v13: /scope/manage etc.).
+ */
+function shouldUsePageNetworkFirstStrategy(request, url) {
+  if (request.mode === 'navigate' || url.pathname.endsWith('.html')) return true;
+  const accept = request.headers.get('accept') || '';
+  if (accept.includes('text/html')) return true;
+  if (
+    url.origin === self.location.origin &&
+    pathnameUnderShopScope(url.pathname) &&
+    !looksLikeStaticAssetPath(url.pathname)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/** High-churn reads: never intercept so SW API cache cannot serve stale queue state. */
+function isLiveQueueOrTicketApiPath(pathname) {
+  if (/^\/api\/shops\/[^/]+\/(queue(?:\/next)?|metrics|wait-times|statistics|wait-debug)$/.test(pathname)) {
+    return true;
+  }
+  if (/^\/api\/shops\/[^/]+\/tickets\/active$/.test(pathname)) {
+    return true;
+  }
+  if (/^\/api\/tickets\/\d+$/.test(pathname)) {
+    return true;
+  }
+  return false;
+}
+
 const STATIC_ASSETS = [
   SCOPE_PATH,
   `${SCOPE_PATH}index.html`,
@@ -60,7 +115,7 @@ const API_ROUTES = [
  * Uses add() per URL so one 404 (e.g. missing favicon.png or font) does not break the whole install.
  */
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker', CACHE_VERSION, '(cross-origin skip fix)');
+  console.log('[SW] Installing service worker', CACHE_VERSION, '(SPA page routing + live queue API bypass)');
   
   event.waitUntil(
     caches.open(PAGE_CACHE_NAME).then((cache) => {
@@ -197,8 +252,8 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
-    // Don't intercept queue API - always fetch from network, never cache (queue changes constantly).
-    if (url.origin === self.location.origin && /^\/api\/shops\/[^/]+\/queue$/.test(url.pathname)) {
+    // Live queue / ticket reads — bypass SW entirely (no apiNetworkFirstStrategy cache).
+    if (url.origin === self.location.origin && isLiveQueueOrTicketApiPath(url.pathname)) {
       return;
     }
 
@@ -215,9 +270,9 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
-    // HTML navigation: network-first, cache in PAGE cache.
-    // This prevents stale HTML pointing at missing hashed bundles (blank screen after deploy).
-    if (request.mode === 'navigate' || url.pathname.endsWith('.html')) {
+    // HTML / SPA app-shell: network-first, cache in PAGE cache.
+    // Includes Accept: text/html and extensionless paths under the SW scope (not static assets).
+    if (shouldUsePageNetworkFirstStrategy(request, url)) {
       event.respondWith(pageNetworkFirstStrategy(request));
       return;
     }
