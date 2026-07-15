@@ -2,7 +2,6 @@ import './dns-config.js';
 import Fastify, { type FastifyRequest, type FastifyPluginCallback } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fastifyHelmet from '@fastify/helmet';
-import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyWebSocketModule from '@fastify/websocket';
 import fastifyMultipart from '@fastify/multipart';
@@ -33,6 +32,7 @@ import { registerWebSocket } from './websocket/handler.js';
 import { getPublicPath } from './lib/paths.js';
 import { getProjectByPathname, getProjectBySlug, getShopByProjectSlug } from './lib/shop.js';
 import { startQueueCountdown } from './jobs/queueCountdown.js';
+import { registerCors } from './cors.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -97,37 +97,7 @@ fastify.register(fastifyHelmet, {
   hidePoweredBy: true, // Hide X-Powered-By header
 });
 
-// CORS: Allow multiple origins (localhost for dev, Render domains for prod)
-const allowedOrigins = [
-  'http://localhost:4040',
-  'http://localhost:3000',
-  'https://eu-to-na-fila.onrender.com', // Render deployment URL
-  env.CORS_ORIGIN
-].filter(Boolean);
-
-fastify.register(fastifyCors, {
-  origin: (origin, cb) => {
-    // Allow requests with no origin (same-origin requests, mobile apps, curl, etc.)
-    if (!origin) return cb(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      return cb(null, true);
-    }
-    
-    // In development, allow all origins
-    if (env.NODE_ENV === 'development') {
-      return cb(null, true);
-    }
-    
-    // For same-site requests (SPA loading its own assets), allow if origin matches our domain
-    if (origin.includes('eu-to-na-fila.onrender.com') || origin.includes('eutonafila')) {
-      return cb(null, true);
-    }
-    
-    cb(new Error('Not allowed by CORS'), false);
-  },
-  credentials: true,
-});
+registerCors(fastify, env.CORS_ORIGIN);
 
 // Normalize websocket plugin import for ESM/TypeScript interop
 // Handles both default export and direct module export scenarios
