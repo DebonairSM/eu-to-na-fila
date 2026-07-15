@@ -11,7 +11,10 @@ const __dirname = dirname(__filename);
 const envPath = resolve(__dirname, '../../../.env');
 dotenv.config({ path: envPath });
 
-const envSchema = z.object({
+export const DEVELOPMENT_JWT_SECRET =
+  'change_me_in_production_use_a_long_random_string_at_least_32_chars';
+
+export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().transform(Number).default('4041'),
   DATABASE_URL: z
@@ -24,7 +27,7 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((s) => (s != null && s !== '' ? Number(s) : undefined)),
-  JWT_SECRET: z.string().min(32).default('change_me_in_production_use_a_long_random_string_at_least_32_chars'),
+  JWT_SECRET: z.string().min(32).default(DEVELOPMENT_JWT_SECRET),
   CORS_ORIGIN: z.string().default('http://localhost:4040'),
   SHOP_SLUG: z.string().default('shop'),
   /** Project slug for resolving shops. Optional; when unset, SHOP_SLUG is used as fallback (e.g. auth redirects). */
@@ -99,11 +102,24 @@ const envSchema = z.object({
       if (value == null || value === '') return true;
       return !['0', 'false', 'off', 'no'].includes(value.toLowerCase());
     }),
+}).superRefine((value, context) => {
+  if (value.NODE_ENV !== 'production') return;
+  if (value.JWT_SECRET === DEVELOPMENT_JWT_SECRET) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['JWT_SECRET'],
+      message: 'JWT_SECRET is required in production and must not use the development placeholder',
+    });
+  }
 });
+
+export function parseEnv(values: NodeJS.ProcessEnv) {
+  return envSchema.parse(values);
+}
 
 let env: z.infer<typeof envSchema>;
 try {
-  env = envSchema.parse(process.env);
+  env = parseEnv(process.env);
 } catch (error) {
   if (error instanceof z.ZodError) {
     const missingVars = error.errors
